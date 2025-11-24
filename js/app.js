@@ -17,12 +17,12 @@ const App = {
 
     initTheme: () => {
         const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
+        // Default to dark mode if no saved preference
+        if (savedTheme === 'light') {
             document.documentElement.removeAttribute('data-theme');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
         }
         App.updateThemeIcons();
     },
@@ -63,6 +63,8 @@ const App = {
             if (user) {
                 App.state.currentUser = user;
                 App.render();
+            } else {
+                alert("Usuario o contraseña incorrectos (admin/admin)");
             }
         });
 
@@ -93,11 +95,12 @@ const App = {
             });
         });
 
-        // Add Property Modal
+        // Add Property Modal Handling
         const modal = document.getElementById('add-property-modal');
         const openModalBtns = [document.getElementById('quick-add-btn'), document.getElementById('add-property-fab')];
         const closeModalBtn = document.querySelector('.close-modal');
 
+        // Open Modal
         openModalBtns.forEach(btn => {
             if(btn) {
                 btn.addEventListener('click', () => {
@@ -106,69 +109,239 @@ const App = {
             }
         });
 
-        closeModalBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-
-        // Close modal on outside click
-        modal.addEventListener('click', (e) => {
+        // Close Modal
+        if(closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+        
+        // Close on click outside
+        window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
             }
         });
 
         // Add Property Form Submit
-        document.getElementById('add-property-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            // Helper to read file
-            const readFile = (file) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            };
+        const addPropertyForm = document.getElementById('add-property-form');
+        if(addPropertyForm) {
+            addPropertyForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
 
-            try {
-                const photoFile = formData.get('photo');
-                const contractFile = formData.get('contract');
-                
-                let photoUrl = 'https://via.placeholder.com/300x200?text=Casa';
-                if (photoFile && photoFile.size > 0) {
-                    photoUrl = await readFile(photoFile);
-                }
-
-                let contractData = null;
-                if (contractFile && contractFile.size > 0) {
-                    contractData = {
-                        name: contractFile.name,
-                        data: await readFile(contractFile)
-                    };
-                }
-
-                const property = {
-                    address: formData.get('address'),
-                    tenantName: formData.get('tenantName'),
-                    price: parseFloat(formData.get('price')),
-                    increaseRate: parseFloat(formData.get('increaseRate')),
-                    increaseFrequency: parseInt(formData.get('increaseFrequency')),
-                    photoUrl: photoUrl,
-                    contract: contractData
+                // Helper to read file
+                const readFile = (file) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
                 };
 
-                DataManager.addProperty(property);
-                e.target.reset();
-                modal.classList.add('hidden');
-                App.refreshData(); // Re-render data dependent views
-                App.navigateTo('properties-view');
-            } catch (error) {
-                console.error("Error saving property:", error);
-                alert("Hubo un error al guardar la propiedad. Intenta con archivos más pequeños.");
-            }
+                try {
+                    const photoFile = formData.get('photo');
+                    const contractFile = formData.get('contract');
+                    
+                    let photoUrl = 'https://via.placeholder.com/300x200?text=Casa';
+                    if (photoFile && photoFile.size > 0) {
+                        photoUrl = await readFile(photoFile);
+                    } else {
+                        // Default placeholder if no file
+                        photoUrl = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+                    }
+
+                    let contractData = null;
+                    if (contractFile && contractFile.size > 0) {
+                        contractData = {
+                            name: contractFile.name,
+                            data: await readFile(contractFile)
+                        };
+                    }
+
+                    const property = {
+                        address: formData.get('address'),
+                        tenantName: formData.get('tenantName'),
+                        price: parseFloat(formData.get('price')),
+                        increaseRate: parseFloat(formData.get('increaseRate')),
+                        increaseFrequency: parseInt(formData.get('increaseFrequency')),
+                        contractStartDate: formData.get('contractStartDate'),
+                        contractEndDate: formData.get('contractEndDate'),
+                        rentDueDay: parseInt(formData.get('rentDueDay')),
+                        photoUrl: photoUrl,
+                        contract: contractData
+                    };
+
+                    DataManager.addProperty(property);
+                    e.target.reset();
+                    modal.classList.add('hidden');
+                    App.refreshData(); // Re-render data dependent views
+                    App.navigateTo('properties-view');
+                } catch (error) {
+                    console.error("Error saving property:", error);
+                    alert("Hubo un error al guardar la propiedad. Intenta con archivos más pequeños.");
+                }
+            });
+        }
+    },
+
+    openPropertyDetails: (property) => {
+        const modal = document.getElementById('property-details-modal');
+        const infoContainer = document.getElementById('details-info-container');
+        const closeBtn = document.getElementById('close-details-modal');
+        
+        // Populate Info
+        infoContainer.innerHTML = `
+            <p><strong>Dirección:</strong> ${property.address}</p>
+            <p><strong>Inquilino:</strong> ${property.tenantName}</p>
+            <p><strong>Precio:</strong> $${property.price.toLocaleString()}</p>
+            <p><strong>Aumento:</strong> ${property.increaseRate}% cada ${property.increaseFrequency} meses</p>
+            <p><strong>Vencimiento Alquiler:</strong> Día ${property.rentDueDay}</p>
+            <p><strong>Contrato:</strong> ${property.contractStartDate} al ${property.contractEndDate}</p>
+            ${property.contract ? `<p><strong>Archivo:</strong> <a href="${property.contract.data}" download="${property.contract.name}" style="color:var(--primary-color)">Descargar Contrato</a></p>` : ''}
+        `;
+
+        // Calendar State
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+
+        const render = () => App.renderCalendar(currentYear, currentMonth, property);
+        
+        // Navigation Handlers (remove old listeners to avoid duplicates if any - simple approach here)
+        const prevBtn = document.getElementById('prev-month');
+        const nextBtn = document.getElementById('next-month');
+        
+        prevBtn.onclick = () => {
+            currentMonth--;
+            if(currentMonth < 0) { currentMonth = 11; currentYear--; }
+            render();
+        };
+        
+        nextBtn.onclick = () => {
+            currentMonth++;
+            if(currentMonth > 11) { currentMonth = 0; currentYear++; }
+            render();
+        };
+
+        // Initial Render
+        render();
+        
+        // Show Modal
+        modal.classList.remove('hidden');
+        
+        // Close Handlers
+        closeBtn.onclick = () => modal.classList.add('hidden');
+        modal.onclick = (e) => {
+            if(e.target === modal) modal.classList.add('hidden');
+        };
+    },
+
+    renderCalendar: (year, month, property) => {
+        const grid = document.getElementById('calendar-grid');
+        const monthYearLabel = document.getElementById('calendar-month-year');
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        monthYearLabel.textContent = `${monthNames[month]} ${year}`;
+        grid.innerHTML = '';
+
+        // Headers
+        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        days.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'calendar-day-header';
+            el.textContent = d;
+            grid.appendChild(el);
         });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        // Empty slots
+        for(let i=0; i<firstDay; i++) {
+            grid.appendChild(document.createElement('div'));
+        }
+
+        // Helper to calculate rent for a specific date
+        const calculateRent = (date) => {
+            const start = new Date(property.contractStartDate);
+            start.setHours(12,0,0,0);
+            
+            if (date < start) return property.price;
+
+            // Calculate months elapsed since start
+            const monthsElapsed = (date.getFullYear() - start.getFullYear()) * 12 + (date.getMonth() - start.getMonth());
+            
+            // Calculate number of increases
+            const numIncreases = Math.floor(monthsElapsed / property.increaseFrequency);
+            
+            if (numIncreases <= 0) return property.price;
+
+            // Compound interest formula: Price * (1 + Rate)^Increases
+            // Assuming rate is percentage e.g. 10 for 10%
+            const rate = property.increaseRate / 100;
+            const newPrice = property.price * Math.pow(1 + rate, numIncreases);
+            
+            return Math.round(newPrice);
+        };
+
+        // Days
+        for(let day=1; day<=daysInMonth; day++) {
+            const el = document.createElement('div');
+            el.className = 'calendar-day';
+            
+            const dayNumber = document.createElement('span');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            el.appendChild(dayNumber);
+            
+            const currentDate = new Date(year, month, day);
+            currentDate.setHours(12,0,0,0);
+            
+            // Checks
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            if(isToday) el.classList.add('is-today');
+
+            // Contract Start/End
+            const startDate = new Date(property.contractStartDate);
+            startDate.setHours(12,0,0,0);
+            const endDate = new Date(property.contractEndDate);
+            endDate.setHours(12,0,0,0);
+            
+            const isStart = currentDate.getTime() === startDate.getTime();
+            const isEnd = currentDate.getTime() === endDate.getTime();
+
+            if(isStart || isEnd) el.classList.add('is-start-end');
+
+            // Rent Due Day & Amount Display
+            // Only show if within contract period
+            if (currentDate >= startDate && currentDate <= endDate) {
+                if(day === property.rentDueDay) {
+                    el.classList.add('is-due');
+                    
+                    const rentAmount = calculateRent(currentDate);
+                    const priceEl = document.createElement('span');
+                    priceEl.className = 'calendar-price';
+                    priceEl.textContent = `$${rentAmount.toLocaleString()}`;
+                    el.appendChild(priceEl);
+                }
+            }
+
+            // Increase Dates (Visual indicator only, amount is handled by is-due logic)
+            // Logic: Start Date + (Frequency * N months)
+            let tempDate = new Date(startDate);
+            // We iterate to find if THIS specific day is an increase day
+            // Optimization: Calculate increases relative to start date
+            
+            // Check if this month/day aligns with an increase
+            const monthsDiff = (year - startDate.getFullYear()) * 12 + (month - startDate.getMonth());
+            if (monthsDiff > 0 && monthsDiff % property.increaseFrequency === 0 && day === startDate.getDate()) {
+                 if(currentDate <= endDate) el.classList.add('is-increase');
+            }
+
+            grid.appendChild(el);
+        }
     },
 
     navigateTo: (viewId) => {
@@ -226,6 +399,12 @@ const App = {
             properties.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'property-card glass-card';
+                card.style.cursor = 'pointer';
+                card.onclick = (e) => {
+                    // Prevent opening modal if clicking a link/button inside card
+                    if(e.target.tagName === 'A' || e.target.closest('a')) return;
+                    App.openPropertyDetails(p);
+                };
                 
                 // Create image element if photo exists
                 const imgHtml = p.photoUrl ? `<img src="${p.photoUrl}" alt="Foto propiedad" style="width:100%; height: 150px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: var(--spacing-sm);">` : '';
