@@ -17,39 +17,43 @@ const App = {
 
     initTheme: () => {
         const savedTheme = localStorage.getItem('theme');
-        
         // Default to dark mode if no saved preference
-        if (savedTheme === 'light') {
-            document.documentElement.removeAttribute('data-theme');
-        } else {
+        const theme = savedTheme === 'light' ? 'light' : 'dark';
+        App.setTheme(theme);
+    },
+
+    setTheme: (theme) => {
+        if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
         }
+        
+        localStorage.setItem('theme', theme);
+        
+        // Sync all checkboxes
+        const isDark = theme === 'dark';
+        document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+            cb.checked = isDark;
+        });
+
         App.updateThemeIcons();
     },
 
     toggleTheme: () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        if (newTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-        }
-        
-        localStorage.setItem('theme', newTheme);
-        App.updateThemeIcons();
+        App.setTheme(newTheme);
     },
 
     updateThemeIcons: () => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const iconName = isDark ? 'light_mode' : 'dark_mode';
         
-        const desktopBtn = document.querySelector('#theme-toggle-btn span');
-        if(desktopBtn) desktopBtn.textContent = iconName;
-        
-        const mobileBtn = document.querySelector('#mobile-theme-toggle span');
-        if(mobileBtn) mobileBtn.textContent = iconName;
+        // Update menu item text/icon
+        document.querySelectorAll('.theme-toggle-btn span').forEach(span => {
+            span.textContent = iconName;
+        });
     },
 
     setupEventListeners: () => {
@@ -77,12 +81,17 @@ const App = {
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         document.getElementById('mobile-logout-btn').addEventListener('click', handleLogout);
 
-        // Theme Toggle
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if(themeBtn) themeBtn.addEventListener('click', App.toggleTheme);
-        
-        const mobileThemeBtn = document.getElementById('mobile-theme-toggle');
-        if(mobileThemeBtn) mobileThemeBtn.addEventListener('click', App.toggleTheme);
+        // Theme Toggle (Menu Button)
+        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', App.toggleTheme);
+        });
+
+        // Theme Switch (Checkbox)
+        document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                App.setTheme(e.target.checked ? 'dark' : 'light');
+            });
+        });
 
         // Navigation
         const navLinks = document.querySelectorAll('.nav-link, .nav-item');
