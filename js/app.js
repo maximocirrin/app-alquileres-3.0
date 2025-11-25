@@ -132,6 +132,24 @@ const App = {
             }
         });
 
+        // File Input Handling
+        const handleFileSelect = (inputId, nameId) => {
+            const input = document.getElementById(inputId);
+            const nameSpan = document.getElementById(nameId);
+            if(input && nameSpan) {
+                input.addEventListener('change', (e) => {
+                    if(e.target.files && e.target.files.length > 0) {
+                        nameSpan.textContent = e.target.files[0].name;
+                    } else {
+                        nameSpan.textContent = "Ningún archivo seleccionado";
+                    }
+                });
+            }
+        };
+
+        handleFileSelect('photo-upload', 'photo-file-name');
+        handleFileSelect('contract-upload', 'contract-file-name');
+
         // Add Property Form Submit
         const addPropertyForm = document.getElementById('add-property-form');
         if(addPropertyForm) {

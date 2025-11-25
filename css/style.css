@@ -45,7 +45,7 @@
     
     --primary-hue: 10;
     --primary-color: hsl(var(--primary-hue), 70%, 65%); /* Slightly lighter for dark mode */
-    --primary-dark: hsl(var(--primary-hue), 100%, 95%);
+    --primary-dark: hsl(var(--primary-hue), 80%, 65%);
     --primary-light: hsl(var(--primary-hue), 70%, 25%);
     
     /* Dark Mode Gradients (Deep) */
@@ -852,8 +852,8 @@ input:focus, select:focus {
   height: 0.75em;
   border-radius: var(--container-radius);
   background-color: var(--spot-color);
-  -webkit-box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
-  box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
+  -webkit-box-shadow: 0em 0.0312em 0.062em rgba(133, 92, 39, 0.25) inset;
+  box-shadow: 0em 0.0312em 0.062em rgba(29, 28, 28, 0.25) inset;
 }
 
 .theme-switch__spot:nth-of-type(2) {
@@ -930,4 +930,38 @@ input:focus, select:focus {
   -webkit-transform: translateY(-50%);
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
+}
+
+/* Responsive Forms */
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+}
+
+/* Custom File Inputs */
+.custom-file-input {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 0; /* Override default label margin */
+}
+
+.file-name {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    word-break: break-all;
 }
