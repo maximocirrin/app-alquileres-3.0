@@ -183,6 +183,7 @@ input:focus, select:focus {
 .form-row {
     display: flex;
     gap: var(--spacing-sm);
+    width: 100%;
 }
 
 .form-row .form-group {
@@ -463,7 +464,7 @@ input:focus, select:focus {
     background: none;
     border: none;
     border-bottom: 1px solid rgba(0,0,0,0.05);
-    width: 90%;
+    width: 100%;
     text-align: left;
     font-size: 1rem;
     cursor: pointer;
