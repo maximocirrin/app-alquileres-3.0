@@ -78,7 +78,8 @@ const App = {
             App.state.currentUser = null;
             App.render();
         };
-        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
         document.getElementById('mobile-logout-btn').addEventListener('click', handleLogout);
 
         // Theme Toggle (Menu Button)

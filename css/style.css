@@ -544,6 +544,11 @@ input:focus, select:focus {
         cursor: pointer;
         color: var(--text-muted);
     }
+
+    /* Hide redundant toggle in view headers on desktop */
+    .view-header .theme-switch {
+        display: none;
+    }
 }
 
 /* Details Modal & Calendar */
