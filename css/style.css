@@ -189,6 +189,13 @@ input:focus, select:focus {
     flex: 1;
 }
 
+/* Make form rows stack on mobile */
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+    }
+}
+
 /* Buttons */
 .btn-primary {
     width: 100%;
