@@ -969,7 +969,7 @@ input:focus, select:focus {
     }
     
     /* Aggressive fix for input overflow and consistency */
-    input, select {
+    input, select, textarea {
         min-width: 0;
         width: 100% !important;
         max-width: 100% !important;
@@ -977,9 +977,15 @@ input:focus, select:focus {
         height: 48px; /* Fixed height for consistency */
         line-height: 48px; /* Center text vertically */
         box-sizing: border-box;
+        
+        /* iOS Specific Resets */
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: var(--radius-sm); /* Enforce our radius */
+        background-color: rgba(255,255,255,0.05); /* Enforce background */
     }
     
-    /* Adjust textarea if added later */
+    /* Adjust textarea */
     textarea {
         height: auto;
         padding: 12px;
