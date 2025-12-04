@@ -968,12 +968,22 @@ input:focus, select:focus {
         gap: var(--spacing-sm);
     }
     
-    /* Aggressive fix for input overflow */
+    /* Aggressive fix for input overflow and consistency */
     input, select {
         min-width: 0;
         width: 100% !important;
         max-width: 100% !important;
-        padding: 12px 10px; /* Slightly reduced padding */
+        padding: 0 12px; /* Horizontal padding only, let height control vertical */
+        height: 48px; /* Fixed height for consistency */
+        line-height: 48px; /* Center text vertically */
+        box-sizing: border-box;
+    }
+    
+    /* Adjust textarea if added later */
+    textarea {
+        height: auto;
+        padding: 12px;
+        line-height: 1.5;
     }
     
     .form-group {
