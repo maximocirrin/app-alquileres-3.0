@@ -157,72 +157,122 @@
                             <h2>Nueva Propiedad</h2>
                             <button class="close-modal"><span class="material-symbols-rounded">close</span></button>
                         </header>
+                        
+                        <!-- Step Indicators -->
+                        <div class="step-indicators">
+                            <div class="step-indicator active" data-step="1">1</div>
+                            <div class="step-line"></div>
+                            <div class="step-indicator" data-step="2">2</div>
+                            <div class="step-line"></div>
+                            <div class="step-indicator" data-step="3">3</div>
+                        </div>
+
                         <form id="add-property-form">
-                            <div class="form-group">
-                                <label>Dirección</label>
-                                <input type="text" name="address" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Inquilino</label>
-                                <input type="text" name="tenantName" required>
-                            </div>
-                            <div class="form-row">
+                            <!-- Step 1: Datos del Inmueble -->
+                            <div class="form-step active" data-step="1">
+                                <h3>Datos del Inmueble</h3>
                                 <div class="form-group">
-                                    <label>Precio ($)</label>
-                                    <input type="number" name="price" required>
+                                    <label>Dirección</label>
+                                    <input type="text" name="address" required>
                                 </div>
-                                <div class="form-group">
-                                    <label>Aumento (%)</label>
-                                    <input type="number" name="increaseRate">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Frecuencia Aumento</label>
-                                <select name="increaseFrequency">
-                                    <option value="6">Semestral (6 meses)</option>
-                                    <option value="12">Anual (12 meses)</option>
-                                    <option value="6">Semestral (6 meses)</option>
-                                    <option value="12">Anual (12 meses)</option>
-                                    <option value="3">Trimestral (3 meses)</option>
-                                </select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Inicio Contrato</label>
-                                    <input type="date" name="contractStartDate" required>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Precio ($)</label>
+                                        <input type="number" name="price" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Aumento (%)</label>
+                                        <input type="number" name="increaseRate">
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>Fin Contrato</label>
-                                    <input type="date" name="contractEndDate" required>
+                                    <label>Frecuencia Aumento</label>
+                                    <select name="increaseFrequency">
+                                        <option value="6">Semestral (6 meses)</option>
+                                        <option value="12">Anual (12 meses)</option>
+                                        <option value="3">Trimestral (3 meses)</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Inicio Contrato</label>
+                                        <input type="date" name="contractStartDate" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Fin Contrato</label>
+                                        <input type="date" name="contractEndDate" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Día de Vencimiento (1-31)</label>
+                                    <input type="number" name="rentDueDay" min="1" max="31" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Foto de la Propiedad</label>
+                                    <div class="custom-file-input">
+                                        <label for="photo-upload" class="btn-secondary file-upload-btn">
+                                            <span class="material-symbols-rounded">upload_file</span> Elegir Foto
+                                        </label>
+                                        <span class="file-name" id="photo-file-name">Ningún archivo seleccionado</span>
+                                        <input type="file" id="photo-upload" name="photo" accept="image/*" class="hidden-file-input">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Contrato (PDF/Doc)</label>
+                                    <div class="custom-file-input">
+                                        <label for="contract-upload" class="btn-secondary file-upload-btn">
+                                            <span class="material-symbols-rounded">description</span> Elegir Contrato
+                                        </label>
+                                        <span class="file-name" id="contract-file-name">Ningún archivo seleccionado</span>
+                                        <input type="file" id="contract-upload" name="contract" accept=".pdf,.doc,.docx" class="hidden-file-input">
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-primary next-step-btn">Siguiente</button>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Día de Vencimiento (1-31)</label>
-                                <input type="number" name="rentDueDay" min="1" max="31" required>
-                            </div>
-                            <!-- Placeholder for file uploads -->
-                            <!-- Custom File Inputs -->
-                            <div class="form-group">
-                                <label>Foto de la Propiedad</label>
-                                <div class="custom-file-input">
-                                    <label for="photo-upload" class="btn-secondary file-upload-btn">
-                                        <span class="material-symbols-rounded">upload_file</span> Elegir Foto
-                                    </label>
-                                    <span class="file-name" id="photo-file-name">Ningún archivo seleccionado</span>
-                                    <input type="file" id="photo-upload" name="photo" accept="image/*" class="hidden-file-input">
+
+                            <!-- Step 2: Datos del Inquilino -->
+                            <div class="form-step" data-step="2">
+                                <h3>Datos del Inquilino</h3>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" name="tenantName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="tenantEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" name="tenantPhone">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary prev-step-btn">Anterior</button>
+                                    <button type="button" class="btn-primary next-step-btn">Siguiente</button>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Contrato (PDF/Doc)</label>
-                                <div class="custom-file-input">
-                                    <label for="contract-upload" class="btn-secondary file-upload-btn">
-                                        <span class="material-symbols-rounded">description</span> Elegir Contrato
-                                    </label>
-                                    <span class="file-name" id="contract-file-name">Ningún archivo seleccionado</span>
-                                    <input type="file" id="contract-upload" name="contract" accept=".pdf,.doc,.docx" class="hidden-file-input">
+
+                            <!-- Step 3: Datos del Propietario -->
+                            <div class="form-step" data-step="3">
+                                <h3>Datos del Propietario</h3>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" name="ownerName">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="ownerEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" name="ownerPhone">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary prev-step-btn">Anterior</button>
+                                    <button type="submit" class="btn-primary">Guardar Propiedad</button>
                                 </div>
                             </div>
-                            <button type="submit" class="btn-primary">Guardar Propiedad</button>
                         </form>
                     </div>
                 </div>

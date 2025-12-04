@@ -109,12 +109,75 @@ const App = {
         const modal = document.getElementById('add-property-modal');
         const openModalBtns = [document.getElementById('quick-add-btn'), document.getElementById('add-property-fab')];
         const closeModalBtn = document.querySelector('.close-modal');
+        
+        // Wizard State
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        const updateWizardUI = () => {
+            // Update Steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                if(parseInt(step.dataset.step) === currentStep) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+
+            // Update Indicators
+            document.querySelectorAll('.step-indicator').forEach(ind => {
+                const step = parseInt(ind.dataset.step);
+                if (step === currentStep) {
+                    ind.classList.add('active');
+                    ind.classList.remove('completed');
+                } else if (step < currentStep) {
+                    ind.classList.add('completed');
+                    ind.classList.remove('active');
+                } else {
+                    ind.classList.remove('active', 'completed');
+                }
+            });
+
+            // Update Lines
+            const lines = document.querySelectorAll('.step-line');
+            lines.forEach((line, index) => {
+                if (index < currentStep - 1) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.remove('active');
+                }
+            });
+        };
+
+        const validateStep = (step) => {
+            const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = stepEl.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+            inputs.forEach(input => {
+                if (!input.value) {
+                    isValid = false;
+                    input.style.borderColor = '#ef4444';
+                    // Reset border on input
+                    input.addEventListener('input', function() {
+                        this.style.borderColor = '';
+                    }, { once: true });
+                }
+            });
+            return isValid;
+        };
 
         // Open Modal
         openModalBtns.forEach(btn => {
             if(btn) {
                 btn.addEventListener('click', () => {
                     modal.classList.remove('hidden');
+                    document.body.classList.add('no-scroll');
+                    // Reset wizard
+                    currentStep = 1;
+                    updateWizardUI();
+                    document.getElementById('add-property-form').reset();
+                    document.getElementById('photo-file-name').textContent = "Ningún archivo seleccionado";
+                    document.getElementById('contract-file-name').textContent = "Ningún archivo seleccionado";
                 });
             }
         });
@@ -123,6 +186,7 @@ const App = {
         if(closeModalBtn) {
             closeModalBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
+                document.body.classList.remove('no-scroll');
             });
         }
         
@@ -130,7 +194,31 @@ const App = {
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
+                document.body.classList.remove('no-scroll');
             }
+        });
+
+        // Wizard Navigation
+        document.querySelectorAll('.next-step-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (validateStep(currentStep)) {
+                    if (currentStep < totalSteps) {
+                        currentStep++;
+                        updateWizardUI();
+                    }
+                } else {
+                    alert("Por favor completa los campos requeridos.");
+                }
+            });
+        });
+
+        document.querySelectorAll('.prev-step-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizardUI();
+                }
+            });
         });
 
         // File Input Handling
@@ -156,6 +244,9 @@ const App = {
         if(addPropertyForm) {
             addPropertyForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                // Final validation (optional, as steps should be validated)
+                
                 const formData = new FormData(e.target);
 
                 // Helper to read file
@@ -191,6 +282,11 @@ const App = {
                     const property = {
                         address: formData.get('address'),
                         tenantName: formData.get('tenantName'),
+                        tenantEmail: formData.get('tenantEmail'),
+                        tenantPhone: formData.get('tenantPhone'),
+                        ownerName: formData.get('ownerName'),
+                        ownerEmail: formData.get('ownerEmail'),
+                        ownerPhone: formData.get('ownerPhone'),
                         price: parseFloat(formData.get('price')),
                         increaseRate: parseFloat(formData.get('increaseRate')),
                         increaseFrequency: parseInt(formData.get('increaseFrequency')),
@@ -204,6 +300,7 @@ const App = {
                     DataManager.addProperty(property);
                     e.target.reset();
                     modal.classList.add('hidden');
+                    document.body.classList.remove('no-scroll');
                     App.refreshData(); // Re-render data dependent views
                     App.navigateTo('properties-view');
                 } catch (error) {
@@ -257,11 +354,18 @@ const App = {
         
         // Show Modal
         modal.classList.remove('hidden');
+        document.body.classList.add('no-scroll');
         
         // Close Handlers
-        closeBtn.onclick = () => modal.classList.add('hidden');
+        closeBtn.onclick = () => {
+            modal.classList.add('hidden');
+            document.body.classList.remove('no-scroll');
+        };
         modal.onclick = (e) => {
-            if(e.target === modal) modal.classList.add('hidden');
+            if(e.target === modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('no-scroll');
+            }
         };
     },
 
