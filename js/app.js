@@ -521,6 +521,7 @@ const App = {
         // Dashboard Stats
         document.getElementById('total-properties-count').textContent = properties.length;
         document.getElementById('total-income-display').textContent = `$${totalIncome.toLocaleString()}`;
+        document.getElementById('late-tenants-count').textContent = DataManager.getLateTenantsCount();
 
         // Properties List
         const propertiesList = document.getElementById('properties-list');

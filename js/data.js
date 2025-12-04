@@ -57,5 +57,10 @@ const DataManager = {
     calculateTotalIncome: () => {
         const properties = DataManager.getProperties();
         return properties.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
+    },
+
+    getLateTenantsCount: () => {
+        // Placeholder: Return 0 as payment tracking is not implemented yet
+        return 0;
     }
 };
