@@ -112,7 +112,7 @@ const App = {
         
         // Wizard State
         let currentStep = 1;
-        const totalSteps = 3;
+        const totalSteps = 4;
 
         const updateWizardUI = () => {
             // Update Steps
@@ -294,7 +294,10 @@ const App = {
                         contractEndDate: formData.get('contractEndDate'),
                         rentDueDay: parseInt(formData.get('rentDueDay')),
                         photoUrl: photoUrl,
-                        contract: contractData
+                        contract: contractData,
+                        cbuAlias: formData.get('cbuAlias'),
+                        notifyRentExpiry: formData.get('notifyRentExpiry') === 'on',
+                        notifyPunitiveInterests: formData.get('notifyPunitiveInterests') === 'on'
                     };
 
                     DataManager.addProperty(property);

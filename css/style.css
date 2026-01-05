@@ -1139,3 +1139,53 @@ body.no-scroll {
     height: 100vh; /* Prevent scrolling on some mobile browsers */
     touch-action: none; /* Disable touch actions */
 }
+
+/* Form Switch */
+.form-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-switch input {
+    display: none;
+}
+
+.switch-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.switch-slider::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.form-switch input:checked + .switch-slider {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-switch input:checked + .switch-slider::before {
+    transform: translateX(20px);
+    background-color: white;
+}
+
+.switch-label {
+    font-size: 0.95rem;
+    color: var(--text-main);
+}

@@ -169,6 +169,8 @@
                             <div class="step-indicator" data-step="2">2</div>
                             <div class="step-line"></div>
                             <div class="step-indicator" data-step="3">3</div>
+                            <div class="step-line"></div>
+                            <div class="step-indicator" data-step="4">4</div>
                         </div>
 
                         <form id="add-property-form">
@@ -236,8 +238,29 @@
                                 </div>
                             </div>
 
-                            <!-- Step 2: Datos del Inquilino -->
+                            <!-- Step 2: Datos del Propietario (Previously Step 3) -->
                             <div class="form-step" data-step="2">
+                                <h3>Datos del Propietario</h3>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" name="ownerName">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="ownerEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" name="ownerPhone">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary prev-step-btn">Anterior</button>
+                                    <button type="button" class="btn-primary next-step-btn">Siguiente</button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Datos del Inquilino (Previously Step 2) -->
+                            <div class="form-step" data-step="3">
                                 <h3>Datos del Inquilino</h3>
                                 <div class="form-group">
                                     <label>Nombre Completo</label>
@@ -257,21 +280,30 @@
                                 </div>
                             </div>
 
-                            <!-- Step 3: Datos del Propietario -->
-                            <div class="form-step" data-step="3">
-                                <h3>Datos del Propietario</h3>
+                            <!-- Step 4: Datos de Facturación y Notificaciones -->
+                            <div class="form-step" data-step="4">
+                                <h3>Datos de Facturación y Notificaciones</h3>
                                 <div class="form-group">
-                                    <label>Nombre Completo</label>
-                                    <input type="text" name="ownerName">
+                                    <label>CBU y/o Alias</label>
+                                    <input type="text" name="cbuAlias" placeholder="Ingrese CBU o Alias">
                                 </div>
+                                
                                 <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" name="ownerEmail">
+                                    <label class="form-switch">
+                                        <input type="checkbox" name="notifyRentExpiry">
+                                        <span class="switch-slider"></span>
+                                        <span class="switch-label">Notificar vencimiento de alquiler (con link de pago)</span>
+                                    </label>
                                 </div>
+
                                 <div class="form-group">
-                                    <label>Teléfono</label>
-                                    <input type="tel" name="ownerPhone">
+                                    <label class="form-switch">
+                                        <input type="checkbox" name="notifyPunitiveInterests">
+                                        <span class="switch-slider"></span>
+                                        <span class="switch-label">Recordatorio de alquiler vencido (intereses punitorios)</span>
+                                    </label>
                                 </div>
+
                                 <div class="form-actions">
                                     <button type="button" class="btn-secondary prev-step-btn">Anterior</button>
                                     <button type="submit" class="btn-primary">Guardar Propiedad</button>
