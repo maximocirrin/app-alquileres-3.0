@@ -245,8 +245,6 @@ const App = {
             addPropertyForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // Final validation (optional, as steps should be validated)
-                
                 const formData = new FormData(e.target);
 
                 // Helper to read file
@@ -267,7 +265,6 @@ const App = {
                     if (photoFile && photoFile.size > 0) {
                         photoUrl = await readFile(photoFile);
                     } else {
-                        // Default placeholder if no file
                         photoUrl = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
                     }
 
@@ -279,6 +276,12 @@ const App = {
                         };
                     }
 
+                    // Safe parsing
+                    const price = parseFloat(formData.get('price')) || 0;
+                    const increaseRate = parseFloat(formData.get('increaseRate')) || 0;
+                    const increaseFrequency = parseInt(formData.get('increaseFrequency')) || 12; // Default to 12 if missing
+                    const rentDueDay = parseInt(formData.get('rentDueDay')) || 1;
+
                     const property = {
                         address: formData.get('address'),
                         tenantName: formData.get('tenantName'),
@@ -287,12 +290,12 @@ const App = {
                         ownerName: formData.get('ownerName'),
                         ownerEmail: formData.get('ownerEmail'),
                         ownerPhone: formData.get('ownerPhone'),
-                        price: parseFloat(formData.get('price')),
-                        increaseRate: parseFloat(formData.get('increaseRate')),
-                        increaseFrequency: parseInt(formData.get('increaseFrequency')),
+                        price: price,
+                        increaseRate: increaseRate,
+                        increaseFrequency: increaseFrequency,
                         contractStartDate: formData.get('contractStartDate'),
                         contractEndDate: formData.get('contractEndDate'),
-                        rentDueDay: parseInt(formData.get('rentDueDay')),
+                        rentDueDay: rentDueDay,
                         photoUrl: photoUrl,
                         contract: contractData,
                         cbuAlias: formData.get('cbuAlias'),
@@ -319,9 +322,33 @@ const App = {
         const infoContainer = document.getElementById('details-info-container');
         const closeBtn = document.getElementById('close-details-modal');
         
+        // Calculate Status
+        const today = new Date();
+        // Check if current day is past rentDueDay
+        // Note: strictly greater means overdue. e.g. Due 10th. Today 11th -> Overdue.
+        const isOverdue = today.getDate() > property.rentDueDay;
+        
+        // Since we don't track payments yet, we'll assume "Al día" if not overdue, or "Vencido" if overdue.
+        // In a real app, we'd check if a payment exists for this month.
+        const statusHtml = isOverdue 
+            ? `<span class="status-badge status-overdue">Vencido</span>`
+            : `<span class="status-badge status-pending">Al día</span>`;
+
+        // Calculate Expiration Date (Current Month)
+        // We always show the due date for the *current* month to align with the status
+        const dueYear = today.getFullYear();
+        const dueMonth = today.getMonth();
+        const maxDaysInMonth = new Date(dueYear, dueMonth + 1, 0).getDate();
+        const dueDaySafe = Math.min(property.rentDueDay || 1, maxDaysInMonth);
+        
+        const expirationDate = new Date(dueYear, dueMonth, dueDaySafe);
+        const expirationDateStr = expirationDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
         // Populate Info
         infoContainer.innerHTML = `
             <p><strong>Dirección:</strong> ${property.address}</p>
+            <p><strong>Estado:</strong> ${statusHtml}</p>
+            <p><strong>Vencimiento:</strong> ${expirationDateStr}</p>
             <p><strong>Inquilino:</strong> ${property.tenantName}</p>
             <p><strong>Precio:</strong> $${property.price.toLocaleString()}</p>
             <p><strong>Aumento:</strong> ${property.increaseRate}% cada ${property.increaseFrequency} meses</p>
@@ -373,6 +400,13 @@ const App = {
     },
 
     renderCalendar: (year, month, property) => {
+        // Helper to parse date string YYYY-MM-DD as Local Date (avoiding TZ shifts)
+        const parseLocalDate = (dateStr) => {
+            if(!dateStr) return null;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d, 12, 0, 0); // Noon to match calendar cells
+        };
+
         const grid = document.getElementById('calendar-grid');
         const monthYearLabel = document.getElementById('calendar-month-year');
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -393,15 +427,19 @@ const App = {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const today = new Date();
 
+        // Total cells counter
+        let totalCells = 0;
+
         // Empty slots
         for(let i=0; i<firstDay; i++) {
             grid.appendChild(document.createElement('div'));
+            totalCells++;
         }
 
         // Helper to calculate rent for a specific date
         const calculateRent = (date) => {
-            const start = new Date(property.contractStartDate);
-            start.setHours(12,0,0,0);
+            const start = parseLocalDate(property.contractStartDate);
+            if (!start) return property.price;
             
             if (date < start) return property.price;
 
@@ -414,7 +452,6 @@ const App = {
             if (numIncreases <= 0) return property.price;
 
             // Compound interest formula: Price * (1 + Rate)^Increases
-            // Assuming rate is percentage e.g. 10 for 10%
             const rate = property.increaseRate / 100;
             const newPrice = property.price * Math.pow(1 + rate, numIncreases);
             
@@ -431,50 +468,60 @@ const App = {
             dayNumber.textContent = day;
             el.appendChild(dayNumber);
             
-            const currentDate = new Date(year, month, day);
-            currentDate.setHours(12,0,0,0);
+            const currentDate = new Date(year, month, day, 12, 0, 0);
             
             // Checks
             const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
             if(isToday) el.classList.add('is-today');
 
             // Contract Start/End
-            const startDate = new Date(property.contractStartDate);
-            startDate.setHours(12,0,0,0);
-            const endDate = new Date(property.contractEndDate);
-            endDate.setHours(12,0,0,0);
+            const startDate = parseLocalDate(property.contractStartDate);
+            const endDate = parseLocalDate(property.contractEndDate);
             
-            const isStart = currentDate.getTime() === startDate.getTime();
-            const isEnd = currentDate.getTime() === endDate.getTime();
+            if (startDate && endDate) {
+                const isStart = currentDate.getTime() === startDate.getTime();
+                const isEnd = currentDate.getTime() === endDate.getTime();
 
-            if(isStart || isEnd) el.classList.add('is-start-end');
+                if(isStart || isEnd) el.classList.add('is-start-end');
 
-            // Rent Due Day & Amount Display
-            // Only show if within contract period
-            if (currentDate >= startDate && currentDate <= endDate) {
-                if(day === property.rentDueDay) {
-                    el.classList.add('is-due');
-                    
-                    const rentAmount = calculateRent(currentDate);
-                    const priceEl = document.createElement('span');
-                    priceEl.className = 'calendar-price';
-                    priceEl.textContent = `$${rentAmount.toLocaleString()}`;
-                    el.appendChild(priceEl);
+                // Rent Due Day & Amount Display
+                // Only show if within contract period
+                if (currentDate >= startDate && currentDate <= endDate) {
+                    if(day === property.rentDueDay) {
+                        el.classList.add('is-due');
+                        
+                        const rentAmount = calculateRent(currentDate);
+                        const priceEl = document.createElement('span');
+                        priceEl.className = 'calendar-price';
+                        priceEl.textContent = `$${rentAmount.toLocaleString()}`;
+                        el.appendChild(priceEl);
+                    }
+                }
+
+                // Increase Dates (Visual indicator only)
+                // Check if monthsDiff is positive and multiple of frequency
+                // And match the DAY of the start date (e.g. if started on 15th, increases are on 15th)
+                if (day === startDate.getDate()) {
+                     const monthsDiff = (year - startDate.getFullYear()) * 12 + (month - startDate.getMonth());
+                     if (monthsDiff > 0 && monthsDiff % property.increaseFrequency === 0) {
+                         if(currentDate <= endDate) el.classList.add('is-increase');
+                     }
                 }
             }
 
-            // Increase Dates (Visual indicator only, amount is handled by is-due logic)
-            // Logic: Start Date + (Frequency * N months)
-            let tempDate = new Date(startDate);
-            // We iterate to find if THIS specific day is an increase day
-            // Optimization: Calculate increases relative to start date
-            
-            // Check if this month/day aligns with an increase
-            const monthsDiff = (year - startDate.getFullYear()) * 12 + (month - startDate.getMonth());
-            if (monthsDiff > 0 && monthsDiff % property.increaseFrequency === 0 && day === startDate.getDate()) {
-                 if(currentDate <= endDate) el.classList.add('is-increase');
-            }
+            grid.appendChild(el);
+            totalCells++;
+        }
 
+        // Fill remaining slots to maintain constant height (6 rows * 7 days = 42 cells)
+        const totalRows = 6;
+        const remainingCells = (totalRows * 7) - totalCells;
+        
+        for(let i=0; i<remainingCells; i++) {
+            const el = document.createElement('div');
+            el.className = 'calendar-day';
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
             grid.appendChild(el);
         }
     },
@@ -554,11 +601,35 @@ const App = {
                     </div>
                 ` : '';
 
+                // Calculate Status
+                const today = new Date();
+                const isOverdue = today.getDate() > p.rentDueDay;
+                const statusHtml = isOverdue 
+                    ? `<span class="status-badge status-overdue" style="font-size: 0.7rem; padding: 2px 6px;">Vencido</span>`
+                    : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al día</span>`;
+
+                // Calculate Expiration Date (Current Month)
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth(); // 0-indexed
+                const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                // Clamp day to month length (e.g. if due day is 31 and it's Feb)
+                const dueDaySafe = Math.min(p.rentDueDay || 1, maxDaysInMonth);
+                
+                const expirationDate = new Date(currentYear, currentMonth, dueDaySafe);
+                const expirationDateStr = expirationDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+
                 card.innerHTML = `
                     ${imgHtml}
                     <div class="property-header">
                         <span class="property-address">${p.address}</span>
+                        ${statusHtml}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <span class="property-price">$${p.price.toLocaleString()}</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">
+                        <strong>Vencimiento:</strong> ${expirationDateStr}
                     </div>
                     <div class="property-tenant">
                         <span class="material-symbols-rounded" style="font-size: 16px;">person</span>
