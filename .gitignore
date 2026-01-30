@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+db_config.js
+.env
+
+# Uploaded files
+uploads/
+
+# OS generated files
+Thumbs.db
+.DS_Store

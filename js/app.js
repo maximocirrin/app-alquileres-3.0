@@ -8,10 +8,10 @@ const App = {
         currentView: 'home-view'
     },
 
-    init: () => {
+    init: async () => {
         App.initTheme();
         App.state.currentUser = DataManager.getCurrentUser();
-        App.render();
+        await App.render();
         App.setupEventListeners();
     },
 
@@ -257,11 +257,15 @@ const App = {
                     c.classList.add('hidden');
                     c.classList.remove('active');
                 });
-                const content = document.getElementById(targetTab);
-                if(content) {
-                    content.classList.remove('hidden');
-                    content.classList.add('active');
-                }
+                    // Lazy load content if needed
+                    const content = document.getElementById(targetTab);
+                    if(content) {
+                        content.classList.remove('hidden');
+                        content.classList.add('active');
+                        // Load specific tab data
+                        if(targetTab === 'tab-tenants') App.renderTenants();
+                        if(targetTab === 'tab-payments') App.renderPayments();
+                    }
             });
         });
 
@@ -355,11 +359,11 @@ const App = {
                         notifyPunitiveInterests: formData.get('notifyPunitiveInterests') === 'on'
                     };
 
-                    DataManager.addProperty(property);
+                    await DataManager.addProperty(property);
                     e.target.reset();
                     modal.classList.add('hidden');
                     document.body.classList.remove('no-scroll');
-                    App.refreshData(); // Re-render data dependent views
+                    await App.refreshData(); // Re-render data dependent views
                     App.navigateTo('properties-view');
                 } catch (error) {
                     console.error("Error saving property:", error);
@@ -596,7 +600,7 @@ const App = {
         });
     },
 
-    render: () => {
+    render: async () => {
         const { currentUser } = App.state;
         const loginView = document.getElementById('login-view');
         const mainLayout = document.getElementById('main-layout');
@@ -605,7 +609,7 @@ const App = {
             loginView.classList.add('hidden');
             mainLayout.classList.remove('hidden');
             document.getElementById('user-display-name').textContent = currentUser.name;
-            App.refreshData();
+            await App.refreshData();
             // Ensure we are on a valid view, default to home if none active or if coming from login
             if(document.querySelectorAll('.view:not(.hidden)').length === 0 || App.state.currentView === 'login-view') {
                  App.navigateTo('home-view');
@@ -617,8 +621,8 @@ const App = {
     },
 
     // NEW METHODS
-    renderTenants: () => {
-        const tenants = DataManager.getTenants();
+    renderTenants: async () => {
+        const tenants = await DataManager.getTenants();
         const tbody = document.querySelector('#tenants-table tbody');
         if (!tbody) return;
         
@@ -664,8 +668,9 @@ const App = {
         });
     },
 
-    renderPayments: () => {
-        const payments = DataManager.getPayments();
+    renderPayments: async () => {
+        // use mock payments for now
+        const payments = await DataManager.getMockPayments();
         const tbody = document.querySelector('#payments-table tbody');
         if(!tbody) return;
 
@@ -712,7 +717,7 @@ const App = {
         });
 
         // Update Payment Stats
-        const stats = DataManager.getPaymentStats();
+        const stats = await DataManager.getPaymentStats();
         document.getElementById('payments-total-paid').textContent = `$${stats.totalPaid.toLocaleString()}`;
         document.getElementById('payments-pending-count').textContent = stats.pendingCount;
         document.getElementById('payments-total-transactions').textContent = stats.totalTransactions;
@@ -748,14 +753,14 @@ const App = {
         }
     },
 
-    refreshData: () => {
-        const properties = DataManager.getProperties();
-        const totalIncome = DataManager.calculateTotalIncome();
+    refreshData: async () => {
+        const properties = await DataManager.getProperties();
+        const totalIncome = await DataManager.calculateTotalIncome();
 
         // Dashboard Stats
         document.getElementById('total-properties-count').textContent = properties.length;
         document.getElementById('total-income-display').textContent = `$${totalIncome.toLocaleString()}`;
-        document.getElementById('late-tenants-count').textContent = DataManager.getLateTenantsCount();
+        document.getElementById('late-tenants-count').textContent = await DataManager.getLateTenantsCount();
 
         // Properties List
         const propertiesList = document.getElementById('properties-list');

@@ -8,12 +8,15 @@ const STORAGE_KEYS = {
     PROPERTIES: 'rental_app_properties'
 };
 
+const API_BASE_URL = 'http://localhost:3000'; // Ensure we hit the backend even if running on Live Server
+
 const DataManager = {
     // User Management
     login: (username, password) => {
-        // Mock login - accept any non-empty credentials
+        // Mock login remains client-side for now as requested schema stored hash but logic was not fully moved yet
+        // For full security this should effectively call an API
         if (username && password) {
-            const user = { username, name: username }; // Simple mock user
+            const user = { username, name: username };
             localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
             return user;
         }
@@ -30,95 +33,94 @@ const DataManager = {
     },
 
     // Property Management
-    getProperties: () => {
-        const propsStr = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
-        return propsStr ? JSON.parse(propsStr) : [];
+    getProperties: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/properties`);
+            if (!response.ok) throw new Error('Failed to fetch properties');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
     },
 
-    addProperty: (property) => {
-        const properties = DataManager.getProperties();
-        const newProperty = {
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString(),
-            ...property
-        };
-        properties.push(newProperty);
-        localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
-        return newProperty;
+    addProperty: async (property) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/properties`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(property)
+            });
+            if (!response.ok) throw new Error('Failed to save property');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     },
 
-    deleteProperty: (id) => {
-        let properties = DataManager.getProperties();
-        properties = properties.filter(p => p.id !== id);
-        localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
+    deleteProperty: async (id) => {
+        // Implement API call if backend supports it
+        // await fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' });
+        console.warn("Delete not fully implemented in backend yet");
     },
 
     // Finances
-    calculateTotalIncome: () => {
-        const properties = DataManager.getProperties();
+    calculateTotalIncome: async () => {
+        const properties = await DataManager.getProperties();
         return properties.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
     },
 
     // Tenants Management
-    getTenants: () => {
-        const properties = DataManager.getProperties();
-        // Extract tenants from properties where they exist
-        const tenants = properties.filter(p => p.tenantName).map(p => ({
-            id: p.id, // Using property ID for simplicity in this link
-            name: p.tenantName,
-            email: p.tenantEmail || 'No informado',
-            phone: p.tenantPhone || 'No informado',
-            propertyId: p.id,
-            propertyAddress: p.address,
-            contractEnd: p.contractEndDate,
-            rent: p.price
-        }));
-        return tenants;
+    getTenants: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tenants`);
+            if (!response.ok) throw new Error('Failed to fetch tenants');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            // Fallback
+            return [];
+        }
     },
 
     // Payments Management
     getPayments: () => {
-        // Mock consolidated payments data
-        const tenants = DataManager.getTenants();
-        const payments = [];
-        const statuses = ['Pagado', 'Pendiente', 'Atrasado'];
-        const methods = ['Efectivo', 'Transferencia', 'Depósito'];
-
-        // Generate some random history
-        tenants.forEach(t => {
-            // Last month payment
-            payments.push({
-                id: Math.random().toString(36).substr(2, 9),
-                date: new Date().toISOString().split('T')[0], // Today
-                tenantId: t.id,
-                tenantName: t.name,
-                propertyId: t.propertyId,
-                propertyAddress: t.propertyAddress,
-                method: methods[Math.floor(Math.random() * methods.length)],
-                amount: t.rent,
-                status: statuses[Math.floor(Math.random() * statuses.length)]
-            });
-            // Previous month
-            const prevDate = new Date();
-            prevDate.setMonth(prevDate.getMonth() - 1);
-            payments.push({
-                id: Math.random().toString(36).substr(2, 9),
-                date: prevDate.toISOString().split('T')[0],
-                tenantId: t.id,
-                tenantName: t.name,
-                propertyId: t.propertyId,
-                propertyAddress: t.propertyAddress,
-                method: 'Transferencia',
-                amount: t.rent,
-                status: 'Pagado'
-            });
-        });
-        
-        return payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Keeping MOCK data for payments as requested schema didn't prioritize payments table yet
+        // and user asked for "Tabla inquilinos y Tabla contratos" specifically.
+        // We will mock this based on tenants if possible or keep random generator
+        return []; 
+    },
+    
+    // Mock for now until Payments table is added
+    getMockPayments: async () => {
+         // Re-implementing the mock logic but async to match interface
+         const tenants = await DataManager.getTenants();
+         const payments = [];
+         const statuses = ['Pagado', 'Pendiente', 'Atrasado'];
+         const methods = ['Efectivo', 'Transferencia', 'Depósito'];
+ 
+         tenants.forEach(t => {
+             // Last month payment
+             payments.push({
+                 id: Math.random().toString(36).substr(2, 9),
+                 date: new Date().toISOString().split('T')[0],
+                 tenantId: t.id,
+                 tenantName: t.name,
+                 propertyId: t.propertyId || 'N/A', // Adjust based on DB response
+                 propertyAddress: t.propertyAddress,
+                 method: methods[Math.floor(Math.random() * methods.length)],
+                 amount: parseFloat(t.rent) || 0,
+                 status: statuses[Math.floor(Math.random() * statuses.length)]
+             });
+         });
+         return payments.sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
-    getPaymentStats: () => {
-        const payments = DataManager.getPayments();
+    getPaymentStats: async () => {
+        const payments = await DataManager.getMockPayments();
         const totalPaid = payments
             .filter(p => p.status === 'Pagado')
             .reduce((sum, p) => sum + parseFloat(p.amount), 0);
@@ -132,9 +134,8 @@ const DataManager = {
         };
     },
 
-    getLateTenantsCount: () => {
-        const payments = DataManager.getPayments();
-        // Count unique tenants with 'Atrasado' status
+    getLateTenantsCount: async () => {
+        const payments = await DataManager.getMockPayments();
         const lateSet = new Set(payments.filter(p => p.status === 'Atrasado').map(p => p.tenantId));
         return lateSet.size;
     }
