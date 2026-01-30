@@ -149,8 +149,93 @@
                             </button>
                         </div>
                     </header>
-                    <div id="properties-list" class="properties-grid">
-                        <!-- Properties will be injected here -->
+                    
+                    <!-- Tabs Navigation -->
+                    <div class="tabs-nav glass-panel">
+                        <button class="tab-btn active" data-tab="tab-properties">Propiedades</button>
+                        <button class="tab-btn" data-tab="tab-tenants">Inquilinos</button>
+                        <button class="tab-btn" data-tab="tab-payments">Pagos</button>
+                    </div>
+
+                    <!-- Tab Content: Properties -->
+                    <div id="tab-properties" class="tab-content active">
+                        <div id="properties-list" class="properties-grid">
+                            <!-- Properties will be injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Tenants -->
+                    <div id="tab-tenants" class="tab-content hidden">
+                        <div class="action-bar glass-card">
+                            <div class="search-bar">
+                                <span class="material-symbols-rounded">search</span>
+                                <input type="text" id="tenant-search" placeholder="Buscar inquilino...">
+                            </div>
+                            <button class="btn-secondary" id="quick-add-tenant-btn">
+                                <span class="material-symbols-rounded">person_add</span> Nuevo
+                            </button>
+                        </div>
+                        <div class="table-container glass-card">
+                            <table class="data-table" id="tenants-table">
+                                <thead>
+                                    <tr>
+                                        <th>Inquilino</th>
+                                        <th>Contacto</th>
+                                        <th>Propiedad</th>
+                                        <th>Contrato</th>
+                                        <th>Renta</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Tenants injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Payments -->
+                    <div id="tab-payments" class="tab-content hidden">
+                        <div class="dashboard-grid">
+                            <div class="stat-card glass-card">
+                                <h3>Total Pagado</h3>
+                                <p class="stat-value" id="payments-total-paid">$0</p>
+                            </div>
+                            <div class="stat-card glass-card">
+                                <h3>Pagos Pendientes</h3>
+                                <p class="stat-value" id="payments-pending-count">0</p>
+                            </div>
+                            <div class="stat-card glass-card">
+                                <h3>Transacciones</h3>
+                                <p class="stat-value" id="payments-total-transactions">0</p>
+                            </div>
+                        </div>
+
+                        <div class="action-bar glass-card">
+                             <div class="search-bar" style="width: 100%;">
+                                <span class="material-symbols-rounded">search</span>
+                                <input type="text" id="payment-search" placeholder="Buscar pagos por inquilino o propiedad...">
+                            </div>
+                        </div>
+
+                        <div class="table-container glass-card">
+                            <table class="data-table" id="payments-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Inquilino</th>
+                                        <th>Propiedad</th>
+                                        <th>Método</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Payments injected here -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 

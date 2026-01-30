@@ -59,8 +59,83 @@ const DataManager = {
         return properties.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
     },
 
+    // Tenants Management
+    getTenants: () => {
+        const properties = DataManager.getProperties();
+        // Extract tenants from properties where they exist
+        const tenants = properties.filter(p => p.tenantName).map(p => ({
+            id: p.id, // Using property ID for simplicity in this link
+            name: p.tenantName,
+            email: p.tenantEmail || 'No informado',
+            phone: p.tenantPhone || 'No informado',
+            propertyId: p.id,
+            propertyAddress: p.address,
+            contractEnd: p.contractEndDate,
+            rent: p.price
+        }));
+        return tenants;
+    },
+
+    // Payments Management
+    getPayments: () => {
+        // Mock consolidated payments data
+        const tenants = DataManager.getTenants();
+        const payments = [];
+        const statuses = ['Pagado', 'Pendiente', 'Atrasado'];
+        const methods = ['Efectivo', 'Transferencia', 'Depósito'];
+
+        // Generate some random history
+        tenants.forEach(t => {
+            // Last month payment
+            payments.push({
+                id: Math.random().toString(36).substr(2, 9),
+                date: new Date().toISOString().split('T')[0], // Today
+                tenantId: t.id,
+                tenantName: t.name,
+                propertyId: t.propertyId,
+                propertyAddress: t.propertyAddress,
+                method: methods[Math.floor(Math.random() * methods.length)],
+                amount: t.rent,
+                status: statuses[Math.floor(Math.random() * statuses.length)]
+            });
+            // Previous month
+            const prevDate = new Date();
+            prevDate.setMonth(prevDate.getMonth() - 1);
+            payments.push({
+                id: Math.random().toString(36).substr(2, 9),
+                date: prevDate.toISOString().split('T')[0],
+                tenantId: t.id,
+                tenantName: t.name,
+                propertyId: t.propertyId,
+                propertyAddress: t.propertyAddress,
+                method: 'Transferencia',
+                amount: t.rent,
+                status: 'Pagado'
+            });
+        });
+        
+        return payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+
+    getPaymentStats: () => {
+        const payments = DataManager.getPayments();
+        const totalPaid = payments
+            .filter(p => p.status === 'Pagado')
+            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        
+        const pendingCount = payments.filter(p => p.status === 'Pendiente' || p.status === 'Atrasado').length;
+        
+        return {
+            totalPaid,
+            pendingCount,
+            totalTransactions: payments.length
+        };
+    },
+
     getLateTenantsCount: () => {
-        // Placeholder: Return 0 as payment tracking is not implemented yet
-        return 0;
+        const payments = DataManager.getPayments();
+        // Count unique tenants with 'Atrasado' status
+        const lateSet = new Set(payments.filter(p => p.status === 'Atrasado').map(p => p.tenantId));
+        return lateSet.size;
     }
 };

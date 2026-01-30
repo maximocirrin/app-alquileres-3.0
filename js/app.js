@@ -190,11 +190,15 @@ const App = {
             });
         }
         
-        // Close on click outside
+        // Close Modal on click outside
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
                 document.body.classList.remove('no-scroll');
+            }
+            // Close Dropdown Menus if clicking outside
+            if (!e.target.closest('.action-cell')) {
+                document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
             }
         });
 
@@ -238,6 +242,54 @@ const App = {
 
         handleFileSelect('photo-upload', 'photo-file-name');
         handleFileSelect('contract-upload', 'contract-file-name');
+
+        // Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetTab = btn.getAttribute('data-tab');
+                
+                // Update Buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update Content
+                document.querySelectorAll('.tab-content').forEach(c => {
+                    c.classList.add('hidden');
+                    c.classList.remove('active');
+                });
+                const content = document.getElementById(targetTab);
+                if(content) {
+                    content.classList.remove('hidden');
+                    content.classList.add('active');
+                }
+            });
+        });
+
+        // Search Handlers
+        const setupSearch = (inputId, tableId) => {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            input.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        };
+
+        setupSearch('tenant-search', 'tenants-table');
+        setupSearch('payment-search', 'payments-table');
+
+        // Quick Add Tenant Button (Simulate opening modal for now)
+        document.getElementById('quick-add-tenant-btn').addEventListener('click', () => {
+           // For now, re-use the property modal or show a message
+           document.getElementById('add-property-fab').click();
+           // In a real app, this would open a tenant-specific modal or pre-fill the form
+        });
 
         // Add Property Form Submit
         const addPropertyForm = document.getElementById('add-property-form');
@@ -564,6 +616,138 @@ const App = {
         }
     },
 
+    // NEW METHODS
+    renderTenants: () => {
+        const tenants = DataManager.getTenants();
+        const tbody = document.querySelector('#tenants-table tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (tenants.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted-foreground);">No hay inquilinos registrados.</td></tr>';
+            return;
+        }
+
+        tenants.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 600;">${t.name}</div>
+                    <div style="font-size: 0.8em; color: var(--muted-foreground);">${t.email}</div>
+                </td>
+                <td>${t.phone}</td>
+                <td>${t.propertyAddress}</td>
+                <td>Vence: ${t.contractEnd}</td>
+                <td style="font-weight: 600;">$${t.rent.toLocaleString()}</td>
+                <td class="action-cell">
+                    <button class="more-options-btn" onclick="App.toggleMenu(event, 'tenant', '${t.id}')">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                    <div id="menu-tenant-${t.id}" class="dropdown-menu">
+                        <button class="dropdown-item" onclick="App.handleAction('details', 'tenant', '${t.id}')">
+                            <span class="material-symbols-rounded">visibility</span> Ver detalles
+                        </button>
+                        <button class="dropdown-item" onclick="App.handleAction('edit', 'tenant', '${t.id}')">
+                            <span class="material-symbols-rounded">edit</span> Editar
+                        </button>
+                        <button class="dropdown-item" onclick="App.handleAction('renew', 'tenant', '${t.id}')">
+                            <span class="material-symbols-rounded">autorenew</span> Renovar contrato
+                        </button>
+                        <button class="dropdown-item danger" onclick="App.handleAction('delete', 'tenant', '${t.id}')">
+                            <span class="material-symbols-rounded">delete</span> Eliminar
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    },
+
+    renderPayments: () => {
+        const payments = DataManager.getPayments();
+        const tbody = document.querySelector('#payments-table tbody');
+        if(!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (payments.length === 0) {
+             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted-foreground);">No hay pagos registrados.</td></tr>';
+             return;
+        }
+
+        payments.forEach(p => {
+            const tr = document.createElement('tr');
+            
+            // Status Class
+            let badgeClass = 'badge-pending';
+            if (p.status === 'Pagado') badgeClass = 'badge-paid';
+            if (p.status === 'Atrasado') badgeClass = 'badge-late';
+
+            tr.innerHTML = `
+                <td style="white-space:nowrap;">${p.date}</td>
+                <td style="font-weight: 500;">${p.tenantName}</td>
+                <td style="font-size: 0.9em;">${p.propertyAddress}</td>
+                <td>${p.method}</td>
+                <td style="font-weight: 600;">$${p.amount.toLocaleString()}</td>
+                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                <td class="action-cell">
+                    <button class="more-options-btn" onclick="App.toggleMenu(event, 'payment', '${p.id}')">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                    <div id="menu-payment-${p.id}" class="dropdown-menu">
+                        <button class="dropdown-item" onclick="App.handleAction('details', 'payment', '${p.id}')">
+                            <span class="material-symbols-rounded">visibility</span> Ver detalles
+                        </button>
+                        <button class="dropdown-item" onclick="App.handleAction('edit', 'payment', '${p.id}')">
+                            <span class="material-symbols-rounded">edit</span> Editar
+                        </button>
+                         <button class="dropdown-item danger" onclick="App.handleAction('delete', 'payment', '${p.id}')">
+                            <span class="material-symbols-rounded">delete</span> Eliminar
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update Payment Stats
+        const stats = DataManager.getPaymentStats();
+        document.getElementById('payments-total-paid').textContent = `$${stats.totalPaid.toLocaleString()}`;
+        document.getElementById('payments-pending-count').textContent = stats.pendingCount;
+        document.getElementById('payments-total-transactions').textContent = stats.totalTransactions;
+    },
+
+    toggleMenu: (event, type, id) => {
+        event.stopPropagation();
+        const menuId = `menu-${type}-${id}`;
+        const menu = document.getElementById(menuId);
+        
+        // Close all other menus
+        document.querySelectorAll('.dropdown-menu.active').forEach(m => {
+            if(m.id !== menuId) m.classList.remove('active');
+        });
+
+        if(menu) {
+            menu.classList.toggle('active');
+        }
+    },
+
+    handleAction: (action, type, id) => {
+        console.log(`Action: ${action}, Type: ${type}, ID: ${id}`);
+        // Close menus
+        document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
+        
+        if (action === 'delete') {
+            if(confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+                alert('Elemento eliminado (simulado)');
+                // In real app: call DataManager.delete... and re-render
+            }
+        } else {
+            alert(`Acción: ${action} en ${type} (simulada)`);
+        }
+    },
+
     refreshData: () => {
         const properties = DataManager.getProperties();
         const totalIncome = DataManager.calculateTotalIncome();
@@ -584,15 +768,12 @@ const App = {
                 card.className = 'property-card glass-card';
                 card.style.cursor = 'pointer';
                 card.onclick = (e) => {
-                    // Prevent opening modal if clicking a link/button inside card
                     if(e.target.tagName === 'A' || e.target.closest('a')) return;
                     App.openPropertyDetails(p);
                 };
                 
-                // Create image element if photo exists
                 const imgHtml = p.photoUrl ? `<img src="${p.photoUrl}" alt="Foto propiedad" style="width:100%; height: 150px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: var(--spacing-sm);">` : '';
                 
-                // Create contract link if exists
                 const contractHtml = p.contract ? `
                     <div style="margin-top: 8px;">
                         <a href="${p.contract.data}" download="${p.contract.name}" class="btn-secondary" style="font-size: 0.8rem; padding: 4px 8px;">
@@ -601,23 +782,18 @@ const App = {
                     </div>
                 ` : '';
 
-                // Calculate Status
                 const today = new Date();
                 const isOverdue = today.getDate() > p.rentDueDay;
                 const statusHtml = isOverdue 
                     ? `<span class="status-badge status-overdue" style="font-size: 0.7rem; padding: 2px 6px;">Vencido</span>`
                     : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al día</span>`;
 
-                // Calculate Expiration Date (Current Month)
                 const currentYear = today.getFullYear();
-                const currentMonth = today.getMonth(); // 0-indexed
+                const currentMonth = today.getMonth();
                 const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                // Clamp day to month length (e.g. if due day is 31 and it's Feb)
                 const dueDaySafe = Math.min(p.rentDueDay || 1, maxDaysInMonth);
-                
                 const expirationDate = new Date(currentYear, currentMonth, dueDaySafe);
                 const expirationDateStr = expirationDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
 
                 card.innerHTML = `
                     ${imgHtml}
@@ -657,6 +833,10 @@ const App = {
             `;
             financeList.appendChild(item);
         });
+
+        // REFRESH NEW GRIDS
+        App.renderTenants();
+        App.renderPayments();
     }
 };
 
