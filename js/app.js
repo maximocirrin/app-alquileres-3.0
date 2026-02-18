@@ -9,17 +9,55 @@ const App = {
     },
 
     init: async () => {
-        App.initTheme();
-        App.state.currentUser = DataManager.getCurrentUser();
-        await App.render();
-        App.setupEventListeners();
+        try {
+            App.checkAuth();
+            App.setupTheme();
+            App.setupEventListeners();
+            
+            // Check if user is logged in
+            const user = await DataManager.getCurrentUser();
+            if (user) {
+                App.showMainApp(user);
+            } else {
+                App.showLogin();
+            }
+        } catch (error) {
+            console.error("Initialization error:", error);
+        }
     },
 
-    initTheme: () => {
-        const savedTheme = localStorage.getItem('theme');
-        // Default to dark mode if no saved preference
-        const theme = savedTheme === 'light' ? 'light' : 'dark';
-        App.setTheme(theme);
+    checkAuth: async () => {
+         const user = await DataManager.getCurrentUser();
+         if (!user && !document.getElementById('login-view').classList.contains('hidden')) {
+             // Stay on login
+         } else if (!user) {
+             App.showLogin();
+         }
+    },
+
+    setupTheme: () => {
+        const themeSwitches = document.querySelectorAll('.theme-switch__checkbox');
+        const mobileThemeBtn = document.getElementById('mobile-theme-toggle'); 
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Apply initial theme
+        App.setTheme(currentTheme);
+
+        // Listeners for Switch Toggles (Desktop/Headers)
+        themeSwitches.forEach(sw => {
+            sw.addEventListener('change', (e) => {
+                const newTheme = e.target.checked ? 'dark' : 'light';
+                App.setTheme(newTheme);
+            });
+        });
+
+        // Listener for Mobile Menu Button
+        if (mobileThemeBtn) {
+            mobileThemeBtn.addEventListener('click', () => {
+                App.toggleTheme();
+            });
+        }
     },
 
     setTheme: (theme) => {
@@ -41,7 +79,7 @@ const App = {
     },
 
     toggleTheme: () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         App.setTheme(newTheme);
     },
@@ -49,28 +87,87 @@ const App = {
     updateThemeIcons: () => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const iconName = isDark ? 'light_mode' : 'dark_mode';
+        const text = isDark ? 'Modo Claro' : 'Modo Oscuro';
         
         // Update menu item text/icon
-        document.querySelectorAll('.theme-toggle-btn span').forEach(span => {
-            span.textContent = iconName;
-        });
+        const mobileBtn = document.getElementById('mobile-theme-toggle');
+        if (mobileBtn) {
+            mobileBtn.innerHTML = `<span class="material-symbols-rounded">${iconName}</span> ${text}`;
+        }
     },
 
     setupEventListeners: () => {
         // Login Form
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            const user = DataManager.login(username, password);
-            if (user) {
-                App.state.currentUser = user;
-                App.render();
-            } else {
-                alert("Usuario o contraseña incorrectos (admin/admin)");
-            }
-        });
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                try {
+                    const user = await DataManager.login(email, password);
+                    if (user) {
+                        App.showMainApp(user);
+                    } else {
+                        alert('Credenciales inválidas');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Error al iniciar sesión");
+                }
+            });
+        }
+
+        // Register Form
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('reg-name').value;
+                const email = document.getElementById('reg-email').value;
+                const password = document.getElementById('reg-password').value;
+                
+                try {
+                    const user = await DataManager.signUp(email, password, name);
+                    if (user) {
+                         alert("Cuenta creada exitosamente! Sesión iniciada.");
+                         App.showMainApp(user);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Error al registrarse: " + error.message);
+                }
+            });
+        }
+
+        // Toggle Login/Register
+        const showRegisterBtn = document.getElementById('show-register-btn');
+        const showLoginBtn = document.getElementById('show-login-btn');
+        const loginText = document.getElementById('to-register-text');
+        const registerText = document.getElementById('to-login-text');
+
+        if(showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-form').classList.add('hidden');
+                loginText.classList.add('hidden');
+                
+                document.getElementById('register-form').classList.remove('hidden');
+                registerText.classList.remove('hidden');
+            });
+        }
+
+        if(showLoginBtn) {
+            showLoginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('register-form').classList.add('hidden');
+                registerText.classList.add('hidden');
+                
+                document.getElementById('login-form').classList.remove('hidden');
+                loginText.classList.remove('hidden');
+            });
+        }
 
         // Logout
         const handleLogout = () => {
@@ -176,7 +273,7 @@ const App = {
                     currentStep = 1;
                     updateWizardUI();
                     document.getElementById('add-property-form').reset();
-                    document.getElementById('photo-file-name').textContent = "Ningún archivo seleccionado";
+                    // document.getElementById('photo-file-name').textContent = "Ningún archivo seleccionado"; // Removed
                     document.getElementById('contract-file-name').textContent = "Ningún archivo seleccionado";
                 });
             }
@@ -225,7 +322,7 @@ const App = {
             });
         });
 
-        // File Input Handling
+        // File Input Handling (Contract Only)
         const handleFileSelect = (inputId, nameId) => {
             const input = document.getElementById(inputId);
             const nameSpan = document.getElementById(nameId);
@@ -240,7 +337,7 @@ const App = {
             }
         };
 
-        handleFileSelect('photo-upload', 'photo-file-name');
+        // handleFileSelect('photo-upload', 'photo-file-name'); // Removed
         handleFileSelect('contract-upload', 'contract-file-name');
 
         // Tab Navigation
@@ -314,15 +411,16 @@ const App = {
                 };
 
                 try {
-                    const photoFile = formData.get('photo');
+                    // const photoFile = formData.get('photo'); // Removed
                     const contractFile = formData.get('contract');
                     
-                    let photoUrl = 'https://via.placeholder.com/300x200?text=Casa';
+                    // Default Photo URL
+                    let photoUrl = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+                    /*
                     if (photoFile && photoFile.size > 0) {
                         photoUrl = await readFile(photoFile);
-                    } else {
-                        photoUrl = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
                     }
+                    */
 
                     let contractData = null;
                     if (contractFile && contractFile.size > 0) {
@@ -377,6 +475,38 @@ const App = {
         const modal = document.getElementById('property-details-modal');
         const infoContainer = document.getElementById('details-info-container');
         const closeBtn = document.getElementById('close-details-modal');
+
+        // ADDED: Bottom Right Delete Button Logic
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Remove existing from header (legacy fix) or content
+        const existingBtnHeader = modal.querySelector('.modal-header .delete-property-btn');
+        if(existingBtnHeader) existingBtnHeader.remove();
+        
+        const existingBtn = modalContent.querySelector('.delete-property-btn');
+        if(existingBtn) existingBtn.remove();
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'icon-btn delete-property-btn text-danger';
+        deleteBtn.innerHTML = '<span class="material-symbols-rounded">delete</span>';
+        deleteBtn.title = 'Eliminar Propiedad';
+        
+        // Append to modal content (container)
+        modalContent.appendChild(deleteBtn);
+
+        deleteBtn.onclick = async () => {
+            if(confirm('¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.')) {
+                try {
+                    await DataManager.deleteProperty(property.id);
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('no-scroll');
+                    await App.refreshData();
+                } catch (error) {
+                    alert('Error al eliminar la propiedad');
+                    console.error(error);
+                }
+            }
+        };
         
         // Calculate Status
         const today = new Date();
@@ -582,6 +712,20 @@ const App = {
         }
     },
 
+    showLogin: () => {
+        document.getElementById('login-view').classList.remove('hidden');
+        document.getElementById('main-layout').classList.add('hidden');
+        document.body.style.backgroundColor = 'var(--background-color)';
+    },
+
+    showMainApp: (user) => {
+        App.state.currentUser = user;
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('main-layout').classList.remove('hidden');
+        App.render();
+        App.refreshData();
+    },
+
     navigateTo: (viewId) => {
         // Update State
         App.state.currentView = viewId;
@@ -758,86 +902,95 @@ const App = {
         const totalIncome = await DataManager.calculateTotalIncome();
 
         // Dashboard Stats
-        document.getElementById('total-properties-count').textContent = properties.length;
-        document.getElementById('total-income-display').textContent = `$${totalIncome.toLocaleString()}`;
-        document.getElementById('late-tenants-count').textContent = await DataManager.getLateTenantsCount();
+        const totalPropsDisplay = document.getElementById('total-properties-count');
+        if (totalPropsDisplay) totalPropsDisplay.textContent = properties.length;
+        
+        const totalIncomeDisplay = document.getElementById('total-income-display');
+        if (totalIncomeDisplay) totalIncomeDisplay.textContent = `$${totalIncome.toLocaleString()}`;
+        
+        const lateTenantsDisplay = document.getElementById('late-tenants-count');
+        if (lateTenantsDisplay) lateTenantsDisplay.textContent = await DataManager.getLateTenantsCount();
 
         // Properties List
         const propertiesList = document.getElementById('properties-list');
-        propertiesList.innerHTML = '';
-        if (properties.length === 0) {
-            propertiesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); grid-column: 1/-1;">No hay propiedades registradas.</p>';
-        } else {
-            properties.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'property-card glass-card';
-                card.style.cursor = 'pointer';
-                card.onclick = (e) => {
-                    if(e.target.tagName === 'A' || e.target.closest('a')) return;
-                    App.openPropertyDetails(p);
-                };
-                
-                const imgHtml = p.photoUrl ? `<img src="${p.photoUrl}" alt="Foto propiedad" style="width:100%; height: 150px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: var(--spacing-sm);">` : '';
-                
-                const contractHtml = p.contract ? `
-                    <div style="margin-top: 8px;">
-                        <a href="${p.contract.data}" download="${p.contract.name}" class="btn-secondary" style="font-size: 0.8rem; padding: 4px 8px;">
-                            <span class="material-symbols-rounded" style="font-size: 16px;">description</span> Ver Contrato
-                        </a>
-                    </div>
-                ` : '';
+        if (propertiesList) {
+            propertiesList.innerHTML = '';
+            if (properties.length === 0) {
+                propertiesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); grid-column: 1/-1;">No hay propiedades registradas.</p>';
+            } else {
+                properties.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'property-card glass-card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = (e) => {
+                        if(e.target.tagName === 'A' || e.target.closest('a')) return;
+                        App.openPropertyDetails(p);
+                    };
+                    
+                    const imgHtml = p.photoUrl ? `<img src="${p.photoUrl}" alt="Foto propiedad" style="width:100%; height: 150px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: var(--spacing-sm);">` : '';
+                    
+                    const contractHtml = p.contract ? `
+                        <div style="margin-top: 8px;">
+                            <a href="${p.contract.data}" download="${p.contract.name}" class="btn-secondary" style="font-size: 0.8rem; padding: 4px 8px;">
+                                <span class="material-symbols-rounded" style="font-size: 16px;">description</span> Ver Contrato
+                            </a>
+                        </div>
+                    ` : '';
 
-                const today = new Date();
-                const isOverdue = today.getDate() > p.rentDueDay;
-                const statusHtml = isOverdue 
-                    ? `<span class="status-badge status-overdue" style="font-size: 0.7rem; padding: 2px 6px;">Vencido</span>`
-                    : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al día</span>`;
+                    const today = new Date();
+                    const isOverdue = today.getDate() > p.rentDueDay;
+                    const statusHtml = isOverdue 
+                        ? `<span class="status-badge status-overdue" style="font-size: 0.7rem; padding: 2px 6px;">Vencido</span>`
+                        : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al día</span>`;
 
-                const currentYear = today.getFullYear();
-                const currentMonth = today.getMonth();
-                const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                const dueDaySafe = Math.min(p.rentDueDay || 1, maxDaysInMonth);
-                const expirationDate = new Date(currentYear, currentMonth, dueDaySafe);
-                const expirationDateStr = expirationDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const currentYear = today.getFullYear();
+                    const currentMonth = today.getMonth();
+                    const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                    const dueDaySafe = Math.min(p.rentDueDay || 1, maxDaysInMonth);
+                    const expirationDate = new Date(currentYear, currentMonth, dueDaySafe);
+                    
+                    const timeLeft = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
+                    const timeHtml = timeLeft >= 0 
+                        ? `<small style="display:block; margin-top:4px; color:var(--text-muted);">Vence en ${timeLeft} días</small>`
+                        : `<small style="display:block; margin-top:4px; color:var(--error);">Vencido hace ${Math.abs(timeLeft)} días</small>`;
 
-                card.innerHTML = `
-                    ${imgHtml}
-                    <div class="property-header">
-                        <span class="property-address">${p.address}</span>
-                        ${statusHtml}
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span class="property-price">$${p.price.toLocaleString()}</span>
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">
-                        <strong>Vencimiento:</strong> ${expirationDateStr}
-                    </div>
-                    <div class="property-tenant">
-                        <span class="material-symbols-rounded" style="font-size: 16px;">person</span>
-                        ${p.tenantName}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">
-                        Aumento: ${p.increaseRate}% cada ${p.increaseFrequency} meses
-                    </div>
-                    ${contractHtml}
-                `;
-                propertiesList.appendChild(card);
-            });
+                    card.innerHTML = `
+                        ${imgHtml}
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 2px;">${p.address}</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem;">Inq: ${p.tenantName || 'N/A'}</p>
+                            </div>
+                            ${statusHtml}
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <p style="font-weight: 600; font-size: 1.2rem;">$${parseFloat(p.price).toLocaleString()}</p>
+                            ${timeHtml}
+                        </div>
+                        ${contractHtml}
+                    `;
+                    propertiesList.appendChild(card);
+                });
+            }
         }
 
-        // Finances View
-        document.getElementById('finance-total-income').textContent = `$${totalIncome.toLocaleString()}`;
+        // Finances View (Simple)
+        const incomeDisplay = document.getElementById('finance-total-income');
+        if(incomeDisplay) incomeDisplay.textContent = `$${totalIncome.toLocaleString()}`;
+        
         const financeList = document.getElementById('finance-breakdown-list');
-        financeList.innerHTML = '';
-        properties.forEach(p => {
-            const item = document.createElement('li');
-            item.className = 'finance-item';
-            item.innerHTML = `
-                <span>${p.address}</span>
-                <span style="font-weight: 600;">$${p.price.toLocaleString()}</span>
-            `;
-            financeList.appendChild(item);
-        });
+        if(financeList) {
+            financeList.innerHTML = '';
+            properties.forEach(p => {
+                const item = document.createElement('li');
+                item.className = 'finance-item';
+                item.innerHTML = `
+                    <span>${p.address}</span>
+                    <span style="font-weight: 600;">$${p.price.toLocaleString()}</span>
+                `;
+                financeList.appendChild(item);
+            });
+        }
 
         // REFRESH NEW GRIDS
         App.renderTenants();
@@ -845,5 +998,8 @@ const App = {
     }
 };
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', App.init);
+// Make App global
+window.App = App;
+
+// Remove duplicate init call
+// document.addEventListener('DOMContentLoaded', App.init);

@@ -1,122 +1,212 @@
 /**
  * Data Management Module
- * Handles localStorage operations and mock data.
+ * Handles Supabase operations (Global Version)
  */
 
-const STORAGE_KEYS = {
-    USER: 'rental_app_user',
-    PROPERTIES: 'rental_app_properties'
-};
-
-const API_BASE_URL = 'http://localhost:3000'; // Ensure we hit the backend even if running on Live Server
+// No imports - relies on global supabaseClient
 
 const DataManager = {
     // User Management
-    login: (username, password) => {
-        // Mock login remains client-side for now as requested schema stored hash but logic was not fully moved yet
-        // For full security this should effectively call an API
-        if (username && password) {
-            const user = { username, name: username };
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-            return user;
+    login: async (email, password) => {
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+        
+        if (error) {
+            console.error("Login error:", error);
+            return null;
         }
-        return null;
+        return data.user;
     },
 
-    logout: () => {
-        localStorage.removeItem(STORAGE_KEYS.USER);
+    signUp: async (email, password, fullName) => {
+        const { data, error } = await window.supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName
+                }
+            }
+        });
+        
+        if (error) {
+            console.error("Signup error:", error);
+            throw error;
+        }
+        return data.user;
     },
 
-    getCurrentUser: () => {
-        const userStr = localStorage.getItem(STORAGE_KEYS.USER);
-        return userStr ? JSON.parse(userStr) : null;
+    logout: async () => {
+        const { error } = await window.supabaseClient.auth.signOut();
+        if (error) console.error("Logout error:", error);
+    },
+
+    getCurrentUser: async () => {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        return user;
     },
 
     // Property Management
     getProperties: async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/properties`);
-            if (!response.ok) throw new Error('Failed to fetch properties');
-            return await response.json();
-        } catch (error) {
-            console.error(error);
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching properties:", error);
             return [];
         }
+
+        // Map DB columns to Frontend structure
+        return data.map(p => ({
+            id: p.id,
+            title: p.title, 
+            description: p.description,
+            address: p.address,
+            price: p.price,
+            rentDueDay: p.rent_due_day,
+            increaseRate: p.increase_rate,
+            increaseFrequency: p.increase_frequency,
+            contractStartDate: p.contract_start,
+            contractEndDate: p.contract_end,
+            tenantName: p.tenant_name,
+            tenantEmail: p.tenant_email,
+            tenantPhone: p.tenant_phone,
+            cbuAlias: p.cbu_alias,
+            notifyRentExpiry: p.notify_rent_expiry,
+            notifyPunitiveInterests: p.notify_punitive_interests,
+            contract: p.contract_data, 
+            photoUrl: p.images && p.images.length > 0 ? p.images[0] : null,
+            status: p.status,
+            paymentStatus: p.payment_status 
+        }));
     },
 
     addProperty: async (property) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/properties`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(property)
-            });
-            if (!response.ok) throw new Error('Failed to save property');
-            return await response.json();
-        } catch (error) {
-            console.error(error);
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        // Map Frontend structure to DB columns
+        const dbProperty = {
+            owner_id: user.id,
+            address: property.address,
+            price: property.price,
+            rent_due_day: property.rentDueDay,
+            increase_rate: property.increaseRate,
+            increase_frequency: property.increaseFrequency,
+            contract_start: property.contractStartDate,
+            contract_end: property.contractEndDate,
+            tenant_name: property.tenantName,
+            tenant_email: property.tenantEmail,
+            tenant_phone: property.tenantPhone,
+            cbu_alias: property.cbuAlias,
+            notify_rent_expiry: property.notifyRentExpiry,
+            notify_punitive_interests: property.notifyPunitiveInterests,
+            contract_data: property.contract,
+            images: property.photoUrl ? [property.photoUrl] : [],
+            status: 'alquilada', 
+            payment_status: 'pendiente'
+        };
+
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .insert([dbProperty])
+            .select();
+
+        if (error) {
+            console.error("Error adding property:", error);
+            throw error;
+        }
+        return data[0];
+    },
+
+    deleteProperty: async (id) => {
+        const { error } = await window.supabaseClient
+            .from('properties')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error("Error deleting property:", error);
             throw error;
         }
     },
 
-    deleteProperty: async (id) => {
-        // Implement API call if backend supports it
-        // await fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' });
-        console.warn("Delete not fully implemented in backend yet");
+    updatePaymentStatus: async (propertyId, status) => {
+        const { error } = await window.supabaseClient
+            .from('properties')
+            .update({ payment_status: status })
+            .eq('id', propertyId);
+
+        if (error) {
+             console.error("Error updating payment status:", error);
+             throw error;
+        }
     },
 
     // Finances
     calculateTotalIncome: async () => {
-        const properties = await DataManager.getProperties();
-        return properties.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .select('price');
+        
+        if (error) return 0;
+        return data.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
     },
 
     // Tenants Management
     getTenants: async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/tenants`);
-            if (!response.ok) throw new Error('Failed to fetch tenants');
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-            // Fallback
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .select('id, address, tenant_name, tenant_email, tenant_phone, price, payment_status, rent_due_day')
+            .not('tenant_name', 'is', null);
+
+        if (error) {
+            console.error("Error fetching tenants:", error);
             return [];
         }
+
+        return data.map(t => ({
+            id: t.id,
+            name: t.tenant_name,
+            email: t.tenant_email,
+            phone: t.tenant_phone,
+            propertyAddress: t.address,
+            rent: t.price,
+            status: t.payment_status,
+            rentDueDay: t.rent_due_day
+        }));
     },
 
-    // Payments Management
+    // Payments Management (Mock)
     getPayments: () => {
-        // Keeping MOCK data for payments as requested schema didn't prioritize payments table yet
-        // and user asked for "Tabla inquilinos y Tabla contratos" specifically.
-        // We will mock this based on tenants if possible or keep random generator
         return []; 
     },
     
-    // Mock for now until Payments table is added
     getMockPayments: async () => {
-         // Re-implementing the mock logic but async to match interface
          const tenants = await DataManager.getTenants();
+         if (tenants.length === 0) return [];
+
          const payments = [];
-         const statuses = ['Pagado', 'Pendiente', 'Atrasado'];
          const methods = ['Efectivo', 'Transferencia', 'Depósito'];
  
          tenants.forEach(t => {
-             // Last month payment
              payments.push({
-                 id: Math.random().toString(36).substr(2, 9),
+                 id: t.id + '-pay',
                  date: new Date().toISOString().split('T')[0],
                  tenantId: t.id,
                  tenantName: t.name,
-                 propertyId: t.propertyId || 'N/A', // Adjust based on DB response
+                 propertyId: t.id, 
                  propertyAddress: t.propertyAddress,
                  method: methods[Math.floor(Math.random() * methods.length)],
                  amount: parseFloat(t.rent) || 0,
-                 status: statuses[Math.floor(Math.random() * statuses.length)]
+                 status: t.status === 'al_dia' ? 'Pagado' : (t.status === 'atrasado' ? 'Atrasado' : 'Pendiente')
              });
          });
-         return payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+         return payments;
     },
 
     getPaymentStats: async () => {
@@ -140,3 +230,8 @@ const DataManager = {
         return lateSet.size;
     }
 };
+
+window.DataManager = DataManager;
+
+// Make DataManager global
+window.DataManager = DataManager;

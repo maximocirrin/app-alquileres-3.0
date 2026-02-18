@@ -4,13 +4,12 @@
   "description": "Backend for Rental Management System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "setup-db": "node setup_db.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "mysql2": "^3.6.1"
+    "@supabase/supabase-js": "^2.39.0"
   }
 }

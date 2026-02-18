@@ -1521,3 +1521,66 @@ body.no-scroll {
     font-size: 0.95rem;
     color: var(--text-main);
 }
+
+/* Delete Property Button */
+.delete-property-btn {
+    background: transparent !important;
+    border: none;
+    color: var(--destructive);
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-property-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    transform: scale(1.1);
+}
+
+.delete-property-btn .material-symbols-rounded {
+    font-size: 24px;
+}
+
+
+/* Reposition Delete Button */
+.modal-content {
+    position: relative;
+}
+
+.delete-property-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+/* Enhanced Close Modal Button */
+.close-modal {
+    background: rgba(128, 128, 128, 0.2);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--foreground);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.close-modal:hover {
+    background: var(--destructive);
+    color: white;
+    border-color: var(--destructive);
+    transform: rotate(90deg);
+}
+
+.close-modal .material-symbols-rounded {
+    font-size: 24px;
+    font-weight: 700;
+}
