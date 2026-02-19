@@ -279,18 +279,21 @@ const App = {
             }
         });
 
-        // Close Modal
-        if(closeModalBtn) {
-            closeModalBtn.addEventListener('click', () => {
-                modal.classList.add('hidden');
-                document.body.classList.remove('no-scroll');
+        // Close Modals
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modalToClose = e.target.closest('.modal');
+                if (modalToClose) {
+                    modalToClose.classList.add('hidden');
+                    document.body.classList.remove('no-scroll');
+                }
             });
-        }
+        });
         
         // Close Modal on click outside
         window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.add('hidden');
                 document.body.classList.remove('no-scroll');
             }
             // Close Dropdown Menus if clicking outside
@@ -402,6 +405,9 @@ const App = {
 
         setupSearch('tenant-search', 'tenants-table');
         setupSearch('payment-search', 'payments-table');
+
+        // Market Place Handlers
+        App.setupMarketPlaceListeners();
 
         // Quick Add Tenant Button (Simulate opening modal for now)
         document.getElementById('quick-add-tenant-btn').addEventListener('click', () => {
@@ -778,6 +784,107 @@ const App = {
         document.getElementById('main-layout').classList.remove('hidden');
         App.render();
         App.refreshData();
+    },
+
+    setupMarketPlaceListeners: () => {
+        const startBtn = document.getElementById('publish-property-trigger');
+        const contactModal = document.getElementById('marketplace-contact-modal');
+        const wizardModal = document.getElementById('marketplace-wizard-modal');
+        const contactForm = document.getElementById('marketplace-contact-form');
+        
+        if (startBtn && contactModal) {
+            startBtn.addEventListener('click', () => {
+                contactModal.classList.remove('hidden');
+                document.body.classList.add('no-scroll');
+            });
+        }
+
+        if (contactForm && wizardModal) {
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault(); // Prevent page reload
+                // Here we would normally validate and store the contact form data.
+                // For now, we proceed to the wizard.
+                if (contactModal) contactModal.classList.add('hidden');
+                wizardModal.classList.remove('hidden');
+            });
+        }
+
+        // Substep Navigation in Wizard (Step 1)
+        const sidebarItems = document.querySelectorAll('.wizard-sidebar .sidebar-item');
+        const substepContents = document.querySelectorAll('.substep-content');
+
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove active class from all
+                sidebarItems.forEach(i => i.classList.remove('active'));
+                substepContents.forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked
+                item.classList.add('active');
+                const targetId = `substep-${item.getAttribute('data-substep')}`;
+                const targetContent = document.getElementById(targetId);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+
+        // Counters + / - Logic
+        const counterBtns = document.querySelectorAll('.counter-btn');
+        counterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = btn.getAttribute('data-target');
+                const isPlus = btn.classList.contains('plus');
+                
+                const hiddenInput = document.getElementById(targetId);
+                const displayVal = document.getElementById(`val-${targetId}`);
+                
+                if (hiddenInput && displayVal) {
+                    let currentVal = parseInt(hiddenInput.value) || 0;
+                    if (isPlus) {
+                        currentVal++;
+                    } else {
+                        if (currentVal > 0) currentVal--;
+                    }
+                    hiddenInput.value = currentVal;
+                    displayVal.textContent = currentVal;
+                }
+            });
+        });
+
+        // Property Type Dropdown logic based on Subtype
+        const propTypeSelect = document.getElementById('prop-type');
+        const propSubtypeSelect = document.getElementById('prop-subtype');
+
+        if (propTypeSelect && propSubtypeSelect) {
+            const subtypes = {
+                departamento: ['Departamento', 'Duplex', 'Triplex', 'Penthouse', 'Loft'],
+                casa: ['Casa', 'Chalet', 'Casa Quinta', 'Casa de Campo', 'Cabaña'],
+                ph: ['PH al frente', 'PH al fondo', 'PH independiente'],
+                terreno: ['Lote', 'Terreno Comercial', 'Terreno Residencial', 'Quinta'],
+                oficina: ['Oficina individual', 'Piso de oficina', 'Coworking'],
+                comercial: ['Local en calle', 'Local en galería', 'Galpón', 'Depósito'],
+                cochera: ['Fija', 'Móvil', 'Techada', 'Descubierta']
+            };
+
+            propTypeSelect.addEventListener('change', (e) => {
+                const type = e.target.value;
+                propSubtypeSelect.innerHTML = '<option value="" disabled selected>Seleccioná subtipo...</option>';
+                
+                if (subtypes[type]) {
+                    subtypes[type].forEach(st => {
+                        const opt = document.createElement('option');
+                        opt.value = st.toLowerCase().replace(/ /g, '_');
+                        opt.textContent = st;
+                        propSubtypeSelect.appendChild(opt);
+                    });
+                    propSubtypeSelect.disabled = false;
+                } else {
+                    propSubtypeSelect.disabled = true;
+                }
+            });
+        }
     },
 
     navigateTo: (viewId) => {

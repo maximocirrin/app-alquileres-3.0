@@ -71,7 +71,7 @@
                 <nav class="desktop-nav">
                     <button class="nav-link active" data-target="home-view">Inicio</button>
                     <button class="nav-link" data-target="properties-view">Propiedades</button>
-                    <button class="nav-link" data-target="finances-view">Finanzas</button>
+                    <button class="nav-link" data-target="marketplace-view">Market Place</button>
                 </nav>
                 <div class="user-profile">
                     <label class="theme-switch">
@@ -147,6 +147,13 @@
                         <button class="btn-secondary" id="quick-add-btn">
                             <span class="material-symbols-rounded">add_home</span> Agregar Propiedad
                         </button>
+                    </div>
+
+                    <div class="finances-list glass-card">
+                        <h3>Desglose por Propiedad</h3>
+                        <ul id="finance-breakdown-list">
+                            <!-- List items injected here -->
+                        </ul>
                     </div>
                 </section>
 
@@ -463,10 +470,10 @@
                     </div>
                 </div>
 
-                <!-- Finances View -->
-                <section id="finances-view" class="view hidden">
+                <!-- Market Place View -->
+                <section id="marketplace-view" class="view hidden">
                     <header class="view-header">
-                        <h2>Finanzas</h2>
+                        <h2>Market Place</h2>
                         <label class="theme-switch">
                             <input type="checkbox" class="theme-switch__checkbox">
                             <div class="theme-switch__container">
@@ -488,17 +495,280 @@
                             </div>
                         </label>
                     </header>
-                    <div class="finances-summary glass-card">
-                        <h3>Ingresos Totales Mensuales</h3>
-                        <p class="big-number" id="finance-total-income">$0</p>
-                    </div>
-                    <div class="finances-list glass-card">
-                        <h3>Desglose por Propiedad</h3>
-                        <ul id="finance-breakdown-list">
-                            <!-- List items injected here -->
-                        </ul>
+                    <div class="marketplace-actions glass-card" style="text-align: center; padding: 4rem 2rem; margin-top: 2rem;">
+                        <span class="material-symbols-rounded" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">storefront</span>
+                        <h3>Vende o alquila tu propiedad rápida y fácilmente</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;">Accede a miles de interesados publicando en nuestro Market Place.</p>
+                        <button class="btn-primary" id="publish-property-trigger" style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
+                            Publicar Propiedad
+                        </button>
                     </div>
                 </section>
+
+                <!-- Market Place Contact Info Modal -->
+                <div id="marketplace-contact-modal" class="modal hidden">
+                    <div class="modal-content no-scroll glass-card" style="max-width: 600px; padding: 2.5rem;">
+                        <header class="modal-header" style="justify-content: flex-end; padding-bottom: 0px;">
+                            <button class="close-modal"><span class="material-symbols-rounded">close</span></button>
+                        </header>
+                        
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; font-weight: 600;">Completá el formulario</h2>
+                            <p style="color: var(--text-muted);">Datos de facturación y de contacto, para que los<br>interesados puedan realizarte consultas por tu<br>aviso</p>
+                        </div>
+
+                        <form id="marketplace-contact-form">
+                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Nombre</label>
+                                    <input type="text" name="contactName" placeholder="Ingresá un nombre" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Apellido</label>
+                                    <input type="text" name="contactSurname" placeholder="Ingresá un apellido" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Condición</label>
+                                    <select name="contactCondition" required>
+                                        <option value="Responsable Inscripto">Responsable Inscripto</option>
+                                        <option value="Monotributista">Monotributista</option>
+                                        <option value="Consumidor Final">Consumidor Final</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Documento / CUIT</label>
+                                    <input type="text" name="contactDoc" placeholder="Ingresá un documento" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Teléfono móvil</label>
+                                    <input type="tel" name="contactMobile" placeholder="Ingresá un número de teléfono móvil" required>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Teléfono (opcional)</label>
+                                    <input type="tel" name="contactPhone" placeholder="Ingresá un número de teléfono">
+                                </div>
+                            </div>
+
+                            <div class="form-actions" style="justify-content: center; margin-top: 2rem;">
+                                <button type="submit" class="btn-primary" style="padding: 0.8rem 3rem; font-size: 1.1rem; border-radius: 8px;">Continuar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Market Place Wizard Modal -->
+                <div id="marketplace-wizard-modal" class="modal hidden" style="padding: 0; background: transparent;">
+                    <div class="modal-content wizard-modal full-screen glass-panel">
+                        <header class="modal-header wizard-header">
+                            <button class="close-modal wizard-close-btn"><span class="material-symbols-rounded">close</span></button>
+                            <!-- Step Indicators -->
+                            <div class="step-indicators" style="width: 100%; max-width: 600px; margin: 0 auto; margin-bottom: 2rem;">
+                                <div class="step-indicator active" data-step="1" data-label="Principales">1</div>
+                                <div class="step-line"></div>
+                                <div class="step-indicator" data-step="2" data-label="Multimedia">2</div>
+                                <div class="step-line"></div>
+                                <div class="step-indicator" data-step="3" data-label="Extras">3</div>
+                                <div class="step-line"></div>
+                                <div class="step-indicator" data-step="4" data-label="Publicar">4</div>
+                            </div>
+
+                        </header>
+                        
+                        <div class="wizard-body" style="flex: 1; display: flex; overflow: hidden; background: var(--background); border-radius: 0 0 16px 16px;">
+                            <!-- Sidebar -->
+                            <aside class="wizard-sidebar">
+                                <ul class="wizard-nav-list">
+                                    <li class="wizard-nav-item active" data-substep="operacion">
+                                        <div class="nav-item-content">Operación y tipo de propiedad</div>
+                                    </li>
+                                    <li class="wizard-nav-item" data-substep="ubicacion">
+                                        <div class="nav-item-content">Ubicación</div>
+                                    </li>
+                                    <li class="wizard-nav-item" data-substep="caracteristicas">
+                                        <div class="nav-item-content">Características</div>
+                                    </li>
+                                </ul>
+                            </aside>
+
+                            <!-- Main Content Area -->
+                            <div class="wizard-main-content">
+                                <h2 class="wizard-greeting">¡Hola, empecemos a crear tu aviso!</h2>
+                                
+                                <div class="wizard-form-container glass-panel">
+                                    <!-- Operación sub-step -->
+                                    <div class="wizard-substep active" id="substep-operacion">
+                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">Contanos, ¿qué querés publicar?</h3>
+                                        
+                                        <div class="form-group" style="margin-bottom: 2rem;">
+                                            <label style="font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Tipo de operación</label>
+                                            <div class="segmented-control">
+                                                <input type="radio" id="op-venta" name="operationType" value="Venta" checked>
+                                                <label for="op-venta">Venta</label>
+                                                
+                                                <input type="radio" id="op-alquiler" name="operationType" value="Alquiler">
+                                                <label for="op-alquiler">Alquiler</label>
+                                                
+                                                <input type="radio" id="op-temporada" name="operationType" value="Temporada">
+                                                <label for="op-temporada">Temporada</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row keep-row-mobile">
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Tipo de propiedad</label>
+                                                <select name="propertyType">
+                                                    <option value="" disabled selected>Seleccioná el tipo de propiedad</option>
+                                                    <option value="Casa">Casa</option>
+                                                    <option value="Departamento">Departamento</option>
+                                                    <option value="PH">PH</option>
+                                                    <option value="Terreno">Terreno</option>
+                                                    <option value="Local">Local</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Subtipo de propiedad</label>
+                                                <select name="propertySubtype" disabled>
+                                                    <option value="" disabled selected>Seleccioná el subtipo de propiedad</option>
+                                                    <!-- Options will be populated when propertyType is selected -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ubicacion sub-step -->
+                                    <div class="wizard-substep hidden" id="substep-ubicacion">
+                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">¿Dónde está ubicada tu propiedad?</h3>
+                                        
+                                        <div class="form-group">
+                                            <label style="font-size: 0.9rem;">Ingresá calle y altura</label>
+                                            <input type="text" name="streetAddress" placeholder="Ingresá una dirección">
+                                        </div>
+
+                                        <div class="form-row keep-row-mobile">
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Provincia</label>
+                                                <select name="province">
+                                                    <option value="" disabled selected>Seleccioná una provincia</option>
+                                                    <option value="Mendoza">Mendoza</option>
+                                                    <option value="Buenos Aires">Buenos Aires</option>
+                                                    <option value="Córdoba">Córdoba</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Ciudad</label>
+                                                <select name="city">
+                                                    <option value="" disabled selected>Seleccioná una ciudad</option>
+                                                    <option value="Ciudad de Mendoza">Ciudad de Mendoza</option>
+                                                    <option value="Godoy Cruz">Godoy Cruz</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row keep-row-mobile">
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Barrio</label>
+                                                <select name="neighborhood">
+                                                    <option value="" disabled selected>Seleccioná un barrio</option>
+                                                    <option value="Quinta Sección">Quinta Sección</option>
+                                                    <option value="Sexta Sección">Sexta Sección</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group" style="flex: 1;">
+                                                <label style="font-size: 0.9rem;">Subzona</label>
+                                                <select name="subzone" disabled>
+                                                    <option value="" disabled selected>Seleccioná una subzona</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">¿Cómo querés mostrar tu ubicación?</h4>
+                                        <div class="location-radio-group" style="display: flex; gap: 2rem; align-items: center;">
+                                            <label class="custom-radio">
+                                                <input type="radio" name="locationType" value="Exacta" checked>
+                                                <span class="radio-mark"></span>
+                                                Exacta
+                                            </label>
+                                            <label class="custom-radio">
+                                                <input type="radio" name="locationType" value="Aproximada">
+                                                <span class="radio-mark"></span>
+                                                Aproximada
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Caracteristicas sub-step -->
+                                    <div class="wizard-substep hidden" id="substep-caracteristicas">
+                                        <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">Características principales</h3>
+                                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Contanos un poco más de tu propiedad.</p>
+                                        
+                                        <div class="counters-grid">
+                                            <div class="counter-group">
+                                                <label>Ambientes (opcional)</label>
+                                                <div class="counter">
+                                                    <button type="button" class="counter-btn minus" data-target="ambientes">-</button>
+                                                    <input type="number" id="ambientes-val" name="ambientes" value="0" readonly>
+                                                    <button type="button" class="counter-btn plus" data-target="ambientes">+</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="counter-group">
+                                                <label>Dormitorios (opcional)</label>
+                                                <div class="counter">
+                                                    <button type="button" class="counter-btn minus" data-target="dormitorios">-</button>
+                                                    <input type="number" id="dormitorios-val" name="dormitorios" value="0" readonly>
+                                                    <button type="button" class="counter-btn plus" data-target="dormitorios">+</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="counter-group">
+                                                <label>Baños (opcional)</label>
+                                                <div class="counter">
+                                                    <button type="button" class="counter-btn minus" data-target="banos">-</button>
+                                                    <input type="number" id="banos-val" name="banos" value="0" readonly>
+                                                    <button type="button" class="counter-btn plus" data-target="banos">+</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="counter-group">
+                                                <label>Toilettes (opcional)</label>
+                                                <div class="counter">
+                                                    <button type="button" class="counter-btn minus" data-target="toilettes">-</button>
+                                                    <input type="number" id="toilettes-val" name="toilettes" value="0" readonly>
+                                                    <button type="button" class="counter-btn plus" data-target="toilettes">+</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="counter-group">
+                                                <label>Cocheras (opcional)</label>
+                                                <div class="counter">
+                                                    <button type="button" class="counter-btn minus" data-target="cocheras">-</button>
+                                                    <input type="number" id="cocheras-val" name="cocheras" value="0" readonly>
+                                                    <button type="button" class="counter-btn plus" data-target="cocheras">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div> <!-- End wizard-form-container -->
+
+                                <div class="wizard-footer">
+                                    <button class="btn-text hidden" id="wizard-back-btn" style="color: var(--text-main); font-weight: 500;">
+                                        <span class="material-symbols-rounded">chevron_left</span> Atrás
+                                    </button>
+                                    <div style="flex: 1;"></div>
+                                    <button class="btn-secondary" style="margin-right: 1rem;">Guardar y salir</button>
+                                    <button class="btn-primary" id="wizard-continue-btn">Continuar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Menu View (Mobile Only) -->
                 <section id="menu-view" class="view hidden">
@@ -532,9 +802,9 @@
                     <span class="material-symbols-rounded">apartment</span>
                     <span class="label">Propiedades</span>
                 </button>
-                <button class="nav-item" data-target="finances-view">
-                    <span class="material-symbols-rounded">payments</span>
-                    <span class="label">Finanzas</span>
+                <button class="nav-item" data-target="marketplace-view">
+                    <span class="material-symbols-rounded">storefront</span>
+                    <span class="label">Market Place</span>
                 </button>
                 <button class="nav-item" data-target="menu-view">
                     <span class="material-symbols-rounded">menu</span>

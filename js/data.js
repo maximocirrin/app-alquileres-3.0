@@ -230,6 +230,52 @@ const DataManager = {
         const payments = await DataManager.getMockPayments();
         const lateSet = new Set(payments.filter(p => p.status === 'Atrasado').map(p => p.tenantId));
         return lateSet.size;
+    },
+
+    // Marketplace Operations
+    addMarketplaceProperty: async (propertyData) => {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        const dbProperty = {
+            owner_id: user.id,
+            contact_nombre: propertyData.contactNombre,
+            contact_apellido: propertyData.contactApellido,
+            contact_condicion: propertyData.contactCondicion,
+            contact_documento: propertyData.contactDocumento,
+            contact_celular: propertyData.contactCelular,
+            contact_fijo: propertyData.contactFijo || null,
+            
+            operacion: propertyData.operacion,
+            tipo_propiedad: propertyData.tipoPropiedad,
+            subtipo_propiedad: propertyData.subtipoPropiedad || null,
+            
+            calle_altura: propertyData.calleAltura,
+            provincia: propertyData.provincia,
+            ciudad: propertyData.ciudad,
+            barrio: propertyData.barrio,
+            subzona: propertyData.subzona || null,
+            ubicacion_exacta: propertyData.ubicacionExacta !== false,
+            
+            ambientes: parseInt(propertyData.ambientes) || 1,
+            dormitorios: parseInt(propertyData.dormitorios) || 1,
+            banos: parseInt(propertyData.banos) || 1,
+            toilettes: parseInt(propertyData.toilettes) || 0,
+            cocheras: parseInt(propertyData.cocheras) || 0,
+            
+            status: 'draft'
+        };
+
+        const { data, error } = await window.supabaseClient
+            .from('marketplace_properties')
+            .insert([dbProperty])
+            .select();
+
+        if (error) {
+            console.error("Error adding marketplace property:", error);
+            throw error;
+        }
+        return data[0];
     }
 };
 
