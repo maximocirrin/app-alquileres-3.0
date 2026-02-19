@@ -322,6 +322,24 @@ const App = {
             });
         });
 
+        // Duration Select Handling
+        const durationSelect = document.getElementById('contract-duration');
+        const customDurationGroup = document.getElementById('custom-duration-group');
+        const customDurationInput = document.getElementById('custom-duration');
+
+        if(durationSelect && customDurationGroup && customDurationInput) {
+            durationSelect.addEventListener('change', (e) => {
+                if(e.target.value === 'custom') {
+                    customDurationGroup.classList.remove('hidden');
+                    customDurationInput.setAttribute('required', 'true');
+                } else {
+                    customDurationGroup.classList.add('hidden');
+                    customDurationInput.removeAttribute('required');
+                    customDurationInput.value = '';
+                }
+            });
+        }
+
         // File Input Handling (Contract Only)
         const handleFileSelect = (inputId, nameId) => {
             const input = document.getElementById(inputId);
@@ -436,26 +454,54 @@ const App = {
                     const increaseFrequency = parseInt(formData.get('increaseFrequency')) || 12; // Default to 12 if missing
                     const rentDueDay = parseInt(formData.get('rentDueDay')) || 1;
 
-                    const property = {
-                        address: formData.get('address'),
-                        tenantName: formData.get('tenantName'),
-                        tenantEmail: formData.get('tenantEmail'),
-                        tenantPhone: formData.get('tenantPhone'),
-                        ownerName: formData.get('ownerName'),
-                        ownerEmail: formData.get('ownerEmail'),
-                        ownerPhone: formData.get('ownerPhone'),
-                        price: price,
-                        increaseRate: increaseRate,
-                        increaseFrequency: increaseFrequency,
-                        contractStartDate: formData.get('contractStartDate'),
-                        contractEndDate: formData.get('contractEndDate'),
-                        rentDueDay: rentDueDay,
-                        photoUrl: photoUrl,
-                        contract: contractData,
-                        cbuAlias: formData.get('cbuAlias'),
-                        notifyRentExpiry: formData.get('notifyRentExpiry') === 'on',
-                        notifyPunitiveInterests: formData.get('notifyPunitiveInterests') === 'on'
-                    };
+
+                        // Calculate End Date based on Duration
+                        const startDateStr = formData.get('contractStartDate');
+                        let durationMonths = 0;
+                        
+                        const durationVal = formData.get('contractDuration');
+                        if (durationVal === 'custom') {
+                            durationMonths = parseInt(formData.get('customDuration'));
+                        } else {
+                            durationMonths = parseInt(durationVal);
+                        }
+
+                        let contractEndDate = '';
+                        if (startDateStr && durationMonths > 0) {
+                            // Parse start date as local date to avoid timezone issues
+                            const [y, m, d] = startDateStr.split('-').map(Number);
+                            const startDate = new Date(y, m - 1, d);
+                            
+                            // Add months
+                            startDate.setMonth(startDate.getMonth() + durationMonths);
+                            
+                            // Format YYYY-MM-DD
+                            const year = startDate.getFullYear();
+                            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(startDate.getDate()).padStart(2, '0');
+                            contractEndDate = `${year}-${month}-${day}`;
+                        }
+
+                        const property = {
+                            address: formData.get('address'),
+                            tenantName: formData.get('tenantName'),
+                            tenantEmail: formData.get('tenantEmail'),
+                            tenantPhone: formData.get('tenantPhone'),
+                            ownerName: formData.get('ownerName'),
+                            ownerEmail: formData.get('ownerEmail'),
+                            ownerPhone: formData.get('ownerPhone'),
+                            price: price,
+                            increaseRate: increaseRate,
+                            increaseFrequency: increaseFrequency,
+                            contractStartDate: startDateStr,
+                            contractEndDate: contractEndDate,
+                            rentDueDay: rentDueDay,
+                            photoUrl: photoUrl,
+                            contract: contractData,
+                            cbuAlias: formData.get('cbuAlias'),
+                            notifyRentExpiry: formData.get('notifyRentExpiry') === 'on',
+                            notifyPunitiveInterests: formData.get('notifyPunitiveInterests') === 'on'
+                        };
 
                     await DataManager.addProperty(property);
                     e.target.reset();
@@ -478,21 +524,30 @@ const App = {
 
         // ADDED: Bottom Right Delete Button Logic
         const modalContent = modal.querySelector('.modal-content');
-        
-        // Remove existing from header (legacy fix) or content
+
+        // Remove existing from header (legacy fix) or content or calendar section
         const existingBtnHeader = modal.querySelector('.modal-header .delete-property-btn');
         if(existingBtnHeader) existingBtnHeader.remove();
         
-        const existingBtn = modalContent.querySelector('.delete-property-btn');
+        const existingBtn = modal.querySelector('.calendar-section .delete-property-btn');
         if(existingBtn) existingBtn.remove();
+        
+        // Also remove if it was directly in modal content/previous location
+        const existingBtnContent = modalContent.querySelector('.delete-property-btn');
+        if(existingBtnContent) existingBtnContent.remove();
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'icon-btn delete-property-btn text-danger';
-        deleteBtn.innerHTML = '<span class="material-symbols-rounded">delete</span>';
+        deleteBtn.className = 'delete-property-btn text-danger';
+        deleteBtn.innerHTML = '<span class="material-symbols-rounded">delete</span> Eliminar Propiedad';
         deleteBtn.title = 'Eliminar Propiedad';
         
-        // Append to modal content (container)
-        modalContent.appendChild(deleteBtn);
+        // Append to calendar section
+        const calendarSection = modal.querySelector('.calendar-section');
+        if(calendarSection) {
+            calendarSection.appendChild(deleteBtn);
+        } else {
+             modalContent.appendChild(deleteBtn);
+        }
 
         deleteBtn.onclick = async () => {
             if(confirm('¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.')) {
@@ -715,7 +770,6 @@ const App = {
     showLogin: () => {
         document.getElementById('login-view').classList.remove('hidden');
         document.getElementById('main-layout').classList.add('hidden');
-        document.body.style.backgroundColor = 'var(--background-color)';
     },
 
     showMainApp: (user) => {
@@ -786,7 +840,10 @@ const App = {
                 </td>
                 <td>${t.phone}</td>
                 <td>${t.propertyAddress}</td>
-                <td>Vence: ${t.contractEnd}</td>
+                <td>
+                    ${t.contract ? `<a href="${t.contract.data}" download="${t.contract.name}" class="text-primary" title="Descargar Contrato"><span class="material-symbols-rounded">description</span></a>` : '<span class="text-muted">-</span>'}
+                </td>
+                <td>${t.contractEnd || '<span class="text-muted">-</span>'}</td>
                 <td style="font-weight: 600;">$${t.rent.toLocaleString()}</td>
                 <td class="action-cell">
                     <button class="more-options-btn" onclick="App.toggleMenu(event, 'tenant', '${t.id}')">
@@ -950,24 +1007,21 @@ const App = {
                     const expirationDate = new Date(currentYear, currentMonth, dueDaySafe);
                     
                     const timeLeft = Math.ceil((expirationDate - today) / (1000 * 60 * 60 * 24));
-                    const timeHtml = timeLeft >= 0 
-                        ? `<small style="display:block; margin-top:4px; color:var(--text-muted);">Vence en ${timeLeft} días</small>`
-                        : `<small style="display:block; margin-top:4px; color:var(--error);">Vencido hace ${Math.abs(timeLeft)} días</small>`;
+                    
+                    const contractEndParam = p.contractEndDate ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;"><strong>Fin Contrato:</strong> ${p.contractEndDate}</p>` : '';
 
                     card.innerHTML = `
                         ${imgHtml}
-                        <div style="display:flex; justify-content:space-between; align-items:start;">
-                            <div>
-                                <h3 style="font-size: 1.1rem; margin-bottom: 2px;">${p.address}</h3>
-                                <p style="color: var(--text-muted); font-size: 0.9rem;">Inq: ${p.tenantName || 'N/A'}</p>
+                        <div class="property-info" style="padding: var(--spacing-sm);">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">${p.address}</h3>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight: 600; color: var(--primary-color);">$${p.price.toLocaleString()}</span>
+                                ${statusHtml}
                             </div>
-                            ${statusHtml}
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Inquilino: ${p.tenantName}</p>
+                            ${contractEndParam}
+                            ${contractHtml}
                         </div>
-                        <div style="margin-top: 12px;">
-                            <p style="font-weight: 600; font-size: 1.2rem;">$${parseFloat(p.price).toLocaleString()}</p>
-                            ${timeHtml}
-                        </div>
-                        ${contractHtml}
                     `;
                     propertiesList.appendChild(card);
                 });

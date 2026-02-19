@@ -1524,38 +1524,48 @@ body.no-scroll {
 
 /* Delete Property Button */
 .delete-property-btn {
-    background: transparent !important;
-    border: none;
+    background: transparent;
+    border: 1px solid var(--destructive);
     color: var(--destructive);
-    padding: 8px;
-    border-radius: 50%;
-    transition: background-color 0.2s, transform 0.1s;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: var(--spacing-md);
+    cursor: pointer;
+    font-weight: 600;
 }
 
 .delete-property-btn:hover {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    transform: scale(1.1);
+    background-color: var(--destructive);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .delete-property-btn .material-symbols-rounded {
-    font-size: 24px;
+    font-size: 20px;
 }
 
 
-/* Reposition Delete Button */
+/* Reposition Delete Button - Removed absolute positioning */
 .modal-content {
     position: relative;
+    /* Ensure padding for bottom button if needed, but flex layout handles it */
 }
 
+/* 
 .delete-property-btn {
     position: absolute;
     bottom: 20px;
     right: 20px;
     z-index: 10;
-}
+} 
+*/
 
 /* Enhanced Close Modal Button */
 .close-modal {

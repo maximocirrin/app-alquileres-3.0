@@ -11,6 +11,14 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
+<script>
+    (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    })();
+</script>
 <body>
     <div id="app">
         <!-- Login View -->
@@ -206,6 +214,7 @@
                                         <th>Contacto</th>
                                         <th>Propiedad</th>
                                         <th>Contrato</th>
+                                        <th>Vencimiento</th>
                                         <th>Renta</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -313,8 +322,17 @@
                                         <input type="date" name="contractStartDate" required>
                                     </div>
                                     <div class="form-group">
-                                        <label>Fin Contrato</label>
-                                        <input type="date" name="contractEndDate" required>
+                                        <label>Duración del Contrato</label>
+                                        <select name="contractDuration" id="contract-duration" required>
+                                            <option value="6">6 meses</option>
+                                            <option value="12">12 meses</option>
+                                            <option value="24">24 meses</option>
+                                            <option value="custom">Personalizado</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group hidden" id="custom-duration-group">
+                                        <label>Cantidad de Meses</label>
+                                        <input type="number" name="customDuration" id="custom-duration" min="1" placeholder="Ej: 18">
                                     </div>
                                 </div>
                                 <div class="form-group">

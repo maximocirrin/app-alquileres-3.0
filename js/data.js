@@ -161,7 +161,7 @@ const DataManager = {
     getTenants: async () => {
         const { data, error } = await window.supabaseClient
             .from('properties')
-            .select('id, address, tenant_name, tenant_email, tenant_phone, price, payment_status, rent_due_day')
+            .select('id, address, tenant_name, tenant_email, tenant_phone, price, payment_status, rent_due_day, contract_data, contract_end')
             .not('tenant_name', 'is', null);
 
         if (error) {
@@ -177,7 +177,9 @@ const DataManager = {
             propertyAddress: t.address,
             rent: t.price,
             status: t.payment_status,
-            rentDueDay: t.rent_due_day
+            rentDueDay: t.rent_due_day,
+            contract: t.contract_data,
+            contractEnd: t.contract_end
         }));
     },
 
