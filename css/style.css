@@ -1300,7 +1300,7 @@ input:focus, select:focus {
     }
     
     .form-row.keep-row-mobile {
-        flex-direction: row;
+        flex-direction: column; /* Force stack for Market Place to avoid squeezing */
     }
     
     .form-row {
@@ -1794,6 +1794,17 @@ body.no-scroll {
 }
 
 @media (max-width: 768px) {
+    /* Contact Modal specific fixes */
+    #marketplace-contact-modal .modal-content {
+        padding: 1.5rem !important; /* Reduce padding on small screens */
+    }
+    
+    #marketplace-contact-modal .modal-header {
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    /* Wizard specific fixes */
     .wizard-modal.full-screen .wizard-body {
         flex-direction: column;
     }
@@ -1812,18 +1823,31 @@ body.no-scroll {
         padding: var(--spacing-md);
         padding-bottom: 100px; /* Space for the footer buttons */
     }
+
+    /* Form Layouts */
+    .keep-row-mobile {
+        flex-direction: column; /* Stack on mobile for better fit */
+        gap: var(--spacing-sm);
+    }
+    
+    .wizard-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-right: 0;
+        padding-bottom: var(--spacing-sm);
+    }
 }
 
 .wizard-modal.full-screen .wizard-main-content {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-xl);
-    position: relative;
     padding-bottom: 100px; /* Space for footer */
 }
 
 .wizard-modal.full-screen .wizard-footer {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
@@ -1832,7 +1856,7 @@ body.no-scroll {
     border-top: 1px solid var(--border);
     display: flex;
     align-items: center;
-    z-index: 10;
+    z-index: 100;
 }
 
 .wizard-sidebar {
@@ -1905,12 +1929,13 @@ body.no-scroll {
         padding-bottom: var(--spacing-sm);
     }
     .wizard-nav-list {
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 4px;
+        flex-direction: column; /* Stack instead of side-by-side scroll */
+        overflow-x: hidden;
+        padding-bottom: 0;
     }
     .wizard-nav-item {
-        white-space: nowrap;
+        white-space: normal; /* Allow text wrapping */
+        text-align: center; /* Center for mobile */
     }
 }
 

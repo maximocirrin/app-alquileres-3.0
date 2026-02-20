@@ -810,24 +810,72 @@ const App = {
         }
 
         // Substep Navigation in Wizard (Step 1)
-        const sidebarItems = document.querySelectorAll('.wizard-sidebar .sidebar-item');
-        const substepContents = document.querySelectorAll('.substep-content');
+        const sidebarItems = document.querySelectorAll('.wizard-sidebar .wizard-nav-item');
+        const substepContents = document.querySelectorAll('.wizard-substep');
+        const wizardBackBtn = document.getElementById('wizard-back-btn');
 
-        sidebarItems.forEach(item => {
+        // Helper function to update the footer buttons based on the active index
+        const updateWizardFooter = (activeIndex) => {
+            if (wizardBackBtn) {
+                if (activeIndex > 0) {
+                    wizardBackBtn.classList.remove('hidden');
+                } else {
+                    wizardBackBtn.classList.add('hidden');
+                }
+            }
+        };
+
+        sidebarItems.forEach((item, index) => {
             item.addEventListener('click', () => {
                 // Remove active class from all
                 sidebarItems.forEach(i => i.classList.remove('active'));
-                substepContents.forEach(c => c.classList.remove('active'));
+                substepContents.forEach(c => {
+                    c.classList.remove('active');
+                    c.classList.add('hidden');
+                });
 
                 // Add active class to clicked
                 item.classList.add('active');
                 const targetId = `substep-${item.getAttribute('data-substep')}`;
+                
                 const targetContent = document.getElementById(targetId);
                 if (targetContent) {
+                    targetContent.classList.remove('hidden');
                     targetContent.classList.add('active');
                 }
+
+                updateWizardFooter(index);
             });
         });
+
+        const wizardContinueBtn = document.getElementById('wizard-continue-btn');
+        if (wizardContinueBtn) {
+            wizardContinueBtn.addEventListener('click', () => {
+                // Find currently active sidebar item
+                const sidebarArray = Array.from(sidebarItems);
+                const activeIndex = sidebarArray.findIndex(item => item.classList.contains('active'));
+                
+                if (activeIndex !== -1 && activeIndex < sidebarArray.length - 1) {
+                    // Navigate to next sub-step in Step 1
+                    sidebarArray[activeIndex + 1].click();
+                } else {
+                    // We are at the last sub-step of Step 1, proceed to Step 2 (Multimedia)
+                    // TODO: Implement the transition to multimedia. For now, we will add a console.log or alert.
+                    alert("Avanzando al Paso 2: Multimedia (En construcción)");
+                }
+            });
+        }
+
+        if (wizardBackBtn) {
+            wizardBackBtn.addEventListener('click', () => {
+                const sidebarArray = Array.from(sidebarItems);
+                const activeIndex = sidebarArray.findIndex(item => item.classList.contains('active'));
+                
+                if (activeIndex > 0) {
+                    sidebarArray[activeIndex - 1].click();
+                }
+            });
+        }
 
         // Counters + / - Logic
         const counterBtns = document.querySelectorAll('.counter-btn');

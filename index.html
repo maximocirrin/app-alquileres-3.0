@@ -507,30 +507,30 @@
 
                 <!-- Market Place Contact Info Modal -->
                 <div id="marketplace-contact-modal" class="modal hidden">
-                    <div class="modal-content no-scroll glass-card" style="max-width: 600px; padding: 2.5rem;">
-                        <header class="modal-header" style="justify-content: flex-end; padding-bottom: 0px;">
+                    <div class="modal-content no-scroll glass-card" style="width: 90%; max-width: 90vw; padding: 5%; overflow-x: hidden; box-sizing: border-box;">
+                        <header class="modal-header" style="justify-content: flex-end; padding-bottom: 0;">
                             <button class="close-modal"><span class="material-symbols-rounded">close</span></button>
                         </header>
                         
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; font-weight: 600;">Completá el formulario</h2>
-                            <p style="color: var(--text-muted);">Datos de facturación y de contacto, para que los<br>interesados puedan realizarte consultas por tu<br>aviso</p>
+                        <div style="text-align: center; margin-bottom: 5%;">
+                            <h2 style="font-size: clamp(1.2rem, 5vw, 1.8rem); margin-bottom: 2%; font-weight: 600;">Completá el formulario</h2>
+                            <p style="color: var(--text-muted); font-size: clamp(0.85rem, 3vw, 1rem);">Datos de facturación y de contacto, para que los<br>interesados puedan realizarte consultas por tu aviso</p>
                         </div>
 
-                        <form id="marketplace-contact-form">
-                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
-                                <div class="form-group" style="flex: 1;">
+                        <form id="marketplace-contact-form" style="width: 100%;">
+                            <div class="form-row keep-row-mobile" style="gap: 2%;">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Nombre</label>
                                     <input type="text" name="contactName" placeholder="Ingresá un nombre" required>
                                 </div>
-                                <div class="form-group" style="flex: 1;">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Apellido</label>
                                     <input type="text" name="contactSurname" placeholder="Ingresá un apellido" required>
                                 </div>
                             </div>
 
-                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
-                                <div class="form-group" style="flex: 1;">
+                            <div class="form-row keep-row-mobile" style="gap: 2%;">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Condición</label>
                                     <select name="contactCondition" required>
                                         <option value="Responsable Inscripto">Responsable Inscripto</option>
@@ -538,25 +538,25 @@
                                         <option value="Consumidor Final">Consumidor Final</option>
                                     </select>
                                 </div>
-                                <div class="form-group" style="flex: 1;">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Documento / CUIT</label>
                                     <input type="text" name="contactDoc" placeholder="Ingresá un documento" required>
                                 </div>
                             </div>
 
-                            <div class="form-row keep-row-mobile" style="gap: 1rem;">
-                                <div class="form-group" style="flex: 1;">
+                            <div class="form-row keep-row-mobile" style="gap: 2%;">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Teléfono móvil</label>
-                                    <input type="tel" name="contactMobile" placeholder="Ingresá un número de teléfono móvil" required>
+                                    <input type="tel" name="contactMobile" placeholder="Ingresá teléfono móvil" required>
                                 </div>
-                                <div class="form-group" style="flex: 1;">
-                                    <label>Teléfono (opcional)</label>
-                                    <input type="tel" name="contactPhone" placeholder="Ingresá un número de teléfono">
+                                <div class="form-group" style="flex: 1; min-width: 45%;">
+                                    <label>Teléfono (opc.)</label>
+                                    <input type="tel" name="contactPhone" placeholder="Ingresá teléfono fijo">
                                 </div>
                             </div>
 
-                            <div class="form-actions" style="justify-content: center; margin-top: 2rem;">
-                                <button type="submit" class="btn-primary" style="padding: 0.8rem 3rem; font-size: 1.1rem; border-radius: 8px;">Continuar</button>
+                            <div class="form-actions" style="justify-content: center; margin-top: 5%;">
+                                <button type="submit" class="btn-primary" style="padding: 3% 10%; font-size: clamp(1rem, 4vw, 1.1rem); border-radius: 8px; width: 100%; max-width: 300px;">Continuar</button>
                             </div>
                         </form>
                     </div>
@@ -758,11 +758,8 @@
                                 </div> <!-- End wizard-form-container -->
 
                                 <div class="wizard-footer">
-                                    <button class="btn-text hidden" id="wizard-back-btn" style="color: var(--text-main); font-weight: 500;">
-                                        <span class="material-symbols-rounded">chevron_left</span> Atrás
-                                    </button>
                                     <div style="flex: 1;"></div>
-                                    <button class="btn-secondary" style="margin-right: 1rem;">Guardar y salir</button>
+                                    <button class="btn-secondary hidden" id="wizard-back-btn" style="margin-right: 1rem;">Atrás</button>
                                     <button class="btn-primary" id="wizard-continue-btn">Continuar</button>
                                 </div>
                             </div>
