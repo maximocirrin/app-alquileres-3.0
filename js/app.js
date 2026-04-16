@@ -63,8 +63,10 @@ const App = {
     setTheme: (theme) => {
         if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
         } else {
             document.documentElement.removeAttribute('data-theme');
+            document.documentElement.classList.remove('dark');
         }
         
         localStorage.setItem('theme', theme);
@@ -97,6 +99,33 @@ const App = {
     },
 
     setupEventListeners: () => {
+        // Landing Marketplace Navigation
+        const btnAdministrar = document.getElementById('btn-administrar');
+        if (btnAdministrar) {
+            btnAdministrar.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('landing-marketplace-view').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+            });
+        }
+
+        const btnBackMarketplace = document.getElementById('btn-back-marketplace');
+        if (btnBackMarketplace) {
+            btnBackMarketplace.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('app').classList.add('hidden');
+                document.getElementById('landing-marketplace-view').classList.remove('hidden');
+                
+                // Reiniciar animaciones de scroll
+                if (window.marketplaceObserver) {
+                    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                        el.classList.remove('is-visible');
+                        window.marketplaceObserver.observe(el);
+                    });
+                }
+            });
+        }
+
         // Login Form
         const loginForm = document.getElementById('login-form');
         if (loginForm) {

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#80272b",
+                        "on-surface": "#1a1c1c",
+                        "surface-tint": "#a73737",
+                        "on-primary-fixed-variant": "#871f22",
+                        "tertiary": "#7b2327",
+                        "outline": "#8b716f",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#811b1e",
+                        "surface-container": "#eeeeee",
+                        "secondary-container": "#e1dfdf",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2f3131",
+                        "inverse-on-surface": "#f1f1f1",
+                        "background": "#f9f9f9",
+                        "surface-container-low": "#f3f3f3",
+                        "on-secondary-container": "#636262",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#ffdad7",
+                        "surface": "#f9f9f9",
+                        "on-primary-container": "#ffc3bf",
+                        "secondary-fixed": "#e4e2e2",
+                        "surface-container-high": "#e8e8e8",
+                        "tertiary-fixed": "#ffdad8",
+                        "surface-variant": "#e2e2e2",
+                        "inverse-primary": "#ffb3ae",
+                        "primary-fixed-dim": "#ffb3ae",
+                        "on-secondary-fixed-variant": "#464747",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f9f9f9",
+                        "surface-dim": "#dadada",
+                        "on-tertiary-container": "#ffc3c1",
+                        "on-tertiary-fixed": "#410007",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-background": "#1a1c1c",
+                        "primary-container": "#a13333",
+                        "on-primary-fixed": "#410005",
+                        "error-container": "#ffdad6",
+                        "secondary": "#5e5e5e",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "tertiary-fixed-dim": "#ffb3b1",
+                        "on-surface-variant": "#574140",
+                        "tertiary-container": "#9a3a3c",
+                        "outline-variant": "#debfbd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-shadow {
+            box-shadow: 0 12px 40px rgba(26,28,28,0.04);
+        }
+        .glass-nav {
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(26,28,28,0.04)]">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 duration-200 text-[#811b1e] p-2 rounded-full hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined" data-icon="search">menu</span>
+</button>
+<h1 class="font-manrope font-extrabold italic text-[#811b1e] text-lg">The Editorial Estate</h1>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-stone-400 font-manrope uppercase tracking-widest text-xs font-bold hover:bg-stone-50 transition-colors px-2 py-1" href="#">Home</a>
+<a class="text-stone-400 font-manrope uppercase tracking-widest text-xs font-bold hover:bg-stone-50 transition-colors px-2 py-1" href="#">Properties</a>
+<a class="text-[#811b1e] font-manrope uppercase tracking-widest text-xs font-bold border-b-2 border-[#811b1e] px-2 py-1" href="#">Marketplace</a>
+<a class="text-stone-400 font-manrope uppercase tracking-widest text-xs font-bold hover:bg-stone-50 transition-colors px-2 py-1" href="#">Menu</a>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border-2 border-outline-variant/20">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="close-up portrait of a professional man in a clean white studio setting with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBavDDyzLdnOXptZxmW2CXeT7eZwpPu5_1XLhIfzMMb8WHDyZyMZ4xz-QuUpR_jdHKkiSN1vGVb7m1BN5h_rLHlqZRd7jOkGxWP9dkjNuPhlr1yrvwj2qsVkamkpKELCYdBz2t_hNZV6oWA04_IVoqZtztNyZhKuL3xaseGw67klzNvcCcNRnj5qglEh5rT1TI91ILOKT-2nGljLMlaHlnuJxz4w8uaBNe3mji7FuBDgfqIvWqOY7e-JUSoUICPBfnJlbowMlF7j4VN"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-7xl mx-auto">
+<!-- Search & Editorial Headline -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="max-w-2xl">
+<span class="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold mb-3 block">Marketplace</span>
+<h2 class="font-headline text-5xl md:text-6xl font-extrabold text-on-surface leading-tight tracking-tighter">
+                        Encuentra tu próximo <br/><span class="italic text-primary">legado arquitectónico.</span>
+</h2>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="mt-10 flex flex-col md:flex-row gap-4 bg-surface-container-lowest p-4 rounded-3xl shadow-sm">
+<div class="flex-1 flex items-center gap-3 px-4 py-3 bg-surface-container-high rounded-2xl">
+<span class="material-symbols-outlined text-secondary" data-icon="location_on">location_on</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface placeholder:text-secondary font-medium" placeholder="¿Dónde quieres vivir?" type="text"/>
+</div>
+<div class="flex flex-wrap md:flex-nowrap gap-4">
+<div class="flex items-center gap-2 px-6 py-3 bg-surface-container-high rounded-2xl cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-secondary" data-icon="tune">tune</span>
+<span class="font-medium text-on-surface">Filtros</span>
+</div>
+<button class="bg-gradient-to-br from-[#811b1e] to-[#a13333] text-white px-10 py-3 rounded-2xl font-bold tracking-tight shadow-lg shadow-primary/20 active:scale-95 duration-200">
+                        Buscar
+                    </button>
+</div>
+</div>
+</section>
+<!-- Category Filters -->
+<nav class="flex items-center gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar">
+<button class="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-bold shadow-md">
+<span class="material-symbols-outlined text-lg" data-icon="home">home</span>
+<span>Casas</span>
+</button>
+<button class="flex items-center gap-2 bg-surface-container-lowest text-secondary px-6 py-3 rounded-full font-bold hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="apartment">apartment</span>
+<span>Departamentos</span>
+</button>
+<button class="flex items-center gap-2 bg-surface-container-lowest text-secondary px-6 py-3 rounded-full font-bold hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="business">business</span>
+<span>Oficinas</span>
+</button>
+<button class="flex items-center gap-2 bg-surface-container-lowest text-secondary px-6 py-3 rounded-full font-bold hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="landscape">landscape</span>
+<span>Terrenos</span>
+</button>
+</nav>
+<!-- Property Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Property Card 1 -->
+<div class="group bg-surface-container-lowest rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/5">
+<div class="relative h-72 overflow-hidden">
+<img alt="Luxury Villa" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="luxurious modern villa with large glass windows at dusk featuring a glowing interior and swimming pool" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArxD2A88pAkEPV8Qt9_gkL8lXuE6q1Ml2YGgs78PE3_9-t5iZKUvLnh37WiTHeEmS2QPDeztlcOHD9juqgcbGHg25fuxtvKR0iL4nN6yeZEY4qaBUtBlWyMYkU5u5hZaYWe3xPxJ9D135EM6l8QrTJ8DkjyjPiboELesMwX58y6cqve_hlKVVc69P9lcuVrKCPDyJwB6m1CvV5pHXEiUehhLRj8qr4HUNgJiWzOVQnV420bL9lvnHkcCkLkXeXLfvuItgFnWPDETtK"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-white/90 backdrop-blur-md text-primary text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Destacado</span>
+<span class="bg-primary text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Venta</span>
+</div>
+<button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-8">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Villa Serena</h3>
+<div class="flex items-center text-secondary gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span class="text-xs font-medium uppercase tracking-wider">San Pedro Garza García</span>
+</div>
+</div>
+<p class="text-2xl font-extrabold text-primary">$1,250,000</p>
+</div>
+<div class="flex justify-between items-center pt-6 border-t border-outline-variant/20">
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="bed">bed</span>
+<span class="text-xs font-bold text-on-surface">4 Hab</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="bathtub">bathtub</span>
+<span class="text-xs font-bold text-on-surface">3.5 Baños</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="straighten">straighten</span>
+<span class="text-xs font-bold text-on-surface">420 m²</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Property Card 2 -->
+<div class="group bg-surface-container-lowest rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/5">
+<div class="relative h-72 overflow-hidden">
+<img alt="Modern Penthouse" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="architectural shot of a high-end luxury penthouse with a large terrace overlooking a city skyline at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBm83iXHwN1ETyh7ym0eYb4O-BjmyRRcoVtEoWyrcbI13dN1tC0QeiIzbqZuSqi32IiOhiCtFnIykPFI50Jk2TUMGQ1T2Ffc2LrbXkcN3o9Es7bnYeDn3GlU-ePaP00o81UthuO7wL0zGFVRjy31Q6tq00NVmEQgNZaaCfopuZKUNEwfxZ03StNVS_aTpAYRZgohBfJOP28MWlSd-bshQifkDEISGTwZnyyhoxgSHqGYNSZTOKjLwoHYcDIulEvb6oZ4ZCIqSGH-b7"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-white/90 backdrop-blur-md text-primary text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Nuevo</span>
+</div>
+<button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-8">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Penthouse Áurea</h3>
+<div class="flex items-center text-secondary gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span class="text-xs font-medium uppercase tracking-wider">Polanco, CDMX</span>
+</div>
+</div>
+<p class="text-2xl font-extrabold text-primary">$890,000</p>
+</div>
+<div class="flex justify-between items-center pt-6 border-t border-outline-variant/20">
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="bed">bed</span>
+<span class="text-xs font-bold text-on-surface">3 Hab</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="bathtub">bathtub</span>
+<span class="text-xs font-bold text-on-surface">2 Baños</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="straighten">straighten</span>
+<span class="text-xs font-bold text-on-surface">185 m²</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Property Card 3 -->
+<div class="group bg-surface-container-lowest rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/5">
+<div class="relative h-72 overflow-hidden">
+<img alt="Office Space" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="minimalist and bright office workspace with natural oak desks and floor-to-ceiling windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd_b_3LV66Ka6iob-Ixsk5J_OL-TP9cvat9BzEtrvmVJbyDQbyP8dQOyobtL5CaIYKdNtXNVtfHcl6alyf9frMW1Zy15MV1vH1kurTHRY9R0Roha3EkpKkf0QZKuyeV4blCM6h2yNzuUmJz8gXEb4SvdzW7eP9yM4JO9ifa50Fv-mN8whaxKzdefpS4NSh2sG-K79Vh6YkbQ8yC0LDl-cYUhtXIpQ9hXkX6LxUtUXtTMUDZHFjqYM5Ffi6wZvx0Blk3K36z5opDyu6"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-error-container text-on-error-container text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Oportunidad</span>
+</div>
+<button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-8">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Corporate Loft</h3>
+<div class="flex items-center text-secondary gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span class="text-xs font-medium uppercase tracking-wider">Santa Fe, CDMX</span>
+</div>
+</div>
+<p class="text-2xl font-extrabold text-primary">$450,000</p>
+</div>
+<div class="flex justify-between items-center pt-6 border-t border-outline-variant/20">
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="meeting_room">meeting_room</span>
+<span class="text-xs font-bold text-on-surface">8 Salas</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="wc">wc</span>
+<span class="text-xs font-bold text-on-surface">4 Baños</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-secondary" data-icon="straighten">straighten</span>
+<span class="text-xs font-bold text-on-surface">310 m²</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Featured Section Asymmetric -->
+<section class="mt-24 mb-12">
+<div class="flex flex-col lg:flex-row bg-[#811b1e] rounded-[3rem] overflow-hidden text-white">
+<div class="lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center">
+<span class="font-label text-xs uppercase tracking-[0.3em] opacity-60 mb-6">Inversión Premium</span>
+<h2 class="font-headline text-4xl lg:text-6xl font-extrabold mb-8 leading-tight">Tu patrimonio, <br/>curado por expertos.</h2>
+<p class="font-body text-lg opacity-80 mb-10 max-w-md">Accede a propiedades exclusivas antes de que salgan al mercado abierto. Un servicio boutique para el inversor sofisticado.</p>
+<div class="flex gap-4">
+<button class="bg-white text-primary px-8 py-4 rounded-2xl font-bold hover:bg-stone-100 transition-colors">Solicitar Acceso</button>
+</div>
+</div>
+<div class="lg:w-1/2 relative min-h-[400px]">
+<img alt="Luxury Estate" class="absolute inset-0 w-full h-full object-cover" data-alt="ultra-modern luxury estate facade with swimming pool reflects architectural lines and dramatic lighting at night" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFyGAn1evOJMSO6dl5jmovR7Xx7uw_2uERX0hAkMkKU0mQbT9KTJ8-rdMxlaMateh-0TXwp1M8b2vcKO3k_yssSQ4pMXPXZg5mDOQ3X8_ZY90IoiAN46jSYFeYVDXGhOyfkCDSjR3x4VpsavHhDKXE5wP1NX2jE-Zs7cF2s9Op-ooeTyOBviZJMhWyocumxEZxvnX3JBXz4HNc3DqLbll6A5Hh1ZDNjrLPu2zgemYRVosOARcrhPC1YTyG9-supxWSvu75Tel5-9bZ"/>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl rounded-t-[2rem] z-50 shadow-[0_-8px_30px_rgba(26,28,28,0.04)] md:hidden">
+<a class="flex flex-col items-center justify-center text-stone-400 px-4 py-2 hover:text-[#811b1e] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-inter text-[10px] font-semibold tracking-tight">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 px-4 py-2 hover:text-[#811b1e] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+<span class="font-inter text-[10px] font-semibold tracking-tight">Properties</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#811b1e] to-[#a13333] text-white rounded-2xl px-5 py-2 scale-105 shadow-lg shadow-[#811b1e]/20 active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-inter text-[10px] font-semibold tracking-tight">Marketplace</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 px-4 py-2 hover:text-[#811b1e] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+<span class="font-inter text-[10px] font-semibold tracking-tight">Menu</span>
+</a>
+</nav>
+<!-- Map FAB (Floating Action Button) -->
+<button class="fixed bottom-24 right-6 md:bottom-12 md:right-12 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 active:scale-90 duration-300 z-40">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+</button>
+</body></html>
