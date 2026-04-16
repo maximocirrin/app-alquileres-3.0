@@ -108,18 +108,22 @@
         .custom-scrollbar::-webkit-scrollbar {
             height: 4px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.05);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 4px;
             margin: 0px 4px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
         }
+
         html.dark .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
         }
+
         html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #52525b;
         }
@@ -131,13 +135,23 @@
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: opacity, transform;
         }
+
         .animate-on-scroll.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
-        .delay-100 { transition-delay: 100ms; }
-        .delay-200 { transition-delay: 200ms; }
-        .delay-300 { transition-delay: 300ms; }
+
+        .delay-100 {
+            transition-delay: 100ms;
+        }
+
+        .delay-200 {
+            transition-delay: 200ms;
+        }
+
+        .delay-300 {
+            transition-delay: 300ms;
+        }
 
         .theme-switch__checkbox {
             display: none !important;
@@ -244,7 +258,7 @@
                 </div>
                 <div class="flex items-center gap-2 md:gap-6">
                     <a id="btn-administrar"
-                        class="bg-surface-dim px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-full text-zinc-700 dark:text-zinc-200 hover:text-red-800 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 flex-shrink-0">Admin.</a>
+                        class="bg-surface-dim px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-full text-zinc-700 dark:text-zinc-200 hover:text-red-800 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 flex-shrink-0">Administrar</a>
                     <label class="theme-switch flex-shrink-0"
                         style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
                         <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
@@ -286,10 +300,11 @@
                 </div>
             </div>
         </nav>
-        <main class="pt-20">
+        <main class="pt-16 md:pt-20">
             <!-- Hero Section -->
             <section class="relative h-[600px] flex items-center justify-center overflow-hidden">
-                <div class="absolute inset-0 z-0">
+                <div class="absolute inset-0 z-0"
+                    style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
                     <img alt="Luxury Estate" class="w-full h-full object-cover brightness-75"
                         src="img/hero-marketplace.jpg" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
@@ -303,11 +318,13 @@
                         class="bg-surface-container-lowest p-2 rounded-full shadow-2xl flex items-center max-w-2xl mx-auto backdrop-blur-md bg-opacity-95 animate-on-scroll delay-100">
                         <div class="flex-1 flex items-center px-4 sm:px-6 gap-3">
                             <span class="material-symbols-outlined text-primary">search</span>
-                            <input class="w-full bg-transparent border-none focus:ring-0 text-on-surface py-3 font-body outline-none"
+                            <input
+                                class="w-full bg-transparent border-none focus:ring-0 text-on-surface py-3 font-body outline-none"
                                 placeholder="¿Dónde quieres vivir?" type="text" />
                         </div>
                         <div class="h-8 w-[1px] bg-zinc-300 dark:bg-zinc-700"></div>
-                        <button class="flex items-center gap-2 px-2 sm:px-4 select-none cursor-pointer text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-primary transition-colors border-none bg-transparent outline-none">
+                        <button
+                            class="flex items-center gap-2 px-2 sm:px-4 select-none cursor-pointer text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-primary transition-colors border-none bg-transparent outline-none">
                             <span class="material-symbols-outlined text-[1.25rem]">tune</span>
                             <span class="font-bold text-sm hidden sm:inline">Filtros</span>
                         </button>
@@ -347,7 +364,7 @@
                         <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5] border-none shadow-none">
                             <img alt="Modernist Villa"
                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="https://loremflickr.com/800/1000/villa,modern" />
+                                src="img/hero-marketplace.jpg" />
                             <div
                                 class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border-none">
                                 <span class="text-[10px] font-bold tracking-widest text-primary uppercase">EN
@@ -364,19 +381,27 @@
                                 <span class="material-symbols-outlined text-base">location_on</span>
                                 Bel Air, Los Angeles
                             </p>
-                            <div class="flex items-center gap-6 pt-4 text-secondary border-t border-outline-variant/20">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bed</span>
-                                    <span class="text-sm font-semibold">5 Dorm.</span>
+                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
+                                <div class="flex items-center gap-6 text-secondary">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bed</span>
+                                        <span class="text-sm font-semibold">5 Dorm.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bathtub</span>
+                                        <span class="text-sm font-semibold">6 Baños</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">square_foot</span>
+                                        <span class="text-sm font-semibold">850 m²</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bathtub</span>
-                                    <span class="text-sm font-semibold">6 Baños</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">square_foot</span>
-                                    <span class="text-sm font-semibold">850 m²</span>
-                                </div>
+                                <button
+                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
+                                    Ver más
+                                    <span
+                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -385,7 +410,7 @@
                         <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5]">
                             <img alt="Brutalist Estate"
                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="https://loremflickr.com/800/1001/house,luxury" />
+                                src="img/hero-marketplace.jpg" />
                             <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm">
                                 <span class="text-[10px] font-bold tracking-widest text-primary uppercase">EN
                                     VENTA</span>
@@ -401,19 +426,27 @@
                                 <span class="material-symbols-outlined text-base">location_on</span>
                                 Malibu, California
                             </p>
-                            <div class="flex items-center gap-6 pt-4 text-secondary border-t border-outline-variant/20">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bed</span>
-                                    <span class="text-sm font-semibold">4 Dorm.</span>
+                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
+                                <div class="flex items-center gap-6 text-secondary">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bed</span>
+                                        <span class="text-sm font-semibold">4 Dorm.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bathtub</span>
+                                        <span class="text-sm font-semibold">4 Baños</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">square_foot</span>
+                                        <span class="text-sm font-semibold">620 m²</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bathtub</span>
-                                    <span class="text-sm font-semibold">4 Baños</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">square_foot</span>
-                                    <span class="text-sm font-semibold">620 m²</span>
-                                </div>
+                                <button
+                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
+                                    Ver más
+                                    <span
+                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -422,7 +455,7 @@
                         <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5]">
                             <img alt="Glass House"
                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="https://loremflickr.com/800/1002/mansion,exterior" />
+                                src="img/hero-marketplace.jpg" />
                             <div
                                 class="absolute top-4 right-4 bg-error-container/90 backdrop-blur px-3 py-1 rounded shadow-sm">
                                 <span
@@ -439,19 +472,27 @@
                                 <span class="material-symbols-outlined text-base">location_on</span>
                                 Aspen, Colorado
                             </p>
-                            <div class="flex items-center gap-6 pt-4 text-secondary border-t border-outline-variant/20">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bed</span>
-                                    <span class="text-sm font-semibold">6 Dorm.</span>
+                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
+                                <div class="flex items-center gap-6 text-secondary">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bed</span>
+                                        <span class="text-sm font-semibold">6 Dorm.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">bathtub</span>
+                                        <span class="text-sm font-semibold">7 Baños</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">square_foot</span>
+                                        <span class="text-sm font-semibold">1,100 m²</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">bathtub</span>
-                                    <span class="text-sm font-semibold">7 Baños</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-lg">square_foot</span>
-                                    <span class="text-sm font-semibold">1,100 m²</span>
-                                </div>
+                                <button
+                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
+                                    Ver más
+                                    <span
+                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -471,7 +512,7 @@
                     <div class="relative animate-on-scroll">
                         <div class="aspect-square rounded-2xl overflow-hidden shadow-2xl">
                             <img alt="Architecture Detail" class="w-full h-full object-cover"
-                                src="https://loremflickr.com/800/800/architecture,interior" />
+                                src="img/hero-marketplace.jpg" />
                         </div>
                         <div
                             class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary rounded-2xl p-8 text-on-primary flex flex-col justify-end shadow-2xl hidden md:flex">
@@ -615,61 +656,95 @@
 
             <!-- Views Container -->
             <div class="content-container">
-
+                
                 <!-- Home / Dashboard View -->
                 <section id="home-view" class="view hidden">
-                    <header class="view-header">
-                        <h2>Inicio</h2>
-                        <label class="theme-switch">
-                            <input type="checkbox" class="theme-switch__checkbox">
-                            <div class="theme-switch__container">
-                                <div class="theme-switch__clouds"></div>
-                                <div class="theme-switch__stars-container">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                            d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
-                                            fill="currentColor"></path>
-                                    </svg>
-                                </div>
-                                <div class="theme-switch__circle-container">
-                                    <div class="theme-switch__sun-moon-container">
-                                        <div class="theme-switch__moon">
-                                            <div class="theme-switch__spot"></div>
-                                            <div class="theme-switch__spot"></div>
-                                            <div class="theme-switch__spot"></div>
+                    <div class="max-w-7xl mx-auto pt-16 md:pt-12 px-6 pb-24 md:pb-12">
+                        <!-- Header -->
+                        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 relative">
+                            <!-- Theme Toggle (Mobile Top Right) -->
+                            <label class="theme-switch absolute -top-12 right-0 z-50 md:hidden cursor-pointer transform scale-75" style="width: fit-content; margin: 0; transform-origin: right top;">
+                                <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
+                                <div class="theme-switch__container">
+                                    <div class="theme-switch__clouds"></div>
+                                    <div class="theme-switch__stars-container">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z" fill="currentColor"></path></svg>
+                                    </div>
+                                    <div class="theme-switch__circle-container">
+                                        <div class="theme-switch__sun-moon-container">
+                                            <div class="theme-switch__moon">
+                                                <div class="theme-switch__spot"></div>
+                                                <div class="theme-switch__spot"></div>
+                                                <div class="theme-switch__spot"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            </label>
+                            <div>
+                                <h2 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface dark:text-white mb-2 pt-6 md:pt-0">Inicio</h2>
+                                <p class="font-body text-secondary dark:text-secondary-fixed-dim text-lg">Resumen de cartera y estado de propiedades.</p>
                             </div>
-                        </label>
-                    </header>
-                    <div class="dashboard-grid">
-                        <div class="stat-card glass-card">
-                            <h3>Total Propiedades</h3>
-                            <p class="stat-value" id="total-properties-count">0</p>
+                            <button id="quick-add-btn" class="bg-gradient-to-br from-primary to-primary-container text-white font-body font-bold text-sm px-6 py-4 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] hover:opacity-90 transition-all flex items-center justify-center gap-2 whitespace-nowrap self-start md:self-auto mt-4 md:mt-0">
+                                <span class="material-symbols-outlined">add</span>
+                                Agregar Propiedad
+                            </button>
                         </div>
-                        <div class="stat-card glass-card">
-                            <h3>Ingresos Mensuales</h3>
-                            <p class="stat-value" id="total-income-display">$0</p>
+                        <!-- Key Statistics Bento Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+                            <!-- Stat Card 1 -->
+                            <div class="bg-surface-container-lowest dark:bg-on-surface border border-outline-variant/30 dark:border-none shadow-sm dark:shadow-none rounded-xl p-8 relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                                <div class="relative z-10 flex flex-col h-full justify-between">
+                                    <div class="flex items-start justify-between mb-8">
+                                        <span class="font-label text-xs uppercase tracking-widest text-secondary dark:text-secondary-fixed-dim font-bold">Total Propiedades</span>
+                                        <span class="material-symbols-outlined text-primary dark:text-primary-fixed">domain</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-headline text-5xl font-extrabold tracking-tighter text-primary dark:text-primary-fixed block leading-none" id="total-properties-count">0</span>
+                                        <span class="font-body text-sm text-secondary dark:text-secondary-fixed mt-2 block"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Stat Card 2 -->
+                            <div class="bg-surface-container-lowest dark:bg-on-surface border border-outline-variant/30 dark:border-none shadow-sm dark:shadow-none rounded-xl p-8 relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                                <div class="relative z-10 flex flex-col h-full justify-between">
+                                    <div class="flex items-start justify-between mb-8">
+                                        <span class="font-label text-xs uppercase tracking-widest text-secondary dark:text-secondary-fixed-dim font-bold">Ingresos Mensuales</span>
+                                        <span class="material-symbols-outlined text-primary dark:text-primary-fixed">payments</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-headline text-4xl font-extrabold tracking-tighter text-primary dark:text-primary-fixed block leading-none" id="total-income-display">$0</span>
+                                        <span class="font-body text-sm text-secondary dark:text-secondary-fixed mt-2 block">Proyectado</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Stat Card 3 -->
+                            <div class="bg-surface-container-lowest dark:bg-on-surface border border-outline-variant/30 dark:border-outline-variant/10 shadow-sm dark:shadow-none rounded-xl p-8 relative overflow-hidden group">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+                                <div class="relative z-10 flex flex-col h-full justify-between">
+                                    <div class="flex items-start justify-between mb-8">
+                                        <span class="font-label text-xs uppercase tracking-widest text-secondary dark:text-secondary-fixed-dim font-bold">Inquilinos en Mora</span>
+                                        <span class="material-symbols-outlined text-secondary dark:text-secondary-fixed-dim">warning</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-headline text-5xl font-extrabold tracking-tighter text-on-surface dark:text-surface block leading-none" id="late-tenants-count">0</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card glass-card">
-                            <h3>Inquilinos en Mora</h3>
-                            <p class="stat-value" id="late-tenants-count">0</p>
-                        </div>
-                    </div>
 
-                    <div class="recent-activity glass-card">
-                        <h3>Acciones Rápidas</h3>
-                        <button class="btn-secondary" id="quick-add-btn">
-                            <span class="material-symbols-rounded">add_home</span> Agregar Propiedad
-                        </button>
-                    </div>
-
-                    <div class="finances-list glass-card">
-                        <h3>Desglose por Propiedad</h3>
-                        <ul id="finance-breakdown-list">
-                            <!-- List items injected here -->
-                        </ul>
+                        <!-- Property Breakdown Section -->
+                        <div class="mb-8">
+                            <div class="flex justify-between items-end mb-8 border-b border-outline-variant/50 dark:border-on-surface/50 pb-4">
+                                <h3 class="font-headline text-2xl font-bold text-on-surface dark:text-white tracking-tight">Estado de Propiedades</h3>
+                                <button class="nav-link text-primary dark:text-primary-fixed font-body text-sm font-semibold hover:opacity-80 transition-opacity" data-target="properties-view">Ver Todas</button>
+                            </div>
+                            <div class="space-y-6" id="finance-breakdown-list">
+                                <!-- List items injected here by app.js -->
+                            </div>
+                        </div>
                     </div>
                 </section>
 

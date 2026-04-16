@@ -1220,11 +1220,41 @@ const App = {
         if(financeList) {
             financeList.innerHTML = '';
             properties.forEach(p => {
-                const item = document.createElement('li');
-                item.className = 'finance-item';
+                // Determine property status (mock logic: check late tenants or use simple "AL DÍA" default)
+                // In a real app we'd determine this via DataManager.getPaymentsForMonth()
+                const isLate = false; // Could add real logic
+                const statusHtml = isLate 
+                    ? `<span class="bg-error-container/20 text-error-container font-label text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-sm shrink-0 border border-error-container/30">VENCIDO</span>`
+                    : `<span class="bg-surface-variant/10 text-secondary-fixed font-label text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-sm shrink-0 border border-surface-variant/20">AL DÍA</span>`;
+                
+                const imageUrl = p.photoUrl || "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
+
+                const item = document.createElement('div');
+                item.className = 'bg-surface-container-lowest dark:bg-on-surface border border-outline-variant/50 dark:border-none rounded-xl overflow-hidden flex flex-col sm:flex-row group transition-all duration-300 hover:bg-surface-container-low dark:hover:bg-on-surface/80 shadow-sm dark:shadow-none';
                 item.innerHTML = `
-                    <span>${p.address}</span>
-                    <span style="font-weight: 600;">$${p.price.toLocaleString()}</span>
+                    <div class="sm:w-64 h-48 sm:h-auto relative overflow-hidden">
+                    <img alt="Property Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${imageUrl}"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden"></div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div class="flex justify-between items-start gap-4 mb-4">
+                    <div>
+                    <h4 class="font-body font-bold text-lg text-on-surface dark:text-white mb-1">${p.address}</h4>
+                    <p class="font-body text-sm text-secondary dark:text-secondary-fixed-dim">${p.ownerName || 'Propietario no asignado'}</p>
+                    </div>
+                    ${statusHtml}
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-auto">
+                    <div>
+                    <span class="block font-label text-[10px] text-secondary dark:text-secondary-fixed-dim uppercase tracking-widest mb-1">Inquilino</span>
+                    <span class="font-body text-sm text-on-surface dark:text-white font-medium">${p.tenantName || 'Sin asignar'}</span>
+                    </div>
+                    <div>
+                    <span class="block font-label text-[10px] text-secondary dark:text-secondary-fixed-dim uppercase tracking-widest mb-1">Valor Mensual</span>
+                    <span class="font-body text-sm text-on-surface dark:text-white font-medium">$${parseFloat(p.price).toLocaleString()}</span>
+                    </div>
+                    </div>
+                    </div>
                 `;
                 financeList.appendChild(item);
             });
