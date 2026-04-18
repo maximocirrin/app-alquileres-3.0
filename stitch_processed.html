@@ -1,0 +1,148 @@
+
+    <!-- Publish Property View -->
+    <section id="publish-property-view"
+        class="bg-background dark:bg-[#141212] font-body w-full min-h-screen z-[100] transition-opacity duration-300 hidden absolute top-0 left-0">
+        <!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-[#141212]/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-[#534341]/30">
+<div class="flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="text-primary dark:text-[#A13333] hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-manrope tracking-tight font-bold text-xl font-bold tracking-tighter text-primary dark:text-[#A13333]">The Architectural Ledger</span>
+</div>
+<!-- Desktop Progress Indicator -->
+<div class="hidden md:flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm">1</div>
+<span class="font-headline font-bold text-primary dark:text-[#A13333]">Principales</span>
+</div>
+<div class="w-8 border-t-2 border-surface-dim"></div>
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] text-on-surface dark:text-[#e2e2e2] flex items-center justify-center font-headline font-bold text-sm">2</div>
+<span class="font-headline font-bold text-on-surface dark:text-[#e2e2e2]">Multimedia</span>
+</div>
+<div class="w-8 border-t-2 border-surface-dim"></div>
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] text-on-surface dark:text-[#e2e2e2] flex items-center justify-center font-headline font-bold text-sm">3</div>
+<span class="font-headline font-bold text-on-surface dark:text-[#e2e2e2]">Extras</span>
+</div>
+<div class="w-8 border-t-2 border-surface-dim"></div>
+<div class="flex items-center gap-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] text-on-surface dark:text-[#e2e2e2] flex items-center justify-center font-headline font-bold text-sm">4</div>
+<span class="font-headline font-bold text-on-surface dark:text-[#e2e2e2]">Publicar</span>
+</div>
+</div>
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface dark:text-[#e2e2e2]">person</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 pt-16">
+<!-- Main Content Area -->
+<main class="flex-1 w-full p-6 md:p-12 pb-32">
+<div class="max-w-4xl mx-auto">
+<div class="mb-12">
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold text-on-background dark:text-[#e2e2e2] tracking-tight mb-4">Operación y tipo de propiedad</h1>
+<p class="text-secondary dark:text-[#a08c8a] font-body text-lg">Define los aspectos fundamentales de tu publicación.</p>
+</div>
+<div class="bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] p-8 rounded-xl border border-outline-variant/30 dark:border-[#534341]/30 mb-8">
+<!-- Sub-navigation tabs -->
+<div class="flex gap-8 mb-10 overflow-x-auto pb-2">
+<button class="font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap">Operación y tipo de propiedad</button>
+<button class="font-headline font-medium text-secondary dark:text-[#a08c8a] hover:text-on-background dark:text-[#e2e2e2] transition-colors pb-2 whitespace-nowrap">Ubicación</button>
+<button class="font-headline font-medium text-secondary dark:text-[#a08c8a] hover:text-on-background dark:text-[#e2e2e2] transition-colors pb-2 whitespace-nowrap">Características</button>
+</div>
+<form class="space-y-8">
+<!-- Tipo de operación -->
+<div class="space-y-4">
+<label class="block font-headline font-bold text-on-background dark:text-[#e2e2e2] text-lg">Tipo de operación *</label>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="operacion" type="radio"/>
+<div class="p-4 rounded-lg bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] border-2 border-transparent peer-checked:border-primary dark:border-[#A13333] peer-checked:bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] transition-all text-center">
+<span class="font-headline font-bold text-on-background dark:text-[#e2e2e2] peer-checked:text-primary dark:text-[#A13333]">Venta</span>
+</div>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-[#A13333] opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="operacion" type="radio"/>
+<div class="p-4 rounded-lg bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] border-2 border-transparent peer-checked:border-primary dark:border-[#A13333] peer-checked:bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] transition-all text-center">
+<span class="font-headline font-bold text-on-background dark:text-[#e2e2e2] peer-checked:text-primary dark:text-[#A13333]">Alquiler</span>
+</div>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-[#A13333] opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="operacion" type="radio"/>
+<div class="p-4 rounded-lg bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] border-2 border-transparent peer-checked:border-primary dark:border-[#A13333] peer-checked:bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] transition-all text-center">
+<span class="font-headline font-bold text-on-background dark:text-[#e2e2e2] peer-checked:text-primary dark:text-[#A13333]">Temporada</span>
+</div>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-[#A13333] opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</label>
+</div>
+</div>
+<!-- Tipo de propiedad -->
+<div class="space-y-4">
+<label class="block font-headline font-bold text-on-background dark:text-[#e2e2e2] text-lg">Tipo de propiedad *</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] border-none text-on-background dark:text-[#e2e2e2] rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
+<option disabled="" selected="" value="">Selecciona el tipo de propiedad</option>
+<option value="departamento">Departamento</option>
+<option value="casa">Casa</option>
+<option value="ph">PH</option>
+<option value="terreno">Terreno</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#a08c8a]">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Subtipo de propiedad -->
+<div class="space-y-4">
+<label class="block font-headline font-bold text-on-background dark:text-[#e2e2e2] text-lg">Subtipo de propiedad</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container dark:bg-[#211f1e]-high dark:bg-[#2b2928] border-none text-on-background dark:text-[#e2e2e2] rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container dark:bg-[#211f1e]-lowest dark:bg-[#0f0d0d] focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
+<option disabled="" selected="" value="">Selecciona un subtipo (opcional)</option>
+<option value="estudio">Estudio / Monoambiente</option>
+<option value="duplex">Dúplex</option>
+<option value="penthouse">Penthouse</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#a08c8a]">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+</form>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col-reverse sm:flex-row justify-end gap-4 mt-8">
+<button class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-[#A13333] bg-transparent border border-outline-variant/30 dark:border-[#534341]/30 hover:bg-surface-container dark:bg-[#211f1e] transition-colors">
+                        Guardar y salir
+                    </button>
+<button class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-[#A13333]">
+                        Continuar
+                    </button>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 pb-safe bg-surface/90 backdrop-blur-md z-50 border-t border-outline-variant/30 dark:border-[#534341]/30 shadow-none">
+<a class="flex flex-col items-center justify-center bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] rounded-xl px-6 py-1 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-inter text-xs font-medium mt-1">Operación</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-[#a08c8a] hover:text-primary dark:text-[#A13333] transition-colors active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">location_on</span>
+<span class="font-inter text-xs font-medium mt-1">Ubicación</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-[#a08c8a] hover:text-primary dark:text-[#A13333] transition-colors active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">rule</span>
+<span class="font-inter text-xs font-medium mt-1">Características</span>
+</a>
+</nav>
+
+    </section>
+  

@@ -109,9 +109,303 @@ const App = {
             });
         }
 
-        const btnBackMarketplace = document.getElementById('btn-back-marketplace');
-        if (btnBackMarketplace) {
-            btnBackMarketplace.addEventListener('click', (e) => {
+        const btnPublicarMarketplace = document.getElementById('btn-publicar-marketplace');
+        if (btnPublicarMarketplace) {
+            btnPublicarMarketplace.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('landing-marketplace-view').classList.add('hidden');
+                const appElem = document.getElementById('app');
+                if(appElem) appElem.classList.add('hidden');
+                const publishElem = document.getElementById('publish-property-view');
+                if(publishElem) {
+                    publishElem.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                }
+            });
+        }
+
+        const btnBackFromPublish = document.getElementById('btn-back-from-publish');
+        if (btnBackFromPublish) {
+            btnBackFromPublish.addEventListener('click', (e) => {
+                e.preventDefault();
+                const publishElem = document.getElementById('publish-property-view');
+                if(publishElem) publishElem.classList.add('hidden');
+                document.getElementById('landing-marketplace-view').classList.remove('hidden');
+                window.scrollTo(0, 0);
+            });
+        }
+
+        // Form 'Principales' Validation & Submit Interceptor
+        const formPrincipales = document.getElementById('form-principales');
+        if (formPrincipales) {
+            formPrincipales.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                let isValid = true;
+                const errorTipo = document.getElementById('error-tipo');
+                const errorSubtipo = document.getElementById('error-subtipo');
+                const selectTipo = document.getElementById('tipo-propiedad');
+                const selectSubtipo = document.getElementById('subtipo-propiedad');
+
+                // Reset error visuals
+                if (errorTipo) errorTipo.classList.add('hidden');
+                if (errorSubtipo) errorSubtipo.classList.add('hidden');
+
+                // Custom validation for 'Tipo de propiedad'
+                if (selectTipo && !selectTipo.value) {
+                    if (errorTipo) errorTipo.classList.remove('hidden');
+                    isValid = false;
+                }
+
+                // Custom validation for 'Subtipo de propiedad'
+                if (selectSubtipo && selectSubtipo.required && !selectSubtipo.value) {
+                    if (errorSubtipo) errorSubtipo.classList.remove('hidden');
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    console.log('¡Datos Principales completos y validados (Custom)! Avanzando al subpaso de Ubicación...');
+                    
+                    // Manejar DOM para mostrar Ubicación
+                    const tabOperacion = document.getElementById('tab-operacion');
+                    const tabUbicacion = document.getElementById('tab-ubicacion');
+                    const stepOperacion = document.getElementById('step-operacion');
+                    const stepUbicacion = document.getElementById('step-ubicacion');
+                    const pasoSubtitle = document.getElementById('paso-subtitle');
+
+                    if (tabOperacion && tabUbicacion && stepOperacion && stepUbicacion) {
+                        tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
+                        tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+
+                        stepOperacion.classList.add('hidden');
+                        stepUbicacion.classList.remove('hidden');
+
+                        if(typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
+                            setTimeout(() => {
+                                google.maps.event.trigger(propertyMap, 'resize');
+                                propertyMap.setCenter({ lat: -32.898684, lng: -68.847522 });
+                            }, 50);
+                        }
+
+                        if(pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
+
+                        // Mover los botones "Continuar" para que apunten al nuevo formulario
+                        document.querySelectorAll('button[form="form-principales"]').forEach(btn => {
+                            btn.setAttribute('form', 'form-ubicacion');
+                        });
+                        
+                        // Hacer que "Operación" sea clickeable para volver
+                        tabOperacion.onclick = (event) => {
+                            event.preventDefault();
+                            tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+                            tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            stepUbicacion.classList.add('hidden');
+                            stepOperacion.classList.remove('hidden');
+                            if(pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
+                            document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
+                                btn.setAttribute('form', 'form-principales');
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dependent Dropdowns Logic for Property Publishing
+        const selectTipoPropiedad = document.getElementById('tipo-propiedad');
+        const selectSubtipoPropiedad = document.getElementById('subtipo-propiedad');
+
+        if (selectTipoPropiedad && selectSubtipoPropiedad) {
+            const subtiposConfig = {
+                departamento: [
+                    { value: 'apartaestudio', label: 'Apartaestudio' },
+                    { value: 'duplex', label: 'Dúplex' },
+                    { value: 'estandar', label: 'Estándar' },
+                    { value: 'loft', label: 'Loft' },
+                    { value: 'monoambiente', label: 'Monoambiente' },
+                    { value: 'penthouse', label: 'Penthouse' },
+                    { value: 'piso', label: 'Piso' },
+                    { value: 'semipiso', label: 'Semipiso' },
+                    { value: 'triplex', label: 'Tríplex' }
+                ],
+                casa: [
+                    { value: 'barrio-acceso-controlado', label: 'Barrio con acceso controlado' },
+                    { value: 'bungalow', label: 'Bungalow' },
+                    { value: 'cabana', label: 'Cabaña' },
+                    { value: 'casa', label: 'Casa' },
+                    { value: 'casa-de-playa', label: 'Casa de playa' },
+                    { value: 'chalet', label: 'Chalet' },
+                    { value: 'condominio', label: 'Condominio' },
+                    { value: 'duplex', label: 'Dúplex' },
+                    { value: 'ph', label: 'PH' },
+                    { value: 'prefabricada', label: 'Prefabricada' },
+                    { value: 'triplex', label: 'Tríplex' }
+                ]
+            };
+
+            selectTipoPropiedad.addEventListener('change', (e) => {
+                const tipo = e.target.value;
+                
+                // Clear existing subtipos but keep the default disabled placeholder
+                selectSubtipoPropiedad.innerHTML = '<option disabled selected value="">Selecciona un subtipo (opcional)</option>';
+
+                if (tipo && subtiposConfig[tipo]) {
+                    // Unlock the field, make it required, and populate the respective options
+                    selectSubtipoPropiedad.disabled = false;
+                    selectSubtipoPropiedad.required = true;
+                    subtiposConfig[tipo].forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.value;
+                        option.textContent = sub.label;
+                        selectSubtipoPropiedad.appendChild(option);
+                    });
+                } else {
+                    // Lock the field, make it not required
+                    selectSubtipoPropiedad.disabled = true;
+                    selectSubtipoPropiedad.required = false;
+                }
+
+                // Remove lingering custom errors if user modifies selections
+                const errorTipo = document.getElementById('error-tipo');
+                const errorSubtipo = document.getElementById('error-subtipo');
+                if (errorTipo) errorTipo.classList.add('hidden');
+                if (errorSubtipo) errorSubtipo.classList.add('hidden');
+            });
+        }
+
+        // Form 'Ubicación' Validation & Submit Interceptor
+        const formUbicacion = document.getElementById('form-ubicacion');
+        if (formUbicacion) {
+            formUbicacion.addEventListener('submit', (e) => {
+                e.preventDefault();
+                let isValid = true;
+                
+                const calle = document.getElementById('calle-altura');
+                const prov = document.getElementById('provincia');
+                const ciudad = document.getElementById('ciudad');
+                const errCalle = document.getElementById('error-calle');
+                const errProv = document.getElementById('error-provincia');
+                const errCiudad = document.getElementById('error-ciudad');
+                
+                if(errCalle) errCalle.classList.add('hidden');
+                if(errProv) errProv.classList.add('hidden');
+                if(errCiudad) errCiudad.classList.add('hidden');
+                
+                if(calle && !calle.value) { if(errCalle) errCalle.classList.remove('hidden'); isValid = false; }
+                if(prov && !prov.value) { if(errProv) errProv.classList.remove('hidden'); isValid = false; }
+                if(ciudad && ciudad.required && !ciudad.value) { if(errCiudad) errCiudad.classList.remove('hidden'); isValid = false; }
+                
+                if(isValid) {
+                    console.log('¡Datos Ubicación completos y validados! (Acá iría la transición a Características)');
+                }
+            });
+        }
+        
+        // Provincia -> Ciudad dependent dropdown
+        const selectProvincia = document.getElementById('provincia');
+        const selectCiudad = document.getElementById('ciudad');
+        
+        if (selectProvincia && selectCiudad) {
+            const ciudadesConfig = {
+                'buenos-aires': [
+                    { value: 'la-plata', label: 'La Plata' },
+                    { value: 'mar-del-plata', label: 'Mar del Plata' },
+                    { value: 'tandil', label: 'Tandil' },
+                    { value: 'bahia-blanca', label: 'Bahía Blanca' }
+                ],
+                'caba': [
+                    { value: 'palermo', label: 'Palermo' },
+                    { value: 'belgrano', label: 'Belgrano' },
+                    { value: 'recoleta', label: 'Recoleta' },
+                    { value: 'caballito', label: 'Caballito' }
+                ],
+                'cordoba': [
+                    { value: 'cordoba-cap', label: 'Córdoba Capital' },
+                    { value: 'villa-carlos-paz', label: 'Villa Carlos Paz' }
+                ],
+                'santa-fe': [
+                    { value: 'rosario', label: 'Rosario' },
+                    { value: 'santa-fe-cap', label: 'Santa Fe Capital' }
+                ],
+                'mendoza': [
+                    { value: 'mendoza-cap', label: 'Mendoza Capital' },
+                    { value: 'san-rafael', label: 'San Rafael' }
+                ]
+            };
+            
+            selectProvincia.addEventListener('change', (e) => {
+                const p = e.target.value;
+                selectCiudad.innerHTML = '<option disabled selected value="">Selecciona la ciudad</option>';
+                const errProv = document.getElementById('error-provincia');
+                if(errProv) errProv.classList.add('hidden');
+                
+                if (p && ciudadesConfig[p]) {
+                    selectCiudad.disabled = false;
+                    selectCiudad.required = true;
+                    ciudadesConfig[p].forEach(city => {
+                        const opt = document.createElement('option');
+                        opt.value = city.value;
+                        opt.textContent = city.label;
+                        selectCiudad.appendChild(opt);
+                    });
+                } else {
+                    selectCiudad.disabled = true;
+                    selectCiudad.required = false;
+                }
+                const errCiudad = document.getElementById('error-ciudad');
+                if(errCiudad) errCiudad.classList.add('hidden');
+            });
+            
+            selectCiudad.addEventListener('change', () => {
+                const errCiudad = document.getElementById('error-ciudad');
+                if(errCiudad) errCiudad.classList.add('hidden');
+            });
+            
+            const calle = document.getElementById('calle-altura');
+            if(calle) {
+                calle.addEventListener('input', () => {
+                    const errCalle = document.getElementById('error-calle');
+                    if(errCalle) errCalle.classList.add('hidden');
+                });
+            }
+        }
+
+        // Real Interactive Map using Google Maps JS API
+        window.initGoogleMap = function() {
+            const mapContainer = document.getElementById('real-map-container');
+            if (!mapContainer) return;
+
+            // Mendoza coordinates
+            const initialPos = { lat: -32.898684, lng: -68.847522 };
+
+            window.propertyMap = new google.maps.Map(mapContainer, {
+                zoom: 15,
+                center: initialPos,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+            });
+
+            // Use default Google Maps red marker (draggable)
+            window.propertyMarker = new google.maps.Marker({
+                position: initialPos,
+                map: window.propertyMap,
+                draggable: true,
+                title: "Arrastra para ajustar tu ubicación",
+                animation: google.maps.Animation.DROP,
+            });
+            
+            // Listen for drag end
+            window.propertyMarker.addListener('dragend', function() {
+                const pos = window.propertyMarker.getPosition();
+                console.log(`Pin dropped at Lat: ${pos.lat()}, Lng: ${pos.lng()}`);
+                // Could call reverse geocoding here to auto-fill address
+            });
+        };
+
+        const btnBackMarketplaceElements = document.querySelectorAll('.btn-back-marketplace');
+        btnBackMarketplaceElements.forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.getElementById('app').classList.add('hidden');
                 document.getElementById('landing-marketplace-view').classList.remove('hidden');
@@ -124,7 +418,7 @@ const App = {
                     });
                 }
             });
-        }
+        });
 
         // Login Form
         const loginForm = document.getElementById('login-form');

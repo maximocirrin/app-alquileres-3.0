@@ -1,102 +1,99 @@
 <!DOCTYPE html>
 
-<html class="light" lang="es"><head>
+<html class="dark" lang="es"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Publicar Propiedad - The Architectural Ledger</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-background": "#1a1c1c",
-                        "surface-dim": "#dadada",
-                        "surface-bright": "#f9f9f9",
-                        "secondary-fixed": "#e4e2e2",
-                        "tertiary-container": "#9a3a3c",
-                        "on-tertiary-fixed": "#410007",
-                        "tertiary-fixed": "#ffdad8",
-                        "surface-container-lowest": "#ffffff",
-                        "on-secondary-fixed-variant": "#464747",
-                        "inverse-surface": "#2f3131",
-                        "surface-container-highest": "#e2e2e2",
-                        "error-container": "#ffdad6",
-                        "surface": "#f9f9f9",
-                        "primary": "#811b1e",
-                        "on-surface-variant": "#574140",
-                        "on-error-container": "#93000a",
-                        "secondary-fixed-dim": "#c7c6c6",
-                        "secondary-container": "#e1dfdf",
-                        "surface-tint": "#a73737",
-                        "primary-container": "#a13333",
-                        "outline-variant": "#debfbd",
-                        "on-primary-fixed": "#410005",
-                        "surface-container-low": "#f3f3f3",
-                        "on-error": "#ffffff",
-                        "inverse-on-surface": "#f1f1f1",
-                        "primary-fixed-dim": "#ffb3ae",
-                        "primary-fixed": "#ffdad7",
-                        "on-tertiary-fixed-variant": "#80272b",
-                        "on-primary-container": "#ffc3bf",
-                        "inverse-primary": "#ffb3ae",
-                        "tertiary": "#7b2327",
-                        "tertiary-fixed-dim": "#ffb3b1",
-                        "on-primary": "#ffffff",
-                        "error": "#ba1a1a",
-                        "surface-container-high": "#e8e8e8",
-                        "on-tertiary-container": "#ffc3c1",
-                        "on-secondary-container": "#636262",
-                        "on-tertiary": "#ffffff",
-                        "secondary": "#5e5e5e",
-                        "on-primary-fixed-variant": "#871f22",
-                        "on-secondary-fixed": "#1b1c1c",
-                        "background": "#f9f9f9",
-                        "on-surface": "#1a1c1c",
-                        "surface-container": "#eeeeee",
-                        "on-secondary": "#ffffff",
-                        "outline": "#8b716f",
-                        "surface-variant": "#e2e2e2"
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    fontFamily: {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                }
+<script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "on-background": "#e2e2e2",
+                "surface-dim": "#141212",
+                "surface-bright": "#3b3838",
+                "secondary-fixed": "#ffdad8",
+                "tertiary-container": "#7b2327",
+                "on-tertiary-fixed": "#410007",
+                "tertiary-fixed": "#ffdad8",
+                "surface-container-lowest": "#0f0d0d",
+                "on-secondary-fixed-variant": "#80272b",
+                "inverse-surface": "#e2e2e2",
+                "surface-container-highest": "#363433",
+                "error-container": "#93000a",
+                "surface": "#141212",
+                "primary": "#A13333",
+                "on-surface-variant": "#d8c2c1",
+                "on-error-container": "#ffdad6",
+                "secondary-fixed-dim": "#ffb3b1",
+                "secondary-container": "#80272b",
+                "surface-tint": "#A13333",
+                "primary-container": "#811b1e",
+                "outline-variant": "#534341",
+                "on-primary-fixed": "#ffffff",
+                "surface-container-low": "#1c1b1a",
+                "on-error": "#ffffff",
+                "inverse-on-surface": "#32302f",
+                "primary-fixed-dim": "#A13333",
+                "primary-fixed": "#ffdad7",
+                "on-tertiary-fixed-variant": "#80272b",
+                "on-primary-container": "#ffc3bf",
+                "inverse-primary": "#a13333",
+                "tertiary": "#ffb3b1",
+                "tertiary-fixed-dim": "#ffb3b1",
+                "on-primary": "#ffffff",
+                "error": "#ffb4ab",
+                "surface-container-high": "#2b2928",
+                "on-tertiary-container": "#ffc3c1",
+                "on-secondary-container": "#ffc3c1",
+                "on-tertiary": "#ffffff",
+                "secondary": "#a08c8a",
+                "on-primary-fixed-variant": "#871f22",
+                "on-secondary-fixed": "#410007",
+                "background": "#141212",
+                "on-surface": "#e2e2e2",
+                "surface-container": "#211f1e",
+                "on-secondary": "#ffffff",
+                "outline": "#a08c8a",
+                "surface-variant": "#534341"
+            },
+            borderRadius: {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
             }
         }
-    </script>
+    }
+}</script>
 <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; color: #1a1c1c; }
+        body { font-family: 'Inter', sans-serif; background-color: #141212; color: #e2e2e2; }
         h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Manrope', sans-serif; }
-        .gradient-btn { background: linear-gradient(135deg, #811b1e 0%, #a13333 100%); }
+        .gradient-btn { background: #A13333; }
     </style>
 <style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
+        body { font-family: 'Inter', sans-serif; background-color: #141212; color: #e2e2e2; }
+        h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Manrope', sans-serif; }
+        .gradient-btn { background: #A13333; }
+    </style>
 </head>
 <body class="bg-background min-h-screen antialiased text-on-background flex flex-col">
 <!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-stone-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] no-border tonal-transition bg-stone-100 dark:bg-stone-900">
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30">
 <div class="flex justify-between items-center px-6 h-16 w-full">
 <div class="flex items-center gap-4">
-<button class="text-[#811b1e] dark:text-[#debfbd] hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
+<button class="text-primary hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
 <span class="material-symbols-outlined">arrow_back</span>
 </button>
-<span class="font-manrope tracking-tight font-bold text-xl font-bold tracking-tighter text-[#811b1e] dark:text-[#debfbd]">The Architectural Ledger</span>
+<span class="font-manrope tracking-tight font-bold text-xl font-bold tracking-tighter text-primary">The Architectural Ledger</span>
 </div>
 <!-- Desktop Progress Indicator -->
 <div class="hidden md:flex items-center gap-8">
@@ -135,7 +132,7 @@
 <h1 class="text-4xl md:text-5xl font-headline font-extrabold text-on-background tracking-tight mb-4">Operación y tipo de propiedad</h1>
 <p class="text-secondary font-body text-lg">Define los aspectos fundamentales de tu publicación.</p>
 </div>
-<div class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] mb-8">
+<div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/30 mb-8">
 <!-- Sub-navigation tabs -->
 <div class="flex gap-8 mb-10 overflow-x-auto pb-2">
 <button class="font-headline font-bold text-primary border-b-2 border-primary pb-2 whitespace-nowrap">Operación y tipo de propiedad</button>
@@ -174,7 +171,7 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background text-lg">Tipo de propiedad *</label>
 <div class="relative">
-<select class="w-full appearance-none bg-surface-container-high border-none text-on-background rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-outline-variant/30 transition-colors cursor-pointer">
+<select class="w-full appearance-none bg-surface-container-high border-none text-on-background rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
 <option disabled="" selected="" value="">Selecciona el tipo de propiedad</option>
 <option value="departamento">Departamento</option>
 <option value="casa">Casa</option>
@@ -190,7 +187,7 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background text-lg">Subtipo de propiedad</label>
 <div class="relative">
-<select class="w-full appearance-none bg-surface-container-high border-none text-on-background rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-outline-variant/30 transition-colors cursor-pointer">
+<select class="w-full appearance-none bg-surface-container-high border-none text-on-background rounded-sm py-4 px-4 pr-12 font-body focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
 <option disabled="" selected="" value="">Selecciona un subtipo (opcional)</option>
 <option value="estudio">Estudio / Monoambiente</option>
 <option value="duplex">Dúplex</option>
@@ -208,7 +205,7 @@
 <button class="px-8 py-4 rounded-xl font-headline font-bold text-primary bg-transparent border border-outline-variant/30 hover:bg-surface-container transition-colors">
                         Guardar y salir
                     </button>
-<button class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary gradient-btn hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+<button class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary">
                         Continuar
                     </button>
 </div>
@@ -216,16 +213,16 @@
 </main>
 </div>
 <!-- BottomNavBar (Mobile Only) -->
-<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 pb-safe bg-white/90 dark:bg-stone-950/90 backdrop-blur-md z-50 border-t border-[#debfbd]/15 tonal-layering bg-stone-50 dark:bg-stone-900 shadow-none">
-<a class="flex flex-col items-center justify-center bg-[#811b1e] text-white rounded-xl px-6 py-1 active:scale-90 transition-all" href="#">
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 pb-safe bg-surface/90 backdrop-blur-md z-50 border-t border-outline-variant/30 shadow-none">
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl px-6 py-1 active:scale-90 transition-all" href="#">
 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
 <span class="font-inter text-xs font-medium mt-1">Operación</span>
 </a>
-<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-[#a13333] transition-colors active:scale-90 transition-all" href="#">
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-90 transition-all" href="#">
 <span class="material-symbols-outlined">location_on</span>
 <span class="font-inter text-xs font-medium mt-1">Ubicación</span>
 </a>
-<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-[#a13333] transition-colors active:scale-90 transition-all" href="#">
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-90 transition-all" href="#">
 <span class="material-symbols-outlined">rule</span>
 <span class="font-inter text-xs font-medium mt-1">Características</span>
 </a>
