@@ -113,6 +113,7 @@ const App = {
         if (btnPublicarMarketplace) {
             btnPublicarMarketplace.addEventListener('click', (e) => {
                 e.preventDefault();
+                window.currentWizardStep = 1; // Reiniciar paso
                 document.getElementById('landing-marketplace-view').classList.add('hidden');
                 const appElem = document.getElementById('app');
                 if(appElem) appElem.classList.add('hidden');
@@ -125,14 +126,310 @@ const App = {
         }
 
         const btnBackFromPublish = document.getElementById('btn-back-from-publish');
-        if (btnBackFromPublish) {
-            btnBackFromPublish.addEventListener('click', (e) => {
-                e.preventDefault();
-                const publishElem = document.getElementById('publish-property-view');
-                if(publishElem) publishElem.classList.add('hidden');
-                document.getElementById('landing-marketplace-view').classList.remove('hidden');
-                window.scrollTo(0, 0);
+        const btnBackMobile = document.getElementById('btn-back-mobile');
+        
+        const handleBackFromPublish = (e) => {
+            e.preventDefault();
+
+            // Check if we need to go back to Step 3 from Step 4
+            if (window.currentWizardStep === 4) {
+                const step3Container = document.getElementById('wizard-step-3-container');
+                const step4Container = document.getElementById('wizard-step-4-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
+
+                if(title) title.style.opacity = '0';
+                if(subtitle) subtitle.style.opacity = '0';
+                if(step4Container) {
+                    step4Container.classList.remove('opacity-100', 'scale-100');
+                    step4Container.classList.add('opacity-0', 'scale-95');
+                }
+
+                setTimeout(() => {
+                    if(step4Container) {
+                        step4Container.classList.add('hidden');
+                        step4Container.style.height = '0';
+                    }
+
+                    // Update Progress Indicator
+                    const pStep3 = document.getElementById('progress-step-3');
+                    const pStep4 = document.getElementById('progress-step-4');
+                    const pLine3 = document.getElementById('progress-line-3');
+                    
+                    if(pStep3) {
+                        pStep3.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
+                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Extras</span>
+                        `;
+                    }
+                    if(pStep4) {
+                        pStep4.classList.add('opacity-50');
+                        pStep4.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">4</div>
+                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Publicar</span>
+                        `;
+                    }
+                    
+                    if(pLine3) {
+                        pLine3.classList.remove('border-primary', 'dark:border-red-500');
+                        pLine3.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
+                    }
+
+                    if(step3Container) {
+                        step3Container.classList.remove('hidden');
+                        if(title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
+                        if(subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
+
+                        void step3Container.offsetWidth; // Reflow
+
+                        if(title) title.style.opacity = '1';
+                        if(subtitle) subtitle.style.opacity = '1';
+                        step3Container.classList.remove('opacity-0', 'scale-95', 'h-0');
+                        step3Container.classList.add('opacity-100', 'scale-100', 'h-auto');
+                        step3Container.style.height = ''; // Limpiar inline style
+
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                        // Change buttons to submit form-extras
+                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+
+                        if (continueBtnDesk) {
+                            continueBtnDesk.textContent = 'Continuar';
+                            continueBtnDesk.setAttribute('form', 'form-extras');
+                        }
+                        if (continueBtnMob) {
+                            continueBtnMob.textContent = 'Continuar';
+                            continueBtnMob.setAttribute('form', 'form-extras');
+                        }
+
+                        window.currentWizardStep = 3;
+                    }
+                }, 400);
+
+                return;
+            }
+
+            // Check if we need to go back to Step 2 from Step 3
+            if (window.currentWizardStep === 3) {
+                const step2Container = document.getElementById('wizard-step-2-container');
+                const step3Container = document.getElementById('wizard-step-3-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
+
+                if(title) title.style.opacity = '0';
+                if(subtitle) subtitle.style.opacity = '0';
+                if(step3Container) {
+                    step3Container.classList.remove('opacity-100', 'scale-100');
+                    step3Container.classList.add('opacity-0', 'scale-95');
+                }
+
+                setTimeout(() => {
+                    if(step3Container) {
+                        step3Container.classList.add('hidden');
+                        step3Container.style.height = '0';
+                    }
+
+                    // Update Progress Indicator
+                    const pStep2 = document.getElementById('progress-step-2');
+                    const pStep3 = document.getElementById('progress-step-3');
+                    const pLine2 = document.getElementById('progress-line-2');
+                    
+                    if(pStep2) {
+                        pStep2.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
+                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
+                        `;
+                    }
+                    if(pStep3) {
+                        pStep3.classList.add('opacity-50');
+                        pStep3.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">3</div>
+                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Extras</span>
+                        `;
+                    }
+                    
+                    if(pLine2) {
+                        pLine2.classList.remove('border-primary', 'dark:border-red-500');
+                        pLine2.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
+                    }
+
+                    if(step2Container) {
+                        step2Container.classList.remove('hidden');
+                        if(title) title.textContent = 'Agregá fotos y videos';
+                        if(subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
+
+                        void step2Container.offsetWidth; // Reflow
+
+                        if(title) title.style.opacity = '1';
+                        if(subtitle) subtitle.style.opacity = '1';
+                        step2Container.classList.remove('opacity-0', 'scale-95', 'h-0');
+                        step2Container.classList.add('opacity-100', 'scale-100', 'h-auto');
+                        step2Container.style.height = ''; // Limpiar inline style
+
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                        // Change buttons to submit form-multimedia
+                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+
+                        if (continueBtnDesk) {
+                            continueBtnDesk.textContent = 'Continuar';
+                            continueBtnDesk.setAttribute('form', 'form-multimedia');
+                        }
+                        if (continueBtnMob) {
+                            continueBtnMob.textContent = 'Continuar';
+                            continueBtnMob.setAttribute('form', 'form-multimedia');
+                        }
+
+                        window.currentWizardStep = 2;
+                    }
+                }, 400);
+
+                return;
+            }
+
+            // Check if we need to go back to Step 1 instead of cancelling
+            if (window.currentWizardStep === 2) {
+                // Transition back to step 1
+                const step1Container = document.getElementById('wizard-step-1-container');
+                const step2Container = document.getElementById('wizard-step-2-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
+
+                // Fade out step 2
+                if(title) title.style.opacity = '0';
+                if(subtitle) subtitle.style.opacity = '0';
+                if(step2Container) {
+                    step2Container.classList.remove('opacity-100', 'scale-100');
+                    step2Container.classList.add('opacity-0', 'scale-95');
+                }
+
+                setTimeout(() => {
+                    if(step2Container) {
+                        step2Container.classList.add('hidden');
+                        step2Container.style.height = '0';
+                    }
+
+                    // Update Progress Indicator
+                    const pStep1 = document.getElementById('progress-step-1');
+                    const pStep2 = document.getElementById('progress-step-2');
+                    
+                    if(pStep1) {
+                        pStep1.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
+                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
+                        `;
+                    }
+                    if(pStep2) {
+                        pStep2.classList.add('opacity-50');
+                        pStep2.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">2</div>
+                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
+                        `;
+                    }
+                    
+                    const pLine1 = document.getElementById('progress-line-1');
+                    if(pLine1) {
+                        pLine1.classList.remove('border-primary', 'dark:border-red-500');
+                        pLine1.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
+                    }
+
+                    if(step1Container) {
+                        step1Container.classList.remove('hidden');
+                        if(title) title.textContent = '¡Empecemos a crear tu aviso!';
+                        if(subtitle) subtitle.textContent = 'Detalles de tu propiedad'; // Or whatever was the original context
+
+                        void step1Container.offsetWidth; // Reflow
+
+                        if(title) title.style.opacity = '1';
+                        if(subtitle) subtitle.style.opacity = '1';
+                        step1Container.classList.remove('opacity-0', 'scale-95', 'h-0');
+                        step1Container.classList.add('opacity-100', 'scale-100', 'h-auto');
+                        step1Container.style.height = ''; // Limpiar inline style
+
+                        // Scroll up if necessary
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                        // Reset buttons
+                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+                        const backBtnDeskText = document.getElementById('btn-back-desktop-text');
+                        const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
+                        const backBtnTopIcon = document.getElementById('btn-back-icon');
+                        const backBtnTopText = document.getElementById('btn-back-text');
+
+                        if (continueBtnDesk) {
+                            continueBtnDesk.textContent = 'Continuar';
+                            continueBtnDesk.setAttribute('form', 'form-caracteristicas');
+                        }
+                        if (continueBtnMob) {
+                            continueBtnMob.textContent = 'Continuar';
+                            continueBtnMob.setAttribute('form', 'form-caracteristicas');
+                        }
+
+                        if (backBtnDeskText) backBtnDeskText.textContent = 'Cancelar';
+                        if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'close';
+                        if (backBtnTopText) backBtnTopText.textContent = 'Cancelar';
+                        if (backBtnTopIcon) backBtnTopIcon.textContent = 'close';
+
+                        window.currentWizardStep = 1;
+                    }
+                }, 400);
+
+                return;
+            }
+
+            // Cerrar la vista (Cancelar)
+            
+            // Forzar vuelta al sub-paso 1 (Operación) antes de cerrar para que al reabrir esté limpio
+            const stepOperacion = document.getElementById('step-operacion');
+            const stepUbicacion = document.getElementById('step-ubicacion');
+            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+            const tabOperacion = document.getElementById('tab-operacion');
+            const tabUbicacion = document.getElementById('tab-ubicacion');
+            const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+            const pasoSubtitle = document.getElementById('paso-subtitle');
+            const publishMainTitle = document.getElementById('publish-main-title');
+
+            if (stepOperacion) stepOperacion.classList.remove('hidden');
+            if (stepUbicacion) stepUbicacion.classList.add('hidden');
+            if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
+
+            if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+            if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+            if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+            
+            if (publishMainTitle) publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
+            if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
+
+            // Reset forms and continue button bindings
+            document.querySelectorAll('button[type="submit"]').forEach(btn => {
+                if (btn.hasAttribute('form')) btn.setAttribute('form', 'form-principales');
             });
+
+            const publishElem = document.getElementById('publish-property-view');
+            if(publishElem) publishElem.classList.add('hidden');
+            
+            const landingElem = document.getElementById('landing-marketplace-view');
+            if(landingElem) landingElem.classList.remove('hidden');
+            
+            window.scrollTo(0, 0);
+            
+            // Reiniciar animaciones de scroll
+            if (window.marketplaceObserver) {
+                document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                    el.classList.remove('is-visible');
+                    window.marketplaceObserver.observe(el);
+                });
+            }
+        };
+
+        if (btnBackFromPublish) {
+            btnBackFromPublish.addEventListener('click', handleBackFromPublish);
+        }
+        if (btnBackMobile) {
+            btnBackMobile.addEventListener('click', handleBackFromPublish);
         }
 
         // Form 'Principales' Validation & Submit Interceptor
@@ -180,6 +477,10 @@ const App = {
                         stepOperacion.classList.add('hidden');
                         stepUbicacion.classList.remove('hidden');
 
+                        if (window.innerWidth < 768) {
+                            tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        }
+
                         if(typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
                             setTimeout(() => {
                                 google.maps.event.trigger(propertyMap, 'resize');
@@ -201,11 +502,20 @@ const App = {
                             tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                             stepUbicacion.classList.add('hidden');
                             stepOperacion.classList.remove('hidden');
+
+                            if (window.innerWidth < 768) {
+                                tabOperacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                            }
+
                             if(pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
                             document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
                                 btn.setAttribute('form', 'form-principales');
                             });
+                            
+
                         }
+                        
+
                     }
                 }
             });
@@ -296,7 +606,415 @@ const App = {
                 if(ciudad && ciudad.required && !ciudad.value) { if(errCiudad) errCiudad.classList.remove('hidden'); isValid = false; }
                 
                 if(isValid) {
-                    console.log('¡Datos Ubicación completos y validados! (Acá iría la transición a Características)');
+                    console.log('¡Datos Ubicación completos y validados! Transicionando a Características...');
+                    
+                    const tabUbicacion = document.getElementById('tab-ubicacion');
+                    const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+                    const stepUbicacion = document.getElementById('step-ubicacion');
+                    const stepCaracteristicas = document.getElementById('step-caracteristicas');
+                    const pasoSubtitle = document.getElementById('paso-subtitle');
+
+                    if (tabUbicacion && tabCaracteristicas && stepUbicacion && stepCaracteristicas) {
+                        tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
+                        tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+
+                        stepUbicacion.classList.add('hidden');
+                        stepCaracteristicas.classList.remove('hidden');
+
+                        if (window.innerWidth < 768) {
+                            tabCaracteristicas.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        }
+
+                        if(pasoSubtitle) pasoSubtitle.textContent = 'Detalles de tu propiedad';
+
+                        document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
+                            btn.setAttribute('form', 'form-caracteristicas');
+                        });
+                        
+                        // Hacer que "Ubicación" sea clickeable para volver
+                        tabUbicacion.onclick = (event) => {
+                            event.preventDefault();
+                            tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+                            tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            stepCaracteristicas.classList.add('hidden');
+                            stepUbicacion.classList.remove('hidden');
+
+                            if (window.innerWidth < 768) {
+                                tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                            }
+
+                            if(pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
+                            document.querySelectorAll('button[form="form-caracteristicas"]').forEach(btn => {
+                                btn.setAttribute('form', 'form-ubicacion');
+                            });
+                            
+
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Form 'Características' Validation & Submit Interceptor
+        const formCaracteristicas = document.getElementById('form-caracteristicas');
+        if (formCaracteristicas) {
+            formCaracteristicas.addEventListener('submit', (e) => {
+                e.preventDefault();
+                let isValid = true;
+                
+                const supCubierta = document.getElementById('sup-cubierta');
+                const supTotal = document.getElementById('sup-total');
+                const precio = document.getElementById('precio');
+                const titulo = document.getElementById('titulo-aviso');
+                const descripcion = document.getElementById('descripcion-aviso');
+                
+                const errSupCubierta = document.getElementById('error-sup-cubierta');
+                const errSupTotal = document.getElementById('error-sup-total');
+                const errPrecio = document.getElementById('error-precio');
+                const errTitulo = document.getElementById('error-titulo');
+                const errDescripcion = document.getElementById('error-descripcion');
+                
+                if(errSupCubierta) errSupCubierta.classList.add('hidden');
+                if(errSupTotal) errSupTotal.classList.add('hidden');
+                if(errPrecio) errPrecio.classList.add('hidden');
+                if(errTitulo) errTitulo.classList.add('hidden');
+                if(errDescripcion) errDescripcion.classList.add('hidden');
+                
+                if(supCubierta && !supCubierta.value) { if(errSupCubierta) errSupCubierta.classList.remove('hidden'); isValid = false; }
+                if(supTotal && !supTotal.value) { if(errSupTotal) errSupTotal.classList.remove('hidden'); isValid = false; }
+                if(precio && !precio.value) { if(errPrecio) errPrecio.classList.remove('hidden'); isValid = false; }
+                if(titulo && !titulo.value) { if(errTitulo) errTitulo.classList.remove('hidden'); isValid = false; }
+                if(descripcion && !descripcion.value) { if(errDescripcion) errDescripcion.classList.remove('hidden'); isValid = false; }
+                
+                if(isValid) {
+                    console.log('¡Datos Características completos y validados! Transicionando al paso 2: Multimedia...');
+                    
+                    const step1Container = document.getElementById('wizard-step-1-container');
+                    const step2Container = document.getElementById('wizard-step-2-container');
+                    const title = document.getElementById('publish-main-title');
+                    const subtitle = document.getElementById('paso-subtitle');
+                    
+                    // Fade out title and subtitle
+                    if(title) title.style.opacity = '0';
+                    if(subtitle) subtitle.style.opacity = '0';
+                    
+                    // Hide step 1 with animation
+                    if(step1Container) {
+                        step1Container.classList.remove('opacity-100', 'scale-100');
+                        step1Container.classList.add('opacity-0', 'scale-95');
+                    }
+                    
+                    setTimeout(() => {
+                        if(step1Container) {
+                            step1Container.classList.add('hidden');
+                            step1Container.style.height = '0';
+                        }
+                        
+                        // Update Progress Indicator
+                        const pStep1 = document.getElementById('progress-step-1');
+                        const pStep2 = document.getElementById('progress-step-2');
+                        
+                        if(pStep1) {
+                            pStep1.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Principales</span>
+                            `;
+                        }
+                        
+                        if(pStep2) {
+                            pStep2.classList.remove('opacity-50');
+                            pStep2.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
+                            `;
+                        }
+                        
+                        const pLine1 = document.getElementById('progress-line-1');
+                        if(pLine1) {
+                            pLine1.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
+                            pLine1.classList.add('border-primary', 'dark:border-red-500');
+                        }
+                        
+                        if(step2Container) {
+                            // Show Step 2
+                            step2Container.classList.remove('hidden');
+                            
+                            // Update titles
+                            if(title) title.textContent = 'Agregá fotos y videos';
+                            if(subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
+                            
+                            // Trigger reflow
+                            void step2Container.offsetWidth;
+                            
+                            // Fade in Step 2 and titles
+                            if(title) title.style.opacity = '1';
+                            if(subtitle) subtitle.style.opacity = '1';
+                            
+                            step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                            step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                            step2Container.style.height = ''; // Limpiar inline style
+                            
+                            // Scroll up if necessary
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            
+                            // Change action buttons text/behavior if needed
+                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+                            
+                            if (continueBtnDesk) {
+                                continueBtnDesk.textContent = 'Continuar';
+                                continueBtnDesk.setAttribute('form', 'form-multimedia');
+                            }
+                            if (continueBtnMob) {
+                                continueBtnMob.textContent = 'Continuar';
+                                continueBtnMob.setAttribute('form', 'form-multimedia');
+                            }
+                            
+                            // Set global state
+                            window.currentWizardStep = 2;
+                            
+                            // Update Back buttons to say "Atrás"
+                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
+                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
+                            const backBtnTopIcon = document.getElementById('btn-back-icon');
+                            const backBtnTopText = document.getElementById('btn-back-text');
+
+                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
+                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
+                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
+                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
+                        }
+                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                }
+            });
+        }
+        
+        // Form 'Multimedia' Submit Interceptor (Transition to Step 3)
+        const formMultimedia = document.getElementById('form-multimedia');
+        if (formMultimedia) {
+            formMultimedia.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // TODO: Add multimedia validation logic here if needed
+                let isValid = true;
+                
+                if(isValid) {
+                    console.log('¡Datos Multimedia completos! Transicionando al paso 3: Extras...');
+                    
+                    const step2Container = document.getElementById('wizard-step-2-container');
+                    const step3Container = document.getElementById('wizard-step-3-container');
+                    const title = document.getElementById('publish-main-title');
+                    const subtitle = document.getElementById('paso-subtitle');
+                    
+                    // Fade out title and subtitle
+                    if(title) title.style.opacity = '0';
+                    if(subtitle) subtitle.style.opacity = '0';
+                    
+                    // Hide step 2 with animation
+                    if(step2Container) {
+                        step2Container.classList.remove('opacity-100', 'scale-100');
+                        step2Container.classList.add('opacity-0', 'scale-95');
+                    }
+                    
+                    setTimeout(() => {
+                        if(step2Container) {
+                            step2Container.classList.add('hidden');
+                            step2Container.style.height = '0';
+                        }
+                        
+                        // Update Progress Indicator
+                        const pStep2 = document.getElementById('progress-step-2');
+                        const pStep3 = document.getElementById('progress-step-3');
+                        const pLine2 = document.getElementById('progress-line-2');
+                        
+                        if(pStep2) {
+                            pStep2.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
+                            `;
+                        }
+                        
+                        if(pStep3) {
+                            pStep3.classList.remove('opacity-50');
+                            pStep3.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Extras</span>
+                            `;
+                        }
+                        
+                        if(pLine2) {
+                            pLine2.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
+                            pLine2.classList.add('border-primary', 'dark:border-red-500');
+                        }
+                        
+                        if(step3Container) {
+                            // Show Step 3
+                            step3Container.classList.remove('hidden');
+                            
+                            // Update titles
+                            if(title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
+                            if(subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
+                            
+                            // Trigger reflow
+                            void step3Container.offsetWidth;
+                            
+                            // Fade in Step 3 and titles
+                            if(title) title.style.opacity = '1';
+                            if(subtitle) subtitle.style.opacity = '1';
+                            
+                            step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                            step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                            step3Container.style.height = ''; // Limpiar inline style
+                            
+                            // Scroll up if necessary
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            
+                            // Change action buttons text/behavior if needed
+                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+                            
+                            if (continueBtnDesk) {
+                                continueBtnDesk.textContent = 'Continuar';
+                                continueBtnDesk.setAttribute('form', 'form-extras');
+                            }
+                            if (continueBtnMob) {
+                                continueBtnMob.textContent = 'Continuar';
+                                continueBtnMob.setAttribute('form', 'form-extras');
+                            }
+                            
+                            // Set global state
+                            window.currentWizardStep = 3;
+                            
+                            // Update Back buttons to say "Atrás"
+                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
+                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
+                            const backBtnTopIcon = document.getElementById('btn-back-icon');
+                            const backBtnTopText = document.getElementById('btn-back-text');
+
+                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
+                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
+                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
+                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
+                        }
+                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                }
+            });
+        }
+        
+        // Form 'Extras' Submit Interceptor (Transition to Step 4)
+        const formExtras = document.getElementById('form-extras');
+        if (formExtras) {
+            formExtras.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // TODO: Add extras validation logic here if needed
+                let isValid = true;
+                
+                if(isValid) {
+                    console.log('¡Datos Extras completos! Transicionando al paso 4: Publicar...');
+                    
+                    const step3Container = document.getElementById('wizard-step-3-container');
+                    const step4Container = document.getElementById('wizard-step-4-container');
+                    const title = document.getElementById('publish-main-title');
+                    const subtitle = document.getElementById('paso-subtitle');
+                    
+                    // Fade out title and subtitle
+                    if(title) title.style.opacity = '0';
+                    if(subtitle) subtitle.style.opacity = '0';
+                    
+                    // Hide step 3 with animation
+                    if(step3Container) {
+                        step3Container.classList.remove('opacity-100', 'scale-100');
+                        step3Container.classList.add('opacity-0', 'scale-95');
+                    }
+                    
+                    setTimeout(() => {
+                        if(step3Container) {
+                            step3Container.classList.add('hidden');
+                            step3Container.style.height = '0';
+                        }
+                        
+                        // Update Progress Indicator
+                        const pStep3 = document.getElementById('progress-step-3');
+                        const pStep4 = document.getElementById('progress-step-4');
+                        const pLine3 = document.getElementById('progress-line-3');
+                        
+                        if(pStep3) {
+                            pStep3.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Extras</span>
+                            `;
+                        }
+                        
+                        if(pStep4) {
+                            pStep4.classList.remove('opacity-50');
+                            pStep4.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">4</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Publicar</span>
+                            `;
+                        }
+                        
+                        if(pLine3) {
+                            pLine3.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
+                            pLine3.classList.add('border-primary', 'dark:border-red-500');
+                        }
+                        
+                        if(step4Container) {
+                            // Show Step 4
+                            step4Container.classList.remove('hidden');
+                            
+                            // Update titles
+                            if(title) title.textContent = '¡Estás a un paso de terminar!';
+                            if(subtitle) subtitle.textContent = 'Revisá y elegí tu plan de publicación';
+                            
+                            // Trigger reflow
+                            void step4Container.offsetWidth;
+                            
+                            // Fade in Step 4 and titles
+                            if(title) title.style.opacity = '1';
+                            if(subtitle) subtitle.style.opacity = '1';
+                            
+                            step4Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                            step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                            step4Container.style.height = ''; // Limpiar inline style
+                            
+                            // Scroll up if necessary
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            
+                            // Change action buttons text/behavior if needed
+                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+                            
+                            if (continueBtnDesk) {
+                                continueBtnDesk.textContent = 'Publicar Aviso';
+                                continueBtnDesk.setAttribute('form', 'form-planes');
+                            }
+                            if (continueBtnMob) {
+                                continueBtnMob.textContent = 'Publicar Aviso';
+                                continueBtnMob.setAttribute('form', 'form-planes');
+                            }
+                            
+                            // Set global state
+                            window.currentWizardStep = 4;
+                            
+                            // Update Back buttons to say "Atrás"
+                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
+                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
+                            const backBtnTopIcon = document.getElementById('btn-back-icon');
+                            const backBtnTopText = document.getElementById('btn-back-text');
+
+                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
+                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
+                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
+                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
+                        }
+                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
                 }
             });
         }
@@ -370,38 +1088,7 @@ const App = {
             }
         }
 
-        // Real Interactive Map using Google Maps JS API
-        window.initGoogleMap = function() {
-            const mapContainer = document.getElementById('real-map-container');
-            if (!mapContainer) return;
 
-            // Mendoza coordinates
-            const initialPos = { lat: -32.898684, lng: -68.847522 };
-
-            window.propertyMap = new google.maps.Map(mapContainer, {
-                zoom: 15,
-                center: initialPos,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-            });
-
-            // Use default Google Maps red marker (draggable)
-            window.propertyMarker = new google.maps.Marker({
-                position: initialPos,
-                map: window.propertyMap,
-                draggable: true,
-                title: "Arrastra para ajustar tu ubicación",
-                animation: google.maps.Animation.DROP,
-            });
-            
-            // Listen for drag end
-            window.propertyMarker.addListener('dragend', function() {
-                const pos = window.propertyMarker.getPosition();
-                console.log(`Pin dropped at Lat: ${pos.lat()}, Lng: ${pos.lng()}`);
-                // Could call reverse geocoding here to auto-fill address
-            });
-        };
 
         const btnBackMarketplaceElements = document.querySelectorAll('.btn-back-marketplace');
         btnBackMarketplaceElements.forEach(btn => {
@@ -1565,3 +2252,181 @@ window.App = App;
 
 // Remove duplicate init call
 // document.addEventListener('DOMContentLoaded', App.init);
+
+// Real Interactive Map using Google Maps JS API
+window.initGoogleMap = function() {
+    const mapContainer = document.getElementById('real-map-container');
+    if (!mapContainer) return;
+
+    // Mendoza coordinates
+    const initialPos = { lat: -32.898684, lng: -68.847522 };
+
+    window.propertyMap = new google.maps.Map(mapContainer, {
+        zoom: 15,
+        center: initialPos,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+    });
+
+    // Use default Google Maps red marker (draggable)
+    window.propertyMarker = new google.maps.Marker({
+        position: initialPos,
+        map: window.propertyMap,
+        draggable: true,
+        title: "Arrastra para ajustar tu ubicación",
+        animation: google.maps.Animation.DROP,
+    });
+
+    const updateAddressUI = (latLng) => {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                const address = results[0].formatted_address;
+                const label = document.getElementById('map-address-label');
+                if (label) label.textContent = address;
+                
+                const inputCalle = document.getElementById('calle-altura');
+                if (inputCalle && !inputCalle.value) {
+                    const addressComponents = results[0].address_components;
+                    let route = '';
+                    let streetNumber = '';
+                    addressComponents.forEach(comp => {
+                        if (comp.types.includes('route')) route = comp.long_name;
+                        if (comp.types.includes('street_number')) streetNumber = comp.long_name;
+                    });
+                    if (route) {
+                        inputCalle.value = `${route} ${streetNumber}`.trim();
+                    }
+                }
+            }
+        });
+    };
+    
+    // Listen for map click
+    window.propertyMap.addListener('click', function(e) {
+        window.propertyMarker.setPosition(e.latLng);
+        window.propertyMap.panTo(e.latLng);
+        updateAddressUI(e.latLng);
+    });
+    
+    // Listen for drag end
+    window.propertyMarker.addListener('dragend', function() {
+        const pos = window.propertyMarker.getPosition();
+        updateAddressUI(pos);
+    });
+};
+
+// Toggle for accordions in Step 3
+window.toggleAccordion = function(contentId, btn) {
+    const content = document.getElementById(contentId);
+    if (!content) return;
+    
+    const icon = btn.querySelector('.accordion-icon');
+    
+    if (content.classList.contains('grid-rows-[0fr]')) {
+        // Abrir
+        content.classList.remove('grid-rows-[0fr]');
+        content.classList.add('grid-rows-[1fr]');
+        if (icon) {
+            icon.classList.add('rotate-180');
+        }
+    } else {
+        // Cerrar
+        content.classList.remove('grid-rows-[1fr]');
+        content.classList.add('grid-rows-[0fr]');
+        if (icon) {
+            icon.classList.remove('rotate-180');
+        }
+    }
+};
+
+// Step 3 Selected Features Chips and Search Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const formExtras = document.getElementById('form-extras');
+    const selectedFeaturesContainer = document.getElementById('selected-features-container');
+    const searchInput = document.querySelector('#form-extras input[type="text"][placeholder="Ej. Permite mascotas"]');
+
+    if (formExtras && selectedFeaturesContainer) {
+        const featureCheckboxes = formExtras.querySelectorAll('.checkbox-wrapper input[type="checkbox"]');
+        
+        // Logic for updating chips
+        featureCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateFeatureChips);
+        });
+
+        function updateFeatureChips() {
+            selectedFeaturesContainer.innerHTML = '';
+            
+            featureCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const label = checkbox.nextElementSibling;
+                    const textSpan = label.querySelector('span');
+                    if (!textSpan) return;
+                    
+                    const text = textSpan.textContent.trim();
+                    
+                    const chip = document.createElement('div');
+                    chip.className = 'inline-flex items-center gap-2 bg-[#cfd7db] dark:bg-[#282828] rounded-lg px-3 py-1.5 transition-colors';
+                    
+                    const spanText = document.createElement('span');
+                    spanText.className = 'font-body text-on-background dark:text-[#f1f1f1] text-sm whitespace-nowrap';
+                    spanText.textContent = text;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'w-4 h-4 rounded-full bg-[#f24822] flex items-center justify-center hover:opacity-80 transition-opacity shrink-0';
+                    removeBtn.innerHTML = `<span class="material-symbols-outlined text-white" style="font-size: 12px; font-weight: bold;">close</span>`;
+                    
+                    removeBtn.addEventListener('click', () => {
+                        checkbox.checked = false;
+                        updateFeatureChips();
+                    });
+                    
+                    chip.appendChild(spanText);
+                    chip.appendChild(removeBtn);
+                    
+                    selectedFeaturesContainer.appendChild(chip);
+                }
+            });
+        }
+
+        // Logic for search filtering
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                
+                // Open all accordions if there's text
+                const accordions = formExtras.querySelectorAll('.accordion-btn');
+                const contents = formExtras.querySelectorAll('.transition-\\[grid-template-rows\\]');
+                
+                if (term.length > 0) {
+                    contents.forEach(content => {
+                        content.classList.remove('grid-rows-[0fr]');
+                        content.classList.add('grid-rows-[1fr]');
+                    });
+                    accordions.forEach(btn => {
+                        const icon = btn.querySelector('.accordion-icon');
+                        if (icon) icon.classList.add('rotate-180');
+                    });
+                }
+                
+                // Filter items
+                featureCheckboxes.forEach(checkbox => {
+                    const wrapper = checkbox.closest('.checkbox-wrapper');
+                    const label = checkbox.nextElementSibling;
+                    const textSpan = label.querySelector('span');
+                    
+                    if (wrapper && textSpan) {
+                        const text = textSpan.textContent.toLowerCase();
+                        if (text.includes(term)) {
+                            wrapper.style.display = '';
+                        } else {
+                            wrapper.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+    }
+});

@@ -14,7 +14,7 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     
     <!-- Leaflet Map -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?callback=initGoogleMap&v=weekly"></script>
+    <!-- Removed Google Maps script from here -->
 
 
     <!-- Tailwind & Stitch Fonts -->
@@ -24,6 +24,13 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function() {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -160,6 +167,71 @@
         .theme-switch__checkbox {
             display: none !important;
         }
+        /* Ocultar flechas de inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        /* Custom animated SVG checkbox / radio */
+        .checkbox-wrapper input[type="checkbox"],
+        .checkbox-wrapper input[type="radio"] {
+            display: none !important;
+        }
+
+        .checkbox-wrapper .terms-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-wrapper .checkbox-svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .checkbox-wrapper .checkbox-box {
+            fill: #ebebeb; /* Light mode surface-container-high */
+            stroke: #A13333;
+            stroke-dasharray: 800;
+            stroke-dashoffset: 800;
+            transition: stroke-dashoffset 0.6s ease-in;
+            rx: 30px; /* Slight rounding to match app aesthetic better */
+        }
+
+        html.dark .checkbox-wrapper .checkbox-box {
+            fill: #282828; /* Dark mode surface-container-high */
+            stroke: #ef4444;
+        }
+
+        .checkbox-wrapper .checkbox-tick {
+            stroke: #A13333;
+            stroke-dasharray: 172;
+            stroke-dashoffset: 172;
+            transition: stroke-dashoffset 0.6s ease-in;
+        }
+
+        html.dark .checkbox-wrapper .checkbox-tick {
+            stroke: #ef4444;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-box,
+        .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-tick,
+        .checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-box,
+        .checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-tick {
+            stroke-dashoffset: 0;
+        }
+
+        #desktop-action-buttons {
+            display: none !important;
+        }
+        @media (min-width: 768px) {
+            #desktop-action-buttons {
+                display: flex !important;
+            }
+        }
     </style>
     <style id="marketplace-dark-overrides">
         html.dark #landing-marketplace-view {
@@ -247,14 +319,14 @@
         <nav
             class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
-                class="flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
+                class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
                     <a href="#" class="flex items-center gap-1.5 md:gap-2 group">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 md:w-8 md:h-8 text-red-600 dark:text-red-500 group-hover:scale-105 transition-transform">
-                            <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
-                            <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
-                        </svg>
-                        <span class="text-base sm:text-xl md:text-2xl font-extrabold text-red-900 dark:text-red-500 uppercase tracking-widest hidden sm:block">Inmuebles</span>
+
+
+
+
+                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary dark:text-red-500 whitespace-nowrap">The Architectural Ledger</span>
                     </a>
                     <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base">
                         <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer"
@@ -265,13 +337,15 @@
                             href="#">Insights</a>
                     </div>
                 </div>
-                <div class="flex items-center gap-1 sm:gap-2 md:gap-6">
+                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
                     <a id="btn-administrar"
                         class="bg-surface-dim px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-200 hover:text-red-800 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 flex-shrink-0">Administrar</a>
                     <button id="btn-publicar-marketplace"
                         class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-3 py-1 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:opacity-90 transition-all shadow-md active:scale-95 flex-shrink-0">
                         Publicar
                     </button>
+                </div>
+                <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
                     <div class="hidden md:flex items-center gap-4 text-zinc-500">
                         <span
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
@@ -576,10 +650,10 @@
 <header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-white/5">
 <div class="flex justify-between items-center px-6 h-16 w-full">
 <div class="flex items-center gap-4">
-<button id="btn-back-from-publish" class="text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
-<span class="material-symbols-outlined">arrow_back</span>
+<button id="btn-back-from-publish" class="flex items-center gap-1 text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" id="btn-back-icon">close</span>
+<span id="btn-back-text" class="font-body font-bold text-sm">Cancelar</span>
 </button>
-<span class="font-headline tracking-tight font-bold text-xl font-bold tracking-tighter text-primary dark:text-red-500">The Architectural Ledger</span>
 </div>
 
 <div class="flex items-center">
@@ -595,31 +669,33 @@
 <div class="max-w-4xl mx-auto">
 <div class="mb-12">
 <!-- Desktop Progress Indicator -->
-<div class="flex items-start md:items-center justify-between md:justify-start gap-2 md:gap-8 mb-8 overflow-x-visible pb-2 w-full md:w-auto">
-<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0">
+<div class="flex items-start md:items-center justify-between md:justify-start gap-2 md:gap-8 mb-8 overflow-x-visible pb-2 w-full md:w-auto" id="publish-progress-indicator">
+<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0" id="progress-step-1">
 <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
 <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
 </div>
-<div class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2]"></div>
-<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50">
+<div id="progress-line-1" class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300"></div>
+<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50" id="progress-step-2">
 <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">2</div>
 <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
 </div>
-<div class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2]"></div>
-<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50">
+<div id="progress-line-2" class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300"></div>
+<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50" id="progress-step-3">
 <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">3</div>
 <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Extras</span>
 </div>
-<div class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2]"></div>
-<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50">
+<div id="progress-line-3" class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300"></div>
+<div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50" id="progress-step-4">
 <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">4</div>
 <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Publicar</span>
 </div>
 </div>
-<h1 class="text-4xl md:text-5xl font-headline font-extrabold text-on-background dark:text-[#f1f1f1] tracking-tight mb-4">¡Empecemos a crear tu aviso!</h1>
-<p id="paso-subtitle" class="text-secondary dark:text-[#c7c6c6] font-body text-lg">¿Qué querés publicar?</p>
+<h1 id="publish-main-title" class="text-4xl md:text-5xl font-headline font-extrabold text-on-background dark:text-[#f1f1f1] tracking-tight mb-4 transition-opacity duration-300">¡Empecemos a crear tu aviso!</h1>
+<p id="paso-subtitle" class="text-secondary dark:text-[#c7c6c6] font-body text-lg transition-opacity duration-300">¿Qué querés publicar?</p>
 </div>
-<div class="bg-surface-container-lowest dark:bg-[#0c0c0e] p-8 rounded-xl border border-outline-variant/30 dark:border-white/5 mb-8">
+
+<div id="wizard-step-1-container" class="transition-all duration-500 ease-in-out transform origin-top opacity-100 scale-100 h-auto overflow-visible">
+<div class="bg-surface-container-lowest dark:bg-[#0c0c0e] p-8 rounded-xl border border-outline-variant/30 dark:border-white/5 mb-8 relative">
 <!-- Sub-navigation tabs -->
 <div class="flex gap-8 mb-10 overflow-x-auto pb-2">
 <button id="tab-operacion" class="font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación y tipo de propiedad</button>
@@ -785,15 +861,1199 @@
 </div>
 </form>
 </div>
+
+<!-- Paso 3: Características (Inicialmente Oculto) -->
+<div id="step-caracteristicas" class="hidden">
+<form id="form-caracteristicas" class="space-y-12" novalidate>
+
+<!-- Contadores -->
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Ambientes <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('ambientes-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
+            <input type="number" id="ambientes-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('ambientes-new'); input.value = parseInt(input.value || 0) + 1"><span class="material-symbols-outlined">add</span></button>
+        </div>
+    </div>
+    <div class="flex items-center justify-between">
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Dormitorios <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('dormitorios-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
+            <input type="number" id="dormitorios-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('dormitorios-new'); input.value = parseInt(input.value || 0) + 1"><span class="material-symbols-outlined">add</span></button>
+        </div>
+    </div>
+    <div class="flex items-center justify-between">
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Baños <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('banos-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
+            <input type="number" id="banos-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('banos-new'); input.value = parseInt(input.value || 0) + 1"><span class="material-symbols-outlined">add</span></button>
+        </div>
+    </div>
+    <div class="flex items-center justify-between">
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Toilettes <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('toilettes-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
+            <input type="number" id="toilettes-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('toilettes-new'); input.value = parseInt(input.value || 0) + 1"><span class="material-symbols-outlined">add</span></button>
+        </div>
+    </div>
+    <div class="flex items-center justify-between">
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Cocheras <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('cocheras-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
+            <input type="number" id="cocheras-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
+            <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('cocheras-new'); input.value = parseInt(input.value || 0) + 1"><span class="material-symbols-outlined">add</span></button>
+        </div>
+    </div>
 </div>
+
+<!-- Superficie -->
+<div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+    <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Superficie</label>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+            <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie cubierta *</label>
+            <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">m2</div>
+                <input type="number" id="sup-cubierta" required class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
+            </div>
+            <p id="error-sup-cubierta" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+        </div>
+        <div class="space-y-2">
+            <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie total *</label>
+            <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">m2</div>
+                <input type="number" id="sup-total" required class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
+            </div>
+            <p id="error-sup-total" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+        </div>
+    </div>
+</div>
+
+<!-- Antigüedad -->
+<div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+    <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Antigüedad</label>
+    <div class="flex flex-col gap-4">
+        <div class="checkbox-wrapper w-max">
+            <input type="radio" id="antiguedad-estrenar" name="antiguedad" value="estrenar">
+            <label class="terms-label" for="antiguedad-estrenar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                    <mask fill="white" id="path-1-inside-1_estrenar">
+                        <rect height="200" width="200" rx="30"></rect>
+                    </mask>
+                    <rect mask="url(#path-1-inside-1_estrenar)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                </svg>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">A estrenar</span>
+            </label>
+        </div>
+        <div class="checkbox-wrapper w-max">
+            <input type="radio" id="antiguedad-anios" name="antiguedad" value="anios">
+            <label class="terms-label" for="antiguedad-anios">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                    <mask fill="white" id="path-1-inside-1_anios">
+                        <rect height="200" width="200" rx="30"></rect>
+                    </mask>
+                    <rect mask="url(#path-1-inside-1_anios)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                </svg>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">Años de antigüedad</span>
+            </label>
+        </div>
+        <div class="checkbox-wrapper w-max">
+            <input type="radio" id="antiguedad-construccion" name="antiguedad" value="construccion">
+            <label class="terms-label" for="antiguedad-construccion">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                    <mask fill="white" id="path-1-inside-1_construccion">
+                        <rect height="200" width="200" rx="30"></rect>
+                    </mask>
+                    <rect mask="url(#path-1-inside-1_construccion)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                </svg>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">En construcción</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Precio -->
+<div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+    <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Precio</label>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+            <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Precio de la propiedad *</label>
+            <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                <select class="h-14 bg-surface-container dark:bg-[#1e1e1e] border-none text-on-background dark:text-[#f1f1f1] font-body text-base font-bold !w-16 sm:!w-20 shrink-0 flex-none focus:ring-0 cursor-pointer border-r border-outline-variant/30 dark:border-white/5 text-center px-1">
+                    <option>$</option>
+                    <option>U$S</option>
+                </select>
+                <input type="number" id="precio" required class="flex-1 min-w-0 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
+            </div>
+            <p id="error-precio" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+        </div>
+        <div class="space-y-2">
+            <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Expensas <span class="text-secondary dark:text-[#c7c6c6] text-sm font-normal">(opcional)</span></label>
+            <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                <div class="h-14 bg-surface-container dark:bg-[#1e1e1e] px-0 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-on-background dark:text-[#f1f1f1] font-body font-bold text-base !w-16 sm:!w-20 shrink-0 flex-none">$</div>
+                <input type="number" id="expensas" class="flex-1 min-w-0 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
+            </div>
+        </div>
+    </div>
+    <div class="pt-2">
+        <div class="checkbox-wrapper w-max">
+            <input id="apto-credito" name="apto-credito" type="checkbox">
+            <label class="terms-label" for="apto-credito">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                    <mask fill="white" id="path-1-inside-1_apto_credito">
+                        <rect height="200" width="200" rx="30"></rect>
+                    </mask>
+                    <rect mask="url(#path-1-inside-1_apto_credito)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                </svg>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-base whitespace-nowrap ml-3">Apto crédito</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Describí la propiedad -->
+<div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+    <div>
+        <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Describí la propiedad</label>
+        <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Asegurate de incluir el tipo de propiedad y el tipo de operación de tu aviso.</p>
+    </div>
+    
+    <div class="space-y-2 mt-4">
+        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Título *</label>
+        <input type="text" id="titulo-aviso" required placeholder="Completá el título de tu aviso" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+        <p id="error-titulo" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+    </div>
+    
+    <div class="space-y-2 mt-4">
+        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Descripción *</label>
+        <div class="relative">
+            <textarea id="descripcion-aviso" required placeholder="Escribí un mínimo de 150 caracteres" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md p-4 font-body text-base min-h-[160px] resize-y focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50" oninput="document.getElementById('char-count').textContent = this.value.length"></textarea>
+            <div class="absolute bottom-4 right-4 font-body text-xs text-secondary dark:text-[#c7c6c6]"><span id="char-count">0</span></div>
+        </div>
+        <p id="error-descripcion" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+    </div>
+</div>
+
+</form>
+</div>
+</div>
+</div>
+
+<!-- Contenedor Paso 2 (Multimedia) -->
+<div id="wizard-step-2-container" class="hidden transition-all duration-500 ease-in-out transform origin-top opacity-0 translate-y-8 scale-95 h-0 overflow-hidden">
+<div class="bg-surface-container-lowest dark:bg-[#0c0c0e] p-6 md:p-8 rounded-xl border border-outline-variant/30 dark:border-white/5 mb-8">
+    <form id="form-multimedia" class="space-y-12" novalidate>
+        
+        <!-- Fotos -->
+        <div class="space-y-4">
+            <div>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Fotos *</label>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">Cargá entre 5 y 50 fotos. Una vez cargadas, arrastrá y soltá para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
+            </div>
+            
+            <div class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
+                <div class="w-14 h-14 bg-primary/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-primary dark:text-red-500 text-3xl">upload</span>
+                </div>
+                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">Agregá las fotos de la propiedad</span>
+                <input type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
+            </div>
+        </div>
+
+        <!-- Videos -->
+        <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+            <div>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Videos <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">Podés cargar hasta 10 videos de Youtube.</p>
+            </div>
+            
+            <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 hover:bg-primary/5 dark:hover:bg-red-500/5 transition-all text-center">
+                Agregar video
+            </button>
+        </div>
+
+        <!-- Planos -->
+        <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+            <div>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Planos <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">Cargá los planos de la propiedad. Una vez cargados, arrastrá y soltá para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
+            </div>
+            
+            <div class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
+                <div class="w-14 h-14 bg-primary/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-primary dark:text-red-500 text-3xl">upload</span>
+                </div>
+                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">Agregá los planos de la propiedad</span>
+                <input type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
+            </div>
+        </div>
+
+        <!-- Recorrido 360 -->
+        <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+            <div>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Recorrido 360° <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">Cargá un recorrido 360° de la propiedad.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="url" placeholder="Pegá la URL del recorrido acá" class="flex-1 appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                
+                <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 hover:bg-primary/5 dark:hover:bg-red-500/5 transition-all text-center whitespace-nowrap">
+                    Agregar
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+</div>
+
+<!-- Paso 3: Extras (Comodidades y Adicionales) -->
+<div id="wizard-step-3-container" class="hidden opacity-0 translate-y-8 scale-95 h-0 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform origin-top w-full max-w-4xl mx-auto pb-24 md:pb-8">
+    <div class="bg-surface/50 dark:bg-[#121212]/50 backdrop-blur-md rounded-3xl p-6 md:p-12 border border-outline-variant/30 dark:border-white/5 shadow-2xl">
+        <form id="form-extras" class="space-y-12">
+            
+            <!-- Buscador y Chips -->
+            <div class="space-y-4">
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Buscá y agregá características</label>
+                <div class="relative">
+                    <input type="text" placeholder="Ej. Permite mascotas" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                    <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-secondary dark:text-[#c7c6c6]">search</span>
+                </div>
+                <!-- Contenedor de Chips Seleccionados -->
+                <div id="selected-features-container" class="flex flex-wrap gap-3 mt-4 empty:hidden">
+                    <!-- Los chips se insertarán aquí dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Acordeones (Visuales) -->
+            <!-- Acordeones (Visuales) -->
+            <div class="space-y-0 border border-outline-variant/30 dark:border-white/10 rounded-xl overflow-hidden bg-surface-container-lowest dark:bg-[#0c0c0e]">
+                
+                <!-- Características generales -->
+                <div class="border-b border-outline-variant/30 dark:border-white/10">
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-caracteristicas-generales', this)">
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Características generales</span>
+                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
+                    </div>
+                    <div id="content-caracteristicas-generales" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                        <div class="overflow-hidden">
+                            <div class="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-4 bg-surface-container-lowest dark:bg-[#0c0c0e]">
+                                
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="acc-personas" name="acc-personas" type="checkbox">
+                                    <label class="terms-label" for="acc-personas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_acc">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_acc)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Acceso para personas con...</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="apto-profesional" name="apto-profesional" type="checkbox">
+                                    <label class="terms-label" for="apto-profesional">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_apto">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_apto)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Apto profesional</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="gimnasio" name="gimnasio" type="checkbox">
+                                    <label class="terms-label" for="gimnasio">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_gym">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_gym)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Gimnasio</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="hidromasaje" name="hidromasaje" type="checkbox">
+                                    <label class="terms-label" for="hidromasaje">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_hidro">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_hidro)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Hidromasaje</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="parrilla" name="parrilla" type="checkbox">
+                                    <label class="terms-label" for="parrilla">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_parrilla">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_parrilla)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Parrilla</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="permite-mascotas" name="permite-mascotas" type="checkbox">
+                                    <label class="terms-label" for="permite-mascotas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_mascotas">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_mascotas)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Permite mascotas</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="pileta" name="pileta" type="checkbox">
+                                    <label class="terms-label" for="pileta">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_pileta">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_pileta)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Pileta</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="sala-juegos" name="sala-juegos" type="checkbox">
+                                    <label class="terms-label" for="sala-juegos">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_juegos">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_juegos)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sala de juegos</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="solarium" name="solarium" type="checkbox">
+                                    <label class="terms-label" for="solarium">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_solarium">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_solarium)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Solarium</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="uso-comercial" name="uso-comercial" type="checkbox">
+                                    <label class="terms-label" for="uso-comercial">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_uso">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_uso)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Uso comercial</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Características -->
+                <div class="border-b border-outline-variant/30 dark:border-white/10">
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-caracteristicas', this)">
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Características</span>
+                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
+                    </div>
+                    <div id="content-caracteristicas" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                        <div class="overflow-hidden">
+                            <div class="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-4 bg-surface-container-lowest dark:bg-[#0c0c0e]">
+                                
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="aire-acondicionado" name="aire-acondicionado" type="checkbox">
+                                    <label class="terms-label" for="aire-acondicionado">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_aire">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_aire)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Aire acondicionado</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="alarma" name="alarma" type="checkbox">
+                                    <label class="terms-label" for="alarma">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_alarma">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_alarma)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Alarma</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="amoblado" name="amoblado" type="checkbox">
+                                    <label class="terms-label" for="amoblado">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_amoblado">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_amoblado)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Amoblado</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="caldera" name="caldera" type="checkbox">
+                                    <label class="terms-label" for="caldera">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_caldera">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_caldera)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Caldera</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="calefaccion" name="calefaccion" type="checkbox">
+                                    <label class="terms-label" for="calefaccion">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_calefaccion">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_calefaccion)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Calefacción</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="cancha-deportes" name="cancha-deportes" type="checkbox">
+                                    <label class="terms-label" for="cancha-deportes">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_cancha">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_cancha)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Cancha de deportes</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="cocina-equipada" name="cocina-equipada" type="checkbox">
+                                    <label class="terms-label" for="cocina-equipada">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_cocina">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_cocina)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Cocina equipada</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="frigobar" name="frigobar" type="checkbox">
+                                    <label class="terms-label" for="frigobar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_frigobar">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_frigobar)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Frigobar</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="lavarropas" name="lavarropas" type="checkbox">
+                                    <label class="terms-label" for="lavarropas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_lavarropas">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_lavarropas)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Lavarropas</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="lavavajillas" name="lavavajillas" type="checkbox">
+                                    <label class="terms-label" for="lavavajillas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_lavavajillas">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_lavavajillas)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Lavavajillas</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="microondas" name="microondas" type="checkbox">
+                                    <label class="terms-label" for="microondas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_micro">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_micro)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Microondas</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="quincho" name="quincho" type="checkbox">
+                                    <label class="terms-label" for="quincho">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_quincho">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_quincho)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Quincho</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="sauna" name="sauna" type="checkbox">
+                                    <label class="terms-label" for="sauna">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_sauna">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_sauna)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sauna</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="secarropas" name="secarropas" type="checkbox">
+                                    <label class="terms-label" for="secarropas">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_seca">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_seca)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Secarropas</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="termotanque" name="termotanque" type="checkbox">
+                                    <label class="terms-label" for="termotanque">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_termo">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_termo)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Termotanque</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Ambientes -->
+                <div class="border-b border-outline-variant/30 dark:border-white/10">
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-ambientes', this)">
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Ambientes</span>
+                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
+                    </div>
+                    <div id="content-ambientes" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                        <div class="overflow-hidden">
+                            <div class="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-4 bg-surface-container-lowest dark:bg-[#0c0c0e]">
+                                
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="altillo" name="altillo" type="checkbox">
+                                    <label class="terms-label" for="altillo">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_altillo">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_altillo)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Altillo</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="balcon" name="balcon" type="checkbox">
+                                    <label class="terms-label" for="balcon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_balcon">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_balcon)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Balcón</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="baulera" name="baulera" type="checkbox">
+                                    <label class="terms-label" for="baulera">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_baulera">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_baulera)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Baulera</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="cocina" name="cocina" type="checkbox">
+                                    <label class="terms-label" for="cocina">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_cocina">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_cocina)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Cocina</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="comedor" name="comedor" type="checkbox">
+                                    <label class="terms-label" for="comedor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_comedor">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_comedor)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Comedor</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="comedor-diario" name="comedor-diario" type="checkbox">
+                                    <label class="terms-label" for="comedor-diario">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_comedor_diario">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_comedor_diario)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Comedor diario</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="dependencia-servicio" name="dependencia-servicio" type="checkbox">
+                                    <label class="terms-label" for="dependencia-servicio">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_dependencia">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_dependencia)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Dependencia de servicio</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="dormitorio-suite" name="dormitorio-suite" type="checkbox">
+                                    <label class="terms-label" for="dormitorio-suite">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_dormitorio">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_dormitorio)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Dormitorio en suite</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="escritorio" name="escritorio" type="checkbox">
+                                    <label class="terms-label" for="escritorio">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_escritorio">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_escritorio)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Escritorio</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="hall" name="hall" type="checkbox">
+                                    <label class="terms-label" for="hall">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_hall">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_hall)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Hall</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="jardin" name="jardin" type="checkbox">
+                                    <label class="terms-label" for="jardin">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_jardin">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_jardin)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Jardín</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="lavadero" name="lavadero" type="checkbox">
+                                    <label class="terms-label" for="lavadero">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_lavadero">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_lavadero)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Lavadero</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="living" name="living" type="checkbox">
+                                    <label class="terms-label" for="living">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_living">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_living)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Living</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="living-comedor" name="living-comedor" type="checkbox">
+                                    <label class="terms-label" for="living-comedor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_living_comedor">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_living_comedor)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Living comedor</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="patio" name="patio" type="checkbox">
+                                    <label class="terms-label" for="patio">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_patio">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_patio)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Patio</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="sotano" name="sotano" type="checkbox">
+                                    <label class="terms-label" for="sotano">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_sotano">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_sotano)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sótano</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="terraza" name="terraza" type="checkbox">
+                                    <label class="terms-label" for="terraza">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_terraza">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_terraza)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Terraza</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="vestidor" name="vestidor" type="checkbox">
+                                    <label class="terms-label" for="vestidor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_vestidor">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_vestidor)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Vestidor</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Servicios -->
+                <div>
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-servicios', this)">
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Servicios</span>
+                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
+                    </div>
+                    <div id="content-servicios" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
+                        <div class="overflow-hidden">
+                            <div class="p-6 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-4 bg-surface-container-lowest dark:bg-[#0c0c0e]">
+                                
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="ascensor" name="ascensor" type="checkbox">
+                                    <label class="terms-label" for="ascensor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_ascensor">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_ascensor)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Ascensor</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-wrapper w-max">
+                                    <input id="encargado" name="encargado" type="checkbox">
+                                    <label class="terms-label" for="encargado">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <mask fill="white" id="path-1-inside-1_encargado">
+                                                <rect height="200" width="200" rx="30"></rect>
+                                            </mask>
+                                            <rect mask="url(#path-1-inside-1_encargado)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                        </svg>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Encargado</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adicionales -->
+            <div class="space-y-6 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Adicionales</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cantidad de plantas -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Cantidad de plantas</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
+                                <option value="" disabled selected>Seleccioná una opción</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3+">3 o más</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Cobertura cochera -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Cobertura cochera</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
+                                <option value="" disabled selected>Seleccioná una opción</option>
+                                <option value="cubierta">Cubierta</option>
+                                <option value="descubierta">Descubierta</option>
+                                <option value="semicubierta">Semicubierta</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
+                        </div>
+                    </div>
+
+                    <!-- Luminoso -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Luminoso</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
+                                <option value="" disabled selected>Seleccioná una opción</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
+                        </div>
+                    </div>
+
+                    <!-- Orientación -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Orientación</label>
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
+                                <option value="" disabled selected>Seleccioná una opción</option>
+                                <option value="norte">Norte</option>
+                                <option value="sur">Sur</option>
+                                <option value="este">Este</option>
+                                <option value="oeste">Oeste</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
+                        </div>
+                    </div>
+
+                    <!-- Frente del terreno -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Frente del terreno (m2)</label>
+                        <input type="number" placeholder="0" class="w-full appearance-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                    </div>
+
+                    <!-- Largo del terreno -->
+                    <div class="space-y-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Largo del terreno (m2)</label>
+                        <input type="number" placeholder="0" class="w-full appearance-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                    </div>
+
+                    <!-- Superficie semicubierta -->
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie semicubierta (m2)</label>
+                        <input type="number" placeholder="0" class="w-full md:w-[calc(50%-12px)] appearance-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Paso 4: Publicar (Planes) -->
+<div id="wizard-step-4-container" class="hidden opacity-0 translate-y-8 scale-95 h-0 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform origin-top w-full max-w-4xl mx-auto pb-24 md:pb-8">
+    <div class="bg-surface/50 dark:bg-[#121212]/50 backdrop-blur-md rounded-3xl p-6 md:p-12 border border-outline-variant/30 dark:border-white/5 shadow-2xl">
+        <form id="form-planes" class="space-y-12">
+            
+            <!-- Plan Seleccionado (Gratis) -->
+            <div class="space-y-4">
+                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Seleccioná el plan con el que querés publicar</h3>
+                <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm mt-4">Planes disponibles</label>
+                
+                <div class="border border-outline-variant/30 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest dark:bg-[#0c0c0e] relative overflow-hidden cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors border-l-4 border-l-primary dark:border-l-red-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-5 h-5 rounded-full border-2 border-primary dark:border-red-500 flex items-center justify-center">
+                            <div class="w-2.5 h-2.5 rounded-full bg-primary dark:bg-red-500"></div>
+                        </div>
+                        <span class="font-headline font-bold text-primary dark:text-red-500 text-lg">Gratis</span>
+                    </div>
+                    <span class="font-body text-on-background dark:text-[#f1f1f1] text-sm">Visibilidad baja</span>
+                    <span class="font-body text-secondary dark:text-[#c7c6c6] text-sm font-medium">Cantidad disponible: 1</span>
+                </div>
+            </div>
+
+            <!-- Otros Planes -->
+            <div class="space-y-6 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+                <div>
+                    <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Más planes para vos</h3>
+                    <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Obtené y publicá con cualquiera de estos planes.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Card: Superdestacado -->
+                    <div class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative">
+                        <span class="font-headline font-bold text-indigo-600 dark:text-indigo-400 text-sm mb-4">1 Superdestacado</span>
+                        <div class="flex items-end gap-1 mb-6">
+                            <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$ 48.130,17</span>
+                            <span class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/ mes*</span>
+                        </div>
+                        <ul class="space-y-3 mb-8 flex-1">
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Incluye 1 aviso con máxima exposición en los listados
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Genera mayor cantidad de interesados
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Plan con renovación automática
+                            </li>
+                        </ul>
+                        <div class="mb-6">
+                            <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
+                            <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 39.777,00</p>
+                        </div>
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                            Comprar
+                        </button>
+                    </div>
+
+                    <!-- Card: Destacado -->
+                    <div class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative">
+                        <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400 text-sm mb-4">1 Destacado</span>
+                        <div class="flex items-end gap-1 mb-6">
+                            <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$ 30.080,60</span>
+                            <span class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/ mes*</span>
+                        </div>
+                        <ul class="space-y-3 mb-8 flex-1">
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Incluye 1 aviso con visibilidad destacada en los listados
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Genera mayor cantidad de interesados
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Plan con renovación automática
+                            </li>
+                        </ul>
+                        <div class="mb-6">
+                            <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
+                            <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 24.860,00</p>
+                        </div>
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                            Comprar
+                        </button>
+                    </div>
+
+                    <!-- Card: Simple -->
+                    <div class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative mt-4 lg:mt-0">
+                        <div class="absolute -top-4 right-6 bg-surface-container-high dark:bg-[#282828] text-on-background dark:text-[#f1f1f1] text-xs font-bold px-3 py-1 rounded-full border border-outline-variant/30 dark:border-white/10">Solo Alquiler</div>
+                        <span class="font-headline font-bold text-orange-500 dark:text-orange-400 text-sm mb-4">1 Simple</span>
+                        <div class="flex items-end gap-1 mb-6">
+                            <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$ 13.879,91</span>
+                            <span class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/ mes*</span>
+                        </div>
+                        <ul class="space-y-3 mb-8 flex-1">
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Incluye 1 aviso con visibilidad estándar
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Genera moderada cantidad de interesados
+                            </li>
+                            <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
+                                <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
+                                Plan con renovación automática
+                            </li>
+                        </ul>
+                        <div class="mb-6">
+                            <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
+                            <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 11.471,00</p>
+                        </div>
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                            Comprar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
 <!-- Action Buttons (Desktop/Tablet Only) -->
-<div class="hidden md:flex flex-col-reverse sm:flex-row justify-end gap-4 mt-8">
-<button class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
-                        Guardar y salir
-                    </button>
-<button type="submit" form="form-principales" class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-[#A13333]">
-                        Continuar
-                    </button>
+<div id="desktop-action-buttons" class="flex-row justify-between items-center gap-4 mt-12 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+    <button type="button" id="btn-back-desktop" class="px-6 py-4 rounded-xl font-headline font-bold text-secondary dark:text-[#c7c6c6] bg-transparent hover:bg-surface-container transition-colors flex items-center gap-2" onclick="document.getElementById('btn-back-from-publish').click()">
+        <span class="material-symbols-outlined" id="btn-back-desktop-icon">close</span>
+        <span id="btn-back-desktop-text">Cancelar</span>
+    </button>
+    <div class="flex flex-row gap-4">
+        <button type="button" class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
+            Guardar y salir
+        </button>
+        <button type="submit" form="form-principales" class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-[#A13333]">
+            Continuar
+        </button>
+    </div>
+</div>
 </div>
 </div>
 </main>
@@ -1732,6 +2992,8 @@ Continuar
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
         <script src="js/app.js"></script>
+        <!-- Google Maps -->
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&loading=async&v=weekly"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 if (window.App) {
