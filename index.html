@@ -299,6 +299,101 @@
             background-color: rgba(24, 24, 27, 0.8) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
+
+        /* === Success Overlay === */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        html.dark .success-overlay {
+            background: rgba(10,10,10,0.92);
+        }
+        .success-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-checkmark {
+            width: 100px;
+            height: 100px;
+        }
+        .success-checkmark .circle {
+            fill: none;
+            stroke: #A13333;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transform-origin: center;
+        }
+        .success-overlay.active .circle {
+            animation: circle-draw 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.2s forwards;
+        }
+        .success-checkmark .check {
+            fill: none;
+            stroke: #A13333;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+        }
+        .success-overlay.active .check {
+            animation: check-draw 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.7s forwards;
+        }
+
+        @keyframes circle-draw {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes check-draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .success-overlay .success-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 1.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        html.dark .success-overlay .success-title {
+            color: #f1f1f1;
+        }
+        .success-overlay.active .success-title {
+            animation: fade-up 0.5s ease 1s forwards;
+        }
+
+        .success-overlay .success-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        html.dark .success-overlay .success-subtitle {
+            color: #999;
+        }
+        .success-overlay.active .success-subtitle {
+            animation: fade-up 0.5s ease 1.15s forwards;
+        }
+
+        @keyframes fade-up {
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <script>
@@ -375,10 +470,62 @@
                             </div>
                         </div>
                     </label>
-                    <!-- Mock profile image -->
-                    <div
-                        class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 flex-shrink-0">
-                        U
+                    <!-- User Profile Dropdown -->
+                    <div class="relative" id="user-menu-container">
+                        <button id="user-avatar-btn"
+                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
+                            aria-haspopup="true" aria-expanded="false">
+                            <span id="user-avatar-initial">U</span>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu"
+                            class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200/60 dark:border-zinc-700/60 overflow-hidden z-[9999] opacity-0 translate-y-2 transition-all duration-200 ease-out"
+                            role="menu">
+                            <!-- User Info Header -->
+                            <div class="px-5 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                                <p id="dropdown-user-name" class="font-headline font-bold text-on-background dark:text-white text-base leading-tight">Usuario</p>
+                                <p id="dropdown-user-id" class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-body">Identificador</p>
+                            </div>
+                            <!-- Primary Actions -->
+                            <div class="py-2 px-2">
+                                <button id="menu-mis-avisos" class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">description</span>
+                                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mis avisos</span>
+                                </button>
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">mail</span>
+                                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Interesados</span>
+                                </button>
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">schedule</span>
+                                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mi actividad</span>
+                                </button>
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">payments</span>
+                                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Contrataciones</span>
+                                </button>
+                            </div>
+                            <!-- Secondary Actions -->
+                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mi cuenta</span>
+                                </button>
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">Ajustes de notificaciones</span>
+                                </button>
+                            </div>
+                            <!-- Help & Logout -->
+                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
+                                    <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">¿Podemos ayudarte?</span>
+                                </button>
+                            </div>
+                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <button id="menu-logout" class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group" role="menuitem">
+                                    <span class="text-sm text-red-600 dark:text-red-400 font-medium">Cerrar sesión</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -441,144 +588,26 @@
                     </div>
                 </div>
                 <!-- Property Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
-                    <!-- Card 1 -->
-                    <div class="group cursor-pointer animate-on-scroll delay-100">
-                        <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5] border-none shadow-none">
-                            <img alt="Modernist Villa"
-                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="img/hero-marketplace.jpg" />
-                            <div
-                                class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border-none">
-                                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">EN
-                                    VENTA</span>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-headline text-2xl font-bold text-on-background leading-tight">The
-                                    Obsidian Pavilion</h3>
-                                <span class="text-2xl font-bold text-primary">$4,250,000</span>
-                            </div>
-                            <p class="text-secondary flex items-center gap-1 text-sm border-none mt-[2px] mb-[2px]">
-                                <span class="material-symbols-outlined text-base">location_on</span>
-                                Bel Air, Los Angeles
-                            </p>
-                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
-                                <div class="flex items-center gap-6 text-secondary">
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bed</span>
-                                        <span class="text-sm font-semibold">5 Dorm.</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bathtub</span>
-                                        <span class="text-sm font-semibold">6 Baños</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">square_foot</span>
-                                        <span class="text-sm font-semibold">850 m²</span>
-                                    </div>
-                                </div>
-                                <button
-                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
-                                    Ver más
-                                    <span
-                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                                </button>
-                            </div>
-                        </div>
+                <div id="marketplace-property-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
+                    <!-- Skeleton cards (shown while loading) -->
+                    <div class="marketplace-skeleton animate-pulse">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3"><div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div><div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div></div>
                     </div>
-                    <!-- Card 2 -->
-                    <div class="group cursor-pointer border-none shadow-none animate-on-scroll delay-200">
-                        <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5]">
-                            <img alt="Brutalist Estate"
-                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="img/hero-marketplace.jpg" />
-                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm">
-                                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">EN
-                                    VENTA</span>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-headline text-2xl font-bold text-on-background leading-tight">Terrazo
-                                    Maritimo</h3>
-                                <span class="text-2xl font-bold text-primary">$2,800,000</span>
-                            </div>
-                            <p class="text-secondary flex items-center gap-1 text-sm border-none mt-[2px] mb-[2px]">
-                                <span class="material-symbols-outlined text-base">location_on</span>
-                                Malibu, California
-                            </p>
-                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
-                                <div class="flex items-center gap-6 text-secondary">
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bed</span>
-                                        <span class="text-sm font-semibold">4 Dorm.</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bathtub</span>
-                                        <span class="text-sm font-semibold">4 Baños</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">square_foot</span>
-                                        <span class="text-sm font-semibold">620 m²</span>
-                                    </div>
-                                </div>
-                                <button
-                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
-                                    Ver más
-                                    <span
-                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="marketplace-skeleton animate-pulse hidden md:block">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3"><div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div><div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div></div>
                     </div>
-                    <!-- Card 3 -->
-                    <div class="group cursor-pointer border-none shadow-none animate-on-scroll delay-300">
-                        <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5]">
-                            <img alt="Glass House"
-                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                src="img/hero-marketplace.jpg" />
-                            <div
-                                class="absolute top-4 right-4 bg-error-container/90 backdrop-blur px-3 py-1 rounded shadow-sm">
-                                <span
-                                    class="text-[10px] font-bold tracking-widest text-on-error-container uppercase">VENDIDO</span>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-headline text-2xl font-bold text-on-background leading-tight">The
-                                    Crystal Sanctuary</h3>
-                                <span class="text-2xl font-bold text-primary">$5,100,000</span>
-                            </div>
-                            <p class="text-secondary flex items-center gap-1 text-sm border-none mt-[2px] mb-[2px]">
-                                <span class="material-symbols-outlined text-base">location_on</span>
-                                Aspen, Colorado
-                            </p>
-                            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
-                                <div class="flex items-center gap-6 text-secondary">
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bed</span>
-                                        <span class="text-sm font-semibold">6 Dorm.</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">bathtub</span>
-                                        <span class="text-sm font-semibold">7 Baños</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lg">square_foot</span>
-                                        <span class="text-sm font-semibold">1,100 m²</span>
-                                    </div>
-                                </div>
-                                <button
-                                    class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
-                                    Ver más
-                                    <span
-                                        class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="marketplace-skeleton animate-pulse hidden lg:block">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3"><div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div><div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div></div>
                     </div>
+                </div>
+                <!-- Empty state (hidden by default) -->
+                <div id="marketplace-empty-state" class="hidden col-span-3 py-24 text-center">
+                    <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4 block">home_work</span>
+                    <p class="font-headline text-xl font-bold text-on-background">Todavía no hay propiedades publicadas</p>
+                    <p class="font-body text-secondary mt-2">¡Sé el primero en publicar tu propiedad!</p>
                 </div>
                 <!-- More results indicator -->
                 <div class="mt-20 text-center">
@@ -644,6 +673,197 @@
     </section>
 
 
+    <!-- Mis Avisos View -->
+    <section id="mis-avisos-view"
+        class="bg-[#f5f5f5] dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body w-full min-h-screen z-[100] transition-opacity duration-300 hidden">
+        <!-- Same Navbar as Landing -->
+        <nav class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+            <div class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
+                <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
+                    <a id="btn-back-from-avisos" href="#" class="flex items-center gap-1.5 md:gap-2 group cursor-pointer">
+                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary dark:text-red-500 whitespace-nowrap">The Architectural Ledger</span>
+                    </a>
+                    <!-- Sub-navigation tabs -->
+                    <div class="hidden md:flex items-center gap-1 lg:gap-6 text-sm">
+                        <a class="avisos-tab active text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer px-1" data-tab="avisos">Mis avisos</a>
+                        <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="interesados">Interesados</a>
+                        <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="actividad">Mi actividad</a>
+                        <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="contrataciones">Contrataciones</a>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 sm:gap-2 md:gap-4 ml-auto">
+                    <button id="btn-nuevo-aviso" class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-3 py-1 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:opacity-90 transition-all shadow-md active:scale-95 flex-shrink-0">Publicar</button>
+                    <!-- Avatar in mis avisos nav -->
+                    <div class="relative" id="avisos-user-menu-container">
+                        <button id="avisos-user-avatar-btn"
+                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
+                            aria-haspopup="true" aria-expanded="false">
+                            <span class="avisos-avatar-initial">U</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile sub-navigation -->
+            <div class="flex md:hidden items-center gap-0 border-t border-zinc-200/60 dark:border-zinc-800 overflow-x-auto scrollbar-hide">
+                <a class="avisos-tab active whitespace-nowrap text-xs font-bold text-red-900 dark:text-red-400 border-b-2 border-red-900 dark:border-red-400 px-4 py-2.5 cursor-pointer" data-tab="avisos">Mis avisos</a>
+                <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="interesados">Interesados</a>
+                <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="actividad">Mi actividad</a>
+                <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="contrataciones">Contrataciones</a>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <main class="pt-[120px] md:pt-24 pb-16 px-3 sm:px-4 md:px-8 lg:px-12">
+            <div class="max-w-[1440px] mx-auto">
+
+                <!-- Layout: Sidebar + Main -->
+                <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+
+                    <!-- Sidebar Filters (desktop) -->
+                    <aside id="avisos-sidebar" class="hidden lg:block w-[260px] flex-shrink-0">
+                        <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-5 sticky top-28">
+                            <h3 class="font-headline font-bold text-sm text-on-background dark:text-white mb-4">Filtros</h3>
+
+                            <!-- Tipo de inmueble -->
+                            <div class="mb-5">
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">Tipo de inmueble</p>
+                                <div id="filter-tipo" class="space-y-1.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Tipo de operación -->
+                            <div class="mb-5">
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">Tipo de operación</p>
+                                <div id="filter-operacion" class="space-y-1.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Ciudad -->
+                            <div class="mb-5">
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">Ciudad</p>
+                                <div id="filter-ciudad" class="space-y-1.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <div class="border-t border-zinc-100 dark:border-zinc-800 pt-4 mt-2">
+                                <button class="w-full flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors py-2 px-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                    <span class="material-symbols-outlined text-lg">inventory_2</span>
+                                    Bandeja de archivados
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Mobile filter toggle -->
+                    <div class="lg:hidden flex items-center gap-2">
+                        <button id="mobile-filter-toggle" class="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <span class="material-symbols-outlined text-lg">tune</span>
+                            Filtros
+                        </button>
+                    </div>
+
+                    <!-- Mobile Filters Drawer -->
+                    <div id="mobile-filters-drawer" class="hidden lg:hidden bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-5 mb-2">
+                        <h3 class="font-headline font-bold text-sm text-on-background dark:text-white mb-4">Filtros</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                            <div>
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Tipo de inmueble</p>
+                                <div id="filter-tipo-mobile" class="space-y-1.5"></div>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Tipo de operación</p>
+                                <div id="filter-operacion-mobile" class="space-y-1.5"></div>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Ciudad</p>
+                                <div id="filter-ciudad-mobile" class="space-y-1.5"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="flex-1 min-w-0">
+
+                        <!-- Toolbar: count + search + sort -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
+                            <p id="avisos-count" class="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-2 whitespace-nowrap">
+                                <span class="material-symbols-outlined text-lg text-zinc-400">search</span>
+                                Cargando avisos...
+                            </p>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <div class="relative flex-1 sm:flex-initial">
+                                    <input id="avisos-search" type="text" placeholder="Código / ID / Título / Dirección"
+                                        class="w-full sm:w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-4 pr-10 py-2.5 text-sm text-on-background dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow">
+                                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-lg text-zinc-400 pointer-events-none">search</span>
+                                </div>
+                                <select id="avisos-sort"
+                                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer min-w-[160px] hidden sm:block">
+                                    <option value="recent">Modificados recientes</option>
+                                    <option value="oldest">Más antiguos</option>
+                                    <option value="price-asc">Menor precio</option>
+                                    <option value="price-desc">Mayor precio</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Avisos List -->
+                        <div id="mis-avisos-grid" class="space-y-4">
+                            <!-- Loading skeletons -->
+                            <div class="mis-avisos-skeleton animate-pulse bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5">
+                                <div class="flex gap-4 md:gap-5">
+                                    <div class="w-[100px] h-[75px] md:w-[140px] md:h-[100px] rounded-xl bg-zinc-200 dark:bg-zinc-800 flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-3">
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
+                                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mis-avisos-skeleton animate-pulse bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5">
+                                <div class="flex gap-4 md:gap-5">
+                                    <div class="w-[100px] h-[75px] md:w-[140px] md:h-[100px] rounded-xl bg-zinc-200 dark:bg-zinc-800 flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-3">
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
+                                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mis-avisos-skeleton animate-pulse bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5 hidden sm:block">
+                                <div class="flex gap-4 md:gap-5">
+                                    <div class="w-[100px] h-[75px] md:w-[140px] md:h-[100px] rounded-xl bg-zinc-200 dark:bg-zinc-800 flex-shrink-0"></div>
+                                    <div class="flex-1 space-y-3">
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
+                                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                                        <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="mis-avisos-empty" class="hidden py-16 md:py-24 text-center">
+                            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-4xl text-zinc-400 dark:text-zinc-500">home_work</span>
+                            </div>
+                            <p class="font-headline text-xl font-bold text-on-background dark:text-white">Todavía no tenés avisos</p>
+                            <p class="font-body text-secondary dark:text-zinc-400 mt-2 max-w-md mx-auto">Publicá tu primera propiedad y empezá a recibir consultas de potenciales compradores o inquilinos.</p>
+                            <button id="btn-publicar-empty" class="mt-8 bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3.5 rounded-full font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 inline-flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">add</span>
+                                Publicar propiedad
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+
     <!-- Publish Property View -->
 <section id="publish-property-view" class="bg-background dark:bg-[#0c0c0e] font-body w-full min-h-screen z-[100] transition-opacity duration-300 hidden">
 <!-- TopAppBar -->
@@ -652,7 +872,7 @@
 <div class="flex items-center gap-4">
 <button id="btn-back-from-publish" class="flex items-center gap-1 text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
 <span class="material-symbols-outlined" id="btn-back-icon">close</span>
-<span id="btn-back-text" class="font-body font-bold text-sm">Cancelar</span>
+<span id="btn-back-text" class="font-body font-bold text-sm">Volver al inicio</span>
 </button>
 </div>
 
@@ -796,9 +1016,28 @@
 <option disabled selected value="">Selecciona la provincia</option>
 <option value="buenos-aires">Buenos Aires</option>
 <option value="caba">Ciudad Autónoma de Buenos Aires</option>
+<option value="catamarca">Catamarca</option>
+<option value="chaco">Chaco</option>
+<option value="chubut">Chubut</option>
 <option value="cordoba">Córdoba</option>
-<option value="santa-fe">Santa Fe</option>
+<option value="corrientes">Corrientes</option>
+<option value="entre-rios">Entre Ríos</option>
+<option value="formosa">Formosa</option>
+<option value="jujuy">Jujuy</option>
+<option value="la-pampa">La Pampa</option>
+<option value="la-rioja">La Rioja</option>
 <option value="mendoza">Mendoza</option>
+<option value="misiones">Misiones</option>
+<option value="neuquen">Neuquén</option>
+<option value="rio-negro">Río Negro</option>
+<option value="salta">Salta</option>
+<option value="san-juan">San Juan</option>
+<option value="san-luis">San Luis</option>
+<option value="santa-cruz">Santa Cruz</option>
+<option value="santa-fe">Santa Fe</option>
+<option value="santiago-del-estero">Santiago del Estero</option>
+<option value="tierra-del-fuego">Tierra del Fuego, Antártida e Islas del Atlántico Sur</option>
+<option value="tucuman">Tucumán</option>
 </select>
 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
 <span class="material-symbols-outlined">expand_more</span>
@@ -808,10 +1047,10 @@
 </div>
 
 <div class="space-y-4">
-<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Ciudad / Barrio *</label>
+<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Departamento *</label>
 <div class="relative">
 <select id="ciudad" disabled required class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-<option disabled selected value="">Selecciona la ciudad</option>
+<option disabled selected value="">Selecciona el departamento</option>
 </select>
 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
 <span class="material-symbols-outlined">expand_more</span>
@@ -1059,13 +1298,19 @@
                 <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">Cargá entre 5 y 50 fotos. Una vez cargadas, arrastrá y soltá para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
             </div>
             
-            <div class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
+            <div id="fotos-dropzone" class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
                 <div class="w-14 h-14 bg-primary/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <span class="material-symbols-outlined text-primary dark:text-red-500 text-3xl">upload</span>
                 </div>
                 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">Agregá las fotos de la propiedad</span>
-                <input type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
+                <input id="fotos-input" type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
             </div>
+            
+            <!-- Previews Container -->
+            <div id="fotos-preview-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6 empty:hidden">
+                <!-- Image previews will be appended here -->
+            </div>
+            <div id="fotos-error-msg" class="hidden text-error dark:text-red-400 text-sm font-semibold mt-2"></div>
         </div>
 
         <!-- Videos -->
@@ -2043,7 +2288,7 @@
 <div id="desktop-action-buttons" class="flex-row justify-between items-center gap-4 mt-12 pt-8 border-t border-outline-variant/30 dark:border-white/5">
     <button type="button" id="btn-back-desktop" class="px-6 py-4 rounded-xl font-headline font-bold text-secondary dark:text-[#c7c6c6] bg-transparent hover:bg-surface-container transition-colors flex items-center gap-2" onclick="document.getElementById('btn-back-from-publish').click()">
         <span class="material-symbols-outlined" id="btn-back-desktop-icon">close</span>
-        <span id="btn-back-desktop-text">Cancelar</span>
+        <span id="btn-back-desktop-text">Volver al inicio</span>
     </button>
     <div class="flex flex-row gap-4">
         <button type="button" class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
@@ -2062,7 +2307,7 @@
 <nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-between items-center h-20 px-4 pb-safe bg-surface/90 dark:bg-zinc-950/90 backdrop-blur-md z-50 border-t border-outline-variant/30 dark:border-white/5 shadow-none pb-[env(safe-area-inset-bottom)]">
 <button id="btn-back-mobile" class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[4rem]">
 <span class="material-symbols-outlined text-[22px]">arrow_back</span>
-<span class="font-inter text-[10px] font-medium mt-1">Atrás</span>
+<span class="font-inter text-[10px] font-medium mt-1">Inicio</span>
 </button>
 <button class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[5rem]">
 <span class="material-symbols-outlined text-[22px]">save</span>
@@ -2993,7 +3238,7 @@ Continuar
         <script src="js/data.js"></script>
         <script src="js/app.js"></script>
         <!-- Google Maps -->
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&loading=async&v=weekly"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 if (window.App) {
@@ -3018,6 +3263,17 @@ Continuar
                 document.querySelectorAll('.animate-on-scroll').forEach(el => window.marketplaceObserver.observe(el));
             });
         </script>
+
+<!-- Success Overlay -->
+<div id="publish-success-overlay" class="success-overlay">
+    <svg class="success-checkmark" viewBox="0 0 100 100">
+        <circle class="circle" cx="50" cy="50" r="45"/>
+        <polyline class="check" points="30 52 44 66 70 38"/>
+    </svg>
+    <p class="success-title">¡Propiedad publicada!</p>
+    <p class="success-subtitle">Tu aviso ya está disponible en el marketplace</p>
+</div>
+
 </body>
 
 </html>

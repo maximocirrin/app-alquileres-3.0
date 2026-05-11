@@ -48,11 +48,55 @@ const DataManager = {
         return user;
     },
 
+    getUserProfile: async () => {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) return null;
+        const { data, error } = await window.supabaseClient
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .eq('id', user.id)
+            .single();
+        if (error) {
+            console.error("Error fetching profile:", error);
+            return null;
+        }
+        return data;
+    },
+
+    getUserMarketplaceProperties: async () => {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) return [];
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .select(`
+                id, title, description, address, price, status, images, created_at,
+                propiedad_imagenes (url, orden)
+            `)
+            .eq('owner_id', user.id)
+            .order('created_at', { ascending: false });
+        if (error) {
+            console.error("Error fetching user marketplace properties:", error);
+            return [];
+        }
+        return data || [];
+    },
+
     // Property Management
     getProperties: async () => {
         const { data, error } = await window.supabaseClient
             .from('properties')
-            .select('*')
+            .select(`
+                *,
+                contracts (
+                    tenant_id,
+                    start_date,
+                    end_date,
+                    monthly_rent,
+                    payment_due_day,
+                    status,
+                    contract_data
+                )
+            `)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -60,55 +104,45 @@ const DataManager = {
             return [];
         }
 
-        // Map DB columns to Frontend structure
-        return data.map(p => ({
-            id: p.id,
-            title: p.title, 
-            description: p.description,
-            address: p.address,
-            price: p.price,
-            rentDueDay: p.rent_due_day,
-            increaseRate: p.increase_rate,
-            increaseFrequency: p.increase_frequency,
-            contractStartDate: p.contract_start,
-            contractEndDate: p.contract_end,
-            tenantName: p.tenant_name,
-            tenantEmail: p.tenant_email,
-            tenantPhone: p.tenant_phone,
-            cbuAlias: p.cbu_alias,
-            notifyRentExpiry: p.notify_rent_expiry,
-            notifyPunitiveInterests: p.notify_punitive_interests,
-            contract: p.contract_data, 
-            photoUrl: p.images && p.images.length > 0 ? p.images[0] : null,
-            status: p.status,
-            paymentStatus: p.payment_status 
-        }));
+        return data.map(p => {
+            const currentContract = p.contracts && p.contracts.length > 0 ? p.contracts[0] : null;
+            return {
+                id: p.id,
+                title: p.title, 
+                description: p.description,
+                address: p.address,
+                price: p.price,
+                rentDueDay: currentContract?.payment_due_day || null,
+                increaseRate: null,
+                increaseFrequency: null,
+                contractStartDate: currentContract?.start_date || null,
+                contractEndDate: currentContract?.end_date || null,
+                tenantName: 'Inquilino', 
+                tenantEmail: '',
+                tenantPhone: '',
+                cbuAlias: null,
+                notifyRentExpiry: false,
+                notifyPunitiveInterests: false,
+                contract: currentContract?.contract_data || null, 
+                photoUrl: p.images && p.images.length > 0 ? p.images[0] : null,
+                status: p.status,
+                paymentStatus: currentContract?.status === 'activo' ? 'al_dia' : 'pendiente' 
+            };
+        });
     },
 
     addProperty: async (property) => {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) throw new Error("User not authenticated");
 
-        // Map Frontend structure to DB columns
         const dbProperty = {
             owner_id: user.id,
+            title: property.address || 'Nueva Propiedad',
+            description: '',
             address: property.address,
-            price: property.price,
-            rent_due_day: property.rentDueDay,
-            increase_rate: property.increaseRate,
-            increase_frequency: property.increaseFrequency,
-            contract_start: property.contractStartDate,
-            contract_end: property.contractEndDate,
-            tenant_name: property.tenantName,
-            tenant_email: property.tenantEmail,
-            tenant_phone: property.tenantPhone,
-            cbu_alias: property.cbuAlias,
-            notify_rent_expiry: property.notifyRentExpiry,
-            notify_punitive_interests: property.notifyPunitiveInterests,
-            contract_data: property.contract,
+            price: property.price || 0,
             images: property.photoUrl ? [property.photoUrl] : [],
-            status: 'alquilada', 
-            payment_status: 'pendiente'
+            status: 'alquilada' 
         };
 
         const { data, error } = await window.supabaseClient
@@ -136,15 +170,9 @@ const DataManager = {
     },
 
     updatePaymentStatus: async (propertyId, status) => {
-        const { error } = await window.supabaseClient
-            .from('properties')
-            .update({ payment_status: status })
-            .eq('id', propertyId);
-
-        if (error) {
-             console.error("Error updating payment status:", error);
-             throw error;
-        }
+        // En el nuevo esquema el estado de pago dependería de los contratos o los pagos en sí.
+        // Simulamos el éxito para mantener compatibilidad con UI.
+        console.warn('updatePaymentStatus no hace nada en DB por ahora (requiere tabla de pagos).');
     },
 
     // Finances
@@ -160,26 +188,36 @@ const DataManager = {
     // Tenants Management
     getTenants: async () => {
         const { data, error } = await window.supabaseClient
-            .from('properties')
-            .select('id, address, tenant_name, tenant_email, tenant_phone, price, payment_status, rent_due_day, contract_data, contract_end')
-            .not('tenant_name', 'is', null);
+            .from('contracts')
+            .select(`
+                id, 
+                monthly_rent, 
+                payment_due_day, 
+                contract_data, 
+                end_date, 
+                status,
+                property_id,
+                properties (address),
+                profiles!tenant_id (full_name, email)
+            `)
+            .eq('status', 'activo');
 
         if (error) {
             console.error("Error fetching tenants:", error);
             return [];
         }
 
-        return data.map(t => ({
-            id: t.id,
-            name: t.tenant_name,
-            email: t.tenant_email,
-            phone: t.tenant_phone,
-            propertyAddress: t.address,
-            rent: t.price,
-            status: t.payment_status,
-            rentDueDay: t.rent_due_day,
-            contract: t.contract_data,
-            contractEnd: t.contract_end
+        return data.map(c => ({
+            id: c.tenant_id || c.id,
+            name: c.profiles?.full_name || 'Inquilino',
+            email: c.profiles?.email || '',
+            phone: '',
+            propertyAddress: c.properties?.address || 'Sin dirección',
+            rent: c.monthly_rent,
+            status: c.status === 'activo' ? 'al_dia' : 'pendiente',
+            rentDueDay: c.payment_due_day,
+            contract: c.contract_data,
+            contractEnd: c.end_date
         }));
     },
 
@@ -237,37 +275,37 @@ const DataManager = {
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) throw new Error("User not authenticated");
 
+        const descriptionText = propertyData.descripcionAviso || '';
+        const operationText = propertyData.operacion ? `[${propertyData.operacion.toUpperCase()}] ` : '';
+        const fullTitle = propertyData.tituloAviso || `${operationText}${propertyData.tipoPropiedad} en ${propertyData.ciudad}`;
+        
+        const addressParts = [propertyData.calleAltura, propertyData.barrio, propertyData.ciudad, propertyData.provincia].filter(Boolean);
+        const fullAddress = addressParts.join(', ') || 'No especificado';
+        
+        const extraInfo = {
+            operacion: propertyData.operacion || 'venta',
+            tipo: propertyData.tipoPropiedad || 'departamento',
+            ambientes: propertyData.ambientes,
+            dormitorios: propertyData.dormitorios,
+            banos: propertyData.banos,
+            sup_cubierta: propertyData.supCubierta,
+            moneda: propertyData.moneda || 'ARS'
+        };
+
+        const finalDescription = `${descriptionText}\n\nDetalles: ${JSON.stringify(extraInfo)}`;
+
         const dbProperty = {
             owner_id: user.id,
-            contact_nombre: propertyData.contactNombre,
-            contact_apellido: propertyData.contactApellido,
-            contact_condicion: propertyData.contactCondicion,
-            contact_documento: propertyData.contactDocumento,
-            contact_celular: propertyData.contactCelular,
-            contact_fijo: propertyData.contactFijo || null,
-            
-            operacion: propertyData.operacion,
-            tipo_propiedad: propertyData.tipoPropiedad,
-            subtipo_propiedad: propertyData.subtipoPropiedad || null,
-            
-            calle_altura: propertyData.calleAltura,
-            provincia: propertyData.provincia,
-            ciudad: propertyData.ciudad,
-            barrio: propertyData.barrio,
-            subzona: propertyData.subzona || null,
-            ubicacion_exacta: propertyData.ubicacionExacta !== false,
-            
-            ambientes: parseInt(propertyData.ambientes) || 1,
-            dormitorios: parseInt(propertyData.dormitorios) || 1,
-            banos: parseInt(propertyData.banos) || 1,
-            toilettes: parseInt(propertyData.toilettes) || 0,
-            cocheras: parseInt(propertyData.cocheras) || 0,
-            
-            status: 'draft'
+            title: fullTitle,
+            description: finalDescription,
+            address: fullAddress,
+            price: parseFloat(propertyData.precio) || 0,
+            status: 'disponible',
+            images: propertyData.multimedia?.fotos || []
         };
 
         const { data, error } = await window.supabaseClient
-            .from('marketplace_properties')
+            .from('properties')
             .insert([dbProperty])
             .select();
 
@@ -275,11 +313,105 @@ const DataManager = {
             console.error("Error adding marketplace property:", error);
             throw error;
         }
-        return data[0];
+
+        const newProperty = data[0];
+
+        // Process and upload images
+        if (propertyData.photos && propertyData.photos.length > 0) {
+            try {
+                const optimizeImageOnClient = (file) => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = new Image();
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                let width = img.width;
+                                let height = img.height;
+                                const max_width = 1920;
+                                if (width > max_width) {
+                                    height = Math.round((height * max_width) / width);
+                                    width = max_width;
+                                }
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+                                canvas.toBlob((blob) => {
+                                    resolve(blob);
+                                }, 'image/webp', 0.8);
+                            };
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                };
+
+                const uploadPromises = propertyData.photos.map(async (file, index) => {
+                    const optimizedBlob = await optimizeImageOnClient(file);
+                    const fileName = `${Date.now()}-${index}.webp`;
+                    const storagePath = `propiedades/${newProperty.id}/${fileName}`;
+                    
+                    const { data: storageData, error: storageError } = await window.supabaseClient
+                        .storage
+                        .from('propiedades_multimedia')
+                        .upload(storagePath, optimizedBlob, {
+                            contentType: 'image/webp',
+                            upsert: false
+                        });
+
+                    if (storageError) throw storageError;
+
+                    const { data: publicUrlData } = window.supabaseClient
+                        .storage
+                        .from('propiedades_multimedia')
+                        .getPublicUrl(storagePath);
+
+                    return {
+                        propiedad_id: newProperty.id,
+                        url: publicUrlData.publicUrl,
+                        storage_path: storagePath,
+                        orden: index + 1
+                    };
+                });
+
+                const uploadedImagesMetadata = await Promise.all(uploadPromises);
+                
+                const { error: dbError } = await window.supabaseClient
+                    .from('propiedad_imagenes')
+                    .insert(uploadedImagesMetadata);
+                    
+                if (dbError) throw dbError;
+                
+                // Clear the temporary array now that we have uploaded them
+                window.selectedPropertyPhotos = [];
+                
+            } catch (imgError) {
+                console.error("Error procesando/subiendo imagenes:", imgError);
+                // Procedemos igual ya que la propiedad se creó
+            }
+        }
+
+        return newProperty;
+    },
+
+    getPublicMarketplaceProperties: async (limit = 12) => {
+        const { data, error } = await window.supabaseClient
+            .from('properties')
+            .select(`
+                id, title, description, address, price, status, images, created_at,
+                propiedad_imagenes (url, orden)
+            `)
+            .eq('status', 'disponible')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error("Error fetching marketplace properties:", error);
+            return [];
+        }
+        return data || [];
     }
 };
 
-window.DataManager = DataManager;
-
-// Make DataManager global
 window.DataManager = DataManager;

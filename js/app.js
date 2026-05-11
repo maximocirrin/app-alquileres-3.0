@@ -14,6 +14,9 @@ const App = {
             App.setupTheme();
             App.setupEventListeners();
             
+            // Load marketplace public listings
+            loadMarketplaceListings();
+            
             // Check if user is logged in
             const user = await DataManager.getCurrentUser();
             if (user) {
@@ -111,9 +114,18 @@ const App = {
 
         const btnPublicarMarketplace = document.getElementById('btn-publicar-marketplace');
         if (btnPublicarMarketplace) {
-            btnPublicarMarketplace.addEventListener('click', (e) => {
+            btnPublicarMarketplace.addEventListener('click', async (e) => {
                 e.preventDefault();
-                window.currentWizardStep = 1; // Reiniciar paso
+                // Check if user is authenticated before opening wizard
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    sessionStorage.setItem('postLoginRedirect', 'publish');
+                    document.getElementById('landing-marketplace-view').classList.add('hidden');
+                    document.getElementById('main-layout').classList.add('hidden');
+                    document.getElementById('login-view').classList.remove('hidden');
+                    return;
+                }
+                window.currentWizardStep = 1;
                 document.getElementById('landing-marketplace-view').classList.add('hidden');
                 const appElem = document.getElementById('app');
                 if(appElem) appElem.classList.add('hidden');
@@ -130,255 +142,6 @@ const App = {
         
         const handleBackFromPublish = (e) => {
             e.preventDefault();
-
-            // Check if we need to go back to Step 3 from Step 4
-            if (window.currentWizardStep === 4) {
-                const step3Container = document.getElementById('wizard-step-3-container');
-                const step4Container = document.getElementById('wizard-step-4-container');
-                const title = document.getElementById('publish-main-title');
-                const subtitle = document.getElementById('paso-subtitle');
-
-                if(title) title.style.opacity = '0';
-                if(subtitle) subtitle.style.opacity = '0';
-                if(step4Container) {
-                    step4Container.classList.remove('opacity-100', 'scale-100');
-                    step4Container.classList.add('opacity-0', 'scale-95');
-                }
-
-                setTimeout(() => {
-                    if(step4Container) {
-                        step4Container.classList.add('hidden');
-                        step4Container.style.height = '0';
-                    }
-
-                    // Update Progress Indicator
-                    const pStep3 = document.getElementById('progress-step-3');
-                    const pStep4 = document.getElementById('progress-step-4');
-                    const pLine3 = document.getElementById('progress-line-3');
-                    
-                    if(pStep3) {
-                        pStep3.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
-                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Extras</span>
-                        `;
-                    }
-                    if(pStep4) {
-                        pStep4.classList.add('opacity-50');
-                        pStep4.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">4</div>
-                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Publicar</span>
-                        `;
-                    }
-                    
-                    if(pLine3) {
-                        pLine3.classList.remove('border-primary', 'dark:border-red-500');
-                        pLine3.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
-                    }
-
-                    if(step3Container) {
-                        step3Container.classList.remove('hidden');
-                        if(title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
-                        if(subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
-
-                        void step3Container.offsetWidth; // Reflow
-
-                        if(title) title.style.opacity = '1';
-                        if(subtitle) subtitle.style.opacity = '1';
-                        step3Container.classList.remove('opacity-0', 'scale-95', 'h-0');
-                        step3Container.classList.add('opacity-100', 'scale-100', 'h-auto');
-                        step3Container.style.height = ''; // Limpiar inline style
-
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                        // Change buttons to submit form-extras
-                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                        if (continueBtnDesk) {
-                            continueBtnDesk.textContent = 'Continuar';
-                            continueBtnDesk.setAttribute('form', 'form-extras');
-                        }
-                        if (continueBtnMob) {
-                            continueBtnMob.textContent = 'Continuar';
-                            continueBtnMob.setAttribute('form', 'form-extras');
-                        }
-
-                        window.currentWizardStep = 3;
-                    }
-                }, 400);
-
-                return;
-            }
-
-            // Check if we need to go back to Step 2 from Step 3
-            if (window.currentWizardStep === 3) {
-                const step2Container = document.getElementById('wizard-step-2-container');
-                const step3Container = document.getElementById('wizard-step-3-container');
-                const title = document.getElementById('publish-main-title');
-                const subtitle = document.getElementById('paso-subtitle');
-
-                if(title) title.style.opacity = '0';
-                if(subtitle) subtitle.style.opacity = '0';
-                if(step3Container) {
-                    step3Container.classList.remove('opacity-100', 'scale-100');
-                    step3Container.classList.add('opacity-0', 'scale-95');
-                }
-
-                setTimeout(() => {
-                    if(step3Container) {
-                        step3Container.classList.add('hidden');
-                        step3Container.style.height = '0';
-                    }
-
-                    // Update Progress Indicator
-                    const pStep2 = document.getElementById('progress-step-2');
-                    const pStep3 = document.getElementById('progress-step-3');
-                    const pLine2 = document.getElementById('progress-line-2');
-                    
-                    if(pStep2) {
-                        pStep2.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
-                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
-                        `;
-                    }
-                    if(pStep3) {
-                        pStep3.classList.add('opacity-50');
-                        pStep3.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">3</div>
-                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Extras</span>
-                        `;
-                    }
-                    
-                    if(pLine2) {
-                        pLine2.classList.remove('border-primary', 'dark:border-red-500');
-                        pLine2.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
-                    }
-
-                    if(step2Container) {
-                        step2Container.classList.remove('hidden');
-                        if(title) title.textContent = 'Agregá fotos y videos';
-                        if(subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
-
-                        void step2Container.offsetWidth; // Reflow
-
-                        if(title) title.style.opacity = '1';
-                        if(subtitle) subtitle.style.opacity = '1';
-                        step2Container.classList.remove('opacity-0', 'scale-95', 'h-0');
-                        step2Container.classList.add('opacity-100', 'scale-100', 'h-auto');
-                        step2Container.style.height = ''; // Limpiar inline style
-
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                        // Change buttons to submit form-multimedia
-                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                        if (continueBtnDesk) {
-                            continueBtnDesk.textContent = 'Continuar';
-                            continueBtnDesk.setAttribute('form', 'form-multimedia');
-                        }
-                        if (continueBtnMob) {
-                            continueBtnMob.textContent = 'Continuar';
-                            continueBtnMob.setAttribute('form', 'form-multimedia');
-                        }
-
-                        window.currentWizardStep = 2;
-                    }
-                }, 400);
-
-                return;
-            }
-
-            // Check if we need to go back to Step 1 instead of cancelling
-            if (window.currentWizardStep === 2) {
-                // Transition back to step 1
-                const step1Container = document.getElementById('wizard-step-1-container');
-                const step2Container = document.getElementById('wizard-step-2-container');
-                const title = document.getElementById('publish-main-title');
-                const subtitle = document.getElementById('paso-subtitle');
-
-                // Fade out step 2
-                if(title) title.style.opacity = '0';
-                if(subtitle) subtitle.style.opacity = '0';
-                if(step2Container) {
-                    step2Container.classList.remove('opacity-100', 'scale-100');
-                    step2Container.classList.add('opacity-0', 'scale-95');
-                }
-
-                setTimeout(() => {
-                    if(step2Container) {
-                        step2Container.classList.add('hidden');
-                        step2Container.style.height = '0';
-                    }
-
-                    // Update Progress Indicator
-                    const pStep1 = document.getElementById('progress-step-1');
-                    const pStep2 = document.getElementById('progress-step-2');
-                    
-                    if(pStep1) {
-                        pStep1.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
-                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
-                        `;
-                    }
-                    if(pStep2) {
-                        pStep2.classList.add('opacity-50');
-                        pStep2.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">2</div>
-                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
-                        `;
-                    }
-                    
-                    const pLine1 = document.getElementById('progress-line-1');
-                    if(pLine1) {
-                        pLine1.classList.remove('border-primary', 'dark:border-red-500');
-                        pLine1.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
-                    }
-
-                    if(step1Container) {
-                        step1Container.classList.remove('hidden');
-                        if(title) title.textContent = '¡Empecemos a crear tu aviso!';
-                        if(subtitle) subtitle.textContent = 'Detalles de tu propiedad'; // Or whatever was the original context
-
-                        void step1Container.offsetWidth; // Reflow
-
-                        if(title) title.style.opacity = '1';
-                        if(subtitle) subtitle.style.opacity = '1';
-                        step1Container.classList.remove('opacity-0', 'scale-95', 'h-0');
-                        step1Container.classList.add('opacity-100', 'scale-100', 'h-auto');
-                        step1Container.style.height = ''; // Limpiar inline style
-
-                        // Scroll up if necessary
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                        // Reset buttons
-                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-                        const backBtnDeskText = document.getElementById('btn-back-desktop-text');
-                        const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
-                        const backBtnTopIcon = document.getElementById('btn-back-icon');
-                        const backBtnTopText = document.getElementById('btn-back-text');
-
-                        if (continueBtnDesk) {
-                            continueBtnDesk.textContent = 'Continuar';
-                            continueBtnDesk.setAttribute('form', 'form-caracteristicas');
-                        }
-                        if (continueBtnMob) {
-                            continueBtnMob.textContent = 'Continuar';
-                            continueBtnMob.setAttribute('form', 'form-caracteristicas');
-                        }
-
-                        if (backBtnDeskText) backBtnDeskText.textContent = 'Cancelar';
-                        if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'close';
-                        if (backBtnTopText) backBtnTopText.textContent = 'Cancelar';
-                        if (backBtnTopIcon) backBtnTopIcon.textContent = 'close';
-
-                        window.currentWizardStep = 1;
-                    }
-                }, 400);
-
-                return;
-            }
 
             // Cerrar la vista (Cancelar)
             
@@ -774,31 +537,116 @@ const App = {
                             
                             // Set global state
                             window.currentWizardStep = 2;
-                            
-                            // Update Back buttons to say "Atrás"
-                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
-                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
-                            const backBtnTopIcon = document.getElementById('btn-back-icon');
-                            const backBtnTopText = document.getElementById('btn-back-text');
-
-                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
-                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
-                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
-                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
                         }
+                            
                     }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
                 }
             });
         }
-        
+                      // --- Image Upload Logic ---
+        const fotosDropzone = document.getElementById('fotos-dropzone');
+        const fotosInput = document.getElementById('fotos-input');
+        const fotosPreviewContainer = document.getElementById('fotos-preview-container');
+        const fotosErrorMsg = document.getElementById('fotos-error-msg');
+        window.selectedPropertyPhotos = [];
+
+        if (fotosDropzone && fotosInput && fotosPreviewContainer) {
+            fotosDropzone.addEventListener('click', () => {
+                fotosInput.click();
+            });
+
+            fotosInput.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                    
+                    const cropAndOptimizeImage1to1 = (file) => {
+                        return new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                const img = new Image();
+                                img.onload = function() {
+                                    const size = Math.min(img.width, img.height);
+                                    const sx = (img.width - size) / 2;
+                                    const sy = (img.height - size) / 2;
+                                    
+                                    const MAX_SIZE = 1920;
+                                    const targetSize = Math.min(size, MAX_SIZE);
+                                    
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = targetSize;
+                                    canvas.height = targetSize;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
+                                    
+                                    canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.8);
+                                };
+                                img.src = ev.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    };
+
+                    const processedBlobs = await Promise.all(imageFiles.map(cropAndOptimizeImage1to1));
+                    window.selectedPropertyPhotos = [...window.selectedPropertyPhotos, ...processedBlobs];
+                    
+                    if (window.selectedPropertyPhotos.length > 50) {
+                        window.selectedPropertyPhotos = window.selectedPropertyPhotos.slice(0, 50);
+                    }
+                    
+                    renderPhotoPreviews();
+                }
+            });
+
+            function renderPhotoPreviews() {
+                fotosPreviewContainer.innerHTML = '';
+                if (window.selectedPropertyPhotos.length > 0) {
+                    fotosPreviewContainer.classList.remove('hidden');
+                } else {
+                    fotosPreviewContainer.classList.add('hidden');
+                }
+
+                window.selectedPropertyPhotos.forEach((blob, index) => {
+                    const url = URL.createObjectURL(blob);
+                    const div = document.createElement('div');
+                    div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10';
+                    div.innerHTML = `
+                        <img src="${url}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button type="button" class="text-white hover:text-red-500 transition-colors delete-photo-btn" data-index="${index}">
+                                <span class="material-symbols-outlined text-3xl">delete</span>
+                            </button>
+                        </div>
+                    `;
+                    fotosPreviewContainer.appendChild(div);
+
+                    div.querySelector('.delete-photo-btn').addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        window.selectedPropertyPhotos.splice(index, 1);
+                        renderPhotoPreviews();
+                    });
+                });
+            }
+        }
+
         // Form 'Multimedia' Submit Interceptor (Transition to Step 3)
         const formMultimedia = document.getElementById('form-multimedia');
         if (formMultimedia) {
             formMultimedia.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
-                // TODO: Add multimedia validation logic here if needed
                 let isValid = true;
+                
+                const photoCount = window.selectedPropertyPhotos ? window.selectedPropertyPhotos.length : 0;
+                if (photoCount < 5 || photoCount > 50) {
+                    isValid = false;
+                    if (fotosErrorMsg) {
+                        fotosErrorMsg.textContent = `Debes cargar entre 5 y 50 fotos. Actualmente tienes ${photoCount}.`;
+                        fotosErrorMsg.classList.remove('hidden');
+                    }
+                } else {
+                    if (fotosErrorMsg) fotosErrorMsg.classList.add('hidden');
+                }
                 
                 if(isValid) {
                     console.log('¡Datos Multimedia completos! Transicionando al paso 3: Extras...');
@@ -888,18 +736,8 @@ const App = {
                             
                             // Set global state
                             window.currentWizardStep = 3;
-                            
-                            // Update Back buttons to say "Atrás"
-                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
-                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
-                            const backBtnTopIcon = document.getElementById('btn-back-icon');
-                            const backBtnTopText = document.getElementById('btn-back-text');
-
-                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
-                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
-                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
-                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
                         }
+                            
                     }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
                 }
             });
@@ -1002,19 +840,192 @@ const App = {
                             
                             // Set global state
                             window.currentWizardStep = 4;
-                            
-                            // Update Back buttons to say "Atrás"
-                            const backBtnDeskText = document.getElementById('btn-back-desktop-text');
-                            const backBtnDeskIcon = document.getElementById('btn-back-desktop-icon');
-                            const backBtnTopIcon = document.getElementById('btn-back-icon');
-                            const backBtnTopText = document.getElementById('btn-back-text');
-
-                            if (backBtnDeskText) backBtnDeskText.textContent = 'Atrás';
-                            if (backBtnDeskIcon) backBtnDeskIcon.textContent = 'arrow_back';
-                            if (backBtnTopText) backBtnTopText.textContent = 'Atrás';
-                            if (backBtnTopIcon) backBtnTopIcon.textContent = 'arrow_back';
                         }
+                            
                     }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                }
+            });
+        }
+        
+        // Form 'Planes' Submit Interceptor (Final Submit to Supabase)
+        const formPlanes = document.getElementById('form-planes');
+        if (formPlanes) {
+            formPlanes.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('¡Iniciando publicación en Supabase!');
+                
+                // Mostrar estado de carga (opcional, podrías añadir un spinner)
+                const submitBtnDesk = document.querySelector('#desktop-action-buttons button[form="form-planes"]');
+                const submitBtnMob = document.querySelector('nav.md\\:hidden button[form="form-planes"]');
+                const originalTextDesk = submitBtnDesk ? submitBtnDesk.textContent : '';
+                
+                if (submitBtnDesk) submitBtnDesk.textContent = 'Publicando...';
+                if (submitBtnMob) submitBtnMob.textContent = 'Publicando...';
+                if (submitBtnDesk) submitBtnDesk.disabled = true;
+                if (submitBtnMob) submitBtnMob.disabled = true;
+
+                try {
+                    // Helper to get selected radio
+                    const getRadioValue = (name) => {
+                        const checked = document.querySelector(`input[name="${name}"]:checked`);
+                        return checked ? checked.value : null;
+                    };
+                    
+                    // Helper to get selected checkboxes
+                    const getCheckedValues = (containerSelector) => {
+                        const container = document.querySelector(containerSelector);
+                        if (!container) return [];
+                        const checked = container.querySelectorAll('input[type="checkbox"]:checked');
+                        return Array.from(checked).map(cb => cb.name);
+                    };
+
+                    const getVal = (id) => {
+                        const el = document.getElementById(id);
+                        return el ? el.value : null;
+                    };
+
+                    // Collecting data
+                    const propertyData = {
+                        // Contacto (Paso 1)
+                        contactNombre: getVal('contact-nombre'),
+                        contactApellido: getVal('contact-apellido'),
+                        contactCondicion: getRadioValue('contact-condicion') || 'propietario',
+                        contactDocumento: getVal('contact-documento'),
+                        contactCelular: getVal('contact-celular'),
+                        contactFijo: getVal('contact-fijo'),
+                        
+                        // Principales (Paso 1)
+                        operacion: getRadioValue('operacion') || 'alquiler',
+                        tipoPropiedad: getVal('tipo-propiedad'),
+                        subtipoPropiedad: getVal('subtipo-propiedad'),
+                        
+                        ambientes: getVal('ambientes-new'),
+                        dormitorios: getVal('dormitorios-new'),
+                        banos: getVal('banos-new'),
+                        toilettes: getVal('toilettes-new'),
+                        cocheras: getVal('cocheras-new'),
+                        antiguedad: getRadioValue('antiguedad'),
+                        
+                        // Ubicacion (Paso 1.1)
+                        calleAltura: getVal('calle-altura'),
+                        provincia: getVal('provincia'),
+                        ciudad: getVal('ciudad'),
+                        barrio: getVal('barrio'),
+                        subzona: getVal('subzona'),
+                        ubicacionExacta: getRadioValue('precision') === 'exacta',
+                        
+                        // Caracteristicas (Paso 1.2)
+                        supCubierta: getVal('sup-cubierta'),
+                        supTotal: getVal('sup-total'),
+                        precio: getVal('precio'),
+                        moneda: document.getElementById('precio')?.previousElementSibling?.value === 'U$S' ? 'USD' : 'ARS',
+                        expensas: getVal('expensas'),
+                        tituloAviso: getVal('titulo-aviso'),
+                        descripcionAviso: getVal('descripcion-aviso'),
+                        
+                        // Extras (Paso 3)
+                        caracteristicas: getCheckedValues('#content-caracteristicas'),
+                        ambientesExtras: getCheckedValues('#content-ambientes'),
+                        servicios: getCheckedValues('#content-servicios'),
+                        adicionales: {
+                            cantidadPlantas: document.querySelector('#form-extras select:nth-of-type(1)')?.value,
+                            coberturaCochera: document.querySelector('#form-extras select:nth-of-type(2)')?.value,
+                            luminoso: document.querySelector('#form-extras select:nth-of-type(3)')?.value,
+                            orientacion: document.querySelector('#form-extras select:nth-of-type(4)')?.value,
+                            frenteTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(1)')?.value,
+                            largoTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(2)')?.value,
+                            supSemicubierta: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(3)')?.value
+                        },
+                        
+                        // Planes (Paso 4)
+                        planPublicacion: 'gratis', // For now, hardcoded as default or extract from UI if implemented
+                        
+                        // Multimedia
+                        photos: window.selectedPropertyPhotos || []
+                    };
+
+                    // Guardar en Supabase
+                    const result = await window.DataManager.addMarketplaceProperty(propertyData);
+                    console.log('Propiedad guardada exitosamente:', result);
+                    
+                    // Show success overlay with animated checkmark
+                    // Re-enable buttons first
+                    if (submitBtnDesk) { submitBtnDesk.textContent = originalTextDesk; submitBtnDesk.disabled = false; }
+                    if (submitBtnMob) { submitBtnMob.textContent = 'Publicar Aviso'; submitBtnMob.disabled = false; }
+                    
+                    // Create overlay dynamically with inline styles to avoid CSS conflicts
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = `
+                        position: fixed; inset: 0; z-index: 999999;
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        background: ${isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)'};
+                        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                        opacity: 0; transition: opacity 0.4s ease;
+                    `;
+                    
+                    overlay.innerHTML = `
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#A13333" stroke-width="3"
+                                stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283"
+                                style="animation: successCircle 0.6s cubic-bezier(0.65,0,0.45,1) 0.2s forwards;" />
+                            <polyline points="30 52 44 66 70 38" fill="none" stroke="#A13333" stroke-width="4"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                stroke-dasharray="50" stroke-dashoffset="50"
+                                style="animation: successCheck 0.4s cubic-bezier(0.65,0,0.45,1) 0.7s forwards;" />
+                        </svg>
+                        <p style="font-family: 'Outfit', 'Manrope', sans-serif; font-size: 1.5rem; font-weight: 700;
+                            color: ${isDark ? '#f1f1f1' : '#1a1a1a'}; margin-top: 1.5rem;
+                            opacity: 0; transform: translateY(10px);
+                            animation: successFadeUp 0.5s ease 1s forwards;">
+                            ¡Propiedad publicada!
+                        </p>
+                        <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem;
+                            color: ${isDark ? '#999' : '#666'}; margin-top: 0.5rem;
+                            opacity: 0; transform: translateY(10px);
+                            animation: successFadeUp 0.5s ease 1.15s forwards;">
+                            Tu aviso ya está disponible en el marketplace
+                        </p>
+                    `;
+                    
+                    // Inject keyframes if not already present
+                    if (!document.getElementById('success-keyframes')) {
+                        const styleSheet = document.createElement('style');
+                        styleSheet.id = 'success-keyframes';
+                        styleSheet.textContent = `
+                            @keyframes successCircle { to { stroke-dashoffset: 0; } }
+                            @keyframes successCheck { to { stroke-dashoffset: 0; } }
+                            @keyframes successFadeUp { to { opacity: 1; transform: translateY(0); } }
+                        `;
+                        document.head.appendChild(styleSheet);
+                    }
+                    
+                    document.body.appendChild(overlay);
+                    
+                    // Force reflow then fade in
+                    void overlay.offsetWidth;
+                    overlay.style.opacity = '1';
+                    
+                    // Wait for animation to play
+                    await new Promise(resolve => setTimeout(resolve, 2800));
+                    
+                    // Fade out
+                    overlay.style.opacity = '0';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Remove overlay and redirect
+                    overlay.remove();
+                    document.getElementById('btn-back-from-publish').click();
+                    return;
+                    
+                } catch (error) {
+                    console.error('Error al publicar la propiedad:', error);
+                    alert('Ocurrió un error al publicar la propiedad. Por favor, intenta nuevamente.');
+                } finally {
+                    if (submitBtnDesk) submitBtnDesk.textContent = originalTextDesk;
+                    if (submitBtnMob) submitBtnMob.textContent = 'Publicar Aviso';
+                    if (submitBtnDesk) submitBtnDesk.disabled = false;
+                    if (submitBtnMob) submitBtnMob.disabled = false;
                 }
             });
         }
@@ -1025,35 +1036,2177 @@ const App = {
         
         if (selectProvincia && selectCiudad) {
             const ciudadesConfig = {
-                'buenos-aires': [
-                    { value: 'la-plata', label: 'La Plata' },
-                    { value: 'mar-del-plata', label: 'Mar del Plata' },
-                    { value: 'tandil', label: 'Tandil' },
-                    { value: 'bahia-blanca', label: 'Bahía Blanca' }
+                "buenos-aires": [
+                    {
+                        "value": "25-de-mayo",
+                        "label": "25 de Mayo"
+                    },
+                    {
+                        "value": "9-de-julio",
+                        "label": "9 de Julio"
+                    },
+                    {
+                        "value": "adolfo-alsina",
+                        "label": "Adolfo Alsina"
+                    },
+                    {
+                        "value": "adolfo-gonzales-chaves",
+                        "label": "Adolfo Gonzales Chaves"
+                    },
+                    {
+                        "value": "alberti",
+                        "label": "Alberti"
+                    },
+                    {
+                        "value": "almirante-brown",
+                        "label": "Almirante Brown"
+                    },
+                    {
+                        "value": "arrecifes",
+                        "label": "Arrecifes"
+                    },
+                    {
+                        "value": "avellaneda",
+                        "label": "Avellaneda"
+                    },
+                    {
+                        "value": "ayacucho",
+                        "label": "Ayacucho"
+                    },
+                    {
+                        "value": "azul",
+                        "label": "Azul"
+                    },
+                    {
+                        "value": "bahia-blanca",
+                        "label": "Bahía Blanca"
+                    },
+                    {
+                        "value": "balcarce",
+                        "label": "Balcarce"
+                    },
+                    {
+                        "value": "baradero",
+                        "label": "Baradero"
+                    },
+                    {
+                        "value": "benito-juarez",
+                        "label": "Benito Juárez"
+                    },
+                    {
+                        "value": "berazategui",
+                        "label": "Berazategui"
+                    },
+                    {
+                        "value": "berisso",
+                        "label": "Berisso"
+                    },
+                    {
+                        "value": "bolivar",
+                        "label": "Bolívar"
+                    },
+                    {
+                        "value": "bragado",
+                        "label": "Bragado"
+                    },
+                    {
+                        "value": "brandsen",
+                        "label": "Brandsen"
+                    },
+                    {
+                        "value": "campana",
+                        "label": "Campana"
+                    },
+                    {
+                        "value": "canuelas",
+                        "label": "Cañuelas"
+                    },
+                    {
+                        "value": "capitan-sarmiento",
+                        "label": "Capitán Sarmiento"
+                    },
+                    {
+                        "value": "carlos-casares",
+                        "label": "Carlos Casares"
+                    },
+                    {
+                        "value": "carlos-tejedor",
+                        "label": "Carlos Tejedor"
+                    },
+                    {
+                        "value": "carmen-de-areco",
+                        "label": "Carmen de Areco"
+                    },
+                    {
+                        "value": "castelli",
+                        "label": "Castelli"
+                    },
+                    {
+                        "value": "chacabuco",
+                        "label": "Chacabuco"
+                    },
+                    {
+                        "value": "chascomus",
+                        "label": "Chascomús"
+                    },
+                    {
+                        "value": "chivilcoy",
+                        "label": "Chivilcoy"
+                    },
+                    {
+                        "value": "colon",
+                        "label": "Colón"
+                    },
+                    {
+                        "value": "coronel-de-marina-leonardo-rosales",
+                        "label": "Coronel de Marina Leonardo Rosales"
+                    },
+                    {
+                        "value": "coronel-dorrego",
+                        "label": "Coronel Dorrego"
+                    },
+                    {
+                        "value": "coronel-pringles",
+                        "label": "Coronel Pringles"
+                    },
+                    {
+                        "value": "coronel-suarez",
+                        "label": "Coronel Suárez"
+                    },
+                    {
+                        "value": "daireaux",
+                        "label": "Daireaux"
+                    },
+                    {
+                        "value": "dolores",
+                        "label": "Dolores"
+                    },
+                    {
+                        "value": "ensenada",
+                        "label": "Ensenada"
+                    },
+                    {
+                        "value": "escobar",
+                        "label": "Escobar"
+                    },
+                    {
+                        "value": "esteban-echeverria",
+                        "label": "Esteban Echeverría"
+                    },
+                    {
+                        "value": "exaltacion-de-la-cruz",
+                        "label": "Exaltación de la Cruz"
+                    },
+                    {
+                        "value": "ezeiza",
+                        "label": "Ezeiza"
+                    },
+                    {
+                        "value": "florencio-varela",
+                        "label": "Florencio Varela"
+                    },
+                    {
+                        "value": "florentino-ameghino",
+                        "label": "Florentino Ameghino"
+                    },
+                    {
+                        "value": "general-alvarado",
+                        "label": "General Alvarado"
+                    },
+                    {
+                        "value": "general-alvear",
+                        "label": "General Alvear"
+                    },
+                    {
+                        "value": "general-arenales",
+                        "label": "General Arenales"
+                    },
+                    {
+                        "value": "general-belgrano",
+                        "label": "General Belgrano"
+                    },
+                    {
+                        "value": "general-guido",
+                        "label": "General Guido"
+                    },
+                    {
+                        "value": "general-juan-madariaga",
+                        "label": "General Juan Madariaga"
+                    },
+                    {
+                        "value": "general-la-madrid",
+                        "label": "General La Madrid"
+                    },
+                    {
+                        "value": "general-las-heras",
+                        "label": "General Las Heras"
+                    },
+                    {
+                        "value": "general-lavalle",
+                        "label": "General Lavalle"
+                    },
+                    {
+                        "value": "general-paz",
+                        "label": "General Paz"
+                    },
+                    {
+                        "value": "general-pinto",
+                        "label": "General Pinto"
+                    },
+                    {
+                        "value": "general-pueyrredon",
+                        "label": "General Pueyrredón"
+                    },
+                    {
+                        "value": "general-rodriguez",
+                        "label": "General Rodríguez"
+                    },
+                    {
+                        "value": "general-san-martin",
+                        "label": "General San Martín"
+                    },
+                    {
+                        "value": "general-viamonte",
+                        "label": "General Viamonte"
+                    },
+                    {
+                        "value": "general-villegas",
+                        "label": "General Villegas"
+                    },
+                    {
+                        "value": "guamini",
+                        "label": "Guaminí"
+                    },
+                    {
+                        "value": "hipolito-yrigoyen",
+                        "label": "Hipólito Yrigoyen"
+                    },
+                    {
+                        "value": "hurlingham",
+                        "label": "Hurlingham"
+                    },
+                    {
+                        "value": "ituzaingo",
+                        "label": "Ituzaingó"
+                    },
+                    {
+                        "value": "jose-c-paz",
+                        "label": "José C. Paz"
+                    },
+                    {
+                        "value": "junin",
+                        "label": "Junín"
+                    },
+                    {
+                        "value": "la-costa",
+                        "label": "La Costa"
+                    },
+                    {
+                        "value": "la-matanza",
+                        "label": "La Matanza"
+                    },
+                    {
+                        "value": "la-plata",
+                        "label": "La Plata"
+                    },
+                    {
+                        "value": "lanus",
+                        "label": "Lanús"
+                    },
+                    {
+                        "value": "laprida",
+                        "label": "Laprida"
+                    },
+                    {
+                        "value": "las-flores",
+                        "label": "Las Flores"
+                    },
+                    {
+                        "value": "leandro-n-alem",
+                        "label": "Leandro N. Alem"
+                    },
+                    {
+                        "value": "lezama",
+                        "label": "Lezama"
+                    },
+                    {
+                        "value": "lincoln",
+                        "label": "Lincoln"
+                    },
+                    {
+                        "value": "loberia",
+                        "label": "Lobería"
+                    },
+                    {
+                        "value": "lobos",
+                        "label": "Lobos"
+                    },
+                    {
+                        "value": "lomas-de-zamora",
+                        "label": "Lomas de Zamora"
+                    },
+                    {
+                        "value": "lujan",
+                        "label": "Luján"
+                    },
+                    {
+                        "value": "magdalena",
+                        "label": "Magdalena"
+                    },
+                    {
+                        "value": "maipu",
+                        "label": "Maipú"
+                    },
+                    {
+                        "value": "malvinas-argentinas",
+                        "label": "Malvinas Argentinas"
+                    },
+                    {
+                        "value": "mar-chiquita",
+                        "label": "Mar Chiquita"
+                    },
+                    {
+                        "value": "marcos-paz",
+                        "label": "Marcos Paz"
+                    },
+                    {
+                        "value": "mercedes",
+                        "label": "Mercedes"
+                    },
+                    {
+                        "value": "merlo",
+                        "label": "Merlo"
+                    },
+                    {
+                        "value": "monte",
+                        "label": "Monte"
+                    },
+                    {
+                        "value": "monte-hermoso",
+                        "label": "Monte Hermoso"
+                    },
+                    {
+                        "value": "moreno",
+                        "label": "Moreno"
+                    },
+                    {
+                        "value": "moron",
+                        "label": "Morón"
+                    },
+                    {
+                        "value": "navarro",
+                        "label": "Navarro"
+                    },
+                    {
+                        "value": "necochea",
+                        "label": "Necochea"
+                    },
+                    {
+                        "value": "olavarria",
+                        "label": "Olavarría"
+                    },
+                    {
+                        "value": "patagones",
+                        "label": "Patagones"
+                    },
+                    {
+                        "value": "pehuajo",
+                        "label": "Pehuajó"
+                    },
+                    {
+                        "value": "pellegrini",
+                        "label": "Pellegrini"
+                    },
+                    {
+                        "value": "pergamino",
+                        "label": "Pergamino"
+                    },
+                    {
+                        "value": "pila",
+                        "label": "Pila"
+                    },
+                    {
+                        "value": "pilar",
+                        "label": "Pilar"
+                    },
+                    {
+                        "value": "pinamar",
+                        "label": "Pinamar"
+                    },
+                    {
+                        "value": "presidente-peron",
+                        "label": "Presidente Perón"
+                    },
+                    {
+                        "value": "puan",
+                        "label": "Puán"
+                    },
+                    {
+                        "value": "punta-indio",
+                        "label": "Punta Indio"
+                    },
+                    {
+                        "value": "quilmes",
+                        "label": "Quilmes"
+                    },
+                    {
+                        "value": "ramallo",
+                        "label": "Ramallo"
+                    },
+                    {
+                        "value": "rauch",
+                        "label": "Rauch"
+                    },
+                    {
+                        "value": "rivadavia",
+                        "label": "Rivadavia"
+                    },
+                    {
+                        "value": "rojas",
+                        "label": "Rojas"
+                    },
+                    {
+                        "value": "roque-perez",
+                        "label": "Roque Pérez"
+                    },
+                    {
+                        "value": "saavedra",
+                        "label": "Saavedra"
+                    },
+                    {
+                        "value": "saladillo",
+                        "label": "Saladillo"
+                    },
+                    {
+                        "value": "salliquelo",
+                        "label": "Salliqueló"
+                    },
+                    {
+                        "value": "salto",
+                        "label": "Salto"
+                    },
+                    {
+                        "value": "san-andres-de-giles",
+                        "label": "San Andrés de Giles"
+                    },
+                    {
+                        "value": "san-antonio-de-areco",
+                        "label": "San Antonio de Areco"
+                    },
+                    {
+                        "value": "san-cayetano",
+                        "label": "San Cayetano"
+                    },
+                    {
+                        "value": "san-fernando",
+                        "label": "San Fernando"
+                    },
+                    {
+                        "value": "san-isidro",
+                        "label": "San Isidro"
+                    },
+                    {
+                        "value": "san-miguel",
+                        "label": "San Miguel"
+                    },
+                    {
+                        "value": "san-nicolas",
+                        "label": "San Nicolás"
+                    },
+                    {
+                        "value": "san-pedro",
+                        "label": "San Pedro"
+                    },
+                    {
+                        "value": "san-vicente",
+                        "label": "San Vicente"
+                    },
+                    {
+                        "value": "suipacha",
+                        "label": "Suipacha"
+                    },
+                    {
+                        "value": "tandil",
+                        "label": "Tandil"
+                    },
+                    {
+                        "value": "tapalque",
+                        "label": "Tapalqué"
+                    },
+                    {
+                        "value": "tigre",
+                        "label": "Tigre"
+                    },
+                    {
+                        "value": "tordillo",
+                        "label": "Tordillo"
+                    },
+                    {
+                        "value": "tornquist",
+                        "label": "Tornquist"
+                    },
+                    {
+                        "value": "trenque-lauquen",
+                        "label": "Trenque Lauquen"
+                    },
+                    {
+                        "value": "tres-arroyos",
+                        "label": "Tres Arroyos"
+                    },
+                    {
+                        "value": "tres-de-febrero",
+                        "label": "Tres de Febrero"
+                    },
+                    {
+                        "value": "tres-lomas",
+                        "label": "Tres Lomas"
+                    },
+                    {
+                        "value": "vicente-lopez",
+                        "label": "Vicente López"
+                    },
+                    {
+                        "value": "villa-gesell",
+                        "label": "Villa Gesell"
+                    },
+                    {
+                        "value": "villarino",
+                        "label": "Villarino"
+                    },
+                    {
+                        "value": "zarate",
+                        "label": "Zárate"
+                    }
                 ],
-                'caba': [
-                    { value: 'palermo', label: 'Palermo' },
-                    { value: 'belgrano', label: 'Belgrano' },
-                    { value: 'recoleta', label: 'Recoleta' },
-                    { value: 'caballito', label: 'Caballito' }
+                "entre-rios": [
+                    {
+                        "value": "colon",
+                        "label": "Colón"
+                    },
+                    {
+                        "value": "concordia",
+                        "label": "Concordia"
+                    },
+                    {
+                        "value": "diamante",
+                        "label": "Diamante"
+                    },
+                    {
+                        "value": "federacion",
+                        "label": "Federación"
+                    },
+                    {
+                        "value": "federal",
+                        "label": "Federal"
+                    },
+                    {
+                        "value": "feliciano",
+                        "label": "Feliciano"
+                    },
+                    {
+                        "value": "gualeguay",
+                        "label": "Gualeguay"
+                    },
+                    {
+                        "value": "gualeguaychu",
+                        "label": "Gualeguaychú"
+                    },
+                    {
+                        "value": "islas-del-ibicuy",
+                        "label": "Islas del Ibicuy"
+                    },
+                    {
+                        "value": "la-paz",
+                        "label": "La Paz"
+                    },
+                    {
+                        "value": "nogoya",
+                        "label": "Nogoyá"
+                    },
+                    {
+                        "value": "parana",
+                        "label": "Paraná"
+                    },
+                    {
+                        "value": "san-salvador",
+                        "label": "San Salvador"
+                    },
+                    {
+                        "value": "tala",
+                        "label": "Tala"
+                    },
+                    {
+                        "value": "uruguay",
+                        "label": "Uruguay"
+                    },
+                    {
+                        "value": "victoria",
+                        "label": "Victoria"
+                    },
+                    {
+                        "value": "villaguay",
+                        "label": "Villaguay"
+                    }
                 ],
-                'cordoba': [
-                    { value: 'cordoba-cap', label: 'Córdoba Capital' },
-                    { value: 'villa-carlos-paz', label: 'Villa Carlos Paz' }
+                "corrientes": [
+                    {
+                        "value": "bella-vista",
+                        "label": "Bella Vista"
+                    },
+                    {
+                        "value": "beron-de-astrada",
+                        "label": "Berón de Astrada"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "concepcion",
+                        "label": "Concepción"
+                    },
+                    {
+                        "value": "curuzu-cuatia",
+                        "label": "Curuzú Cuatiá"
+                    },
+                    {
+                        "value": "empedrado",
+                        "label": "Empedrado"
+                    },
+                    {
+                        "value": "esquina",
+                        "label": "Esquina"
+                    },
+                    {
+                        "value": "general-alvear",
+                        "label": "General Alvear"
+                    },
+                    {
+                        "value": "general-paz",
+                        "label": "General Paz"
+                    },
+                    {
+                        "value": "goya",
+                        "label": "Goya"
+                    },
+                    {
+                        "value": "itati",
+                        "label": "Itatí"
+                    },
+                    {
+                        "value": "ituzaingo",
+                        "label": "Ituzaingó"
+                    },
+                    {
+                        "value": "lavalle",
+                        "label": "Lavalle"
+                    },
+                    {
+                        "value": "mburucuya",
+                        "label": "Mburucuyá"
+                    },
+                    {
+                        "value": "mercedes",
+                        "label": "Mercedes"
+                    },
+                    {
+                        "value": "monte-caseros",
+                        "label": "Monte Caseros"
+                    },
+                    {
+                        "value": "paso-de-los-libres",
+                        "label": "Paso de los Libres"
+                    },
+                    {
+                        "value": "saladas",
+                        "label": "Saladas"
+                    },
+                    {
+                        "value": "san-cosme",
+                        "label": "San Cosme"
+                    },
+                    {
+                        "value": "san-luis-del-palmar",
+                        "label": "San Luis del Palmar"
+                    },
+                    {
+                        "value": "san-martin",
+                        "label": "San Martín"
+                    },
+                    {
+                        "value": "san-miguel",
+                        "label": "San Miguel"
+                    },
+                    {
+                        "value": "san-roque",
+                        "label": "San Roque"
+                    },
+                    {
+                        "value": "santo-tome",
+                        "label": "Santo Tomé"
+                    },
+                    {
+                        "value": "sauce",
+                        "label": "Sauce"
+                    }
                 ],
-                'santa-fe': [
-                    { value: 'rosario', label: 'Rosario' },
-                    { value: 'santa-fe-cap', label: 'Santa Fe Capital' }
+                "salta": [
+                    {
+                        "value": "anta",
+                        "label": "Anta"
+                    },
+                    {
+                        "value": "cachi",
+                        "label": "Cachi"
+                    },
+                    {
+                        "value": "cafayate",
+                        "label": "Cafayate"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "cerrillos",
+                        "label": "Cerrillos"
+                    },
+                    {
+                        "value": "chicoana",
+                        "label": "Chicoana"
+                    },
+                    {
+                        "value": "general-guemes",
+                        "label": "General Güemes"
+                    },
+                    {
+                        "value": "general-jose-de-san-martin",
+                        "label": "General José de San Martín"
+                    },
+                    {
+                        "value": "guachipas",
+                        "label": "Guachipas"
+                    },
+                    {
+                        "value": "iruya",
+                        "label": "Iruya"
+                    },
+                    {
+                        "value": "la-caldera",
+                        "label": "La Caldera"
+                    },
+                    {
+                        "value": "la-candelaria",
+                        "label": "La Candelaria"
+                    },
+                    {
+                        "value": "la-poma",
+                        "label": "La Poma"
+                    },
+                    {
+                        "value": "la-vina",
+                        "label": "La Viña"
+                    },
+                    {
+                        "value": "los-andes",
+                        "label": "Los Andes"
+                    },
+                    {
+                        "value": "metan",
+                        "label": "Metán"
+                    },
+                    {
+                        "value": "molinos",
+                        "label": "Molinos"
+                    },
+                    {
+                        "value": "oran",
+                        "label": "Orán"
+                    },
+                    {
+                        "value": "rivadavia",
+                        "label": "Rivadavia"
+                    },
+                    {
+                        "value": "rosario-de-la-frontera",
+                        "label": "Rosario de la Frontera"
+                    },
+                    {
+                        "value": "rosario-de-lerma",
+                        "label": "Rosario de Lerma"
+                    },
+                    {
+                        "value": "san-carlos",
+                        "label": "San Carlos"
+                    },
+                    {
+                        "value": "santa-victoria",
+                        "label": "Santa Victoria"
+                    }
                 ],
-                'mendoza': [
-                    { value: 'mendoza-cap', label: 'Mendoza Capital' },
-                    { value: 'san-rafael', label: 'San Rafael' }
+                "chaco": [
+                    {
+                        "value": "1-de-mayo",
+                        "label": "1° de Mayo"
+                    },
+                    {
+                        "value": "12-de-octubre",
+                        "label": "12 de Octubre"
+                    },
+                    {
+                        "value": "2-de-abril",
+                        "label": "2 de Abril"
+                    },
+                    {
+                        "value": "25-de-mayo",
+                        "label": "25 de Mayo"
+                    },
+                    {
+                        "value": "9-de-julio",
+                        "label": "9 de Julio"
+                    },
+                    {
+                        "value": "almirante-brown",
+                        "label": "Almirante Brown"
+                    },
+                    {
+                        "value": "bermejo",
+                        "label": "Bermejo"
+                    },
+                    {
+                        "value": "chacabuco",
+                        "label": "Chacabuco"
+                    },
+                    {
+                        "value": "comandante-fernandez",
+                        "label": "Comandante Fernández"
+                    },
+                    {
+                        "value": "fray-justo-santa-maria-de-oro",
+                        "label": "Fray Justo Santa María de Oro"
+                    },
+                    {
+                        "value": "general-belgrano",
+                        "label": "General Belgrano"
+                    },
+                    {
+                        "value": "general-donovan",
+                        "label": "General Donovan"
+                    },
+                    {
+                        "value": "general-guemes",
+                        "label": "General Güemes"
+                    },
+                    {
+                        "value": "independencia",
+                        "label": "Independencia"
+                    },
+                    {
+                        "value": "libertad",
+                        "label": "Libertad"
+                    },
+                    {
+                        "value": "libertador-general-san-martin",
+                        "label": "Libertador General San Martín"
+                    },
+                    {
+                        "value": "maipu",
+                        "label": "Maipú"
+                    },
+                    {
+                        "value": "mayor-luis-j-fontana",
+                        "label": "Mayor Luis J. Fontana"
+                    },
+                    {
+                        "value": "ohiggins",
+                        "label": "O'Higgins"
+                    },
+                    {
+                        "value": "presidencia-de-la-plaza",
+                        "label": "Presidencia de la Plaza"
+                    },
+                    {
+                        "value": "quitilipi",
+                        "label": "Quitilipi"
+                    },
+                    {
+                        "value": "san-fernando",
+                        "label": "San Fernando"
+                    },
+                    {
+                        "value": "san-lorenzo",
+                        "label": "San Lorenzo"
+                    },
+                    {
+                        "value": "sargento-cabral",
+                        "label": "Sargento Cabral"
+                    },
+                    {
+                        "value": "tapenaga",
+                        "label": "Tapenagá"
+                    }
+                ],
+                "la-rioja": [
+                    {
+                        "value": "angel-vicente-penaloza",
+                        "label": "Ángel Vicente Peñaloza"
+                    },
+                    {
+                        "value": "arauco",
+                        "label": "Arauco"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "castro-barros",
+                        "label": "Castro Barros"
+                    },
+                    {
+                        "value": "chamical",
+                        "label": "Chamical"
+                    },
+                    {
+                        "value": "chilecito",
+                        "label": "Chilecito"
+                    },
+                    {
+                        "value": "famatina",
+                        "label": "Famatina"
+                    },
+                    {
+                        "value": "general-belgrano",
+                        "label": "General Belgrano"
+                    },
+                    {
+                        "value": "general-felipe-varela",
+                        "label": "General Felipe Varela"
+                    },
+                    {
+                        "value": "general-juan-facundo-quiroga",
+                        "label": "General Juan Facundo Quiroga"
+                    },
+                    {
+                        "value": "general-lamadrid",
+                        "label": "General Lamadrid"
+                    },
+                    {
+                        "value": "general-ortiz-de-ocampo",
+                        "label": "General Ortiz de Ocampo"
+                    },
+                    {
+                        "value": "general-san-martin",
+                        "label": "General San Martín"
+                    },
+                    {
+                        "value": "independencia",
+                        "label": "Independencia"
+                    },
+                    {
+                        "value": "rosario-vera-penaloza",
+                        "label": "Rosario Vera Peñaloza"
+                    },
+                    {
+                        "value": "san-blas-de-los-sauces",
+                        "label": "San Blas de Los Sauces"
+                    },
+                    {
+                        "value": "sanagasta",
+                        "label": "Sanagasta"
+                    },
+                    {
+                        "value": "vinchina",
+                        "label": "Vinchina"
+                    }
+                ],
+                "chubut": [
+                    {
+                        "value": "biedma",
+                        "label": "Biedma"
+                    },
+                    {
+                        "value": "cushamen",
+                        "label": "Cushamen"
+                    },
+                    {
+                        "value": "escalante",
+                        "label": "Escalante"
+                    },
+                    {
+                        "value": "florentino-ameghino",
+                        "label": "Florentino Ameghino"
+                    },
+                    {
+                        "value": "futaleufu",
+                        "label": "Futaleufú"
+                    },
+                    {
+                        "value": "gaiman",
+                        "label": "Gaiman"
+                    },
+                    {
+                        "value": "gastre",
+                        "label": "Gastre"
+                    },
+                    {
+                        "value": "languineo",
+                        "label": "Languiñeo"
+                    },
+                    {
+                        "value": "martires",
+                        "label": "Mártires"
+                    },
+                    {
+                        "value": "paso-de-indios",
+                        "label": "Paso de Indios"
+                    },
+                    {
+                        "value": "rawson",
+                        "label": "Rawson"
+                    },
+                    {
+                        "value": "rio-senguer",
+                        "label": "Río Senguer"
+                    },
+                    {
+                        "value": "sarmiento",
+                        "label": "Sarmiento"
+                    },
+                    {
+                        "value": "tehuelches",
+                        "label": "Tehuelches"
+                    },
+                    {
+                        "value": "telsen",
+                        "label": "Telsen"
+                    }
+                ],
+                "santa-cruz": [
+                    {
+                        "value": "corpen-aike",
+                        "label": "Corpen Aike"
+                    },
+                    {
+                        "value": "deseado",
+                        "label": "Deseado"
+                    },
+                    {
+                        "value": "guer-aike",
+                        "label": "Güer Aike"
+                    },
+                    {
+                        "value": "lago-argentino",
+                        "label": "Lago Argentino"
+                    },
+                    {
+                        "value": "lago-buenos-aires",
+                        "label": "Lago Buenos Aires"
+                    },
+                    {
+                        "value": "magallanes",
+                        "label": "Magallanes"
+                    },
+                    {
+                        "value": "rio-chico",
+                        "label": "Río Chico"
+                    }
+                ],
+                "rio-negro": [
+                    {
+                        "value": "25-de-mayo",
+                        "label": "25 de Mayo"
+                    },
+                    {
+                        "value": "9-de-julio",
+                        "label": "9 de Julio"
+                    },
+                    {
+                        "value": "adolfo-alsina",
+                        "label": "Adolfo Alsina"
+                    },
+                    {
+                        "value": "avellaneda",
+                        "label": "Avellaneda"
+                    },
+                    {
+                        "value": "bariloche",
+                        "label": "Bariloche"
+                    },
+                    {
+                        "value": "el-cuy",
+                        "label": "El Cuy"
+                    },
+                    {
+                        "value": "general-roca",
+                        "label": "General Roca"
+                    },
+                    {
+                        "value": "norquinco",
+                        "label": "Ñorquinco"
+                    },
+                    {
+                        "value": "pichi-mahuida",
+                        "label": "Pichi Mahuida"
+                    },
+                    {
+                        "value": "pilcaniyeu",
+                        "label": "Pilcaniyeu"
+                    },
+                    {
+                        "value": "san-antonio",
+                        "label": "San Antonio"
+                    },
+                    {
+                        "value": "valcheta",
+                        "label": "Valcheta"
+                    }
+                ],
+                "santiago-del-estero": [
+                    {
+                        "value": "aguirre",
+                        "label": "Aguirre"
+                    },
+                    {
+                        "value": "alberdi",
+                        "label": "Alberdi"
+                    },
+                    {
+                        "value": "atamisqui",
+                        "label": "Atamisqui"
+                    },
+                    {
+                        "value": "avellaneda",
+                        "label": "Avellaneda"
+                    },
+                    {
+                        "value": "banda",
+                        "label": "Banda"
+                    },
+                    {
+                        "value": "belgrano",
+                        "label": "Belgrano"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "choya",
+                        "label": "Choya"
+                    },
+                    {
+                        "value": "copo",
+                        "label": "Copo"
+                    },
+                    {
+                        "value": "figueroa",
+                        "label": "Figueroa"
+                    },
+                    {
+                        "value": "general-taboada",
+                        "label": "General Taboada"
+                    },
+                    {
+                        "value": "guasayan",
+                        "label": "Guasayán"
+                    },
+                    {
+                        "value": "jimenez",
+                        "label": "Jiménez"
+                    },
+                    {
+                        "value": "juan-felipe-ibarra",
+                        "label": "Juan Felipe Ibarra"
+                    },
+                    {
+                        "value": "loreto",
+                        "label": "Loreto"
+                    },
+                    {
+                        "value": "mitre",
+                        "label": "Mitre"
+                    },
+                    {
+                        "value": "moreno",
+                        "label": "Moreno"
+                    },
+                    {
+                        "value": "ojo-de-agua",
+                        "label": "Ojo de Agua"
+                    },
+                    {
+                        "value": "pellegrini",
+                        "label": "Pellegrini"
+                    },
+                    {
+                        "value": "quebrachos",
+                        "label": "Quebrachos"
+                    },
+                    {
+                        "value": "rio-hondo",
+                        "label": "Río Hondo"
+                    },
+                    {
+                        "value": "rivadavia",
+                        "label": "Rivadavia"
+                    },
+                    {
+                        "value": "robles",
+                        "label": "Robles"
+                    },
+                    {
+                        "value": "salavina",
+                        "label": "Salavina"
+                    },
+                    {
+                        "value": "san-martin",
+                        "label": "San Martín"
+                    },
+                    {
+                        "value": "sarmiento",
+                        "label": "Sarmiento"
+                    },
+                    {
+                        "value": "silipica",
+                        "label": "Silípica"
+                    }
+                ],
+                "san-luis": [
+                    {
+                        "value": "ayacucho",
+                        "label": "Ayacucho"
+                    },
+                    {
+                        "value": "belgrano",
+                        "label": "Belgrano"
+                    },
+                    {
+                        "value": "chacabuco",
+                        "label": "Chacabuco"
+                    },
+                    {
+                        "value": "coronel-pringles",
+                        "label": "Coronel Pringles"
+                    },
+                    {
+                        "value": "general-pedernera",
+                        "label": "General Pedernera"
+                    },
+                    {
+                        "value": "gobernador-dupuy",
+                        "label": "Gobernador Dupuy"
+                    },
+                    {
+                        "value": "juan-martin-de-pueyrredon",
+                        "label": "Juan Martín de Pueyrredón"
+                    },
+                    {
+                        "value": "junin",
+                        "label": "Junín"
+                    },
+                    {
+                        "value": "libertador-general-san-martin",
+                        "label": "Libertador General San Martín"
+                    }
+                ],
+                "cordoba": [
+                    {
+                        "value": "calamuchita",
+                        "label": "Calamuchita"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "colon",
+                        "label": "Colón"
+                    },
+                    {
+                        "value": "cruz-del-eje",
+                        "label": "Cruz del Eje"
+                    },
+                    {
+                        "value": "general-roca",
+                        "label": "General Roca"
+                    },
+                    {
+                        "value": "general-san-martin",
+                        "label": "General San Martín"
+                    },
+                    {
+                        "value": "ischilin",
+                        "label": "Ischilín"
+                    },
+                    {
+                        "value": "juarez-celman",
+                        "label": "Juárez Celman"
+                    },
+                    {
+                        "value": "marcos-juarez",
+                        "label": "Marcos Juárez"
+                    },
+                    {
+                        "value": "minas",
+                        "label": "Minas"
+                    },
+                    {
+                        "value": "pocho",
+                        "label": "Pocho"
+                    },
+                    {
+                        "value": "presidente-roque-saenz-pena",
+                        "label": "Presidente Roque Sáenz Peña"
+                    },
+                    {
+                        "value": "punilla",
+                        "label": "Punilla"
+                    },
+                    {
+                        "value": "rio-cuarto",
+                        "label": "Río Cuarto"
+                    },
+                    {
+                        "value": "rio-primero",
+                        "label": "Río Primero"
+                    },
+                    {
+                        "value": "rio-seco",
+                        "label": "Río Seco"
+                    },
+                    {
+                        "value": "rio-segundo",
+                        "label": "Río Segundo"
+                    },
+                    {
+                        "value": "san-alberto",
+                        "label": "San Alberto"
+                    },
+                    {
+                        "value": "san-javier",
+                        "label": "San Javier"
+                    },
+                    {
+                        "value": "san-justo",
+                        "label": "San Justo"
+                    },
+                    {
+                        "value": "santa-maria",
+                        "label": "Santa María"
+                    },
+                    {
+                        "value": "sobremonte",
+                        "label": "Sobremonte"
+                    },
+                    {
+                        "value": "tercero-arriba",
+                        "label": "Tercero Arriba"
+                    },
+                    {
+                        "value": "totoral",
+                        "label": "Totoral"
+                    },
+                    {
+                        "value": "tulumba",
+                        "label": "Tulumba"
+                    },
+                    {
+                        "value": "union",
+                        "label": "Unión"
+                    }
+                ],
+                "caba": [
+                    {
+                        "value": "comuna-1",
+                        "label": "Comuna 1"
+                    },
+                    {
+                        "value": "comuna-10",
+                        "label": "Comuna 10"
+                    },
+                    {
+                        "value": "comuna-11",
+                        "label": "Comuna 11"
+                    },
+                    {
+                        "value": "comuna-12",
+                        "label": "Comuna 12"
+                    },
+                    {
+                        "value": "comuna-13",
+                        "label": "Comuna 13"
+                    },
+                    {
+                        "value": "comuna-14",
+                        "label": "Comuna 14"
+                    },
+                    {
+                        "value": "comuna-15",
+                        "label": "Comuna 15"
+                    },
+                    {
+                        "value": "comuna-2",
+                        "label": "Comuna 2"
+                    },
+                    {
+                        "value": "comuna-3",
+                        "label": "Comuna 3"
+                    },
+                    {
+                        "value": "comuna-4",
+                        "label": "Comuna 4"
+                    },
+                    {
+                        "value": "comuna-5",
+                        "label": "Comuna 5"
+                    },
+                    {
+                        "value": "comuna-6",
+                        "label": "Comuna 6"
+                    },
+                    {
+                        "value": "comuna-7",
+                        "label": "Comuna 7"
+                    },
+                    {
+                        "value": "comuna-8",
+                        "label": "Comuna 8"
+                    },
+                    {
+                        "value": "comuna-9",
+                        "label": "Comuna 9"
+                    }
+                ],
+                "mendoza": [
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "general-alvear",
+                        "label": "General Alvear"
+                    },
+                    {
+                        "value": "godoy-cruz",
+                        "label": "Godoy Cruz"
+                    },
+                    {
+                        "value": "guaymallen",
+                        "label": "Guaymallén"
+                    },
+                    {
+                        "value": "junin",
+                        "label": "Junín"
+                    },
+                    {
+                        "value": "la-paz",
+                        "label": "La Paz"
+                    },
+                    {
+                        "value": "las-heras",
+                        "label": "Las Heras"
+                    },
+                    {
+                        "value": "lavalle",
+                        "label": "Lavalle"
+                    },
+                    {
+                        "value": "lujan-de-cuyo",
+                        "label": "Luján de Cuyo"
+                    },
+                    {
+                        "value": "maipu",
+                        "label": "Maipú"
+                    },
+                    {
+                        "value": "malargue",
+                        "label": "Malargüe"
+                    },
+                    {
+                        "value": "rivadavia",
+                        "label": "Rivadavia"
+                    },
+                    {
+                        "value": "san-carlos",
+                        "label": "San Carlos"
+                    },
+                    {
+                        "value": "san-martin",
+                        "label": "San Martín"
+                    },
+                    {
+                        "value": "san-rafael",
+                        "label": "San Rafael"
+                    },
+                    {
+                        "value": "santa-rosa",
+                        "label": "Santa Rosa"
+                    },
+                    {
+                        "value": "tunuyan",
+                        "label": "Tunuyán"
+                    },
+                    {
+                        "value": "tupungato",
+                        "label": "Tupungato"
+                    }
+                ],
+                "formosa": [
+                    {
+                        "value": "bermejo",
+                        "label": "Bermejo"
+                    },
+                    {
+                        "value": "formosa",
+                        "label": "Formosa"
+                    },
+                    {
+                        "value": "laishi",
+                        "label": "Laishi"
+                    },
+                    {
+                        "value": "matacos",
+                        "label": "Matacos"
+                    },
+                    {
+                        "value": "patino",
+                        "label": "Patiño"
+                    },
+                    {
+                        "value": "pilagas",
+                        "label": "Pilagás"
+                    },
+                    {
+                        "value": "pilcomayo",
+                        "label": "Pilcomayo"
+                    },
+                    {
+                        "value": "pirane",
+                        "label": "Pirané"
+                    },
+                    {
+                        "value": "ramon-lista",
+                        "label": "Ramón Lista"
+                    }
+                ],
+                "ro-negro": [
+                    {
+                        "value": "conesa",
+                        "label": "Conesa"
+                    }
+                ],
+                "jujuy": [
+                    {
+                        "value": "cochinoca",
+                        "label": "Cochinoca"
+                    },
+                    {
+                        "value": "dr-manuel-belgrano",
+                        "label": "Dr. Manuel Belgrano"
+                    },
+                    {
+                        "value": "el-carmen",
+                        "label": "El Carmen"
+                    },
+                    {
+                        "value": "humahuaca",
+                        "label": "Humahuaca"
+                    },
+                    {
+                        "value": "ledesma",
+                        "label": "Ledesma"
+                    },
+                    {
+                        "value": "palpala",
+                        "label": "Palpalá"
+                    },
+                    {
+                        "value": "rinconada",
+                        "label": "Rinconada"
+                    },
+                    {
+                        "value": "san-antonio",
+                        "label": "San Antonio"
+                    },
+                    {
+                        "value": "san-pedro",
+                        "label": "San Pedro"
+                    },
+                    {
+                        "value": "santa-barbara",
+                        "label": "Santa Bárbara"
+                    },
+                    {
+                        "value": "santa-catalina",
+                        "label": "Santa Catalina"
+                    },
+                    {
+                        "value": "susques",
+                        "label": "Susques"
+                    },
+                    {
+                        "value": "tilcara",
+                        "label": "Tilcara"
+                    },
+                    {
+                        "value": "tumbaya",
+                        "label": "Tumbaya"
+                    },
+                    {
+                        "value": "valle-grande",
+                        "label": "Valle Grande"
+                    },
+                    {
+                        "value": "yavi",
+                        "label": "Yavi"
+                    }
+                ],
+                "neuquen": [
+                    {
+                        "value": "alumine",
+                        "label": "Aluminé"
+                    },
+                    {
+                        "value": "anelo",
+                        "label": "Añelo"
+                    },
+                    {
+                        "value": "catan-lil",
+                        "label": "Catán Lil"
+                    },
+                    {
+                        "value": "chos-malal",
+                        "label": "Chos Malal"
+                    },
+                    {
+                        "value": "collon-cura",
+                        "label": "Collón Curá"
+                    },
+                    {
+                        "value": "confluencia",
+                        "label": "Confluencia"
+                    },
+                    {
+                        "value": "huiliches",
+                        "label": "Huiliches"
+                    },
+                    {
+                        "value": "lacar",
+                        "label": "Lácar"
+                    },
+                    {
+                        "value": "loncopue",
+                        "label": "Loncopué"
+                    },
+                    {
+                        "value": "los-lagos",
+                        "label": "Los Lagos"
+                    },
+                    {
+                        "value": "minas",
+                        "label": "Minas"
+                    },
+                    {
+                        "value": "norquin",
+                        "label": "Ñorquín"
+                    },
+                    {
+                        "value": "pehuenches",
+                        "label": "Pehuenches"
+                    },
+                    {
+                        "value": "picun-leufu",
+                        "label": "Picún Leufú"
+                    },
+                    {
+                        "value": "picunches",
+                        "label": "Picunches"
+                    },
+                    {
+                        "value": "zapala",
+                        "label": "Zapala"
+                    }
+                ],
+                "catamarca": [
+                    {
+                        "value": "ambato",
+                        "label": "Ambato"
+                    },
+                    {
+                        "value": "ancasti",
+                        "label": "Ancasti"
+                    },
+                    {
+                        "value": "andalgala",
+                        "label": "Andalgalá"
+                    },
+                    {
+                        "value": "antofagasta-de-la-sierra",
+                        "label": "Antofagasta de la Sierra"
+                    },
+                    {
+                        "value": "belen",
+                        "label": "Belén"
+                    },
+                    {
+                        "value": "capayan",
+                        "label": "Capayán"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "el-alto",
+                        "label": "El Alto"
+                    },
+                    {
+                        "value": "fray-mamerto-esquiu",
+                        "label": "Fray Mamerto Esquiú"
+                    },
+                    {
+                        "value": "la-paz",
+                        "label": "La Paz"
+                    },
+                    {
+                        "value": "paclin",
+                        "label": "Paclín"
+                    },
+                    {
+                        "value": "poman",
+                        "label": "Pomán"
+                    },
+                    {
+                        "value": "santa-maria",
+                        "label": "Santa María"
+                    },
+                    {
+                        "value": "santa-rosa",
+                        "label": "Santa Rosa"
+                    },
+                    {
+                        "value": "tinogasta",
+                        "label": "Tinogasta"
+                    },
+                    {
+                        "value": "valle-viejo",
+                        "label": "Valle Viejo"
+                    }
+                ],
+                "tierra-del-fuego": [
+                    {
+                        "value": "antartida-argentina",
+                        "label": "Antártida Argentina"
+                    },
+                    {
+                        "value": "islas-del-atlantico-sur",
+                        "label": "Islas del Atlántico Sur"
+                    },
+                    {
+                        "value": "rio-grande",
+                        "label": "Río Grande"
+                    },
+                    {
+                        "value": "tolhuin",
+                        "label": "Tolhuin"
+                    },
+                    {
+                        "value": "ushuaia",
+                        "label": "Ushuaia"
+                    }
+                ],
+                "tucuman": [
+                    {
+                        "value": "burruyacu",
+                        "label": "Burruyacú"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "chicligasta",
+                        "label": "Chicligasta"
+                    },
+                    {
+                        "value": "cruz-alta",
+                        "label": "Cruz Alta"
+                    },
+                    {
+                        "value": "famailla",
+                        "label": "Famaillá"
+                    },
+                    {
+                        "value": "graneros",
+                        "label": "Graneros"
+                    },
+                    {
+                        "value": "juan-bautista-alberdi",
+                        "label": "Juan Bautista Alberdi"
+                    },
+                    {
+                        "value": "la-cocha",
+                        "label": "La Cocha"
+                    },
+                    {
+                        "value": "leales",
+                        "label": "Leales"
+                    },
+                    {
+                        "value": "lules",
+                        "label": "Lules"
+                    },
+                    {
+                        "value": "monteros",
+                        "label": "Monteros"
+                    },
+                    {
+                        "value": "rio-chico",
+                        "label": "Río Chico"
+                    },
+                    {
+                        "value": "simoca",
+                        "label": "Simoca"
+                    },
+                    {
+                        "value": "tafi-del-valle",
+                        "label": "Tafí del Valle"
+                    },
+                    {
+                        "value": "tafi-viejo",
+                        "label": "Tafí Viejo"
+                    },
+                    {
+                        "value": "trancas",
+                        "label": "Trancas"
+                    },
+                    {
+                        "value": "yerba-buena",
+                        "label": "Yerba Buena"
+                    }
+                ],
+                "santa-fe": [
+                    {
+                        "value": "9-de-julio",
+                        "label": "9 de Julio"
+                    },
+                    {
+                        "value": "belgrano",
+                        "label": "Belgrano"
+                    },
+                    {
+                        "value": "caseros",
+                        "label": "Caseros"
+                    },
+                    {
+                        "value": "castellanos",
+                        "label": "Castellanos"
+                    },
+                    {
+                        "value": "constitucion",
+                        "label": "Constitución"
+                    },
+                    {
+                        "value": "garay",
+                        "label": "Garay"
+                    },
+                    {
+                        "value": "general-lopez",
+                        "label": "General López"
+                    },
+                    {
+                        "value": "general-obligado",
+                        "label": "General Obligado"
+                    },
+                    {
+                        "value": "iriondo",
+                        "label": "Iriondo"
+                    },
+                    {
+                        "value": "la-capital",
+                        "label": "La Capital"
+                    },
+                    {
+                        "value": "las-colonias",
+                        "label": "Las Colonias"
+                    },
+                    {
+                        "value": "rosario",
+                        "label": "Rosario"
+                    },
+                    {
+                        "value": "san-cristobal",
+                        "label": "San Cristóbal"
+                    },
+                    {
+                        "value": "san-javier",
+                        "label": "San Javier"
+                    },
+                    {
+                        "value": "san-jeronimo",
+                        "label": "San Jerónimo"
+                    },
+                    {
+                        "value": "san-justo",
+                        "label": "San Justo"
+                    },
+                    {
+                        "value": "san-lorenzo",
+                        "label": "San Lorenzo"
+                    },
+                    {
+                        "value": "san-martin",
+                        "label": "San Martín"
+                    },
+                    {
+                        "value": "vera",
+                        "label": "Vera"
+                    }
+                ],
+                "la-pampa": [
+                    {
+                        "value": "atreuco",
+                        "label": "Atreucó"
+                    },
+                    {
+                        "value": "caleu-caleu",
+                        "label": "Caleu Caleu"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "catrilo",
+                        "label": "Catriló"
+                    },
+                    {
+                        "value": "chalileo",
+                        "label": "Chalileo"
+                    },
+                    {
+                        "value": "chapaleufu",
+                        "label": "Chapaleufú"
+                    },
+                    {
+                        "value": "chical-co",
+                        "label": "Chical Co"
+                    },
+                    {
+                        "value": "conhelo",
+                        "label": "Conhelo"
+                    },
+                    {
+                        "value": "curaco",
+                        "label": "Curacó"
+                    },
+                    {
+                        "value": "guatrache",
+                        "label": "Guatraché"
+                    },
+                    {
+                        "value": "hucal",
+                        "label": "Hucal"
+                    },
+                    {
+                        "value": "lihuel-calel",
+                        "label": "Lihuel Calel"
+                    },
+                    {
+                        "value": "limay-mahuida",
+                        "label": "Limay Mahuida"
+                    },
+                    {
+                        "value": "loventue",
+                        "label": "Loventué"
+                    },
+                    {
+                        "value": "maraco",
+                        "label": "Maracó"
+                    },
+                    {
+                        "value": "puelen",
+                        "label": "Puelén"
+                    },
+                    {
+                        "value": "quemu-quemu",
+                        "label": "Quemú Quemú"
+                    },
+                    {
+                        "value": "rancul",
+                        "label": "Rancul"
+                    },
+                    {
+                        "value": "realico",
+                        "label": "Realicó"
+                    },
+                    {
+                        "value": "toay",
+                        "label": "Toay"
+                    },
+                    {
+                        "value": "trenel",
+                        "label": "Trenel"
+                    },
+                    {
+                        "value": "utracan",
+                        "label": "Utracán"
+                    }
+                ],
+                "misiones": [
+                    {
+                        "value": "25-de-mayo",
+                        "label": "25 de Mayo"
+                    },
+                    {
+                        "value": "apostoles",
+                        "label": "Apóstoles"
+                    },
+                    {
+                        "value": "cainguas",
+                        "label": "Cainguás"
+                    },
+                    {
+                        "value": "candelaria",
+                        "label": "Candelaria"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "concepcion",
+                        "label": "Concepción"
+                    },
+                    {
+                        "value": "eldorado",
+                        "label": "Eldorado"
+                    },
+                    {
+                        "value": "general-manuel-belgrano",
+                        "label": "General Manuel Belgrano"
+                    },
+                    {
+                        "value": "guarani",
+                        "label": "Guaraní"
+                    },
+                    {
+                        "value": "iguazu",
+                        "label": "Iguazú"
+                    },
+                    {
+                        "value": "leandro-n-alem",
+                        "label": "Leandro N. Alem"
+                    },
+                    {
+                        "value": "libertador-general-san-martin",
+                        "label": "Libertador General San Martín"
+                    },
+                    {
+                        "value": "montecarlo",
+                        "label": "Montecarlo"
+                    },
+                    {
+                        "value": "obera",
+                        "label": "Oberá"
+                    },
+                    {
+                        "value": "san-ignacio",
+                        "label": "San Ignacio"
+                    },
+                    {
+                        "value": "san-javier",
+                        "label": "San Javier"
+                    },
+                    {
+                        "value": "san-pedro",
+                        "label": "San Pedro"
+                    }
+                ],
+                "san-juan": [
+                    {
+                        "value": "25-de-mayo",
+                        "label": "25 de Mayo"
+                    },
+                    {
+                        "value": "9-de-julio",
+                        "label": "9 de Julio"
+                    },
+                    {
+                        "value": "albardon",
+                        "label": "Albardón"
+                    },
+                    {
+                        "value": "angaco",
+                        "label": "Angaco"
+                    },
+                    {
+                        "value": "calingasta",
+                        "label": "Calingasta"
+                    },
+                    {
+                        "value": "capital",
+                        "label": "Capital"
+                    },
+                    {
+                        "value": "caucete",
+                        "label": "Caucete"
+                    },
+                    {
+                        "value": "chimbas",
+                        "label": "Chimbas"
+                    },
+                    {
+                        "value": "iglesia",
+                        "label": "Iglesia"
+                    },
+                    {
+                        "value": "jachal",
+                        "label": "Jáchal"
+                    },
+                    {
+                        "value": "pocito",
+                        "label": "Pocito"
+                    },
+                    {
+                        "value": "rawson",
+                        "label": "Rawson"
+                    },
+                    {
+                        "value": "rivadavia",
+                        "label": "Rivadavia"
+                    },
+                    {
+                        "value": "san-martin",
+                        "label": "San Martín"
+                    },
+                    {
+                        "value": "santa-lucia",
+                        "label": "Santa Lucía"
+                    },
+                    {
+                        "value": "sarmiento",
+                        "label": "Sarmiento"
+                    },
+                    {
+                        "value": "ullum",
+                        "label": "Ullum"
+                    },
+                    {
+                        "value": "valle-fertil",
+                        "label": "Valle Fértil"
+                    },
+                    {
+                        "value": "zonda",
+                        "label": "Zonda"
+                    }
                 ]
             };
             
             selectProvincia.addEventListener('change', (e) => {
                 const p = e.target.value;
-                selectCiudad.innerHTML = '<option disabled selected value="">Selecciona la ciudad</option>';
+                selectCiudad.innerHTML = '<option disabled selected value="">Selecciona el departamento</option>';
                 const errProv = document.getElementById('error-provincia');
                 if(errProv) errProv.classList.add('hidden');
                 
@@ -1119,6 +3272,20 @@ const App = {
                     const user = await DataManager.login(email, password);
                     if (user) {
                         App.showMainApp(user);
+                        // Handle post-login redirect
+                        const redirect = sessionStorage.getItem('postLoginRedirect');
+                        if (redirect === 'publish') {
+                            sessionStorage.removeItem('postLoginRedirect');
+                            setTimeout(() => {
+                                document.getElementById('landing-marketplace-view').classList.remove('hidden');
+                                document.getElementById('main-layout').classList.add('hidden');
+                                document.getElementById('login-view').classList.add('hidden');
+                                document.getElementById('landing-marketplace-view').classList.remove('hidden');
+                                window.currentWizardStep = 1;
+                                const publishElem = document.getElementById('publish-property-view');
+                                if(publishElem) { publishElem.classList.remove('hidden'); window.scrollTo(0, 0); }
+                            }, 100);
+                        }
                     } else {
                         alert('Credenciales inválidas');
                     }
@@ -1861,17 +4028,25 @@ const App = {
         const wizardContinueBtn = document.getElementById('wizard-continue-btn');
         if (wizardContinueBtn) {
             wizardContinueBtn.addEventListener('click', () => {
-                // Find currently active sidebar item
-                const sidebarArray = Array.from(sidebarItems);
-                const activeIndex = sidebarArray.findIndex(item => item.classList.contains('active'));
-                
-                if (activeIndex !== -1 && activeIndex < sidebarArray.length - 1) {
-                    // Navigate to next sub-step in Step 1
-                    sidebarArray[activeIndex + 1].click();
-                } else {
-                    // We are at the last sub-step of Step 1, proceed to Step 2 (Multimedia)
-                    // TODO: Implement the transition to multimedia. For now, we will add a console.log or alert.
-                    alert("Avanzando al Paso 2: Multimedia (En construcción)");
+                if (window.currentWizardStep === 1) {
+                    const sidebarArray = Array.from(sidebarItems);
+                    const activeIndex = sidebarArray.findIndex(item => item.classList.contains('active'));
+                    
+                    if (activeIndex !== -1 && activeIndex < sidebarArray.length - 1) {
+                        sidebarArray[activeIndex + 1].click();
+                    } else {
+                        const form = document.getElementById('form-general');
+                        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                } else if (window.currentWizardStep === 2) {
+                    const form = document.getElementById('form-multimedia');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                } else if (window.currentWizardStep === 3) {
+                    const form = document.getElementById('form-extras');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                } else if (window.currentWizardStep === 4) {
+                    const form = document.getElementById('form-planes');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                 }
             });
         }
@@ -2253,8 +4428,128 @@ window.App = App;
 // Remove duplicate init call
 // document.addEventListener('DOMContentLoaded', App.init);
 
+// ============================================================
+// Marketplace Public Listings Renderer
+// ============================================================
+async function loadMarketplaceListings() {
+    const grid = document.getElementById('marketplace-property-grid');
+    const emptyState = document.getElementById('marketplace-empty-state');
+    if (!grid) return;
+
+    try {
+        const properties = await window.DataManager.getPublicMarketplaceProperties(12);
+
+        // Remove skeleton cards
+        grid.querySelectorAll('.marketplace-skeleton').forEach(el => el.remove());
+
+        if (!properties || properties.length === 0) {
+            grid.classList.add('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+        grid.classList.remove('hidden');
+
+        properties.forEach((prop, i) => {
+            const card = createMarketplaceCard(prop, i);
+            grid.appendChild(card);
+        });
+
+        // Re-observe for scroll animations
+        grid.querySelectorAll('.animate-on-scroll').forEach(el => {
+            if (window.marketplaceObserver) window.marketplaceObserver.observe(el);
+        });
+
+    } catch (err) {
+        console.error('Error loading marketplace listings:', err);
+        grid.querySelectorAll('.marketplace-skeleton').forEach(el => el.remove());
+        if (emptyState) emptyState.classList.remove('hidden');
+    }
+}
+
+function createMarketplaceCard(prop, index) {
+    const delays = ['delay-100', 'delay-200', 'delay-300'];
+    const delay = delays[index % 3];
+
+    let extraInfo = {};
+    if (prop.description && prop.description.includes('Detalles: ')) {
+        try {
+            const jsonStr = prop.description.split('Detalles: ')[1];
+            extraInfo = JSON.parse(jsonStr);
+        } catch (e) {
+            console.warn('Could not parse extraInfo from description');
+        }
+    }
+
+    const operacionLabel = {
+        'venta': 'EN VENTA',
+        'alquiler': 'EN ALQUILER',
+        'temporada': 'TEMPORADA'
+    }[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion?.toUpperCase() || 'EN VENTA';
+
+    const moneda = extraInfo.moneda === 'USD' ? 'U$S' : '$';
+    const precio = prop.price
+        ? `${moneda} ${Number(prop.price).toLocaleString('es-AR')}`
+        : 'Consultar precio';
+
+    const ubicacion = prop.address || 'Ubicación no especificada';
+
+    const titulo = prop.title || 'Propiedad';
+
+    // Get first image from multimedia if available
+    let fotos = prop.images || [];
+    if (prop.propiedad_imagenes && prop.propiedad_imagenes.length > 0) {
+        // Sort by 'orden' and map to URLs
+        const sortedImages = prop.propiedad_imagenes.sort((a, b) => a.orden - b.orden);
+        fotos = sortedImages.map(img => img.url);
+    }
+    const imgSrc = (Array.isArray(fotos) && fotos.length > 0)
+        ? fotos[0]
+        : 'img/hero-marketplace.jpg';
+
+    const dormitorios = extraInfo.dormitorios || 0;
+    const banos = extraInfo.banos || 0;
+    const supCubierta = extraInfo.sup_cubierta;
+
+    const card = document.createElement('div');
+    card.className = `group cursor-pointer animate-on-scroll ${delay}`;
+    card.innerHTML = `
+        <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5] border-none shadow-none">
+            <img alt="${titulo}"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                src="${imgSrc}"
+                onerror="this.src='img/hero-marketplace.jpg'">
+            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border-none">
+                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">${operacionLabel}</span>
+            </div>
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between items-start gap-2">
+                <h3 class="font-headline text-xl font-bold text-on-background leading-tight line-clamp-2">${titulo}</h3>
+                <span class="text-xl font-bold text-primary whitespace-nowrap shrink-0">${precio}</span>
+            </div>
+            <p class="text-secondary flex items-center gap-1 text-sm border-none">
+                <span class="material-symbols-outlined text-base">location_on</span>
+                ${ubicacion || 'Ubicación no especificada'}
+            </p>
+            <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
+                <div class="flex items-center gap-6 text-secondary">
+                    ${dormitorios > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bed</span><span class="text-sm font-semibold">${dormitorios} Dorm.</span></div>` : ''}
+                    ${banos > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bathtub</span><span class="text-sm font-semibold">${banos} Baños</span></div>` : ''}
+                    ${supCubierta ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} m²</span></div>` : ''}
+                </div>
+                <button class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
+                    Ver más
+                    <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    `;
+    return card;
+}
 // Real Interactive Map using Google Maps JS API
-window.initGoogleMap = function() {
+window.initGoogleMap = async function() {
     const mapContainer = document.getElementById('real-map-container');
     if (!mapContainer) return;
 
@@ -2267,15 +4562,16 @@ window.initGoogleMap = function() {
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
+        mapId: 'property_wizard_map',
     });
 
-    // Use default Google Maps red marker (draggable)
-    window.propertyMarker = new google.maps.Marker({
+    // Use AdvancedMarkerElement (modern API)
+    const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
+    window.propertyMarker = new AdvancedMarkerElement({
         position: initialPos,
         map: window.propertyMap,
-        draggable: true,
         title: "Arrastra para ajustar tu ubicación",
-        animation: google.maps.Animation.DROP,
+        gmpDraggable: true,
     });
 
     const updateAddressUI = (latLng) => {
@@ -2305,16 +4601,99 @@ window.initGoogleMap = function() {
     
     // Listen for map click
     window.propertyMap.addListener('click', function(e) {
-        window.propertyMarker.setPosition(e.latLng);
+        window.propertyMarker.position = e.latLng;
         window.propertyMap.panTo(e.latLng);
         updateAddressUI(e.latLng);
     });
     
-    // Listen for drag end
+    // Listen for drag end on AdvancedMarkerElement
     window.propertyMarker.addListener('dragend', function() {
-        const pos = window.propertyMarker.getPosition();
+        const pos = window.propertyMarker.position;
         updateAddressUI(pos);
     });
+
+    // --- Autocomplete & Auto-fill (PlaceAutocompleteElement - modern API) ---
+    const inputCalle = document.getElementById('calle-altura');
+    if (inputCalle) {
+        const autocomplete = new google.maps.places.Autocomplete(inputCalle, {
+            componentRestrictions: { country: "ar" },
+            fields: ["address_components", "geometry", "formatted_address", "name"],
+        });
+
+        // Prevent form submission on enter to not accidentally submit the wizard
+        inputCalle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') e.preventDefault();
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
+
+            // Update map
+            window.propertyMap.panTo(place.geometry.location);
+            window.propertyMarker.position = place.geometry.location;
+            
+            const label = document.getElementById('map-address-label');
+            if (label) label.textContent = place.formatted_address;
+
+            // Extract components
+            let provinciaStr = '';
+            let departamentoStr = '';
+            
+            for (const component of place.address_components) {
+                const types = component.types;
+                if (types.includes('administrative_area_level_1')) {
+                    provinciaStr = component.long_name;
+                }
+                if (types.includes('administrative_area_level_2') || types.includes('locality')) {
+                    if (!departamentoStr) departamentoStr = component.long_name;
+                }
+            }
+
+            // Clean string helper for flexible matching
+            const cleanStr = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+
+            const provSelect = document.getElementById('provincia');
+            const depSelect = document.getElementById('ciudad');
+
+            if (provSelect && provinciaStr) {
+                const searchProv = cleanStr(provinciaStr);
+                let matchedProv = false;
+                for (let i = 0; i < provSelect.options.length; i++) {
+                    const optText = cleanStr(provSelect.options[i].text);
+                    // Match province names
+                    if (optText.includes(searchProv) || searchProv.includes(optText)) {
+                        provSelect.selectedIndex = i;
+                        matchedProv = true;
+                        provSelect.dispatchEvent(new Event('change'));
+                        
+                        // Clear error UI if present
+                        const errProv = document.getElementById('error-provincia');
+                        if (errProv) errProv.classList.add('hidden');
+                        break;
+                    }
+                }
+
+                // If province matched, try to match department
+                if (matchedProv && depSelect && departamentoStr) {
+                    setTimeout(() => {
+                        const searchDep = cleanStr(departamentoStr);
+                        for (let i = 0; i < depSelect.options.length; i++) {
+                            const optText = cleanStr(depSelect.options[i].text);
+                            if (optText.includes(searchDep) || searchDep.includes(optText)) {
+                                depSelect.selectedIndex = i;
+                                depSelect.dispatchEvent(new Event('change'));
+                                
+                                const errDep = document.getElementById('error-ciudad');
+                                if (errDep) errDep.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, 50); // slight delay to allow department list to render after province change
+                }
+            }
+        });
+    }
 };
 
 // Toggle for accordions in Step 3
@@ -2428,5 +4807,397 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
+    }
+});
+
+// Disable number inputs scroll wheel behavior globally
+document.addEventListener('wheel', function(event) {
+    if (document.activeElement.type === 'number') {
+        document.activeElement.blur();
+    }
+});
+
+// ============================================================
+// User Dropdown Menu & Mis Avisos
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const avatarBtn = document.getElementById('user-avatar-btn');
+    const dropdownMenu = document.getElementById('user-dropdown-menu');
+    const menuContainer = document.getElementById('user-menu-container');
+    
+    if (!avatarBtn || !dropdownMenu) return;
+    
+    let isDropdownOpen = false;
+    
+    // Toggle dropdown
+    const openDropdown = () => {
+        dropdownMenu.classList.remove('hidden');
+        // Force reflow for animation
+        void dropdownMenu.offsetWidth;
+        dropdownMenu.classList.remove('opacity-0', 'translate-y-2');
+        dropdownMenu.classList.add('opacity-100', 'translate-y-0');
+        avatarBtn.setAttribute('aria-expanded', 'true');
+        isDropdownOpen = true;
+    };
+    
+    const closeDropdown = () => {
+        dropdownMenu.classList.remove('opacity-100', 'translate-y-0');
+        dropdownMenu.classList.add('opacity-0', 'translate-y-2');
+        avatarBtn.setAttribute('aria-expanded', 'false');
+        isDropdownOpen = false;
+        setTimeout(() => {
+            if (!isDropdownOpen) {
+                dropdownMenu.classList.add('hidden');
+            }
+        }, 200);
+    };
+    
+    avatarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isDropdownOpen) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (isDropdownOpen && menuContainer && !menuContainer.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+    
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isDropdownOpen) {
+            closeDropdown();
+        }
+    });
+    
+    // Populate user info from Supabase
+    async function populateUserDropdown() {
+        try {
+            const profile = await window.DataManager.getUserProfile();
+            if (profile) {
+                const nameEl = document.getElementById('dropdown-user-name');
+                const idEl = document.getElementById('dropdown-user-id');
+                const initialEl = document.getElementById('user-avatar-initial');
+                
+                if (nameEl) nameEl.textContent = profile.full_name || profile.email || 'Usuario';
+                if (idEl) idEl.textContent = `Identificador: ${profile.id.substring(0, 8)}`;
+                if (initialEl && profile.full_name) {
+                    initialEl.textContent = profile.full_name.charAt(0).toUpperCase();
+                }
+            }
+        } catch (err) {
+            console.warn('Could not load user profile for dropdown:', err);
+        }
+    }
+    
+    // Listen for auth state changes to populate
+    window.supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+            if (session) populateUserDropdown();
+        }
+        if (event === 'SIGNED_OUT') {
+            const nameEl = document.getElementById('dropdown-user-name');
+            const idEl = document.getElementById('dropdown-user-id');
+            const initialEl = document.getElementById('user-avatar-initial');
+            if (nameEl) nameEl.textContent = 'Usuario';
+            if (idEl) idEl.textContent = 'Identificador';
+            if (initialEl) initialEl.textContent = 'U';
+        }
+    });
+    
+    // Initial load
+    populateUserDropdown();
+    
+    // Logout handler
+    const logoutBtn = document.getElementById('menu-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            closeDropdown();
+            await window.DataManager.logout();
+            // Redirect to marketplace landing
+            document.querySelectorAll('#mis-avisos-view, #publish-property-view, #app, #main-layout').forEach(el => {
+                if (el) el.classList.add('hidden');
+            });
+            const landing = document.getElementById('landing-marketplace-view');
+            if (landing) landing.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+    }
+    
+    // ============================================================
+    // Mis Avisos Navigation & Rendering
+    // ============================================================
+    let allAvisos = [];
+    const menuMisAvisos = document.getElementById('menu-mis-avisos');
+    const misAvisosView = document.getElementById('mis-avisos-view');
+    const landingView = document.getElementById('landing-marketplace-view');
+    const btnBackFromAvisos = document.getElementById('btn-back-from-avisos');
+    const btnNuevoAviso = document.getElementById('btn-nuevo-aviso');
+    const btnPublicarEmpty = document.getElementById('btn-publicar-empty');
+
+    // Sync avatar initial in avisos nav
+    function syncAvisosAvatar() {
+        const srcInitial = document.getElementById('user-avatar-initial');
+        const targets = document.querySelectorAll('.avisos-avatar-initial');
+        if (srcInitial) targets.forEach(t => t.textContent = srcInitial.textContent);
+    }
+
+    // Mobile filter toggle
+    const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+    const mobileFiltersDrawer = document.getElementById('mobile-filters-drawer');
+    if (mobileFilterToggle && mobileFiltersDrawer) {
+        mobileFilterToggle.addEventListener('click', () => mobileFiltersDrawer.classList.toggle('hidden'));
+    }
+
+    // Avisos avatar btn -> go back
+    const avisosAvatarBtn = document.getElementById('avisos-user-avatar-btn');
+    if (avisosAvatarBtn) {
+        avisosAvatarBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isDropdownOpen) closeDropdown();
+            else openDropdown();
+        });
+    }
+    
+    // Navigate to Mis Avisos
+    if (menuMisAvisos) {
+        menuMisAvisos.addEventListener('click', async () => {
+            closeDropdown();
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (!session) {
+                sessionStorage.setItem('postLoginRedirect', 'misAvisos');
+                document.getElementById('landing-marketplace-view')?.classList.add('hidden');
+                document.getElementById('main-layout')?.classList.add('hidden');
+                document.getElementById('login-view')?.classList.remove('hidden');
+                return;
+            }
+            syncAvisosAvatar();
+            if (landingView) landingView.classList.add('hidden');
+            if (misAvisosView) misAvisosView.classList.remove('hidden');
+            window.scrollTo(0, 0);
+            loadMisAvisos();
+        });
+    }
+
+    // Back from Mis Avisos
+    if (btnBackFromAvisos) {
+        btnBackFromAvisos.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (misAvisosView) misAvisosView.classList.add('hidden');
+            if (landingView) landingView.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+    }
+    
+    // Nuevo aviso from Mis Avisos
+    const goToPublish = async () => {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (!session) return;
+        
+        if (misAvisosView) misAvisosView.classList.add('hidden');
+        if (landingView) landingView.classList.add('hidden');
+        const appElem = document.getElementById('app');
+        if (appElem) appElem.classList.add('hidden');
+        
+        window.currentWizardStep = 1;
+        const publishElem = document.getElementById('publish-property-view');
+        if (publishElem) {
+            publishElem.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+    };
+    
+    if (btnNuevoAviso) btnNuevoAviso.addEventListener('click', goToPublish);
+    if (btnPublicarEmpty) btnPublicarEmpty.addEventListener('click', goToPublish);
+    
+    // Search & sort handlers
+    const avisosSearch = document.getElementById('avisos-search');
+    const avisosSort = document.getElementById('avisos-sort');
+    if (avisosSearch) avisosSearch.addEventListener('input', () => renderFilteredAvisos());
+    if (avisosSort) avisosSort.addEventListener('change', () => renderFilteredAvisos());
+
+    function renderFilteredAvisos() {
+        const term = (avisosSearch?.value || '').toLowerCase();
+        const sortVal = avisosSort?.value || 'recent';
+        let filtered = allAvisos.filter(a => {
+            const searchable = [a.titulo_aviso, a.calle_altura, a.ciudad, a.provincia, a.tipo_propiedad, a.id?.substring(0,8)].filter(Boolean).join(' ').toLowerCase();
+            return searchable.includes(term);
+        });
+        if (sortVal === 'oldest') filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+        else if (sortVal === 'price-asc') filtered.sort((a,b) => (Number(a.precio)||0) - (Number(b.precio)||0));
+        else if (sortVal === 'price-desc') filtered.sort((a,b) => (Number(b.precio)||0) - (Number(a.precio)||0));
+        else filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        renderAvisosCards(filtered);
+    }
+
+    function renderAvisosCards(avisos) {
+        const grid = document.getElementById('mis-avisos-grid');
+        const emptyState = document.getElementById('mis-avisos-empty');
+        const countEl = document.getElementById('avisos-count');
+        if (!grid) return;
+        grid.querySelectorAll('.aviso-card').forEach(el => el.remove());
+        if (countEl) countEl.innerHTML = `<span class="material-symbols-outlined text-lg text-zinc-400">search</span> Se encontraron <b>${avisos.length}</b> aviso${avisos.length !== 1 ? 's' : ''}`;
+        if (!avisos.length) {
+            grid.classList.add('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+        if (emptyState) emptyState.classList.add('hidden');
+        grid.classList.remove('hidden');
+        avisos.forEach((a, i) => grid.appendChild(createAvisoCard(a, i)));
+    }
+
+    function populateFilters(avisos) {
+        const tipoMap = {}, opMap = {}, cityMap = {};
+        avisos.forEach(a => {
+            if (a.tipo_propiedad) tipoMap[a.tipo_propiedad] = (tipoMap[a.tipo_propiedad]||0)+1;
+            if (a.operacion) opMap[a.operacion] = (opMap[a.operacion]||0)+1;
+            if (a.ciudad) cityMap[a.ciudad] = (cityMap[a.ciudad]||0)+1;
+        });
+        const tipoLabels = {'departamento':'Departamento','casa':'Casa','ph':'PH','terreno':'Terreno','local-comercial':'Local comercial','oficina-comercial':'Oficina comercial','quinta-vacacional':'Quinta Vacacional'};
+        const opLabels = {'venta':'Venta','alquiler':'Alquiler','temporada':'Temporada','on':'Venta'};
+        const makeFilterItem = (label, count) => `<a class="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 cursor-pointer transition-colors py-0.5"><span>${label}</span><span class="text-xs text-zinc-400">(${count})</span></a>`;
+        ['', '-mobile'].forEach(suffix => {
+            const tipoEl = document.getElementById('filter-tipo'+suffix);
+            const opEl = document.getElementById('filter-operacion'+suffix);
+            const cityEl = document.getElementById('filter-ciudad'+suffix);
+            if (tipoEl) tipoEl.innerHTML = Object.entries(tipoMap).map(([k,v]) => makeFilterItem(tipoLabels[k]||k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+            if (opEl) opEl.innerHTML = Object.entries(opMap).map(([k,v]) => makeFilterItem(opLabels[k]||k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+            if (cityEl) cityEl.innerHTML = Object.entries(cityMap).map(([k,v]) => makeFilterItem(k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+        });
+    }
+
+    async function loadMisAvisos() {
+        const grid = document.getElementById('mis-avisos-grid');
+        const emptyState = document.getElementById('mis-avisos-empty');
+        const countEl = document.getElementById('avisos-count');
+        if (!grid) return;
+        grid.querySelectorAll('.mis-avisos-skeleton').forEach(el => el.style.display = '');
+        grid.querySelectorAll('.aviso-card').forEach(el => el.remove());
+        if (emptyState) emptyState.classList.add('hidden');
+        grid.classList.remove('hidden');
+        if (countEl) countEl.innerHTML = `<span class="material-symbols-outlined text-lg text-zinc-400 animate-spin">progress_activity</span> Cargando avisos...`;
+        try {
+            allAvisos = await window.DataManager.getUserMarketplaceProperties();
+            grid.querySelectorAll('.mis-avisos-skeleton').forEach(el => el.remove());
+            populateFilters(allAvisos);
+            renderFilteredAvisos();
+        } catch (err) {
+            console.error('Error loading mis avisos:', err);
+            grid.querySelectorAll('.mis-avisos-skeleton').forEach(el => el.remove());
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (countEl) countEl.innerHTML = `<span class="material-symbols-outlined text-lg text-red-400">error</span> Error al cargar`;
+        }
+    }
+
+    function createAvisoCard(aviso, index) {
+        const statusCfg = {
+            'disponible': {label:'Disponible', dot:'bg-emerald-400', text:'text-emerald-700 dark:text-emerald-300'},
+            'draft': {label:'Borrador', dot:'bg-amber-400', text:'text-amber-700 dark:text-amber-300'},
+            'published': {label:'Publicado', dot:'bg-emerald-400', text:'text-emerald-700 dark:text-emerald-300'},
+            'alquilada': {label:'Alquilada', dot:'bg-blue-400', text:'text-blue-700 dark:text-blue-300'},
+            'mantenimiento': {label:'Mantenimiento', dot:'bg-zinc-400', text:'text-zinc-600 dark:text-zinc-400'},
+            'paused': {label:'Pausado', dot:'bg-zinc-400', text:'text-zinc-600 dark:text-zinc-400'},
+            'expired': {label:'Expirado', dot:'bg-red-400', text:'text-red-600 dark:text-red-400'}
+        };
+        const st = statusCfg[aviso.status] || statusCfg['draft'];
+
+        // Parse extra info from description JSON if present
+        let extraInfo = {};
+        if (aviso.description && aviso.description.includes('Detalles: ')) {
+            try { extraInfo = JSON.parse(aviso.description.split('Detalles: ')[1]); } catch(e) {}
+        }
+
+        const tipoLabels = {'departamento':'Departamento','casa':'Casa','ph':'PH','terreno':'Terreno','local-comercial':'Local comercial','oficina-comercial':'Oficina comercial','quinta-vacacional':'Quinta Vacacional'};
+        const opLabels = {'venta':'Venta','alquiler':'Alquiler','temporada':'Temporada','on':'Venta'};
+        const tipo = tipoLabels[extraInfo.tipo_propiedad] || extraInfo.tipo_propiedad || 'Propiedad';
+        const op = opLabels[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion || '';
+        const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
+        const precio = aviso.price ? `${moneda} ${Number(aviso.price).toLocaleString('es-AR')}` : 'Consultar';
+        const ubicacion = aviso.address || 'Sin ubicación';
+        const titulo = aviso.title || `${tipo} en ${op}`;
+        const date = aviso.created_at ? new Date(aviso.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+        const shortId = aviso.id ? aviso.id.substring(0,8) : '';
+
+        // Get image from propiedad_imagenes join or images array
+        let imgSrc = 'img/hero-marketplace.jpg';
+        if (aviso.propiedad_imagenes && aviso.propiedad_imagenes.length > 0) {
+            const sorted = aviso.propiedad_imagenes.sort((a,b) => a.orden - b.orden);
+            imgSrc = sorted[0].url;
+        } else if (aviso.images && aviso.images.length > 0) {
+            imgSrc = aviso.images[0];
+        }
+
+        const dormitorios = extraInfo.dormitorios || 0;
+        const banos = extraInfo.banos || 0;
+        const supCubierta = extraInfo.sup_cubierta || '';
+
+        // Completeness percentage
+        const fields = [aviso.title, aviso.price, aviso.address, extraInfo.tipo_propiedad, extraInfo.operacion, dormitorios, banos, supCubierta, aviso.description, aviso.images?.length || aviso.propiedad_imagenes?.length];
+        const filled = fields.filter(Boolean).length;
+        const pct = Math.round((filled / fields.length) * 100);
+        const pctColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+        const circumference = 2 * Math.PI * 18;
+        const strokeOffset = circumference - (pct / 100) * circumference;
+
+        const card = document.createElement('div');
+        card.className = 'aviso-card bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 group';
+        card.innerHTML = `
+            <div class="flex gap-4 md:gap-5">
+                <!-- Thumbnail -->
+                <div class="w-[90px] h-[68px] sm:w-[120px] sm:h-[85px] md:w-[140px] md:h-[100px] rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0 relative">
+                    <img src="${imgSrc}" alt="${titulo}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <span class="text-xs font-bold text-primary dark:text-red-400 uppercase tracking-wider">${tipo}</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full ${st.dot} inline-block"></span>
+                            <span class="text-xs font-semibold ${st.text}">${st.label}</span>
+                        </div>
+                    </div>
+                    <h3 class="font-headline text-sm md:text-base font-bold text-on-background dark:text-white leading-snug line-clamp-1 mb-0.5">${titulo}</h3>
+                    <p class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-1">${ubicacion}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">${op}</span>
+                        <span class="text-sm font-bold text-on-background dark:text-white">${precio}</span>
+                    </div>
+                </div>
+                <!-- Completion ring (desktop) -->
+                <div class="hidden md:flex flex-col items-center justify-center gap-1 flex-shrink-0 w-16">
+                    <svg width="44" height="44" viewBox="0 0 44 44" class="transform -rotate-90">
+                        <circle cx="22" cy="22" r="18" stroke-width="3" fill="none" class="stroke-zinc-200 dark:stroke-zinc-700"/>
+                        <circle cx="22" cy="22" r="18" stroke-width="3" fill="none" stroke="${pctColor}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${strokeOffset}"/>
+                    </svg>
+                    <span class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 -mt-8">${pct}%</span>
+                </div>
+                <!-- Stats (desktop) -->
+                <div class="hidden lg:flex items-center gap-6 flex-shrink-0">
+                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Exposición</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
+                    <div class="text-center min-w-[80px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Visualizaciones</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
+                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-primary dark:text-red-400">Ver consultas</p></div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <div class="flex items-center gap-3 md:gap-5 text-[11px] text-zinc-400 dark:text-zinc-500">
+                    <span>ID <b class="text-primary dark:text-red-400">${shortId}</b></span>
+                    <span>Creado ${date}</span>
+                    <span class="hidden sm:inline">${dormitorios ? dormitorios+' dorm.' : ''} ${banos ? banos+' baños' : ''} ${supCubierta ? supCubierta+'m²' : ''}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver"><span class="material-symbols-outlined text-lg">visibility</span></button>
+                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Editar"><span class="material-symbols-outlined text-lg">edit</span></button>
+                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Compartir"><span class="material-symbols-outlined text-lg">share</span></button>
+                </div>
+            </div>
+        `;
+        return card;
     }
 });
