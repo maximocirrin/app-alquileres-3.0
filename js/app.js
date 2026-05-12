@@ -4662,14 +4662,8 @@ window.initGoogleMap = async function() {
     if (autocompleteWrapper && inputCalleHidden) {
         const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
         
-        // Helper to style the autocompletes
         const styleAutocomplete = (el) => {
-            el.style.setProperty('--pac-background-color', 'transparent');
-            el.style.setProperty('--pac-border-radius', '0px');
-            el.style.setProperty('--pac-color', 'inherit');
-            el.style.setProperty('--pac-font-family', 'inherit');
-            el.style.setProperty('--pac-padding', '0'); 
-            el.style.width = '100%';
+            el.classList.add('w-full', 'h-full');
         };
 
         const autocomplete = new PlaceAutocompleteElement({

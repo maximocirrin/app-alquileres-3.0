@@ -31,6 +31,36 @@
             originalWarn.apply(console, arguments);
         };
     </script>
+    <style>
+        /* Modern PlaceAutocompleteElement Custom Properties */
+        gmpx-place-autocomplete {
+            --pac-background-color: #e8e8e8;
+            --pac-color: #1a1a1a;
+            --pac-border-radius: 4px;
+            --pac-padding: 0 16px;
+            --pac-font-family: 'DM Sans', sans-serif;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .dark gmpx-place-autocomplete {
+            --pac-background-color: #282828;
+            --pac-color: #f1f1f1;
+            --pac-icon-color: rgba(199, 198, 198, 0.5);
+        }
+        /* Hide the inner default input border if any */
+        gmpx-place-autocomplete::part(input) {
+            border: none !important;
+            outline: none !important;
+        }
+        gmpx-place-autocomplete:focus-within {
+            --pac-background-color: #ffffff;
+            outline: 1px solid #d32f2f;
+        }
+        .dark gmpx-place-autocomplete:focus-within {
+            --pac-background-color: #1a1a1c; /* surface-container-lowest */
+            outline: 1px solid #ef4444; /* red-500 */
+        }
+    </style>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -1002,7 +1032,7 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Calle y altura *</label>
 <div class="relative">
-<div id="autocomplete-wrapper" class="w-full h-14 px-4 font-body text-sm md:text-base bg-surface-container-high dark:bg-[#282828] rounded-sm flex items-center focus-within:bg-surface-container-lowest focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-colors"></div>
+<div id="autocomplete-wrapper" class="w-full h-14 relative transition-colors"></div>
 <input type="hidden" id="calle-altura" required>
 </div>
 <p id="error-calle" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
@@ -1013,7 +1043,7 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Provincia *</label>
 <div class="relative">
-<div id="autocomplete-provincia" class="w-full h-14 px-4 font-body text-sm md:text-base bg-surface-container-high dark:bg-[#282828] rounded-sm flex items-center focus-within:bg-surface-container-lowest focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-colors"></div>
+<div id="autocomplete-provincia" class="w-full h-14 relative transition-colors"></div>
 <input type="hidden" id="provincia" required>
 </div>
 <p id="error-provincia" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
@@ -1022,7 +1052,7 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Departamento *</label>
 <div class="relative">
-<div id="autocomplete-ciudad" class="w-full h-14 px-4 font-body text-sm md:text-base bg-surface-container-high dark:bg-[#282828] rounded-sm flex items-center focus-within:bg-surface-container-lowest focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-colors disabled:opacity-50"></div>
+<div id="autocomplete-ciudad" class="w-full h-14 relative transition-colors disabled:opacity-50"></div>
 <input type="hidden" id="ciudad" required>
 </div>
 <p id="error-ciudad" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
