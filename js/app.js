@@ -877,6 +877,7 @@ const App = {
                 `;
                 
                 overlay.innerHTML = `
+                    <img src="img/logo-terrio.svg" alt="Terrio" style="height: 60px; margin-bottom: 2rem; opacity: 0.8;">
                     <div class="loader-pub" style="
                         width: fit-content; font-weight: bold; font-family: monospace; font-size: 30px;
                         background: radial-gradient(circle closest-side,#811b1e 94%,#0000) right/calc(200% - 1em) 100%;
@@ -4650,73 +4651,84 @@ window.initGoogleMap = async function() {
     });
 
     // --- Autocomplete & Auto-fill (PlaceAutocompleteElement - modern API) ---
-    const autocompleteWrapper = document.getElementById('autocomplete-wrapper');
-    const inputCalleHidden = document.getElementById('calle-altura');
-    const inputProvincia = document.getElementById('provincia');
-    const inputCiudad = document.getElementById('ciudad');
-    
-    if (autocompleteWrapper && inputCalleHidden) {
-        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
-
-        const autocomplete = new PlaceAutocompleteElement({
-            includedRegionCodes: ["ar"],
-        });
-        
-        autocomplete.classList.add('w-full', 'h-full');
-        autocompleteWrapper.appendChild(autocomplete);
-
-        // Sync hidden input for validation
-        autocomplete.addEventListener('input', () => {
-            inputCalleHidden.value = autocomplete.inputValue || '';
+    const inputCalle = document.getElementById('calle-altura');
+    if (inputCalle) {
+        const autocomplete = new google.maps.places.Autocomplete(inputCalle, {
+            componentRestrictions: { country: "ar" },
+            fields: ["address_components", "geometry", "formatted_address", "name"],
         });
 
-        // When a place is selected from the dropdown
-        autocomplete.addEventListener('gmp-placeselect', async (e) => {
-            const place = e.place;
-            if (!place) return;
+        // Prevent form submission on enter to not accidentally submit the wizard
+        inputCalle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') e.preventDefault();
+        });
 
-            await place.fetchFields({ fields: ["addressComponents", "location", "formattedAddress", "displayName"] });
-            
-            const loc = place.location;
-            if (!loc) return;
-
-            inputCalleHidden.value = place.formattedAddress || '';
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
 
             // Update map
-            window.propertyMap.panTo(loc);
-            window.propertyMarker.position = loc;
+            window.propertyMap.panTo(place.geometry.location);
+            window.propertyMarker.position = place.geometry.location;
             
             const label = document.getElementById('map-address-label');
-            if (label) label.textContent = place.formattedAddress || '';
+            if (label) label.textContent = place.formatted_address;
 
-            // Extract provincia and departamento from address components
+            // Extract components
             let provinciaStr = '';
             let departamentoStr = '';
             
-            if (place.addressComponents) {
-                for (const component of place.addressComponents) {
-                    const types = component.types;
-                    if (types.includes('administrative_area_level_1')) {
-                        provinciaStr = component.longText;
-                    }
-                    if (types.includes('administrative_area_level_2') || types.includes('locality')) {
-                        if (!departamentoStr) departamentoStr = component.longText;
-                    }
+            for (const component of place.address_components) {
+                const types = component.types;
+                if (types.includes('administrative_area_level_1')) {
+                    provinciaStr = component.long_name;
+                }
+                if (types.includes('administrative_area_level_2') || types.includes('locality')) {
+                    if (!departamentoStr) departamentoStr = component.long_name;
                 }
             }
 
-            // Auto-fill Provincia
-            if (inputProvincia && provinciaStr) {
-                inputProvincia.value = provinciaStr;
-                const errProv = document.getElementById('error-provincia');
-                if (errProv) errProv.classList.add('hidden');
-            }
+            // Clean string helper for flexible matching
+            const cleanStr = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 
-            // Auto-fill Departamento
-            if (inputCiudad && departamentoStr) {
-                inputCiudad.value = departamentoStr;
-                const errCiudad = document.getElementById('error-ciudad');
-                if (errCiudad) errCiudad.classList.add('hidden');
+            const provSelect = document.getElementById('provincia');
+            const depSelect = document.getElementById('ciudad');
+
+            if (provSelect && provinciaStr) {
+                const searchProv = cleanStr(provinciaStr);
+                let matchedProv = false;
+                for (let i = 0; i < provSelect.options.length; i++) {
+                    const optText = cleanStr(provSelect.options[i].text);
+                    // Match province names
+                    if (optText.includes(searchProv) || searchProv.includes(optText)) {
+                        provSelect.selectedIndex = i;
+                        matchedProv = true;
+                        provSelect.dispatchEvent(new Event('change'));
+                        
+                        // Clear error UI if present
+                        const errProv = document.getElementById('error-provincia');
+                        if (errProv) errProv.classList.add('hidden');
+                        break;
+                    }
+                }
+
+                // If province matched, try to match department
+                if (matchedProv && depSelect && departamentoStr) {
+                    setTimeout(() => {
+                        const searchDep = cleanStr(departamentoStr);
+                        for (let i = 0; i < depSelect.options.length; i++) {
+                            const optText = cleanStr(depSelect.options[i].text);
+                            if (optText.includes(searchDep) || searchDep.includes(optText)) {
+                                depSelect.selectedIndex = i;
+                                depSelect.dispatchEvent(new Event('change'));
+                                
+                                const errDep = document.getElementById('error-ciudad');
+                                if (errDep) errDep.classList.add('hidden');
+                                break;
+                            }
+                        }
+                    }, 50); // slight delay to allow department list to render after province change
+                }
             }
         });
     }
