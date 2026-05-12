@@ -4649,85 +4649,119 @@ window.initGoogleMap = async function() {
         updateAddressUI(pos);
     });
 
-    // --- Autocomplete & Auto-fill ---
-    const inputCalle = document.getElementById('calle-altura');
-    if (inputCalle) {
-        const autocomplete = new google.maps.places.Autocomplete(inputCalle, {
-            componentRestrictions: { country: "ar" },
-            fields: ["address_components", "geometry", "formatted_address", "name"],
+    // --- Autocomplete & Auto-fill (PlaceAutocompleteElement - modern API) ---
+    const autocompleteWrapper = document.getElementById('autocomplete-wrapper');
+    const inputCalleHidden = document.getElementById('calle-altura');
+    
+    const provWrapper = document.getElementById('autocomplete-provincia');
+    const inputProvHidden = document.getElementById('provincia');
+    
+    const ciudadWrapper = document.getElementById('autocomplete-ciudad');
+    const inputCiudadHidden = document.getElementById('ciudad');
+    
+    if (autocompleteWrapper && inputCalleHidden) {
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+        
+        // Helper to style the autocompletes
+        const styleAutocomplete = (el) => {
+            el.style.setProperty('--pac-background-color', 'transparent');
+            el.style.setProperty('--pac-border-radius', '0px');
+            el.style.setProperty('--pac-color', 'inherit');
+            el.style.setProperty('--pac-font-family', 'inherit');
+            el.style.setProperty('--pac-padding', '0'); 
+            el.style.width = '100%';
+        };
+
+        const autocomplete = new PlaceAutocompleteElement({
+            includedRegionCodes: ["ar"],
+        });
+        
+        styleAutocomplete(autocomplete);
+        autocompleteWrapper.appendChild(autocomplete);
+
+        // Actualizar el valor oculto para la validación
+        autocomplete.addEventListener('input', () => {
+            inputCalleHidden.value = autocomplete.inputValue || '';
         });
 
-        // Prevent form submission on enter to not accidentally submit the wizard
-        inputCalle.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') e.preventDefault();
-        });
+        let autocompleteProv, autocompleteCiudad;
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
+        if (provWrapper && inputProvHidden) {
+            autocompleteProv = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
+            styleAutocomplete(autocompleteProv);
+            provWrapper.appendChild(autocompleteProv);
+            autocompleteProv.addEventListener('input', () => { inputProvHidden.value = autocompleteProv.inputValue || ''; });
+            autocompleteProv.addEventListener('gmp-placeselect', async (e) => {
+                if (e.place) {
+                    await e.place.fetchFields({ fields: ["displayName"] });
+                    inputProvHidden.value = e.place.displayName || autocompleteProv.inputValue;
+                    const errProv = document.getElementById('error-provincia');
+                    if (errProv) errProv.classList.add('hidden');
+                }
+            });
+        }
+
+        if (ciudadWrapper && inputCiudadHidden) {
+            autocompleteCiudad = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
+            styleAutocomplete(autocompleteCiudad);
+            ciudadWrapper.appendChild(autocompleteCiudad);
+            autocompleteCiudad.addEventListener('input', () => { inputCiudadHidden.value = autocompleteCiudad.inputValue || ''; });
+            autocompleteCiudad.addEventListener('gmp-placeselect', async (e) => {
+                if (e.place) {
+                    await e.place.fetchFields({ fields: ["displayName"] });
+                    inputCiudadHidden.value = e.place.displayName || autocompleteCiudad.inputValue;
+                    const errCiudad = document.getElementById('error-ciudad');
+                    if (errCiudad) errCiudad.classList.add('hidden');
+                }
+            });
+        }
+
+        // Evento cuando se selecciona un lugar en calle-altura
+        autocomplete.addEventListener('gmp-placeselect', async (e) => {
+            const place = e.place;
+            if (!place) return;
+
+            await place.fetchFields({ fields: ["addressComponents", "geometry", "formattedAddress", "displayName"] });
+            
             if (!place.geometry || !place.geometry.location) return;
+
+            inputCalleHidden.value = place.formattedAddress;
 
             // Update map
             window.propertyMap.panTo(place.geometry.location);
             window.propertyMarker.position = place.geometry.location;
             
             const label = document.getElementById('map-address-label');
-            if (label) label.textContent = place.formatted_address;
+            if (label) label.textContent = place.formattedAddress;
 
             // Extract components
             let provinciaStr = '';
             let departamentoStr = '';
             
-            for (const component of place.address_components) {
-                const types = component.types;
-                if (types.includes('administrative_area_level_1')) {
-                    provinciaStr = component.long_name;
-                }
-                if (types.includes('administrative_area_level_2') || types.includes('locality')) {
-                    if (!departamentoStr) departamentoStr = component.long_name;
+            if (place.addressComponents) {
+                for (const component of place.addressComponents) {
+                    const types = component.types;
+                    if (types.includes('administrative_area_level_1')) {
+                        provinciaStr = component.longText;
+                    }
+                    if (types.includes('administrative_area_level_2') || types.includes('locality')) {
+                        if (!departamentoStr) departamentoStr = component.longText;
+                    }
                 }
             }
 
-            // Clean string helper for flexible matching
-            const cleanStr = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+            if (autocompleteProv && inputProvHidden && provinciaStr) {
+                autocompleteProv.inputValue = provinciaStr;
+                inputProvHidden.value = provinciaStr;
+                const errProv = document.getElementById('error-provincia');
+                if (errProv) errProv.classList.add('hidden');
+            }
 
-            const provSelect = document.getElementById('provincia');
-            const depSelect = document.getElementById('ciudad');
-
-            if (provSelect && provinciaStr) {
-                const searchProv = cleanStr(provinciaStr);
-                let matchedProv = false;
-                for (let i = 0; i < provSelect.options.length; i++) {
-                    const optText = cleanStr(provSelect.options[i].text);
-                    // Match province names
-                    if (optText.includes(searchProv) || searchProv.includes(optText)) {
-                        provSelect.selectedIndex = i;
-                        matchedProv = true;
-                        provSelect.dispatchEvent(new Event('change'));
-                        
-                        // Clear error UI if present
-                        const errProv = document.getElementById('error-provincia');
-                        if (errProv) errProv.classList.add('hidden');
-                        break;
-                    }
-                }
-
-                // If province matched, try to match department
-                if (matchedProv && depSelect && departamentoStr) {
-                    setTimeout(() => {
-                        const searchDep = cleanStr(departamentoStr);
-                        for (let i = 0; i < depSelect.options.length; i++) {
-                            const optText = cleanStr(depSelect.options[i].text);
-                            if (optText.includes(searchDep) || searchDep.includes(optText)) {
-                                depSelect.selectedIndex = i;
-                                depSelect.dispatchEvent(new Event('change'));
-                                
-                                const errDep = document.getElementById('error-ciudad');
-                                if (errDep) errDep.classList.add('hidden');
-                                break;
-                            }
-                        }
-                    }, 50); // slight delay to allow department list to render after province change
-                }
+            if (autocompleteCiudad && inputCiudadHidden && departamentoStr) {
+                autocompleteCiudad.inputValue = departamentoStr;
+                inputCiudadHidden.value = departamentoStr;
+                const errCiudad = document.getElementById('error-ciudad');
+                if (errCiudad) errCiudad.classList.add('hidden');
             }
         });
     }

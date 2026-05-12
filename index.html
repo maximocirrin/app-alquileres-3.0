@@ -1013,39 +1013,8 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Provincia *</label>
 <div class="relative">
-<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-secondary dark:text-[#c7c6c6]">
-<span class="material-symbols-outlined text-[20px]">search</span>
-</div>
-<select id="provincia" required class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 pl-12 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
-<option disabled selected value="">Selecciona la provincia</option>
-<option value="buenos-aires">Buenos Aires</option>
-<option value="caba">Ciudad Autónoma de Buenos Aires</option>
-<option value="catamarca">Catamarca</option>
-<option value="chaco">Chaco</option>
-<option value="chubut">Chubut</option>
-<option value="cordoba">Córdoba</option>
-<option value="corrientes">Corrientes</option>
-<option value="entre-rios">Entre Ríos</option>
-<option value="formosa">Formosa</option>
-<option value="jujuy">Jujuy</option>
-<option value="la-pampa">La Pampa</option>
-<option value="la-rioja">La Rioja</option>
-<option value="mendoza">Mendoza</option>
-<option value="misiones">Misiones</option>
-<option value="neuquen">Neuquén</option>
-<option value="rio-negro">Río Negro</option>
-<option value="salta">Salta</option>
-<option value="san-juan">San Juan</option>
-<option value="san-luis">San Luis</option>
-<option value="santa-cruz">Santa Cruz</option>
-<option value="santa-fe">Santa Fe</option>
-<option value="santiago-del-estero">Santiago del Estero</option>
-<option value="tierra-del-fuego">Tierra del Fuego, Antártida e Islas del Atlántico Sur</option>
-<option value="tucuman">Tucumán</option>
-</select>
-<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-secondary dark:text-[#c7c6c6]">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
+<div id="autocomplete-provincia" class="w-full h-14 px-4 font-body text-sm md:text-base bg-surface-container-high dark:bg-[#282828] rounded-sm flex items-center focus-within:bg-surface-container-lowest focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-colors"></div>
+<input type="hidden" id="provincia" required>
 </div>
 <p id="error-provincia" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
@@ -1053,15 +1022,8 @@
 <div class="space-y-4">
 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Departamento *</label>
 <div class="relative">
-<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-secondary dark:text-[#c7c6c6]">
-<span class="material-symbols-outlined text-[20px]">search</span>
-</div>
-<select id="ciudad" disabled required class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 pl-12 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-<option disabled selected value="">Selecciona el departamento</option>
-</select>
-<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-secondary dark:text-[#c7c6c6]">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
+<div id="autocomplete-ciudad" class="w-full h-14 px-4 font-body text-sm md:text-base bg-surface-container-high dark:bg-[#282828] rounded-sm flex items-center focus-within:bg-surface-container-lowest focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-colors disabled:opacity-50"></div>
+<input type="hidden" id="ciudad" required>
 </div>
 <p id="error-ciudad" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
