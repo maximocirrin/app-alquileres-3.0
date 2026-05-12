@@ -4715,15 +4715,15 @@ window.initGoogleMap = async function() {
             const place = e.place;
             if (!place) return;
 
-            await place.fetchFields({ fields: ["addressComponents", "geometry", "formattedAddress", "displayName"] });
+            await place.fetchFields({ fields: ["addressComponents", "location", "formattedAddress", "displayName"] });
             
-            if (!place.geometry || !place.geometry.location) return;
+            if (!place.location) return;
 
             inputCalleHidden.value = place.formattedAddress;
 
             // Update map
-            window.propertyMap.panTo(place.geometry.location);
-            window.propertyMarker.position = place.geometry.location;
+            window.propertyMap.panTo(place.location);
+            window.propertyMarker.position = place.location;
             
             const label = document.getElementById('map-address-label');
             if (label) label.textContent = place.formattedAddress;
