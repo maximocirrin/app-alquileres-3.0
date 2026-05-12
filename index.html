@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -83,7 +83,7 @@
                         "surface-container-high": "#e8e8e8",
                         "outline-variant": "#debfbd",
                         "inverse-primary": "#ffb3ae",
-                        "primary-container": "#811b1e",
+                        "primary-container": "#a13333",
                         "on-secondary-container": "#636262"
                     },
                     "borderRadius": {
@@ -167,7 +167,7 @@
         .theme-switch__checkbox {
             display: none !important;
         }
-        /* Ocultar flechas de inputs numÃ©ricos */
+        /* Ocultar flechas de inputs numéricos */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -194,7 +194,7 @@
 
         .checkbox-wrapper .checkbox-box {
             fill: #ebebeb; /* Light mode surface-container-high */
-            stroke: #811b1e;
+            stroke: #A13333;
             stroke-dasharray: 800;
             stroke-dashoffset: 800;
             transition: stroke-dashoffset 0.6s ease-in;
@@ -207,7 +207,7 @@
         }
 
         .checkbox-wrapper .checkbox-tick {
-            stroke: #811b1e;
+            stroke: #A13333;
             stroke-dasharray: 172;
             stroke-dashoffset: 172;
             transition: stroke-dashoffset 0.6s ease-in;
@@ -330,7 +330,7 @@
         }
         .success-checkmark .circle {
             fill: none;
-            stroke: #811b1e;
+            stroke: #A13333;
             stroke-width: 3;
             stroke-linecap: round;
             stroke-dasharray: 283;
@@ -342,7 +342,7 @@
         }
         .success-checkmark .check {
             fill: none;
-            stroke: #811b1e;
+            stroke: #A13333;
             stroke-width: 4;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -421,10 +421,10 @@
 
 
 
-                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary whitespace-nowrap">The Architectural Ledger</span>
+                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary dark:text-red-500 whitespace-nowrap">The Architectural Ledger</span>
                     </a>
                     <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base">
-                        <a class="text-red-900 font-bold border-b-2 border-red-900 pb-1 cursor-pointer"
+                        <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer"
                             href="#">Marketplace</a>
                         <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
                             href="#">Portfolio</a>
@@ -517,12 +517,12 @@
                             <!-- Help & Logout -->
                             <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
                                 <button class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group" role="menuitem">
-                                    <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">Â¿Podemos ayudarte?</span>
+                                    <span class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">¿Podemos ayudarte?</span>
                                 </button>
                             </div>
                             <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
                                 <button id="menu-logout" class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group" role="menuitem">
-                                    <span class="text-sm text-red-600 font-medium">Cerrar sesiÃ³n</span>
+                                    <span class="text-sm text-red-600 dark:text-red-400 font-medium">Cerrar sesión</span>
                                 </button>
                             </div>
                         </div>
@@ -542,7 +542,7 @@
                 <div class="relative z-10 w-full max-w-4xl px-6 text-center">
                     <h1
                         class="font-headline text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tighter leading-tight animate-on-scroll">
-                        Encuentra tu prÃ³ximo <br />hogar
+                        Encuentra tu próximo <br />hogar
                     </h1>
                     <div
                         class="bg-surface-container-lowest p-2 rounded-full shadow-2xl flex items-center max-w-2xl mx-auto backdrop-blur-md bg-opacity-95 animate-on-scroll delay-100">
@@ -550,7 +550,7 @@
                             <span class="material-symbols-outlined text-primary">search</span>
                             <input
                                 class="w-full bg-transparent border-none focus:ring-0 text-on-surface py-3 font-body outline-none"
-                                placeholder="Â¿DÃ³nde quieres vivir?" type="text" />
+                                placeholder="¿Dónde quieres vivir?" type="text" />
                         </div>
                         <div class="h-8 w-[1px] bg-zinc-300 dark:bg-zinc-700"></div>
                         <button
@@ -606,14 +606,14 @@
                 <!-- Empty state (hidden by default) -->
                 <div id="marketplace-empty-state" class="hidden col-span-3 py-24 text-center">
                     <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4 block">home_work</span>
-                    <p class="font-headline text-xl font-bold text-on-background">TodavÃ­a no hay propiedades publicadas</p>
-                    <p class="font-body text-secondary mt-2">Â¡SÃ© el primero en publicar tu propiedad!</p>
+                    <p class="font-headline text-xl font-bold text-on-background">Todavía no hay propiedades publicadas</p>
+                    <p class="font-body text-secondary mt-2">¡Sé el primero en publicar tu propiedad!</p>
                 </div>
                 <!-- More results indicator -->
                 <div class="mt-20 text-center">
                     <button
                         class="bg-surface-container hover:bg-surface-container-high text-on-surface px-12 py-4 rounded-full font-bold transition-all border border-outline-variant/10">
-                        Explorar mÃ¡s propiedades
+                        Explorar más propiedades
                     </button>
                 </div>
             </section>
@@ -630,19 +630,19 @@
                             class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary rounded-2xl p-8 text-on-primary flex flex-col justify-end shadow-2xl hidden md:flex">
                             <span class="font-headline text-4xl font-bold mb-2">24/7</span>
                             <p class="text-sm opacity-80 leading-relaxed font-body border-none">Acceso exclusivo a gemas
-                                arquitectÃ³nicas fuera del mercado y haciendas histÃ³ricas.</p>
+                                arquitectónicas fuera del mercado y haciendas históricas.</p>
                         </div>
                     </div>
                     <div class="space-y-8 animate-on-scroll delay-200">
-                        <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs">SelecciÃ³n Curada</span>
-                        <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background leading-tight">El EstÃ¡ndar
+                        <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs">Selección Curada</span>
+                        <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background leading-tight">El Estándar
                             Inmuebles: Donde la Forma Conoce la Funcionalidad</h2>
                         <p class="text-secondary text-lg leading-relaxed font-body">Nuestro marketplace no se trata solo
-                            de metros cuadrados. Curamos propiedades basadas en significancia arquitectÃ³nica, honestidad
+                            de metros cuadrados. Curamos propiedades basadas en significancia arquitectónica, honestidad
                             de materiales e inteligencia espacial.</p>
                         <div class="pt-4">
                             <a class="inline-flex items-center gap-2 text-primary font-bold group" href="#">
-                                Conoce sobre nuestro proceso de curaciÃ³n
+                                Conoce sobre nuestro proceso de curación
                                 <span
                                     class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                             </a>
@@ -657,13 +657,13 @@
                 class="flex flex-col md:flex-row justify-between items-center px-12 py-8 w-full font-['Inter'] text-sm tracking-normal">
                 <div class="flex flex-col md:flex-row items-center gap-8 border-none">
                     <span class="font-['Manrope'] font-semibold text-zinc-900 dark:text-zinc-100">Inmuebles</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Â© 2026 Inmuebles. Todos los derechos
+                    <span class="text-zinc-500 dark:text-zinc-400">© 2026 Inmuebles. Todos los derechos
                         reservados.</span>
                 </div>
                 <div class="flex gap-8 mt-6 md:mt-0">
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">PolÃ­tica
+                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">Política
                         de Privacidad</a>
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">TÃ©rminos
+                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">Términos
                         de Servicio</a>
                     <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity"
                         href="#">Soporte</a>
@@ -681,11 +681,11 @@
             <div class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
                     <a id="btn-back-from-avisos" href="#" class="flex items-center gap-1.5 md:gap-2 group cursor-pointer">
-                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary whitespace-nowrap">The Architectural Ledger</span>
+                        <span class="font-headline tracking-tight font-bold text-[11px] sm:text-sm md:text-xl tracking-tighter text-primary dark:text-red-500 whitespace-nowrap">The Architectural Ledger</span>
                     </a>
                     <!-- Sub-navigation tabs -->
                     <div class="hidden md:flex items-center gap-1 lg:gap-6 text-sm">
-                        <a class="avisos-tab active text-red-900 font-bold border-b-2 border-red-900 pb-1 cursor-pointer px-1" data-tab="avisos">Mis avisos</a>
+                        <a class="avisos-tab active text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer px-1" data-tab="avisos">Mis avisos</a>
                         <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="interesados">Interesados</a>
                         <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="actividad">Mi actividad</a>
                         <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1" data-tab="contrataciones">Contrataciones</a>
@@ -705,7 +705,7 @@
             </div>
             <!-- Mobile sub-navigation -->
             <div class="flex md:hidden items-center gap-0 border-t border-zinc-200/60 dark:border-zinc-800 overflow-x-auto scrollbar-hide">
-                <a class="avisos-tab active whitespace-nowrap text-xs font-bold text-red-900 border-b-2 border-red-900 px-4 py-2.5 cursor-pointer" data-tab="avisos">Mis avisos</a>
+                <a class="avisos-tab active whitespace-nowrap text-xs font-bold text-red-900 dark:text-red-400 border-b-2 border-red-900 dark:border-red-400 px-4 py-2.5 cursor-pointer" data-tab="avisos">Mis avisos</a>
                 <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="interesados">Interesados</a>
                 <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="actividad">Mi actividad</a>
                 <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer" data-tab="contrataciones">Contrataciones</a>
@@ -732,9 +732,9 @@
                                 </div>
                             </div>
 
-                            <!-- Tipo de operaciÃ³n -->
+                            <!-- Tipo de operación -->
                             <div class="mb-5">
-                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">Tipo de operaciÃ³n</p>
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">Tipo de operación</p>
                                 <div id="filter-operacion" class="space-y-1.5">
                                     <!-- Populated by JS -->
                                 </div>
@@ -774,7 +774,7 @@
                                 <div id="filter-tipo-mobile" class="space-y-1.5"></div>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Tipo de operaciÃ³n</p>
+                                <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Tipo de operación</p>
                                 <div id="filter-operacion-mobile" class="space-y-1.5"></div>
                             </div>
                             <div>
@@ -795,14 +795,14 @@
                             </p>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <div class="relative flex-1 sm:flex-initial">
-                                    <input id="avisos-search" type="text" placeholder="CÃ³digo / ID / TÃ­tulo / DirecciÃ³n"
+                                    <input id="avisos-search" type="text" placeholder="Código / ID / Título / Dirección"
                                         class="w-full sm:w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-4 pr-10 py-2.5 text-sm text-on-background dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow">
                                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-lg text-zinc-400 pointer-events-none">search</span>
                                 </div>
                                 <select id="avisos-sort"
                                     class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer min-w-[160px] hidden sm:block">
                                     <option value="recent">Modificados recientes</option>
-                                    <option value="oldest">MÃ¡s antiguos</option>
+                                    <option value="oldest">Más antiguos</option>
                                     <option value="price-asc">Menor precio</option>
                                     <option value="price-desc">Mayor precio</option>
                                 </select>
@@ -849,8 +849,8 @@
                             <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700 flex items-center justify-center">
                                 <span class="material-symbols-outlined text-4xl text-zinc-400 dark:text-zinc-500">home_work</span>
                             </div>
-                            <p class="font-headline text-xl font-bold text-on-background dark:text-white">TodavÃ­a no tenÃ©s avisos</p>
-                            <p class="font-body text-secondary dark:text-zinc-400 mt-2 max-w-md mx-auto">PublicÃ¡ tu primera propiedad y empezÃ¡ a recibir consultas de potenciales compradores o inquilinos.</p>
+                            <p class="font-headline text-xl font-bold text-on-background dark:text-white">Todavía no tenés avisos</p>
+                            <p class="font-body text-secondary dark:text-zinc-400 mt-2 max-w-md mx-auto">Publicá tu primera propiedad y empezá a recibir consultas de potenciales compradores o inquilinos.</p>
                             <button id="btn-publicar-empty" class="mt-8 bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3.5 rounded-full font-bold text-sm hover:opacity-90 transition-all shadow-md active:scale-95 inline-flex items-center gap-2">
                                 <span class="material-symbols-outlined text-lg">add</span>
                                 Publicar propiedad
@@ -870,7 +870,7 @@
 <header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-white/5">
 <div class="flex justify-between items-center px-6 h-16 w-full">
 <div class="flex items-center gap-4">
-<button id="btn-back-from-publish" class="flex items-center gap-1 text-primary hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
+<button id="btn-back-from-publish" class="flex items-center gap-1 text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
 <span class="material-symbols-outlined" id="btn-back-icon">close</span>
 <span id="btn-back-text" class="font-body font-bold text-sm">Volver al inicio</span>
 </button>
@@ -891,8 +891,8 @@
 <!-- Desktop Progress Indicator -->
 <div class="flex items-start md:items-center justify-between md:justify-start gap-2 md:gap-8 mb-8 overflow-x-visible pb-2 w-full md:w-auto" id="publish-progress-indicator">
 <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0" id="progress-step-1">
-<div class="w-8 h-8 rounded-full bg-primary dark:bg-primary text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
-<span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base">Principales</span>
+<div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
+<span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
 </div>
 <div id="progress-line-1" class="w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300"></div>
 <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2 shrink-0 opacity-50" id="progress-step-2">
@@ -910,44 +910,44 @@
 <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base">Publicar</span>
 </div>
 </div>
-<h1 id="publish-main-title" class="text-4xl md:text-5xl font-headline font-extrabold text-on-background dark:text-[#f1f1f1] tracking-tight mb-4 transition-opacity duration-300">Â¡Empecemos a crear tu aviso!</h1>
-<p id="paso-subtitle" class="text-secondary dark:text-[#c7c6c6] font-body text-lg transition-opacity duration-300">Â¿QuÃ© querÃ©s publicar?</p>
+<h1 id="publish-main-title" class="text-4xl md:text-5xl font-headline font-extrabold text-on-background dark:text-[#f1f1f1] tracking-tight mb-4 transition-opacity duration-300">¡Empecemos a crear tu aviso!</h1>
+<p id="paso-subtitle" class="text-secondary dark:text-[#c7c6c6] font-body text-lg transition-opacity duration-300">¿Qué querés publicar?</p>
 </div>
 
 <div id="wizard-step-1-container" class="transition-all duration-500 ease-in-out transform origin-top opacity-100 scale-100 h-auto overflow-visible">
 <div class="bg-surface-container-lowest dark:bg-[#0c0c0e] p-8 rounded-xl border border-outline-variant/30 dark:border-white/5 mb-8 relative">
 <!-- Sub-navigation tabs -->
 <div class="flex gap-8 mb-10 overflow-x-auto pb-2">
-<button id="tab-operacion" class="font-headline font-bold text-primary border-b-2 border-primary dark:border-primary pb-2 whitespace-nowrap active-tab pointer-events-none">OperaciÃ³n y tipo de propiedad</button>
-<button id="tab-ubicacion" class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">UbicaciÃ³n</button>
-<button id="tab-caracteristicas" class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">CaracterÃ­sticas</button>
+<button id="tab-operacion" class="font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación y tipo de propiedad</button>
+<button id="tab-ubicacion" class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">Ubicación</button>
+<button id="tab-caracteristicas" class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">Características</button>
 </div>
 <div id="step-operacion" class="block">
 <form id="form-principales" class="space-y-8" novalidate>
-<!-- Tipo de operaciÃ³n -->
+<!-- Tipo de operación -->
 <div class="space-y-4">
-<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Tipo de operaciÃ³n *</label>
+<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Tipo de operación *</label>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 <label class="cursor-pointer relative">
 <input checked="" class="peer sr-only" name="operacion" type="radio"/>
 <div class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Venta</span>
 </div>
-<span class="absolute top-2 right-2 material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </label>
 <label class="cursor-pointer relative">
 <input class="peer sr-only" name="operacion" type="radio"/>
 <div class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Alquiler</span>
 </div>
-<span class="absolute top-2 right-2 material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </label>
 <label class="cursor-pointer relative">
 <input class="peer sr-only" name="operacion" type="radio"/>
 <div class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Temporada</span>
 </div>
-<span class="absolute top-2 right-2 material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </label>
 </div>
 </div>
@@ -958,10 +958,10 @@
 <select id="tipo-propiedad" required class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
 <option disabled="" selected="" value="">Selecciona el tipo de propiedad</option>
 <option value="departamento">Departamento</option>
-<option value="bodega-galpon">Bodega-GalpÃ³n</option>
+<option value="bodega-galpon">Bodega-Galpón</option>
 <option value="casa">Casa</option>
 <option value="consultorio">Consultorio</option>
-<option value="deposito">DepÃ³sito</option>
+<option value="deposito">Depósito</option>
 <option value="edificio">Edificio</option>
 <option value="fondo-de-comercio">Fondo de comercio</option>
 <option value="cochera">Cochera</option>
@@ -977,7 +977,7 @@
 <span class="material-symbols-outlined">expand_more</span>
 </div>
 </div>
-<p id="error-tipo" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+<p id="error-tipo" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
 <!-- Subtipo de propiedad -->
 <div class="space-y-4">
@@ -990,12 +990,12 @@
 <span class="material-symbols-outlined">expand_more</span>
 </div>
 </div>
-<p id="error-subtipo" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+<p id="error-subtipo" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
 </form>
 </div>
 
-<!-- Paso 2: UbicaciÃ³n (Inicialmente Oculto) -->
+<!-- Paso 2: Ubicación (Inicialmente Oculto) -->
 <div id="step-ubicacion" class="hidden">
 <form id="form-ubicacion" class="space-y-8" novalidate>
 <!-- Calle y altura -->
@@ -1004,7 +1004,7 @@
 <div class="relative">
 <input type="text" id="calle-altura" required placeholder="Ej: Av. del Libertador 1000" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 font-body text-sm md:text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
 </div>
-<p id="error-calle" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+<p id="error-calle" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
 
 <!-- Provincia y Ciudad -->
@@ -1015,35 +1015,35 @@
 <select id="provincia" required class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
 <option disabled selected value="">Selecciona la provincia</option>
 <option value="buenos-aires">Buenos Aires</option>
-<option value="caba">Ciudad AutÃ³noma de Buenos Aires</option>
+<option value="caba">Ciudad Autónoma de Buenos Aires</option>
 <option value="catamarca">Catamarca</option>
 <option value="chaco">Chaco</option>
 <option value="chubut">Chubut</option>
-<option value="cordoba">CÃ³rdoba</option>
+<option value="cordoba">Córdoba</option>
 <option value="corrientes">Corrientes</option>
-<option value="entre-rios">Entre RÃ­os</option>
+<option value="entre-rios">Entre Ríos</option>
 <option value="formosa">Formosa</option>
 <option value="jujuy">Jujuy</option>
 <option value="la-pampa">La Pampa</option>
 <option value="la-rioja">La Rioja</option>
 <option value="mendoza">Mendoza</option>
 <option value="misiones">Misiones</option>
-<option value="neuquen">NeuquÃ©n</option>
-<option value="rio-negro">RÃ­o Negro</option>
+<option value="neuquen">Neuquén</option>
+<option value="rio-negro">Río Negro</option>
 <option value="salta">Salta</option>
 <option value="san-juan">San Juan</option>
 <option value="san-luis">San Luis</option>
 <option value="santa-cruz">Santa Cruz</option>
 <option value="santa-fe">Santa Fe</option>
 <option value="santiago-del-estero">Santiago del Estero</option>
-<option value="tierra-del-fuego">Tierra del Fuego, AntÃ¡rtida e Islas del AtlÃ¡ntico Sur</option>
-<option value="tucuman">TucumÃ¡n</option>
+<option value="tierra-del-fuego">Tierra del Fuego, Antártida e Islas del Atlántico Sur</option>
+<option value="tucuman">Tucumán</option>
 </select>
 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
 <span class="material-symbols-outlined">expand_more</span>
 </div>
 </div>
-<p id="error-provincia" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+<p id="error-provincia" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
 
 <div class="space-y-4">
@@ -1056,27 +1056,27 @@
 <span class="material-symbols-outlined">expand_more</span>
 </div>
 </div>
-<p id="error-ciudad" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+<p id="error-ciudad" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
 </div>
 </div>
 
-<!-- Â¿CÃ³mo querÃ©s mostrar tu ubicaciÃ³n? -->
+<!-- ¿Cómo querés mostrar tu ubicación? -->
 <div class="space-y-4 pt-4 border-t border-outline-variant/30 dark:border-white/5">
-<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Â¿CÃ³mo querÃ©s mostrar tu ubicaciÃ³n?</label>
+<label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">¿Cómo querés mostrar tu ubicación?</label>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 <label class="cursor-pointer relative">
 <input checked="" class="peer sr-only" name="precision" type="radio" value="exacta"/>
 <div class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Exacta</span>
 </div>
-<span class="absolute top-2 right-2 material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </label>
 <label class="cursor-pointer relative">
 <input class="peer sr-only" name="precision" type="radio" value="aproximada"/>
 <div class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
 <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Aproximada</span>
 </div>
-<span class="absolute top-2 right-2 material-symbols-outlined text-primary opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </label>
 </div>
 </div>
@@ -1084,7 +1084,7 @@
 <!-- Banner Info -->
 <div class="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 rounded-r-lg mt-6 flex items-start gap-4">
 <span class="material-symbols-outlined text-blue-500 mt-0.5">info</span>
-<p class="font-body text-sm font-medium text-slate-700 dark:text-[#c7c6c6]">RecordÃ¡ que al seleccionar "Aproximada" tu propiedad no aparecerÃ¡ en el mapa de bÃºsqueda.</p>
+<p class="font-body text-sm font-medium text-slate-700 dark:text-[#c7c6c6]">Recordá que al seleccionar "Aproximada" tu propiedad no aparecerá en el mapa de búsqueda.</p>
 </div>
 
 <!-- Google Map Interactive -->
@@ -1101,7 +1101,7 @@
 </form>
 </div>
 
-<!-- Paso 3: CaracterÃ­sticas (Inicialmente Oculto) -->
+<!-- Paso 3: Características (Inicialmente Oculto) -->
 <div id="step-caracteristicas" class="hidden">
 <form id="form-caracteristicas" class="space-y-12" novalidate>
 
@@ -1124,7 +1124,7 @@
         </div>
     </div>
     <div class="flex items-center justify-between">
-        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">BaÃ±os <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
+        <label class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Baños <span class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
         <div class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
             <button type="button" class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none" onclick="const input = document.getElementById('banos-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span class="material-symbols-outlined">remove</span></button>
             <input type="number" id="banos-new" class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none" value="0" readonly>
@@ -1159,7 +1159,7 @@
                 <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">m2</div>
                 <input type="number" id="sup-cubierta" required class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
             </div>
-            <p id="error-sup-cubierta" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+            <p id="error-sup-cubierta" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
         </div>
         <div class="space-y-2">
             <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie total *</label>
@@ -1167,14 +1167,14 @@
                 <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">m2</div>
                 <input type="number" id="sup-total" required class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
             </div>
-            <p id="error-sup-total" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+            <p id="error-sup-total" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
         </div>
     </div>
 </div>
 
-<!-- AntigÃ¼edad -->
+<!-- Antigüedad -->
 <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
-    <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">AntigÃ¼edad</label>
+    <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Antigüedad</label>
     <div class="flex flex-col gap-4">
         <div class="checkbox-wrapper w-max">
             <input type="radio" id="antiguedad-estrenar" name="antiguedad" value="estrenar">
@@ -1199,7 +1199,7 @@
                     <rect mask="url(#path-1-inside-1_anios)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                     <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                 </svg>
-                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">AÃ±os de antigÃ¼edad</span>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">Años de antigüedad</span>
             </label>
         </div>
         <div class="checkbox-wrapper w-max">
@@ -1212,7 +1212,7 @@
                     <rect mask="url(#path-1-inside-1_construccion)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                     <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                 </svg>
-                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">En construcciÃ³n</span>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-lg whitespace-nowrap ml-3">En construcción</span>
             </label>
         </div>
     </div>
@@ -1231,7 +1231,7 @@
                 </select>
                 <input type="number" id="precio" required class="flex-1 min-w-0 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0">
             </div>
-            <p id="error-precio" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+            <p id="error-precio" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
         </div>
         <div class="space-y-2">
             <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Expensas <span class="text-secondary dark:text-[#c7c6c6] text-sm font-normal">(opcional)</span></label>
@@ -1252,32 +1252,32 @@
                     <rect mask="url(#path-1-inside-1_apto_credito)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                     <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                 </svg>
-                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-base whitespace-nowrap ml-3">Apto crÃ©dito</span>
+                <span class="font-body font-normal text-secondary dark:text-[#c7c6c6] text-base whitespace-nowrap ml-3">Apto crédito</span>
             </label>
         </div>
     </div>
 </div>
 
-<!-- DescribÃ­ la propiedad -->
+<!-- Describí la propiedad -->
 <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
     <div>
-        <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">DescribÃ­ la propiedad</label>
-        <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Asegurate de incluir el tipo de propiedad y el tipo de operaciÃ³n de tu aviso.</p>
+        <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Describí la propiedad</label>
+        <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Asegurate de incluir el tipo de propiedad y el tipo de operación de tu aviso.</p>
     </div>
     
     <div class="space-y-2 mt-4">
-        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">TÃ­tulo *</label>
-        <input type="text" id="titulo-aviso" required placeholder="CompletÃ¡ el tÃ­tulo de tu aviso" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
-        <p id="error-titulo" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Título *</label>
+        <input type="text" id="titulo-aviso" required placeholder="Completá el título de tu aviso" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+        <p id="error-titulo" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
     </div>
     
     <div class="space-y-2 mt-4">
-        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">DescripciÃ³n *</label>
+        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Descripción *</label>
         <div class="relative">
-            <textarea id="descripcion-aviso" required placeholder="EscribÃ­ un mÃ­nimo de 150 caracteres" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md p-4 font-body text-base min-h-[160px] resize-y focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50" oninput="document.getElementById('char-count').textContent = this.value.length"></textarea>
+            <textarea id="descripcion-aviso" required placeholder="Escribí un mínimo de 150 caracteres" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-md p-4 font-body text-base min-h-[160px] resize-y focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50" oninput="document.getElementById('char-count').textContent = this.value.length"></textarea>
             <div class="absolute bottom-4 right-4 font-body text-xs text-secondary dark:text-[#c7c6c6]"><span id="char-count">0</span></div>
         </div>
-        <p id="error-descripcion" class="hidden text-primary text-sm font-body mt-1">Completa este campo</p>
+        <p id="error-descripcion" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
     </div>
 </div>
 
@@ -1295,14 +1295,14 @@
         <div class="space-y-4">
             <div>
                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Fotos *</label>
-                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">CargÃ¡ entre 5 y 50 fotos. Una vez cargadas, arrastrÃ¡ y soltÃ¡ para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">Cargá entre 5 y 50 fotos. Una vez cargadas, arrastrá y soltá para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
             </div>
             
-            <div id="fotos-dropzone" class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
+            <div id="fotos-dropzone" class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
                 <div class="w-14 h-14 bg-primary/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-primary text-3xl">upload</span>
+                    <span class="material-symbols-outlined text-primary dark:text-red-500 text-3xl">upload</span>
                 </div>
-                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">AgregÃ¡ las fotos de la propiedad</span>
+                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">Agregá las fotos de la propiedad</span>
                 <input id="fotos-input" type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
             </div>
             
@@ -1310,17 +1310,17 @@
             <div id="fotos-preview-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6 empty:hidden">
                 <!-- Image previews will be appended here -->
             </div>
-            <div id="fotos-error-msg" class="hidden text-error text-sm font-semibold mt-2"></div>
+            <div id="fotos-error-msg" class="hidden text-error dark:text-red-400 text-sm font-semibold mt-2"></div>
         </div>
 
         <!-- Videos -->
         <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
             <div>
                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Videos <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
-                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">PodÃ©s cargar hasta 10 videos de Youtube.</p>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">Podés cargar hasta 10 videos de Youtube.</p>
             </div>
             
-            <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all text-center">
+            <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 hover:bg-primary/5 dark:hover:bg-red-500/5 transition-all text-center">
                 Agregar video
             </button>
         </div>
@@ -1329,14 +1329,14 @@
         <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
             <div>
                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Planos <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
-                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">CargÃ¡ los planos de la propiedad. Una vez cargados, arrastrÃ¡ y soltÃ¡ para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">Cargá los planos de la propiedad. Una vez cargados, arrastrá y soltá para cambiarlas de orden. Se admiten los formatos jpg, jpeg y png desde 500 x 500px hasta 6000 x 6000px.</p>
             </div>
             
-            <div class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
+            <div class="border-2 border-dashed border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface-container-lowest dark:bg-[#0c0c0e] hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e]">
                 <div class="w-14 h-14 bg-primary/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-primary text-3xl">upload</span>
+                    <span class="material-symbols-outlined text-primary dark:text-red-500 text-3xl">upload</span>
                 </div>
-                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">AgregÃ¡ los planos de la propiedad</span>
+                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-center text-sm md:text-base">Agregá los planos de la propiedad</span>
                 <input type="file" multiple accept="image/jpeg, image/png, image/jpg" class="hidden">
             </div>
         </div>
@@ -1344,14 +1344,14 @@
         <!-- Recorrido 360 -->
         <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
             <div>
-                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Recorrido 360Â° <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
-                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">CargÃ¡ un recorrido 360Â° de la propiedad.</p>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Recorrido 360° <span class="text-secondary dark:text-[#c7c6c6] font-normal text-base">(opcional)</span></label>
+                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2">Cargá un recorrido 360° de la propiedad.</p>
             </div>
             
             <div class="flex flex-col md:flex-row gap-4">
-                <input type="url" placeholder="PegÃ¡ la URL del recorrido acÃ¡" class="flex-1 appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
+                <input type="url" placeholder="Pegá la URL del recorrido acá" class="flex-1 appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
                 
-                <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all text-center whitespace-nowrap">
+                <button type="button" class="w-full md:w-auto px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/60 dark:border-white/10 hover:border-primary dark:hover:border-red-500 hover:bg-primary/5 dark:hover:bg-red-500/5 transition-all text-center whitespace-nowrap">
                     Agregar
                 </button>
             </div>
@@ -1368,14 +1368,14 @@
             
             <!-- Buscador y Chips -->
             <div class="space-y-4">
-                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">BuscÃ¡ y agregÃ¡ caracterÃ­sticas</label>
+                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Buscá y agregá características</label>
                 <div class="relative">
                     <input type="text" placeholder="Ej. Permite mascotas" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
                     <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-secondary dark:text-[#c7c6c6]">search</span>
                 </div>
                 <!-- Contenedor de Chips Seleccionados -->
                 <div id="selected-features-container" class="flex flex-wrap gap-3 mt-4 empty:hidden">
-                    <!-- Los chips se insertarÃ¡n aquÃ­ dinÃ¡micamente -->
+                    <!-- Los chips se insertarán aquí dinámicamente -->
                 </div>
             </div>
 
@@ -1383,10 +1383,10 @@
             <!-- Acordeones (Visuales) -->
             <div class="space-y-0 border border-outline-variant/30 dark:border-white/10 rounded-xl overflow-hidden bg-surface-container-lowest dark:bg-[#0c0c0e]">
                 
-                <!-- CaracterÃ­sticas generales -->
+                <!-- Características generales -->
                 <div class="border-b border-outline-variant/30 dark:border-white/10">
                     <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-caracteristicas-generales', this)">
-                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">CaracterÃ­sticas generales</span>
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Características generales</span>
                         <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
                     </div>
                     <div id="content-caracteristicas-generales" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
@@ -1538,10 +1538,10 @@
                     </div>
                 </div>
 
-                <!-- CaracterÃ­sticas -->
+                <!-- Características -->
                 <div class="border-b border-outline-variant/30 dark:border-white/10">
                     <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors accordion-btn" onclick="toggleAccordion('content-caracteristicas', this)">
-                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">CaracterÃ­sticas</span>
+                        <span class="font-body text-on-background dark:text-[#f1f1f1] text-base">Características</span>
                         <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon">expand_more</span>
                     </div>
                     <div id="content-caracteristicas" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out">
@@ -1614,7 +1614,7 @@
                                             <rect mask="url(#path-1-inside-1_calefaccion)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                                         </svg>
-                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">CalefacciÃ³n</span>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Calefacción</span>
                                     </label>
                                 </div>
 
@@ -1796,7 +1796,7 @@
                                             <rect mask="url(#path-1-inside-1_balcon)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                                         </svg>
-                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">BalcÃ³n</span>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Balcón</span>
                                     </label>
                                 </div>
 
@@ -1922,7 +1922,7 @@
                                             <rect mask="url(#path-1-inside-1_jardin)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                                         </svg>
-                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">JardÃ­n</span>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Jardín</span>
                                     </label>
                                 </div>
 
@@ -1992,7 +1992,7 @@
                                             <rect mask="url(#path-1-inside-1_sotano)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                                         </svg>
-                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">SÃ³tano</span>
+                                        <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sótano</span>
                                     </label>
                                 </div>
 
@@ -2082,10 +2082,10 @@
                         <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Cantidad de plantas</label>
                         <div class="relative">
                             <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
-                                <option value="" disabled selected>SeleccionÃ¡ una opciÃ³n</option>
+                                <option value="" disabled selected>Seleccioná una opción</option>
                                 <option value="1">1</option>
                                 <option value="2">2</option>
-                                <option value="3+">3 o mÃ¡s</option>
+                                <option value="3+">3 o más</option>
                             </select>
                             <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
                         </div>
@@ -2096,7 +2096,7 @@
                         <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Cobertura cochera</label>
                         <div class="relative">
                             <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
-                                <option value="" disabled selected>SeleccionÃ¡ una opciÃ³n</option>
+                                <option value="" disabled selected>Seleccioná una opción</option>
                                 <option value="cubierta">Cubierta</option>
                                 <option value="descubierta">Descubierta</option>
                                 <option value="semicubierta">Semicubierta</option>
@@ -2110,20 +2110,20 @@
                         <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Luminoso</label>
                         <div class="relative">
                             <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
-                                <option value="" disabled selected>SeleccionÃ¡ una opciÃ³n</option>
-                                <option value="si">SÃ­</option>
+                                <option value="" disabled selected>Seleccioná una opción</option>
+                                <option value="si">Sí</option>
                                 <option value="no">No</option>
                             </select>
                             <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
                         </div>
                     </div>
 
-                    <!-- OrientaciÃ³n -->
+                    <!-- Orientación -->
                     <div class="space-y-2">
-                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">OrientaciÃ³n</label>
+                        <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Orientación</label>
                         <div class="relative">
                             <select class="w-full appearance-none bg-none bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-4 pr-12 font-body text-base focus:ring-0 hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] focus:bg-surface-container-lowest dark:focus:bg-[#0c0c0e] focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors cursor-pointer">
-                                <option value="" disabled selected>SeleccionÃ¡ una opciÃ³n</option>
+                                <option value="" disabled selected>Seleccioná una opción</option>
                                 <option value="norte">Norte</option>
                                 <option value="sur">Sur</option>
                                 <option value="este">Este</option>
@@ -2164,7 +2164,7 @@
             
             <!-- Plan Seleccionado (Gratis) -->
             <div class="space-y-4">
-                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">SeleccionÃ¡ el plan con el que querÃ©s publicar</h3>
+                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Seleccioná el plan con el que querés publicar</h3>
                 <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm mt-4">Planes disponibles</label>
                 
                 <div class="border border-outline-variant/30 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest dark:bg-[#0c0c0e] relative overflow-hidden cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors border-l-4 border-l-primary dark:border-l-red-500">
@@ -2172,7 +2172,7 @@
                         <div class="w-5 h-5 rounded-full border-2 border-primary dark:border-red-500 flex items-center justify-center">
                             <div class="w-2.5 h-2.5 rounded-full bg-primary dark:bg-red-500"></div>
                         </div>
-                        <span class="font-headline font-bold text-primary text-lg">Gratis</span>
+                        <span class="font-headline font-bold text-primary dark:text-red-500 text-lg">Gratis</span>
                     </div>
                     <span class="font-body text-on-background dark:text-[#f1f1f1] text-sm">Visibilidad baja</span>
                     <span class="font-body text-secondary dark:text-[#c7c6c6] text-sm font-medium">Cantidad disponible: 1</span>
@@ -2182,8 +2182,8 @@
             <!-- Otros Planes -->
             <div class="space-y-6 pt-8 border-t border-outline-variant/30 dark:border-white/5">
                 <div>
-                    <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">MÃ¡s planes para vos</h3>
-                    <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">ObtenÃ© y publicÃ¡ con cualquiera de estos planes.</p>
+                    <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Más planes para vos</h3>
+                    <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Obtené y publicá con cualquiera de estos planes.</p>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -2197,7 +2197,7 @@
                         <ul class="space-y-3 mb-8 flex-1">
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                Incluye 1 aviso con mÃ¡xima exposiciÃ³n en los listados
+                                Incluye 1 aviso con máxima exposición en los listados
                             </li>
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
@@ -2205,14 +2205,14 @@
                             </li>
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                Plan con renovaciÃ³n automÃ¡tica
+                                Plan con renovación automática
                             </li>
                         </ul>
                         <div class="mb-6">
                             <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
                             <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 39.777,00</p>
                         </div>
-                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-primary hover:opacity-90 transition-opacity">
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                             Comprar
                         </button>
                     </div>
@@ -2235,14 +2235,14 @@
                             </li>
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                Plan con renovaciÃ³n automÃ¡tica
+                                Plan con renovación automática
                             </li>
                         </ul>
                         <div class="mb-6">
                             <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
                             <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 24.860,00</p>
                         </div>
-                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-primary hover:opacity-90 transition-opacity">
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                             Comprar
                         </button>
                     </div>
@@ -2258,7 +2258,7 @@
                         <ul class="space-y-3 mb-8 flex-1">
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                Incluye 1 aviso con visibilidad estÃ¡ndar
+                                Incluye 1 aviso con visibilidad estándar
                             </li>
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
@@ -2266,14 +2266,14 @@
                             </li>
                             <li class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
                                 <span class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                Plan con renovaciÃ³n automÃ¡tica
+                                Plan con renovación automática
                             </li>
                         </ul>
                         <div class="mb-6">
                             <p class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">* Precio sin impuestos:</p>
                             <p class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">$ 11.471,00</p>
                         </div>
-                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-primary hover:opacity-90 transition-opacity">
+                        <button type="button" class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                             Comprar
                         </button>
                     </div>
@@ -2291,10 +2291,10 @@
         <span id="btn-back-desktop-text">Volver al inicio</span>
     </button>
     <div class="flex flex-row gap-4">
-        <button type="button" class="px-8 py-4 rounded-xl font-headline font-bold text-primary bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
+        <button type="button" class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
             Guardar y salir
         </button>
-        <button type="submit" form="form-principales" class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-primary">
+        <button type="submit" form="form-principales" class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-[#A13333]">
             Continuar
         </button>
     </div>
@@ -2313,7 +2313,7 @@
 <span class="material-symbols-outlined text-[22px]">save</span>
 <span class="font-inter text-[10px] font-medium mt-1 leading-tight text-center">Guardar<br>y salir</span>
 </button>
-<button type="submit" form="form-principales" class="flex items-center justify-center bg-primary dark:bg-primary text-on-primary dark:text-[#ffffff] rounded-xl px-10 py-3.5 active:scale-95 transition-all shadow-lg font-headline font-bold text-sm flex-1 max-w-[12rem] ml-2">
+<button type="submit" form="form-principales" class="flex items-center justify-center bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] rounded-xl px-10 py-3.5 active:scale-95 transition-all shadow-lg font-headline font-bold text-sm flex-1 max-w-[12rem] ml-2">
 Continuar
 </button>
 </nav>
@@ -2326,7 +2326,7 @@ Continuar
         <section id="login-view" class="view active">
             <div class="login-container glass-card">
                 <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Herramienta Inmuebles</h1>
-                <p>MÃ³dulo de AdministraciÃ³n</p>
+                <p>Módulo de Administración</p>
                 <form id="login-form">
                     <div class="input-group">
                         <span class="material-symbols-rounded">email</span>
@@ -2334,14 +2334,14 @@ Continuar
                     </div>
                     <div class="input-group">
                         <span class="material-symbols-rounded">lock</span>
-                        <input type="password" id="password" placeholder="ContraseÃ±a" required>
+                        <input type="password" id="password" placeholder="Contraseña" required>
                     </div>
                     <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Iniciar
-                        SesiÃ³n</button>
+                        Sesión</button>
                 </form>
                 <p id="to-register-text" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
-                    Â¿No tienes cuenta? <a href="#" id="show-register-btn"
-                        style="color: var(--primary-color);">RegÃ­strate</a>
+                    ¿No tienes cuenta? <a href="#" id="show-register-btn"
+                        style="color: var(--primary-color);">Regístrate</a>
                 </p>
 
                 <!-- Register Form -->
@@ -2356,15 +2356,15 @@ Continuar
                     </div>
                     <div class="input-group">
                         <span class="material-symbols-rounded">lock</span>
-                        <input type="password" id="reg-password" placeholder="ContraseÃ±a" required>
+                        <input type="password" id="reg-password" placeholder="Contraseña" required>
                     </div>
                     <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Crear
                         Cuenta</button>
                 </form>
                 <p id="to-login-text" class="hidden"
                     style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
-                    Â¿Ya tienes cuenta? <a href="#" id="show-login-btn" style="color: var(--primary-color);">Inicia
-                        SesiÃ³n</a>
+                    ¿Ya tienes cuenta? <a href="#" id="show-login-btn" style="color: var(--primary-color);">Inicia
+                        Sesión</a>
                 </p>
             </div>
         </section>
@@ -2403,7 +2403,7 @@ Continuar
                         </div>
                     </label>
                     <span id="user-display-name">Usuario</span>
-                    <button class="icon-btn nav-link" data-target="menu-view" title="MenÃº"><span
+                    <button class="icon-btn nav-link" data-target="menu-view" title="Menú"><span
                             class="material-symbols-rounded">menu</span></button>
                 </div>
             </header>
@@ -2619,7 +2619,7 @@ Continuar
                                         <th>Fecha</th>
                                         <th>Inquilino</th>
                                         <th>Propiedad</th>
-                                        <th>MÃ©todo</th>
+                                        <th>Método</th>
                                         <th>Monto</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
@@ -2657,7 +2657,7 @@ Continuar
                             <div class="form-step active" data-step="1">
                                 <h3>Datos del Inmueble</h3>
                                 <div class="form-group">
-                                    <label>DirecciÃ³n</label>
+                                    <label>Dirección</label>
                                     <input type="text" name="address" required>
                                 </div>
                                 <div class="form-row keep-row-mobile">
@@ -2684,7 +2684,7 @@ Continuar
                                         <input type="date" name="contractStartDate" required>
                                     </div>
                                     <div class="form-group">
-                                        <label>DuraciÃ³n del Contrato</label>
+                                        <label>Duración del Contrato</label>
                                         <select name="contractDuration" id="contract-duration" required>
                                             <option value="6">6 meses</option>
                                             <option value="12">12 meses</option>
@@ -2699,7 +2699,7 @@ Continuar
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>DÃ­a de Vencimiento (1-31)</label>
+                                    <label>Día de Vencimiento (1-31)</label>
                                     <input type="number" name="rentDueDay" min="1" max="31" required>
                                 </div>
 
@@ -2709,7 +2709,7 @@ Continuar
                                         <label for="contract-upload" class="btn-secondary file-upload-btn">
                                             <span class="material-symbols-rounded">description</span> Elegir Contrato
                                         </label>
-                                        <span class="file-name" id="contract-file-name">NingÃºn archivo
+                                        <span class="file-name" id="contract-file-name">Ningún archivo
                                             seleccionado</span>
                                         <input type="file" id="contract-upload" name="contract" accept=".pdf,.doc,.docx"
                                             class="hidden-file-input">
@@ -2732,7 +2732,7 @@ Continuar
                                     <input type="email" name="ownerEmail">
                                 </div>
                                 <div class="form-group">
-                                    <label>TelÃ©fono</label>
+                                    <label>Teléfono</label>
                                     <input type="tel" name="ownerPhone">
                                 </div>
                                 <div class="form-actions">
@@ -2753,7 +2753,7 @@ Continuar
                                     <input type="email" name="tenantEmail">
                                 </div>
                                 <div class="form-group">
-                                    <label>TelÃ©fono</label>
+                                    <label>Teléfono</label>
                                     <input type="tel" name="tenantPhone">
                                 </div>
                                 <div class="form-actions">
@@ -2762,9 +2762,9 @@ Continuar
                                 </div>
                             </div>
 
-                            <!-- Step 4: Datos de FacturaciÃ³n y Notificaciones -->
+                            <!-- Step 4: Datos de Facturación y Notificaciones -->
                             <div class="form-step" data-step="4">
-                                <h3>Datos de FacturaciÃ³n y Notificaciones</h3>
+                                <h3>Datos de Facturación y Notificaciones</h3>
                                 <div class="form-group">
                                     <label>CBU y/o Alias</label>
                                     <input type="text" name="cbuAlias" placeholder="Ingrese CBU o Alias">
@@ -2880,7 +2880,7 @@ Continuar
                         style="text-align: center; padding: 4rem 2rem; margin-top: 2rem;">
                         <span class="material-symbols-rounded"
                             style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">storefront</span>
-                        <h3>Vende o alquila tu propiedad rÃ¡pida y fÃ¡cilmente</h3>
+                        <h3>Vende o alquila tu propiedad rápida y fácilmente</h3>
                         <p style="color: var(--text-muted); margin-bottom: 2rem;">Accede a miles de interesados
                             publicando en nuestro Market Place.</p>
                         <button class="btn-primary" id="publish-property-trigger"
@@ -2901,9 +2901,9 @@ Continuar
 
                         <div style="text-align: center; margin-bottom: 5%;">
                             <h2 style="font-size: clamp(1.2rem, 5vw, 1.8rem); margin-bottom: 2%; font-weight: 600;">
-                                CompletÃ¡ el formulario</h2>
+                                Completá el formulario</h2>
                             <p style="color: var(--text-muted); font-size: clamp(0.85rem, 3vw, 1rem);">Datos de
-                                facturaciÃ³n y de contacto, para que los<br>interesados puedan realizarte consultas por
+                                facturación y de contacto, para que los<br>interesados puedan realizarte consultas por
                                 tu aviso</p>
                         </div>
 
@@ -2911,17 +2911,17 @@ Continuar
                             <div class="form-row keep-row-mobile" style="gap: 2%;">
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Nombre</label>
-                                    <input type="text" name="contactName" placeholder="IngresÃ¡ un nombre" required>
+                                    <input type="text" name="contactName" placeholder="Ingresá un nombre" required>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Apellido</label>
-                                    <input type="text" name="contactSurname" placeholder="IngresÃ¡ un apellido" required>
+                                    <input type="text" name="contactSurname" placeholder="Ingresá un apellido" required>
                                 </div>
                             </div>
 
                             <div class="form-row keep-row-mobile" style="gap: 2%;">
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
-                                    <label>CondiciÃ³n</label>
+                                    <label>Condición</label>
                                     <select name="contactCondition" required>
                                         <option value="Responsable Inscripto">Responsable Inscripto</option>
                                         <option value="Monotributista">Monotributista</option>
@@ -2930,19 +2930,19 @@ Continuar
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
                                     <label>Documento / CUIT</label>
-                                    <input type="text" name="contactDoc" placeholder="IngresÃ¡ un documento" required>
+                                    <input type="text" name="contactDoc" placeholder="Ingresá un documento" required>
                                 </div>
                             </div>
 
                             <div class="form-row keep-row-mobile" style="gap: 2%;">
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
-                                    <label>TelÃ©fono mÃ³vil</label>
-                                    <input type="tel" name="contactMobile" placeholder="IngresÃ¡ telÃ©fono mÃ³vil"
+                                    <label>Teléfono móvil</label>
+                                    <input type="tel" name="contactMobile" placeholder="Ingresá teléfono móvil"
                                         required>
                                 </div>
                                 <div class="form-group" style="flex: 1; min-width: 45%;">
-                                    <label>TelÃ©fono (opc.)</label>
-                                    <input type="tel" name="contactPhone" placeholder="IngresÃ¡ telÃ©fono fijo">
+                                    <label>Teléfono (opc.)</label>
+                                    <input type="tel" name="contactPhone" placeholder="Ingresá teléfono fijo">
                                 </div>
                             </div>
 
@@ -2980,31 +2980,31 @@ Continuar
                             <aside class="wizard-sidebar">
                                 <ul class="wizard-nav-list">
                                     <li class="wizard-nav-item active" data-substep="operacion">
-                                        <div class="nav-item-content">OperaciÃ³n y tipo de propiedad</div>
+                                        <div class="nav-item-content">Operación y tipo de propiedad</div>
                                     </li>
                                     <li class="wizard-nav-item" data-substep="ubicacion">
-                                        <div class="nav-item-content">UbicaciÃ³n</div>
+                                        <div class="nav-item-content">Ubicación</div>
                                     </li>
                                     <li class="wizard-nav-item" data-substep="caracteristicas">
-                                        <div class="nav-item-content">CaracterÃ­sticas</div>
+                                        <div class="nav-item-content">Características</div>
                                     </li>
                                 </ul>
                             </aside>
 
                             <!-- Main Content Area -->
                             <div class="wizard-main-content">
-                                <h2 class="wizard-greeting">Â¡Hola, empecemos a crear tu aviso!</h2>
+                                <h2 class="wizard-greeting">¡Hola, empecemos a crear tu aviso!</h2>
 
                                 <div class="wizard-form-container glass-panel">
-                                    <!-- OperaciÃ³n sub-step -->
+                                    <!-- Operación sub-step -->
                                     <div class="wizard-substep active" id="substep-operacion">
-                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">Contanos, Â¿quÃ© querÃ©s
+                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">Contanos, ¿qué querés
                                             publicar?</h3>
 
                                         <div class="form-group" style="margin-bottom: 2rem;">
                                             <label
                                                 style="font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Tipo
-                                                de operaciÃ³n</label>
+                                                de operación</label>
                                             <div class="segmented-control">
                                                 <input type="radio" id="op-venta" name="operationType" value="Venta"
                                                     checked>
@@ -3024,7 +3024,7 @@ Continuar
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Tipo de propiedad</label>
                                                 <select name="propertyType">
-                                                    <option value="" disabled selected>SeleccionÃ¡ el tipo de propiedad
+                                                    <option value="" disabled selected>Seleccioná el tipo de propiedad
                                                     </option>
                                                     <option value="Casa">Casa</option>
                                                     <option value="Departamento">Departamento</option>
@@ -3036,7 +3036,7 @@ Continuar
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Subtipo de propiedad</label>
                                                 <select name="propertySubtype" disabled>
-                                                    <option value="" disabled selected>SeleccionÃ¡ el subtipo de
+                                                    <option value="" disabled selected>Seleccioná el subtipo de
                                                         propiedad</option>
                                                     <!-- Options will be populated when propertyType is selected -->
                                                 </select>
@@ -3046,28 +3046,28 @@ Continuar
 
                                     <!-- Ubicacion sub-step -->
                                     <div class="wizard-substep hidden" id="substep-ubicacion">
-                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">Â¿DÃ³nde estÃ¡ ubicada tu
+                                        <h3 style="margin-bottom: 2rem; font-size: 1.2rem;">¿Dónde está ubicada tu
                                             propiedad?</h3>
 
                                         <div class="form-group">
-                                            <label style="font-size: 0.9rem;">IngresÃ¡ calle y altura</label>
-                                            <input type="text" name="streetAddress" placeholder="IngresÃ¡ una direcciÃ³n">
+                                            <label style="font-size: 0.9rem;">Ingresá calle y altura</label>
+                                            <input type="text" name="streetAddress" placeholder="Ingresá una dirección">
                                         </div>
 
                                         <div class="form-row keep-row-mobile">
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Provincia</label>
                                                 <select name="province">
-                                                    <option value="" disabled selected>SeleccionÃ¡ una provincia</option>
+                                                    <option value="" disabled selected>Seleccioná una provincia</option>
                                                     <option value="Mendoza">Mendoza</option>
                                                     <option value="Buenos Aires">Buenos Aires</option>
-                                                    <option value="CÃ³rdoba">CÃ³rdoba</option>
+                                                    <option value="Córdoba">Córdoba</option>
                                                 </select>
                                             </div>
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Ciudad</label>
                                                 <select name="city">
-                                                    <option value="" disabled selected>SeleccionÃ¡ una ciudad</option>
+                                                    <option value="" disabled selected>Seleccioná una ciudad</option>
                                                     <option value="Ciudad de Mendoza">Ciudad de Mendoza</option>
                                                     <option value="Godoy Cruz">Godoy Cruz</option>
                                                 </select>
@@ -3078,21 +3078,21 @@ Continuar
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Barrio</label>
                                                 <select name="neighborhood">
-                                                    <option value="" disabled selected>SeleccionÃ¡ un barrio</option>
-                                                    <option value="Quinta SecciÃ³n">Quinta SecciÃ³n</option>
-                                                    <option value="Sexta SecciÃ³n">Sexta SecciÃ³n</option>
+                                                    <option value="" disabled selected>Seleccioná un barrio</option>
+                                                    <option value="Quinta Sección">Quinta Sección</option>
+                                                    <option value="Sexta Sección">Sexta Sección</option>
                                                 </select>
                                             </div>
                                             <div class="form-group" style="flex: 1;">
                                                 <label style="font-size: 0.9rem;">Subzona</label>
                                                 <select name="subzone" disabled>
-                                                    <option value="" disabled selected>SeleccionÃ¡ una subzona</option>
+                                                    <option value="" disabled selected>Seleccioná una subzona</option>
                                                 </select>
                                             </div>
                                         </div>
 
-                                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Â¿CÃ³mo
-                                            querÃ©s mostrar tu ubicaciÃ³n?</h4>
+                                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">¿Cómo
+                                            querés mostrar tu ubicación?</h4>
                                         <div class="location-radio-group"
                                             style="display: flex; gap: 2rem; align-items: center;">
                                             <label class="custom-radio">
@@ -3110,10 +3110,10 @@ Continuar
 
                                     <!-- Caracteristicas sub-step -->
                                     <div class="wizard-substep hidden" id="substep-caracteristicas">
-                                        <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">CaracterÃ­sticas
+                                        <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">Características
                                             principales</h3>
                                         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">
-                                            Contanos un poco mÃ¡s de tu propiedad.</p>
+                                            Contanos un poco más de tu propiedad.</p>
 
                                         <div class="counters-grid">
                                             <div class="counter-group">
@@ -3141,7 +3141,7 @@ Continuar
                                             </div>
 
                                             <div class="counter-group">
-                                                <label>BaÃ±os (opcional)</label>
+                                                <label>Baños (opcional)</label>
                                                 <div class="counter">
                                                     <button type="button" class="counter-btn minus"
                                                         data-target="banos">-</button>
@@ -3182,7 +3182,7 @@ Continuar
                                 <div class="wizard-footer">
                                     <div style="flex: 1;"></div>
                                     <button class="btn-secondary hidden" id="wizard-back-btn"
-                                        style="margin-right: 1rem;">AtrÃ¡s</button>
+                                        style="margin-right: 1rem;">Atrás</button>
                                     <button class="btn-primary" id="wizard-continue-btn">Continuar</button>
                                 </div>
                             </div>
@@ -3193,20 +3193,20 @@ Continuar
                 <!-- Menu View (Mobile Only) -->
                 <section id="menu-view" class="view hidden">
                     <header class="view-header">
-                        <h2>MenÃº</h2>
+                        <h2>Menú</h2>
                     </header>
                     <div class="menu-list glass-card">
                         <button class="menu-item">
                             <span class="material-symbols-rounded">person</span> Perfil
                         </button>
                         <button class="menu-item">
-                            <span class="material-symbols-rounded">settings</span> ConfiguraciÃ³n
+                            <span class="material-symbols-rounded">settings</span> Configuración
                         </button>
                         <button class="menu-item theme-toggle-btn" id="mobile-theme-toggle">
                             <span class="material-symbols-rounded">dark_mode</span> Tema
                         </button>
                         <button class="menu-item text-danger" id="mobile-logout-btn">
-                            <span class="material-symbols-rounded">logout</span> Cerrar SesiÃ³n
+                            <span class="material-symbols-rounded">logout</span> Cerrar Sesión
                         </button>
                     </div>
                 </section>
@@ -3228,7 +3228,7 @@ Continuar
                 </button>
                 <button class="nav-item" data-target="menu-view">
                     <span class="material-symbols-rounded">menu</span>
-                    <span class="label">MenÃº</span>
+                    <span class="label">Menú</span>
                 </button>
             </nav>
         </main>
@@ -3270,8 +3270,8 @@ Continuar
         <circle class="circle" cx="50" cy="50" r="45"/>
         <polyline class="check" points="30 52 44 66 70 38"/>
     </svg>
-    <p class="success-title">Â¡Propiedad publicada!</p>
-    <p class="success-subtitle">Tu aviso ya estÃ¡ disponible en el marketplace</p>
+    <p class="success-title">¡Propiedad publicada!</p>
+    <p class="success-subtitle">Tu aviso ya está disponible en el marketplace</p>
 </div>
 
 </body>

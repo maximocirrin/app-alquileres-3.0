@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Main Application Logic
  */
 
@@ -145,7 +145,7 @@ const App = {
 
             // Cerrar la vista (Cancelar)
             
-            // Forzar vuelta al sub-paso 1 (OperaciÃ³n) antes de cerrar para que al reabrir estÃ© limpio
+            // Forzar vuelta al sub-paso 1 (Operación) antes de cerrar para que al reabrir esté limpio
             const stepOperacion = document.getElementById('step-operacion');
             const stepUbicacion = document.getElementById('step-ubicacion');
             const stepCaracteristicas = document.getElementById('step-caracteristicas');
@@ -159,12 +159,12 @@ const App = {
             if (stepUbicacion) stepUbicacion.classList.add('hidden');
             if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
 
-            if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary border-b-2 border-primary pb-2 whitespace-nowrap pointer-events-none active-tab';
+            if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
             if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
             if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
             
-            if (publishMainTitle) publishMainTitle.textContent = 'Â¡Empecemos a crear tu aviso!';
-            if (pasoSubtitle) pasoSubtitle.textContent = 'Â¿QuÃ© querÃ©s publicar?';
+            if (publishMainTitle) publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
+            if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
 
             // Reset forms and continue button bindings
             document.querySelectorAll('button[type="submit"]').forEach(btn => {
@@ -224,9 +224,9 @@ const App = {
                 }
 
                 if (isValid) {
-                    console.log('Â¡Datos Principales completos y validados (Custom)! Avanzando al subpaso de UbicaciÃ³n...');
+                    console.log('¡Datos Principales completos y validados (Custom)! Avanzando al subpaso de Ubicación...');
                     
-                    // Manejar DOM para mostrar UbicaciÃ³n
+                    // Manejar DOM para mostrar Ubicación
                     const tabOperacion = document.getElementById('tab-operacion');
                     const tabUbicacion = document.getElementById('tab-ubicacion');
                     const stepOperacion = document.getElementById('step-operacion');
@@ -235,7 +235,7 @@ const App = {
 
                     if (tabOperacion && tabUbicacion && stepOperacion && stepUbicacion) {
                         tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabUbicacion.className = 'font-headline font-bold text-primary border-b-2 border-primary pb-2 whitespace-nowrap pointer-events-none active-tab';
+                        tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
 
                         stepOperacion.classList.add('hidden');
                         stepUbicacion.classList.remove('hidden');
@@ -251,18 +251,18 @@ const App = {
                             }, 50);
                         }
 
-                        if(pasoSubtitle) pasoSubtitle.textContent = 'Â¿DÃ³nde estÃ¡ ubicada tu propiedad?';
+                        if(pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
 
                         // Mover los botones "Continuar" para que apunten al nuevo formulario
                         document.querySelectorAll('button[form="form-principales"]').forEach(btn => {
                             btn.setAttribute('form', 'form-ubicacion');
                         });
                         
-                        // Hacer que "OperaciÃ³n" sea clickeable para volver
+                        // Hacer que "Operación" sea clickeable para volver
                         tabOperacion.onclick = (event) => {
                             event.preventDefault();
                             tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabOperacion.className = 'font-headline font-bold text-primary text-primary border-b-2 border-primary dark:border-primary pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                             stepUbicacion.classList.add('hidden');
                             stepOperacion.classList.remove('hidden');
 
@@ -270,7 +270,7 @@ const App = {
                                 tabOperacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                             }
 
-                            if(pasoSubtitle) pasoSubtitle.textContent = 'Â¿QuÃ© querÃ©s publicar?';
+                            if(pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
                             document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
                                 btn.setAttribute('form', 'form-principales');
                             });
@@ -292,27 +292,27 @@ const App = {
             const subtiposConfig = {
                 departamento: [
                     { value: 'apartaestudio', label: 'Apartaestudio' },
-                    { value: 'duplex', label: 'DÃºplex' },
-                    { value: 'estandar', label: 'EstÃ¡ndar' },
+                    { value: 'duplex', label: 'Dúplex' },
+                    { value: 'estandar', label: 'Estándar' },
                     { value: 'loft', label: 'Loft' },
                     { value: 'monoambiente', label: 'Monoambiente' },
                     { value: 'penthouse', label: 'Penthouse' },
                     { value: 'piso', label: 'Piso' },
                     { value: 'semipiso', label: 'Semipiso' },
-                    { value: 'triplex', label: 'TrÃ­plex' }
+                    { value: 'triplex', label: 'Tríplex' }
                 ],
                 casa: [
                     { value: 'barrio-acceso-controlado', label: 'Barrio con acceso controlado' },
                     { value: 'bungalow', label: 'Bungalow' },
-                    { value: 'cabana', label: 'CabaÃ±a' },
+                    { value: 'cabana', label: 'Cabaña' },
                     { value: 'casa', label: 'Casa' },
                     { value: 'casa-de-playa', label: 'Casa de playa' },
                     { value: 'chalet', label: 'Chalet' },
                     { value: 'condominio', label: 'Condominio' },
-                    { value: 'duplex', label: 'DÃºplex' },
+                    { value: 'duplex', label: 'Dúplex' },
                     { value: 'ph', label: 'PH' },
                     { value: 'prefabricada', label: 'Prefabricada' },
-                    { value: 'triplex', label: 'TrÃ­plex' }
+                    { value: 'triplex', label: 'Tríplex' }
                 ]
             };
 
@@ -346,7 +346,7 @@ const App = {
             });
         }
 
-        // Form 'UbicaciÃ³n' Validation & Submit Interceptor
+        // Form 'Ubicación' Validation & Submit Interceptor
         const formUbicacion = document.getElementById('form-ubicacion');
         if (formUbicacion) {
             formUbicacion.addEventListener('submit', (e) => {
@@ -369,7 +369,7 @@ const App = {
                 if(ciudad && ciudad.required && !ciudad.value) { if(errCiudad) errCiudad.classList.remove('hidden'); isValid = false; }
                 
                 if(isValid) {
-                    console.log('Â¡Datos UbicaciÃ³n completos y validados! Transicionando a CaracterÃ­sticas...');
+                    console.log('¡Datos Ubicación completos y validados! Transicionando a Características...');
                     
                     const tabUbicacion = document.getElementById('tab-ubicacion');
                     const tabCaracteristicas = document.getElementById('tab-caracteristicas');
@@ -379,7 +379,7 @@ const App = {
 
                     if (tabUbicacion && tabCaracteristicas && stepUbicacion && stepCaracteristicas) {
                         tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabCaracteristicas.className = 'font-headline font-bold text-primary border-b-2 border-primary pb-2 whitespace-nowrap pointer-events-none active-tab';
+                        tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
 
                         stepUbicacion.classList.add('hidden');
                         stepCaracteristicas.classList.remove('hidden');
@@ -394,11 +394,11 @@ const App = {
                             btn.setAttribute('form', 'form-caracteristicas');
                         });
                         
-                        // Hacer que "UbicaciÃ³n" sea clickeable para volver
+                        // Hacer que "Ubicación" sea clickeable para volver
                         tabUbicacion.onclick = (event) => {
                             event.preventDefault();
                             tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabUbicacion.className = 'font-headline font-bold text-primary text-primary border-b-2 border-primary dark:border-primary pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                             stepCaracteristicas.classList.add('hidden');
                             stepUbicacion.classList.remove('hidden');
 
@@ -406,7 +406,7 @@ const App = {
                                 tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                             }
 
-                            if(pasoSubtitle) pasoSubtitle.textContent = 'Â¿DÃ³nde estÃ¡ ubicada tu propiedad?';
+                            if(pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
                             document.querySelectorAll('button[form="form-caracteristicas"]').forEach(btn => {
                                 btn.setAttribute('form', 'form-ubicacion');
                             });
@@ -418,7 +418,7 @@ const App = {
             });
         }
         
-        // Form 'CaracterÃ­sticas' Validation & Submit Interceptor
+        // Form 'Características' Validation & Submit Interceptor
         const formCaracteristicas = document.getElementById('form-caracteristicas');
         if (formCaracteristicas) {
             formCaracteristicas.addEventListener('submit', (e) => {
@@ -450,7 +450,7 @@ const App = {
                 if(descripcion && !descripcion.value) { if(errDescripcion) errDescripcion.classList.remove('hidden'); isValid = false; }
                 
                 if(isValid) {
-                    console.log('Â¡Datos CaracterÃ­sticas completos y validados! Transicionando al paso 2: Multimedia...');
+                    console.log('¡Datos Características completos y validados! Transicionando al paso 2: Multimedia...');
                     
                     const step1Container = document.getElementById('wizard-step-1-container');
                     const step2Container = document.getElementById('wizard-step-2-container');
@@ -479,18 +479,18 @@ const App = {
                         
                         if(pStep1) {
                             pStep1.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
                                     <span class="material-symbols-outlined text-[18px]">check</span>
                                 </div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base hidden sm:block">Principales</span>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Principales</span>
                             `;
                         }
                         
                         if(pStep2) {
                             pStep2.classList.remove('opacity-50');
                             pStep2.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-primary text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
                             `;
                         }
                         
@@ -505,8 +505,8 @@ const App = {
                             step2Container.classList.remove('hidden');
                             
                             // Update titles
-                            if(title) title.textContent = 'AgregÃ¡ fotos y videos';
-                            if(subtitle) subtitle.textContent = 'MostrÃ¡ lo mejor de tu propiedad';
+                            if(title) title.textContent = 'Agregá fotos y videos';
+                            if(subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
                             
                             // Trigger reflow
                             void step2Container.offsetWidth;
@@ -649,7 +649,7 @@ const App = {
                 }
                 
                 if(isValid) {
-                    console.log('Â¡Datos Multimedia completos! Transicionando al paso 3: Extras...');
+                    console.log('¡Datos Multimedia completos! Transicionando al paso 3: Extras...');
                     
                     const step2Container = document.getElementById('wizard-step-2-container');
                     const step3Container = document.getElementById('wizard-step-3-container');
@@ -679,18 +679,18 @@ const App = {
                         
                         if(pStep2) {
                             pStep2.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
                                     <span class="material-symbols-outlined text-[18px]">check</span>
                                 </div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
                             `;
                         }
                         
                         if(pStep3) {
                             pStep3.classList.remove('opacity-50');
                             pStep3.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-primary text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base">Extras</span>
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Extras</span>
                             `;
                         }
                         
@@ -704,7 +704,7 @@ const App = {
                             step3Container.classList.remove('hidden');
                             
                             // Update titles
-                            if(title) title.textContent = 'Â¡AgregÃ¡ las comodidades de tu propiedad!';
+                            if(title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
                             if(subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
                             
                             // Trigger reflow
@@ -753,7 +753,7 @@ const App = {
                 let isValid = true;
                 
                 if(isValid) {
-                    console.log('Â¡Datos Extras completos! Transicionando al paso 4: Publicar...');
+                    console.log('¡Datos Extras completos! Transicionando al paso 4: Publicar...');
                     
                     const step3Container = document.getElementById('wizard-step-3-container');
                     const step4Container = document.getElementById('wizard-step-4-container');
@@ -783,18 +783,18 @@ const App = {
                         
                         if(pStep3) {
                             pStep3.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
                                     <span class="material-symbols-outlined text-[18px]">check</span>
                                 </div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base hidden sm:block">Extras</span>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Extras</span>
                             `;
                         }
                         
                         if(pStep4) {
                             pStep4.classList.remove('opacity-50');
                             pStep4.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-primary text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">4</div>
-                                <span class="font-headline font-bold text-primary whitespace-nowrap text-[11px] md:text-base">Publicar</span>
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">4</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Publicar</span>
                             `;
                         }
                         
@@ -808,8 +808,8 @@ const App = {
                             step4Container.classList.remove('hidden');
                             
                             // Update titles
-                            if(title) title.textContent = 'Â¡EstÃ¡s a un paso de terminar!';
-                            if(subtitle) subtitle.textContent = 'RevisÃ¡ y elegÃ­ tu plan de publicaciÃ³n';
+                            if(title) title.textContent = '¡Estás a un paso de terminar!';
+                            if(subtitle) subtitle.textContent = 'Revisá y elegí tu plan de publicación';
                             
                             // Trigger reflow
                             void step4Container.offsetWidth;
@@ -852,9 +852,9 @@ const App = {
         if (formPlanes) {
             formPlanes.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                console.log('Â¡Iniciando publicaciÃ³n en Supabase!');
+                console.log('¡Iniciando publicación en Supabase!');
                 
-                // Mostrar estado de carga (opcional, podrÃ­as aÃ±adir un spinner)
+                // Mostrar estado de carga (opcional, podrías añadir un spinner)
                 const submitBtnDesk = document.querySelector('#desktop-action-buttons button[form="form-planes"]');
                 const submitBtnMob = document.querySelector('nav.md\\:hidden button[form="form-planes"]');
                 const originalTextDesk = submitBtnDesk ? submitBtnDesk.textContent : '';
@@ -966,10 +966,10 @@ const App = {
                     
                     overlay.innerHTML = `
                         <svg width="100" height="100" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="#811b1e" stroke-width="3"
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#A13333" stroke-width="3"
                                 stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283"
                                 style="animation: successCircle 0.6s cubic-bezier(0.65,0,0.45,1) 0.2s forwards;" />
-                            <polyline points="30 52 44 66 70 38" fill="none" stroke="#811b1e" stroke-width="4"
+                            <polyline points="30 52 44 66 70 38" fill="none" stroke="#A13333" stroke-width="4"
                                 stroke-linecap="round" stroke-linejoin="round"
                                 stroke-dasharray="50" stroke-dashoffset="50"
                                 style="animation: successCheck 0.4s cubic-bezier(0.65,0,0.45,1) 0.7s forwards;" />
@@ -978,13 +978,13 @@ const App = {
                             color: ${isDark ? '#f1f1f1' : '#1a1a1a'}; margin-top: 1.5rem;
                             opacity: 0; transform: translateY(10px);
                             animation: successFadeUp 0.5s ease 1s forwards;">
-                            Â¡Propiedad publicada!
+                            ¡Propiedad publicada!
                         </p>
                         <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem;
                             color: ${isDark ? '#999' : '#666'}; margin-top: 0.5rem;
                             opacity: 0; transform: translateY(10px);
                             animation: successFadeUp 0.5s ease 1.15s forwards;">
-                            Tu aviso ya estÃ¡ disponible en el marketplace
+                            Tu aviso ya está disponible en el marketplace
                         </p>
                     `;
                     
@@ -1020,7 +1020,7 @@ const App = {
                     
                 } catch (error) {
                     console.error('Error al publicar la propiedad:', error);
-                    alert('OcurriÃ³ un error al publicar la propiedad. Por favor, intenta nuevamente.');
+                    alert('Ocurrió un error al publicar la propiedad. Por favor, intenta nuevamente.');
                 } finally {
                     if (submitBtnDesk) submitBtnDesk.textContent = originalTextDesk;
                     if (submitBtnMob) submitBtnMob.textContent = 'Publicar Aviso';
@@ -1079,7 +1079,7 @@ const App = {
                     },
                     {
                         "value": "bahia-blanca",
-                        "label": "BahÃ­a Blanca"
+                        "label": "Bahía Blanca"
                     },
                     {
                         "value": "balcarce",
@@ -1091,7 +1091,7 @@ const App = {
                     },
                     {
                         "value": "benito-juarez",
-                        "label": "Benito JuÃ¡rez"
+                        "label": "Benito Juárez"
                     },
                     {
                         "value": "berazategui",
@@ -1103,7 +1103,7 @@ const App = {
                     },
                     {
                         "value": "bolivar",
-                        "label": "BolÃ­var"
+                        "label": "Bolívar"
                     },
                     {
                         "value": "bragado",
@@ -1119,11 +1119,11 @@ const App = {
                     },
                     {
                         "value": "canuelas",
-                        "label": "CaÃ±uelas"
+                        "label": "Cañuelas"
                     },
                     {
                         "value": "capitan-sarmiento",
-                        "label": "CapitÃ¡n Sarmiento"
+                        "label": "Capitán Sarmiento"
                     },
                     {
                         "value": "carlos-casares",
@@ -1147,7 +1147,7 @@ const App = {
                     },
                     {
                         "value": "chascomus",
-                        "label": "ChascomÃºs"
+                        "label": "Chascomús"
                     },
                     {
                         "value": "chivilcoy",
@@ -1155,7 +1155,7 @@ const App = {
                     },
                     {
                         "value": "colon",
-                        "label": "ColÃ³n"
+                        "label": "Colón"
                     },
                     {
                         "value": "coronel-de-marina-leonardo-rosales",
@@ -1171,7 +1171,7 @@ const App = {
                     },
                     {
                         "value": "coronel-suarez",
-                        "label": "Coronel SuÃ¡rez"
+                        "label": "Coronel Suárez"
                     },
                     {
                         "value": "daireaux",
@@ -1191,11 +1191,11 @@ const App = {
                     },
                     {
                         "value": "esteban-echeverria",
-                        "label": "Esteban EcheverrÃ­a"
+                        "label": "Esteban Echeverría"
                     },
                     {
                         "value": "exaltacion-de-la-cruz",
-                        "label": "ExaltaciÃ³n de la Cruz"
+                        "label": "Exaltación de la Cruz"
                     },
                     {
                         "value": "ezeiza",
@@ -1255,15 +1255,15 @@ const App = {
                     },
                     {
                         "value": "general-pueyrredon",
-                        "label": "General PueyrredÃ³n"
+                        "label": "General Pueyrredón"
                     },
                     {
                         "value": "general-rodriguez",
-                        "label": "General RodrÃ­guez"
+                        "label": "General Rodríguez"
                     },
                     {
                         "value": "general-san-martin",
-                        "label": "General San MartÃ­n"
+                        "label": "General San Martín"
                     },
                     {
                         "value": "general-viamonte",
@@ -1275,11 +1275,11 @@ const App = {
                     },
                     {
                         "value": "guamini",
-                        "label": "GuaminÃ­"
+                        "label": "Guaminí"
                     },
                     {
                         "value": "hipolito-yrigoyen",
-                        "label": "HipÃ³lito Yrigoyen"
+                        "label": "Hipólito Yrigoyen"
                     },
                     {
                         "value": "hurlingham",
@@ -1287,15 +1287,15 @@ const App = {
                     },
                     {
                         "value": "ituzaingo",
-                        "label": "ItuzaingÃ³"
+                        "label": "Ituzaingó"
                     },
                     {
                         "value": "jose-c-paz",
-                        "label": "JosÃ© C. Paz"
+                        "label": "José C. Paz"
                     },
                     {
                         "value": "junin",
-                        "label": "JunÃ­n"
+                        "label": "Junín"
                     },
                     {
                         "value": "la-costa",
@@ -1311,7 +1311,7 @@ const App = {
                     },
                     {
                         "value": "lanus",
-                        "label": "LanÃºs"
+                        "label": "Lanús"
                     },
                     {
                         "value": "laprida",
@@ -1335,7 +1335,7 @@ const App = {
                     },
                     {
                         "value": "loberia",
-                        "label": "LoberÃ­a"
+                        "label": "Lobería"
                     },
                     {
                         "value": "lobos",
@@ -1347,7 +1347,7 @@ const App = {
                     },
                     {
                         "value": "lujan",
-                        "label": "LujÃ¡n"
+                        "label": "Luján"
                     },
                     {
                         "value": "magdalena",
@@ -1355,7 +1355,7 @@ const App = {
                     },
                     {
                         "value": "maipu",
-                        "label": "MaipÃº"
+                        "label": "Maipú"
                     },
                     {
                         "value": "malvinas-argentinas",
@@ -1391,7 +1391,7 @@ const App = {
                     },
                     {
                         "value": "moron",
-                        "label": "MorÃ³n"
+                        "label": "Morón"
                     },
                     {
                         "value": "navarro",
@@ -1403,7 +1403,7 @@ const App = {
                     },
                     {
                         "value": "olavarria",
-                        "label": "OlavarrÃ­a"
+                        "label": "Olavarría"
                     },
                     {
                         "value": "patagones",
@@ -1411,7 +1411,7 @@ const App = {
                     },
                     {
                         "value": "pehuajo",
-                        "label": "PehuajÃ³"
+                        "label": "Pehuajó"
                     },
                     {
                         "value": "pellegrini",
@@ -1435,11 +1435,11 @@ const App = {
                     },
                     {
                         "value": "presidente-peron",
-                        "label": "Presidente PerÃ³n"
+                        "label": "Presidente Perón"
                     },
                     {
                         "value": "puan",
-                        "label": "PuÃ¡n"
+                        "label": "Puán"
                     },
                     {
                         "value": "punta-indio",
@@ -1467,7 +1467,7 @@ const App = {
                     },
                     {
                         "value": "roque-perez",
-                        "label": "Roque PÃ©rez"
+                        "label": "Roque Pérez"
                     },
                     {
                         "value": "saavedra",
@@ -1479,7 +1479,7 @@ const App = {
                     },
                     {
                         "value": "salliquelo",
-                        "label": "SalliquelÃ³"
+                        "label": "Salliqueló"
                     },
                     {
                         "value": "salto",
@@ -1487,7 +1487,7 @@ const App = {
                     },
                     {
                         "value": "san-andres-de-giles",
-                        "label": "San AndrÃ©s de Giles"
+                        "label": "San Andrés de Giles"
                     },
                     {
                         "value": "san-antonio-de-areco",
@@ -1511,7 +1511,7 @@ const App = {
                     },
                     {
                         "value": "san-nicolas",
-                        "label": "San NicolÃ¡s"
+                        "label": "San Nicolás"
                     },
                     {
                         "value": "san-pedro",
@@ -1531,7 +1531,7 @@ const App = {
                     },
                     {
                         "value": "tapalque",
-                        "label": "TapalquÃ©"
+                        "label": "Tapalqué"
                     },
                     {
                         "value": "tigre",
@@ -1563,7 +1563,7 @@ const App = {
                     },
                     {
                         "value": "vicente-lopez",
-                        "label": "Vicente LÃ³pez"
+                        "label": "Vicente López"
                     },
                     {
                         "value": "villa-gesell",
@@ -1575,13 +1575,13 @@ const App = {
                     },
                     {
                         "value": "zarate",
-                        "label": "ZÃ¡rate"
+                        "label": "Zárate"
                     }
                 ],
                 "entre-rios": [
                     {
                         "value": "colon",
-                        "label": "ColÃ³n"
+                        "label": "Colón"
                     },
                     {
                         "value": "concordia",
@@ -1593,7 +1593,7 @@ const App = {
                     },
                     {
                         "value": "federacion",
-                        "label": "FederaciÃ³n"
+                        "label": "Federación"
                     },
                     {
                         "value": "federal",
@@ -1609,7 +1609,7 @@ const App = {
                     },
                     {
                         "value": "gualeguaychu",
-                        "label": "GualeguaychÃº"
+                        "label": "Gualeguaychú"
                     },
                     {
                         "value": "islas-del-ibicuy",
@@ -1621,11 +1621,11 @@ const App = {
                     },
                     {
                         "value": "nogoya",
-                        "label": "NogoyÃ¡"
+                        "label": "Nogoyá"
                     },
                     {
                         "value": "parana",
-                        "label": "ParanÃ¡"
+                        "label": "Paraná"
                     },
                     {
                         "value": "san-salvador",
@@ -1655,7 +1655,7 @@ const App = {
                     },
                     {
                         "value": "beron-de-astrada",
-                        "label": "BerÃ³n de Astrada"
+                        "label": "Berón de Astrada"
                     },
                     {
                         "value": "capital",
@@ -1663,11 +1663,11 @@ const App = {
                     },
                     {
                         "value": "concepcion",
-                        "label": "ConcepciÃ³n"
+                        "label": "Concepción"
                     },
                     {
                         "value": "curuzu-cuatia",
-                        "label": "CuruzÃº CuatiÃ¡"
+                        "label": "Curuzú Cuatiá"
                     },
                     {
                         "value": "empedrado",
@@ -1691,11 +1691,11 @@ const App = {
                     },
                     {
                         "value": "itati",
-                        "label": "ItatÃ­"
+                        "label": "Itatí"
                     },
                     {
                         "value": "ituzaingo",
-                        "label": "ItuzaingÃ³"
+                        "label": "Ituzaingó"
                     },
                     {
                         "value": "lavalle",
@@ -1703,7 +1703,7 @@ const App = {
                     },
                     {
                         "value": "mburucuya",
-                        "label": "MburucuyÃ¡"
+                        "label": "Mburucuyá"
                     },
                     {
                         "value": "mercedes",
@@ -1731,7 +1731,7 @@ const App = {
                     },
                     {
                         "value": "san-martin",
-                        "label": "San MartÃ­n"
+                        "label": "San Martín"
                     },
                     {
                         "value": "san-miguel",
@@ -1743,7 +1743,7 @@ const App = {
                     },
                     {
                         "value": "santo-tome",
-                        "label": "Santo TomÃ©"
+                        "label": "Santo Tomé"
                     },
                     {
                         "value": "sauce",
@@ -1777,11 +1777,11 @@ const App = {
                     },
                     {
                         "value": "general-guemes",
-                        "label": "General GÃ¼emes"
+                        "label": "General Güemes"
                     },
                     {
                         "value": "general-jose-de-san-martin",
-                        "label": "General JosÃ© de San MartÃ­n"
+                        "label": "General José de San Martín"
                     },
                     {
                         "value": "guachipas",
@@ -1805,7 +1805,7 @@ const App = {
                     },
                     {
                         "value": "la-vina",
-                        "label": "La ViÃ±a"
+                        "label": "La Viña"
                     },
                     {
                         "value": "los-andes",
@@ -1813,7 +1813,7 @@ const App = {
                     },
                     {
                         "value": "metan",
-                        "label": "MetÃ¡n"
+                        "label": "Metán"
                     },
                     {
                         "value": "molinos",
@@ -1821,7 +1821,7 @@ const App = {
                     },
                     {
                         "value": "oran",
-                        "label": "OrÃ¡n"
+                        "label": "Orán"
                     },
                     {
                         "value": "rivadavia",
@@ -1847,7 +1847,7 @@ const App = {
                 "chaco": [
                     {
                         "value": "1-de-mayo",
-                        "label": "1Â° de Mayo"
+                        "label": "1° de Mayo"
                     },
                     {
                         "value": "12-de-octubre",
@@ -1879,11 +1879,11 @@ const App = {
                     },
                     {
                         "value": "comandante-fernandez",
-                        "label": "Comandante FernÃ¡ndez"
+                        "label": "Comandante Fernández"
                     },
                     {
                         "value": "fray-justo-santa-maria-de-oro",
-                        "label": "Fray Justo Santa MarÃ­a de Oro"
+                        "label": "Fray Justo Santa María de Oro"
                     },
                     {
                         "value": "general-belgrano",
@@ -1895,7 +1895,7 @@ const App = {
                     },
                     {
                         "value": "general-guemes",
-                        "label": "General GÃ¼emes"
+                        "label": "General Güemes"
                     },
                     {
                         "value": "independencia",
@@ -1907,11 +1907,11 @@ const App = {
                     },
                     {
                         "value": "libertador-general-san-martin",
-                        "label": "Libertador General San MartÃ­n"
+                        "label": "Libertador General San Martín"
                     },
                     {
                         "value": "maipu",
-                        "label": "MaipÃº"
+                        "label": "Maipú"
                     },
                     {
                         "value": "mayor-luis-j-fontana",
@@ -1943,13 +1943,13 @@ const App = {
                     },
                     {
                         "value": "tapenaga",
-                        "label": "TapenagÃ¡"
+                        "label": "Tapenagá"
                     }
                 ],
                 "la-rioja": [
                     {
                         "value": "angel-vicente-penaloza",
-                        "label": "Ãngel Vicente PeÃ±aloza"
+                        "label": "Ángel Vicente Peñaloza"
                     },
                     {
                         "value": "arauco",
@@ -1997,7 +1997,7 @@ const App = {
                     },
                     {
                         "value": "general-san-martin",
-                        "label": "General San MartÃ­n"
+                        "label": "General San Martín"
                     },
                     {
                         "value": "independencia",
@@ -2005,7 +2005,7 @@ const App = {
                     },
                     {
                         "value": "rosario-vera-penaloza",
-                        "label": "Rosario Vera PeÃ±aloza"
+                        "label": "Rosario Vera Peñaloza"
                     },
                     {
                         "value": "san-blas-de-los-sauces",
@@ -2039,7 +2039,7 @@ const App = {
                     },
                     {
                         "value": "futaleufu",
-                        "label": "FutaleufÃº"
+                        "label": "Futaleufú"
                     },
                     {
                         "value": "gaiman",
@@ -2051,11 +2051,11 @@ const App = {
                     },
                     {
                         "value": "languineo",
-                        "label": "LanguiÃ±eo"
+                        "label": "Languiñeo"
                     },
                     {
                         "value": "martires",
-                        "label": "MÃ¡rtires"
+                        "label": "Mártires"
                     },
                     {
                         "value": "paso-de-indios",
@@ -2067,7 +2067,7 @@ const App = {
                     },
                     {
                         "value": "rio-senguer",
-                        "label": "RÃ­o Senguer"
+                        "label": "Río Senguer"
                     },
                     {
                         "value": "sarmiento",
@@ -2093,7 +2093,7 @@ const App = {
                     },
                     {
                         "value": "guer-aike",
-                        "label": "GÃ¼er Aike"
+                        "label": "Güer Aike"
                     },
                     {
                         "value": "lago-argentino",
@@ -2109,7 +2109,7 @@ const App = {
                     },
                     {
                         "value": "rio-chico",
-                        "label": "RÃ­o Chico"
+                        "label": "Río Chico"
                     }
                 ],
                 "rio-negro": [
@@ -2143,7 +2143,7 @@ const App = {
                     },
                     {
                         "value": "norquinco",
-                        "label": "Ã‘orquinco"
+                        "label": "Ñorquinco"
                     },
                     {
                         "value": "pichi-mahuida",
@@ -2209,11 +2209,11 @@ const App = {
                     },
                     {
                         "value": "guasayan",
-                        "label": "GuasayÃ¡n"
+                        "label": "Guasayán"
                     },
                     {
                         "value": "jimenez",
-                        "label": "JimÃ©nez"
+                        "label": "Jiménez"
                     },
                     {
                         "value": "juan-felipe-ibarra",
@@ -2245,7 +2245,7 @@ const App = {
                     },
                     {
                         "value": "rio-hondo",
-                        "label": "RÃ­o Hondo"
+                        "label": "Río Hondo"
                     },
                     {
                         "value": "rivadavia",
@@ -2261,7 +2261,7 @@ const App = {
                     },
                     {
                         "value": "san-martin",
-                        "label": "San MartÃ­n"
+                        "label": "San Martín"
                     },
                     {
                         "value": "sarmiento",
@@ -2269,7 +2269,7 @@ const App = {
                     },
                     {
                         "value": "silipica",
-                        "label": "SilÃ­pica"
+                        "label": "Silípica"
                     }
                 ],
                 "san-luis": [
@@ -2299,15 +2299,15 @@ const App = {
                     },
                     {
                         "value": "juan-martin-de-pueyrredon",
-                        "label": "Juan MartÃ­n de PueyrredÃ³n"
+                        "label": "Juan Martín de Pueyrredón"
                     },
                     {
                         "value": "junin",
-                        "label": "JunÃ­n"
+                        "label": "Junín"
                     },
                     {
                         "value": "libertador-general-san-martin",
-                        "label": "Libertador General San MartÃ­n"
+                        "label": "Libertador General San Martín"
                     }
                 ],
                 "cordoba": [
@@ -2321,7 +2321,7 @@ const App = {
                     },
                     {
                         "value": "colon",
-                        "label": "ColÃ³n"
+                        "label": "Colón"
                     },
                     {
                         "value": "cruz-del-eje",
@@ -2333,19 +2333,19 @@ const App = {
                     },
                     {
                         "value": "general-san-martin",
-                        "label": "General San MartÃ­n"
+                        "label": "General San Martín"
                     },
                     {
                         "value": "ischilin",
-                        "label": "IschilÃ­n"
+                        "label": "Ischilín"
                     },
                     {
                         "value": "juarez-celman",
-                        "label": "JuÃ¡rez Celman"
+                        "label": "Juárez Celman"
                     },
                     {
                         "value": "marcos-juarez",
-                        "label": "Marcos JuÃ¡rez"
+                        "label": "Marcos Juárez"
                     },
                     {
                         "value": "minas",
@@ -2357,7 +2357,7 @@ const App = {
                     },
                     {
                         "value": "presidente-roque-saenz-pena",
-                        "label": "Presidente Roque SÃ¡enz PeÃ±a"
+                        "label": "Presidente Roque Sáenz Peña"
                     },
                     {
                         "value": "punilla",
@@ -2365,19 +2365,19 @@ const App = {
                     },
                     {
                         "value": "rio-cuarto",
-                        "label": "RÃ­o Cuarto"
+                        "label": "Río Cuarto"
                     },
                     {
                         "value": "rio-primero",
-                        "label": "RÃ­o Primero"
+                        "label": "Río Primero"
                     },
                     {
                         "value": "rio-seco",
-                        "label": "RÃ­o Seco"
+                        "label": "Río Seco"
                     },
                     {
                         "value": "rio-segundo",
-                        "label": "RÃ­o Segundo"
+                        "label": "Río Segundo"
                     },
                     {
                         "value": "san-alberto",
@@ -2393,7 +2393,7 @@ const App = {
                     },
                     {
                         "value": "santa-maria",
-                        "label": "Santa MarÃ­a"
+                        "label": "Santa María"
                     },
                     {
                         "value": "sobremonte",
@@ -2413,7 +2413,7 @@ const App = {
                     },
                     {
                         "value": "union",
-                        "label": "UniÃ³n"
+                        "label": "Unión"
                     }
                 ],
                 "caba": [
@@ -2493,11 +2493,11 @@ const App = {
                     },
                     {
                         "value": "guaymallen",
-                        "label": "GuaymallÃ©n"
+                        "label": "Guaymallén"
                     },
                     {
                         "value": "junin",
-                        "label": "JunÃ­n"
+                        "label": "Junín"
                     },
                     {
                         "value": "la-paz",
@@ -2513,15 +2513,15 @@ const App = {
                     },
                     {
                         "value": "lujan-de-cuyo",
-                        "label": "LujÃ¡n de Cuyo"
+                        "label": "Luján de Cuyo"
                     },
                     {
                         "value": "maipu",
-                        "label": "MaipÃº"
+                        "label": "Maipú"
                     },
                     {
                         "value": "malargue",
-                        "label": "MalargÃ¼e"
+                        "label": "Malargüe"
                     },
                     {
                         "value": "rivadavia",
@@ -2533,7 +2533,7 @@ const App = {
                     },
                     {
                         "value": "san-martin",
-                        "label": "San MartÃ­n"
+                        "label": "San Martín"
                     },
                     {
                         "value": "san-rafael",
@@ -2545,7 +2545,7 @@ const App = {
                     },
                     {
                         "value": "tunuyan",
-                        "label": "TunuyÃ¡n"
+                        "label": "Tunuyán"
                     },
                     {
                         "value": "tupungato",
@@ -2571,11 +2571,11 @@ const App = {
                     },
                     {
                         "value": "patino",
-                        "label": "PatiÃ±o"
+                        "label": "Patiño"
                     },
                     {
                         "value": "pilagas",
-                        "label": "PilagÃ¡s"
+                        "label": "Pilagás"
                     },
                     {
                         "value": "pilcomayo",
@@ -2583,11 +2583,11 @@ const App = {
                     },
                     {
                         "value": "pirane",
-                        "label": "PiranÃ©"
+                        "label": "Pirané"
                     },
                     {
                         "value": "ramon-lista",
-                        "label": "RamÃ³n Lista"
+                        "label": "Ramón Lista"
                     }
                 ],
                 "ro-negro": [
@@ -2619,7 +2619,7 @@ const App = {
                     },
                     {
                         "value": "palpala",
-                        "label": "PalpalÃ¡"
+                        "label": "Palpalá"
                     },
                     {
                         "value": "rinconada",
@@ -2635,7 +2635,7 @@ const App = {
                     },
                     {
                         "value": "santa-barbara",
-                        "label": "Santa BÃ¡rbara"
+                        "label": "Santa Bárbara"
                     },
                     {
                         "value": "santa-catalina",
@@ -2665,15 +2665,15 @@ const App = {
                 "neuquen": [
                     {
                         "value": "alumine",
-                        "label": "AluminÃ©"
+                        "label": "Aluminé"
                     },
                     {
                         "value": "anelo",
-                        "label": "AÃ±elo"
+                        "label": "Añelo"
                     },
                     {
                         "value": "catan-lil",
-                        "label": "CatÃ¡n Lil"
+                        "label": "Catán Lil"
                     },
                     {
                         "value": "chos-malal",
@@ -2681,7 +2681,7 @@ const App = {
                     },
                     {
                         "value": "collon-cura",
-                        "label": "CollÃ³n CurÃ¡"
+                        "label": "Collón Curá"
                     },
                     {
                         "value": "confluencia",
@@ -2693,11 +2693,11 @@ const App = {
                     },
                     {
                         "value": "lacar",
-                        "label": "LÃ¡car"
+                        "label": "Lácar"
                     },
                     {
                         "value": "loncopue",
-                        "label": "LoncopuÃ©"
+                        "label": "Loncopué"
                     },
                     {
                         "value": "los-lagos",
@@ -2709,7 +2709,7 @@ const App = {
                     },
                     {
                         "value": "norquin",
-                        "label": "Ã‘orquÃ­n"
+                        "label": "Ñorquín"
                     },
                     {
                         "value": "pehuenches",
@@ -2717,7 +2717,7 @@ const App = {
                     },
                     {
                         "value": "picun-leufu",
-                        "label": "PicÃºn LeufÃº"
+                        "label": "Picún Leufú"
                     },
                     {
                         "value": "picunches",
@@ -2739,7 +2739,7 @@ const App = {
                     },
                     {
                         "value": "andalgala",
-                        "label": "AndalgalÃ¡"
+                        "label": "Andalgalá"
                     },
                     {
                         "value": "antofagasta-de-la-sierra",
@@ -2747,11 +2747,11 @@ const App = {
                     },
                     {
                         "value": "belen",
-                        "label": "BelÃ©n"
+                        "label": "Belén"
                     },
                     {
                         "value": "capayan",
-                        "label": "CapayÃ¡n"
+                        "label": "Capayán"
                     },
                     {
                         "value": "capital",
@@ -2763,7 +2763,7 @@ const App = {
                     },
                     {
                         "value": "fray-mamerto-esquiu",
-                        "label": "Fray Mamerto EsquiÃº"
+                        "label": "Fray Mamerto Esquiú"
                     },
                     {
                         "value": "la-paz",
@@ -2771,15 +2771,15 @@ const App = {
                     },
                     {
                         "value": "paclin",
-                        "label": "PaclÃ­n"
+                        "label": "Paclín"
                     },
                     {
                         "value": "poman",
-                        "label": "PomÃ¡n"
+                        "label": "Pomán"
                     },
                     {
                         "value": "santa-maria",
-                        "label": "Santa MarÃ­a"
+                        "label": "Santa María"
                     },
                     {
                         "value": "santa-rosa",
@@ -2797,15 +2797,15 @@ const App = {
                 "tierra-del-fuego": [
                     {
                         "value": "antartida-argentina",
-                        "label": "AntÃ¡rtida Argentina"
+                        "label": "Antártida Argentina"
                     },
                     {
                         "value": "islas-del-atlantico-sur",
-                        "label": "Islas del AtlÃ¡ntico Sur"
+                        "label": "Islas del Atlántico Sur"
                     },
                     {
                         "value": "rio-grande",
-                        "label": "RÃ­o Grande"
+                        "label": "Río Grande"
                     },
                     {
                         "value": "tolhuin",
@@ -2819,7 +2819,7 @@ const App = {
                 "tucuman": [
                     {
                         "value": "burruyacu",
-                        "label": "BurruyacÃº"
+                        "label": "Burruyacú"
                     },
                     {
                         "value": "capital",
@@ -2835,7 +2835,7 @@ const App = {
                     },
                     {
                         "value": "famailla",
-                        "label": "FamaillÃ¡"
+                        "label": "Famaillá"
                     },
                     {
                         "value": "graneros",
@@ -2863,7 +2863,7 @@ const App = {
                     },
                     {
                         "value": "rio-chico",
-                        "label": "RÃ­o Chico"
+                        "label": "Río Chico"
                     },
                     {
                         "value": "simoca",
@@ -2871,11 +2871,11 @@ const App = {
                     },
                     {
                         "value": "tafi-del-valle",
-                        "label": "TafÃ­ del Valle"
+                        "label": "Tafí del Valle"
                     },
                     {
                         "value": "tafi-viejo",
-                        "label": "TafÃ­ Viejo"
+                        "label": "Tafí Viejo"
                     },
                     {
                         "value": "trancas",
@@ -2905,7 +2905,7 @@ const App = {
                     },
                     {
                         "value": "constitucion",
-                        "label": "ConstituciÃ³n"
+                        "label": "Constitución"
                     },
                     {
                         "value": "garay",
@@ -2913,7 +2913,7 @@ const App = {
                     },
                     {
                         "value": "general-lopez",
-                        "label": "General LÃ³pez"
+                        "label": "General López"
                     },
                     {
                         "value": "general-obligado",
@@ -2937,7 +2937,7 @@ const App = {
                     },
                     {
                         "value": "san-cristobal",
-                        "label": "San CristÃ³bal"
+                        "label": "San Cristóbal"
                     },
                     {
                         "value": "san-javier",
@@ -2945,7 +2945,7 @@ const App = {
                     },
                     {
                         "value": "san-jeronimo",
-                        "label": "San JerÃ³nimo"
+                        "label": "San Jerónimo"
                     },
                     {
                         "value": "san-justo",
@@ -2957,7 +2957,7 @@ const App = {
                     },
                     {
                         "value": "san-martin",
-                        "label": "San MartÃ­n"
+                        "label": "San Martín"
                     },
                     {
                         "value": "vera",
@@ -2967,7 +2967,7 @@ const App = {
                 "la-pampa": [
                     {
                         "value": "atreuco",
-                        "label": "AtreucÃ³"
+                        "label": "Atreucó"
                     },
                     {
                         "value": "caleu-caleu",
@@ -2979,7 +2979,7 @@ const App = {
                     },
                     {
                         "value": "catrilo",
-                        "label": "CatrilÃ³"
+                        "label": "Catriló"
                     },
                     {
                         "value": "chalileo",
@@ -2987,7 +2987,7 @@ const App = {
                     },
                     {
                         "value": "chapaleufu",
-                        "label": "ChapaleufÃº"
+                        "label": "Chapaleufú"
                     },
                     {
                         "value": "chical-co",
@@ -2999,11 +2999,11 @@ const App = {
                     },
                     {
                         "value": "curaco",
-                        "label": "CuracÃ³"
+                        "label": "Curacó"
                     },
                     {
                         "value": "guatrache",
-                        "label": "GuatrachÃ©"
+                        "label": "Guatraché"
                     },
                     {
                         "value": "hucal",
@@ -3019,19 +3019,19 @@ const App = {
                     },
                     {
                         "value": "loventue",
-                        "label": "LoventuÃ©"
+                        "label": "Loventué"
                     },
                     {
                         "value": "maraco",
-                        "label": "MaracÃ³"
+                        "label": "Maracó"
                     },
                     {
                         "value": "puelen",
-                        "label": "PuelÃ©n"
+                        "label": "Puelén"
                     },
                     {
                         "value": "quemu-quemu",
-                        "label": "QuemÃº QuemÃº"
+                        "label": "Quemú Quemú"
                     },
                     {
                         "value": "rancul",
@@ -3039,7 +3039,7 @@ const App = {
                     },
                     {
                         "value": "realico",
-                        "label": "RealicÃ³"
+                        "label": "Realicó"
                     },
                     {
                         "value": "toay",
@@ -3051,7 +3051,7 @@ const App = {
                     },
                     {
                         "value": "utracan",
-                        "label": "UtracÃ¡n"
+                        "label": "Utracán"
                     }
                 ],
                 "misiones": [
@@ -3061,11 +3061,11 @@ const App = {
                     },
                     {
                         "value": "apostoles",
-                        "label": "ApÃ³stoles"
+                        "label": "Apóstoles"
                     },
                     {
                         "value": "cainguas",
-                        "label": "CainguÃ¡s"
+                        "label": "Cainguás"
                     },
                     {
                         "value": "candelaria",
@@ -3077,7 +3077,7 @@ const App = {
                     },
                     {
                         "value": "concepcion",
-                        "label": "ConcepciÃ³n"
+                        "label": "Concepción"
                     },
                     {
                         "value": "eldorado",
@@ -3089,11 +3089,11 @@ const App = {
                     },
                     {
                         "value": "guarani",
-                        "label": "GuaranÃ­"
+                        "label": "Guaraní"
                     },
                     {
                         "value": "iguazu",
-                        "label": "IguazÃº"
+                        "label": "Iguazú"
                     },
                     {
                         "value": "leandro-n-alem",
@@ -3101,7 +3101,7 @@ const App = {
                     },
                     {
                         "value": "libertador-general-san-martin",
-                        "label": "Libertador General San MartÃ­n"
+                        "label": "Libertador General San Martín"
                     },
                     {
                         "value": "montecarlo",
@@ -3109,7 +3109,7 @@ const App = {
                     },
                     {
                         "value": "obera",
-                        "label": "OberÃ¡"
+                        "label": "Oberá"
                     },
                     {
                         "value": "san-ignacio",
@@ -3135,7 +3135,7 @@ const App = {
                     },
                     {
                         "value": "albardon",
-                        "label": "AlbardÃ³n"
+                        "label": "Albardón"
                     },
                     {
                         "value": "angaco",
@@ -3163,7 +3163,7 @@ const App = {
                     },
                     {
                         "value": "jachal",
-                        "label": "JÃ¡chal"
+                        "label": "Jáchal"
                     },
                     {
                         "value": "pocito",
@@ -3179,11 +3179,11 @@ const App = {
                     },
                     {
                         "value": "san-martin",
-                        "label": "San MartÃ­n"
+                        "label": "San Martín"
                     },
                     {
                         "value": "santa-lucia",
-                        "label": "Santa LucÃ­a"
+                        "label": "Santa Lucía"
                     },
                     {
                         "value": "sarmiento",
@@ -3195,7 +3195,7 @@ const App = {
                     },
                     {
                         "value": "valle-fertil",
-                        "label": "Valle FÃ©rtil"
+                        "label": "Valle Fértil"
                     },
                     {
                         "value": "zonda",
@@ -3287,11 +3287,11 @@ const App = {
                             }, 100);
                         }
                     } else {
-                        alert('Credenciales invÃ¡lidas');
+                        alert('Credenciales inválidas');
                     }
                 } catch (error) {
                     console.error(error);
-                    alert("Error al iniciar sesiÃ³n");
+                    alert("Error al iniciar sesión");
                 }
             });
         }
@@ -3308,7 +3308,7 @@ const App = {
                 try {
                     const user = await DataManager.signUp(email, password, name);
                     if (user) {
-                         alert("Cuenta creada exitosamente! SesiÃ³n iniciada.");
+                         alert("Cuenta creada exitosamente! Sesión iniciada.");
                          App.showMainApp(user);
                     }
                 } catch (error) {
@@ -3450,8 +3450,8 @@ const App = {
                     currentStep = 1;
                     updateWizardUI();
                     document.getElementById('add-property-form').reset();
-                    // document.getElementById('photo-file-name').textContent = "NingÃºn archivo seleccionado"; // Removed
-                    document.getElementById('contract-file-name').textContent = "NingÃºn archivo seleccionado";
+                    // document.getElementById('photo-file-name').textContent = "Ningún archivo seleccionado"; // Removed
+                    document.getElementById('contract-file-name').textContent = "Ningún archivo seleccionado";
                 });
             }
         });
@@ -3529,7 +3529,7 @@ const App = {
                     if(e.target.files && e.target.files.length > 0) {
                         nameSpan.textContent = e.target.files[0].name;
                     } else {
-                        nameSpan.textContent = "NingÃºn archivo seleccionado";
+                        nameSpan.textContent = "Ningún archivo seleccionado";
                     }
                 });
             }
@@ -3694,7 +3694,7 @@ const App = {
                     App.navigateTo('properties-view');
                 } catch (error) {
                     console.error("Error saving property:", error);
-                    alert("Hubo un error al guardar la propiedad. Intenta con archivos mÃ¡s pequeÃ±os.");
+                    alert("Hubo un error al guardar la propiedad. Intenta con archivos más pequeños.");
                 }
             });
         }
@@ -3733,7 +3733,7 @@ const App = {
         }
 
         deleteBtn.onclick = async () => {
-            if(confirm('Â¿EstÃ¡s seguro de eliminar esta propiedad? Esta acciÃ³n no se puede deshacer.')) {
+            if(confirm('¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.')) {
                 try {
                     await DataManager.deleteProperty(property.id);
                     modal.classList.add('hidden');
@@ -3752,11 +3752,11 @@ const App = {
         // Note: strictly greater means overdue. e.g. Due 10th. Today 11th -> Overdue.
         const isOverdue = today.getDate() > property.rentDueDay;
         
-        // Since we don't track payments yet, we'll assume "Al dÃ­a" if not overdue, or "Vencido" if overdue.
+        // Since we don't track payments yet, we'll assume "Al día" if not overdue, or "Vencido" if overdue.
         // In a real app, we'd check if a payment exists for this month.
         const statusHtml = isOverdue 
             ? `<span class="status-badge status-overdue">Vencido</span>`
-            : `<span class="status-badge status-pending">Al dÃ­a</span>`;
+            : `<span class="status-badge status-pending">Al día</span>`;
 
         // Calculate Expiration Date (Current Month)
         // We always show the due date for the *current* month to align with the status
@@ -3770,13 +3770,13 @@ const App = {
 
         // Populate Info
         infoContainer.innerHTML = `
-            <p><strong>DirecciÃ³n:</strong> ${property.address}</p>
+            <p><strong>Dirección:</strong> ${property.address}</p>
             <p><strong>Estado:</strong> ${statusHtml}</p>
             <p><strong>Vencimiento:</strong> ${expirationDateStr}</p>
             <p><strong>Inquilino:</strong> ${property.tenantName}</p>
             <p><strong>Precio:</strong> $${property.price.toLocaleString()}</p>
             <p><strong>Aumento:</strong> ${property.increaseRate}% cada ${property.increaseFrequency} meses</p>
-            <p><strong>Vencimiento Alquiler:</strong> DÃ­a ${property.rentDueDay}</p>
+            <p><strong>Vencimiento Alquiler:</strong> Día ${property.rentDueDay}</p>
             <p><strong>Contrato:</strong> ${property.contractStartDate} al ${property.contractEndDate}</p>
             ${property.contract ? `<p><strong>Archivo:</strong> <a href="${property.contract.data}" download="${property.contract.name}" style="color:var(--primary-color)">Descargar Contrato</a></p>` : ''}
         `;
@@ -3839,7 +3839,7 @@ const App = {
         grid.innerHTML = '';
 
         // Headers
-        const days = ['Dom', 'Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b'];
+        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
         days.forEach(d => {
             const el = document.createElement('div');
             el.className = 'calendar-day-header';
@@ -4093,17 +4093,17 @@ const App = {
         if (propTypeSelect && propSubtypeSelect) {
             const subtypes = {
                 departamento: ['Departamento', 'Duplex', 'Triplex', 'Penthouse', 'Loft'],
-                casa: ['Casa', 'Chalet', 'Casa Quinta', 'Casa de Campo', 'CabaÃ±a'],
+                casa: ['Casa', 'Chalet', 'Casa Quinta', 'Casa de Campo', 'Cabaña'],
                 ph: ['PH al frente', 'PH al fondo', 'PH independiente'],
                 terreno: ['Lote', 'Terreno Comercial', 'Terreno Residencial', 'Quinta'],
                 oficina: ['Oficina individual', 'Piso de oficina', 'Coworking'],
-                comercial: ['Local en calle', 'Local en galerÃ­a', 'GalpÃ³n', 'DepÃ³sito'],
-                cochera: ['Fija', 'MÃ³vil', 'Techada', 'Descubierta']
+                comercial: ['Local en calle', 'Local en galería', 'Galpón', 'Depósito'],
+                cochera: ['Fija', 'Móvil', 'Techada', 'Descubierta']
             };
 
             propTypeSelect.addEventListener('change', (e) => {
                 const type = e.target.value;
-                propSubtypeSelect.innerHTML = '<option value="" disabled selected>SeleccionÃ¡ subtipo...</option>';
+                propSubtypeSelect.innerHTML = '<option value="" disabled selected>Seleccioná subtipo...</option>';
                 
                 if (subtypes[type]) {
                     subtypes[type].forEach(st => {
@@ -4285,12 +4285,12 @@ const App = {
         document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
         
         if (action === 'delete') {
-            if(confirm('Â¿EstÃ¡s seguro de que deseas eliminar este elemento?')) {
+            if(confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
                 alert('Elemento eliminado (simulado)');
                 // In real app: call DataManager.delete... and re-render
             }
         } else {
-            alert(`AcciÃ³n: ${action} en ${type} (simulada)`);
+            alert(`Acción: ${action} en ${type} (simulada)`);
         }
     },
 
@@ -4338,7 +4338,7 @@ const App = {
                     const isOverdue = today.getDate() > p.rentDueDay;
                     const statusHtml = isOverdue 
                         ? `<span class="status-badge status-overdue" style="font-size: 0.7rem; padding: 2px 6px;">Vencido</span>`
-                        : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al dÃ­a</span>`;
+                        : `<span class="status-badge status-pending" style="font-size: 0.7rem; padding: 2px 6px;">Al día</span>`;
 
                     const currentYear = today.getFullYear();
                     const currentMonth = today.getMonth();
@@ -4376,12 +4376,12 @@ const App = {
         if(financeList) {
             financeList.innerHTML = '';
             properties.forEach(p => {
-                // Determine property status (mock logic: check late tenants or use simple "AL DÃA" default)
+                // Determine property status (mock logic: check late tenants or use simple "AL DÍA" default)
                 // In a real app we'd determine this via DataManager.getPaymentsForMonth()
                 const isLate = false; // Could add real logic
                 const statusHtml = isLate 
                     ? `<span class="bg-error-container/20 text-error-container font-label text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-sm shrink-0 border border-error-container/30">VENCIDO</span>`
-                    : `<span class="bg-surface-variant/10 text-secondary-fixed font-label text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-sm shrink-0 border border-surface-variant/20">AL DÃA</span>`;
+                    : `<span class="bg-surface-variant/10 text-secondary-fixed font-label text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-sm shrink-0 border border-surface-variant/20">AL DÍA</span>`;
                 
                 const imageUrl = p.photoUrl || "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
 
@@ -4493,7 +4493,7 @@ function createMarketplaceCard(prop, index) {
         ? `${moneda} ${Number(prop.price).toLocaleString('es-AR')}`
         : 'Consultar precio';
 
-    const ubicacion = prop.address || 'UbicaciÃ³n no especificada';
+    const ubicacion = prop.address || 'Ubicación no especificada';
 
     const titulo = prop.title || 'Propiedad';
 
@@ -4531,16 +4531,16 @@ function createMarketplaceCard(prop, index) {
             </div>
             <p class="text-secondary flex items-center gap-1 text-sm border-none">
                 <span class="material-symbols-outlined text-base">location_on</span>
-                ${ubicacion || 'UbicaciÃ³n no especificada'}
+                ${ubicacion || 'Ubicación no especificada'}
             </p>
             <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
                 <div class="flex items-center gap-6 text-secondary">
                     ${dormitorios > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bed</span><span class="text-sm font-semibold">${dormitorios} Dorm.</span></div>` : ''}
-                    ${banos > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bathtub</span><span class="text-sm font-semibold">${banos} BaÃ±os</span></div>` : ''}
-                    ${supCubierta ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} mÂ²</span></div>` : ''}
+                    ${banos > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bathtub</span><span class="text-sm font-semibold">${banos} Baños</span></div>` : ''}
+                    ${supCubierta ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} m²</span></div>` : ''}
                 </div>
                 <button class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
-                    Ver mÃ¡s
+                    Ver más
                     <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                 </button>
             </div>
@@ -4570,7 +4570,7 @@ window.initGoogleMap = async function() {
     window.propertyMarker = new AdvancedMarkerElement({
         position: initialPos,
         map: window.propertyMap,
-        title: "Arrastra para ajustar tu ubicaciÃ³n",
+        title: "Arrastra para ajustar tu ubicación",
         gmpDraggable: true,
     });
 
@@ -5061,7 +5061,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const tipoLabels = {'departamento':'Departamento','casa':'Casa','ph':'PH','terreno':'Terreno','local-comercial':'Local comercial','oficina-comercial':'Oficina comercial','quinta-vacacional':'Quinta Vacacional'};
         const opLabels = {'venta':'Venta','alquiler':'Alquiler','temporada':'Temporada','on':'Venta'};
-        const makeFilterItem = (label, count) => `<a class="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary cursor-pointer transition-colors py-0.5"><span>${label}</span><span class="text-xs text-zinc-400">(${count})</span></a>`;
+        const makeFilterItem = (label, count) => `<a class="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 cursor-pointer transition-colors py-0.5"><span>${label}</span><span class="text-xs text-zinc-400">(${count})</span></a>`;
         ['', '-mobile'].forEach(suffix => {
             const tipoEl = document.getElementById('filter-tipo'+suffix);
             const opEl = document.getElementById('filter-operacion'+suffix);
@@ -5103,7 +5103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'alquilada': {label:'Alquilada', dot:'bg-blue-400', text:'text-blue-700 dark:text-blue-300'},
             'mantenimiento': {label:'Mantenimiento', dot:'bg-zinc-400', text:'text-zinc-600 dark:text-zinc-400'},
             'paused': {label:'Pausado', dot:'bg-zinc-400', text:'text-zinc-600 dark:text-zinc-400'},
-            'expired': {label:'Expirado', dot:'bg-red-400', text:'text-red-600'}
+            'expired': {label:'Expirado', dot:'bg-red-400', text:'text-red-600 dark:text-red-400'}
         };
         const st = statusCfg[aviso.status] || statusCfg['draft'];
 
@@ -5119,7 +5119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const op = opLabels[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion || '';
         const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
         const precio = aviso.price ? `${moneda} ${Number(aviso.price).toLocaleString('es-AR')}` : 'Consultar';
-        const ubicacion = aviso.address || 'Sin ubicaciÃ³n';
+        const ubicacion = aviso.address || 'Sin ubicación';
         const titulo = aviso.title || `${tipo} en ${op}`;
         const date = aviso.created_at ? new Date(aviso.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         const shortId = aviso.id ? aviso.id.substring(0,8) : '';
@@ -5156,7 +5156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2 mb-1">
-                        <span class="text-xs font-bold text-primary uppercase tracking-wider">${tipo}</span>
+                        <span class="text-xs font-bold text-primary dark:text-red-400 uppercase tracking-wider">${tipo}</span>
                         <div class="flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full ${st.dot} inline-block"></span>
                             <span class="text-xs font-semibold ${st.text}">${st.label}</span>
@@ -5179,17 +5179,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <!-- Stats (desktop) -->
                 <div class="hidden lg:flex items-center gap-6 flex-shrink-0">
-                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">ExposiciÃ³n</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
+                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Exposición</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
                     <div class="text-center min-w-[80px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Visualizaciones</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
-                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-primary">Ver consultas</p></div>
+                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-primary dark:text-red-400">Ver consultas</p></div>
                 </div>
             </div>
             <!-- Footer -->
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex items-center gap-3 md:gap-5 text-[11px] text-zinc-400 dark:text-zinc-500">
-                    <span>ID <b class="text-primary">${shortId}</b></span>
+                    <span>ID <b class="text-primary dark:text-red-400">${shortId}</b></span>
                     <span>Creado ${date}</span>
-                    <span class="hidden sm:inline">${dormitorios ? dormitorios+' dorm.' : ''} ${banos ? banos+' baÃ±os' : ''} ${supCubierta ? supCubierta+'mÂ²' : ''}</span>
+                    <span class="hidden sm:inline">${dormitorios ? dormitorios+' dorm.' : ''} ${banos ? banos+' baños' : ''} ${supCubierta ? supCubierta+'m²' : ''}</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver"><span class="material-symbols-outlined text-lg">visibility</span></button>
