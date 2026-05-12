@@ -864,6 +864,53 @@ const App = {
                 if (submitBtnDesk) submitBtnDesk.disabled = true;
                 if (submitBtnMob) submitBtnMob.disabled = true;
 
+                // Create overlay dynamically for loader and success
+                const isDark = document.documentElement.classList.contains('dark');
+                const overlay = document.createElement('div');
+                overlay.id = 'dynamic-publish-overlay';
+                overlay.style.cssText = `
+                    position: fixed; inset: 0; z-index: 999999;
+                    display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    background: ${isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)'};
+                    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                    opacity: 0; transition: opacity 0.4s ease;
+                `;
+                
+                overlay.innerHTML = `
+                    <div class="loader-pub" style="
+                        width: fit-content; font-weight: bold; font-family: monospace; font-size: 30px;
+                        background: radial-gradient(circle closest-side,#811b1e 94%,#0000) right/calc(200% - 1em) 100%;
+                        animation: l24 1s infinite alternate linear;
+                    "></div>
+                `;
+
+                // Add keyframes and pseudo-elements for loader
+                if (!document.getElementById('loader-keyframes')) {
+                    const styleSheet = document.createElement('style');
+                    styleSheet.id = 'loader-keyframes';
+                    styleSheet.textContent = `
+                        .loader-pub::before {
+                            content: "Publicando...";
+                            line-height: 1em;
+                            color: #0000;
+                            background: inherit;
+                            background-image: radial-gradient(circle closest-side,#fff 94%,#811b1e);
+                            -webkit-background-clip: text;
+                            background-clip: text;
+                        }
+                        html.dark .loader-pub::before {
+                            background-image: radial-gradient(circle closest-side,#1a1a1a 94%,#811b1e);
+                        }
+                        @keyframes l24 { 100% { background-position: left } }
+                    `;
+                    document.head.appendChild(styleSheet);
+                }
+
+                document.body.appendChild(overlay);
+                // Trigger reflow
+                overlay.offsetHeight;
+                overlay.style.opacity = '1';
+
                 try {
                     // Helper to get selected radio
                     const getRadioValue = (name) => {
@@ -953,16 +1000,10 @@ const App = {
                     if (submitBtnDesk) { submitBtnDesk.textContent = originalTextDesk; submitBtnDesk.disabled = false; }
                     if (submitBtnMob) { submitBtnMob.textContent = 'Publicar Aviso'; submitBtnMob.disabled = false; }
                     
-                    // Create overlay dynamically with inline styles to avoid CSS conflicts
+                    // Update the existing overlay with the success checkmark
                     const isDark = document.documentElement.classList.contains('dark');
-                    const overlay = document.createElement('div');
-                    overlay.style.cssText = `
-                        position: fixed; inset: 0; z-index: 999999;
-                        display: flex; flex-direction: column; align-items: center; justify-content: center;
-                        background: ${isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)'};
-                        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-                        opacity: 0; transition: opacity 0.4s ease;
-                    `;
+                    const overlay = document.getElementById('dynamic-publish-overlay');
+                    if (!overlay) return;
                     
                     overlay.innerHTML = `
                         <svg width="100" height="100" viewBox="0 0 100 100">
@@ -1000,12 +1041,6 @@ const App = {
                         document.head.appendChild(styleSheet);
                     }
                     
-                    document.body.appendChild(overlay);
-                    
-                    // Force reflow then fade in
-                    void overlay.offsetWidth;
-                    overlay.style.opacity = '1';
-                    
                     // Wait for animation to play
                     await new Promise(resolve => setTimeout(resolve, 2800));
                     
@@ -1019,6 +1054,8 @@ const App = {
                     return;
                     
                 } catch (error) {
+                    const overlay = document.getElementById('dynamic-publish-overlay');
+                    if (overlay) overlay.remove();
                     console.error('Error al publicar la propiedad:', error);
                     alert('Ocurrió un error al publicar la propiedad. Por favor, intenta nuevamente.');
                 } finally {
