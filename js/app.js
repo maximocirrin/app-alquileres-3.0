@@ -170,6 +170,11 @@ const App = {
             btnPublicarPropietariosHero.addEventListener('click', openPublishMarketplace);
         }
 
+        const btnPublicarPropietariosFinal = document.getElementById('btn-publicar-propietarios-final');
+        if (btnPublicarPropietariosFinal) {
+            btnPublicarPropietariosFinal.addEventListener('click', openPublishMarketplace);
+        }
+
         const btnAdministrarPropietariosLink = document.getElementById('btn-administrar-propietarios-link');
         if (btnAdministrarPropietariosLink && btnAdministrar) {
             btnAdministrarPropietariosLink.addEventListener('click', () => btnAdministrar.click());
@@ -4884,6 +4889,83 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+});
+
+// Landing propietarios: static carousel controlled by step buttons
+document.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.querySelector('.owner-steps-carousel');
+    if (!carousel) return;
+
+    const tabs = Array.from(carousel.querySelectorAll('.owner-step-tab'));
+    const track = carousel.querySelector('.owner-steps-track');
+    const slides = Array.from(carousel.querySelectorAll('.owner-step-slide'));
+    if (!tabs.length || !track || !slides.length) return;
+
+    let activeIndex = 0;
+    let frameRequest = null;
+
+    const positionCarousel = () => {
+        const activeSlide = slides[activeIndex];
+        const wrap = carousel.querySelector('.owner-steps-track-wrap');
+        if (!activeSlide || !wrap) return;
+
+        if (frameRequest) cancelAnimationFrame(frameRequest);
+        frameRequest = requestAnimationFrame(() => {
+            const activeCenter = activeSlide.offsetLeft + activeSlide.offsetWidth / 2;
+            const wrapCenter = wrap.clientWidth / 2;
+            track.style.transform = `translate3d(${wrapCenter - activeCenter}px, 0, 0)`;
+            frameRequest = null;
+        });
+    };
+
+    const setActiveStep = (index) => {
+        activeIndex = index;
+
+        tabs.forEach((tab, tabIndex) => {
+            const isActive = tabIndex === activeIndex;
+            tab.classList.toggle('is-active', isActive);
+            tab.setAttribute('aria-selected', String(isActive));
+        });
+
+        slides.forEach((slide, slideIndex) => {
+            slide.classList.toggle('is-active', slideIndex === activeIndex);
+        });
+
+        positionCarousel();
+    };
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const nextIndex = Number(tab.dataset.ownerStep);
+            if (Number.isNaN(nextIndex)) return;
+            setActiveStep(nextIndex);
+        });
+    });
+
+    window.addEventListener('resize', positionCarousel);
+    slides.forEach((slide) => {
+        const image = slide.querySelector('img');
+        if (image && !image.complete) image.addEventListener('load', positionCarousel, { once: true });
+    });
+
+    setActiveStep(0);
+    requestAnimationFrame(positionCarousel);
+});
+
+// Landing propietarios FAQ accordion
+document.addEventListener('DOMContentLoaded', () => {
+    const faqItems = document.querySelectorAll('.owner-faq-item');
+    if (!faqItems.length) return;
+
+    faqItems.forEach((item) => {
+        const button = item.querySelector('.owner-faq-question');
+        if (!button) return;
+
+        button.addEventListener('click', () => {
+            const isOpen = item.classList.toggle('is-open');
+            button.setAttribute('aria-expanded', String(isOpen));
+        });
+    });
 });
 
 // Disable number inputs scroll wheel behavior globally
