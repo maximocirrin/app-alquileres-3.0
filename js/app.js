@@ -10,7 +10,7 @@ const App = {
 
     init: async () => {
         try {
-            App.checkAuth();
+            await App.checkAuth();
             App.setupTheme();
             App.setupEventListeners();
             
@@ -19,10 +19,22 @@ const App = {
             
             // Check if user is logged in
             const user = await DataManager.getCurrentUser();
+            const params = new URLSearchParams(window.location.search);
+            const shouldOpenPublish = params.get('publish') === '1';
+
             if (user) {
-                App.showMainApp(user);
+                if (shouldOpenPublish) {
+                    App.showPublishWizard();
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    App.showMainApp(user);
+                }
             } else {
-                App.showLogin();
+                if (shouldOpenPublish) {
+                    window.location.replace('owner-login.html?redirect=publish');
+                } else {
+                    App.showLogin();
+                }
             }
         } catch (error) {
             console.error("Initialization error:", error);
@@ -141,23 +153,10 @@ const App = {
             // Check if user is authenticated before opening wizard
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             if (!session) {
-                sessionStorage.setItem('postLoginRedirect', 'publish');
-                document.getElementById('landing-marketplace-view').classList.add('hidden');
-                document.getElementById('landing-propietarios-view')?.classList.add('hidden');
-                document.getElementById('main-layout').classList.add('hidden');
-                document.getElementById('login-view').classList.remove('hidden');
+                window.location.href = 'owner-login.html?redirect=publish';
                 return;
             }
-            window.currentWizardStep = 1;
-            document.getElementById('landing-marketplace-view').classList.add('hidden');
-            document.getElementById('landing-propietarios-view')?.classList.add('hidden');
-            const appElem = document.getElementById('app');
-            if(appElem) appElem.classList.add('hidden');
-            const publishElem = document.getElementById('publish-property-view');
-            if(publishElem) {
-                publishElem.classList.remove('hidden');
-                window.scrollTo(0, 0);
-            }
+            App.showPublishWizard();
         };
 
         const btnPublicarMarketplace = document.getElementById('btn-publicar-marketplace');
@@ -4042,6 +4041,20 @@ const App = {
         document.getElementById('main-layout').classList.remove('hidden');
         App.render();
         App.refreshData();
+    },
+
+    showPublishWizard: () => {
+        window.currentWizardStep = 1;
+
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view').forEach(el => {
+            if (el) el.classList.add('hidden');
+        });
+
+        const publishElem = document.getElementById('publish-property-view');
+        if (publishElem) {
+            publishElem.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
     },
 
     setupMarketPlaceListeners: () => {
