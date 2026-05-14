@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 
     const params = new URLSearchParams(window.location.search);
-    const redirectTarget = params.get('redirect') === 'publish' ? 'index.html?publish=1' : 'index.html';
+    const redirect = params.get('redirect');
+    const redirectTarget = redirect === 'publish'
+        ? 'index.html?publish=1'
+        : redirect === 'admin'
+            ? 'index.html?admin=1'
+            : 'index.html';
 
     const title = document.getElementById('owner-auth-title');
     const subtitle = document.getElementById('owner-auth-subtitle');
@@ -19,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordInput = document.getElementById('owner-password');
     const message = document.getElementById('owner-auth-message');
 
-    let mode = 'signup';
+    let mode = params.get('mode') === 'login' ? 'login' : 'signup';
 
     const redirectToTarget = () => {
         window.location.replace(redirectTarget);
