@@ -13,6 +13,7 @@ const App = {
             await App.checkAuth();
             App.setupTheme();
             App.setupEventListeners();
+            App.applyPageContext();
             
             // Load marketplace public listings
             loadMarketplaceListings();
@@ -23,24 +24,27 @@ const App = {
             const params = new URLSearchParams(window.location.search);
             const shouldOpenPublish = params.get('publish') === '1';
             const shouldOpenAdmin = params.get('admin') === '1';
+            const pageContext = App.getPageContext();
 
             if (user) {
-                if (shouldOpenPublish) {
-                    App.showPublishWizard();
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } else if (shouldOpenAdmin) {
+                if (pageContext === 'admin' || shouldOpenAdmin) {
                     await App.openAdminDashboard(user);
+                    if (shouldOpenAdmin) window.history.replaceState({}, document.title, window.location.pathname);
+                } else if (shouldOpenPublish) {
+                    App.showPublishWizard();
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else {
                     App.showMainApp(user);
                 }
             } else {
                 if (shouldOpenPublish) {
-                    window.location.replace('owner-login.html?redirect=publish');
-                } else if (shouldOpenAdmin) {
-                    window.location.replace('owner-login.html?redirect=admin&mode=login');
-                } else {
+                    window.location.replace('login.html?redirect=publish');
+                } else if (pageContext === 'admin' || shouldOpenAdmin) {
+                    window.location.replace('login.html?redirect=admin&mode=login');
+                } else if (pageContext === 'default') {
                     App.showLogin();
+                } else {
+                    App.applyPageContext();
                 }
             }
         } catch (error) {
@@ -50,9 +54,10 @@ const App = {
 
     checkAuth: async () => {
          const user = await DataManager.getCurrentUser();
-         if (!user && !document.getElementById('login-view').classList.contains('hidden')) {
+         const loginView = document.getElementById('login-view');
+         if (!user && loginView && !loginView.classList.contains('hidden')) {
              // Stay on login
-         } else if (!user) {
+         } else if (!user && App.getPageContext() === 'default') {
              App.showLogin();
          }
     },
@@ -120,6 +125,39 @@ const App = {
         }
     },
 
+    getPageContext: () => {
+        const page = window.location.pathname.split('/').pop() || 'index.html';
+        if (page === 'propietarios.html') return 'propietarios';
+        if (page === 'administrador.html') return 'admin';
+        if (page === 'inquilinos.html' || page === 'index.html') return 'inquilinos';
+        return 'default';
+    },
+
+    applyPageContext: () => {
+        const context = App.getPageContext();
+        const marketplace = document.getElementById('landing-marketplace-view');
+        const propietarios = document.getElementById('landing-propietarios-view');
+        const app = document.getElementById('app');
+
+        if (context === 'propietarios') {
+            marketplace?.classList.add('hidden');
+            propietarios?.classList.remove('hidden');
+            app?.classList.add('hidden');
+        }
+
+        if (context === 'inquilinos') {
+            marketplace?.classList.remove('hidden');
+            propietarios?.classList.add('hidden');
+            app?.classList.add('hidden');
+        }
+
+        if (context === 'admin') {
+            marketplace?.classList.add('hidden');
+            propietarios?.classList.add('hidden');
+            app?.classList.remove('hidden');
+        }
+    },
+
     setupEventListeners: () => {
         // Landing Marketplace Navigation
         const landingMarketplaceView = document.getElementById('landing-marketplace-view');
@@ -130,18 +168,14 @@ const App = {
         if (btnPropietariosMarketplace && landingMarketplaceView && landingPropietariosView) {
             btnPropietariosMarketplace.addEventListener('click', (e) => {
                 e.preventDefault();
-                landingMarketplaceView.classList.add('hidden');
-                landingPropietariosView.classList.remove('hidden');
-                window.scrollTo(0, 0);
+                window.location.href = 'propietarios.html';
             });
         }
 
         if (btnInquilinoMarketplace && landingMarketplaceView && landingPropietariosView) {
             btnInquilinoMarketplace.addEventListener('click', (e) => {
                 e.preventDefault();
-                landingPropietariosView.classList.add('hidden');
-                landingMarketplaceView.classList.remove('hidden');
-                window.scrollTo(0, 0);
+                window.location.href = 'inquilinos.html';
             });
         }
 
@@ -149,7 +183,7 @@ const App = {
         if (btnAdministrar) {
             btnAdministrar.addEventListener('click', async (e) => {
                 e.preventDefault();
-                await App.openAdminDashboard();
+                window.location.href = 'administrador.html';
             });
         }
 
@@ -158,7 +192,7 @@ const App = {
             // Check if user is authenticated before opening wizard
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             if (!session) {
-                window.location.href = 'owner-login.html?redirect=publish';
+                window.location.href = 'login.html?redirect=publish';
                 return;
             }
             App.showPublishWizard();
@@ -180,8 +214,10 @@ const App = {
         }
 
         const btnAdministrarPropietariosLink = document.getElementById('btn-administrar-propietarios-link');
-        if (btnAdministrarPropietariosLink && btnAdministrar) {
-            btnAdministrarPropietariosLink.addEventListener('click', () => btnAdministrar.click());
+        if (btnAdministrarPropietariosLink) {
+            btnAdministrarPropietariosLink.addEventListener('click', () => {
+                window.location.href = 'administrador.html';
+            });
         }
 
         const btnBackFromPublish = document.getElementById('btn-back-from-publish');
@@ -4036,8 +4072,7 @@ const App = {
     },
 
     showLogin: () => {
-        document.getElementById('login-view').classList.remove('hidden');
-        document.getElementById('main-layout').classList.add('hidden');
+        window.location.href = 'login.html?mode=login';
     },
 
     openAdminDashboard: async (user = null) => {
@@ -4049,7 +4084,7 @@ const App = {
         }
 
         if (!activeUser) {
-            window.location.href = 'owner-login.html?redirect=admin&mode=login';
+            window.location.href = 'login.html?redirect=admin&mode=login';
             return;
         }
 
@@ -4066,8 +4101,8 @@ const App = {
 
     showMainApp: async (user) => {
         App.state.currentUser = user;
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('main-layout').classList.remove('hidden');
+        document.getElementById('login-view')?.classList.add('hidden');
+        document.getElementById('main-layout')?.classList.remove('hidden');
         await App.render();
     },
 
@@ -4266,17 +4301,23 @@ const App = {
         const mainLayout = document.getElementById('main-layout');
 
         if (currentUser) {
-            loginView.classList.add('hidden');
-            mainLayout.classList.remove('hidden');
-            document.getElementById('user-display-name').textContent = currentUser.user_metadata?.full_name || currentUser.email || currentUser.name || 'Usuario';
+            loginView?.classList.add('hidden');
+            mainLayout?.classList.remove('hidden');
+            const userDisplayName = document.getElementById('user-display-name');
+            if (userDisplayName) userDisplayName.textContent = currentUser.user_metadata?.full_name || currentUser.email || currentUser.name || 'Usuario';
             await App.refreshData();
             // Ensure we are on a valid view, default to home if none active or if coming from login
             if(document.querySelectorAll('.view:not(.hidden)').length === 0 || App.state.currentView === 'login-view') {
                  App.navigateTo('home-view');
             }
         } else {
-            loginView.classList.remove('hidden');
-            mainLayout.classList.add('hidden');
+            if (App.getPageContext() === 'admin') {
+                window.location.href = 'login.html?redirect=admin&mode=login';
+                return;
+            }
+            loginView?.classList.add('hidden');
+            mainLayout?.classList.add('hidden');
+            App.applyPageContext();
         }
     },
 
@@ -5170,9 +5211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             if (!session) {
                 sessionStorage.setItem('postLoginRedirect', 'misAvisos');
-                document.getElementById('landing-marketplace-view')?.classList.add('hidden');
-                document.getElementById('main-layout')?.classList.add('hidden');
-                document.getElementById('login-view')?.classList.remove('hidden');
+                window.location.href = 'login.html?redirect=admin&mode=login';
                 return;
             }
             syncAvisosAvatar();

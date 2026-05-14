@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herramienta Terrio</title>
+    <title>Administrador | Terrio</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -163,137 +163,6 @@
 
         .delay-300 {
             transition-delay: 300ms;
-        }
-
-        .tenant-benefit-card {
-            position: relative;
-            overflow: hidden;
-            min-height: 22rem;
-            border: 1px solid rgba(121, 116, 126, 0.26);
-            border-radius: 8px;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 248, 248, 0.94)),
-                radial-gradient(circle at 50% 0%, rgba(161, 51, 51, 0.08), transparent 36%);
-            box-shadow: 0 14px 44px rgba(26, 28, 28, 0.06);
-            transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                background 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .tenant-benefit-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 1.75rem auto;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #A13333, transparent);
-            opacity: 0;
-            transform: scaleX(0.35);
-            transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .tenant-benefit-card::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(161, 51, 51, 0.06), transparent 42%);
-            opacity: 0;
-            transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .tenant-benefit-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(161, 51, 51, 0.36);
-            box-shadow: 0 26px 70px rgba(26, 28, 28, 0.13);
-        }
-
-        .tenant-benefit-card:hover::before {
-            opacity: 1;
-            transform: scaleX(1);
-        }
-
-        .tenant-benefit-card:hover::after {
-            opacity: 1;
-        }
-
-        .tenant-benefit-icon-shell {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 6.75rem;
-            height: 6.75rem;
-            margin-bottom: 1.75rem;
-            border: 1px solid rgba(161, 51, 51, 0.14);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.72);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 16px 36px rgba(161, 51, 51, 0.10);
-            transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 420ms cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .tenant-benefit-icon {
-            width: 4.6rem;
-            height: 4.6rem;
-            object-fit: contain;
-            transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .tenant-benefit-card:hover .tenant-benefit-icon-shell {
-            transform: translateY(-6px);
-            border-color: rgba(161, 51, 51, 0.26);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 22px 48px rgba(161, 51, 51, 0.16);
-        }
-
-        .tenant-benefit-card:hover .tenant-benefit-icon {
-            transform: scale(1.08) rotate(-2deg);
-        }
-
-        html.dark .tenant-benefit-card {
-            border-color: rgba(63, 63, 70, 0.92);
-            background:
-                linear-gradient(180deg, rgba(24, 24, 27, 0.96), rgba(10, 10, 12, 0.96)),
-                radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.12), transparent 38%);
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
-        }
-
-        html.dark .tenant-benefit-card::before {
-            background: linear-gradient(90deg, transparent, #ef4444, transparent);
-        }
-
-        html.dark .tenant-benefit-card::after {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), transparent 44%);
-        }
-
-        html.dark .tenant-benefit-card:hover {
-            border-color: rgba(239, 68, 68, 0.44);
-            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
-        }
-
-        html.dark .tenant-benefit-icon-shell {
-            border-color: rgba(239, 68, 68, 0.18);
-            background: rgba(9, 9, 11, 0.62);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 38px rgba(0, 0, 0, 0.28);
-        }
-
-        @media (max-width: 640px) {
-            .tenant-benefit-card {
-                min-height: auto;
-            }
-
-            .tenant-benefit-icon-shell {
-                width: 5.75rem;
-                height: 5.75rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .tenant-benefit-icon {
-                width: 3.95rem;
-                height: 3.95rem;
-            }
         }
 
         .owner-steps-carousel {
@@ -849,7 +718,7 @@
 <body class="antialiased">
     <!-- Landing Marketplace View -->
     <section id="landing-marketplace-view"
-        class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
+        class="hidden bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
         <!-- TopNavBar -->
         <nav
             class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
@@ -1048,63 +917,66 @@
                 </div>
             </section>
             <!-- Discovery & Filter Section -->
-            <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-12 lg:py-16">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                    <article
-                        class="group/benefit animate-on-scroll relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <img class="relative z-10 mb-8 h-20 w-20 sm:h-24 sm:w-24 object-contain transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg]" src="img/key-icon.svg" alt="" aria-hidden="true" />
-                        <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Estamos contigo en esto</h2>
-                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Recibe ayuda de un agente en tu idioma, para resolver dudas, ayudarte a encontrar casa y
-                                gestionar todo el papeleo.</p>
+            <section class="max-w-[1440px] mx-auto px-12 py-16">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+                    <div class="animate-on-scroll">
+                        <span
+                            class="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-3 block border-none">Descubre
+                            la Excelencia</span>
+                        <h2 class="font-headline text-4xl font-bold text-on-background tracking-tight">Marketplace</h2>
+                    </div>
+                    <!-- Category Tabs -->
+                    <div
+                        class="bg-surface-container p-1 rounded-2xl md:rounded-full flex gap-1 self-start md:self-end border-none overflow-x-auto w-full md:w-max snap-x custom-scrollbar pb-1 md:pb-1 animate-on-scroll delay-100">
+                        <button
+                            class="bg-primary text-on-primary px-6 md:px-8 py-2.5 rounded-full font-bold text-sm shadow-lg border-none whitespace-nowrap snap-start flex-shrink-0">Casas</button>
+                        <button
+                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">Departamentos</button>
+                        <button
+                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">PH</button>
+                        <button
+                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">Terrenos</button>
+                    </div>
+                </div>
+                <!-- Property Grid -->
+                <div id="marketplace-property-grid"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
+                    <!-- Skeleton cards (shown while loading) -->
+                    <div class="marketplace-skeleton animate-pulse">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3">
+                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
+                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
                         </div>
-                    </article>
-
-                    <article
-                        class="group/benefit animate-on-scroll delay-100 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <img class="relative z-10 mb-8 h-20 w-20 sm:h-24 sm:w-24 object-contain transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg]" src="img/shield-icon.svg" alt="" aria-hidden="true" />
-                        <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Siempre a salvo</h2>
-                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Accede a propietarios e inquilinos verificados, pagos seguros y con cobertura total.</p>
-                            <a class="inline-flex mt-2 font-body text-lg sm:text-xl text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                href="detalles-garantia.html">Más sobre nuestra garantía</a>
+                    </div>
+                    <div class="marketplace-skeleton animate-pulse hidden md:block">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3">
+                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
+                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
                         </div>
-                    </article>
-
-                    <article
-                        class="group/benefit animate-on-scroll delay-200 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <img class="relative z-10 mb-8 h-20 w-20 sm:h-24 sm:w-24 object-contain transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg]" src="img/regla-icon.svg" alt="" aria-hidden="true" />
-                        <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                A la medida de tu bolsillo</h2>
-                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Escoge entre miles de opciones sin fianza, con ofertas y tarifas más baratas que en una
-                                inmobiliaria.</p>
+                    </div>
+                    <div class="marketplace-skeleton animate-pulse hidden lg:block">
+                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
+                        <div class="space-y-3">
+                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
+                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
                         </div>
-                    </article>
-
-                    <article
-                        class="group/benefit animate-on-scroll delay-300 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <img class="relative z-10 mb-8 h-20 w-20 sm:h-24 sm:w-24 object-contain transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg]" src="img/planet-icon.svg" alt="" aria-hidden="true" />
-                        <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Desde cualquier lugar</h2>
-                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Encuentra tu alquiler temporal, sin visitas y 100% online.</p>
-                        </div>
-                    </article>
+                    </div>
+                </div>
+                <!-- Empty state (hidden by default) -->
+                <div id="marketplace-empty-state" class="hidden col-span-3 py-24 text-center">
+                    <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4 block">home_work</span>
+                    <p class="font-headline text-xl font-bold text-on-background">Todavía no hay propiedades publicadas
+                    </p>
+                    <p class="font-body text-secondary mt-2">¡Sé el primero en publicar tu propiedad!</p>
+                </div>
+                <!-- More results indicator -->
+                <div class="mt-20 text-center">
+                    <button
+                        class="bg-surface-container hover:bg-surface-container-high text-on-surface px-12 py-4 rounded-full font-bold transition-all border border-outline-variant/10">
+                        Explorar más propiedades
+                    </button>
                 </div>
             </section>
             <!-- Editorial Section -->
@@ -1517,63 +1389,49 @@
                             </a>
                         </div>
 
-                        <div
-                            class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
-                            <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
+                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">badge</span>
                                 </div>
-                                <p
-                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 1
                                 </p>
-                                <h3
-                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Validacion de Identidad del Garante</h3>
-                                <p
-                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Seguridad juridica mediante biometria y cruce de datos con RENAPER en tiempo real.
                                 </p>
                             </article>
 
-                            <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">document_scanner</span>
                                 </div>
-                                <p
-                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 2
                                 </p>
-                                <h3
-                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Analisis de Recibos de Sueldo con IA</h3>
-                                <p
-                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y
-                                    scoring
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y scoring
                                     objetivo.
                                 </p>
                             </article>
 
-                            <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">account_balance</span>
                                 </div>
-                                <p
-                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 3
                                 </p>
-                                <h3
-                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Consulta al BCRA automatica</h3>
-                                <p
-                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Verificacion de historial crediticio mediante acceso directo a la Central de
                                     Deudores.
                                 </p>
@@ -1840,11 +1698,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, H&aacute;bitat no adelanta el pago del alquiler, pero se encarga de que
-                                        cobrarlo sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa,
-                                        nuestra plataforma calcula autom&aacute;ticamente los intereses por cada
-                                        d&iacute;a de mora y env&iacute;a alertas inmediatas tanto al inquilino como a
-                                        sus garantes para que regularicen la situaci&oacute;n cuanto antes.</p>
+                                        No, InmoTech no adelanta el pago del alquiler, pero se encarga de que cobrarlo sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa, nuestra plataforma calcula autom&aacute;ticamente los intereses por cada d&iacute;a de mora y env&iacute;a alertas inmediatas tanto al inquilino como a sus padres (garantes) para que regularicen la situaci&oacute;n cuanto antes.</p>
                                 </div>
                             </div>
                         </article>
@@ -1863,13 +1717,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del
-                                        estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos
-                                        tu patrimonio mediante el inventario digital realizado por nuestro Homechecker.
-                                        Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el
-                                        registro inicial, la plataforma te facilita la documentaci&oacute;n
-                                        t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de
-                                        garant&iacute;a o contra el patrimonio del garante verificado.</p>
+                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos tu patrimonio mediante el inventario digital realizado por nuestro Homechecker. Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el registro inicial, la plataforma te facilita la documentaci&oacute;n t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de garant&iacute;a o contra el patrimonio del garante verificado.</p>
                                 </div>
                             </div>
                         </article>
@@ -1888,14 +1736,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el
-                                        contrato generado por Habitat ya contempla las cl&aacute;usulas de
-                                        resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de
-                                        la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma
-                                        transparente y coordina la visita del Homechecker para certificar el estado de
-                                        la propiedad mediante el inventario digital. De esta manera, el propietario
-                                        dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para
-                                        respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
+                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el contrato generado por Habitat ya contempla las cl&aacute;usulas de resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma transparente y coordina la visita del Homechecker para certificar el estado de la propiedad mediante el inventario digital. De esta manera, el propietario dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
                                 </div>
                             </div>
                         </article>
@@ -4493,7 +4334,7 @@
     </section>
 
     <!-- App Sub-Container (hidden until 'Administrar' is clicked) -->
-    <div id="app" class="hidden relative">
+    <div id="app" class="relative">
         <!-- Login moved to login.html -->
 
         <!-- Main App Layout (Hidden by default) -->

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de Garantia | Terrio</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#1a1c1c",
+                        "surface": "#f9f9f9",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f3f3",
+                        "surface-container": "#eeeeee",
+                        "surface-dim": "#dadada",
+                        "on-surface": "#1a1c1c",
+                        "on-primary": "#ffffff",
+                        "primary": "#811b1e",
+                        "primary-container": "#a13333",
+                        "secondary": "#5e5e5e",
+                        "outline-variant": "#debfbd"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope"],
+                        body: ["Inter"],
+                        label: ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+
+<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body min-h-screen">
+    <nav
+        class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+        <div
+            class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
+            <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
+                <a href="propietarios.html" class="flex items-center gap-1.5 md:gap-2 group" aria-label="Volver al inicio">
+                    <img src="img/logo-lite.png" alt="Habitat Logo"
+                        class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
+                </a>
+                <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base">
+                    <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1"
+                        href="propietarios.html">Propietarios</a>
+                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                        href="inquilinos.html">Portfolio</a>
+                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                        href="inquilinos.html">Insights</a>
+                </div>
+            </div>
+            <div
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
+                <a href="inquilinos.html"
+                    class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
+                    Soy Inquilino
+                </a>
+                <a href="administrador.html"
+                    class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
+                    Administrar
+                </a>
+                <label class="theme-switch flex-shrink-0"
+                    style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
+                    <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
+                    <div class="theme-switch__container">
+                        <div class="theme-switch__clouds"></div>
+                        <div class="theme-switch__stars-container"></div>
+                        <div class="theme-switch__circle-container">
+                            <div class="theme-switch__sun-moon-container">
+                                <div class="theme-switch__moon">
+                                    <div class="theme-switch__spot"></div>
+                                    <div class="theme-switch__spot"></div>
+                                    <div class="theme-switch__spot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
+                <div class="hidden md:flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
+                    <span
+                        class="material-symbols-outlined hover:bg-zinc-50 dark:hover:bg-zinc-900 p-2 rounded-full transition-all cursor-pointer">favorite</span>
+                    <span
+                        class="material-symbols-outlined hover:bg-zinc-50 dark:hover:bg-zinc-900 p-2 rounded-full transition-all cursor-pointer">notifications</span>
+                </div>
+                <button
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 hover:ring-2 hover:ring-primary/40 transition-all">
+                    U
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 md:pt-28 pb-20">
+        <section class="max-w-[1280px] mx-auto px-4 md:px-8">
+            <div
+                class="rounded-[28px] overflow-hidden border border-outline-variant/30 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-[0_18px_46px_rgba(26,28,28,0.08)] dark:shadow-[0_18px_46px_rgba(0,0,0,0.22)]">
+                <div class="bg-surface-container-low dark:bg-[#0f0f12] px-6 py-10 md:px-12 md:py-14 border-b border-outline-variant/30 dark:border-zinc-800">
+                    <a href="propietarios.html"
+                        class="inline-flex items-center gap-2 text-sm font-bold text-primary dark:text-red-400 mb-8 hover:opacity-80 transition-opacity">
+                        <span class="material-symbols-outlined text-lg">arrow_back</span>
+                        Volver a propietarios
+                    </a>
+                    <div class="max-w-4xl">
+                        <span
+                            class="inline-flex items-center gap-2 rounded-full border border-primary/20 dark:border-red-500/30 bg-primary/10 dark:bg-red-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary dark:text-red-400">
+                            <span class="material-symbols-outlined text-base">security</span>
+                            Especificaciones tecnicas y legales
+                        </span>
+                        <h1
+                            class="font-headline text-[40px] leading-[1.05] md:text-6xl md:leading-tight font-extrabold text-on-background dark:text-white mt-6 mb-5">
+                            Validacion integral de garantes.</h1>
+                        <p class="font-body text-base md:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Cada garante atraviesa controles automatizados de identidad, solvencia e historial para
+                            reducir riesgo operativo y respaldar la firma del contrato con evidencia verificable.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/70 dark:divide-zinc-800">
+                    <article class="p-6 md:p-9">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined">badge</span>
+                        </div>
+                        <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                            Detalle de Identidad
+                        </p>
+                        <h2 class="font-headline text-2xl font-extrabold text-on-background dark:text-white mb-6">
+                            KYC y evidencia juridica</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Proceso KYC (Know Your Customer)</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    Se realiza un escaneo de DNI, frente y dorso, junto con una prueba de vida biometrica
+                                    para asegurar que el firmante es el titular legitimo.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Validez Juridica</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    El flujo genera un Audit Trail, o Registro de Auditoria, con IP, geolocalizacion y
+                                    timestamp, cumpliendo con la Ley 25.506 de Firma Digital.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="p-6 md:p-9">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined">document_scanner</span>
+                        </div>
+                        <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                            Detalle de Solvencia
+                        </p>
+                        <h2 class="font-headline text-2xl font-extrabold text-on-background dark:text-white mb-6">
+                            OCR, IA y capacidad de pago</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Tecnologia OCR/IA</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    El sistema extrae automaticamente sueldo neto, antiguedad laboral y aportes desde los
+                                    recibos de sueldo subidos en PDF o imagen.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Relacion Cuota-Ingreso</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    La evaluacion valida objetivamente que el inquilino y su garante posean la capacidad
+                                    de pago necesaria para afrontar el canon locativo.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="p-6 md:p-9">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined">account_balance</span>
+                        </div>
+                        <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                            Detalle de Historial
+                        </p>
+                        <h2 class="font-headline text-2xl font-extrabold text-on-background dark:text-white mb-6">
+                            BCRA y proteccion de datos</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Transparencia Bancaria</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    La consulta se conecta con la base de datos del Banco Central (BCRA) para verificar
+                                    que el garante no registre deudas en situaciones criticas 3, 4 o 5.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white mb-2">
+                                    Seguridad de Datos</h3>
+                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    La informacion se consulta estrictamente para fines de validacion del contrato, bajo
+                                    la Ley 25.326 de Proteccion de Datos Personales.</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function applyTheme(theme) {
+            const isDark = theme === 'dark';
+            document.documentElement.classList.toggle('dark', isDark);
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('theme', theme);
+            document.querySelectorAll('.theme-switch__checkbox').forEach((checkbox) => {
+                checkbox.checked = isDark;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(localStorage.getItem('theme') || 'light');
+            document.querySelectorAll('.theme-switch__checkbox').forEach((checkbox) => {
+                checkbox.addEventListener('change', (event) => {
+                    applyTheme(event.target.checked ? 'dark' : 'light');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
