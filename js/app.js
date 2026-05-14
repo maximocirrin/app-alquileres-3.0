@@ -103,38 +103,76 @@ const App = {
 
     setupEventListeners: () => {
         // Landing Marketplace Navigation
+        const landingMarketplaceView = document.getElementById('landing-marketplace-view');
+        const landingPropietariosView = document.getElementById('landing-propietarios-view');
+        const btnPropietariosMarketplace = document.getElementById('btn-propietarios-marketplace');
+        const btnInquilinoMarketplace = document.getElementById('btn-inquilino-marketplace');
+
+        if (btnPropietariosMarketplace && landingMarketplaceView && landingPropietariosView) {
+            btnPropietariosMarketplace.addEventListener('click', (e) => {
+                e.preventDefault();
+                landingMarketplaceView.classList.add('hidden');
+                landingPropietariosView.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            });
+        }
+
+        if (btnInquilinoMarketplace && landingMarketplaceView && landingPropietariosView) {
+            btnInquilinoMarketplace.addEventListener('click', (e) => {
+                e.preventDefault();
+                landingPropietariosView.classList.add('hidden');
+                landingMarketplaceView.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            });
+        }
+
         const btnAdministrar = document.getElementById('btn-administrar');
         if (btnAdministrar) {
             btnAdministrar.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.getElementById('landing-marketplace-view').classList.add('hidden');
+                document.getElementById('landing-propietarios-view')?.classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
             });
         }
 
+        const openPublishMarketplace = async (e) => {
+            if (e) e.preventDefault();
+            // Check if user is authenticated before opening wizard
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (!session) {
+                sessionStorage.setItem('postLoginRedirect', 'publish');
+                document.getElementById('landing-marketplace-view').classList.add('hidden');
+                document.getElementById('landing-propietarios-view')?.classList.add('hidden');
+                document.getElementById('main-layout').classList.add('hidden');
+                document.getElementById('login-view').classList.remove('hidden');
+                return;
+            }
+            window.currentWizardStep = 1;
+            document.getElementById('landing-marketplace-view').classList.add('hidden');
+            document.getElementById('landing-propietarios-view')?.classList.add('hidden');
+            const appElem = document.getElementById('app');
+            if(appElem) appElem.classList.add('hidden');
+            const publishElem = document.getElementById('publish-property-view');
+            if(publishElem) {
+                publishElem.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            }
+        };
+
         const btnPublicarMarketplace = document.getElementById('btn-publicar-marketplace');
         if (btnPublicarMarketplace) {
-            btnPublicarMarketplace.addEventListener('click', async (e) => {
-                e.preventDefault();
-                // Check if user is authenticated before opening wizard
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (!session) {
-                    sessionStorage.setItem('postLoginRedirect', 'publish');
-                    document.getElementById('landing-marketplace-view').classList.add('hidden');
-                    document.getElementById('main-layout').classList.add('hidden');
-                    document.getElementById('login-view').classList.remove('hidden');
-                    return;
-                }
-                window.currentWizardStep = 1;
-                document.getElementById('landing-marketplace-view').classList.add('hidden');
-                const appElem = document.getElementById('app');
-                if(appElem) appElem.classList.add('hidden');
-                const publishElem = document.getElementById('publish-property-view');
-                if(publishElem) {
-                    publishElem.classList.remove('hidden');
-                    window.scrollTo(0, 0);
-                }
-            });
+            btnPublicarMarketplace.addEventListener('click', openPublishMarketplace);
+        }
+
+        const btnPublicarPropietariosHero = document.getElementById('btn-publicar-propietarios-hero');
+        if (btnPublicarPropietariosHero) {
+            btnPublicarPropietariosHero.addEventListener('click', openPublishMarketplace);
+        }
+
+        const btnAdministrarPropietariosLink = document.getElementById('btn-administrar-propietarios-link');
+        if (btnAdministrarPropietariosLink && btnAdministrar) {
+            btnAdministrarPropietariosLink.addEventListener('click', () => btnAdministrar.click());
         }
 
         const btnBackFromPublish = document.getElementById('btn-back-from-publish');
