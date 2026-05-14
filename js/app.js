@@ -18,7 +18,8 @@ const App = {
             loadMarketplaceListings();
             
             // Check if user is logged in
-            const user = await DataManager.getCurrentUser();
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const user = session?.user || await DataManager.getCurrentUser();
             const params = new URLSearchParams(window.location.search);
             const shouldOpenPublish = params.get('publish') === '1';
             const shouldOpenAdmin = params.get('admin') === '1';
@@ -28,7 +29,7 @@ const App = {
                     App.showPublishWizard();
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else if (shouldOpenAdmin) {
-                    App.showMainApp(user);
+                    await App.openAdminDashboard(user);
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else {
                     App.showMainApp(user);
@@ -148,14 +149,7 @@ const App = {
         if (btnAdministrar) {
             btnAdministrar.addEventListener('click', async (e) => {
                 e.preventDefault();
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (!session) {
-                    window.location.href = 'owner-login.html?redirect=admin&mode=login';
-                    return;
-                }
-                document.getElementById('landing-marketplace-view').classList.add('hidden');
-                document.getElementById('landing-propietarios-view')?.classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
+                await App.openAdminDashboard();
             });
         }
 
@@ -4046,12 +4040,35 @@ const App = {
         document.getElementById('main-layout').classList.add('hidden');
     },
 
-    showMainApp: (user) => {
+    openAdminDashboard: async (user = null) => {
+        let activeUser = user;
+
+        if (!activeUser) {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            activeUser = session?.user || null;
+        }
+
+        if (!activeUser) {
+            window.location.href = 'owner-login.html?redirect=admin&mode=login';
+            return;
+        }
+
+        document.getElementById('landing-marketplace-view')?.classList.add('hidden');
+        document.getElementById('landing-propietarios-view')?.classList.add('hidden');
+        document.getElementById('publish-property-view')?.classList.add('hidden');
+        document.getElementById('mis-avisos-view')?.classList.add('hidden');
+        document.getElementById('app')?.classList.remove('hidden');
+
+        await App.showMainApp(activeUser);
+        App.navigateTo('home-view');
+        window.scrollTo(0, 0);
+    },
+
+    showMainApp: async (user) => {
         App.state.currentUser = user;
         document.getElementById('login-view').classList.add('hidden');
         document.getElementById('main-layout').classList.remove('hidden');
-        App.render();
-        App.refreshData();
+        await App.render();
     },
 
     showPublishWizard: () => {
@@ -4251,7 +4268,7 @@ const App = {
         if (currentUser) {
             loginView.classList.add('hidden');
             mainLayout.classList.remove('hidden');
-            document.getElementById('user-display-name').textContent = currentUser.name;
+            document.getElementById('user-display-name').textContent = currentUser.user_metadata?.full_name || currentUser.email || currentUser.name || 'Usuario';
             await App.refreshData();
             // Ensure we are on a valid view, default to home if none active or if coming from login
             if(document.querySelectorAll('.view:not(.hidden)').length === 0 || App.state.currentView === 'login-view') {
