@@ -703,6 +703,28 @@
                 transform: translateY(0);
             }
         }
+        /* Drawer Menu Custom Animations */
+        #user-dropdown-menu {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #user-dropdown-menu.opacity-100 {
+            visibility: visible;
+        }
+        #user-dropdown-menu.opacity-0 {
+            visibility: hidden;
+        }
+        #user-dropdown-menu.opacity-100 .drawer-panel {
+            transform: translateX(0);
+        }
+        #user-dropdown-menu.opacity-0 .drawer-panel {
+            transform: translateX(100%);
+        }
+        #user-dropdown-menu.opacity-100 .drawer-backdrop {
+            opacity: 1;
+        }
+        #user-dropdown-menu.opacity-0 .drawer-backdrop {
+            opacity: 0;
+        }
     </style>
 </head>
 <script>
@@ -779,99 +801,7 @@
                             </div>
                         </div>
                     </label>
-                    <!-- User Profile Dropdown -->
-                    <div class="relative" id="user-menu-container">
-                        <button id="user-avatar-btn"
-                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
-                            aria-haspopup="true" aria-expanded="false">
-                            <span id="user-avatar-initial">U</span>
-                        </button>
-                        <!-- Dropdown Menu -->
-                        <div id="user-dropdown-menu"
-                            class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200/60 dark:border-zinc-700/60 overflow-hidden z-[9999] opacity-0 translate-y-2 transition-all duration-200 ease-out"
-                            role="menu">
-                            <!-- User Info Header -->
-                            <div class="px-5 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                                <p id="dropdown-user-name"
-                                    class="font-headline font-bold text-on-background dark:text-white text-base leading-tight">
-                                    Usuario</p>
-                                <p id="dropdown-user-id"
-                                    class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-body">Identificador</p>
-                            </div>
-                            <!-- Primary Actions -->
-                            <div class="py-2 px-2">
-                                <button id="menu-mis-avisos"
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">description</span>
-                                    <span
-                                        class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mis
-                                        avisos</span>
-                                </button>
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">mail</span>
-                                    <span
-                                        class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Interesados</span>
-                                </button>
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">schedule</span>
-                                    <span
-                                        class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mi
-                                        actividad</span>
-                                </button>
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="material-symbols-outlined text-[20px] text-zinc-500 dark:text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">payments</span>
-                                    <span
-                                        class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 group-hover:text-on-background dark:group-hover:text-white transition-colors">Contrataciones</span>
-                                </button>
-                            </div>
-                            <!-- Secondary Actions -->
-                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">Mi
-                                        cuenta</span>
-                                </button>
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">Ajustes
-                                        de notificaciones</span>
-                                </button>
-                            </div>
-                            <!-- Help & Logout -->
-                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <button
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors group"
-                                    role="menuitem">
-                                    <span
-                                        class="text-sm text-zinc-600 dark:text-zinc-300 group-hover:text-on-background dark:group-hover:text-white transition-colors">¿Podemos
-                                        ayudarte?</span>
-                                </button>
-                            </div>
-                            <div class="py-2 px-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <button id="menu-logout"
-                                    class="user-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group"
-                                    role="menuitem">
-                                    <span class="text-sm text-red-600 dark:text-red-400 font-medium">Cerrar
-                                        sesión</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </nav>
@@ -977,41 +907,6 @@
                         class="bg-surface-container hover:bg-surface-container-high text-on-surface px-12 py-4 rounded-full font-bold transition-all border border-outline-variant/10">
                         Explorar más propiedades
                     </button>
-                </div>
-            </section>
-            <!-- Editorial Section -->
-            <section class="bg-surface-container-low py-24 border-none">
-                <div
-                    class="max-w-[1440px] mx-auto px-12 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center border-none">
-                    <div class="relative animate-on-scroll">
-                        <div class="aspect-square rounded-2xl overflow-hidden shadow-2xl">
-                            <img alt="Architecture Detail" class="w-full h-full object-cover"
-                                src="img/hero-marketplace.jpg" />
-                        </div>
-                        <div
-                            class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary rounded-2xl p-8 text-on-primary flex flex-col justify-end shadow-2xl hidden md:flex">
-                            <span class="font-headline text-4xl font-bold mb-2">24/7</span>
-                            <p class="text-sm opacity-80 leading-relaxed font-body border-none">Acceso exclusivo a gemas
-                                arquitectónicas fuera del mercado y haciendas históricas.</p>
-                        </div>
-                    </div>
-                    <div class="space-y-8 animate-on-scroll delay-200">
-                        <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs">Selección Curada</span>
-                        <h2
-                            class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background leading-tight">
-                            El Estándar
-                            Terrio: Donde la Forma Conoce la Funcionalidad</h2>
-                        <p class="text-secondary text-lg leading-relaxed font-body">Nuestro marketplace no se trata solo
-                            de metros cuadrados. Curamos propiedades basadas en significancia arquitectónica, honestidad
-                            de materiales e inteligencia espacial.</p>
-                        <div class="pt-4">
-                            <a class="inline-flex items-center gap-2 text-primary font-bold group" href="#">
-                                Conoce sobre nuestro proceso de curación
-                                <span
-                                    class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </section>
         </main>
@@ -4345,7 +4240,6 @@
                 <nav class="desktop-nav">
                     <button class="nav-link active" data-target="home-view">Inicio</button>
                     <button class="nav-link" data-target="properties-view">Propiedades</button>
-                    <button class="nav-link" data-target="marketplace-view">Market Place</button>
                 </nav>
                 <div class="user-profile">
                     <label class="theme-switch">
@@ -4387,7 +4281,7 @@
                             <button
                                 class="btn-back-marketplace flex items-center gap-1.5 px-4 py-2 rounded-full font-body font-bold text-sm shadow-md border-none cursor-pointer transition-transform duration-200 hover:scale-105 bg-gradient-to-br from-primary to-primary-container text-white">
                                 <span class="material-symbols-rounded text-[1.1rem]">arrow_back</span>
-                                Volver al Marketplace
+                                Volver
                             </button>
                         </div>
                         <!-- Header -->
@@ -4844,68 +4738,7 @@
                     </div>
                 </div>
 
-                <!-- Market Place View -->
-                <section id="marketplace-view" class="view hidden">
-                    <div class="max-w-7xl mx-auto pt-16 md:pt-12 px-6 pb-24 md:pb-12">
-                        <!-- Back to Marketplace Button -->
-                        <div class="flex justify-start mb-6">
-                            <button
-                                class="btn-back-marketplace flex items-center gap-1.5 px-4 py-2 rounded-full font-body font-bold text-sm shadow-md border-none cursor-pointer transition-transform duration-200 hover:scale-105 bg-gradient-to-br from-primary to-primary-container text-white">
-                                <span class="material-symbols-rounded text-[1.1rem]">arrow_back</span>
-                                Volver al Marketplace
-                            </button>
-                        </div>
 
-                        <!-- Header -->
-                        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 relative">
-                            <!-- Theme Toggle (Mobile Top Right) -->
-                            <label
-                                class="theme-switch absolute -top-12 right-0 z-50 md:hidden cursor-pointer transform scale-75"
-                                style="width: fit-content; margin: 0; transform-origin: right top;">
-                                <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                                <div class="theme-switch__container">
-                                    <div class="theme-switch__clouds"></div>
-                                    <div class="theme-switch__stars-container">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
-                                                fill="currentColor"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="theme-switch__circle-container">
-                                        <div class="theme-switch__sun-moon-container">
-                                            <div class="theme-switch__moon">
-                                                <div class="theme-switch__spot"></div>
-                                                <div class="theme-switch__spot"></div>
-                                                <div class="theme-switch__spot"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <div>
-                                <h2
-                                    class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface dark:text-white mb-2 pt-6 md:pt-0">
-                                    Market Place</h2>
-                                <p class="font-body text-secondary dark:text-secondary-fixed-dim text-lg">Publica y
-                                    gestiona tus listados del marketplace.</p>
-                            </div>
-                        </div>
-                        <div class="marketplace-actions glass-card"
-                            style="text-align: center; padding: 4rem 2rem; margin-top: 2rem;">
-                            <span class="material-symbols-rounded"
-                                style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">storefront</span>
-                            <h3>Vende o alquila tu propiedad rápida y fácilmente</h3>
-                            <p style="color: var(--text-muted); margin-bottom: 2rem;">Accede a miles de interesados
-                                publicando en nuestro Market Place.</p>
-                            <button class="btn-primary" id="publish-property-trigger"
-                                style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
-                                Publicar Propiedad
-                            </button>
-                        </div>
-                    </div>
-                </section>
 
                 <!-- Market Place Contact Info Modal -->
                 <div id="marketplace-contact-modal" class="modal hidden">
@@ -5237,10 +5070,6 @@
                 <button class="nav-item" data-target="properties-view">
                     <span class="material-symbols-rounded">apartment</span>
                     <span class="label">Propiedades</span>
-                </button>
-                <button class="nav-item" data-target="marketplace-view">
-                    <span class="material-symbols-rounded">storefront</span>
-                    <span class="label">Market Place</span>
                 </button>
                 <button class="nav-item" data-target="menu-view">
                     <span class="material-symbols-rounded">menu</span>

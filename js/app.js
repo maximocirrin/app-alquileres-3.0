@@ -5074,22 +5074,22 @@ document.addEventListener('DOMContentLoaded', () => {
         dropdownMenu.classList.remove('hidden');
         // Force reflow for animation
         void dropdownMenu.offsetWidth;
-        dropdownMenu.classList.remove('opacity-0', 'translate-y-2');
-        dropdownMenu.classList.add('opacity-100', 'translate-y-0');
+        dropdownMenu.classList.remove('opacity-0');
+        dropdownMenu.classList.add('opacity-100');
         avatarBtn.setAttribute('aria-expanded', 'true');
         isDropdownOpen = true;
     };
     
     const closeDropdown = () => {
-        dropdownMenu.classList.remove('opacity-100', 'translate-y-0');
-        dropdownMenu.classList.add('opacity-0', 'translate-y-2');
+        dropdownMenu.classList.remove('opacity-100');
+        dropdownMenu.classList.add('opacity-0');
         avatarBtn.setAttribute('aria-expanded', 'false');
         isDropdownOpen = false;
         setTimeout(() => {
             if (!isDropdownOpen) {
                 dropdownMenu.classList.add('hidden');
             }
-        }, 200);
+        }, 350);
     };
     
     avatarBtn.addEventListener('click', (e) => {
@@ -5129,6 +5129,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (initialEl && profile.full_name) {
                     initialEl.textContent = profile.full_name.charAt(0).toUpperCase();
                 }
+                
+                const loggedInEl = document.getElementById('drawer-user-logged-in');
+                const loggedOutEl = document.getElementById('drawer-user-logged-out');
+                if (loggedInEl) loggedInEl.classList.remove('hidden');
+                if (loggedOutEl) loggedOutEl.classList.add('hidden');
+            } else {
+                const loggedInEl = document.getElementById('drawer-user-logged-in');
+                const loggedOutEl = document.getElementById('drawer-user-logged-out');
+                if (loggedInEl) loggedInEl.classList.add('hidden');
+                if (loggedOutEl) loggedOutEl.classList.remove('hidden');
             }
         } catch (err) {
             console.warn('Could not load user profile for dropdown:', err);
@@ -5147,6 +5157,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nameEl) nameEl.textContent = 'Usuario';
             if (idEl) idEl.textContent = 'Identificador';
             if (initialEl) initialEl.textContent = 'U';
+            
+            const loggedInEl = document.getElementById('drawer-user-logged-in');
+            const loggedOutEl = document.getElementById('drawer-user-logged-out');
+            if (loggedInEl) loggedInEl.classList.add('hidden');
+            if (loggedOutEl) loggedOutEl.classList.remove('hidden');
         }
     });
     
