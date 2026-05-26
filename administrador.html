@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador | Terrio</title>
+    <title>Administrador | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -703,25 +703,32 @@
                 transform: translateY(0);
             }
         }
+
         /* Drawer Menu Custom Animations */
         #user-dropdown-menu {
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
+
         #user-dropdown-menu.opacity-100 {
             visibility: visible;
         }
+
         #user-dropdown-menu.opacity-0 {
             visibility: hidden;
         }
+
         #user-dropdown-menu.opacity-100 .drawer-panel {
             transform: translateX(0);
         }
+
         #user-dropdown-menu.opacity-0 .drawer-panel {
             transform: translateX(100%);
         }
+
         #user-dropdown-menu.opacity-100 .drawer-backdrop {
             opacity: 1;
         }
+
         #user-dropdown-menu.opacity-0 .drawer-backdrop {
             opacity: 0;
         }
@@ -743,7 +750,7 @@
         class="hidden bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
         <!-- TopNavBar -->
         <nav
-            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
@@ -801,7 +808,16 @@
                             </div>
                         </div>
                     </label>
-
+                    <button
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -936,7 +952,7 @@
     <section id="landing-propietarios-view"
         class="hidden bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body w-full min-h-screen z-10 transition-opacity duration-300">
         <nav
-            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
@@ -987,8 +1003,14 @@
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
                     </div>
                     <button
-                        class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all">
-                        U
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                     </button>
                 </div>
             </div>
@@ -1284,49 +1306,63 @@
                             </a>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">badge</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 1
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Validacion de Identidad del Garante</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Seguridad juridica mediante biometria y cruce de datos con RENAPER en tiempo real.
                                 </p>
                             </article>
 
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">document_scanner</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 2
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Analisis de Recibos de Sueldo con IA</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y scoring
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y
+                                    scoring
                                     objetivo.
                                 </p>
                             </article>
 
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">account_balance</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 3
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Consulta al BCRA automatica</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Verificacion de historial crediticio mediante acceso directo a la Central de
                                     Deudores.
                                 </p>
@@ -1593,7 +1629,11 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, InmoTech no adelanta el pago del alquiler, pero se encarga de que cobrarlo sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa, nuestra plataforma calcula autom&aacute;ticamente los intereses por cada d&iacute;a de mora y env&iacute;a alertas inmediatas tanto al inquilino como a sus padres (garantes) para que regularicen la situaci&oacute;n cuanto antes.</p>
+                                        No, InmoTech no adelanta el pago del alquiler, pero se encarga de que cobrarlo
+                                        sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa, nuestra
+                                        plataforma calcula autom&aacute;ticamente los intereses por cada d&iacute;a de
+                                        mora y env&iacute;a alertas inmediatas tanto al inquilino como a sus padres
+                                        (garantes) para que regularicen la situaci&oacute;n cuanto antes.</p>
                                 </div>
                             </div>
                         </article>
@@ -1612,7 +1652,13 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos tu patrimonio mediante el inventario digital realizado por nuestro Homechecker. Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el registro inicial, la plataforma te facilita la documentaci&oacute;n t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de garant&iacute;a o contra el patrimonio del garante verificado.</p>
+                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del
+                                        estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos
+                                        tu patrimonio mediante el inventario digital realizado por nuestro Homechecker.
+                                        Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el
+                                        registro inicial, la plataforma te facilita la documentaci&oacute;n
+                                        t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de
+                                        garant&iacute;a o contra el patrimonio del garante verificado.</p>
                                 </div>
                             </div>
                         </article>
@@ -1631,7 +1677,14 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el contrato generado por Habitat ya contempla las cl&aacute;usulas de resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma transparente y coordina la visita del Homechecker para certificar el estado de la propiedad mediante el inventario digital. De esta manera, el propietario dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
+                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el
+                                        contrato generado por Habitat ya contempla las cl&aacute;usulas de
+                                        resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de
+                                        la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma
+                                        transparente y coordina la visita del Homechecker para certificar el estado de
+                                        la propiedad mediante el inventario digital. De esta manera, el propietario
+                                        dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para
+                                        respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
                                 </div>
                             </div>
                         </article>
@@ -1850,10 +1903,15 @@
                         class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-3 py-1 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:opacity-90 transition-all shadow-md active:scale-95 flex-shrink-0">Publicar</button>
                     <!-- Avatar in mis avisos nav -->
                     <div class="relative" id="avisos-user-menu-container">
-                        <button id="avisos-user-avatar-btn"
-                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
-                            aria-haspopup="true" aria-expanded="false">
-                            <span class="avisos-avatar-initial">U</span>
+                        <button
+                            class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                            aria-label="Menu">
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                         </button>
                     </div>
                 </div>
@@ -5081,7 +5139,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
-        <script src="js/app.js"></script>
+        <script src="js/app.js?v=2"></script>
         <!-- Google Maps -->
         <script async defer
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
@@ -5120,6 +5178,8 @@
             <p class="success-subtitle">Tu aviso ya está disponible en el marketplace</p>
         </div>
 
-</body>
 
+    
+    <!-- End Scripts -->
+</body>
 </html>

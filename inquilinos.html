@@ -834,25 +834,32 @@
                 transform: translateY(0);
             }
         }
+
         /* Drawer Menu Custom Animations */
         #user-dropdown-menu {
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
+
         #user-dropdown-menu.opacity-100 {
             visibility: visible;
         }
+
         #user-dropdown-menu.opacity-0 {
             visibility: hidden;
         }
+
         #user-dropdown-menu.opacity-100 .drawer-panel {
             transform: translateX(0);
         }
+
         #user-dropdown-menu.opacity-0 .drawer-panel {
             transform: translateX(100%);
         }
+
         #user-dropdown-menu.opacity-100 .drawer-backdrop {
             opacity: 1;
         }
+
         #user-dropdown-menu.opacity-0 .drawer-backdrop {
             opacity: 0;
         }
@@ -874,7 +881,7 @@
         class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
         <!-- TopNavBar -->
         <nav
-            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
@@ -932,7 +939,16 @@
                             </div>
                         </div>
                     </label>
-
+                    <button
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -979,7 +995,8 @@
             </section>
 
             <section class="max-w-[1280px] mx-auto px-4 md:px-8 relative z-20 animate-on-scroll">
-                <div class="-mt-12 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
+                <div
+                    class="-mt-12 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
                     <div>
                         <p class="text-2xl md:text-3xl font-headline font-extrabold">+30.000</p>
                         <p class="text-xs font-bold opacity-90">Propietarios ya publicando</p>
@@ -1000,11 +1017,17 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                     <article
                         class="group/benefit animate-on-scroll relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <span class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none" aria-hidden="true">support_agent</span>
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none"
+                            aria-hidden="true">support_agent</span>
                         <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
                                 Estamos contigo en esto</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
                                 Recibe ayuda de un agente en tu idioma, para resolver dudas, ayudarte a encontrar casa y
@@ -1014,11 +1037,17 @@
 
                     <article
                         class="group/benefit animate-on-scroll delay-100 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <span class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none" aria-hidden="true">verified_user</span>
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
+                            aria-hidden="true">verified_user</span>
                         <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
                                 Siempre a salvo</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
                                 Accede a propietarios e inquilinos verificados, pagos seguros y con cobertura total.</p>
@@ -1029,11 +1058,17 @@
 
                     <article
                         class="group/benefit animate-on-scroll delay-200 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <span class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none" aria-hidden="true">savings</span>
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none"
+                            aria-hidden="true">savings</span>
                         <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
                                 A la medida de tu bolsillo</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
                                 Escoge entre miles de opciones sin fianza, con ofertas y tarifas más baratas que en una
@@ -1043,11 +1078,17 @@
 
                     <article
                         class="group/benefit animate-on-scroll delay-300 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
-                        <span class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
-                        <div class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10"></div>
-                        <span class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none" aria-hidden="true">public</span>
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
+                            aria-hidden="true">public</span>
                         <div class="relative z-10 max-w-xl">
-                            <h2 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
                                 Desde cualquier lugar</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
                                 Encuentra tu alquiler temporal, sin visitas y 100% online.</p>
@@ -1057,63 +1098,86 @@
             </section>
 
             <!-- Guarantee Stats & Cards Section -->
-            <section class="bg-slate-50 dark:bg-zinc-950/20 py-20 px-4 sm:px-6 lg:px-12 border-t border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+            <section
+                class="bg-slate-50 dark:bg-zinc-950/20 py-20 px-4 sm:px-6 lg:px-12 border-t border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
                 <div class="max-w-[1280px] mx-auto">
-                    <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
+                    <h2
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
                         Todo bajo control con nuestra garantía
                     </h2>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                         <!-- Card 1 -->
-                        <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                            <div class="relative w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 shrink-0">
+                        <article
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            <div
+                                class="relative w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">notifications_active</span>
-                                <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-red-400 border-2 border-white dark:border-zinc-900"></span>
+                                <span
+                                    class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-red-400 border-2 border-white dark:border-zinc-900"></span>
                             </div>
-                            <h3 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
+                            <h3
+                                class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
                                 Ningún problema sin solución
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Si el propietario cancela tu reserva en el último minuto, <strong class="font-semibold text-zinc-800 dark:text-zinc-200">nos hacemos cargo de tu estancia en un hotel</strong> mientras buscamos otra alternativa.
+                                Si el propietario cancela tu reserva en el último minuto, <strong
+                                    class="font-semibold text-zinc-800 dark:text-zinc-200">nos hacemos cargo de tu
+                                    estancia en un hotel</strong> mientras buscamos otra alternativa.
                             </p>
                         </article>
 
                         <!-- Card 2 -->
-                        <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                            <div class="relative w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6 shrink-0">
+                        <article
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            <div
+                                class="relative w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">calendar_month</span>
                             </div>
-                            <h3 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
+                            <h3
+                                class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
                                 ¿Cambio de planes? Cancelación flexible
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Cancela <strong class="font-semibold text-zinc-800 dark:text-zinc-200">sin coste</strong> antes de que el propietario responda a tu solicitud o si encuentras alguna tarifa que no cuadre con lo acordado.
+                                Cancela <strong class="font-semibold text-zinc-800 dark:text-zinc-200">sin
+                                    coste</strong> antes de que el propietario responda a tu solicitud o si encuentras
+                                alguna tarifa que no cuadre con lo acordado.
                             </p>
                         </article>
 
                         <!-- Card 3 -->
-                        <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                            <div class="relative w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6 shrink-0">
+                        <article
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            <div
+                                class="relative w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">verified_user</span>
                             </div>
-                            <h3 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
+                            <h3
+                                class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
                                 Solo propietarios verificados
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Verificamos minuciosamente a cada propietario por ti y garantizamos que solo reciba el pago <strong class="font-semibold text-zinc-800 dark:text-zinc-200">una vez hayas confirmado</strong> que todo está bien.
+                                Verificamos minuciosamente a cada propietario por ti y garantizamos que solo reciba el
+                                pago <strong class="font-semibold text-zinc-800 dark:text-zinc-200">una vez hayas
+                                    confirmado</strong> que todo está bien.
                             </p>
                         </article>
 
                         <!-- Card 4 -->
-                        <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                            <div class="relative w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-6 shrink-0">
+                        <article
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            <div
+                                class="relative w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">visibility</span>
                             </div>
-                            <h3 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
+                            <h3
+                                class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
                                 Garantía de amor a primera vista
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Tienes 24 horas para comprobar que todo está como en el anuncio. Si no, estamos aquí para <strong class="font-semibold text-zinc-800 dark:text-zinc-200">ayudarte a encontrar</strong> una solución.
+                                Tienes 24 horas para comprobar que todo está como en el anuncio. Si no, estamos aquí
+                                para <strong class="font-semibold text-zinc-800 dark:text-zinc-200">ayudarte a
+                                    encontrar</strong> una solución.
                             </p>
                         </article>
                     </div>
@@ -1121,134 +1185,182 @@
             </section>
 
             <!-- Types of Accommodation Section -->
-            <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-20 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
-                <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
+            <section
+                class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-20 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+                <h2
+                    class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
                     Tipos de alojamiento en alquiler
                 </h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Card 1: Pisos -->
-                    <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                    <article
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/pisos-inquilinos.jpg" alt="Pisos en alquiler" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                            <img src="img/pisos-inquilinos.jpg" alt="Pisos en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
-                        <span class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
+                        <span
+                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
                             Pisos
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Descubre los mejores pisos en alquiler en las principales capitales europeas. ¡Apartamentos de todos los tamaños y para todos los gustos!
+                            Descubre los mejores pisos en alquiler en las principales capitales europeas. ¡Apartamentos
+                            de todos los tamaños y para todos los gustos!
                         </p>
                     </article>
 
                     <!-- Card 2: Habitaciones -->
-                    <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                    <article
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/habitaciones-inquilinos.jpg" alt="Habitaciones en alquiler" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                            <img src="img/habitaciones-inquilinos.jpg" alt="Habitaciones en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
-                        <span class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
+                        <span
+                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
                             Habitaciones
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Encuentra habitaciones en alquiler en pisos compartidos. ¡Comienza tu aventura en una nueva ciudad con el apoyo de tus compañeros de piso!
+                            Encuentra habitaciones en alquiler en pisos compartidos. ¡Comienza tu aventura en una nueva
+                            ciudad con el apoyo de tus compañeros de piso!
                         </p>
                     </article>
 
                     <!-- Card 3: Estudios -->
-                    <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                    <article
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/estudios-inquilinos.jpg" alt="Estudios en alquiler" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                            <img src="img/estudios-inquilinos.jpg" alt="Estudios en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
-                        <span class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
+                        <span
+                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
                             Estudios
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Disfruta de tu propio espacio alquilando un estudio desde el que explorar la ciudad. ¡Modernos y céntricos lofts a tu disposición!
+                            Disfruta de tu propio espacio alquilando un estudio desde el que explorar la ciudad.
+                            ¡Modernos y céntricos lofts a tu disposición!
                         </p>
                     </article>
 
                     <!-- Card 4: Residencias -->
-                    <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                    <article
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                         <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/residencias-inquilinos.jpg" alt="Residencias en alquiler" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                            <img src="img/residencias-inquilinos.jpg" alt="Residencias en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                         </div>
-                        <span class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
+                        <span
+                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
                             Residencias
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Vive la mejor experiencia mientras estudias alquilando una habitación en una residencia de estudiantes. ¡Intimidad y nuevos compañeros a partes iguales!
+                            Vive la mejor experiencia mientras estudias alquilando una habitación en una residencia de
+                            estudiantes. ¡Intimidad y nuevos compañeros a partes iguales!
                         </p>
                     </article>
                 </div>
             </section>
 
             <!-- Owner Call to Action Section -->
-            <section class="bg-zinc-100/50 dark:bg-zinc-900/30 py-24 px-4 sm:px-6 lg:px-12 text-center border-b border-zinc-200/40 dark:border-zinc-800/40 relative overflow-hidden animate-on-scroll">
-                <div class="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-0 dark:opacity-100 pointer-events-none"></div>
+            <section
+                class="bg-zinc-100/50 dark:bg-zinc-900/30 py-24 px-4 sm:px-6 lg:px-12 text-center border-b border-zinc-200/40 dark:border-zinc-800/40 relative overflow-hidden animate-on-scroll">
+                <div
+                    class="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-0 dark:opacity-100 pointer-events-none">
+                </div>
                 <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-                    <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 tracking-tight leading-tight">
+                    <h2
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 tracking-tight leading-tight">
                         ¿Tienes una casa para alquilar?
                     </h2>
-                    <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed">
-                        Súbela a <span class="font-semibold text-primary dark:text-red-400">Terrio</span> y deja que nos encarguemos de todo.
+                    <p
+                        class="font-body text-zinc-600 dark:text-zinc-400 text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed">
+                        Súbela a <span class="font-semibold text-primary dark:text-red-400">Terrio</span> y deja que nos
+                        encarguemos de todo.
                     </p>
-                    <a href="propietarios.html" 
-                       class="inline-flex items-center justify-center rounded-full border border-zinc-800 dark:border-zinc-200 px-10 py-4 font-body font-bold text-base text-zinc-800 dark:text-zinc-200 hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-200 dark:hover:text-zinc-900 transition-all duration-300 shadow-sm hover:shadow active:scale-[0.98]">
+                    <a href="propietarios.html"
+                        class="inline-flex items-center justify-center rounded-full border border-zinc-800 dark:border-zinc-200 px-10 py-4 font-body font-bold text-base text-zinc-800 dark:text-zinc-200 hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-200 dark:hover:text-zinc-900 transition-all duration-300 shadow-sm hover:shadow active:scale-[0.98]">
                         Más información
                     </a>
                 </div>
             </section>
 
             <!-- Cities Section -->
-            <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-24 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+            <section
+                class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-24 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
                 <div class="text-center max-w-3xl mx-auto mb-16">
-                    <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-3 block">
+                    <span
+                        class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-3 block">
                         Presencia Local
                     </span>
-                    <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
+                    <h2
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
                         Nuestras ciudades
                     </h2>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-[1280px] mx-auto bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden shadow-[0_15px_35px_-12px_rgba(0,0,0,0.02)] dark:shadow-none">
+                <div
+                    class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-[1280px] mx-auto bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden shadow-[0_15px_35px_-12px_rgba(0,0,0,0.02)] dark:shadow-none">
                     <!-- Image Column -->
                     <div class="lg:col-span-7 h-[300px] sm:h-[400px] lg:h-auto relative overflow-hidden shrink-0">
-                        <img src="img/mendoza-inquilinos.jpg" alt="Mendoza, Argentina" class="w-full h-full object-cover transition-transform duration-750 hover:scale-102" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent lg:hidden"></div>
-                        <span class="absolute top-6 left-6 inline-flex items-center gap-1.5 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold text-zinc-800 dark:text-zinc-200 border border-white/20 dark:border-zinc-800 shadow-md">
-                            <span class="material-symbols-outlined text-base text-primary dark:text-red-400">location_on</span>
+                        <img src="img/mendoza-inquilinos.jpg" alt="Mendoza, Argentina"
+                            class="w-full h-full object-cover transition-transform duration-750 hover:scale-102" />
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent lg:hidden">
+                        </div>
+                        <span
+                            class="absolute top-6 left-6 inline-flex items-center gap-1.5 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold text-zinc-800 dark:text-zinc-200 border border-white/20 dark:border-zinc-800 shadow-md">
+                            <span
+                                class="material-symbols-outlined text-base text-primary dark:text-red-400">location_on</span>
                             Mendoza, Argentina
                         </span>
                     </div>
 
                     <!-- Content Column -->
                     <div class="lg:col-span-5 p-8 sm:p-12 flex flex-col justify-center space-y-6">
-                        <span class="inline-flex items-center bg-red-50 dark:bg-red-950/20 text-primary dark:text-red-400 px-3.5 py-1.5 rounded-full text-xs font-bold w-fit uppercase tracking-wider">
+                        <span
+                            class="inline-flex items-center bg-red-50 dark:bg-red-950/20 text-primary dark:text-red-400 px-3.5 py-1.5 rounded-full text-xs font-bold w-fit uppercase tracking-wider">
                             Actualmente en
                         </span>
-                        
-                        <h3 class="font-headline text-3xl sm:text-4xl font-extrabold text-on-background dark:text-white tracking-tight">
+
+                        <h3
+                            class="font-headline text-3xl sm:text-4xl font-extrabold text-on-background dark:text-white tracking-tight">
                             Mendoza
                         </h3>
-                        
+
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Explora una curaduría exclusiva de alquileres temporales en la tierra del buen sol y el buen vino. Desde modernos departamentos en el corazón de la Quinta Sección hasta exclusivos lofts de diseño en Godoy Cruz y Chacras de Coria.
+                            Explora el catalogo de alquileres temporales en la tierra del buen sol y el buen vino. Desde
+                            modernos
+                            departamentos en el corazón de la Quinta Sección hasta exclusivos lofts de diseño en Godoy
+                            Cruz y Chacras de Coria.
                         </p>
 
                         <!-- Neighborhood tags -->
                         <div class="space-y-3 pt-2">
-                            <p class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Zonas destacadas</p>
+                            <p class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Zonas
+                                destacadas</p>
                             <div class="flex flex-wrap gap-2">
-                                <span class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Quinta Sección</span>
-                                <span class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Sexta Sección</span>
-                                <span class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Godoy Cruz</span>
-                                <span class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Chacras de Coria</span>
+                                <span
+                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Quinta
+                                    Sección</span>
+                                <span
+                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Sexta
+                                    Sección</span>
+                                <span
+                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Godoy
+                                    Cruz</span>
+                                <span
+                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Chacras
+                                    de Coria</span>
                             </div>
                         </div>
 
                         <!-- CTA Button to scroll/interact -->
                         <div class="pt-4">
-                            <button onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })" 
-                                    class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-6 py-3.5 rounded-xl font-body font-bold text-sm shadow-md transition-all active:scale-[0.98]">
+                            <button
+                                onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })"
+                                class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-6 py-3.5 rounded-xl font-body font-bold text-sm shadow-md transition-all active:scale-[0.98]">
                                 Ver propiedades disponibles
                             </button>
                         </div>
@@ -1257,9 +1369,11 @@
 
                 <!-- Upcoming Destinations -->
                 <div class="mt-20 max-w-[1280px] mx-auto animate-on-scroll">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 border-b border-zinc-200/40 dark:border-zinc-800/40 pb-6">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 border-b border-zinc-200/40 dark:border-zinc-800/40 pb-6">
                         <div>
-                            <h3 class="font-headline text-2xl font-extrabold text-on-background dark:text-white tracking-tight">
+                            <h3
+                                class="font-headline text-2xl font-extrabold text-on-background dark:text-white tracking-tight">
                                 Próximamente en más destinos
                             </h3>
                             <p class="font-body text-zinc-500 dark:text-zinc-400 text-sm mt-1">
@@ -1270,11 +1384,14 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
                         <!-- Buenos Aires -->
-                        <div class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
+                        <div
+                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
+                            <span
+                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
                                 Próximamente
                             </span>
-                            <h4 class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                            <h4
+                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                 Buenos Aires
                             </h4>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
@@ -1283,11 +1400,14 @@
                         </div>
 
                         <!-- Córdoba -->
-                        <div class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
+                        <div
+                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
+                            <span
+                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
                                 Próximamente
                             </span>
-                            <h4 class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                            <h4
+                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                 Córdoba
                             </h4>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
@@ -1296,11 +1416,14 @@
                         </div>
 
                         <!-- Santa Fe -->
-                        <div class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
+                        <div
+                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
+                            <span
+                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
                                 Próximamente
                             </span>
-                            <h4 class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                            <h4
+                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                 Santa Fe
                             </h4>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
@@ -1309,11 +1432,14 @@
                         </div>
 
                         <!-- Tucumán -->
-                        <div class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
+                        <div
+                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
+                            <span
+                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
                                 Próximamente
                             </span>
-                            <h4 class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                            <h4
+                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                 Tucumán
                             </h4>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
@@ -1322,11 +1448,14 @@
                         </div>
 
                         <!-- Salta -->
-                        <div class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
+                        <div
+                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
+                            <span
+                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
                                 Próximamente
                             </span>
-                            <h4 class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                            <h4
+                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                 Salta
                             </h4>
                             <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
@@ -1338,16 +1467,19 @@
             </section>
 
             <!-- Renter FAQ Section -->
-            <section class="max-w-[1280px] mx-auto px-4 md:px-8 py-24 animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40"
+            <section
+                class="max-w-[1280px] mx-auto px-4 md:px-8 py-24 animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40"
                 aria-labelledby="tenant-faq-title">
                 <div class="grid grid-cols-1 lg:grid-cols-[0.72fr_1.28fr] gap-10 lg:gap-20 items-start">
                     <div class="lg:sticky lg:top-28">
                         <h2 id="tenant-faq-title"
                             class="font-headline text-[48px] leading-[1.05] md:text-6xl md:leading-[1.08] font-light text-on-background dark:text-white mb-7">
                             Tus<br>preguntas,<br>respondidas</h2>
-                        <p class="font-body text-lg text-zinc-600 dark:text-zinc-300 mb-2">&iquest;Tienes una pregunta diferente?</p>
+                        <p class="font-body text-lg text-zinc-600 dark:text-zinc-300 mb-2">&iquest;Tienes una pregunta
+                            diferente?</p>
                         <a href="#"
-                            class="inline-flex font-body text-lg font-bold text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors">Descubre m&aacute;s</a>
+                            class="inline-flex font-body text-lg font-bold text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors">Descubre
+                            m&aacute;s</a>
                     </div>
 
                     <div class="owner-faq-list">
@@ -1357,25 +1489,39 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo cancelar una reserva?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo
+                                    cancelar una reserva?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p>Puedes cancelar tu reserva, pero tu reembolso depende de cu&aacute;ndo canceles y de si el propietario ha aprobado tu solicitud.</p>
-                                        <div class="space-y-3 pl-4 border-l-2 border-primary dark:border-red-400 text-sm md:text-base">
-                                            <p><strong>✔️ Antes de que el propietario apruebe tu reserva:</strong><br>Puedes cancelar en cualquier momento y no se aplicar&aacute;n cargos.</p>
-                                            <p><strong>✔️ Despu&eacute;s de que el propietario haya aprobado tu reserva:</strong><br>Tu reembolso depende de con cu&aacute;nta antelaci&oacute;n canceles:</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
+                                        <p>Puedes cancelar tu reserva, pero tu reembolso depende de cu&aacute;ndo
+                                            canceles y de si el propietario ha aprobado tu solicitud.</p>
+                                        <div
+                                            class="space-y-3 pl-4 border-l-2 border-primary dark:border-red-400 text-sm md:text-base">
+                                            <p><strong>✔️ Antes de que el propietario apruebe tu
+                                                    reserva:</strong><br>Puedes cancelar en cualquier momento y no se
+                                                aplicar&aacute;n cargos.</p>
+                                            <p><strong>✔️ Despu&eacute;s de que el propietario haya aprobado tu
+                                                    reserva:</strong><br>Tu reembolso depende de con cu&aacute;nta
+                                                antelaci&oacute;n canceles:</p>
                                             <ul class="list-disc pl-5 space-y-1 text-sm">
-                                                <li>Reembolso completo del pago inicial del alquiler si cancelas con 60 d&iacute;as o m&aacute;s de antelaci&oacute;n a la fecha de entrada.</li>
-                                                <li>Reembolso del 50% del pago inicial del alquiler si cancelas entre 30 y 59 d&iacute;as antes de la fecha de entrada.</li>
-                                                <li>Sin reembolso si cancelas con 29 d&iacute;as o menos de antelaci&oacute;n a la fecha de entrada.</li>
+                                                <li>Reembolso completo del pago inicial del alquiler si cancelas con 60
+                                                    d&iacute;as o m&aacute;s de antelaci&oacute;n a la fecha de entrada.
+                                                </li>
+                                                <li>Reembolso del 50% del pago inicial del alquiler si cancelas entre 30
+                                                    y 59 d&iacute;as antes de la fecha de entrada.</li>
+                                                <li>Sin reembolso si cancelas con 29 d&iacute;as o menos de
+                                                    antelaci&oacute;n a la fecha de entrada.</li>
                                             </ul>
                                         </div>
-                                        <p class="text-sm bg-zinc-100 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-                                            <strong>⚠️ Importante:</strong> La tarifa de H&aacute;bitat no es reembolsable una vez que la reserva est&aacute; confirmada.
+                                        <p
+                                            class="text-sm bg-zinc-100 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
+                                            <strong>⚠️ Importante:</strong> La tarifa de H&aacute;bitat no es
+                                            reembolsable una vez que la reserva est&aacute; confirmada.
                                         </p>
                                     </div>
                                 </div>
@@ -1388,7 +1534,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo visitar la propiedad antes de reservar?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo
+                                    visitar la propiedad antes de reservar?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1396,7 +1543,9 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, con nosotros no tienes que hacerlo. Nuestro equipo verifica las propiedades por ti, d&aacute;ndote m&aacute;s tiempo para planear, hacer maletas o relajarte.</p>
+                                        No, con nosotros no tienes que hacerlo. Nuestro equipo verifica las propiedades
+                                        por ti, d&aacute;ndote m&aacute;s tiempo para planear, hacer maletas o
+                                        relajarte.</p>
                                 </div>
                             </div>
                         </article>
@@ -1407,7 +1556,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Con qui&eacute;n vivir&eacute;?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Con
+                                    qui&eacute;n vivir&eacute;?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1415,7 +1565,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Tenemos inquilinos de todas las edades y nacionalidades en nuestras propiedades, pero no podemos compartir sus datos por privacidad.</p>
+                                        Tenemos inquilinos de todas las edades y nacionalidades en nuestras propiedades,
+                                        pero no podemos compartir sus datos por privacidad.</p>
                                 </div>
                             </div>
                         </article>
@@ -1426,15 +1577,21 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute; es un Homechecker?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
+                                    es un Homechecker?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p>Los Homecheckers son colaboradores que verifican propiedades por ti. Crean los planos digitales, v&iacute;deo-tours y fotos que se ven en nuestros anuncios.</p>
-                                        <p>Puedes confiar en un Homechecker. Son tus ojos y o&iacute;dos en cada una de nuestras ciudades, ya que viven all&iacute; y les damos feedback semanalmente para ayudaros.</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
+                                        <p>Los Homecheckers son colaboradores que verifican propiedades por ti. Crean
+                                            los planos digitales, v&iacute;deo-tours y fotos que se ven en nuestros
+                                            anuncios.</p>
+                                        <p>Puedes confiar en un Homechecker. Son tus ojos y o&iacute;dos en cada una de
+                                            nuestras ciudades, ya que viven all&iacute; y les damos feedback
+                                            semanalmente para ayudaros.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1446,16 +1603,22 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">Mi reserva ha sido aceptada, &iquest;Ahora qu&eacute;?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">Mi
+                                    reserva ha sido aceptada, &iquest;Ahora qu&eacute;?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p>Pagar&aacute;s la cuota de H&aacute;bitat y el primer pago de alquiler. Este dinero va a mantenerse a salvo hasta despu&eacute;s de tu mudanza.</p>
-                                        <p>Tambi&eacute;n te pondremos en contacto con el propietario para que puedas organizar el check-in a tiempo.</p>
-                                        <p class="font-semibold text-primary dark:text-red-400">&iexcl;Lo &uacute;nico que debes hacer ahora es relajarte - Tu pr&oacute;xima mudanza ya ha empezado!</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
+                                        <p>Pagar&aacute;s la cuota de H&aacute;bitat y el primer pago de alquiler. Este
+                                            dinero va a mantenerse a salvo hasta despu&eacute;s de tu mudanza.</p>
+                                        <p>Tambi&eacute;n te pondremos en contacto con el propietario para que puedas
+                                            organizar el check-in a tiempo.</p>
+                                        <p class="font-semibold text-primary dark:text-red-400">&iexcl;Lo &uacute;nico
+                                            que debes hacer ahora es relajarte - Tu pr&oacute;xima mudanza ya ha
+                                            empezado!</p>
                                     </div>
                                 </div>
                             </div>
@@ -1467,7 +1630,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute; ocurre si no me gusta la propiedad donde me he mudado?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
+                                    ocurre si no me gusta la propiedad donde me he mudado?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1475,7 +1639,11 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Dispones de 24 horas desde tu check-in en el alojamiento para comprobar que todo est&aacute; bien. Si consideras que el alojamiento no coincide con lo que te mostramos en la web de H&aacute;bitat o te encuentras con alg&uacute;n problema grave que te impide quedarte, te ayudaremos a encontrar otro lugar donde vivir o te reembolsaremos la totalidad de lo pagado.</p>
+                                        Dispones de 24 horas desde tu check-in en el alojamiento para comprobar que todo
+                                        est&aacute; bien. Si consideras que el alojamiento no coincide con lo que te
+                                        mostramos en la web de H&aacute;bitat o te encuentras con alg&uacute;n problema
+                                        grave que te impide quedarte, te ayudaremos a encontrar otro lugar donde vivir o
+                                        te reembolsaremos la totalidad de lo pagado.</p>
                                 </div>
                             </div>
                         </article>
@@ -1486,18 +1654,34 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;H&aacute;bitat es seguro?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;H&aacute;bitat
+                                    es seguro?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p><strong>H&aacute;bitat</strong> es una plataforma segura con la que m&aacute;s de 120 000 personas han encontrado su nuevo hogar de manera totalmente online, manteniendo siempre m&aacute;s de 4 estrellas de 5 en trustpilot. En H&aacute;bitat, nos volcamos para hacerte la vida m&aacute;s f&aacute;cil y evitarte preocupaciones:</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
+                                        <p><strong>H&aacute;bitat</strong> es una plataforma segura con la que
+                                            m&aacute;s de 120 000 personas han encontrado su nuevo hogar de manera
+                                            totalmente online, manteniendo siempre m&aacute;s de 4 estrellas de 5 en
+                                            trustpilot. En H&aacute;bitat, nos volcamos para hacerte la vida m&aacute;s
+                                            f&aacute;cil y evitarte preocupaciones:</p>
                                         <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
-                                            <li><strong>Verificamos propiedades por ti:</strong> Tomamos fotograf&iacute;as y v&iacute;deos reales acompa&ntilde;ados de una descripci&oacute;n detallada para que puedas tomar la decisi&oacute;n m&aacute;s acertada y segura.</li>
-                                            <li><strong>Garant&iacute;a de pago seguro:</strong> Nuestro sistema te garantiza una experiencia &oacute;ptima con pago seguro 24 horas despu&eacute;s de la llegada. Transferimos tu alquiler al propietario solo cuando nos des el visto bueno. Adem&aacute;s, la pol&iacute;tica de cancelaci&oacute;n viene por defecto, entre otras garant&iacute;as.</li>
-                                            <li><strong>Innovaci&oacute;n constante:</strong> Somos los primeros en lanzar un servicio sin dep&oacute;sito que facilita que puedas entrar a la casa de tus sue&ntilde;os y que adem&aacute;s protege al propietario en caso de impagos o da&ntilde;os.</li>
+                                            <li><strong>Verificamos propiedades por ti:</strong> Tomamos
+                                                fotograf&iacute;as y v&iacute;deos reales acompa&ntilde;ados de una
+                                                descripci&oacute;n detallada para que puedas tomar la decisi&oacute;n
+                                                m&aacute;s acertada y segura.</li>
+                                            <li><strong>Garant&iacute;a de pago seguro:</strong> Nuestro sistema te
+                                                garantiza una experiencia &oacute;ptima con pago seguro 24 horas
+                                                despu&eacute;s de la llegada. Transferimos tu alquiler al propietario
+                                                solo cuando nos des el visto bueno. Adem&aacute;s, la pol&iacute;tica de
+                                                cancelaci&oacute;n viene por defecto, entre otras garant&iacute;as.</li>
+                                            <li><strong>Innovaci&oacute;n constante:</strong> Somos los primeros en
+                                                lanzar un servicio sin dep&oacute;sito que facilita que puedas entrar a
+                                                la casa de tus sue&ntilde;os y que adem&aacute;s protege al propietario
+                                                en caso de impagos o da&ntilde;os.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1510,20 +1694,28 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Por qu&eacute; deber&iacute;a elegir H&aacute;bitat para alquileres de corta y media estancia?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Por
+                                    qu&eacute; deber&iacute;a elegir H&aacute;bitat para alquileres de corta y media
+                                    estancia?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p><strong>H&aacute;bitat</strong> ofrece una forma segura y transparente de alquilar viviendas de corta y media duraci&oacute;n. Aqu&iacute; te contamos por qu&eacute;:</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
+                                        <p><strong>H&aacute;bitat</strong> ofrece una forma segura y transparente de
+                                            alquilar viviendas de corta y media duraci&oacute;n. Aqu&iacute; te contamos
+                                            por qu&eacute;:</p>
                                         <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
-                                            <li>Soporte dedicado si tienes problemas con la propiedad o el propietario.</li>
-                                            <li>Un proceso confiable utilizado por miles de inquilinos internacionales.</li>
+                                            <li>Soporte dedicado si tienes problemas con la propiedad o el propietario.
+                                            </li>
+                                            <li>Un proceso confiable utilizado por miles de inquilinos internacionales.
+                                            </li>
                                             <li>24 horas para revisar tu nuevo hogar al llegar.</li>
                                         </ul>
-                                        <p class="font-semibold">Con H&aacute;bitat, puedes alquilar con confianza y evitar sorpresas ocultas.</p>
+                                        <p class="font-semibold">Con H&aacute;bitat, puedes alquilar con confianza y
+                                            evitar sorpresas ocultas.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1535,23 +1727,40 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Cu&aacute;l es la mejor web de alquileres?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Cu&aacute;l
+                                    es la mejor web de alquileres?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p><strong>H&aacute;bitat</strong> es una de las mejores plataformas para alquilar alojamiento por temporadas, especialmente si eres un freelance, estudiante internacional o te est&aacute;s mudando de ciudad, porque combina anuncios verificados, procesos seguros y una protecci&oacute;n real para todos los inquilinos.</p>
-                                        <p>H&aacute;bitat se especializa en alquileres a medio plazo (desde 1 hasta 11 meses o m&aacute;s) y ofrece fotos profesionales, v&iacute;deos y planos de cada vivienda. As&iacute; te aseguras de que lo que ves es real y est&aacute; bien representado, y puedes reservar sin necesidad de ir a verlo en persona.</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
+                                        <p><strong>H&aacute;bitat</strong> es una de las mejores plataformas para
+                                            alquilar alojamiento por temporadas, especialmente si eres un freelance,
+                                            estudiante internacional o te est&aacute;s mudando de ciudad, porque combina
+                                            anuncios verificados, procesos seguros y una protecci&oacute;n real para
+                                            todos los inquilinos.</p>
+                                        <p>H&aacute;bitat se especializa en alquileres a medio plazo (desde 1 hasta 11
+                                            meses o m&aacute;s) y ofrece fotos profesionales, v&iacute;deos y planos de
+                                            cada vivienda. As&iacute; te aseguras de que lo que ves es real y
+                                            est&aacute; bien representado, y puedes reservar sin necesidad de ir a verlo
+                                            en persona.</p>
                                         <p>Adem&aacute;s, H&aacute;bitat te ofrece:</p>
                                         <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
                                             <li>Reserva online segura.</li>
-                                            <li>Pagos seguros con certificaci&oacute;n PCI DSS, cifrado SSL y pasarelas de pago oficiales.</li>
-                                            <li>Atenci&oacute;n y mediaci&oacute;n si tienes cualquier problema con el piso, el dep&oacute;sito o la reserva.</li>
-                                            <li>Experiencia demostrada: cientos de inquilinos han reservado con total seguridad, con opiniones muy positivas.</li>
+                                            <li>Pagos seguros con certificaci&oacute;n PCI DSS, cifrado SSL y pasarelas
+                                                de pago oficiales.</li>
+                                            <li>Atenci&oacute;n y mediaci&oacute;n si tienes cualquier problema con el
+                                                piso, el dep&oacute;sito o la reserva.</li>
+                                            <li>Experiencia demostrada: cientos de inquilinos han reservado con total
+                                                seguridad, con opiniones muy positivas.</li>
                                         </ul>
-                                        <p>Si buscas una forma fiable y sin quebraderos de cabeza para encontrar piso desde el extranjero, H&aacute;bitat te quita todo el estr&eacute;s y la incertidumbre del proceso tradicional de alquiler, ofreci&eacute;ndote adem&aacute;s protecciones que la mayor&iacute;a de plataformas no tienen.</p>
+                                        <p>Si buscas una forma fiable y sin quebraderos de cabeza para encontrar piso
+                                            desde el extranjero, H&aacute;bitat te quita todo el estr&eacute;s y la
+                                            incertidumbre del proceso tradicional de alquiler, ofreci&eacute;ndote
+                                            adem&aacute;s protecciones que la mayor&iacute;a de plataformas no tienen.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1563,23 +1772,51 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;C&oacute;mo alquilar un piso por 3 meses?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;C&oacute;mo
+                                    alquilar un piso por 3 meses?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p>Encontrar un alojamiento para solo tres meses puede ser complicado, ya que la mayor&iacute;a de los sitios de alquiler tradicionales se centran en contratos a largo plazo o en estancias vacacionales cortas. Tu mejor opci&oacute;n es utilizar plataformas especializadas en alquileres a medio plazo, como <strong>H&aacute;bitat</strong>, porque ofrecemos contratos de alquiler mensuales flexibles.</p>
-                                        <p>Aqu&iacute; te explicamos c&oacute;mo encontrar un buen alquiler de tres meses:</p>
+                                    <div
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
+                                        <p>Encontrar un alojamiento para solo tres meses puede ser complicado, ya que la
+                                            mayor&iacute;a de los sitios de alquiler tradicionales se centran en
+                                            contratos a largo plazo o en estancias vacacionales cortas. Tu mejor
+                                            opci&oacute;n es utilizar plataformas especializadas en alquileres a medio
+                                            plazo, como <strong>H&aacute;bitat</strong>, porque ofrecemos contratos de
+                                            alquiler mensuales flexibles.</p>
+                                        <p>Aqu&iacute; te explicamos c&oacute;mo encontrar un buen alquiler de tres
+                                            meses:</p>
                                         <ol class="list-decimal pl-5 space-y-2 text-sm md:text-base">
-                                            <li><strong>Empieza con plataformas de alquiler a medio plazo:</strong> H&aacute;bitat se centra espec&iacute;ficamente en pisos amueblados disponibles de uno a once meses o m&aacute;s, lo que nos hace perfectos para estudiantes, trabajadores en remoto o cualquiera que est&aacute; en plena mudanza.</li>
-                                            <li><strong>Busca propiedades verificadas:</strong> Busca anuncios que incluyan fotos profesionales, v&iacute;deos y alg&uacute;n tipo de proceso de verificación. As&iacute; sabes que el piso es aut&eacute;ntico antes de comprometerte.</li>
-                                            <li><strong>Reserva a través de un sistema seguro:</strong> Opta por plataformas que tengan opciones de pago seguras, protecci&oacute;n del dep&oacute;sito y contratos de alquiler claros que realmente puedas entender.</li>
-                                            <li><strong>Revisa bien los términos del contrato (estancia mínima):</strong> Aseg&uacute;rate de que la propiedad permite realmente alquileres de tres meses y no exige estancias m&iacute;nimas m&aacute;s largas.</li>
-                                            <li><strong>Consigue apoyo si lo necesitas:</strong> Sobre todo si est&aacute;s reservando desde otro pa&iacute;s, elige un servicio que ofrezca ayuda y pueda intervenir si algo va mal con el casero o con el piso.</li>
+                                            <li><strong>Empieza con plataformas de alquiler a medio plazo:</strong>
+                                                H&aacute;bitat se centra espec&iacute;ficamente en pisos amueblados
+                                                disponibles de uno a once meses o m&aacute;s, lo que nos hace perfectos
+                                                para estudiantes, trabajadores en remoto o cualquiera que est&aacute; en
+                                                plena mudanza.</li>
+                                            <li><strong>Busca propiedades verificadas:</strong> Busca anuncios que
+                                                incluyan fotos profesionales, v&iacute;deos y alg&uacute;n tipo de
+                                                proceso de verificación. As&iacute; sabes que el piso es
+                                                aut&eacute;ntico antes de comprometerte.</li>
+                                            <li><strong>Reserva a través de un sistema seguro:</strong> Opta por
+                                                plataformas que tengan opciones de pago seguras, protecci&oacute;n del
+                                                dep&oacute;sito y contratos de alquiler claros que realmente puedas
+                                                entender.</li>
+                                            <li><strong>Revisa bien los términos del contrato (estancia
+                                                    mínima):</strong> Aseg&uacute;rate de que la propiedad permite
+                                                realmente alquileres de tres meses y no exige estancias m&iacute;nimas
+                                                m&aacute;s largas.</li>
+                                            <li><strong>Consigue apoyo si lo necesitas:</strong> Sobre todo si
+                                                est&aacute;s reservando desde otro pa&iacute;s, elige un servicio que
+                                                ofrezca ayuda y pueda intervenir si algo va mal con el casero o con el
+                                                piso.</li>
                                         </ol>
-                                        <p>H&aacute;bitat te quita gran parte del estr&eacute;s al ofrecer alquileres a medio plazo verificados, reserva online segura, protecci&oacute;n de la fianza y atenci&oacute;n continua mientras est&eacute;s all&iacute;. Podemos ayudarte a conseguir un piso para tres meses sin tener que ir a verlo en persona.</p>
+                                        <p>H&aacute;bitat te quita gran parte del estr&eacute;s al ofrecer alquileres a
+                                            medio plazo verificados, reserva online segura, protecci&oacute;n de la
+                                            fianza y atenci&oacute;n continua mientras est&eacute;s all&iacute;. Podemos
+                                            ayudarte a conseguir un piso para tres meses sin tener que ir a verlo en
+                                            persona.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1589,16 +1826,19 @@
             </section>
 
             <!-- Final Search CTA Section -->
-            <section class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40">
+            <section
+                class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40">
                 <div class="max-w-2xl mx-auto flex flex-col items-center">
                     <!-- Premium Custom SVG Illustration -->
                     <div class="w-48 h-32 mb-8 select-none text-primary dark:text-red-400">
                         <svg viewBox="0 0 200 120" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <!-- Ground line -->
-                            <path d="M20 110 H180" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="opacity-30" />
-                            
+                            <path d="M20 110 H180" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                class="opacity-30" />
+
                             <!-- Lamp -->
-                            <path d="M100 20 V110" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 1" class="opacity-50" />
+                            <path d="M100 20 V110" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 1"
+                                class="opacity-50" />
                             <path d="M85 20 H115" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                             <path d="M90 35 L100 20 L110 35 Z" fill="currentColor" class="opacity-20" />
                             <path d="M90 35 H110 L115 50 H85 Z" fill="currentColor" />
@@ -1619,18 +1859,23 @@
                             <!-- Sofa legs -->
                             <path d="M57 98 L53 108" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
                             <path d="M143 98 L147 108" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                            <path d="M75 98 L75 106" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="opacity-70" />
-                            <path d="M125 98 L125 106" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="opacity-70" />
+                            <path d="M75 98 L75 106" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                class="opacity-70" />
+                            <path d="M125 98 L125 106" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                class="opacity-70" />
 
                             <!-- Small Potted Plant (Left) -->
                             <!-- Pot -->
                             <path d="M30 95 L32 108 H22 L24 95 Z" fill="currentColor" class="opacity-40" />
                             <!-- Leaves -->
-                            <path d="M27 95 C27 85 23 88 23 88 C23 88 19 85 19 95" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                            <path d="M27 95 C27 80 31 82 31 82 C31 82 35 80 35 95" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                            <path d="M27 95 C27 75 27 75 27 75" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            <path d="M27 95 C27 85 23 88 23 88 C23 88 19 85 19 95" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M27 95 C27 80 31 82 31 82 C31 82 35 80 35 95" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M27 95 C27 75 27 75 27 75" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
                             <circle cx="27" cy="74" r="2" fill="currentColor" />
-                            
+
                             <!-- Stack of Books & Tea (Right) -->
                             <!-- Table -->
                             <path d="M162 90 H178 V93 H162 Z" fill="currentColor" class="opacity-30" />
@@ -1639,21 +1884,25 @@
                             <!-- Cup of Tea -->
                             <path d="M167 85 H173 V89 C173 90 167 90 167 89 Z" fill="currentColor" />
                             <path d="M173 86 C175 86 175 88 173 88" stroke="currentColor" stroke-width="1" />
-                            <path d="M170 82 C170 80 168 81 168 79" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" class="opacity-60" />
+                            <path d="M170 82 C170 80 168 81 168 79" stroke="currentColor" stroke-width="0.8"
+                                stroke-linecap="round" class="opacity-60" />
                         </svg>
                     </div>
 
                     <!-- Heading -->
-                    <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight mb-4 animate-on-scroll">
+                    <h2
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight mb-4 animate-on-scroll">
                         Encuentra tu casa ideal con H&aacute;bitat
                     </h2>
-                    <p class="font-body text-zinc-500 dark:text-zinc-400 text-base sm:text-lg mb-8 max-w-md animate-on-scroll delay-100">
+                    <p
+                        class="font-body text-zinc-500 dark:text-zinc-400 text-base sm:text-lg mb-8 max-w-md animate-on-scroll delay-100">
                         Miles de propiedades verificadas con fotos reales y reserva 100% online y segura.
                     </p>
 
                     <!-- Interactive Button with Brand Red and Smooth Scroll -->
-                    <button onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })"
-                            class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-body font-bold text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.98] animate-on-scroll delay-200">
+                    <button
+                        onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })"
+                        class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-body font-bold text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.98] animate-on-scroll delay-200">
                         Empieza a buscar
                     </button>
                 </div>
@@ -1663,39 +1912,69 @@
         <footer
             class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body">
             <div class="max-w-[1580px] mx-auto">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
+                <div
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
                     <!-- Col 1: Hábitat -->
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">H&aacute;bitat</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            H&aacute;bitat</h3>
                         <nav class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
+                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de
+                                nosotros</a>
                             <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Blog</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Instituciones</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Datos de la empresa</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Mapa del sitio</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Becas postdoctorado</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">&Iacute;ndice Trimestral de Alquileres</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Instituciones</a>
+                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Datos de la
+                                empresa</a>
+                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Mapa del
+                                sitio</a>
+                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Becas
+                                postdoctorado</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">&Iacute;ndice
+                                Trimestral de Alquileres</a>
                         </nav>
                     </div>
 
                     <!-- Col 2: Inquilinos & Propietarios -->
                     <div class="flex flex-col gap-8">
                         <div>
-                            <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Inquilinos</h3>
-                            <nav class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo funciona</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Promociones</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;a H&aacute;bitat</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Alojamiento para estudiantes</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Alojamiento n&oacute;madas digitales</a>
+                            <h3
+                                class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                                Inquilinos</h3>
+                            <nav
+                                class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo
+                                    funciona</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Promociones</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;a
+                                    H&aacute;bitat</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Alojamiento
+                                    para estudiantes</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Alojamiento
+                                    n&oacute;madas digitales</a>
                             </nav>
                         </div>
                         <div>
-                            <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Propietarios</h3>
-                            <nav class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;as H&aacute;bitat</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo funciona</a>
+                            <h3
+                                class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                                Propietarios</h3>
+                            <nav
+                                class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
+                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia
+                                    tu propiedad</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;as
+                                    H&aacute;bitat</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo
+                                    funciona</a>
                             </nav>
                         </div>
                     </div>
@@ -1703,51 +1982,82 @@
                     <!-- Col 3: Legal & Únete -->
                     <div class="flex flex-col gap-8">
                         <div>
-                            <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Legal</h3>
-                            <nav class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de privacidad</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de cookies</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">T&eacute;rminos y condiciones</a>
+                            <h3
+                                class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                                Legal</h3>
+                            <nav
+                                class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica
+                                    de privacidad</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica
+                                    de cookies</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">T&eacute;rminos
+                                    y condiciones</a>
                             </nav>
                         </div>
                         <div>
-                            <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">&Uacute;nete a nosotros</h3>
-                            <nav class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Colaboradores</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Hazte partner</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Trabaja con nosotros</a>
-                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Recompensas del Programa de Socios</a>
+                            <h3
+                                class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                                &Uacute;nete a nosotros</h3>
+                            <nav
+                                class="flex flex-col items-start gap-3 font-body text-sm text-zinc-600 dark:text-zinc-400">
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Colaboradores</a>
+                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Hazte
+                                    partner</a>
+                                <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Trabaja
+                                    con nosotros</a>
+                                <a href="#"
+                                    class="hover:text-primary dark:hover:text-red-400 transition-colors">Recompensas del
+                                    Programa de Socios</a>
                             </nav>
                         </div>
                     </div>
 
                     <!-- Col 4: Soporte -->
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Soporte</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Soporte</h3>
                         <div class="flex flex-col items-start gap-4">
-                            <a href="#" class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
+                            <a href="#"
+                                class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
                                 <div class="flex -space-x-2.5">
-                                    <img src="img/tenant-profile-1.jpg" alt="Avatar 1" class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
-                                    <img src="img/tenant-profile-2.jpg" alt="Avatar 2" class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
+                                    <img src="img/tenant-profile-1.jpg" alt="Avatar 1"
+                                        class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
+                                    <img src="img/tenant-profile-2.jpg" alt="Avatar 2"
+                                        class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900" />
                                 </div>
-                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro de ayuda</span>
+                                <span
+                                    class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro
+                                    de ayuda</span>
                             </a>
-                            <a href="#" class="font-body text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
+                            <a href="#"
+                                class="font-body text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar
+                                con soporte</a>
                         </div>
                     </div>
 
                     <!-- Col 5: Descarga la app -->
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Descarga la app</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Descarga la app</h3>
                         <div class="flex flex-col gap-2.5">
-                            <a href="#" class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
+                            <a href="#"
+                                class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
                                 <span class="material-symbols-outlined text-2xl">play_arrow</span>
                                 <span class="leading-tight text-left">
-                                    <span class="block text-[8px] uppercase tracking-wide text-white/75">Get it on</span>
+                                    <span class="block text-[8px] uppercase tracking-wide text-white/75">Get it
+                                        on</span>
                                     <span class="block text-sm font-bold">Google Play</span>
                                 </span>
                             </a>
-                            <a href="#" class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
+                            <a href="#"
+                                class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
                                 <span class="material-symbols-outlined text-2xl">phone_iphone</span>
                                 <span class="leading-tight text-left">
                                     <span class="block text-[8px] tracking-wide text-white/75">Download on the</span>
@@ -1759,14 +2069,22 @@
 
                     <!-- Col 6: Síguenos -->
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">S&iacute;guenos</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            S&iacute;guenos</h3>
                         <div class="flex flex-wrap gap-2">
-                            <a href="#" aria-label="Instagram" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">IG</a>
-                            <a href="#" aria-label="X" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">X</a>
-                            <a href="#" aria-label="TikTok" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">TT</a>
-                            <a href="#" aria-label="LinkedIn" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">in</a>
-                            <a href="#" aria-label="Facebook" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">f</a>
-                            <a href="#" aria-label="YouTube" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">YT</a>
+                            <a href="#" aria-label="Instagram"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">IG</a>
+                            <a href="#" aria-label="X"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">X</a>
+                            <a href="#" aria-label="TikTok"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">TT</a>
+                            <a href="#" aria-label="LinkedIn"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">in</a>
+                            <a href="#" aria-label="Facebook"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">f</a>
+                            <a href="#" aria-label="YouTube"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white dark:hover:bg-red-700 hover:border-primary transition-all">YT</a>
                         </div>
                     </div>
                 </div>
@@ -1774,7 +2092,8 @@
                 <div class="pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                     <!-- Left: Copyright and Logo -->
                     <div class="flex items-center gap-3.5 flex-wrap">
-                        <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80" />
+                        <img src="img/logo-lite.png" alt="Habitat Logo"
+                            class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80" />
                         <span class="font-body text-sm text-zinc-500 dark:text-zinc-400">
                             &copy;2026 H&aacute;bitat &ndash; Todos los derechos reservados
                         </span>
@@ -1782,18 +2101,26 @@
 
                     <!-- Middle: Payment Methods -->
                     <div class="flex items-center gap-3.5 flex-wrap">
-                        <span class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos de pago</span>
+                        <span
+                            class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos
+                            de pago</span>
                         <div class="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
-                            <span class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
-                            <span class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
-                            <span class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
-                            <span class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
-                            <span class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">UnionPay</span>
+                            <span
+                                class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
+                            <span
+                                class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
+                            <span
+                                class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
+                            <span
+                                class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
+                            <span
+                                class="bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">UnionPay</span>
                         </div>
                     </div>
 
                     <!-- Right: Language Selector -->
-                    <div class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
+                    <div
+                        class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
                         <span class="material-symbols-outlined text-lg">language</span>
                         <span>Espa&ntilde;ol</span>
                         <span class="material-symbols-outlined text-base">expand_more</span>
@@ -1859,8 +2186,14 @@
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
                     </div>
                     <button
-                        class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all">
-                        U
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu" onclick="App.toggleFullScreenMenu()">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                     </button>
                 </div>
             </div>
@@ -2156,49 +2489,63 @@
                             </a>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">badge</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 1
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Validacion de Identidad del Garante</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Seguridad juridica mediante biometria y cruce de datos con RENAPER en tiempo real.
                                 </p>
                             </article>
 
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">document_scanner</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 2
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Analisis de Recibos de Sueldo con IA</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y scoring
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    Evaluacion financiera instantanea mediante extraccion automatizada de datos y
+                                    scoring
                                     objetivo.
                                 </p>
                             </article>
 
-                            <article class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                            <article
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">account_balance</span>
                                 </div>
-                                <p class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
+                                <p
+                                    class="font-label text-xs font-bold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400 mb-3">
                                     Modulo 3
                                 </p>
-                                <h3 class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
+                                <h3
+                                    class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-3">
                                     Consulta al BCRA automatica</h3>
-                                <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                <p
+                                    class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                     Verificacion de historial crediticio mediante acceso directo a la Central de
                                     Deudores.
                                 </p>
@@ -2465,7 +2812,11 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, InmoTech no adelanta el pago del alquiler, pero se encarga de que cobrarlo sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa, nuestra plataforma calcula autom&aacute;ticamente los intereses por cada d&iacute;a de mora y env&iacute;a alertas inmediatas tanto al inquilino como a sus padres (garantes) para que regularicen la situaci&oacute;n cuanto antes.</p>
+                                        No, InmoTech no adelanta el pago del alquiler, pero se encarga de que cobrarlo
+                                        sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa, nuestra
+                                        plataforma calcula autom&aacute;ticamente los intereses por cada d&iacute;a de
+                                        mora y env&iacute;a alertas inmediatas tanto al inquilino como a sus padres
+                                        (garantes) para que regularicen la situaci&oacute;n cuanto antes.</p>
                                 </div>
                             </div>
                         </article>
@@ -2484,7 +2835,13 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos tu patrimonio mediante el inventario digital realizado por nuestro Homechecker. Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el registro inicial, la plataforma te facilita la documentaci&oacute;n t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de garant&iacute;a o contra el patrimonio del garante verificado.</p>
+                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del
+                                        estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos
+                                        tu patrimonio mediante el inventario digital realizado por nuestro Homechecker.
+                                        Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el
+                                        registro inicial, la plataforma te facilita la documentaci&oacute;n
+                                        t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de
+                                        garant&iacute;a o contra el patrimonio del garante verificado.</p>
                                 </div>
                             </div>
                         </article>
@@ -2503,7 +2860,14 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el contrato generado por Habitat ya contempla las cl&aacute;usulas de resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma transparente y coordina la visita del Homechecker para certificar el estado de la propiedad mediante el inventario digital. De esta manera, el propietario dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
+                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el
+                                        contrato generado por Habitat ya contempla las cl&aacute;usulas de
+                                        resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de
+                                        la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma
+                                        transparente y coordina la visita del Homechecker para certificar el estado de
+                                        la propiedad mediante el inventario digital. De esta manera, el propietario
+                                        dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para
+                                        respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
                                 </div>
                             </div>
                         </article>
@@ -2722,13 +3086,25 @@
                         class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-3 py-1 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:opacity-90 transition-all shadow-md active:scale-95 flex-shrink-0">Publicar</button>
                     <!-- Avatar in mis avisos nav -->
                     <div class="relative" id="avisos-user-menu-container">
-                        <button id="avisos-user-avatar-btn"
-                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
-                            aria-haspopup="true" aria-expanded="false">
-                            <span class="avisos-avatar-initial">U</span>
+                        <button
+                            class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                            aria-label="Menu">
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                         </button>
                     </div>
                 </div>
+                <button id="avisos-user-avatar-btn"
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
+                    aria-haspopup="true" aria-expanded="false">
+                    <span class="avisos-avatar-initial">U</span>
+                </button>
+            </div>
+            </div>
             </div>
             <!-- Mobile sub-navigation -->
             <div
@@ -6019,7 +6395,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
-        <script src="js/app.js"></script>
+        <script src="js/app.js?v=2"></script>
         <!-- Google Maps -->
         <script async defer
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
@@ -6058,6 +6434,8 @@
             <p class="success-subtitle">Tu aviso ya está disponible en el marketplace</p>
         </div>
 
-</body>
 
+    
+    <!-- End Scripts -->
+</body>
 </html>

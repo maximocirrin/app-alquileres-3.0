@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
     <!-- Icons -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -881,7 +881,7 @@
         class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
         <!-- TopNavBar -->
         <nav
-            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
+            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
@@ -939,7 +939,16 @@
                             </div>
                         </div>
                     </label>
-
+                    <button
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -1321,7 +1330,7 @@
                         </h3>
 
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Explora una curaduría exclusiva de alquileres temporales en la tierra del buen sol y el buen
+                            Explora una exclusiva de alquileres temporales en la tierra del buen sol y el buen
                             vino. Desde modernos departamentos en el corazón de la Quinta Sección hasta exclusivos lofts
                             de diseño en Godoy Cruz y Chacras de Coria.
                         </p>
@@ -2176,8 +2185,14 @@
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
                     </div>
                     <button
-                        class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all">
-                        U
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                     </button>
                 </div>
             </div>
@@ -3070,10 +3085,15 @@
                         class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-3 py-1 md:px-6 md:py-2.5 rounded-full font-bold text-[10px] md:text-sm hover:opacity-90 transition-all shadow-md active:scale-95 flex-shrink-0">Publicar</button>
                     <!-- Avatar in mis avisos nav -->
                     <div class="relative" id="avisos-user-menu-container">
-                        <button id="avisos-user-avatar-btn"
-                            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
-                            aria-haspopup="true" aria-expanded="false">
-                            <span class="avisos-avatar-initial">U</span>
+                        <button
+                            class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                            aria-label="Menu">
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                            <span
+                                class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                         </button>
                     </div>
                 </div>
@@ -6367,7 +6387,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
-        <script src="js/app.js"></script>
+        <script src="js/app.js?v=2"></script>
         <!-- Google Maps -->
         <script async defer
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
@@ -6406,6 +6426,8 @@
             <p class="success-subtitle">Tu aviso ya está disponible en el marketplace</p>
         </div>
 
-</body>
 
+    
+    <!-- End Scripts -->
+</body>
 </html>

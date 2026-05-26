@@ -3594,7 +3594,6 @@ const App = {
                 e.target.classList.add('hidden');
                 document.body.classList.remove('no-scroll');
             }
-            // Close Dropdown Menus if clicking outside
             if (!e.target.closest('.action-cell')) {
                 document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
             }
@@ -5050,6 +5049,190 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Premium hamburger menu for landing pages
+document.addEventListener('DOMContentLoaded', () => {
+    const menuButtons = Array.from(document.querySelectorAll(
+        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn'
+    ));
+
+    if (!menuButtons.length) return;
+
+    const menu = document.createElement('aside');
+    menu.id = 'landing-premium-menu';
+    menu.className = 'landing-menu';
+    menu.setAttribute('aria-hidden', 'true');
+    menu.innerHTML = `
+        <div class="landing-menu__scrim" data-menu-close></div>
+        <div class="landing-menu__panel" role="dialog" aria-modal="true" aria-label="Menú principal">
+            <div class="landing-menu__content">
+                <div class="landing-menu__top">
+                    <a class="landing-menu__brand" href="index.html" aria-label="Inicio">
+                        <img src="img/logo-lite.png" alt="Habitat">
+                    </a>
+                    <button class="landing-menu__close" type="button" aria-label="Cerrar menú" data-menu-close>
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="landing-menu__main">
+                    <nav class="landing-menu__nav" aria-label="Navegación principal">
+                        <a class="landing-menu__link" href="index.html">Inicio</a>
+                        <a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>
+                        <button class="landing-menu__link" type="button" data-menu-action="how-it-works">Cómo funciona</button>
+                        <button class="landing-menu__link" type="button" data-menu-action="favorites">Favoritos</button>
+                    </nav>
+
+                    <div class="landing-menu__lower">
+                        <div class="landing-menu__divider"></div>
+                        <div class="landing-menu__auth" aria-label="Cuenta">
+                            <a class="landing-menu__auth-link" href="login.html?mode=register">Regístrate</a>
+                            <span class="landing-menu__auth-separator" aria-hidden="true"></span>
+                            <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar sesión</a>
+                        </div>
+                        <div class="landing-menu__divider"></div>
+                        <button class="landing-menu__help landing-menu__text-btn" type="button" data-menu-action="help">
+                            <span class="landing-menu__avatars" aria-hidden="true">
+                                <img src="img/tenant-profile-1.jpg" alt="">
+                                <img src="img/tenant-profile-2.jpg" alt="">
+                                <img src="img/tenant-profile-3.jpg" alt="">
+                            </span>
+                            <span>Centro de ayuda</span>
+                        </button>
+                        <button class="landing-menu__contact landing-menu__text-btn" type="button" data-menu-action="contact">Contáctanos</button>
+                        <button class="landing-menu__language landing-menu__text-btn" type="button">
+                            <span>Español</span>
+                            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="landing-menu__download">
+                    <div class="landing-menu__download-title">Descarga la app</div>
+                    <div class="landing-menu__store-row">
+                        <a class="landing-menu__store" href="#" aria-label="Descargar en Google Play">
+                            <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                            <span>
+                                <span class="landing-menu__store-small">GET IT ON</span>
+                                <span class="landing-menu__store-large">Google Play</span>
+                            </span>
+                        </a>
+                        <a class="landing-menu__store" href="#" aria-label="Descargar en App Store">
+                            <span class="material-symbols-outlined" aria-hidden="true">phone_iphone</span>
+                            <span>
+                                <span class="landing-menu__store-small">Download on the</span>
+                                <span class="landing-menu__store-large">App Store</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(menu);
+
+    const closeButton = menu.querySelector('.landing-menu__close');
+    let activeButton = null;
+    let closeTimer = null;
+
+    const visibleLanding = () => (
+        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view'))
+            .find((section) => !section.classList.contains('hidden'))
+    );
+
+    const getVisibleTarget = (selectors) => {
+        const landing = visibleLanding() || document;
+        return selectors
+            .map((selector) => landing.querySelector(selector))
+            .find(Boolean);
+    };
+
+    const openMenu = (button) => {
+        if (closeTimer) window.clearTimeout(closeTimer);
+        activeButton = button;
+        menu.classList.add('is-open');
+        document.body.classList.add('landing-menu-open');
+        menu.setAttribute('aria-hidden', 'false');
+        menuButtons.forEach((item) => {
+            item.classList.toggle('active', item === button);
+            item.setAttribute('aria-expanded', String(item === button));
+        });
+        window.requestAnimationFrame(() => closeButton?.focus({ preventScroll: true }));
+    };
+
+    const closeMenu = () => {
+        menu.classList.remove('is-open');
+        document.body.classList.remove('landing-menu-open');
+        menu.setAttribute('aria-hidden', 'true');
+        menuButtons.forEach((item) => {
+            item.classList.remove('active');
+            item.setAttribute('aria-expanded', 'false');
+        });
+
+        const buttonToRestore = activeButton;
+        closeTimer = window.setTimeout(() => {
+            buttonToRestore?.focus({ preventScroll: true });
+            activeButton = null;
+        }, 220);
+    };
+
+    const scrollToTarget = (target) => {
+        closeMenu();
+        window.setTimeout(() => {
+            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 260);
+    };
+
+    menuButtons.forEach((button) => {
+        button.setAttribute('aria-controls', 'landing-premium-menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (menu.classList.contains('is-open') && activeButton === button) {
+                closeMenu();
+                return;
+            }
+            openMenu(button);
+        });
+    });
+
+    menu.addEventListener('click', (event) => {
+        const closeTrigger = event.target.closest('[data-menu-close]');
+        if (closeTrigger) {
+            closeMenu();
+            return;
+        }
+
+        const action = event.target.closest('[data-menu-action]')?.dataset.menuAction;
+        if (!action) return;
+
+        if (action === 'how-it-works') {
+            const target = getVisibleTarget(['#owner-steps-title', '#tenant-faq-title', '#owner-faq-title']);
+            scrollToTarget(target);
+        }
+
+        if (action === 'favorites') {
+            window.location.href = 'login.html?redirect=favorites&mode=login';
+        }
+
+        if (action === 'help') {
+            const target = getVisibleTarget(['#tenant-faq-title', '#owner-faq-title']);
+            scrollToTarget(target);
+        }
+
+        if (action === 'contact') {
+            const target = getVisibleTarget(['footer', '#marketplace-contact-modal']);
+            scrollToTarget(target);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && menu.classList.contains('is-open')) {
+            closeMenu();
+        }
+    });
+});
+
 // Disable number inputs scroll wheel behavior globally
 document.addEventListener('wheel', function(event) {
     if (document.activeElement.type === 'number') {
@@ -5454,3 +5637,5 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     }
 });
+
+window.App = App;
