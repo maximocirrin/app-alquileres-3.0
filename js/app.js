@@ -5049,6 +5049,142 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Desktop navigation for landing pages
+document.addEventListener('DOMContentLoaded', () => {
+    const landingNavs = Array.from(document.querySelectorAll(
+        '#landing-marketplace-view > nav, #landing-propietarios-view > nav'
+    ));
+
+    if (!landingNavs.length) return;
+
+    const visibleLanding = () => (
+        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view'))
+            .find((section) => !section.classList.contains('hidden'))
+    );
+
+    const getVisibleTarget = (selectors) => {
+        const landing = visibleLanding() || document;
+        return selectors
+            .map((selector) => landing.querySelector(selector))
+            .find(Boolean);
+    };
+
+    const scrollToTarget = (target) => {
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const closeDropdowns = (except = null) => {
+        document.querySelectorAll('.landing-desktop-nav__dropdown.is-open').forEach((dropdown) => {
+            if (dropdown === except) return;
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector('.landing-desktop-nav__dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+    };
+
+    const handleAction = (action) => {
+        closeDropdowns();
+
+        if (action === 'how-it-works') {
+            scrollToTarget(getVisibleTarget(['#owner-steps-title', '#tenant-faq-title', '#owner-faq-title']));
+        }
+
+        if (action === 'favorites') {
+            window.location.href = 'login.html?redirect=favorites&mode=login';
+        }
+
+        if (action === 'help-guide') {
+            scrollToTarget(getVisibleTarget(['#tenant-faq-title', '#owner-faq-title']));
+        }
+
+        if (action === 'contact-agent') {
+            scrollToTarget(getVisibleTarget(['footer', '#marketplace-contact-modal']));
+        }
+    };
+
+    landingNavs.forEach((nav) => {
+        if (nav.querySelector('.landing-desktop-nav')) return;
+
+        const landing = nav.closest('section');
+        const isOwnersLanding = landing?.id === 'landing-propietarios-view';
+        const navInner = nav.firstElementChild;
+        const rightControls = navInner?.lastElementChild;
+        const legacyNav = nav.querySelector('.hidden.lg\\:flex');
+        const centeredCta = nav.querySelector('.absolute.left-1\\/2');
+        const iconGroup = rightControls?.querySelector('.hidden.md\\:flex');
+        const themeSwitch = rightControls?.querySelector('.theme-switch');
+
+        nav.classList.add('landing-nav-enhanced');
+        legacyNav?.classList.add('landing-legacy-nav');
+        centeredCta?.classList.add('landing-nav-primary-cta');
+        iconGroup?.classList.add('landing-desktop-hidden');
+        themeSwitch?.classList.add('landing-desktop-hidden');
+
+        const roleHref = isOwnersLanding ? 'inquilinos.html' : 'propietarios.html';
+        const roleLabel = isOwnersLanding ? 'Soy Inquilino' : 'Soy un Propietario';
+
+        const desktopNav = document.createElement('div');
+        desktopNav.className = 'landing-desktop-nav';
+        desktopNav.setAttribute('aria-label', 'Navegacion principal');
+        desktopNav.innerHTML = `
+            <a class="landing-desktop-nav__role" href="${roleHref}">${roleLabel}</a>
+            <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="how-it-works">C&oacute;mo funciona</button>
+            <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="favorites">Favoritos</button>
+            <span class="landing-desktop-nav__auth">
+                <a class="landing-desktop-nav__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
+                <span class="landing-desktop-nav__auth-separator" aria-hidden="true">|</span>
+                <a class="landing-desktop-nav__auth-link" href="login.html?mode=login">Iniciar sesi&oacute;n</a>
+            </span>
+            <div class="landing-desktop-nav__dropdown">
+                <button class="landing-desktop-nav__dropdown-trigger" type="button" aria-expanded="false">
+                    Ayuda
+                    <span class="material-symbols-outlined landing-desktop-nav__chevron" aria-hidden="true">expand_more</span>
+                </button>
+                <div class="landing-desktop-nav__menu" role="menu">
+                    <button class="landing-desktop-nav__menu-item" type="button" role="menuitem" data-desktop-nav-action="contact-agent">Contactar a un agente</button>
+                    <button class="landing-desktop-nav__menu-item" type="button" role="menuitem" data-desktop-nav-action="help-guide">Gu&iacute;a de ayuda</button>
+                </div>
+            </div>
+            <div class="landing-desktop-nav__dropdown">
+                <button class="landing-desktop-nav__dropdown-trigger" type="button" aria-expanded="false">
+                    Es
+                    <span class="material-symbols-outlined landing-desktop-nav__chevron" aria-hidden="true">expand_more</span>
+                </button>
+                <div class="landing-desktop-nav__menu" role="menu">
+                    <button class="landing-desktop-nav__menu-item" type="button" role="menuitem">Espa&ntilde;ol</button>
+                </div>
+            </div>
+        `;
+
+        rightControls?.prepend(desktopNav);
+    });
+
+    document.addEventListener('click', (event) => {
+        const dropdownTrigger = event.target.closest('.landing-desktop-nav__dropdown-trigger');
+        if (dropdownTrigger) {
+            const dropdown = dropdownTrigger.closest('.landing-desktop-nav__dropdown');
+            const shouldOpen = !dropdown.classList.contains('is-open');
+            closeDropdowns(dropdown);
+            dropdown.classList.toggle('is-open', shouldOpen);
+            dropdownTrigger.setAttribute('aria-expanded', String(shouldOpen));
+            return;
+        }
+
+        const action = event.target.closest('[data-desktop-nav-action]')?.dataset.desktopNavAction;
+        if (action) {
+            handleAction(action);
+            return;
+        }
+
+        if (!event.target.closest('.landing-desktop-nav__dropdown')) {
+            closeDropdowns();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeDropdowns();
+    });
+});
+
 // Premium hamburger menu for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const menuButtons = Array.from(document.querySelectorAll(
@@ -5056,6 +5192,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ));
 
     if (!menuButtons.length) return;
+
+    const isPropietario = window.location.pathname.toLowerCase().includes('propietarios.html');
+    const roleLink = isPropietario 
+        ? '<a class="landing-menu__link" href="inquilinos.html">Soy inquilino</a>'
+        : '<a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>';
 
     const menu = document.createElement('aside');
     menu.id = 'landing-premium-menu';
@@ -5077,7 +5218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="landing-menu__main">
                     <nav class="landing-menu__nav" aria-label="Navegación principal">
                         <a class="landing-menu__link" href="index.html">Inicio</a>
-                        <a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>
+                        ${roleLink}
                         <button class="landing-menu__link" type="button" data-menu-action="how-it-works">Cómo funciona</button>
                         <button class="landing-menu__link" type="button" data-menu-action="favorites">Favoritos</button>
                     </nav>
