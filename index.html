@@ -153,6 +153,10 @@
             transform: translateY(0);
         }
 
+        .premium-guarantee-target {
+            scroll-margin-top: 96px;
+        }
+
         .delay-100 {
             transition-delay: 100ms;
         }
@@ -992,11 +996,11 @@
                 <div
                     class="-mt-12 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
                     <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+30.000</p>
+                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+50</p>
                         <p class="text-xs font-bold opacity-90">Propietarios ya publicando</p>
                     </div>
                     <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">2M+</p>
+                        <p class="text-2xl md:text-3xl font-headline font-extrabold">2.000</p>
                         <p class="text-xs font-bold opacity-90">Inquilinos buscando cada mes</p>
                     </div>
                     <div>
@@ -1046,7 +1050,7 @@
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
                                 Accede a propietarios e inquilinos verificados, pagos seguros y con cobertura total.</p>
                             <a class="inline-flex mt-2 font-body text-lg sm:text-xl text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                href="#seccion-garantia">Más sobre nuestra garantía</a>
+                                data-premium-guarantee-scroll href="#seccion-garantia">Más sobre nuestra garantía</a>
                         </div>
                     </article>
 
@@ -1093,7 +1097,7 @@
 
             <!-- Guarantee Stats & Cards Section -->
             <section id="seccion-garantia"
-                class="bg-slate-50 dark:bg-zinc-950/20 py-20 px-4 sm:px-6 lg:px-12 border-t border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+                class="premium-guarantee-target bg-slate-50 dark:bg-zinc-950/20 py-20 px-4 sm:px-6 lg:px-12 border-t border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
                 <div class="max-w-[1280px] mx-auto">
                     <h2
                         class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
@@ -1324,9 +1328,9 @@
                         </h3>
 
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Explora una exclusiva de alquileres temporales en la tierra del buen sol y el buen
-                            vino. Desde modernos departamentos en el corazón de la Quinta Sección hasta exclusivos lofts
-                            de diseño en Godoy Cruz y Chacras de Coria.
+                            ¿Vienes a estudiar o trabajar por unos meses? Descubre residencias, habitaciones y
+                            departamentos con la flexibilidad que necesitas. Tu próxima aventura en Mendoza empieza
+                            aquí.
                         </p>
 
                         <!-- Neighborhood tags -->
@@ -2093,7 +2097,8 @@
                     </div>
 
                     <!-- Middle: Payment Methods -->
-                    <div class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
+                    <div
+                        class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
                         <span
                             class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos
                             de pago</span>
@@ -3032,7 +3037,8 @@
                             <span class="font-body text-base text-on-background dark:text-zinc-300">&copy;2026
                                 H&aacute;bitat</span>
                         </div>
-                        <div class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap lg:w-auto">
+                        <div
+                            class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap lg:w-auto">
                             <span
                                 class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos
                                 de pago</span>
@@ -6428,6 +6434,49 @@
                 document.querySelectorAll('.animate-on-scroll').forEach(el => window.marketplaceObserver.observe(el));
             });
         </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const guaranteeLink = document.querySelector('[data-premium-guarantee-scroll]');
+                const guaranteeSection = document.querySelector('#seccion-garantia');
+
+                if (!guaranteeLink || !guaranteeSection) return;
+
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const easeOutQuint = (progress) => 1 - Math.pow(1 - progress, 5);
+
+                guaranteeLink.addEventListener('click', (event) => {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+                    event.preventDefault();
+
+                    if (reduceMotion) {
+                        guaranteeSection.scrollIntoView({ block: 'start' });
+                        return;
+                    }
+
+                    const navHeight = document.querySelector('nav')?.getBoundingClientRect().height || 80;
+                    const startY = window.scrollY;
+                    const targetY = guaranteeSection.getBoundingClientRect().top + startY - navHeight - 16;
+                    const distance = targetY - startY;
+                    const duration = Math.min(1250, Math.max(760, Math.abs(distance) * 0.62));
+                    const startedAt = performance.now();
+
+                    const step = (now) => {
+                        const progress = Math.min((now - startedAt) / duration, 1);
+                        window.scrollTo(0, startY + distance * easeOutQuint(progress));
+
+                        if (progress < 1) {
+                            window.requestAnimationFrame(step);
+                            return;
+                        }
+
+                        history.replaceState(null, '', '#seccion-garantia');
+                    };
+
+                    window.requestAnimationFrame(step);
+                });
+            });
+        </script>
 
         <!-- Success Overlay -->
         <div id="publish-success-overlay" class="success-overlay">
@@ -6440,7 +6489,8 @@
         </div>
 
 
-    
-    <!-- End Scripts -->
+
+        <!-- End Scripts -->
 </body>
+
 </html>
