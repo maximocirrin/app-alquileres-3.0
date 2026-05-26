@@ -175,7 +175,7 @@ const App = {
         if (btnInquilinoMarketplace && landingMarketplaceView && landingPropietariosView) {
             btnInquilinoMarketplace.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.location.href = 'inquilinos.html';
+                window.location.href = 'index.html';
             });
         }
 
@@ -5119,7 +5119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         iconGroup?.classList.add('landing-desktop-hidden');
         themeSwitch?.classList.add('landing-desktop-hidden');
 
-        const roleHref = isOwnersLanding ? 'inquilinos.html' : 'propietarios.html';
+        const roleHref = isOwnersLanding ? 'index.html' : 'propietarios.html';
         const roleLabel = isOwnersLanding ? 'Soy Inquilino' : 'Soy un Propietario';
 
         const desktopNav = document.createElement('div');
@@ -5127,7 +5127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         desktopNav.setAttribute('aria-label', 'Navegacion principal');
         desktopNav.innerHTML = `
             <a class="landing-desktop-nav__role" href="${roleHref}">${roleLabel}</a>
-            <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="how-it-works">C&oacute;mo funciona</button>
+            <a class="landing-desktop-nav__item" href="como-funciona.html">C&oacute;mo funciona</a>
             <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="favorites">Favoritos</button>
             <span class="landing-desktop-nav__auth">
                 <a class="landing-desktop-nav__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
@@ -5195,7 +5195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isPropietario = window.location.pathname.toLowerCase().includes('propietarios.html');
     const roleLink = isPropietario 
-        ? '<a class="landing-menu__link" href="inquilinos.html">Soy inquilino</a>'
+        ? '<a class="landing-menu__link" href="index.html">Soy inquilino</a>'
         : '<a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>';
 
     const menu = document.createElement('aside');
@@ -5219,7 +5219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <nav class="landing-menu__nav" aria-label="Navegación principal">
                         <a class="landing-menu__link" href="index.html">Inicio</a>
                         ${roleLink}
-                        <button class="landing-menu__link" type="button" data-menu-action="how-it-works">Cómo funciona</button>
+                        <a class="landing-menu__link" href="como-funciona.html">C&oacute;mo funciona</a>
                         <button class="landing-menu__link" type="button" data-menu-action="favorites">Favoritos</button>
                     </nav>
 
