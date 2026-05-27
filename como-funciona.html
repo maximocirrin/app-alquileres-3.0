@@ -14,7 +14,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=8">
     <script>
         const originalWarn = console.warn;
         console.warn = function () {
@@ -57,6 +57,69 @@
         }
     </script>
     <style>
+        /* Google Translate Custom Overrides */
+        iframe.goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame.skiptranslate {
+            display: none !important;
+        }
+
+        .skiptranslate>iframe {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-ORHb-OEVmcd {
+            display: none !important;
+        }
+
+        body {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        html {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        #google_translate_element {
+            display: none !important;
+        }
+
+        .goog-tooltip {
+            display: none !important;
+        }
+
+        .goog-tooltip:hover {
+            display: none !important;
+        }
+
+        .goog-text-highlight {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Fix for highlight on hover */
+        font {
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #goog-gt-tt {
+            display: none !important;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
@@ -126,19 +189,7 @@
             isolation: isolate;
         }
 
-        .how-hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-            background-size: 72px 72px;
-            mask-image: linear-gradient(to bottom, transparent 0%, black 24%, black 74%, transparent 100%);
-            opacity: 0.5;
-            pointer-events: none;
-        }
+
 
         .how-hero__image {
             transform: scale(1.035);
@@ -146,9 +197,7 @@
         }
 
         .how-hero__glow {
-            background:
-                linear-gradient(115deg, rgba(129, 27, 30, 0.86) 0%, rgba(16, 13, 12, 0.28) 34%, rgba(11, 11, 13, 0.72) 100%),
-                linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent 62%);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent 62%);
         }
 
         .hero-panel {
@@ -238,7 +287,7 @@
 
         .premium-stat-panel {
             background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 247, 244, 0.92)),
+                linear-gradient(135deg, rgb(255, 255, 255), rgb(250, 247, 244)),
                 linear-gradient(90deg, rgba(199, 140, 69, 0.16), transparent 42%, rgba(125, 139, 111, 0.13));
         }
 
@@ -371,7 +420,7 @@
             animation: ctaSheen 4.8s ease-in-out infinite;
         }
 
-        .premium-cta > * {
+        .premium-cta>* {
             position: relative;
             z-index: 1;
         }
@@ -387,7 +436,9 @@
         }
 
         @keyframes ctaSheen {
-            0%, 58% {
+
+            0%,
+            58% {
                 left: -34%;
             }
 
@@ -430,18 +481,19 @@
         }
     </style>
     <script>
-        (function () {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-            }
-        })();
+            (function () {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                }
+            })();
     </script>
 </head>
 
 <body class="bg-background text-on-background font-body antialiased">
-    <section id="how-it-works-view" class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] min-h-screen">
+    <section id="how-it-works-view"
+        class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] min-h-screen">
         <nav
             class="how-nav bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
             <div
@@ -455,27 +507,78 @@
 
                 <div class="hidden lg:flex items-center gap-6 xl:gap-10 ml-auto">
                     <a class="landing-desktop-nav__role" href="propietarios.html">Soy un Propietario</a>
-                    <a class="landing-desktop-nav__item text-primary dark:text-red-400" href="como-funciona.html">C&oacute;mo funciona</a>
-                    <a class="landing-desktop-nav__item" href="login.html?redirect=favorites&amp;mode=login">Favoritos</a>
-                    <span class="landing-desktop-nav__auth">
+                    <a class="landing-desktop-nav__item text-primary dark:text-red-400"
+                        href="como-funciona.html">C&oacute;mo funciona</a>
+                    <a class="landing-desktop-nav__item"
+                        href="login.html?redirect=favorites&amp;mode=login">Favoritos</a>
+                    <span class="landing-desktop-nav__auth" id="desktop-nav-logged-out">
                         <a class="landing-desktop-nav__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
                         <span class="landing-desktop-nav__auth-separator" aria-hidden="true">|</span>
                         <a class="landing-desktop-nav__auth-link" href="login.html?mode=login">Iniciar sesi&oacute;n</a>
                     </span>
-                    <a class="landing-desktop-nav__item" href="#faq">Ayuda</a>
-                    <span class="landing-desktop-nav__item inline-flex items-center gap-1">
-                        Es
-                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
+                    <span class="landing-desktop-nav__auth hidden" id="desktop-nav-logged-in">
+                        <a class="landing-desktop-nav__auth-link" href="administrador.html"
+                            style="font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 4px;">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">account_circle</span>
+                            Cuenta
+                        </a>
                     </span>
+                    <a class="landing-desktop-nav__item" href="#faq">Ayuda</a>
+                    <!-- Custom Language Selector -->
+                    <div class="relative group inline-block z-[110]">
+                        <button
+                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
+                            <span class="material-symbols-outlined text-lg">language</span>
+                            <span class="current-lang-display hidden sm:inline">ES</span>
+                            <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
+                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
+                                translate="no">
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('es', 'ES')">Español</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('en', 'EN')">English</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('de', 'DE')">Deutsch</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('fr', 'FR')">Français</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('pt', 'PT')">Português</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('it', 'IT')">Italiano</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ja', 'JA')">日本語</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('zh-CN', 'ZH')">中文</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ru', 'RU')">Русский</button></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto lg:hidden">
                     <button
                         class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
                         type="button" aria-label="Menu" aria-controls="landing-premium-menu" aria-expanded="false">
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                     </button>
                 </div>
             </div>
@@ -499,18 +602,31 @@
                             <a class="landing-menu__link" href="index.html">Inicio</a>
                             <a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>
                             <a class="landing-menu__link" href="como-funciona.html">C&oacute;mo funciona</a>
-                            <a class="landing-menu__link" href="login.html?redirect=favorites&amp;mode=login">Favoritos</a>
+                            <a class="landing-menu__link"
+                                href="login.html?redirect=favorites&amp;mode=login">Favoritos</a>
                         </nav>
                         <div class="landing-menu__lower">
                             <div class="landing-menu__divider"></div>
-                            <div class="landing-menu__auth" aria-label="Cuenta">
+                            <div class="landing-menu__auth" id="premium-menu-logged-out" aria-label="Cuenta">
                                 <a class="landing-menu__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
                                 <span class="landing-menu__auth-separator" aria-hidden="true"></span>
-                                <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar sesi&oacute;n</a>
+                                <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar
+                                    sesi&oacute;n</a>
                             </div>
+                            <nav class="landing-menu__nav hidden" id="premium-menu-logged-in" aria-label="Cuenta">
+                                <a class="landing-menu__link" href="administrador.html">Perfil</a>
+                                <a class="landing-menu__link" href="#">B&uacute;squedas guardadas</a>
+                                <a class="landing-menu__link" href="#">Reservas</a>
+                                <a class="landing-menu__link" href="#">Ayuda a un Amigo</a>
+                                <a class="landing-menu__link" href="#">Pagos</a>
+                                <button class="landing-menu__link" type="button" id="premium-menu-logout"
+                                    style="color: #f24822;">Cerrar sesi&oacute;n</button>
+                            </nav>
                             <div class="landing-menu__divider"></div>
-                            <a class="landing-menu__contact landing-menu__text-btn" href="#faq" data-menu-close>Centro de ayuda</a>
-                            <a class="landing-menu__language landing-menu__text-btn" href="#footer" data-menu-close>Contacto</a>
+                            <a class="landing-menu__contact landing-menu__text-btn" href="#faq" data-menu-close>Centro
+                                de ayuda</a>
+                            <a class="landing-menu__language landing-menu__text-btn" href="#footer"
+                                data-menu-close>Contacto</a>
                         </div>
                     </div>
                     <div class="landing-menu__download">
@@ -544,14 +660,16 @@
                 <div class="relative z-10 w-full max-w-[1280px] mx-auto px-4 md:px-8 pb-12 md:pb-18">
                     <div class="max-w-4xl">
                         <span
-                            class="reveal inline-flex items-center gap-2 rounded-full bg-white/90 text-primary px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] mb-6">
+                            class="reveal inline-flex items-center gap-2 rounded-full bg-white/90 text-primary px-4 py-2 text-xs font-headline font-extrabold uppercase tracking-[0.18em] mb-6">
                             Reserva online, sin sorpresas
                         </span>
-                        <h1 class="reveal delay-1 font-headline text-5xl md:text-7xl font-extrabold text-white leading-[0.95] mb-6">
+                        <h1
+                            class="reveal delay-1 font-headline text-5xl md:text-7xl font-extrabold text-white leading-[0.95] mb-6">
                             C&oacute;mo funciona H&aacute;bitat
                         </h1>
                         <p class="reveal delay-2 text-lg md:text-2xl text-white/90 max-w-3xl leading-relaxed">
-                            Encuentra una vivienda verificada, env&iacute;a tu solicitud y coordina tu mudanza con pagos protegidos y acompa&ntilde;amiento humano.
+                            Encuentra una vivienda verificada, env&iacute;a tu solicitud y coordina tu mudanza con pagos
+                            protegidos y acompa&ntilde;amiento humano.
                         </p>
                         <div class="reveal delay-3 mt-8 flex flex-col sm:flex-row gap-3">
                             <a href="index.html"
@@ -591,18 +709,22 @@
             </section>
 
             <section class="max-w-[1280px] mx-auto px-4 md:px-8 -mt-10 relative z-20">
-                <div class="premium-stat-panel reveal grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6">
+                <div
+                    class="premium-stat-panel reveal grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6">
                     <div class="stat-item p-4">
                         <p class="font-headline text-3xl font-extrabold text-primary dark:text-red-400">24 h</p>
-                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">Tiempo objetivo de respuesta del propietario.</p>
+                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">Tiempo objetivo de
+                            respuesta del propietario.</p>
                     </div>
                     <div class="stat-item p-4 border-y sm:border-y-0 sm:border-x border-zinc-200 dark:border-zinc-800">
                         <p class="font-headline text-3xl font-extrabold text-primary dark:text-red-400">48 h</p>
-                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">El primer pago se libera luego de tu llegada.</p>
+                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">El primer pago se libera
+                            luego de tu llegada.</p>
                     </div>
                     <div class="stat-item p-4">
                         <p class="font-headline text-3xl font-extrabold text-primary dark:text-red-400">100%</p>
-                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">Proceso online con viviendas y propietarios verificados.</p>
+                        <p class="mt-1 text-sm font-semibold text-zinc-600 dark:text-zinc-300">Proceso online con
+                            viviendas y propietarios verificados.</p>
                     </div>
                 </div>
             </section>
@@ -610,103 +732,154 @@
             <section id="pasos" class="max-w-[1280px] mx-auto px-4 md:px-8 py-20 md:py-28">
                 <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-20">
                     <div class="reveal lg:sticky lg:top-28 self-start">
-                        <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Paso a paso</span>
+                        <span
+                            class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Paso
+                            a paso</span>
                         <h2 class="font-headline text-4xl md:text-5xl font-extrabold leading-tight mb-5">
                             Reserva tu hogar con confianza
                         </h2>
                         <p class="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed">
-                            Adaptamos la experiencia de reserva a alquileres temporarios: menos visitas, m&aacute;s informaci&oacute;n clara y soporte cuando hace falta.
+                            Adaptamos la experiencia de reserva a alquileres temporarios: menos visitas, m&aacute;s
+                            informaci&oacute;n clara y soporte cuando hace falta.
                         </p>
                     </div>
 
                     <div class="space-y-6">
-                        <article class="step-card reveal relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
+                        <article
+                            class="step-card reveal relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
                             <div class="absolute left-9 top-20 bottom-0 w-px how-step-line hidden sm:block"></div>
                             <div class="flex gap-5">
-                                <span class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">1</span>
+                                <span
+                                    class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">1</span>
                                 <div>
-                                    <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">Busca y elige</p>
-                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Explora viviendas verificadas</h3>
+                                    <p
+                                        class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">
+                                        Busca y elige</p>
+                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Explora viviendas
+                                        verificadas</h3>
                                     <p class="mt-3 text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                        Filtra por ubicaci&oacute;n, tipo de propiedad y condiciones. Cada anuncio prioriza fotos, detalles reales y reglas visibles desde el inicio.
+                                        Filtra por ubicaci&oacute;n, tipo de propiedad y condiciones. Cada anuncio
+                                        prioriza fotos, detalles reales y reglas visibles desde el inicio.
                                     </p>
                                     <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">travel_explore</span>
-                                            <p class="text-sm font-semibold">Reserva desde cualquier lugar, sin coordinar visitas interminables.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">travel_explore</span>
+                                            <p class="text-sm font-semibold">Reserva desde cualquier lugar, sin
+                                                coordinar visitas interminables.</p>
                                         </div>
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">verified</span>
-                                            <p class="text-sm font-semibold">Anuncios revisados con datos claros antes de avanzar.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">verified</span>
+                                            <p class="text-sm font-semibold">Anuncios revisados con datos claros antes
+                                                de avanzar.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </article>
 
-                        <article class="step-card reveal delay-1 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
+                        <article
+                            class="step-card reveal delay-1 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
                             <div class="flex gap-5">
-                                <span class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">2</span>
+                                <span
+                                    class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">2</span>
                                 <div>
-                                    <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">Reserva con seguridad</p>
-                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Env&iacute;a tu solicitud</h3>
+                                    <p
+                                        class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">
+                                        Reserva con seguridad</p>
+                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Env&iacute;a tu
+                                        solicitud</h3>
                                     <p class="mt-3 text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                        Cargas tus datos b&aacute;sicos y el m&eacute;todo de pago. No se realiza el cobro hasta que el propietario confirme la reserva.
+                                        Cargas tus datos b&aacute;sicos y el m&eacute;todo de pago. No se realiza el
+                                        cobro hasta que el propietario confirme la reserva.
                                     </p>
                                     <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">lock</span>
-                                            <p class="text-sm font-semibold">Pagos y datos tratados con protecci&oacute;n adicional.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">lock</span>
+                                            <p class="text-sm font-semibold">Pagos y datos tratados con
+                                                protecci&oacute;n adicional.</p>
                                         </div>
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">payments</span>
-                                            <p class="text-sm font-semibold">Solo se cobra cuando la solicitud es aceptada.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">payments</span>
+                                            <p class="text-sm font-semibold">Solo se cobra cuando la solicitud es
+                                                aceptada.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </article>
 
-                        <article class="step-card reveal delay-2 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
+                        <article
+                            class="step-card reveal delay-2 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
                             <div class="flex gap-5">
-                                <span class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">3</span>
+                                <span
+                                    class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">3</span>
                                 <div>
-                                    <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">Confirmaci&oacute;n</p>
-                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Recibe respuesta y datos de contacto</h3>
+                                    <p
+                                        class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">
+                                        Confirmaci&oacute;n</p>
+                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Recibe respuesta
+                                        y datos de contacto</h3>
                                     <p class="mt-3 text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                        Cuando el propietario acepta, te conectamos para coordinar contrato, documentaci&oacute;n y detalles de entrada.
+                                        Cuando el propietario acepta, te conectamos para coordinar contrato,
+                                        documentaci&oacute;n y detalles de entrada.
                                     </p>
                                     <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">schedule_send</span>
-                                            <p class="text-sm font-semibold">Los propietarios suelen responder dentro de 24 horas.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">schedule_send</span>
+                                            <p class="text-sm font-semibold">Los propietarios suelen responder dentro de
+                                                24 horas.</p>
                                         </div>
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">badge</span>
-                                            <p class="text-sm font-semibold">Podr&aacute;n pedir DNI, solvencia o datos bancarios seg&uacute;n el caso.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">badge</span>
+                                            <p class="text-sm font-semibold">Podr&aacute;n pedir DNI, solvencia o datos
+                                                bancarios seg&uacute;n el caso.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </article>
 
-                        <article class="step-card reveal delay-3 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
+                        <article
+                            class="step-card reveal delay-3 relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 md:p-8">
                             <div class="flex gap-5">
-                                <span class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">4</span>
+                                <span
+                                    class="step-badge flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white font-headline font-extrabold">4</span>
                                 <div>
-                                    <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">M&uacute;date</p>
-                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Firma, revisa y empieza tu estad&iacute;a</h3>
+                                    <p
+                                        class="text-xs font-extrabold uppercase tracking-[0.18em] text-primary dark:text-red-400">
+                                        M&uacute;date</p>
+                                    <h3 class="mt-2 font-headline text-2xl md:text-3xl font-extrabold">Firma, revisa y
+                                        empieza tu estad&iacute;a</h3>
                                     <p class="mt-3 text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                                        Al llegar, tienes tiempo para revisar que la vivienda coincida con lo anunciado. H&aacute;bitat acompa&ntilde;a si algo no est&aacute; como corresponde.
+                                        Al llegar, tienes tiempo para revisar que la vivienda coincida con lo anunciado.
+                                        H&aacute;bitat acompa&ntilde;a si algo no est&aacute; como corresponde.
                                     </p>
                                     <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">add_moderator</span>
-                                            <p class="text-sm font-semibold">El primer pago se transfiere al propietario 48 h despu&eacute;s de tu llegada.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">add_moderator</span>
+                                            <p class="text-sm font-semibold">El primer pago se transfiere al propietario
+                                                48 h despu&eacute;s de tu llegada.</p>
                                         </div>
-                                        <div class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
-                                            <span class="material-symbols-outlined text-primary dark:text-red-400">task_alt</span>
-                                            <p class="text-sm font-semibold">Tienes 24 h para reportar diferencias importantes.</p>
+                                        <div
+                                            class="step-feature flex gap-3 rounded-lg bg-surface-container-low dark:bg-zinc-800 p-4">
+                                            <span
+                                                class="material-symbols-outlined text-primary dark:text-red-400">task_alt</span>
+                                            <p class="text-sm font-semibold">Tienes 24 h para reportar diferencias
+                                                importantes.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -717,32 +890,47 @@
             </section>
 
             <section class="bg-surface-container-low dark:bg-zinc-950 border-y border-zinc-200 dark:border-zinc-800">
-                <div class="max-w-[1280px] mx-auto px-4 md:px-8 py-20 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div
+                    class="max-w-[1280px] mx-auto px-4 md:px-8 py-20 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                     <div class="reveal">
-                        <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Garant&iacute;a H&aacute;bitat</span>
-                        <h2 class="font-headline text-4xl md:text-5xl font-extrabold leading-tight mb-5">Conf&iacute;a en el proceso</h2>
+                        <span
+                            class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Garant&iacute;a
+                            H&aacute;bitat</span>
+                        <h2 class="font-headline text-4xl md:text-5xl font-extrabold leading-tight mb-5">Conf&iacute;a
+                            en el proceso</h2>
                         <p class="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed">
-                            Si al mudarte detectas una diferencia importante respecto del anuncio, av&iacute;sanos durante las primeras 24 horas. Revisamos el caso y buscamos una soluci&oacute;n antes de liberar el primer pago.
+                            Si al mudarte detectas una diferencia importante respecto del anuncio, av&iacute;sanos
+                            durante las primeras 24 horas. Revisamos el caso y buscamos una soluci&oacute;n antes de
+                            liberar el primer pago.
                         </p>
                         <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
-                                <span class="material-symbols-outlined text-primary dark:text-red-400 mb-4">verified_user</span>
+                            <div
+                                class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
+                                <span
+                                    class="material-symbols-outlined text-primary dark:text-red-400 mb-4">verified_user</span>
                                 <h3 class="font-headline font-extrabold">Verificado</h3>
-                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Propiedades, identidad y condiciones revisadas.</p>
+                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Propiedades, identidad y
+                                    condiciones revisadas.</p>
                             </div>
-                            <div class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
+                            <div
+                                class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
                                 <span class="material-symbols-outlined text-primary dark:text-red-400 mb-4">forum</span>
                                 <h3 class="font-headline font-extrabold">Humano</h3>
-                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Soporte cercano durante reserva y mudanza.</p>
+                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Soporte cercano durante reserva
+                                    y mudanza.</p>
                             </div>
-                            <div class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
-                                <span class="material-symbols-outlined text-primary dark:text-red-400 mb-4">shield_lock</span>
+                            <div
+                                class="premium-card rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5">
+                                <span
+                                    class="material-symbols-outlined text-primary dark:text-red-400 mb-4">shield_lock</span>
                                 <h3 class="font-headline font-extrabold">Protegido</h3>
-                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Pagos retenidos hasta confirmar la llegada.</p>
+                                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Pagos retenidos hasta confirmar
+                                    la llegada.</p>
                             </div>
                         </div>
                     </div>
-                    <div class="photo-frame reveal delay-1 relative overflow-hidden rounded-lg min-h-[420px] border border-zinc-200 dark:border-zinc-800">
+                    <div
+                        class="photo-frame reveal delay-1 relative overflow-hidden rounded-lg min-h-[420px] border border-zinc-200 dark:border-zinc-800">
                         <img src="img/personas-dandose-lamano.jpg" alt="Acuerdo de alquiler con soporte de Habitat"
                             class="absolute inset-0 h-full w-full object-cover">
                     </div>
@@ -752,14 +940,19 @@
             <section class="max-w-[1280px] mx-auto px-4 md:px-8 py-20 md:py-24">
                 <div class="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-16 items-start">
                     <div class="reveal">
-                        <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Haz m&aacute;s con H&aacute;bitat</span>
-                        <h2 class="font-headline text-4xl md:text-5xl font-extrabold leading-tight mb-5">M&aacute;s claridad que buscar por tu cuenta</h2>
+                        <span
+                            class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Haz
+                            m&aacute;s con H&aacute;bitat</span>
+                        <h2 class="font-headline text-4xl md:text-5xl font-extrabold leading-tight mb-5">M&aacute;s
+                            claridad que buscar por tu cuenta</h2>
                         <p class="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed">
                             Dise&ntilde;ado para reducir incertidumbre antes de pagar o viajar.
                         </p>
                     </div>
-                    <div class="compare-table reveal delay-1 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                        <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr] bg-surface-container-low dark:bg-zinc-800 text-sm font-extrabold">
+                    <div
+                        class="compare-table reveal delay-1 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                        <div
+                            class="grid grid-cols-[1.4fr_0.8fr_0.8fr] bg-surface-container-low dark:bg-zinc-800 text-sm font-extrabold">
                             <div class="p-4">Beneficio</div>
                             <div class="p-4 text-center">H&aacute;bitat</div>
                             <div class="p-4 text-center">B&uacute;squeda directa</div>
@@ -767,80 +960,118 @@
                         <div class="divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
                             <div class="compare-row grid grid-cols-[1.4fr_0.8fr_0.8fr]">
                                 <div class="p-4 font-semibold">Propiedades revisadas</div>
-                                <div class="p-4 text-center text-primary dark:text-red-400"><span class="material-symbols-outlined">check_circle</span></div>
-                                <div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">cancel</span></div>
+                                <div class="p-4 text-center text-primary dark:text-red-400"><span
+                                        class="material-symbols-outlined">check_circle</span></div>
+                                <div class="p-4 text-center text-zinc-400"><span
+                                        class="material-symbols-outlined">cancel</span></div>
                             </div>
                             <div class="compare-row grid grid-cols-[1.4fr_0.8fr_0.8fr]">
                                 <div class="p-4 font-semibold">Pago retenido al inicio</div>
-                                <div class="p-4 text-center text-primary dark:text-red-400"><span class="material-symbols-outlined">check_circle</span></div>
-                                <div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">cancel</span></div>
+                                <div class="p-4 text-center text-primary dark:text-red-400"><span
+                                        class="material-symbols-outlined">check_circle</span></div>
+                                <div class="p-4 text-center text-zinc-400"><span
+                                        class="material-symbols-outlined">cancel</span></div>
                             </div>
                             <div class="compare-row grid grid-cols-[1.4fr_0.8fr_0.8fr]">
                                 <div class="p-4 font-semibold">Propietarios verificados</div>
-                                <div class="p-4 text-center text-primary dark:text-red-400"><span class="material-symbols-outlined">check_circle</span></div>
-                                <div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">cancel</span></div>
+                                <div class="p-4 text-center text-primary dark:text-red-400"><span
+                                        class="material-symbols-outlined">check_circle</span></div>
+                                <div class="p-4 text-center text-zinc-400"><span
+                                        class="material-symbols-outlined">cancel</span></div>
                             </div>
                             <div class="compare-row grid grid-cols-[1.4fr_0.8fr_0.8fr]">
                                 <div class="p-4 font-semibold">Soporte durante la reserva</div>
-                                <div class="p-4 text-center text-primary dark:text-red-400"><span class="material-symbols-outlined">check_circle</span></div>
-                                <div class="p-4 text-center text-zinc-400"><span class="material-symbols-outlined">remove_circle</span></div>
+                                <div class="p-4 text-center text-primary dark:text-red-400"><span
+                                        class="material-symbols-outlined">check_circle</span></div>
+                                <div class="p-4 text-center text-zinc-400"><span
+                                        class="material-symbols-outlined">remove_circle</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="faq" class="bg-surface-container-low dark:bg-zinc-950 border-y border-zinc-200 dark:border-zinc-800">
+            <section id="faq"
+                class="bg-surface-container-low dark:bg-zinc-950 border-y border-zinc-200 dark:border-zinc-800">
                 <div class="max-w-[980px] mx-auto px-4 md:px-8 py-20 md:py-24">
                     <div class="reveal text-center mb-10">
-                        <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Preguntas frecuentes</span>
+                        <span
+                            class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Preguntas
+                            frecuentes</span>
                         <h2 class="font-headline text-4xl md:text-5xl font-extrabold">Lo esencial antes de reservar</h2>
                     </div>
                     <div class="space-y-3">
-                        <details class="faq-card reveal group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
+                        <details
+                            class="faq-card reveal group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
                                 &iquest;Tengo que pagar antes de que el propietario acepte?
-                                <span class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
                             </summary>
-                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">No. Indicas tu m&eacute;todo de pago al solicitar la reserva, pero el cobro se procesa solo si el propietario acepta.</p>
+                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">No. Indicas tu
+                                m&eacute;todo de pago al solicitar la reserva, pero el cobro se procesa solo si el
+                                propietario acepta.</p>
                         </details>
-                        <details class="faq-card reveal delay-1 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
+                        <details
+                            class="faq-card reveal delay-1 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
                                 &iquest;Cu&aacute;nto tarda la respuesta?
-                                <span class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
                             </summary>
-                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">El objetivo es recibir respuesta dentro de 24 horas. Si no se acepta tu solicitud, no se realiza el cargo.</p>
+                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">El objetivo es recibir
+                                respuesta dentro de 24 horas. Si no se acepta tu solicitud, no se realiza el cargo.</p>
                         </details>
-                        <details class="faq-card reveal delay-2 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
+                        <details
+                            class="faq-card reveal delay-2 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
                                 &iquest;Qu&eacute; documentos pueden pedirme?
-                                <span class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
                             </summary>
-                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Puede solicitarse DNI o pasaporte, comprobante de ingresos, referencias o datos bancarios, seg&uacute;n la propiedad y el contrato.</p>
+                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Puede solicitarse DNI o
+                                pasaporte, comprobante de ingresos, referencias o datos bancarios, seg&uacute;n la
+                                propiedad y el contrato.</p>
                         </details>
-                        <details class="faq-card reveal delay-3 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
+                        <details
+                            class="faq-card reveal delay-3 group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
                                 &iquest;Cu&aacute;ndo recibe el dinero el propietario?
-                                <span class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
                             </summary>
-                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Por seguridad, el primer pago se transfiere 48 horas despu&eacute;s de tu mudanza, siempre que no haya una incidencia reportada.</p>
+                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Por seguridad, el primer
+                                pago se transfiere 48 horas despu&eacute;s de tu mudanza, siempre que no haya una
+                                incidencia reportada.</p>
                         </details>
-                        <details class="faq-card reveal group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
+                        <details
+                            class="faq-card reveal group rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+                            <summary
+                                class="flex cursor-pointer list-none items-center justify-between gap-4 font-headline text-lg font-extrabold">
                                 &iquest;Qu&eacute; pasa si la vivienda no coincide con el anuncio?
-                                <span class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined faq-chevron transition-transform">expand_more</span>
                             </summary>
-                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Tienes 24 horas desde la llegada para avisarnos. Revisamos la diferencia y buscamos una soluci&oacute;n con el propietario.</p>
+                            <p class="mt-4 text-zinc-600 dark:text-zinc-300 leading-relaxed">Tienes 24 horas desde la
+                                llegada para avisarnos. Revisamos la diferencia y buscamos una soluci&oacute;n con el
+                                propietario.</p>
                         </details>
                     </div>
                 </div>
             </section>
 
             <section class="max-w-[1280px] mx-auto px-4 md:px-8 py-16 md:py-20">
-                <div class="premium-cta reveal rounded-lg text-white px-6 py-10 md:px-10 md:py-14 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+                <div
+                    class="premium-cta reveal rounded-lg text-white px-6 py-10 md:px-10 md:py-14 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
                     <div>
-                        <h2 class="font-headline text-3xl md:text-5xl font-extrabold leading-tight">Listo para encontrar tu pr&oacute;ximo hogar?</h2>
-                        <p class="mt-4 text-white/85 text-lg max-w-2xl">Explora propiedades verificadas y reserva con un proceso claro de principio a fin.</p>
+                        <h2 class="font-headline text-3xl md:text-5xl font-extrabold leading-tight">Listo para encontrar
+                            tu pr&oacute;ximo hogar?</h2>
+                        <p class="mt-4 text-white/85 text-lg max-w-2xl">Explora propiedades verificadas y reserva con un
+                            proceso claro de principio a fin.</p>
                     </div>
                     <a href="index.html"
                         class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3.5 text-sm font-extrabold text-primary hover:bg-zinc-100 transition-colors">
@@ -856,39 +1087,69 @@
                 <div
                     class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">H&aacute;bitat</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            H&aacute;bitat</h3>
                         <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                            <a href="como-funciona.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo funciona</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
+                            <a href="como-funciona.html"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo
+                                funciona</a>
+                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de
+                                nosotros</a>
                             <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Blog</a>
                         </nav>
                     </div>
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Inquilinos</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Inquilinos</h3>
                         <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                            <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
-                            <a href="como-funciona.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo funciona</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;a H&aacute;bitat</a>
+                            <a href="index.html"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
+                            <a href="como-funciona.html"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo
+                                funciona</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;a
+                                H&aacute;bitat</a>
                         </nav>
                     </div>
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Propietarios</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Propietarios</h3>
                         <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                            <a href="propietarios.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
-                            <a href="como-funciona.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo funciona</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;as H&aacute;bitat</a>
+                            <a href="propietarios.html"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu
+                                propiedad</a>
+                            <a href="como-funciona.html"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">C&oacute;mo
+                                funciona</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Garant&iacute;as
+                                H&aacute;bitat</a>
                         </nav>
                     </div>
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Legal</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Legal</h3>
                         <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de privacidad</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de cookies</a>
-                            <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">T&eacute;rminos y condiciones</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de
+                                privacidad</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">Pol&iacute;tica de
+                                cookies</a>
+                            <a href="#"
+                                class="hover:text-primary dark:hover:text-red-400 transition-colors">T&eacute;rminos y
+                                condiciones</a>
                         </nav>
                     </div>
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Soporte</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            Soporte</h3>
                         <div class="flex flex-col items-start gap-4">
                             <a href="#faq"
                                 class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
@@ -898,18 +1159,28 @@
                                     <img src="img/tenant-profile-2.jpg" alt="Avatar 2"
                                         class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900">
                                 </div>
-                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro de ayuda</span>
+                                <span
+                                    class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro
+                                    de ayuda</span>
                             </a>
-                            <a href="#" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
+                            <a href="#"
+                                class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar
+                                con soporte</a>
                         </div>
                     </div>
                     <div>
-                        <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">S&iacute;guenos</h3>
+                        <h3
+                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                            S&iacute;guenos</h3>
                         <div class="flex flex-wrap gap-2">
-                            <a href="#" aria-label="Instagram" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">IG</a>
-                            <a href="#" aria-label="X" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">X</a>
-                            <a href="#" aria-label="LinkedIn" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">in</a>
-                            <a href="#" aria-label="YouTube" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">YT</a>
+                            <a href="#" aria-label="Instagram"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">IG</a>
+                            <a href="#" aria-label="X"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">X</a>
+                            <a href="#" aria-label="LinkedIn"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">in</a>
+                            <a href="#" aria-label="YouTube"
+                                class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">YT</a>
                         </div>
                     </div>
                 </div>
@@ -918,15 +1189,24 @@
                     <div class="flex items-center gap-3.5 flex-wrap">
                         <img src="img/logo-lite.png" alt="Habitat Logo"
                             class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
-                        <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 H&aacute;bitat - Todos los derechos reservados</span>
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 H&aacute;bitat - Todos los
+                            derechos reservados</span>
                     </div>
-                    <div class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
-                        <span class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos de pago</span>
-                        <div class="flex flex-wrap items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
-                            <span class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
-                            <span class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
-                            <span class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
-                            <span class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
+                    <div
+                        class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
+                        <span
+                            class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos
+                            de pago</span>
+                        <div
+                            class="flex flex-wrap items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
+                            <span
+                                class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
+                            <span
+                                class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
+                            <span
+                                class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
+                            <span
+                                class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-bold text-sm">
@@ -1004,6 +1284,50 @@
             }
         });
     </script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- App Scripts -->
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/app.js?v=8"></script>
+
+    <!-- Google Translate Integration -->
+    <div id="google_translate_element" style="display: none;"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            // Prevent Material Icons from being translated
+            document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
+                icon.setAttribute('translate', 'no');
+                icon.classList.add('notranslate');
+            });
+
+            new google.translate.TranslateElement({
+                pageLanguage: 'es',
+                includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        function changeLanguage(langCode, displayText) {
+            // Set cookie for Google Translate
+            document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
+            document.cookie = "googtrans=/es/" + langCode + "; path=/";
+
+            // Update displays and reload to trigger translation
+            document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
+            window.location.reload();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
+            let lang = match ? match[1].split('/')[2] : 'es';
+            let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT', 'it': 'IT', 'ja': 'JA', 'zh-CN': 'ZH', 'ru': 'RU' };
+            if (labels[lang]) {
+                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

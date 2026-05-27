@@ -2651,7 +2651,7 @@ html.dark .landing-desktop-nav__menu-item {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: clamp(1.55rem, 3vw, 2.3rem);
+    gap: clamp(2rem, 5vw, 3rem);
     min-width: 0;
 }
 
@@ -2671,8 +2671,8 @@ html.dark .landing-desktop-nav__menu-item {
 .landing-menu__link {
     position: relative;
     max-width: 100%;
-    font-size: clamp(1.35rem, 4.4vw, 2.25rem);
-    font-weight: 800;
+    font-size: clamp(1.15rem, 3.5vw, 1.8rem);
+    font-weight: 500;
     line-height: 1.08;
     letter-spacing: 0;
     text-align: left;
@@ -2735,10 +2735,14 @@ html.dark .landing-desktop-nav__menu-item {
     transform: translateY(0);
 }
 
-.landing-menu.is-open .landing-menu__link:nth-child(1) { transition-delay: 140ms; }
-.landing-menu.is-open .landing-menu__link:nth-child(2) { transition-delay: 205ms; }
-.landing-menu.is-open .landing-menu__link:nth-child(3) { transition-delay: 270ms; }
-.landing-menu.is-open .landing-menu__link:nth-child(4) { transition-delay: 335ms; }
+.landing-menu.is-open .landing-menu__main > .landing-menu__nav > .landing-menu__link:nth-child(1) { transition-delay: 140ms; }
+.landing-menu.is-open .landing-menu__main > .landing-menu__nav > .landing-menu__link:nth-child(2) { transition-delay: 205ms; }
+.landing-menu.is-open .landing-menu__main > .landing-menu__nav > .landing-menu__link:nth-child(3) { transition-delay: 270ms; }
+.landing-menu.is-open .landing-menu__main > .landing-menu__nav > .landing-menu__link:nth-child(4) { transition-delay: 335ms; }
+
+.landing-menu.is-open #premium-menu-logged-in .landing-menu__link {
+    transition-delay: 410ms;
+}
 
 .landing-menu__divider {
     width: 100%;
@@ -2749,7 +2753,7 @@ html.dark .landing-desktop-nav__menu-item {
 .landing-menu__lower {
     display: flex;
     flex-direction: column;
-    gap: clamp(1.4rem, 3vw, 2.1rem);
+    gap: clamp(2rem, 4vw, 3rem);
 }
 
 .landing-menu__auth,
@@ -2772,9 +2776,9 @@ html.dark .landing-desktop-nav__menu-item {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.25rem;
-    font-size: clamp(1.15rem, 3.2vw, 1.55rem);
-    font-weight: 800;
+    gap: 1.6rem;
+    font-size: clamp(1rem, 2.8vw, 1.35rem);
+    font-weight: 500;
 }
 
 .landing-menu__auth-separator {
@@ -2798,8 +2802,8 @@ html.dark .landing-desktop-nav__menu-item {
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.78);
     box-shadow: 0 16px 34px rgba(26, 28, 28, 0.08);
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
-    font-weight: 800;
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    font-weight: 500;
 }
 
 .landing-menu__avatars {
@@ -2824,8 +2828,8 @@ html.dark .landing-desktop-nav__menu-item {
 .landing-menu__language {
     align-self: flex-start;
     max-width: 100%;
-    font-size: clamp(1rem, 2.6vw, 1.35rem);
-    font-weight: 800;
+    font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+    font-weight: 500;
     text-align: left;
 }
 
@@ -2938,7 +2942,7 @@ html.dark .landing-menu__divider {
     }
 
     .landing-menu__nav {
-        gap: clamp(1rem, 3.2vw, 1.55rem);
+        gap: clamp(1.8rem, 5vw, 2.4rem);
     }
 }
 
@@ -2975,20 +2979,20 @@ html.dark .landing-menu__divider {
     }
 
     .landing-menu__nav {
-        gap: 0.9rem;
+        gap: 1.8rem;
     }
 
     .landing-menu__link {
-        font-size: clamp(1.25rem, 8vw, 1.85rem);
+        font-size: clamp(1.05rem, 6vw, 1.45rem);
     }
 
     .landing-menu__lower {
-        gap: 0.8rem;
+        gap: 1.4rem;
     }
 
     .landing-menu__auth {
         gap: 0.85rem;
-        font-size: clamp(1rem, 6vw, 1.25rem);
+        font-size: clamp(0.9rem, 5vw, 1.15rem);
     }
 
     .landing-menu__auth-separator {
@@ -2997,7 +3001,7 @@ html.dark .landing-menu__divider {
 
     .landing-menu__help {
         padding-right: 1rem;
-        font-size: clamp(0.95rem, 5vw, 1.1rem);
+        font-size: clamp(0.85rem, 4vw, 1rem);
     }
 
     .landing-menu__avatars img {
@@ -3007,7 +3011,7 @@ html.dark .landing-menu__divider {
 
     .landing-menu__contact,
     .landing-menu__language {
-        font-size: clamp(0.95rem, 5vw, 1.12rem);
+        font-size: clamp(0.85rem, 4.5vw, 1rem);
     }
 
     .landing-menu__store-row {
@@ -3068,11 +3072,11 @@ html.dark .landing-menu__divider {
     }
 
     .landing-menu__nav {
-        gap: 0.9rem;
+        gap: 1.5rem;
     }
 
     .landing-menu__lower {
-        gap: 0.85rem;
+        gap: 1.4rem;
     }
 
     .landing-menu__brand img {
@@ -3080,7 +3084,7 @@ html.dark .landing-menu__divider {
     }
 
     .landing-menu__link {
-        font-size: clamp(1.15rem, 5vh, 1.7rem);
+        font-size: clamp(1rem, 4vh, 1.35rem);
     }
 
     .landing-menu__divider {

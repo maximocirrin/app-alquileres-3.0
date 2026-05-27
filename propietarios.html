@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Propietarios | Terrio</title>
+    <title>Propietarios | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -732,6 +732,69 @@
         #user-dropdown-menu.opacity-0 .drawer-backdrop {
             opacity: 0;
         }
+
+        /* Google Translate Custom Overrides */
+        iframe.goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame.skiptranslate {
+            display: none !important;
+        }
+
+        .skiptranslate>iframe {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-ORHb-OEVmcd {
+            display: none !important;
+        }
+
+        body {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        html {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        #google_translate_element {
+            display: none !important;
+        }
+
+        .goog-tooltip {
+            display: none !important;
+        }
+
+        .goog-tooltip:hover {
+            display: none !important;
+        }
+
+        .goog-text-highlight {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Fix for highlight on hover */
+        font {
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #goog-gt-tt {
+            display: none !important;
+        }
     </style>
 </head>
 <script>
@@ -779,6 +842,49 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
+                    <!-- Custom Language Selector -->
+                    <div class="relative group inline-block z-[110]">
+                        <button
+                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
+                            <span class="material-symbols-outlined text-lg">language</span>
+                            <span class="current-lang-display hidden sm:inline">ES</span>
+                            <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
+                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
+                                translate="no">
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('es', 'ES')">Español</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('de', 'DE')">Deutsch</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('en', 'EN')">English</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('fr', 'FR')">Français</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('pt', 'PT')">Português</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('it', 'IT')">Italiano</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ja', 'JA')">日本語</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('zh-CN', 'ZH')">中文</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ru', 'RU')">Русский</button></li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="hidden md:flex items-center gap-4 text-zinc-500">
                         <span
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
@@ -922,8 +1028,8 @@
             <div
                 class="flex flex-col md:flex-row justify-between items-center px-12 py-8 w-full font-['Inter'] text-sm tracking-normal">
                 <div class="flex flex-col md:flex-row items-center gap-8 border-none">
-                    <span class="font-['Manrope'] font-semibold text-zinc-900 dark:text-zinc-100">Terrio</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">© 2026 Terrio. Todos los derechos
+                    <span class="font-['Manrope'] font-semibold text-zinc-900 dark:text-zinc-100">Hábitat</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">© 2026 Hábitat. Todos los derechos
                         reservados.</span>
                 </div>
                 <div class="flex gap-8 mt-6 md:mt-0">
@@ -966,8 +1072,57 @@
                         class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
                         Soy Inquilino
                     </button>
-                    <a id="btn-administrar"
-                        class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">Administrar</a>
+                </div>
+                <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
+                    <!-- Custom Language Selector -->
+                    <div class="relative group inline-block z-[110]">
+                        <button
+                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
+                            <span class="material-symbols-outlined text-lg">language</span>
+                            <span class="current-lang-display hidden sm:inline">ES</span>
+                            <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
+                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
+                                translate="no">
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('es', 'ES')">Español</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('de', 'DE')">Deutsch</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('en', 'EN')">English</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('fr', 'FR')">Français</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('pt', 'PT')">Português</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('it', 'IT')">Italiano</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ja', 'JA')">日本語</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('zh-CN', 'ZH')">中文</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ru', 'RU')">Русский</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center gap-4 text-zinc-500">
+                        <span
+                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
+                        <span
+                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
+                    </div>
                     <label class="theme-switch flex-shrink-0"
                         style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
                         <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
@@ -985,14 +1140,6 @@
                             </div>
                         </div>
                     </label>
-                </div>
-                <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-                    <div class="hidden md:flex items-center gap-4 text-zinc-500">
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
-                    </div>
                     <button
                         class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
                         aria-label="Menu">
@@ -1064,11 +1211,11 @@
                 <div
                     class="-mt-5 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
                     <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+30.000</p>
+                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+50</p>
                         <p class="text-xs font-bold opacity-90">Propietarios ya publicando</p>
                     </div>
                     <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">2M+</p>
+                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+2.000</p>
                         <p class="text-xs font-bold opacity-90">Inquilinos buscando cada mes</p>
                     </div>
                     <div>
@@ -1085,7 +1232,7 @@
                         class="font-headline text-4xl md:text-5xl font-extrabold text-on-background dark:text-white leading-tight mb-5">
                         Descubre cuánto puede generar tu propiedad</h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 max-w-md">Propietarios reales ganan esto cada
-                        mes en Terrio. ¿Y tú?</p>
+                        mes en Hábitat. ¿Y tú?</p>
                 </div>
                 <div
                     class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 shadow-xl p-6 md:p-8 max-w-xl lg:ml-auto w-full">
@@ -4284,7 +4431,7 @@
         <main id="main-layout" class="hidden">
             <!-- Desktop Header -->
             <header class="desktop-header glass-panel">
-                <div class="logo">Terrio</div>
+                <div class="logo">Hábitat</div>
                 <nav class="desktop-nav">
                     <button class="nav-link active" data-target="home-view">Inicio</button>
                     <button class="nav-link" data-target="properties-view">Propiedades</button>
@@ -5155,7 +5302,7 @@
                         <h2>Menú</h2>
                     </header>
                     <div class="menu-list glass-card">
-                        <button class="menu-item">
+                        <button class="menu-item" onclick="window.location.href='administrador.html'">
                             <span class="material-symbols-rounded">person</span> Perfil
                         </button>
                         <button class="menu-item">
@@ -5195,7 +5342,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
-        <script src="js/app.js?v=2"></script>
+        <script src="js/app.js?v=4"></script>
         <!-- Google Maps -->
         <script async defer
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
@@ -5237,6 +5384,45 @@
 
 
         <!-- End Scripts -->
+
+        <!-- Google Translate Integration -->
+        <div id="google_translate_element"></div>
+        <script type="text/javascript">
+            function googleTranslateElementInit() {
+                // Prevent Material Icons from being translated
+                document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
+                    icon.setAttribute('translate', 'no');
+                    icon.classList.add('notranslate');
+                });
+
+                new google.translate.TranslateElement({
+                    pageLanguage: 'es',
+                    includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
+                    autoDisplay: false
+                }, 'google_translate_element');
+            }
+
+            function changeLanguage(langCode, displayText) {
+                // Set cookie for Google Translate
+                document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
+                document.cookie = "googtrans=/es/" + langCode + "; path=/";
+
+                // Update displays and reload to trigger translation
+                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
+                window.location.reload();
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
+                let lang = match ? match[1].split('/')[2] : 'es';
+                let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT' };
+                if (labels[lang]) {
+                    document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
+                }
+            });
+        </script>
+        <script type="text/javascript"
+            src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

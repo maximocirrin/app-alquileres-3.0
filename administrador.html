@@ -103,6 +103,69 @@
         }
     </script>
     <style>
+        /* Google Translate Custom Overrides */
+        iframe.goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+
+        .goog-te-banner-frame.skiptranslate {
+            display: none !important;
+        }
+
+        .skiptranslate>iframe {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
+            display: none !important;
+        }
+
+        .VIpgJd-ZVi9od-ORHb-OEVmcd {
+            display: none !important;
+        }
+
+        body {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        html {
+            top: 0px !important;
+            position: static !important;
+        }
+
+        #google_translate_element {
+            display: none !important;
+        }
+
+        .goog-tooltip {
+            display: none !important;
+        }
+
+        .goog-tooltip:hover {
+            display: none !important;
+        }
+
+        .goog-text-highlight {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Fix for highlight on hover */
+        font {
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #goog-gt-tt {
+            display: none !important;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
@@ -745,203 +808,7 @@
 </script>
 
 <body class="antialiased">
-    <!-- Landing Marketplace View -->
-    <section id="landing-marketplace-view"
-        class="hidden bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
-        <!-- TopNavBar -->
-        <nav
-            class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
-            <div
-                class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
-                <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                    <a href="#" class="flex items-center gap-1.5 md:gap-2 group">
-
-
-
-
-                        <img src="img/logo-lite.png" alt="Habitat Logo"
-                            class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
-                    </a>
-                    <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base">
-                        <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer"
-                            href="#">Marketplace</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
-                            href="#">Portfolio</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
-                            href="#">Insights</a>
-                    </div>
-                </div>
-                <div
-                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
-                    <button id="btn-propietarios-marketplace"
-                        class="bg-surface-dim px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-200 hover:text-red-800 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 flex-shrink-0">
-                        Soy Propietario
-                    </button>
-                </div>
-                <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-                    <div class="hidden md:flex items-center gap-4 text-zinc-500">
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
-                    </div>
-                    <label class="theme-switch flex-shrink-0"
-                        style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
-                        <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                        <div class="theme-switch__container">
-                            <div class="theme-switch__clouds"></div>
-                            <div class="theme-switch__stars-container">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
-                                        fill="currentColor"></path>
-                                </svg>
-                            </div>
-                            <div class="theme-switch__circle-container">
-                                <div class="theme-switch__sun-moon-container">
-                                    <div class="theme-switch__moon">
-                                        <div class="theme-switch__spot"></div>
-                                        <div class="theme-switch__spot"></div>
-                                        <div class="theme-switch__spot"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-                    <button
-                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
-                        aria-label="Menu">
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                    </button>
-                </div>
-            </div>
-        </nav>
-        <main class="pt-16 md:pt-20">
-            <!-- Hero Section -->
-            <section class="relative h-[600px] flex items-center justify-center overflow-hidden">
-                <div class="absolute inset-0 z-0"
-                    style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
-                    <img alt="Luxury Estate" class="w-full h-full object-cover brightness-75"
-                        src="img/hero-marketplace.jpg" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
-                </div>
-                <div class="relative z-10 w-full max-w-4xl px-6 text-center">
-                    <h1
-                        class="font-headline text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tighter leading-tight animate-on-scroll">
-                        Alquila por meses,<br />fácil y seguro.
-                    </h1>
-                    <div
-                        class="font-body text-lg md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-on-scroll delay-100">
-                        Desde donde estés, solo con propietarios verificados y con todas las garantías.
-                    </div>
-                    <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
-                        <div
-                            class="bg-surface-container-lowest p-2 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md bg-opacity-95">
-                            <div class="flex-1 flex items-center px-4 sm:px-6 gap-3 min-w-0">
-                                <span class="material-symbols-outlined text-primary">search</span>
-                                <input
-                                    class="w-full bg-transparent border-none focus:ring-0 text-on-surface py-3 font-body outline-none"
-                                    placeholder="¿Dónde quieres vivir?" type="text" />
-                            </div>
-                        </div>
-                        <button
-                            class="mt-4 w-full bg-primary text-on-primary px-6 sm:px-8 py-3.5 rounded-full font-bold hover:bg-primary-container transition-all border-none outline-none shadow-2xl">
-                            Buscar
-                        </button>
-                    </div>
-                </div>
-            </section>
-            <!-- Discovery & Filter Section -->
-            <section class="max-w-[1440px] mx-auto px-12 py-16">
-                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
-                    <div class="animate-on-scroll">
-                        <span
-                            class="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-3 block border-none">Descubre
-                            la Excelencia</span>
-                        <h2 class="font-headline text-4xl font-bold text-on-background tracking-tight">Marketplace</h2>
-                    </div>
-                    <!-- Category Tabs -->
-                    <div
-                        class="bg-surface-container p-1 rounded-2xl md:rounded-full flex gap-1 self-start md:self-end border-none overflow-x-auto w-full md:w-max snap-x custom-scrollbar pb-1 md:pb-1 animate-on-scroll delay-100">
-                        <button
-                            class="bg-primary text-on-primary px-6 md:px-8 py-2.5 rounded-full font-bold text-sm shadow-lg border-none whitespace-nowrap snap-start flex-shrink-0">Casas</button>
-                        <button
-                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">Departamentos</button>
-                        <button
-                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">PH</button>
-                        <button
-                            class="text-secondary px-6 md:px-8 py-2.5 rounded-full font-medium text-sm hover:bg-surface-container-high transition-all border-none whitespace-nowrap snap-start flex-shrink-0">Terrenos</button>
-                    </div>
-                </div>
-                <!-- Property Grid -->
-                <div id="marketplace-property-grid"
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-16">
-                    <!-- Skeleton cards (shown while loading) -->
-                    <div class="marketplace-skeleton animate-pulse">
-                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
-                        <div class="space-y-3">
-                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
-                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
-                        </div>
-                    </div>
-                    <div class="marketplace-skeleton animate-pulse hidden md:block">
-                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
-                        <div class="space-y-3">
-                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
-                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
-                        </div>
-                    </div>
-                    <div class="marketplace-skeleton animate-pulse hidden lg:block">
-                        <div class="rounded-xl mb-6 aspect-[4/5] bg-surface-container-high dark:bg-[#282828]"></div>
-                        <div class="space-y-3">
-                            <div class="h-6 bg-surface-container-high dark:bg-[#282828] rounded w-3/4"></div>
-                            <div class="h-4 bg-surface-container-high dark:bg-[#282828] rounded w-1/2"></div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Empty state (hidden by default) -->
-                <div id="marketplace-empty-state" class="hidden col-span-3 py-24 text-center">
-                    <span class="material-symbols-outlined text-6xl text-secondary/40 mb-4 block">home_work</span>
-                    <p class="font-headline text-xl font-bold text-on-background">Todavía no hay propiedades publicadas
-                    </p>
-                    <p class="font-body text-secondary mt-2">¡Sé el primero en publicar tu propiedad!</p>
-                </div>
-                <!-- More results indicator -->
-                <div class="mt-20 text-center">
-                    <button
-                        class="bg-surface-container hover:bg-surface-container-high text-on-surface px-12 py-4 rounded-full font-bold transition-all border border-outline-variant/10">
-                        Explorar más propiedades
-                    </button>
-                </div>
-            </section>
-        </main>
-        <!-- Footer -->
-        <footer class="bg-zinc-50 dark:bg-zinc-950 w-full border-t border-zinc-200/15 dark:border-zinc-800/15">
-            <div
-                class="flex flex-col md:flex-row justify-between items-center px-12 py-8 w-full font-['Inter'] text-sm tracking-normal">
-                <div class="flex flex-col md:flex-row items-center gap-8 border-none">
-                    <span class="font-['Manrope'] font-semibold text-zinc-900 dark:text-zinc-100">Terrio</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">© 2026 Terrio. Todos los derechos
-                        reservados.</span>
-                </div>
-                <div class="flex gap-8 mt-6 md:mt-0">
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">Política
-                        de Privacidad</a>
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity" href="#">Términos
-                        de Servicio</a>
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-opacity"
-                        href="#">Soporte</a>
-                </div>
-            </div>
-        </footer>
-    </section>
-
-
+    <!-- Landing Marketplace View Removed -->
     <!-- Landing Propietarios View -->
     <section id="landing-propietarios-view"
         class="hidden bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body w-full min-h-screen z-10 transition-opacity duration-300">
@@ -950,7 +817,7 @@
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                    <a href="#" class="flex items-center gap-1.5 md:gap-2 group">
+                    <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group">
                         <img src="img/logo-lite.png" alt="Habitat Logo"
                             class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
                     </a>
@@ -990,6 +857,49 @@
                     </label>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
+                    <!-- Custom Language Selector -->
+                    <div class="relative group inline-block z-[110]">
+                        <button
+                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
+                            <span class="material-symbols-outlined text-lg">language</span>
+                            <span class="current-lang-display hidden sm:inline">ES</span>
+                            <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
+                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
+                                translate="no">
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('es', 'ES')">Español</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('en', 'EN')">English</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('de', 'DE')">Deutsch</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('fr', 'FR')">Français</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('pt', 'PT')">Português</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('it', 'IT')">Italiano</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ja', 'JA')">日本語</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('zh-CN', 'ZH')">中文</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ru', 'RU')">Русский</button></li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="hidden md:flex items-center gap-4 text-zinc-500">
                         <span
                             class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
@@ -1088,7 +998,7 @@
                         class="font-headline text-4xl md:text-5xl font-extrabold text-on-background dark:text-white leading-tight mb-5">
                         Descubre cuánto puede generar tu propiedad</h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 max-w-md">Propietarios reales ganan esto cada
-                        mes en Terrio. ¿Y tú?</p>
+                        mes en Hábitat. ¿Y tú?</p>
                 </div>
                 <div
                     class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 shadow-xl p-6 md:p-8 max-w-xl lg:ml-auto w-full">
@@ -1849,7 +1759,8 @@
                             <span class="font-body text-base text-on-background dark:text-zinc-300">&copy;2026
                                 H&aacute;bitat</span>
                         </div>
-                        <div class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap lg:w-auto">
+                        <div
+                            class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap lg:w-auto">
                             <span
                                 class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">M&eacute;todos
                                 de pago</span>
@@ -1893,7 +1804,7 @@
             <div
                 class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                    <a id="btn-back-from-avisos" href="#"
+                    <a href="index.html"
                         class="flex items-center gap-1.5 md:gap-2 group cursor-pointer">
                         <img src="img/logo-lite.png" alt="Habitat Logo"
                             class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
@@ -4306,7 +4217,7 @@
         <main id="main-layout" class="hidden">
             <!-- Desktop Header -->
             <header class="desktop-header glass-panel">
-                <div class="logo">Terrio</div>
+                <div class="logo">Hábitat</div>
                 <nav class="desktop-nav">
                     <button class="nav-link active" data-target="home-view">Inicio</button>
                     <button class="nav-link" data-target="properties-view">Propiedades</button>
@@ -4348,11 +4259,11 @@
                     <div class="max-w-7xl mx-auto pt-16 md:pt-12 px-6 pb-24 md:pb-12">
                         <!-- Back to Marketplace Button -->
                         <div class="flex justify-start mb-6">
-                            <button
-                                class="btn-back-marketplace flex items-center gap-1.5 px-4 py-2 rounded-full font-body font-bold text-sm shadow-md border-none cursor-pointer transition-transform duration-200 hover:scale-105 bg-gradient-to-br from-primary to-primary-container text-white">
+                            <a href="index.html"
+                                class="flex items-center gap-1.5 px-4 py-2 rounded-full font-body font-bold text-sm shadow-md border-none cursor-pointer transition-transform duration-200 hover:scale-105 bg-gradient-to-br from-primary to-primary-container text-white" style="text-decoration: none; width: fit-content;">
                                 <span class="material-symbols-rounded text-[1.1rem]">arrow_back</span>
                                 Volver
-                            </button>
+                            </a>
                         </div>
                         <!-- Header -->
                         <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 relative">
@@ -5115,7 +5026,7 @@
                         <h2>Menú</h2>
                     </header>
                     <div class="menu-list glass-card">
-                        <button class="menu-item">
+                        <button class="menu-item" onclick="window.location.href='administrador.html'">
                             <span class="material-symbols-rounded">person</span> Perfil
                         </button>
                         <button class="menu-item">
@@ -5151,7 +5062,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="js/supabaseClient.js"></script>
         <script src="js/data.js"></script>
-        <script src="js/app.js?v=2"></script>
+        <script src="js/app.js?v=4"></script>
         <!-- Google Maps -->
         <script async defer
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
@@ -5191,7 +5102,45 @@
         </div>
 
 
-    
-    <!-- End Scripts -->
+
+        <!-- End Scripts -->
+    <!-- Google Translate Integration -->
+    <div id="google_translate_element" style="display: none;"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            // Prevent Material Icons from being translated
+            document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
+                icon.setAttribute('translate', 'no');
+                icon.classList.add('notranslate');
+            });
+
+            new google.translate.TranslateElement({
+                pageLanguage: 'es',
+                includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        function changeLanguage(langCode, displayText) {
+            // Set cookie for Google Translate
+            document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
+            document.cookie = "googtrans=/es/" + langCode + "; path=/";
+
+            // Update displays and reload to trigger translation
+            document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
+            window.location.reload();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
+            let lang = match ? match[1].split('/')[2] : 'es';
+            let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT', 'it': 'IT', 'ja': 'JA', 'zh-CN': 'ZH', 'ru': 'RU' };
+            if (labels[lang]) {
+                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>
