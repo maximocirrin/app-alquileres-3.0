@@ -969,13 +969,7 @@
                             href="#">Insights</a>
                     </div>
                 </div>
-                <div
-                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
-                    <button id="btn-propietarios-marketplace"
-                        class="bg-surface-dim px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-200 hover:text-red-800 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 flex-shrink-0">
-                        Soy Propietario
-                    </button>
-                </div>
+
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
                     <!-- Custom Language Selector -->
                     <div class="relative group inline-block z-[110]">
@@ -1064,21 +1058,37 @@
         </nav>
         <main class="pt-16 md:pt-20">
             <!-- Hero Section -->
-            <section class="relative min-h-[600px] flex items-center justify-center overflow-hidden py-24 sm:py-0">
+            <section class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-24 sm:pt-0 sm:pb-20">
                 <div class="absolute inset-0 z-0"
                     style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
                     <img alt="Luxury Estate" class="w-full h-full object-cover brightness-75"
                         src="img/hero-marketplace.jpg" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
                 </div>
+
+                <!-- Persona Selector -->
+                <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 sm:mt-10 bg-transparent">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-4 justify-center w-full">
+                        <a href="index.html" class="bg-primary text-on-primary px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-md whitespace-nowrap transition-all flex-shrink-0 border border-primary">
+                            Soy Inquilino
+                        </a>
+                        <a href="propietarios.html" class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
+                            Soy Propietario
+                        </a>
+                        <a href="corredores.html" class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
+                            Soy inmobiliaria
+                        </a>
+                    </div>
+                </div>
+
                 <div class="relative z-10 w-full max-w-4xl px-6 text-center">
                     <h1
                         class="font-headline text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tighter leading-tight animate-on-scroll">
-                        Alquila por meses,<br />fácil y seguro.
+                        Alquilar nunca fue tan rápido, transparente y 100% digital.
                     </h1>
                     <div
                         class="font-body text-lg md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-on-scroll delay-100">
-                        Desde donde estés, solo con propietarios verificados y con todas las garantías.
+                        Habitat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu alquiler directamente desde el celular, sin costos ocultos.
                     </div>
                     <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
                         <div
@@ -1128,14 +1138,13 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none"
-                            aria-hidden="true">support_agent</span>
+                            aria-hidden="true">badge</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Estamos contigo en esto</h2>
+                                Pasaporte Habitat</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Recibe ayuda de un agente en tu idioma, para resolver dudas, ayudarte a encontrar casa y
-                                gestionar todo el papeleo.</p>
+                                Pagá una única vez un Service Fee tecnológico por tu "Pasaporte del Inquilino" válido por 60 días. Cubre tu validación biométrica con prueba de vida y firma electrónica avanzada. Si un propietario no te acepta, podés postularte a otra propiedad sin volver a pagar.</p>
                         </div>
                     </article>
 
@@ -1148,15 +1157,13 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
-                            aria-hidden="true">verified_user</span>
+                            aria-hidden="true">history_edu</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Siempre a salvo</h2>
+                                Chau Escribanía</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Accede a propietarios e inquilinos verificados, pagos seguros y con cobertura total.</p>
-                            <a class="inline-flex mt-2 font-body text-lg sm:text-xl text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                data-premium-guarantee-scroll href="#seccion-garantia">Más sobre nuestra garantía</a>
+                                Ahorrá tiempo y costos logísticos. La ley no exige escribano para alquilar; firmá tu contrato con plena seguridad probatoria mediante la captura de IP y geolocalización.</p>
                         </div>
                     </article>
 
@@ -1169,14 +1176,13 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[-3deg] select-none"
-                            aria-hidden="true">savings</span>
+                            aria-hidden="true">psychology</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                A la medida de tu bolsillo</h2>
+                                Asistente Legal con IA</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Escoge entre miles de opciones sin fianza, con ofertas y tarifas más baratas que en una
-                                inmobiliaria.</p>
+                                Entendé qué estás firmando. Nuestra Inteligencia Artificial traduce el lenguaje técnico de las cláusulas a un formato conversacional transparente.</p>
                         </div>
                     </article>
 
@@ -1189,13 +1195,32 @@
                         </div>
                         <span
                             class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
-                            aria-hidden="true">public</span>
+                            aria-hidden="true">photo_camera</span>
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
-                                Desde cualquier lugar</h2>
+                                Inventario Digital Inmutable</h2>
                             <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
-                                Encuentra tu alquiler temporal, sin visitas y 100% online.</p>
+                                Olvidate del viejo anexo en papel. Subí fotos y videos del estado del inmueble con marcas de tiempo (timestamp) para evitar cualquier disputa al finalizar tu contrato.</p>
+                        </div>
+                    </article>
+
+                    <article
+                        class="group/benefit animate-on-scroll delay-400 relative min-h-[320px] sm:min-h-[360px] rounded-lg border border-outline-variant/40 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-9 sm:px-10 sm:py-11 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/35 dark:hover:border-red-500/45 hover:shadow-[0_26px_70px_rgba(26,28,28,0.13)] dark:hover:shadow-[0_26px_70px_rgba(0,0,0,0.45)]">
+                        <span
+                            class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:via-red-400/55"></span>
+                        <div
+                            class="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover/benefit:opacity-100 dark:bg-red-500/10">
+                        </div>
+                        <span
+                            class="material-symbols-rounded relative z-10 mb-8 text-[5rem] sm:text-[6rem] text-primary dark:text-red-400 transition-transform duration-500 ease-out group-hover/benefit:-translate-y-2 group-hover/benefit:scale-110 group-hover/benefit:rotate-[3deg] select-none"
+                            aria-hidden="true">build</span>
+                        <div class="relative z-10 max-w-xl">
+                            <h2
+                                class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-6">
+                                Gestión y Mantenimiento</h2>
+                            <p class="font-body text-lg sm:text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
+                                Pagá tu alquiler con métodos digitales y reportá problemas edilicios abriendo tickets con evidencia fotográfica directamente desde la app.</p>
                         </div>
                     </article>
                 </div>
@@ -1206,28 +1231,29 @@
                 class="premium-guarantee-target bg-slate-50 dark:bg-zinc-950/20 py-20 px-4 sm:px-6 lg:px-12 border-t border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
                 <div class="max-w-[1280px] mx-auto">
                     <h2
-                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-16 text-center tracking-tight leading-tight">
-                        Todo bajo control con nuestra garantía
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 text-center tracking-tight leading-tight">
+                        Pasaporte Habitat: Tu perfil listo para alquilar
                     </h2>
+                    <p class="font-body text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-16 max-w-3xl mx-auto text-center">
+                        Aboná un único Service Fee tecnológico, verificá tu perfil en minutos y postulate a tu próximo hogar sin fricciones.
+                    </p>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                         <!-- Card 1 -->
                         <article
                             class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                             <div
                                 class="relative w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 shrink-0">
-                                <span class="material-symbols-rounded text-3xl">notifications_active</span>
+                                <span class="material-symbols-rounded text-3xl">fingerprint</span>
                                 <span
                                     class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-red-400 border-2 border-white dark:border-zinc-900"></span>
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                Ningún problema sin solución
+                                100% Digital y sin escribanías
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Si el propietario cancela tu reserva en el último minuto, <strong
-                                    class="font-semibold text-zinc-800 dark:text-zinc-200">nos hacemos cargo de tu
-                                    estancia en un hotel</strong> mientras buscamos otra alternativa.
+                                Pagás el pase, validás tu identidad con biometría y cargás tu información. En minutos, tu perfil queda verificado y habilitado para firmar tu contrato de forma electrónica con plena validez legal.
                             </p>
                         </article>
 
@@ -1240,12 +1266,10 @@
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                ¿Cambio de planes? Cancelación flexible
+                                Un pago, 60 días de oportunidades
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Cancela <strong class="font-semibold text-zinc-800 dark:text-zinc-200">sin
-                                    coste</strong> antes de que el propietario responda a tu solicitud o si encuentras
-                                alguna tarifa que no cuadre con lo acordado.
+                                Si el propietario elige a otro candidato o cambias de opinión, no perdés tu dinero. Tu pasaporte te permite postularte a todas las propiedades que quieras dentro de la red durante 60 días sin costo extra.
                             </p>
                         </article>
 
@@ -1254,34 +1278,14 @@
                             class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
                             <div
                                 class="relative w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6 shrink-0">
-                                <span class="material-symbols-rounded text-3xl">verified_user</span>
+                                <span class="material-symbols-rounded text-3xl">security</span>
                             </div>
                             <h3
                                 class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                Solo propietarios verificados
+                                Privacidad blindada
                             </h3>
                             <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Verificamos minuciosamente a cada propietario por ti y garantizamos que solo reciba el
-                                pago <strong class="font-semibold text-zinc-800 dark:text-zinc-200">una vez hayas
-                                    confirmado</strong> que todo está bien.
-                            </p>
-                        </article>
-
-                        <!-- Card 4 -->
-                        <article
-                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                            <div
-                                class="relative w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-6 shrink-0">
-                                <span class="material-symbols-rounded text-3xl">visibility</span>
-                            </div>
-                            <h3
-                                class="font-headline text-xl sm:text-2xl font-bold text-on-background dark:text-white mb-4">
-                                Garantía de amor a primera vista
-                            </h3>
-                            <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                Tienes 24 horas para comprobar que todo está como en el anuncio. Si no, estamos aquí
-                                para <strong class="font-semibold text-zinc-800 dark:text-zinc-200">ayudarte a
-                                    encontrar</strong> una solución.
+                                Tus documentos y recibos de sueldo están encriptados. Los propietarios y corredores solo visualizan un certificado validado de tu identidad y capacidad de pago, manteniendo tus archivos originales bajo estricta confidencialidad.
                             </p>
                         </article>
                     </div>
@@ -1593,41 +1597,16 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo
-                                    cancelar una reserva?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué es el Pasaporte Habitat y por qué tiene un costo?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p>Puedes cancelar tu reserva, pero tu reembolso depende de cu&aacute;ndo
-                                            canceles y de si el propietario ha aprobado tu solicitud.</p>
-                                        <div
-                                            class="space-y-3 pl-4 border-l-2 border-primary dark:border-red-400 text-sm md:text-base">
-                                            <p><strong>✔️ Antes de que el propietario apruebe tu
-                                                    reserva:</strong><br>Puedes cancelar en cualquier momento y no se
-                                                aplicar&aacute;n cargos.</p>
-                                            <p><strong>✔️ Despu&eacute;s de que el propietario haya aprobado tu
-                                                    reserva:</strong><br>Tu reembolso depende de con cu&aacute;nta
-                                                antelaci&oacute;n canceles:</p>
-                                            <ul class="list-disc pl-5 space-y-1 text-sm">
-                                                <li>Reembolso completo del pago inicial del alquiler si cancelas con 60
-                                                    d&iacute;as o m&aacute;s de antelaci&oacute;n a la fecha de entrada.
-                                                </li>
-                                                <li>Reembolso del 50% del pago inicial del alquiler si cancelas entre 30
-                                                    y 59 d&iacute;as antes de la fecha de entrada.</li>
-                                                <li>Sin reembolso si cancelas con 29 d&iacute;as o menos de
-                                                    antelaci&oacute;n a la fecha de entrada.</li>
-                                            </ul>
-                                        </div>
-                                        <p
-                                            class="text-sm bg-zinc-100 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-                                            <strong>⚠️ Importante:</strong> La tarifa de H&aacute;bitat no es
-                                            reembolsable una vez que la reserva est&aacute; confirmada.
-                                        </p>
-                                    </div>
+                                    <p
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
+                                        El Pasaporte es un Service Fee tecnológico que pagás por única vez para validar tu identidad (biometría) y capacidad de pago. Este pago centraliza tu perfil y elimina la necesidad de pagar costosos gastos de escribanía, certificaciones de firmas e informes de dominio cada vez que te postulás a una propiedad.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1638,8 +1617,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Puedo
-                                    visitar la propiedad antes de reservar?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué pasa si ningún propietario acepta mi postulación?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1647,9 +1625,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, con nosotros no tienes que hacerlo. Nuestro equipo verifica las propiedades
-                                        por ti, d&aacute;ndote m&aacute;s tiempo para planear, hacer maletas o
-                                        relajarte.</p>
+                                        No perdés tu dinero. Tu Pasaporte tiene una vigencia de 60 días corridos. Durante ese tiempo, podés postularte a todas las propiedades que quieras dentro de la red de Habitat sin volver a pagar el costo de validación.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1660,8 +1637,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Con
-                                    qui&eacute;n vivir&eacute;?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Es legal firmar el contrato de alquiler sin ir a una escribanía?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1669,8 +1645,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Tenemos inquilinos de todas las edades y nacionalidades en nuestras propiedades,
-                                        pero no podemos compartir sus datos por privacidad.</p>
+                                        Sí, totalmente. La legislación argentina avala la firma electrónica para instrumentos privados como los contratos de locación. Habitat certifica tu firma capturando tu IP, geolocalización y aplicando un sello de tiempo (Timestamp), dándole plena validez legal y probatoria sin necesidad de escribanos.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1681,22 +1657,16 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    es un Homechecker?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿El pago del Pasaporte garantiza que voy a alquilar la propiedad?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p>Los Homecheckers son colaboradores que verifican propiedades por ti. Crean
-                                            los planos digitales, v&iacute;deo-tours y fotos que se ven en nuestros
-                                            anuncios.</p>
-                                        <p>Puedes confiar en un Homechecker. Son tus ojos y o&iacute;dos en cada una de
-                                            nuestras ciudades, ya que viven all&iacute; y les damos feedback
-                                            semanalmente para ayudaros.</p>
-                                    </div>
+                                    <p
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
+                                        No. Habitat certifica tu identidad y arma tu perfil validado para darte una ventaja frente a otros candidatos, pero la decisión final de aceptación siempre depende de los requisitos específicos del propietario o del corredor inmobiliario a cargo del inmueble.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1707,23 +1677,16 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">Mi
-                                    reserva ha sido aceptada, &iquest;Ahora qu&eacute;?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Mis datos personales, fotos y recibos de sueldo están seguros?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
                             <div class="owner-faq-answer">
                                 <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p>Pagar&aacute;s la cuota de H&aacute;bitat y el primer pago de alquiler. Este
-                                            dinero va a mantenerse a salvo hasta despu&eacute;s de tu mudanza.</p>
-                                        <p>Tambi&eacute;n te pondremos en contacto con el propietario para que puedas
-                                            organizar el check-in a tiempo.</p>
-                                        <p class="font-semibold text-primary dark:text-red-400">&iexcl;Lo &uacute;nico
-                                            que debes hacer ahora es relajarte - Tu pr&oacute;xima mudanza ya ha
-                                            empezado!</p>
-                                    </div>
+                                    <p
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
+                                        Absolutamente. Operamos con encriptación avanzada y en estricto cumplimiento de la Ley de Protección de Datos Personales (Ley 25.326). Los propietarios solo visualizan un "certificado de perfil validado", sin tener acceso jamás a tus documentos en crudo (como la foto de tu DNI o tus recibos de sueldo).
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1734,8 +1697,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    ocurre si no me gusta la propiedad donde me he mudado?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona el Inventario Digital Inmutable?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1743,185 +1705,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Dispones de 24 horas desde tu check-in en el alojamiento para comprobar que todo
-                                        est&aacute; bien. Si consideras que el alojamiento no coincide con lo que te
-                                        mostramos en la web de H&aacute;bitat o te encuentras con alg&uacute;n problema
-                                        grave que te impide quedarte, te ayudaremos a encontrar otro lugar donde vivir o
-                                        te reembolsaremos la totalidad de lo pagado.</p>
-                                </div>
-                            </div>
-                        </article>
-
-                        <!-- Q7 -->
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;H&aacute;bitat
-                                    es seguro?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p><strong>H&aacute;bitat</strong> es una plataforma segura con la que
-                                            m&aacute;s de 120 000 personas han encontrado su nuevo hogar de manera
-                                            totalmente online, manteniendo siempre m&aacute;s de 4 estrellas de 5 en
-                                            trustpilot. En H&aacute;bitat, nos volcamos para hacerte la vida m&aacute;s
-                                            f&aacute;cil y evitarte preocupaciones:</p>
-                                        <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
-                                            <li><strong>Verificamos propiedades por ti:</strong> Tomamos
-                                                fotograf&iacute;as y v&iacute;deos reales acompa&ntilde;ados de una
-                                                descripci&oacute;n detallada para que puedas tomar la decisi&oacute;n
-                                                m&aacute;s acertada y segura.</li>
-                                            <li><strong>Garant&iacute;a de pago seguro:</strong> Nuestro sistema te
-                                                garantiza una experiencia &oacute;ptima con pago seguro 24 horas
-                                                despu&eacute;s de la llegada. Transferimos tu alquiler al propietario
-                                                solo cuando nos des el visto bueno. Adem&aacute;s, la pol&iacute;tica de
-                                                cancelaci&oacute;n viene por defecto, entre otras garant&iacute;as.</li>
-                                            <li><strong>Innovaci&oacute;n constante:</strong> Somos los primeros en
-                                                lanzar un servicio sin dep&oacute;sito que facilita que puedas entrar a
-                                                la casa de tus sue&ntilde;os y que adem&aacute;s protege al propietario
-                                                en caso de impagos o da&ntilde;os.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-
-                        <!-- Q8 -->
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Por
-                                    qu&eacute; deber&iacute;a elegir H&aacute;bitat para alquileres de corta y media
-                                    estancia?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-3">
-                                        <p><strong>H&aacute;bitat</strong> ofrece una forma segura y transparente de
-                                            alquilar viviendas de corta y media duraci&oacute;n. Aqu&iacute; te contamos
-                                            por qu&eacute;:</p>
-                                        <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
-                                            <li>Soporte dedicado si tienes problemas con la propiedad o el propietario.
-                                            </li>
-                                            <li>Un proceso confiable utilizado por miles de inquilinos internacionales.
-                                            </li>
-                                            <li>24 horas para revisar tu nuevo hogar al llegar.</li>
-                                        </ul>
-                                        <p class="font-semibold">Con H&aacute;bitat, puedes alquilar con confianza y
-                                            evitar sorpresas ocultas.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-
-                        <!-- Q9 -->
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Cu&aacute;l
-                                    es la mejor web de alquileres?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p><strong>H&aacute;bitat</strong> es una de las mejores plataformas para
-                                            alquilar alojamiento por temporadas, especialmente si eres un freelance,
-                                            estudiante internacional o te est&aacute;s mudando de ciudad, porque combina
-                                            anuncios verificados, procesos seguros y una protecci&oacute;n real para
-                                            todos los inquilinos.</p>
-                                        <p>H&aacute;bitat se especializa en alquileres a medio plazo (desde 1 hasta 11
-                                            meses o m&aacute;s) y ofrece fotos profesionales, v&iacute;deos y planos de
-                                            cada vivienda. As&iacute; te aseguras de que lo que ves es real y
-                                            est&aacute; bien representado, y puedes reservar sin necesidad de ir a verlo
-                                            en persona.</p>
-                                        <p>Adem&aacute;s, H&aacute;bitat te ofrece:</p>
-                                        <ul class="list-disc pl-5 space-y-2 text-sm md:text-base">
-                                            <li>Reserva online segura.</li>
-                                            <li>Pagos seguros con certificaci&oacute;n PCI DSS, cifrado SSL y pasarelas
-                                                de pago oficiales.</li>
-                                            <li>Atenci&oacute;n y mediaci&oacute;n si tienes cualquier problema con el
-                                                piso, el dep&oacute;sito o la reserva.</li>
-                                            <li>Experiencia demostrada: cientos de inquilinos han reservado con total
-                                                seguridad, con opiniones muy positivas.</li>
-                                        </ul>
-                                        <p>Si buscas una forma fiable y sin quebraderos de cabeza para encontrar piso
-                                            desde el extranjero, H&aacute;bitat te quita todo el estr&eacute;s y la
-                                            incertidumbre del proceso tradicional de alquiler, ofreci&eacute;ndote
-                                            adem&aacute;s protecciones que la mayor&iacute;a de plataformas no tienen.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-
-                        <!-- Q10 -->
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;C&oacute;mo
-                                    alquilar un piso por 3 meses?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <div
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl space-y-4">
-                                        <p>Encontrar un alojamiento para solo tres meses puede ser complicado, ya que la
-                                            mayor&iacute;a de los sitios de alquiler tradicionales se centran en
-                                            contratos a largo plazo o en estancias vacacionales cortas. Tu mejor
-                                            opci&oacute;n es utilizar plataformas especializadas en alquileres a medio
-                                            plazo, como <strong>H&aacute;bitat</strong>, porque ofrecemos contratos de
-                                            alquiler mensuales flexibles.</p>
-                                        <p>Aqu&iacute; te explicamos c&oacute;mo encontrar un buen alquiler de tres
-                                            meses:</p>
-                                        <ol class="list-decimal pl-5 space-y-2 text-sm md:text-base">
-                                            <li><strong>Empieza con plataformas de alquiler a medio plazo:</strong>
-                                                H&aacute;bitat se centra espec&iacute;ficamente en pisos amueblados
-                                                disponibles de uno a once meses o m&aacute;s, lo que nos hace perfectos
-                                                para estudiantes, trabajadores en remoto o cualquiera que est&aacute; en
-                                                plena mudanza.</li>
-                                            <li><strong>Busca propiedades verificadas:</strong> Busca anuncios que
-                                                incluyan fotos profesionales, v&iacute;deos y alg&uacute;n tipo de
-                                                proceso de verificación. As&iacute; sabes que el piso es
-                                                aut&eacute;ntico antes de comprometerte.</li>
-                                            <li><strong>Reserva a través de un sistema seguro:</strong> Opta por
-                                                plataformas que tengan opciones de pago seguras, protecci&oacute;n del
-                                                dep&oacute;sito y contratos de alquiler claros que realmente puedas
-                                                entender.</li>
-                                            <li><strong>Revisa bien los términos del contrato (estancia
-                                                    mínima):</strong> Aseg&uacute;rate de que la propiedad permite
-                                                realmente alquileres de tres meses y no exige estancias m&iacute;nimas
-                                                m&aacute;s largas.</li>
-                                            <li><strong>Consigue apoyo si lo necesitas:</strong> Sobre todo si
-                                                est&aacute;s reservando desde otro pa&iacute;s, elige un servicio que
-                                                ofrezca ayuda y pueda intervenir si algo va mal con el casero o con el
-                                                piso.</li>
-                                        </ol>
-                                        <p>H&aacute;bitat te quita gran parte del estr&eacute;s al ofrecer alquileres a
-                                            medio plazo verificados, reserva online segura, protecci&oacute;n de la
-                                            fianza y atenci&oacute;n continua mientras est&eacute;s all&iacute;. Podemos
-                                            ayudarte a conseguir un piso para tres meses sin tener que ir a verlo en
-                                            persona.</p>
-                                    </div>
+                                        Al momento de ingresar a la propiedad, la app te permite subir fotos y videos del estado del inmueble. Estos archivos se guardan con marcas de tiempo y no pueden ser modificados, sirviendo como prueba indiscutible para evitar cualquier conflicto al finalizar tu contrato y devolver las llaves.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -2294,13 +2079,7 @@
                             href="#">Insights</a>
                     </div>
                 </div>
-                <div
-                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
-                    <button id="btn-inquilino-marketplace"
-                        class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
-                        Soy Inquilino
-                    </button>
-                </div>
+
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
                     <!-- Custom Language Selector -->
                     <div class="relative group inline-block z-[110]">
@@ -3512,7 +3291,7 @@
                     <button id="btn-back-from-publish"
                         class="flex items-center gap-1 text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
                         <span class="material-symbols-outlined" id="btn-back-icon">close</span>
-                        <span id="btn-back-text" class="font-body font-bold text-sm">Volver al inicio</span>
+                        <span id="btn-back-text" class="font-body font-bold text-sm">Cancelar</span>
                     </button>
                 </div>
 
@@ -5632,7 +5411,7 @@
                             class="px-6 py-4 rounded-xl font-headline font-bold text-secondary dark:text-[#c7c6c6] bg-transparent hover:bg-surface-container transition-colors flex items-center gap-2"
                             onclick="document.getElementById('btn-back-from-publish').click()">
                             <span class="material-symbols-outlined" id="btn-back-desktop-icon">close</span>
-                            <span id="btn-back-desktop-text">Volver al inicio</span>
+                            <span id="btn-back-desktop-text">Cancelar</span>
                         </button>
                         <div class="flex flex-row gap-4">
                             <button type="button"

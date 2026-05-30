@@ -213,6 +213,16 @@ const App = {
             btnPublicarPropietariosFinal.addEventListener('click', openPublishMarketplace);
         }
 
+        const btnAddPropertyFab = document.getElementById('add-property-fab');
+        if (btnAddPropertyFab) {
+            btnAddPropertyFab.addEventListener('click', openPublishMarketplace);
+        }
+
+        const btnQuickAdd = document.getElementById('quick-add-btn');
+        if (btnQuickAdd) {
+            btnQuickAdd.addEventListener('click', openPublishMarketplace);
+        }
+
         const btnAdministrarPropietariosLink = document.getElementById('btn-administrar-propietarios-link');
         if (btnAdministrarPropietariosLink) {
             btnAdministrarPropietariosLink.addEventListener('click', () => {
@@ -257,8 +267,14 @@ const App = {
             const publishElem = document.getElementById('publish-property-view');
             if (publishElem) publishElem.classList.add('hidden');
 
-            const landingElem = document.getElementById('landing-marketplace-view');
-            if (landingElem) landingElem.classList.remove('hidden');
+            if (App.state.currentUser) {
+                document.getElementById('main-layout')?.classList.remove('hidden');
+                if (App.getPageContext() === 'admin') {
+                    document.getElementById('app')?.classList.remove('hidden');
+                }
+            } else {
+                App.applyPageContext();
+            }
 
             window.scrollTo(0, 0);
 
@@ -3500,163 +3516,7 @@ const App = {
             });
         });
 
-        // Add Property Modal Handling
-        const modal = document.getElementById('add-property-modal');
-        const openModalBtns = [document.getElementById('quick-add-btn'), document.getElementById('add-property-fab')];
-        const closeModalBtn = document.querySelector('.close-modal');
 
-        // Wizard State
-        let currentStep = 1;
-        const totalSteps = 4;
-
-        const updateWizardUI = () => {
-            // Update Steps
-            document.querySelectorAll('.form-step').forEach(step => {
-                if (parseInt(step.dataset.step) === currentStep) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-
-            // Update Indicators
-            document.querySelectorAll('.step-indicator').forEach(ind => {
-                const step = parseInt(ind.dataset.step);
-                if (step === currentStep) {
-                    ind.classList.add('active');
-                    ind.classList.remove('completed');
-                } else if (step < currentStep) {
-                    ind.classList.add('completed');
-                    ind.classList.remove('active');
-                } else {
-                    ind.classList.remove('active', 'completed');
-                }
-            });
-
-            // Update Lines
-            const lines = document.querySelectorAll('.step-line');
-            lines.forEach((line, index) => {
-                if (index < currentStep - 1) {
-                    line.classList.add('active');
-                } else {
-                    line.classList.remove('active');
-                }
-            });
-        };
-
-        const validateStep = (step) => {
-            const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
-            const inputs = stepEl.querySelectorAll('input[required], select[required]');
-            let isValid = true;
-            inputs.forEach(input => {
-                if (!input.value) {
-                    isValid = false;
-                    input.style.borderColor = '#ef4444';
-                    // Reset border on input
-                    input.addEventListener('input', function () {
-                        this.style.borderColor = '';
-                    }, { once: true });
-                }
-            });
-            return isValid;
-        };
-
-        // Open Modal
-        openModalBtns.forEach(btn => {
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    modal.classList.remove('hidden');
-                    document.body.classList.add('no-scroll');
-                    // Reset wizard
-                    currentStep = 1;
-                    updateWizardUI();
-                    document.getElementById('add-property-form').reset();
-                    // document.getElementById('photo-file-name').textContent = "Ningún archivo seleccionado"; // Removed
-                    document.getElementById('contract-file-name').textContent = "Ningún archivo seleccionado";
-                });
-            }
-        });
-
-        // Close Modals
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modalToClose = e.target.closest('.modal');
-                if (modalToClose) {
-                    modalToClose.classList.add('hidden');
-                    document.body.classList.remove('no-scroll');
-                }
-            });
-        });
-
-        // Close Modal on click outside
-        window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                e.target.classList.add('hidden');
-                document.body.classList.remove('no-scroll');
-            }
-            if (!e.target.closest('.action-cell')) {
-                document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
-            }
-        });
-
-        // Wizard Navigation
-        document.querySelectorAll('.next-step-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (validateStep(currentStep)) {
-                    if (currentStep < totalSteps) {
-                        currentStep++;
-                        updateWizardUI();
-                    }
-                } else {
-                    alert("Por favor completa los campos requeridos.");
-                }
-            });
-        });
-
-        document.querySelectorAll('.prev-step-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (currentStep > 1) {
-                    currentStep--;
-                    updateWizardUI();
-                }
-            });
-        });
-
-        // Duration Select Handling
-        const durationSelect = document.getElementById('contract-duration');
-        const customDurationGroup = document.getElementById('custom-duration-group');
-        const customDurationInput = document.getElementById('custom-duration');
-
-        if (durationSelect && customDurationGroup && customDurationInput) {
-            durationSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'custom') {
-                    customDurationGroup.classList.remove('hidden');
-                    customDurationInput.setAttribute('required', 'true');
-                } else {
-                    customDurationGroup.classList.add('hidden');
-                    customDurationInput.removeAttribute('required');
-                    customDurationInput.value = '';
-                }
-            });
-        }
-
-        // File Input Handling (Contract Only)
-        const handleFileSelect = (inputId, nameId) => {
-            const input = document.getElementById(inputId);
-            const nameSpan = document.getElementById(nameId);
-            if (input && nameSpan) {
-                input.addEventListener('change', (e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                        nameSpan.textContent = e.target.files[0].name;
-                    } else {
-                        nameSpan.textContent = "Ningún archivo seleccionado";
-                    }
-                });
-            }
-        };
-
-        // handleFileSelect('photo-upload', 'photo-file-name'); // Removed
-        handleFileSelect('contract-upload', 'contract-file-name');
 
         // Tab Navigation
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3713,111 +3573,7 @@ const App = {
             // In a real app, this would open a tenant-specific modal or pre-fill the form
         });
 
-        // Add Property Form Submit
-        const addPropertyForm = document.getElementById('add-property-form');
-        if (addPropertyForm) {
-            addPropertyForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
 
-                const formData = new FormData(e.target);
-
-                // Helper to read file
-                const readFile = (file) => {
-                    return new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                };
-
-                try {
-                    // const photoFile = formData.get('photo'); // Removed
-                    const contractFile = formData.get('contract');
-
-                    // Default Photo URL
-                    let photoUrl = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
-                    /*
-                    if (photoFile && photoFile.size > 0) {
-                        photoUrl = await readFile(photoFile);
-                    }
-                    */
-
-                    let contractData = null;
-                    if (contractFile && contractFile.size > 0) {
-                        contractData = {
-                            name: contractFile.name,
-                            data: await readFile(contractFile)
-                        };
-                    }
-
-                    // Safe parsing
-                    const price = parseFloat(formData.get('price')) || 0;
-                    const increaseRate = parseFloat(formData.get('increaseRate')) || 0;
-                    const increaseFrequency = parseInt(formData.get('increaseFrequency')) || 12; // Default to 12 if missing
-                    const rentDueDay = parseInt(formData.get('rentDueDay')) || 1;
-
-
-                    // Calculate End Date based on Duration
-                    const startDateStr = formData.get('contractStartDate');
-                    let durationMonths = 0;
-
-                    const durationVal = formData.get('contractDuration');
-                    if (durationVal === 'custom') {
-                        durationMonths = parseInt(formData.get('customDuration'));
-                    } else {
-                        durationMonths = parseInt(durationVal);
-                    }
-
-                    let contractEndDate = '';
-                    if (startDateStr && durationMonths > 0) {
-                        // Parse start date as local date to avoid timezone issues
-                        const [y, m, d] = startDateStr.split('-').map(Number);
-                        const startDate = new Date(y, m - 1, d);
-
-                        // Add months
-                        startDate.setMonth(startDate.getMonth() + durationMonths);
-
-                        // Format YYYY-MM-DD
-                        const year = startDate.getFullYear();
-                        const month = String(startDate.getMonth() + 1).padStart(2, '0');
-                        const day = String(startDate.getDate()).padStart(2, '0');
-                        contractEndDate = `${year}-${month}-${day}`;
-                    }
-
-                    const property = {
-                        address: formData.get('address'),
-                        tenantName: formData.get('tenantName'),
-                        tenantEmail: formData.get('tenantEmail'),
-                        tenantPhone: formData.get('tenantPhone'),
-                        ownerName: formData.get('ownerName'),
-                        ownerEmail: formData.get('ownerEmail'),
-                        ownerPhone: formData.get('ownerPhone'),
-                        price: price,
-                        increaseRate: increaseRate,
-                        increaseFrequency: increaseFrequency,
-                        contractStartDate: startDateStr,
-                        contractEndDate: contractEndDate,
-                        rentDueDay: rentDueDay,
-                        photoUrl: photoUrl,
-                        contract: contractData,
-                        cbuAlias: formData.get('cbuAlias'),
-                        notifyRentExpiry: formData.get('notifyRentExpiry') === 'on',
-                        notifyPunitiveInterests: formData.get('notifyPunitiveInterests') === 'on'
-                    };
-
-                    await DataManager.addProperty(property);
-                    e.target.reset();
-                    modal.classList.add('hidden');
-                    document.body.classList.remove('no-scroll');
-                    await App.refreshData(); // Re-render data dependent views
-                    App.navigateTo('properties-view');
-                } catch (error) {
-                    console.error("Error saving property:", error);
-                    alert("Hubo un error al guardar la propiedad. Intenta con archivos más pequeños.");
-                }
-            });
-        }
     },
 
     openPropertyDetails: (property) => {
@@ -5052,13 +4808,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Desktop navigation for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const landingNavs = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav, #landing-propietarios-view > nav'
+        '#landing-marketplace-view > nav, #landing-propietarios-view > nav, #landing-corredores-view > nav'
     ));
 
     if (!landingNavs.length) return;
 
     const visibleLanding = () => (
-        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view'))
+        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #landing-corredores-view'))
             .find((section) => !section.classList.contains('hidden'))
     );
 
@@ -5119,13 +4875,12 @@ document.addEventListener('DOMContentLoaded', () => {
         iconGroup?.classList.add('landing-desktop-hidden');
 
         const roleHref = isOwnersLanding ? 'index.html' : 'propietarios.html';
-        const roleLabel = isOwnersLanding ? 'Soy Inquilino' : 'Soy un Propietario';
+        const roleLabel = isOwnersLanding ? 'Soy Inquilino' : 'Soy Propietario';
 
         const desktopNav = document.createElement('div');
         desktopNav.className = 'landing-desktop-nav';
         desktopNav.setAttribute('aria-label', 'Navegacion principal');
         desktopNav.innerHTML = `
-            <a class="landing-desktop-nav__role" href="${roleHref}">${roleLabel}</a>
             <a class="landing-desktop-nav__item" href="como-funciona.html">C&oacute;mo funciona</a>
             <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="favorites">Favoritos</button>
             <span class="landing-desktop-nav__auth" id="desktop-nav-logged-out">
@@ -5183,15 +4938,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Premium hamburger menu for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const menuButtons = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn'
+        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn'
     ));
 
     if (!menuButtons.length) return;
-
-    const isPropietario = window.location.pathname.toLowerCase().includes('propietarios.html');
-    const roleLink = isPropietario
-        ? '<a class="landing-menu__link" href="index.html">Soy inquilino</a>'
-        : '<a class="landing-menu__link" href="propietarios.html">Soy un Propietario</a>';
 
     const menu = document.createElement('aside');
     menu.id = 'landing-premium-menu';
@@ -5213,7 +4963,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="landing-menu__main">
                     <nav class="landing-menu__nav" aria-label="Navegación principal">
                         <a class="landing-menu__link" href="index.html">Inicio</a>
-                        ${roleLink}
                         <a class="landing-menu__link" href="como-funciona.html">C&oacute;mo funciona</a>
                         <button class="landing-menu__link" type="button" data-menu-action="favorites">Favoritos</button>
                     </nav>
@@ -5302,11 +5051,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeMenu = () => {
         menu.classList.remove('is-open');
         document.body.classList.remove('landing-menu-open');
-        
+
         if (menu.contains(document.activeElement)) {
             document.activeElement.blur();
         }
-        
+
         menu.setAttribute('aria-hidden', 'true');
         menuButtons.forEach((item) => {
             item.classList.remove('active');
@@ -5454,10 +5203,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let profile = null;
                 try {
                     profile = await window.DataManager.getUserProfile();
-                } catch(e) {
+                } catch (e) {
                     console.warn("Failed to get profile, proceeding with user only.", e);
                 }
-                
+
                 const nameEl = document.getElementById('dropdown-user-name');
                 const idEl = document.getElementById('dropdown-user-id');
                 const initialEl = document.getElementById('user-avatar-initial');
@@ -5472,12 +5221,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loggedOutEl = document.getElementById('drawer-user-logged-out');
                 if (loggedInEl) loggedInEl.classList.remove('hidden');
                 if (loggedOutEl) loggedOutEl.classList.add('hidden');
-                
+
                 const premiumLoggedInEl = document.getElementById('premium-menu-logged-in');
                 const premiumLoggedOutEl = document.getElementById('premium-menu-logged-out');
                 if (premiumLoggedInEl) premiumLoggedInEl.classList.remove('hidden');
                 if (premiumLoggedOutEl) premiumLoggedOutEl.classList.add('hidden');
-                
+
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.add('hidden'));
             } else {
@@ -5485,12 +5234,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loggedOutEl = document.getElementById('drawer-user-logged-out');
                 if (loggedInEl) loggedInEl.classList.add('hidden');
                 if (loggedOutEl) loggedOutEl.classList.remove('hidden');
-                
+
                 const premiumLoggedInEl = document.getElementById('premium-menu-logged-in');
                 const premiumLoggedOutEl = document.getElementById('premium-menu-logged-out');
                 if (premiumLoggedInEl) premiumLoggedInEl.classList.add('hidden');
                 if (premiumLoggedOutEl) premiumLoggedOutEl.classList.remove('hidden');
-                
+
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
             }
@@ -5516,12 +5265,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const loggedOutEl = document.getElementById('drawer-user-logged-out');
             if (loggedInEl) loggedInEl.classList.add('hidden');
             if (loggedOutEl) loggedOutEl.classList.remove('hidden');
-            
+
             const premiumLoggedInEl = document.getElementById('premium-menu-logged-in');
             const premiumLoggedOutEl = document.getElementById('premium-menu-logged-out');
             if (premiumLoggedInEl) premiumLoggedInEl.classList.add('hidden');
             if (premiumLoggedOutEl) premiumLoggedOutEl.classList.remove('hidden');
-            
+
             document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
         }
