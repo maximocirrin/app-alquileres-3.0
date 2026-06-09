@@ -12,9 +12,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="css/style.css?v=8">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const originalWarn = console.warn;
         console.warn = function () {
@@ -458,51 +456,6 @@
             transform: translateX(-50%) rotate(45deg);
         }
 
-        .leaflet-popup-content {
-            font-family: Inter, sans-serif;
-            margin: 0.75rem;
-        }
-
-        .leaflet-popup-content strong,
-        .leaflet-popup-content span {
-            display: block;
-        }
-
-        .floating-summary {
-            position: absolute;
-            left: 1rem;
-            right: 1rem;
-            bottom: 1rem;
-            z-index: 2;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: color-mix(in srgb, var(--search-shell) 94%, transparent);
-            backdrop-filter: blur(18px);
-            box-shadow: var(--glass-shadow);
-        }
-
-        .floating-summary img {
-            width: 4.4rem;
-            height: 3.5rem;
-            border-radius: 6px;
-            object-fit: cover;
-        }
-
-        .floating-summary strong,
-        .floating-summary span {
-            display: block;
-        }
-
-        .floating-summary span {
-            color: var(--muted-foreground);
-            font-size: 0.82rem;
-        }
-
         .empty-state {
             display: none;
             padding: 2rem;
@@ -569,19 +522,6 @@
 
             .sort-control {
                 width: 100%;
-            }
-
-            .floating-summary {
-                grid-template-columns: auto 1fr;
-            }
-
-            .floating-summary .ghost-action {
-                grid-column: 1 / -1;
-                justify-content: center;
-            }
-
-            .map-toolbar {
-                align-items: flex-start;
             }
         }
 
@@ -670,30 +610,6 @@
             </div>
         </nav>
 
-        <div id="mobile-menu" class="hidden fixed inset-0 z-[150] bg-white dark:bg-zinc-950 flex flex-col p-6 overflow-y-auto">
-            <div class="flex justify-between items-center mb-8">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto">
-                <button id="mobile-menu-close" class="text-zinc-600 dark:text-zinc-300" type="button" aria-label="Cerrar menu">
-                    <span class="material-symbols-outlined text-3xl">close</span>
-                </button>
-            </div>
-            <div class="flex flex-col gap-6 text-xl font-bold font-headline mb-8">
-                <a href="index.html" class="text-zinc-800 dark:text-zinc-200">Inicio</a>
-                <a href="buscar.html" class="text-primary dark:text-red-400">Buscar alquileres</a>
-                <a href="como-funciona.html" class="text-zinc-800 dark:text-zinc-200">Cómo funciona</a>
-                <a href="login.html?redirect=favorites&mode=login" class="text-zinc-800 dark:text-zinc-200">Favoritos</a>
-            </div>
-            <div class="mt-auto flex flex-col gap-4" id="mobile-nav-logged-out">
-                <a href="login.html?mode=register" class="bg-primary text-on-primary py-3 rounded-xl text-center font-bold">Regístrate</a>
-                <a href="login.html?mode=login" class="bg-surface-container text-zinc-800 dark:text-zinc-200 py-3 rounded-xl text-center font-bold border border-outline-variant/30 dark:border-zinc-700">Iniciar sesión</a>
-            </div>
-            <div class="mt-auto flex flex-col gap-4 hidden" id="mobile-nav-logged-in">
-                <a href="administrador.html" class="bg-primary text-on-primary py-3 rounded-xl text-center font-bold flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined">account_circle</span>
-                    Ir a mi Cuenta
-                </a>
-            </div>
-        </div>
 
         <main class="search-layout">
             <section class="results-panel" aria-label="Resultados de alquileres">
@@ -744,26 +660,6 @@
             <aside class="map-panel" aria-label="Mapa de alquileres">
                 <div class="map-canvas">
                     <div id="rentals-map" aria-label="Mapa interactivo de propiedades en Argentina"></div>
-                    <div class="map-toolbar">
-                        <span class="map-label" id="map-status"><span class="material-symbols-rounded" aria-hidden="true">map</span> Argentina</span>
-                        <button class="province-reset" id="reset-map" type="button">Ver todo</button>
-                    </div>
-
-                    <div class="floating-summary">
-                        <img src="img/pisos-inquilinos.jpg" alt="">
-                        <div>
-                            <strong id="map-summary-title">Argentina</strong>
-                            <span id="map-summary-text">Click en una provincia para acercar y ver propiedades</span>
-                        </div>
-                        <button class="ghost-action" type="button" id="map-summary-action">
-                            <span class="material-symbols-rounded" aria-hidden="true">near_me</span>
-                            Centrar
-                        </button>
-                    </div>
-                </div>
-            </aside>
-        </main>
-    </div>
 
     <script>
         const properties = [
@@ -946,115 +842,82 @@
     </script>
     <script>
         (() => {
-            const rentals = [
-                {
-                    title: 'Departamento luminoso con balcón',
-                    address: 'Palermo Soho, Ciudad Autónoma de Buenos Aires',
-                    province: 'Ciudad Autónoma de Buenos Aires',
-                    coords: [-34.5875, -58.4254],
-                    price: 420000,
-                    image: 'img/pisos-inquilinos.jpg',
-                    type: 'apartment',
-                    tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
-                    note: 'Contrato digital, garantía online y administración desde Habitat.',
-                    pet: true,
-                    verified: true,
-                    featured: 'Visita disponible'
-                },
-                {
-                    title: 'Estudio amoblado cerca del subte',
-                    address: 'Recoleta, Ciudad Autónoma de Buenos Aires',
-                    province: 'Ciudad Autónoma de Buenos Aires',
-                    coords: [-34.5895, -58.3974],
-                    price: 380000,
-                    image: 'img/estudios-inquilinos.jpg',
-                    type: 'studio',
-                    tags: ['Estudio', 'Amoblado', 'Amenities'],
-                    note: 'Ideal para mudanza rápida con firma remota.',
-                    pet: false,
-                    verified: true,
-                    featured: 'Nuevo'
-                },
-                {
-                    title: 'Piso familiar con cochera',
-                    address: 'Belgrano, Ciudad Autónoma de Buenos Aires',
-                    province: 'Ciudad Autónoma de Buenos Aires',
-                    coords: [-34.5621, -58.4567],
-                    price: 690000,
-                    image: 'img/residencias-inquilinos.jpg',
-                    type: 'apartment',
-                    tags: ['3 dormitorios', '2 baños', 'Cochera'],
-                    note: 'Publicación validada por propietario con documentación completa.',
-                    pet: true,
-                    verified: true,
-                    featured: 'Premium'
-                },
-                {
-                    title: 'Monoambiente moderno',
-                    address: 'Córdoba Centro, Córdoba',
-                    province: 'Córdoba',
-                    coords: [-31.4167, -64.1833],
-                    price: 310000,
-                    image: 'img/habitaciones-inquilinos.jpg',
-                    type: 'studio',
-                    tags: ['Monoambiente', 'Laundry', 'Seguridad'],
-                    note: 'Expensas claras y proceso de reserva digital.',
-                    pet: false,
-                    verified: false,
-                    featured: 'Oportunidad'
-                },
-                {
-                    title: 'Departamento en barrio residencial',
-                    address: 'Godoy Cruz, Mendoza',
-                    province: 'Mendoza',
-                    coords: [-32.9286, -68.8358],
-                    price: 455000,
-                    image: 'img/mendoza-inquilinos.jpg',
-                    type: 'apartment',
-                    tags: ['2 dormitorios', 'Patio', 'Mascotas'],
-                    note: 'Apto mascotas y listo para iniciar solicitud.',
-                    pet: true,
-                    verified: false,
-                    featured: 'Apto mascotas'
-                },
-                {
-                    title: 'Dúplex con terraza privada',
-                    address: 'Rosario, Santa Fe',
-                    province: 'Santa Fe',
-                    coords: [-32.9442, -60.6505],
-                    price: 570000,
-                    image: 'img/hero-marketplace.jpg',
-                    type: 'apartment',
-                    tags: ['Dúplex', 'Terraza', '2 baños'],
-                    note: 'Para estadías medias con onboarding digital.',
-                    pet: true,
-                    verified: true,
-                    featured: 'Alta demanda'
+            const provinceCapitals = {
+                'Ciudad Autónoma de Buenos Aires': { lat: -34.6094, lng: -58.3925 },
+                'Buenos Aires': { lat: -34.9205, lng: -57.9536 },
+                'Córdoba': { lat: -31.4167, lng: -64.1833 },
+                'Mendoza': { lat: -32.8898, lng: -68.8373 },
+                'Santa Fe': { lat: -31.6534, lng: -60.7107 },
+                'Tucumán': { lat: -26.8306, lng: -65.2028 },
+                'Entre Ríos': { lat: -31.7327, lng: -60.5296 },
+                'Salta': { lat: -24.7885, lng: -65.4106 },
+                'Misiones': { lat: -27.3667, lng: -55.8966 },
+                'Chaco': { lat: -27.4514, lng: -58.9866 },
+                'Corrientes': { lat: -27.4628, lng: -58.8354 },
+                'Santiago del Estero': { lat: -27.7844, lng: -64.2673 },
+                'San Juan': { lat: -31.5373, lng: -68.5251 },
+                'Jujuy': { lat: -24.1857, lng: -65.3003 },
+                'Río Negro': { lat: -40.8142, lng: -62.9996 },
+                'Neuquén': { lat: -38.9516, lng: -68.0592 },
+                'Formosa': { lat: -26.1843, lng: -58.1741 },
+                'Chubut': { lat: -43.3001, lng: -65.1023 },
+                'San Luis': { lat: -33.3017, lng: -66.3373 },
+                'Catamarca': { lat: -28.4687, lng: -65.7796 },
+                'La Rioja': { lat: -29.4132, lng: -66.8559 },
+                'La Pampa': { lat: -36.6203, lng: -64.2905 },
+                'Santa Cruz': { lat: -51.6231, lng: -69.2157 },
+                'Tierra del Fuego': { lat: -54.8073, lng: -68.3051 }
+            };
+
+            const propertyTypes = ['apartment', 'studio'];
+            const propertyImages = ['img/pisos-inquilinos.jpg', 'img/estudios-inquilinos.jpg', 'img/residencias-inquilinos.jpg', 'img/habitaciones-inquilinos.jpg', 'img/mendoza-inquilinos.jpg', 'img/hero-marketplace.jpg'];
+            const tagsList = ['2 dormitorios', '1 baño', 'Balcón', 'Verificado', 'Amoblado', 'Amenities', 'Cochera', 'Laundry', 'Seguridad', 'Patio', 'Mascotas', 'Terraza'];
+
+            const rentals = [];
+            Object.keys(provinceCapitals).forEach(provName => {
+                const capital = provinceCapitals[provName];
+                for (let i = 0; i < 5; i++) {
+                    const offsetLat = (Math.random() - 0.5) * 0.05;
+                    const offsetLng = (Math.random() - 0.5) * 0.05;
+                    const type = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+                    const image = propertyImages[Math.floor(Math.random() * propertyImages.length)];
+                    const price = Math.floor(Math.random() * 500) * 1000 + 200000;
+                    
+                    rentals.push({
+                        title: `Departamento ${type === 'studio' ? 'Estudio' : 'Luminoso'} ${i+1}`,
+                        address: `Dirección ${i+1}, ${provName}`,
+                        province: provName,
+                        coords: [capital.lat + offsetLat, capital.lng + offsetLng],
+                        price: price,
+                        image: image,
+                        type: type,
+                        tags: [tagsList[Math.floor(Math.random() * tagsList.length)], tagsList[Math.floor(Math.random() * tagsList.length)]],
+                        note: 'Publicación autogenerada para poblar el mapa de pruebas.',
+                        pet: Math.random() > 0.5,
+                        verified: Math.random() > 0.5,
+                        featured: Math.random() > 0.8 ? 'Destacado' : ''
+                    });
                 }
-            ];
+            });
 
             const gridEl = document.getElementById('listing-grid');
             const countEl = document.getElementById('results-count');
             const emptyEl = document.getElementById('empty-state');
             const inputEl = document.getElementById('location-search');
             const sortEl = document.getElementById('sort-select');
-            const statusEl = document.getElementById('map-status');
-            const summaryTitleEl = document.getElementById('map-summary-title');
-            const summaryTextEl = document.getElementById('map-summary-text');
-            const summaryImageEl = document.querySelector('.floating-summary img');
-            const argentinaBounds = L.latLngBounds([[-55.2, -73.6], [-21.6, -53.5]]);
 
             let currentFilter = 'all';
             let currentTerm = '';
             let currentProvince = '';
             let visibleRentals = [];
-            let rentalsMap;
-            let provinceLayer;
-            let markers;
+            
+            // Variables preparadas para Google Maps
+            let googleMap;
+            let googleMarkers = [];
 
             const moneyLabel = (value) => `$${Math.round(value / 1000)}k`;
             const normalize = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            const getProvinceName = (feature) => feature.properties.nombre || feature.properties.name || 'Provincia';
+            const getProvinceName = (feature) => feature.getProperty('nombre') || feature.getProperty('name') || 'Provincia';
             const hasRental = (name) => rentals.some((rental) => rental.province === name);
 
             function matchesRental(rental) {
@@ -1114,101 +977,189 @@
                 countEl.textContent = `${visibleRentals.length} alquiler${visibleRentals.length === 1 ? '' : 'es'} disponible${visibleRentals.length === 1 ? '' : 's'}`;
                 emptyEl.classList.toggle('is-visible', visibleRentals.length === 0);
                 renderMarkers();
-                updateMapSummary();
             }
 
-            function updateMapSummary() {
-                const label = currentProvince || 'Argentina';
-                statusEl.innerHTML = `<span class="material-symbols-rounded" aria-hidden="true">map</span> ${label}`;
-                summaryTitleEl.textContent = label;
-                summaryTextEl.textContent = currentProvince
-                    ? `${visibleRentals.length} propiedad${visibleRentals.length === 1 ? '' : 'es'} visible${visibleRentals.length === 1 ? '' : 's'} en ${currentProvince}`
-                    : 'Click en una provincia para acercar y ver propiedades';
-                summaryImageEl.src = visibleRentals[0]?.image || 'img/pisos-inquilinos.jpg';
+            let infoWindow;
+
+            function clearMarkers() {
+                googleMarkers.forEach(m => m.setMap(null));
+                googleMarkers = [];
             }
+
 
             function renderMarkers() {
-                if (!markers) return;
-                markers.clearLayers();
-                visibleRentals.forEach((rental) => {
-                    L.marker(rental.coords, {
-                        icon: L.divIcon({
-                            className: 'property-map-marker',
-                            html: `<span>${moneyLabel(rental.price)}</span>`,
-                            iconSize: [1, 1],
-                            iconAnchor: [0, 0]
-                        })
-                    })
-                        .bindPopup(`<strong>${rental.title}</strong><span>${rental.address}</span><span>${moneyLabel(rental.price)} / mes</span>`)
-                        .addTo(markers);
-                });
-            }
+                if (!googleMap) return;
+                clearMarkers();
 
-            function provinceStyle(feature) {
-                const name = getProvinceName(feature);
-                const active = currentProvince === name;
-                return {
-                    color: active ? '#811b1e' : '#6f827a',
-                    weight: active ? 2.5 : 1,
-                    opacity: 0.95,
-                    fillColor: hasRental(name) ? '#811b1e' : '#b9c7c1',
-                    fillOpacity: active ? 0.24 : hasRental(name) ? 0.13 : 0.08
-                };
-            }
+                if (!currentProvince) {
+                    // Vista del país: calcular propiedades por provincia
+                    const provinceGroups = {};
+                    visibleRentals.forEach((rental) => {
+                        if (!provinceGroups[rental.province]) {
+                            provinceGroups[rental.province] = 0;
+                        }
+                        provinceGroups[rental.province]++;
+                    });
 
-            function selectProvince(name, layer) {
-                currentProvince = name;
-                provinceLayer?.setStyle(provinceStyle);
-                rentalsMap.fitBounds(layer.getBounds(), { padding: [28, 28], maxZoom: 9 });
-                renderNewListings();
+                    // Mostrar un pin en TODAS las provincias de Argentina en su KM 0
+                    Object.keys(provinceCapitals).forEach((provName) => {
+                        const count = provinceGroups[provName] || 0;
+                        const centerCoords = provinceCapitals[provName];
+
+                        const marker = new google.maps.Marker({
+                            position: centerCoords,
+                            map: googleMap,
+                            title: provName,
+                            label: {
+                                text: count.toString(),
+                                color: 'white',
+                                fontSize: count > 0 ? '13px' : '11px',
+                                fontWeight: 'bold'
+                            },
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: count > 0 ? 18 : 12,
+                                fillColor: count > 0 ? '#811b1e' : '#888888',
+                                fillOpacity: count > 0 ? 1 : 0.6,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2,
+                                labelOrigin: new google.maps.Point(0, 0)
+                            }
+                        });
+
+                        marker.addListener('click', () => {
+                            if (currentProvince === provName) {
+                                resetMap();
+                                return;
+                            }
+                            currentProvince = provName;
+                            
+                            // En lugar de hacer zoom ciego a la capital, calculamos los bounds de las propiedades reales
+                            const bounds = new google.maps.LatLngBounds();
+                            visibleRentals.forEach(r => {
+                                if (r.province === provName) {
+                                    bounds.extend(new google.maps.LatLng(r.coords[0], r.coords[1]));
+                                }
+                            });
+
+                            if (!bounds.isEmpty()) {
+                                // Siempre hacemos un encuadre grande inicial para obligar a Google Maps a hacer 
+                                // el viaje de vuelo animado suave, sin que desactive la animación por distancia.
+                                const center = bounds.getCenter();
+                                const span = 0.8;
+                                const expandedBounds = new google.maps.LatLngBounds(
+                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
+                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
+                                );
+                                googleMap.fitBounds(expandedBounds);
+
+                                // Una vez que termina el vuelo inicial fluido, ajustamos el encuadre final
+                                google.maps.event.addListenerOnce(googleMap, 'idle', function() {
+                                    if (currentProvince !== provName) return; 
+                                    
+                                    // Si hay varias propiedades esparcidas, este fitBounds las encuadrará suavemente
+                                    googleMap.fitBounds(bounds);
+                                    
+                                    // Prevenir un zoom excesivo (nivel calle) si quedaron demasiado cerca matemáticamente
+                                    google.maps.event.addListenerOnce(googleMap, 'idle', function() {
+                                        if (googleMap.getZoom() > 14) googleMap.setZoom(14);
+                                    });
+                                });
+                            } else {
+                                // Provincia vacía (pin gris "0")
+                                const center = new google.maps.LatLng(centerCoords.lat, centerCoords.lng);
+                                const span = 0.8;
+                                const expandedBounds = new google.maps.LatLngBounds(
+                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
+                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
+                                );
+                                googleMap.fitBounds(expandedBounds);
+                            }
+                            
+                            renderNewListings();
+                        });
+
+                        googleMarkers.push(marker);
+                    });
+                } else {
+                    // Vista de provincia: mostrar pines individuales de propiedades
+                    visibleRentals.forEach((rental) => {
+                        const marker = new google.maps.Marker({
+                            position: { lat: rental.coords[0], lng: rental.coords[1] },
+                            map: googleMap,
+                            title: rental.title,
+                            label: {
+                                text: moneyLabel(rental.price),
+                                color: 'white',
+                                fontSize: '11px',
+                                fontWeight: 'bold'
+                            },
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 22,
+                                fillColor: '#811b1e',
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2,
+                                labelOrigin: new google.maps.Point(0, 0)
+                            }
+                        });
+
+                        marker.addListener('click', () => {
+                            const content = `
+                                <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 220px;">
+                                    <strong style="display:block; margin-bottom:4px; font-size: 14px;">${rental.title}</strong>
+                                    <span style="display:block; color: #666; font-size: 13px; margin-bottom:4px;">${rental.address}</span>
+                                    <strong style="display:block; color: #811b1e; font-size: 14px;">${moneyLabel(rental.price)} / mes</strong>
+                                </div>
+                            `;
+                            if (!infoWindow) infoWindow = new google.maps.InfoWindow();
+                            infoWindow.setContent(content);
+                            infoWindow.open(googleMap, marker);
+                        });
+
+                        googleMarkers.push(marker);
+                    });
+                }
             }
 
             function resetMap() {
                 currentProvince = '';
-                provinceLayer?.setStyle(provinceStyle);
-                if (provinceLayer) rentalsMap.fitBounds(provinceLayer.getBounds(), { padding: [18, 18] });
-                else rentalsMap.fitBounds(argentinaBounds, { padding: [18, 18] });
+                if (googleMap) {
+                    googleMap.setCenter({ lat: -38.4161, lng: -63.6167 });
+                    googleMap.setZoom(4);
+                }
                 renderNewListings();
             }
 
-            function initInteractiveMap() {
-                rentalsMap = L.map('rentals-map', {
-                    zoomControl: true,
-                    minZoom: 3,
-                    maxBounds: argentinaBounds.pad(0.25),
-                    maxBoundsViscosity: 0.6
+            window.initInteractiveMap = function() {
+                const mapEl = document.getElementById('rentals-map');
+                if (!mapEl) return;
+                
+                mapEl.innerHTML = '';
+
+                googleMap = new google.maps.Map(mapEl, {
+                    center: { lat: -38.4161, lng: -63.6167 },
+                    zoom: 4,
+                    styles: [
+                        { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{"color": "#444444"}] },
+                        { "featureType": "landscape", "elementType": "all", "stylers": [{"color": "#f2f2f2"}] },
+                        { "featureType": "poi", "elementType": "all", "stylers": [{"visibility": "off"}] },
+                        { "featureType": "road", "elementType": "all", "stylers": [{"saturation": -100}, {"lightness": 45}] },
+                        { "featureType": "road.highway", "elementType": "all", "stylers": [{"visibility": "simplified"}] },
+                        { "featureType": "road.arterial", "elementType": "labels.icon", "stylers": [{"visibility": "off"}] },
+                        { "featureType": "transit", "elementType": "all", "stylers": [{"visibility": "off"}] },
+                        { "featureType": "water", "elementType": "all", "stylers": [{"color": "#dceaf0"}, {"visibility": "on"}] }
+                    ],
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false
                 });
-                rentalsMap.fitBounds(argentinaBounds, { padding: [18, 18] });
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 19
-                }).addTo(rentalsMap);
+                // Capa GeoJSON eliminada para evitar pines por defecto
 
-                markers = L.layerGroup().addTo(rentalsMap);
 
-                fetch('https://apis.datos.gob.ar/georef/api/provincias?formato=geojson')
-                    .then((response) => response.json())
-                    .then((geojson) => {
-                        provinceLayer = L.geoJSON(geojson, {
-                            style: provinceStyle,
-                            onEachFeature(feature, layer) {
-                                const name = getProvinceName(feature);
-                                layer.bindTooltip(name, { sticky: true });
-                                layer.on({
-                                    click: () => selectProvince(name, layer),
-                                    mouseover: () => layer.setStyle({ weight: 2, fillOpacity: 0.2 }),
-                                    mouseout: () => provinceLayer.setStyle(provinceStyle)
-                                });
-                            }
-                        }).addTo(rentalsMap);
-                        rentalsMap.fitBounds(provinceLayer.getBounds(), { padding: [18, 18] });
-                    })
-                    .catch(() => {
-                        summaryTextEl.textContent = 'No se pudieron cargar los límites provinciales. Revisá la conexión.';
-                    })
-                    .finally(renderNewListings);
+                renderNewListings();
             }
 
             function applyNavTheme(theme) {
@@ -1224,15 +1175,6 @@
                 applyNavTheme(this.checked ? 'dark' : 'light');
             });
 
-            document.querySelector('.menu-btn')?.addEventListener('click', () => {
-                document.getElementById('mobile-menu').classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
-            });
-
-            document.getElementById('mobile-menu-close')?.addEventListener('click', () => {
-                document.getElementById('mobile-menu').classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-            });
 
             document.getElementById('search-form').addEventListener('submit', (event) => {
                 event.preventDefault();
@@ -1246,14 +1188,6 @@
             });
 
             sortEl.addEventListener('change', renderNewListings);
-            document.getElementById('reset-map').addEventListener('click', resetMap);
-            document.getElementById('map-summary-action').addEventListener('click', () => {
-                if (currentProvince && visibleRentals.length) {
-                    rentalsMap.fitBounds(L.latLngBounds(visibleRentals.map((rental) => rental.coords)).pad(0.35), { maxZoom: 13 });
-                    return;
-                }
-                resetMap();
-            });
 
             document.querySelectorAll('.filter-chip').forEach((chip) => {
                 chip.addEventListener('click', () => {
@@ -1274,9 +1208,9 @@
             };
 
             applyNavTheme(localStorage.getItem('theme') || 'light');
-            initInteractiveMap();
         })();
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
