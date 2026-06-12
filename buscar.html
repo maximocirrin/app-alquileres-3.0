@@ -8,10 +8,15 @@
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=8">
     <script>
         const originalWarn = console.warn;
@@ -395,7 +400,7 @@
             pointer-events: none;
         }
 
-        .map-toolbar > * {
+        .map-toolbar>* {
             pointer-events: auto;
         }
 
@@ -544,47 +549,80 @@
 
 <body>
     <div class="search-page" id="landing-marketplace-view">
-        <nav class="landing-nav-enhanced bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] border-b border-outline-variant/20 dark:border-zinc-800">
-            <div class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
+        <nav
+            class="landing-nav-enhanced bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] border-b border-outline-variant/20 dark:border-zinc-800">
+            <div
+                class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
                 <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
                     <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group">
-                        <img src="img/logo-lite.png" alt="Habitat Logo" class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
+                        <img src="img/logo-lite.png" alt="Habitat Logo"
+                            class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
                     </a>
                     <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base landing-legacy-nav">
-                        <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer" href="buscar.html">Marketplace</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="#">Portfolio</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="#">Insights</a>
+                        <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer"
+                            href="buscar.html">Marketplace</a>
+                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
+                            href="#">Portfolio</a>
+                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
+                            href="#">Insights</a>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
                     <div class="relative group inline-block z-[110]">
-                        <button class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors" type="button">
+                        <button
+                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors"
+                            type="button">
                             <span class="material-symbols-outlined text-lg">language</span>
                             <span class="current-lang-display hidden sm:inline">ES</span>
                             <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
                         </button>
-                        <div class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
-                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate" translate="no">
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('es', 'ES')" type="button">Español</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('de', 'DE')" type="button">Deutsch</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('en', 'EN')" type="button">English</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('fr', 'FR')" type="button">Français</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('pt', 'PT')" type="button">Português</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('it', 'IT')" type="button">Italiano</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('ja', 'JA')" type="button">日本語</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('zh-CN', 'ZH')" type="button">中文</button></li>
-                                <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('ru', 'RU')" type="button">Русский</button></li>
+                        <div
+                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
+                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
+                                translate="no">
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('es', 'ES')" type="button">Español</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('de', 'DE')" type="button">Deutsch</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('en', 'EN')" type="button">English</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('fr', 'FR')" type="button">Français</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('pt', 'PT')" type="button">Português</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('it', 'IT')" type="button">Italiano</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ja', 'JA')" type="button">日本語</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('zh-CN', 'ZH')" type="button">中文</button></li>
+                                <li><button
+                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
+                                        onclick="changeLanguage('ru', 'RU')" type="button">Русский</button></li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="hidden md:flex items-center gap-4 text-zinc-500 landing-desktop-hidden">
-                        <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate" translate="no">favorite</span>
-                        <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate" translate="no">notifications</span>
+                        <span
+                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate"
+                            translate="no">favorite</span>
+                        <span
+                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate"
+                            translate="no">notifications</span>
                     </div>
 
-                    <label class="theme-switch flex-shrink-0 cursor-pointer" style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
+                    <label class="theme-switch flex-shrink-0 cursor-pointer"
+                        style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
                         <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
                         <div class="theme-switch__container">
                             <div class="theme-switch__clouds"></div>
@@ -601,10 +639,15 @@
                         </div>
                     </label>
 
-                    <button class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0" aria-label="Menu" aria-controls="mobile-menu" aria-expanded="false" type="button">
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                    <button
+                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
+                        aria-label="Menu" aria-controls="mobile-menu" aria-expanded="false" type="button">
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
+                        <span
+                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                     </button>
                 </div>
             </div>
@@ -614,16 +657,19 @@
         <main class="search-layout">
             <section class="results-panel" aria-label="Resultados de alquileres">
                 <div class="search-hero">
-                    <span class="eyebrow"><span class="material-symbols-rounded" aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
+                    <span class="eyebrow"><span class="material-symbols-rounded"
+                            aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
                     <h1>Encontrá tu próximo alquiler.</h1>
-                    <p>Buscá por zona, compará precios y filtrá propiedades listas para avanzar con validación digital, contrato online y gestión desde Habitat.</p>
+                    <p>Buscá por zona, compará precios y filtrá propiedades listas para avanzar con validación digital,
+                        contrato online y gestión desde Habitat.</p>
                 </div>
 
                 <div class="search-card">
                     <form class="search-form" id="search-form">
                         <label class="search-input" for="location-search">
                             <span class="material-symbols-rounded" aria-hidden="true">search</span>
-                            <input id="location-search" type="search" autocomplete="off" placeholder="Ciudad, barrio o dirección">
+                            <input id="location-search" type="search" autocomplete="off"
+                                placeholder="Ciudad, barrio o dirección">
                         </label>
                         <button class="primary-action" type="submit">
                             <span class="material-symbols-rounded" aria-hidden="true">manage_search</span>
@@ -661,287 +707,176 @@
                 <div class="map-canvas">
                     <div id="rentals-map" aria-label="Mapa interactivo de propiedades en Argentina"></div>
 
-    <script>
-        const properties = [
-            {
-                title: 'Departamento luminoso con balcón',
-                address: 'Palermo Soho, Buenos Aires',
-                price: 420000,
-                image: 'img/pisos-inquilinos.jpg',
-                type: 'apartment',
-                tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
-                note: 'Contrato digital, garantía online y administración desde Habitat.',
-                pet: true,
-                verified: true,
-                featured: 'Visita disponible'
-            },
-            {
-                title: 'Estudio amoblado cerca del metro',
-                address: 'Recoleta, Buenos Aires',
-                price: 380000,
-                image: 'img/estudios-inquilinos.jpg',
-                type: 'studio',
-                tags: ['Estudio', 'Amoblado', 'Amenities'],
-                note: 'Ideal para mudanza rápida con firma remota.',
-                pet: false,
-                verified: true,
-                featured: 'Nuevo'
-            },
-            {
-                title: 'Piso familiar con cochera',
-                address: 'Belgrano, Buenos Aires',
-                price: 690000,
-                image: 'img/residencias-inquilinos.jpg',
-                type: 'apartment',
-                tags: ['3 dormitorios', '2 baños', 'Cochera'],
-                note: 'Publicación validada por propietario con documentación completa.',
-                pet: true,
-                verified: true,
-                featured: 'Premium'
-            },
-            {
-                title: 'Monoambiente moderno',
-                address: 'Córdoba Centro, Córdoba',
-                price: 310000,
-                image: 'img/habitaciones-inquilinos.jpg',
-                type: 'studio',
-                tags: ['Monoambiente', 'Laundry', 'Seguridad'],
-                note: 'Expensas claras y proceso de reserva digital.',
-                pet: false,
-                verified: false,
-                featured: 'Oportunidad'
-            },
-            {
-                title: 'Departamento en barrio residencial',
-                address: 'Godoy Cruz, Mendoza',
-                price: 455000,
-                image: 'img/mendoza-inquilinos.jpg',
-                type: 'apartment',
-                tags: ['2 dormitorios', 'Patio', 'Mascotas'],
-                note: 'Apto mascotas y listo para iniciar solicitud.',
-                pet: true,
-                verified: false,
-                featured: 'Apto mascotas'
-            },
-            {
-                title: 'Dúplex con terraza privada',
-                address: 'Valencia, España',
-                price: 570000,
-                image: 'img/hero-marketplace.jpg',
-                type: 'apartment',
-                tags: ['Dúplex', 'Terraza', '2 baños'],
-                note: 'Para estadías medias con onboarding digital.',
-                pet: true,
-                verified: true,
-                featured: 'Alta demanda'
-            }
-        ];
+                    <script>
+                        const properties = [
+                            {
+                                title: 'Departamento luminoso con balcón',
+                                address: 'Palermo Soho, Buenos Aires',
+                                province: 'Ciudad Autónoma de Buenos Aires',
+                                coords: [-34.5836, -58.4285],
+                                price: 420000,
+                                image: 'img/pisos-inquilinos.jpg',
+                                type: 'apartment',
+                                tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
+                                note: 'Contrato digital, garantía online y administración desde Habitat.',
+                                pet: true,
+                                verified: true,
+                                featured: 'Visita disponible'
+                            },
+                            {
+                                title: 'Estudio amoblado cerca del metro',
+                                address: 'Recoleta, Buenos Aires',
+                                province: 'Ciudad Autónoma de Buenos Aires',
+                                coords: [-34.5885, -58.3970],
+                                price: 380000,
+                                image: 'img/estudios-inquilinos.jpg',
+                                type: 'studio',
+                                tags: ['Estudio', 'Amoblado', 'Amenities'],
+                                note: 'Ideal para mudanza rápida con firma remota.',
+                                pet: false,
+                                verified: true,
+                                featured: 'Nuevo'
+                            },
+                            {
+                                title: 'Piso familiar con cochera',
+                                address: 'Belgrano, Buenos Aires',
+                                province: 'Ciudad Autónoma de Buenos Aires',
+                                coords: [-34.5615, -58.4566],
+                                price: 690000,
+                                image: 'img/residencias-inquilinos.jpg',
+                                type: 'apartment',
+                                tags: ['3 dormitorios', '2 baños', 'Cochera'],
+                                note: 'Publicación validada por propietario con documentación completa.',
+                                pet: true,
+                                verified: true,
+                                featured: 'Premium'
+                            },
+                            {
+                                title: 'Monoambiente moderno',
+                                address: 'Córdoba Centro, Córdoba',
+                                province: 'Córdoba',
+                                coords: [-31.4167, -64.1833],
+                                price: 310000,
+                                image: 'img/habitaciones-inquilinos.jpg',
+                                type: 'studio',
+                                tags: ['Monoambiente', 'Laundry', 'Seguridad'],
+                                note: 'Expensas claras y proceso de reserva digital.',
+                                pet: false,
+                                verified: false,
+                                featured: 'Oportunidad'
+                            },
+                            {
+                                title: 'Departamento en barrio residencial',
+                                address: 'Godoy Cruz, Mendoza',
+                                province: 'Mendoza',
+                                coords: [-32.9167, -68.8333],
+                                price: 455000,
+                                image: 'img/mendoza-inquilinos.jpg',
+                                type: 'apartment',
+                                tags: ['2 dormitorios', 'Patio', 'Mascotas'],
+                                note: 'Apto mascotas y listo para iniciar solicitud.',
+                                pet: true,
+                                verified: false,
+                                featured: 'Apto mascotas'
+                            },
+                            {
+                                title: 'Dúplex con terraza privada',
+                                address: 'Rosario Centro, Santa Fe',
+                                province: 'Santa Fe',
+                                coords: [-32.9468, -60.6393],
+                                price: 570000,
+                                image: 'img/hero-marketplace.jpg',
+                                type: 'apartment',
+                                tags: ['Dúplex', 'Terraza', '2 baños'],
+                                note: 'Para estadías medias con onboarding digital.',
+                                pet: true,
+                                verified: true,
+                                featured: 'Alta demanda'
+                            }
+                        ];
 
-        const grid = document.getElementById('listing-grid');
-        const count = document.getElementById('results-count');
-        const empty = document.getElementById('empty-state');
-        const searchInput = document.getElementById('location-search');
-        const sortSelect = document.getElementById('sort-select');
-        let activeFilter = 'all';
-        let term = '';
+                    </script>
+                    <script>
+                        (() => {
+                            const provinceCapitals = {
+                                'Ciudad Autónoma de Buenos Aires': { lat: -34.6094, lng: -58.3925 },
+                                'Buenos Aires': { lat: -34.9205, lng: -57.9536 },
+                                'Córdoba': { lat: -31.4167, lng: -64.1833 },
+                                'Mendoza': { lat: -32.8898, lng: -68.8373 },
+                                'Santa Fe': { lat: -31.6534, lng: -60.7107 },
+                                'Tucumán': { lat: -26.8306, lng: -65.2028 },
+                                'Entre Ríos': { lat: -31.7327, lng: -60.5296 },
+                                'Salta': { lat: -24.7885, lng: -65.4106 },
+                                'Misiones': { lat: -27.3667, lng: -55.8966 },
+                                'Chaco': { lat: -27.4514, lng: -58.9866 },
+                                'Corrientes': { lat: -27.4628, lng: -58.8354 },
+                                'Santiago del Estero': { lat: -27.7844, lng: -64.2673 },
+                                'San Juan': { lat: -31.5373, lng: -68.5251 },
+                                'Jujuy': { lat: -24.1857, lng: -65.3003 },
+                                'Río Negro': { lat: -40.8142, lng: -62.9996 },
+                                'Neuquén': { lat: -38.9516, lng: -68.0592 },
+                                'Formosa': { lat: -26.1843, lng: -58.1741 },
+                                'Chubut': { lat: -43.3001, lng: -65.1023 },
+                                'San Luis': { lat: -33.3017, lng: -66.3373 },
+                                'Catamarca': { lat: -28.4687, lng: -65.7796 },
+                                'La Rioja': { lat: -29.4132, lng: -66.8559 },
+                                'La Pampa': { lat: -36.6203, lng: -64.2905 },
+                                'Santa Cruz': { lat: -51.6231, lng: -69.2157 },
+                                'Tierra del Fuego': { lat: -54.8073, lng: -68.3051 }
+                            };
 
-        const money = (value) => `$${Math.round(value / 1000)}k`;
+                            const propertyTypes = ['apartment', 'studio'];
+                            const propertyImages = ['img/pisos-inquilinos.jpg', 'img/estudios-inquilinos.jpg', 'img/residencias-inquilinos.jpg', 'img/habitaciones-inquilinos.jpg', 'img/mendoza-inquilinos.jpg', 'img/hero-marketplace.jpg'];
+                            const tagsList = ['2 dormitorios', '1 baño', 'Balcón', 'Verificado', 'Amoblado', 'Amenities', 'Cochera', 'Laundry', 'Seguridad', 'Patio', 'Mascotas', 'Terraza'];
 
-        function propertyMatches(property) {
-            const matchesText = `${property.title} ${property.address} ${property.tags.join(' ')}`.toLowerCase().includes(term);
-            const matchesFilter =
-                activeFilter === 'all' ||
-                property.type === activeFilter ||
-                (activeFilter === 'pet' && property.pet) ||
-                (activeFilter === 'verified' && property.verified);
+                            // Las propiedades ya están definidas en el script superior como 'properties'
 
-            return matchesText && matchesFilter;
-        }
+                            const gridEl = document.getElementById('listing-grid');
+                            const countEl = document.getElementById('results-count');
+                            const emptyEl = document.getElementById('empty-state');
+                            const inputEl = document.getElementById('location-search');
+                            const sortEl = document.getElementById('sort-select');
 
-        function renderListings() {
-            let visible = properties.filter(propertyMatches);
+                            let currentFilter = 'all';
+                            let currentTerm = '';
+                            let currentProvince = '';
+                            let visibleRentals = [];
 
-            if (sortSelect.value === 'price-asc') visible.sort((a, b) => a.price - b.price);
-            if (sortSelect.value === 'price-desc') visible.sort((a, b) => b.price - a.price);
+                            // Variables preparadas para Google Maps
+                            let googleMap;
+                            let googleMarkers = [];
+                            let markerCluster = null;
 
-            grid.innerHTML = visible.map((property) => `
-                <article class="listing-card">
-                    <div class="listing-media">
-                        <img src="${property.image}" alt="${property.title}">
-                        <span class="status-badge">${property.featured}</span>
-                        <button class="favorite-btn" type="button" aria-label="Guardar ${property.title}">
-                            <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
-                        </button>
-                    </div>
-                    <div class="listing-body">
-                        <div class="listing-top">
-                            <div>
-                                <strong class="listing-price">${money(property.price)} / mes</strong>
-                                <h2 class="listing-title">${property.title}</h2>
-                            </div>
-                            <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
-                        </div>
-                        <span class="listing-address">${property.address}</span>
-                        <ul class="spec-list">
-                            ${property.tags.map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
-                        </ul>
-                        <p class="listing-note">${property.note}</p>
-                        <div class="card-actions">
-                            <button class="primary-action" type="button">Contactar</button>
-                            <button class="ghost-action" type="button">
-                                <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
-                                Agendar visita
-                            </button>
-                        </div>
-                    </div>
-                </article>
-            `).join('');
+                            const moneyLabel = (value) => `$${Math.round(value / 1000)}k`;
+                            const normalize = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            const getProvinceName = (feature) => feature.getProperty('nombre') || feature.getProperty('name') || 'Provincia';
+                            const hasRental = (name) => properties.some((rental) => rental.province === name);
 
-            count.textContent = `${visible.length} alquiler${visible.length === 1 ? '' : 'es'} disponible${visible.length === 1 ? '' : 's'}`;
-            empty.classList.toggle('is-visible', visible.length === 0);
-        }
+                            function matchesRental(rental) {
+                                const searchable = normalize(`${rental.title} ${rental.address} ${rental.province} ${rental.tags.join(' ')}`);
+                                let cleanedTerm = normalize(currentTerm).replace(/argentina/g, '').replace(/provincia de/g, '').trim();
+                                const termWords = cleanedTerm.split(/[\s,]+/).filter(w => w.length > 2);
+                                const matchesText = cleanedTerm === '' || searchable.includes(cleanedTerm) || (termWords.length > 0 && termWords.every(w => searchable.includes(w)));
+                                
+                                const matchesFilter =
+                                    currentFilter === 'all' ||
+                                    rental.type === currentFilter ||
+                                    (currentFilter === 'pet' && rental.pet) ||
+                                    (currentFilter === 'verified' && rental.verified);
+                                // Ya no filtramos por provincia para que el resto de propiedades no desaparezca al hacer zoom
+                                return matchesText && matchesFilter;
+                            }
 
-        document.getElementById('search-form').addEventListener('submit', (event) => {
-            event.preventDefault();
-            term = searchInput.value.trim().toLowerCase();
-            renderListings();
-        });
+                            function getVisibleRentals() {
+                                const visible = properties.filter(matchesRental);
+                                if (sortEl.value === 'price-asc') visible.sort((a, b) => a.price - b.price);
+                                if (sortEl.value === 'price-desc') visible.sort((a, b) => b.price - a.price);
+                                return visible;
+                            }
 
-        searchInput.addEventListener('input', () => {
-            term = searchInput.value.trim().toLowerCase();
-            renderListings();
-        });
-
-        sortSelect.addEventListener('change', renderListings);
-
-        document.querySelectorAll('.filter-chip').forEach((chip) => {
-            chip.addEventListener('click', () => {
-                document.querySelectorAll('.filter-chip').forEach((item) => item.classList.remove('is-active'));
-                chip.classList.add('is-active');
-                activeFilter = chip.dataset.filter;
-                renderListings();
-            });
-        });
-
-        function applyTheme(theme) {
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-            else document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('theme', theme);
-            const oldThemeIcon = document.querySelector('#theme-toggle span');
-            if (oldThemeIcon) oldThemeIcon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
-        }
-
-        document.getElementById('theme-toggle')?.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            applyTheme(isDark ? 'light' : 'dark');
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'light');
-        renderListings();
-    </script>
-    <script>
-        (() => {
-            const provinceCapitals = {
-                'Ciudad Autónoma de Buenos Aires': { lat: -34.6094, lng: -58.3925 },
-                'Buenos Aires': { lat: -34.9205, lng: -57.9536 },
-                'Córdoba': { lat: -31.4167, lng: -64.1833 },
-                'Mendoza': { lat: -32.8898, lng: -68.8373 },
-                'Santa Fe': { lat: -31.6534, lng: -60.7107 },
-                'Tucumán': { lat: -26.8306, lng: -65.2028 },
-                'Entre Ríos': { lat: -31.7327, lng: -60.5296 },
-                'Salta': { lat: -24.7885, lng: -65.4106 },
-                'Misiones': { lat: -27.3667, lng: -55.8966 },
-                'Chaco': { lat: -27.4514, lng: -58.9866 },
-                'Corrientes': { lat: -27.4628, lng: -58.8354 },
-                'Santiago del Estero': { lat: -27.7844, lng: -64.2673 },
-                'San Juan': { lat: -31.5373, lng: -68.5251 },
-                'Jujuy': { lat: -24.1857, lng: -65.3003 },
-                'Río Negro': { lat: -40.8142, lng: -62.9996 },
-                'Neuquén': { lat: -38.9516, lng: -68.0592 },
-                'Formosa': { lat: -26.1843, lng: -58.1741 },
-                'Chubut': { lat: -43.3001, lng: -65.1023 },
-                'San Luis': { lat: -33.3017, lng: -66.3373 },
-                'Catamarca': { lat: -28.4687, lng: -65.7796 },
-                'La Rioja': { lat: -29.4132, lng: -66.8559 },
-                'La Pampa': { lat: -36.6203, lng: -64.2905 },
-                'Santa Cruz': { lat: -51.6231, lng: -69.2157 },
-                'Tierra del Fuego': { lat: -54.8073, lng: -68.3051 }
-            };
-
-            const propertyTypes = ['apartment', 'studio'];
-            const propertyImages = ['img/pisos-inquilinos.jpg', 'img/estudios-inquilinos.jpg', 'img/residencias-inquilinos.jpg', 'img/habitaciones-inquilinos.jpg', 'img/mendoza-inquilinos.jpg', 'img/hero-marketplace.jpg'];
-            const tagsList = ['2 dormitorios', '1 baño', 'Balcón', 'Verificado', 'Amoblado', 'Amenities', 'Cochera', 'Laundry', 'Seguridad', 'Patio', 'Mascotas', 'Terraza'];
-
-            const rentals = [];
-            Object.keys(provinceCapitals).forEach(provName => {
-                const capital = provinceCapitals[provName];
-                for (let i = 0; i < 5; i++) {
-                    const offsetLat = (Math.random() - 0.5) * 0.05;
-                    const offsetLng = (Math.random() - 0.5) * 0.05;
-                    const type = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
-                    const image = propertyImages[Math.floor(Math.random() * propertyImages.length)];
-                    const price = Math.floor(Math.random() * 500) * 1000 + 200000;
-                    
-                    rentals.push({
-                        title: `Departamento ${type === 'studio' ? 'Estudio' : 'Luminoso'} ${i+1}`,
-                        address: `Dirección ${i+1}, ${provName}`,
-                        province: provName,
-                        coords: [capital.lat + offsetLat, capital.lng + offsetLng],
-                        price: price,
-                        image: image,
-                        type: type,
-                        tags: [tagsList[Math.floor(Math.random() * tagsList.length)], tagsList[Math.floor(Math.random() * tagsList.length)]],
-                        note: 'Publicación autogenerada para poblar el mapa de pruebas.',
-                        pet: Math.random() > 0.5,
-                        verified: Math.random() > 0.5,
-                        featured: Math.random() > 0.8 ? 'Destacado' : ''
-                    });
-                }
-            });
-
-            const gridEl = document.getElementById('listing-grid');
-            const countEl = document.getElementById('results-count');
-            const emptyEl = document.getElementById('empty-state');
-            const inputEl = document.getElementById('location-search');
-            const sortEl = document.getElementById('sort-select');
-
-            let currentFilter = 'all';
-            let currentTerm = '';
-            let currentProvince = '';
-            let visibleRentals = [];
-            
-            // Variables preparadas para Google Maps
-            let googleMap;
-            let googleMarkers = [];
-
-            const moneyLabel = (value) => `$${Math.round(value / 1000)}k`;
-            const normalize = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            const getProvinceName = (feature) => feature.getProperty('nombre') || feature.getProperty('name') || 'Provincia';
-            const hasRental = (name) => rentals.some((rental) => rental.province === name);
-
-            function matchesRental(rental) {
-                const searchable = normalize(`${rental.title} ${rental.address} ${rental.province} ${rental.tags.join(' ')}`);
-                const matchesText = searchable.includes(normalize(currentTerm));
-                const matchesFilter =
-                    currentFilter === 'all' ||
-                    rental.type === currentFilter ||
-                    (currentFilter === 'pet' && rental.pet) ||
-                    (currentFilter === 'verified' && rental.verified);
-                const matchesProvince = !currentProvince || rental.province === currentProvince;
-                return matchesText && matchesFilter && matchesProvince;
-            }
-
-            function getVisibleRentals() {
-                const visible = rentals.filter(matchesRental);
-                if (sortEl.value === 'price-asc') visible.sort((a, b) => a.price - b.price);
-                if (sortEl.value === 'price-desc') visible.sort((a, b) => b.price - a.price);
-                return visible;
-            }
-
-            function renderNewListings() {
-                visibleRentals = getVisibleRentals();
-                gridEl.innerHTML = visibleRentals.map((rental) => `
+                            function renderNewListings() {
+                                visibleRentals = getVisibleRentals();
+                                gridEl.innerHTML = visibleRentals.map((rental) => `
                     <article class="listing-card">
                         <div class="listing-media">
                             <img src="${rental.image}" alt="${rental.title}">
@@ -974,247 +909,359 @@
                     </article>
                 `).join('');
 
-                countEl.textContent = `${visibleRentals.length} alquiler${visibleRentals.length === 1 ? '' : 'es'} disponible${visibleRentals.length === 1 ? '' : 's'}`;
-                emptyEl.classList.toggle('is-visible', visibleRentals.length === 0);
-                renderMarkers();
-            }
-
-            let infoWindow;
-
-            function clearMarkers() {
-                googleMarkers.forEach(m => m.setMap(null));
-                googleMarkers = [];
-            }
-
-
-            function renderMarkers() {
-                if (!googleMap) return;
-                clearMarkers();
-
-                if (!currentProvince) {
-                    // Vista del país: calcular propiedades por provincia
-                    const provinceGroups = {};
-                    visibleRentals.forEach((rental) => {
-                        if (!provinceGroups[rental.province]) {
-                            provinceGroups[rental.province] = 0;
-                        }
-                        provinceGroups[rental.province]++;
-                    });
-
-                    // Mostrar un pin en TODAS las provincias de Argentina en su KM 0
-                    Object.keys(provinceCapitals).forEach((provName) => {
-                        const count = provinceGroups[provName] || 0;
-                        const centerCoords = provinceCapitals[provName];
-
-                        const marker = new google.maps.Marker({
-                            position: centerCoords,
-                            map: googleMap,
-                            title: provName,
-                            label: {
-                                text: count.toString(),
-                                color: 'white',
-                                fontSize: count > 0 ? '13px' : '11px',
-                                fontWeight: 'bold'
-                            },
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: count > 0 ? 18 : 12,
-                                fillColor: count > 0 ? '#811b1e' : '#888888',
-                                fillOpacity: count > 0 ? 1 : 0.6,
-                                strokeColor: '#ffffff',
-                                strokeWeight: 2,
-                                labelOrigin: new google.maps.Point(0, 0)
+                                countEl.textContent = `${visibleRentals.length} alquiler${visibleRentals.length === 1 ? '' : 'es'} disponible${visibleRentals.length === 1 ? '' : 's'}`;
+                                emptyEl.classList.toggle('is-visible', visibleRentals.length === 0);
+                                renderMarkers();
                             }
-                        });
 
-                        marker.addListener('click', () => {
-                            if (currentProvince === provName) {
-                                resetMap();
-                                return;
-                            }
-                            currentProvince = provName;
-                            
-                            // En lugar de hacer zoom ciego a la capital, calculamos los bounds de las propiedades reales
-                            const bounds = new google.maps.LatLngBounds();
-                            visibleRentals.forEach(r => {
-                                if (r.province === provName) {
-                                    bounds.extend(new google.maps.LatLng(r.coords[0], r.coords[1]));
+                            let infoWindow;
+
+                            function clearMarkers() {
+                                if (markerCluster) {
+                                    markerCluster.clearMarkers();
                                 }
-                            });
+                                googleMarkers.forEach(m => m.setMap(null));
+                                googleMarkers = [];
+                            }
 
-                            if (!bounds.isEmpty()) {
-                                // Siempre hacemos un encuadre grande inicial para obligar a Google Maps a hacer 
-                                // el viaje de vuelo animado suave, sin que desactive la animación por distancia.
-                                const center = bounds.getCenter();
-                                const span = 0.8;
-                                const expandedBounds = new google.maps.LatLngBounds(
-                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
-                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
-                                );
-                                googleMap.fitBounds(expandedBounds);
 
-                                // Una vez que termina el vuelo inicial fluido, ajustamos el encuadre final
-                                google.maps.event.addListenerOnce(googleMap, 'idle', function() {
-                                    if (currentProvince !== provName) return; 
-                                    
-                                    // Si hay varias propiedades esparcidas, este fitBounds las encuadrará suavemente
-                                    googleMap.fitBounds(bounds);
-                                    
-                                    // Prevenir un zoom excesivo (nivel calle) si quedaron demasiado cerca matemáticamente
-                                    google.maps.event.addListenerOnce(googleMap, 'idle', function() {
-                                        if (googleMap.getZoom() > 14) googleMap.setZoom(14);
+                            function renderMarkers() {
+                                if (!googleMap) return;
+                                clearMarkers();
+
+                                if (!currentProvince) {
+                                    // Vista del país: calcular propiedades por provincia
+                                    const provinceGroups = {};
+                                    visibleRentals.forEach((rental) => {
+                                        if (!provinceGroups[rental.province]) {
+                                            provinceGroups[rental.province] = 0;
+                                        }
+                                        provinceGroups[rental.province]++;
                                     });
-                                });
-                            } else {
-                                // Provincia vacía (pin gris "0")
-                                const center = new google.maps.LatLng(centerCoords.lat, centerCoords.lng);
-                                const span = 0.8;
-                                const expandedBounds = new google.maps.LatLngBounds(
-                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
-                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
-                                );
-                                googleMap.fitBounds(expandedBounds);
-                            }
-                            
-                            renderNewListings();
-                        });
 
-                        googleMarkers.push(marker);
-                    });
-                } else {
-                    // Vista de provincia: mostrar pines individuales de propiedades
-                    visibleRentals.forEach((rental) => {
-                        const marker = new google.maps.Marker({
-                            position: { lat: rental.coords[0], lng: rental.coords[1] },
-                            map: googleMap,
-                            title: rental.title,
-                            label: {
-                                text: moneyLabel(rental.price),
-                                color: 'white',
-                                fontSize: '11px',
-                                fontWeight: 'bold'
-                            },
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 22,
-                                fillColor: '#811b1e',
-                                fillOpacity: 1,
-                                strokeColor: '#ffffff',
-                                strokeWeight: 2,
-                                labelOrigin: new google.maps.Point(0, 0)
-                            }
-                        });
+                                    // Mostrar un pin en TODAS las provincias de Argentina en su KM 0
+                                    Object.keys(provinceCapitals).forEach((provName) => {
+                                        const count = provinceGroups[provName] || 0;
+                                        const centerCoords = provinceCapitals[provName];
 
-                        marker.addListener('click', () => {
-                            const content = `
+                                        const marker = new google.maps.Marker({
+                                            position: centerCoords,
+                                            map: googleMap,
+                                            title: provName,
+                                            label: {
+                                                text: count.toString(),
+                                                color: 'white',
+                                                fontSize: count > 0 ? '13px' : '11px',
+                                                fontWeight: 'bold'
+                                            },
+                                            icon: {
+                                                path: google.maps.SymbolPath.CIRCLE,
+                                                scale: count > 0 ? 18 : 12,
+                                                fillColor: count > 0 ? '#811b1e' : '#888888',
+                                                fillOpacity: count > 0 ? 1 : 0.6,
+                                                strokeColor: '#ffffff',
+                                                strokeWeight: 2,
+                                                labelOrigin: new google.maps.Point(0, 0)
+                                            }
+                                        });
+
+                                        marker.addListener('click', () => {
+                                            if (currentProvince === provName) {
+                                                resetMap();
+                                                return;
+                                            }
+                                            currentProvince = provName;
+
+                                            // En lugar de hacer zoom ciego a la capital, calculamos los bounds de las propiedades reales
+                                            const bounds = new google.maps.LatLngBounds();
+                                            visibleRentals.forEach(r => {
+                                                if (r.province === provName) {
+                                                    bounds.extend(new google.maps.LatLng(r.coords[0], r.coords[1]));
+                                                }
+                                            });
+
+                                            if (!bounds.isEmpty()) {
+                                                const center = bounds.getCenter();
+                                                
+                                                // Expandimos ligeramente los bounds finales para asegurar que el zoom final no sea excesivo (evitamos el salto brusco)
+                                                const minSpan = 0.05; // aprox 5km
+                                                const ne = bounds.getNorthEast();
+                                                const sw = bounds.getSouthWest();
+                                                if (Math.abs(ne.lat() - sw.lat()) < minSpan || Math.abs(ne.lng() - sw.lng()) < minSpan) {
+                                                    bounds.extend(new google.maps.LatLng(center.lat() - minSpan, center.lng() - minSpan));
+                                                    bounds.extend(new google.maps.LatLng(center.lat() + minSpan, center.lng() + minSpan));
+                                                }
+
+                                                // Siempre hacemos un encuadre grande inicial para obligar a Google Maps a hacer 
+                                                // el viaje de vuelo animado suave, sin que desactive la animación por distancia.
+                                                const span = 0.8;
+                                                const expandedBounds = new google.maps.LatLngBounds(
+                                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
+                                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
+                                                );
+                                                googleMap.fitBounds(expandedBounds);
+
+                                                // Una vez que termina el vuelo inicial fluido, ajustamos el encuadre final
+                                                google.maps.event.addListenerOnce(googleMap, 'idle', function () {
+                                                    if (currentProvince !== provName) return;
+
+                                                    // Como expandimos "bounds" matemáticamente antes, esta llamada aterrizará suavemente en un zoom razonable
+                                                    googleMap.fitBounds(bounds);
+                                                });
+                                            } else {
+                                                // Provincia vacía (pin gris "0")
+                                                const center = new google.maps.LatLng(centerCoords.lat, centerCoords.lng);
+                                                const span = 0.8;
+                                                const expandedBounds = new google.maps.LatLngBounds(
+                                                    new google.maps.LatLng(center.lat() - span, center.lng() - span),
+                                                    new google.maps.LatLng(center.lat() + span, center.lng() + span)
+                                                );
+                                                googleMap.fitBounds(expandedBounds);
+                                            }
+
+                                            renderNewListings();
+                                        });
+
+                                        googleMarkers.push(marker);
+                                    });
+                                } else {
+                                    // Vista de provincia: mostrar pines individuales de propiedades
+                                    visibleRentals.forEach((rental) => {
+                                        const marker = new google.maps.Marker({
+                                            position: { lat: rental.coords[0], lng: rental.coords[1] },
+                                            title: rental.title,
+                                            label: {
+                                                text: moneyLabel(rental.price),
+                                                color: 'white',
+                                                fontSize: '11px',
+                                                fontWeight: 'bold'
+                                            },
+                                            icon: {
+                                                path: google.maps.SymbolPath.CIRCLE,
+                                                scale: 22,
+                                                fillColor: '#811b1e',
+                                                fillOpacity: 1,
+                                                strokeColor: '#ffffff',
+                                                strokeWeight: 2,
+                                                labelOrigin: new google.maps.Point(0, 0)
+                                            }
+                                        });
+
+                                        marker.addListener('click', () => {
+                                            const content = `
                                 <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 220px;">
                                     <strong style="display:block; margin-bottom:4px; font-size: 14px;">${rental.title}</strong>
                                     <span style="display:block; color: #666; font-size: 13px; margin-bottom:4px;">${rental.address}</span>
                                     <strong style="display:block; color: #811b1e; font-size: 14px;">${moneyLabel(rental.price)} / mes</strong>
                                 </div>
                             `;
-                            if (!infoWindow) infoWindow = new google.maps.InfoWindow();
-                            infoWindow.setContent(content);
-                            infoWindow.open(googleMap, marker);
-                        });
+                                            if (!infoWindow) infoWindow = new google.maps.InfoWindow();
+                                            infoWindow.setContent(content);
+                                            infoWindow.open(googleMap, marker);
+                                        });
 
-                        googleMarkers.push(marker);
-                    });
-                }
-            }
+                                        googleMarkers.push(marker);
+                                    });
 
-            function resetMap() {
-                currentProvince = '';
-                if (googleMap) {
-                    googleMap.setCenter({ lat: -38.4161, lng: -63.6167 });
-                    googleMap.setZoom(4);
-                }
-                renderNewListings();
-            }
+                                    // Agrupar pines si están muy cerca o superpuestos
+                                    if (window.markerClusterer) {
+                                        if (markerCluster) {
+                                            markerCluster.clearMarkers();
+                                        }
+                                        markerCluster = new markerClusterer.MarkerClusterer({
+                                            map: googleMap,
+                                            markers: googleMarkers,
+                                            renderer: {
+                                                render: function({ count, position }) {
+                                                    return new google.maps.Marker({
+                                                        position: position,
+                                                        label: {
+                                                            text: String(count),
+                                                            color: 'white',
+                                                            fontSize: count > 9 ? '12px' : '13px',
+                                                            fontWeight: 'bold'
+                                                        },
+                                                        icon: {
+                                                            path: google.maps.SymbolPath.CIRCLE,
+                                                            scale: 18,
+                                                            fillColor: '#811b1e',
+                                                            fillOpacity: 1,
+                                                            strokeColor: '#ffffff',
+                                                            strokeWeight: 2,
+                                                            labelOrigin: new google.maps.Point(0, 0)
+                                                        },
+                                                        zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        // Fallback si no cargó la librería
+                                        googleMarkers.forEach(m => m.setMap(googleMap));
+                                    }
+                                }
+                            }
 
-            window.initInteractiveMap = function() {
-                const mapEl = document.getElementById('rentals-map');
-                if (!mapEl) return;
-                
-                mapEl.innerHTML = '';
+                            function resetMap() {
+                                currentProvince = '';
+                                if (googleMap) {
+                                    googleMap.setCenter({ lat: -38.4161, lng: -63.6167 });
+                                    googleMap.setZoom(4);
+                                }
+                                renderNewListings();
+                            }
 
-                googleMap = new google.maps.Map(mapEl, {
-                    center: { lat: -38.4161, lng: -63.6167 },
-                    zoom: 4,
-                    styles: [
-                        { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{"color": "#444444"}] },
-                        { "featureType": "landscape", "elementType": "all", "stylers": [{"color": "#f2f2f2"}] },
-                        { "featureType": "poi", "elementType": "all", "stylers": [{"visibility": "off"}] },
-                        { "featureType": "road", "elementType": "all", "stylers": [{"saturation": -100}, {"lightness": 45}] },
-                        { "featureType": "road.highway", "elementType": "all", "stylers": [{"visibility": "simplified"}] },
-                        { "featureType": "road.arterial", "elementType": "labels.icon", "stylers": [{"visibility": "off"}] },
-                        { "featureType": "transit", "elementType": "all", "stylers": [{"visibility": "off"}] },
-                        { "featureType": "water", "elementType": "all", "stylers": [{"color": "#dceaf0"}, {"visibility": "on"}] }
-                    ],
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false
-                });
+                            window.initInteractiveMap = function () {
+                                const mapEl = document.getElementById('rentals-map');
+                                if (!mapEl) return;
 
-                // Capa GeoJSON eliminada para evitar pines por defecto
+                                mapEl.innerHTML = '';
+
+                                googleMap = new google.maps.Map(mapEl, {
+                                    center: { lat: -38.4161, lng: -63.6167 },
+                                    zoom: 4,
+                                    styles: [
+                                        { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
+                                        { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2f2f2" }] },
+                                        { "featureType": "poi", "elementType": "all", "stylers": [{ "visibility": "off" }] },
+                                        { "featureType": "road", "elementType": "all", "stylers": [{ "saturation": -100 }, { "lightness": 45 }] },
+                                        { "featureType": "road.highway", "elementType": "all", "stylers": [{ "visibility": "simplified" }] },
+                                        { "featureType": "road.arterial", "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
+                                        { "featureType": "transit", "elementType": "all", "stylers": [{ "visibility": "off" }] },
+                                        { "featureType": "water", "elementType": "all", "stylers": [{ "color": "#dceaf0" }, { "visibility": "on" }] }
+                                    ],
+                                    mapTypeControl: false,
+                                    streetViewControl: false,
+                                    fullscreenControl: false
+                                });
+
+                                // Capa GeoJSON eliminada para evitar pines por defecto
+
+                                const autocomplete = new google.maps.places.Autocomplete(document.getElementById('location-search'), {
+                                    types: ['(regions)'],
+                                    componentRestrictions: { country: 'ar' }
+                                });
+                                autocomplete.addListener('place_changed', () => {
+                                    const place = autocomplete.getPlace();
+                                    if (place.geometry) {
+                                        googleMap.panTo(place.geometry.location);
+                                        googleMap.setZoom(12);
+                                        currentTerm = document.getElementById('location-search').value.trim();
+                                        renderNewListings();
+                                    }
+                                });
+
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const locationParam = urlParams.get('location');
+                                if (locationParam) {
+                                    const locNorm = normalize(locationParam);
+                                    let foundProv = '';
+                                    for (const prov of Object.keys(provinceCapitals)) {
+                                        if (normalize(prov).includes(locNorm)) {
+                                            foundProv = prov;
+                                            break;
+                                        }
+                                    }
+
+                                    if (foundProv && googleMap) {
+                                        const marker = googleMarkers.find(m => m.getTitle() === foundProv);
+                                        if (marker) {
+                                            google.maps.event.trigger(marker, 'click');
+                                        }
+                                    } else if (visibleRentals.length > 0 && googleMap) {
+                                        const bounds = new google.maps.LatLngBounds();
+                                        visibleRentals.forEach(r => {
+                                            bounds.extend(new google.maps.LatLng(r.coords[0], r.coords[1]));
+                                        });
+                                        if (!bounds.isEmpty()) {
+                                            googleMap.fitBounds(bounds);
+                                            if (visibleRentals.length === 1) {
+                                                const listener = google.maps.event.addListener(googleMap, "idle", function() { 
+                                                    if (googleMap.getZoom() > 14) googleMap.setZoom(14); 
+                                                    google.maps.event.removeListener(listener); 
+                                                });
+                                            }
+                                        }
+                                    } else if (googleMap) {
+                                        const geocoder = new google.maps.Geocoder();
+                                        geocoder.geocode({ address: locationParam }, (results, status) => {
+                                            if (status === 'OK' && results[0]) {
+                                                if (results[0].geometry.viewport) {
+                                                    googleMap.fitBounds(results[0].geometry.viewport);
+                                                } else {
+                                                    googleMap.panTo(results[0].geometry.location);
+                                                    googleMap.setZoom(14);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+
+                            function applyNavTheme(theme) {
+                                document.documentElement.classList.toggle('dark', theme === 'dark');
+                                if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+                                else document.documentElement.removeAttribute('data-theme');
+                                localStorage.setItem('theme', theme);
+                                const themeInput = document.querySelector('.theme-switch__checkbox');
+                                if (themeInput) themeInput.checked = theme === 'dark';
+                            }
+
+                            document.querySelector('.theme-switch__checkbox')?.addEventListener('change', function () {
+                                applyNavTheme(this.checked ? 'dark' : 'light');
+                            });
 
 
-                renderNewListings();
-            }
+                            document.getElementById('search-form').addEventListener('submit', (event) => {
+                                event.preventDefault();
+                                currentTerm = inputEl.value.trim();
+                                renderNewListings();
+                            });
 
-            function applyNavTheme(theme) {
-                document.documentElement.classList.toggle('dark', theme === 'dark');
-                if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-                else document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', theme);
-                const themeInput = document.querySelector('.theme-switch__checkbox');
-                if (themeInput) themeInput.checked = theme === 'dark';
-            }
+                            inputEl.addEventListener('input', () => {
+                                currentTerm = inputEl.value.trim();
+                                renderNewListings();
+                            });
 
-            document.querySelector('.theme-switch__checkbox')?.addEventListener('change', function () {
-                applyNavTheme(this.checked ? 'dark' : 'light');
-            });
+                            sortEl.addEventListener('change', renderNewListings);
 
+                            document.querySelectorAll('.filter-chip').forEach((chip) => {
+                                chip.addEventListener('click', () => {
+                                    document.querySelectorAll('.filter-chip').forEach((item) => item.classList.remove('is-active'));
+                                    chip.classList.add('is-active');
+                                    currentFilter = chip.dataset.filter;
+                                    renderNewListings();
+                                });
+                            });
 
-            document.getElementById('search-form').addEventListener('submit', (event) => {
-                event.preventDefault();
-                currentTerm = inputEl.value.trim();
-                renderNewListings();
-            });
+                            window.changeLanguage = (langCode, displayText) => {
+                                document.cookie = `googtrans=/es/${langCode}; path=/; domain=${window.location.hostname}`;
+                                document.cookie = `googtrans=/es/${langCode}; path=/`;
+                                document.querySelectorAll('.current-lang-display').forEach((el) => {
+                                    el.textContent = displayText;
+                                });
+                                window.location.reload();
+                            };
 
-            inputEl.addEventListener('input', () => {
-                currentTerm = inputEl.value.trim();
-                renderNewListings();
-            });
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const locationParam = urlParams.get('location');
+                            if (locationParam) {
+                                inputEl.value = locationParam;
+                                currentTerm = locationParam.trim();
+                            }
+                            renderNewListings();
 
-            sortEl.addEventListener('change', renderNewListings);
-
-            document.querySelectorAll('.filter-chip').forEach((chip) => {
-                chip.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-chip').forEach((item) => item.classList.remove('is-active'));
-                    chip.classList.add('is-active');
-                    currentFilter = chip.dataset.filter;
-                    renderNewListings();
-                });
-            });
-
-            window.changeLanguage = (langCode, displayText) => {
-                document.cookie = `googtrans=/es/${langCode}; path=/; domain=${window.location.hostname}`;
-                document.cookie = `googtrans=/es/${langCode}; path=/`;
-                document.querySelectorAll('.current-lang-display').forEach((el) => {
-                    el.textContent = displayText;
-                });
-                window.location.reload();
-            };
-
-            applyNavTheme(localStorage.getItem('theme') || 'light');
-        })();
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabaseClient.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/app.js?v=4"></script>
+                            applyNavTheme(localStorage.getItem('theme') || 'light');
+                        })();
+                    </script>
+                    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+                    <script
+                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap"
+                        async defer></script>
+                    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+                    <script src="js/supabaseClient.js"></script>
+                    <script src="js/data.js"></script>
+                    <script src="js/app.js?v=4"></script>
 </body>
 
 </html>
