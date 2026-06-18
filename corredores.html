@@ -17,13 +17,13 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    
+
     <!-- Icons -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
-    
+
     <!-- Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap"
@@ -66,17 +66,25 @@
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: opacity, transform;
         }
+
         .animate-on-scroll.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
-        .delay-100 { transition-delay: 100ms; }
-        .delay-200 { transition-delay: 200ms; }
-        
+
+        .delay-100 {
+            transition-delay: 100ms;
+        }
+
+        .delay-200 {
+            transition-delay: 200ms;
+        }
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
         }
+
         html.dark .glass-panel {
             background: rgba(24, 24, 27, 0.8);
         }
@@ -88,159 +96,94 @@
     </style>
 </head>
 
-<body id="landing-corredores-view" class="antialiased bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body">
-    <!-- Navbar -->
-    <nav class="landing-nav-enhanced bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] border-b border-outline-variant/20 dark:border-zinc-800">
-        <div class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
-            <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group">
-                    <img src="img/logo-lite.png" alt="Habitat Logo" class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
-                </a>
-            </div>
-
-            <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-                <!-- Custom Language Selector -->
-                <div class="relative group inline-block z-[110]">
-                    <button
-                        class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
-                        <span class="material-symbols-outlined text-lg">language</span>
-                        <span class="current-lang-display hidden sm:inline">ES</span>
-                        <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
-                    </button>
-                    <!-- Dropdown menu -->
-                    <div
-                        class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
-                        <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
-                            translate="no">
-                            <li><button
-                                    class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                    onclick="changeLanguage('es', 'ES')">Español</button></li>
-                            <li><button
-                                    class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                    onclick="changeLanguage('en', 'EN')">English</button></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <label class="theme-switch flex-shrink-0 cursor-pointer" style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
-                    <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                    <div class="theme-switch__container">
-                        <div class="theme-switch__clouds"></div>
-                        <div class="theme-switch__stars-container">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                                <path fill-rule="evenodd" clip-rule="evenodd" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z" fill="currentColor"></path>
-                            </svg>
-                        </div>
-                        <div class="theme-switch__circle-container">
-                            <div class="theme-switch__sun-moon-container">
-                                <div class="theme-switch__moon">
-                                    <div class="theme-switch__spot"></div>
-                                    <div class="theme-switch__spot"></div>
-                                    <div class="theme-switch__spot"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </label>
-
-                <button class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0" aria-label="Menu">
-                    <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                    <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                    <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu Overlay -->
-    <div id="mobile-menu" class="hidden fixed inset-0 z-[150] bg-white dark:bg-zinc-950 flex flex-col p-6 overflow-y-auto">
-        <div class="flex justify-between items-center mb-8">
-            <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto">
-            <button onclick="document.getElementById('mobile-menu').classList.add('hidden'); document.body.classList.remove('overflow-hidden');" class="text-zinc-600 dark:text-zinc-300">
-                <span class="material-symbols-outlined text-3xl">close</span>
-            </button>
-        </div>
-        <div class="flex flex-col gap-6 text-xl font-bold font-headline mb-8">
-            <a href="index.html" class="text-zinc-800 dark:text-zinc-200">Inicio</a>
-            <a href="como-funciona.html" class="text-zinc-800 dark:text-zinc-200">C&oacute;mo funciona</a>
-            <a href="login.html?redirect=favorites&mode=login" class="text-zinc-800 dark:text-zinc-200">Favoritos</a>
-        </div>
-        <div class="mt-auto flex flex-col gap-4" id="mobile-nav-logged-out">
-            <a href="login.html?mode=register" class="bg-primary text-on-primary py-3 rounded-xl text-center font-bold">Reg&iacute;strate</a>
-            <a href="login.html?mode=login" class="bg-surface-container text-zinc-800 dark:text-zinc-200 py-3 rounded-xl text-center font-bold border border-outline-variant/30 dark:border-zinc-700">Iniciar sesi&oacute;n</a>
-        </div>
-        <div class="mt-auto flex flex-col gap-4 hidden" id="mobile-nav-logged-in">
-            <a href="administrador.html" class="bg-primary text-on-primary py-3 rounded-xl text-center font-bold flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined">account_circle</span>
-                Ir a mi Cuenta
-            </a>
-        </div>
-    </div>
+<body id="landing-corredores-view"
+    class="antialiased bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body">
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
 
     <main class="pt-16 md:pt-20 pb-20">
-
 
         <!-- Hero Section (Adinco Inspired) -->
         <section class="max-w-[1280px] mx-auto px-4 md:px-8 pt-8 sm:pt-0 pb-16">
             <!-- Persona Selector -->
             <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 sm:mt-10 bg-transparent">
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-4 justify-center w-full">
-                    <a href="index.html" class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
+                    <a href="index.html"
+                        class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
                         Soy Inquilino
                     </a>
-                    <a href="propietarios.html" class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
+                    <a href="propietarios.html"
+                        class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
                         Soy Propietario
                     </a>
-                    <a href="corredores.html" class="bg-primary text-on-primary px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-md whitespace-nowrap transition-all flex-shrink-0 border border-primary">
+                    <a href="corredores.html"
+                        class="bg-primary text-on-primary px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-md whitespace-nowrap transition-all flex-shrink-0 border border-primary">
                         Soy inmobiliaria
                     </a>
                 </div>
             </div>
-            
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div class="relative z-10">
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 font-bold text-xs mb-6 border border-primary/20 dark:border-red-400/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 font-bold text-xs mb-6 border border-primary/20 dark:border-red-400/20">
                         <span class="material-symbols-outlined text-sm">rocket_launch</span>
                         Software CRM Inmobiliario Integrado
                     </div>
-                    <h1 class="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold text-on-background dark:text-white leading-[1.1] mb-6 tracking-tight">
+                    <h1
+                        class="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold text-on-background dark:text-white leading-[1.1] mb-6 tracking-tight">
                         El CRM transaccional que multiplica tu capacidad operativa.
                     </h1>
                     <p class="font-body text-lg text-zinc-600 dark:text-zinc-300 mb-8 max-w-lg leading-relaxed">
-                        Infraestructura LegalTech diseñada para escalar tu negocio. Automatizá cobros, firmas y gestión, manteniendo tu autonomía profesional y cumpliendo con tu Colegio.
+                        Infraestructura LegalTech diseñada para escalar tu negocio. Automatizá cobros, firmas y gestión,
+                        manteniendo tu autonomía profesional y cumpliendo con tu Colegio.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <button class="bg-primary text-on-primary px-8 py-4 rounded-xl font-bold text-base hover:bg-primary-container transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto">
+                        <button
+                            class="bg-primary text-on-primary px-8 py-4 rounded-xl font-bold text-base hover:bg-primary-container transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto">
                             Comienza tu prueba gratis
                         </button>
-                        <button class="bg-surface-container text-on-surface dark:bg-zinc-800 dark:text-white border border-outline-variant/50 dark:border-zinc-700 px-8 py-4 rounded-xl font-bold text-base hover:bg-surface-container-high dark:hover:bg-zinc-700 transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <button
+                            class="bg-surface-container text-on-surface dark:bg-zinc-800 dark:text-white border border-outline-variant/50 dark:border-zinc-700 px-8 py-4 rounded-xl font-bold text-base hover:bg-surface-container-high dark:hover:bg-zinc-700 transition-all shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                             <span class="material-symbols-outlined">play_circle</span>
                             Ver demo de Hábitat
                         </button>
                     </div>
                     <div class="mt-8 flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-green-600">check_circle</span> Sin tarjeta de crédito</span>
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-green-600">check_circle</span> Configuración en 5 min</span>
+                        <span class="flex items-center gap-1"><span
+                                class="material-symbols-outlined text-green-600">check_circle</span> Sin tarjeta de
+                            crédito</span>
+                        <span class="flex items-center gap-1"><span
+                                class="material-symbols-outlined text-green-600">check_circle</span> Configuración en 5
+                            min</span>
                     </div>
                 </div>
                 <div class="relative animate-on-scroll">
-                    <div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-3xl transform translate-x-4 translate-y-4"></div>
-                    <img src="img/hero-marketplace.jpg" alt="Dashboard Hábitat CRM" class="relative z-10 w-full h-[400px] md:h-[500px] object-cover rounded-3xl shadow-2xl border border-outline-variant/20 dark:border-zinc-700" />
-                    
+                    <div
+                        class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-3xl transform translate-x-4 translate-y-4">
+                    </div>
+                    <img src="img/hero-marketplace.jpg" alt="Dashboard Hábitat CRM"
+                        class="relative z-10 w-full h-[400px] md:h-[500px] object-cover rounded-3xl shadow-2xl border border-outline-variant/20 dark:border-zinc-700" />
+
                     <!-- Floating stats card -->
-                    <div class="absolute -bottom-6 -left-6 bg-white dark:bg-zinc-800 p-5 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-4 animate-on-scroll delay-200">
-                        <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
+                    <div
+                        class="absolute -bottom-6 -left-6 bg-white dark:bg-zinc-800 p-5 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-4 animate-on-scroll delay-200">
+                        <div
+                            class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
                             <span class="material-symbols-outlined">trending_up</span>
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Aumento en ventas</p>
+                            <p class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                Aumento en ventas</p>
                             <p class="font-headline text-2xl font-extrabold text-on-background dark:text-white">+45%</p>
                         </div>
                     </div>
 
                     <!-- Floating leads card -->
-                    <div class="absolute top-10 -right-6 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-lg border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-3 animate-on-scroll delay-300 hidden md:flex">
-                        <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400 shrink-0">
+                    <div
+                        class="absolute top-10 -right-6 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-lg border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-3 animate-on-scroll delay-300 hidden md:flex">
+                        <div
+                            class="w-10 h-10 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400 shrink-0">
                             <span class="material-symbols-outlined">person_add</span>
                         </div>
                         <div>
@@ -254,18 +197,28 @@
 
         <!-- Stats Section -->
         <section class="max-w-[1280px] mx-auto px-4 md:px-8 mt-4 mb-20 animate-on-scroll">
-            <div class="bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/30 dark:border-zinc-800 rounded-3xl p-8 md:p-12 shadow-sm">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-outline-variant/20 dark:divide-zinc-700">
+            <div
+                class="bg-surface-container-low dark:bg-zinc-900 border border-outline-variant/30 dark:border-zinc-800 rounded-3xl p-8 md:p-12 shadow-sm">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-outline-variant/20 dark:divide-zinc-700">
                     <div class="py-4 md:py-0">
-                        <div class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">+10.000</div>
-                        <div class="text-zinc-600 dark:text-zinc-400 font-medium">Inmobiliarias confían en nosotros</div>
+                        <div
+                            class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">
+                            +10.000</div>
+                        <div class="text-zinc-600 dark:text-zinc-400 font-medium">Inmobiliarias confían en nosotros
+                        </div>
                     </div>
                     <div class="py-4 md:py-0">
-                        <div class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">15+</div>
-                        <div class="text-zinc-600 dark:text-zinc-400 font-medium">Portales integrados (Zonaprop, Argenprop...)</div>
+                        <div
+                            class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">
+                            15+</div>
+                        <div class="text-zinc-600 dark:text-zinc-400 font-medium">Portales integrados (Zonaprop,
+                            Argenprop...)</div>
                     </div>
                     <div class="py-4 md:py-0">
-                        <div class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">3.5M</div>
+                        <div
+                            class="font-headline text-4xl md:text-5xl font-extrabold text-primary dark:text-red-400 mb-2">
+                            3.5M</div>
                         <div class="text-zinc-600 dark:text-zinc-400 font-medium">Propiedades gestionadas</div>
                     </div>
                 </div>
@@ -273,71 +226,98 @@
         </section>
 
         <!-- Core Features Section -->
-        <section class="bg-surface-container-low dark:bg-zinc-900 py-24 border-y border-outline-variant/20 dark:border-zinc-800 overflow-hidden">
+        <section
+            class="bg-surface-container-low dark:bg-zinc-900 py-24 border-y border-outline-variant/20 dark:border-zinc-800 overflow-hidden">
             <div class="max-w-[1280px] mx-auto px-4 md:px-8">
                 <div class="text-center mb-20 max-w-2xl mx-auto animate-on-scroll">
-                    <span class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Solución Integral</span>
-                    <h2 class="font-headline text-3xl md:text-5xl font-extrabold text-on-background dark:text-white mb-6">
+                    <span
+                        class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">Solución
+                        Integral</span>
+                    <h2
+                        class="font-headline text-3xl md:text-5xl font-extrabold text-on-background dark:text-white mb-6">
                         Todo lo que necesitas en un solo lugar
                     </h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg">
-                        Olvídate de usar múltiples herramientas. Hábitat te ofrece las herramientas más avanzadas para modernizar tu gestión inmobiliaria y multiplicar tus resultados.
+                        Olvídate de usar múltiples herramientas. Hábitat te ofrece las herramientas más avanzadas para
+                        modernizar tu gestión inmobiliaria y multiplicar tus resultados.
                     </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Feature 1 -->
-                    <div class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">business</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Tecnología, no intermediación</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Tecnología,
+                            no intermediación</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Somos estrictamente un proveedor SaaS. No operamos como inmobiliaria, no tasamos ni mostramos propiedades. Tus honorarios los fijás libremente según las normativas de tu jurisdicción.
+                            Somos estrictamente un proveedor SaaS. No operamos como inmobiliaria, no tasamos ni
+                            mostramos propiedades. Tus honorarios los fijás libremente según las normativas de tu
+                            jurisdicción.
                         </p>
                     </div>
 
                     <!-- Feature 2 -->
-                    <div class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">description</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Contratos Inteligentes Blindados</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Contratos
+                            Inteligentes Blindados</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Utilizá modelos estandarizados o subí los tuyos. Configurá montos y plazos en un entorno que bloquea ediciones libres para evitar cláusulas nulas o abusivas.
+                            Utilizá modelos estandarizados o subí los tuyos. Configurá montos y plazos en un entorno que
+                            bloquea ediciones libres para evitar cláusulas nulas o abusivas.
                         </p>
                     </div>
 
                     <!-- Feature 3 -->
-                    <div class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-200">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-200">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">payments</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Cobranzas y Punitorios Automáticos</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Cobranzas y
+                            Punitorios Automáticos</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            El motor financiero envía recordatorios preventivos. Ante atrasos, bloquea la recepción del pago original y recalcula la deuda sumando intereses punitorios diarios en tiempo real.
+                            El motor financiero envía recordatorios preventivos. Ante atrasos, bloquea la recepción del
+                            pago original y recalcula la deuda sumando intereses punitorios diarios en tiempo real.
                         </p>
                     </div>
-                    
+
                     <!-- Feature 4 -->
-                    <div class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">settings</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Parametrización y Cumplimiento</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">
+                            Parametrización y Cumplimiento</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Adaptá la plataforma a las reglas de tu provincia. Parametrizá a quién se le cobran los honorarios y configurá el traslado de los costos de la pasarela de pagos para proteger tus márgenes.
+                            Adaptá la plataforma a las reglas de tu provincia. Parametrizá a quién se le cobran los
+                            honorarios y configurá el traslado de los costos de la pasarela de pagos para proteger tus
+                            márgenes.
                         </p>
                     </div>
 
                     <!-- Feature 5 -->
-                    <div class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
+                    <div
+                        class="bg-white dark:bg-zinc-800 p-8 rounded-[24px] border border-outline-variant/20 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 animate-on-scroll delay-100">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 shadow-inner">
                             <span class="material-symbols-outlined text-3xl">photo_camera</span>
                         </div>
-                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Inventario Digital Inmutable</h3>
+                        <h3 class="font-headline text-xl font-bold text-on-background dark:text-white mb-3">Inventario
+                            Digital Inmutable</h3>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-4">
-                            Digitalizá el ciclo de vida del alquiler. Evitá disputas gestionando inventarios mediante fotos y videos certificados con sellos de tiempo.
+                            Digitalizá el ciclo de vida del alquiler. Evitá disputas gestionando inventarios mediante
+                            fotos y videos certificados con sellos de tiempo.
                         </p>
                     </div>
                 </div>
@@ -349,11 +329,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div class="order-2 lg:order-1 animate-on-scroll">
                     <div class="relative">
-                        <div class="absolute inset-0 bg-primary/5 dark:bg-red-500/5 rounded-[40px] transform -rotate-3 scale-105"></div>
-                        <img src="img/personas-dandose-lamano.jpg" alt="Agente Inmobiliario cerrando venta" class="relative z-10 w-full rounded-[32px] shadow-2xl border border-outline-variant/20 dark:border-zinc-700 object-cover h-[500px]" />
-                        
-                        <div class="absolute top-10 -left-8 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-3">
-                            <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
+                        <div
+                            class="absolute inset-0 bg-primary/5 dark:bg-red-500/5 rounded-[40px] transform -rotate-3 scale-105">
+                        </div>
+                        <img src="img/personas-dandose-lamano.jpg" alt="Agente Inmobiliario cerrando venta"
+                            class="relative z-10 w-full rounded-[32px] shadow-2xl border border-outline-variant/20 dark:border-zinc-700 object-cover h-[500px]" />
+
+                        <div
+                            class="absolute top-10 -left-8 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-20 flex items-center gap-3">
+                            <div
+                                class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
                                 <span class="material-symbols-outlined">description</span>
                             </div>
                             <div>
@@ -364,39 +349,48 @@
                     </div>
                 </div>
                 <div class="order-1 lg:order-2 animate-on-scroll delay-100">
-                    <h2 class="font-headline text-3xl md:text-4xl font-extrabold text-on-background dark:text-white mb-6">
+                    <h2
+                        class="font-headline text-3xl md:text-4xl font-extrabold text-on-background dark:text-white mb-6">
                         Colaboración y red de contactos a tu alcance
                     </h2>
                     <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg mb-8 leading-relaxed">
-                        La Red Hábitat es el ecosistema donde miles de corredores inmobiliarios interactúan todos los días. Si tú tienes al cliente comprador, alguien más tiene la propiedad (y viceversa).
+                        La Red Hábitat es el ecosistema donde miles de corredores inmobiliarios interactúan todos los
+                        días. Si tú tienes al cliente comprador, alguien más tiene la propiedad (y viceversa).
                     </p>
-                    
+
                     <ul class="space-y-6">
                         <li class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <div
+                                class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined text-sm">done</span>
                             </div>
                             <div>
-                                <h4 class="font-bold text-on-background dark:text-white text-lg">Busca en inventario compartido</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Filtra miles de propiedades disponibles para compartir comisión entre colegas de confianza.</p>
+                                <h4 class="font-bold text-on-background dark:text-white text-lg">Busca en inventario
+                                    compartido</h4>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Filtra miles de propiedades disponibles
+                                    para compartir comisión entre colegas de confianza.</p>
                             </div>
                         </li>
                         <li class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <div
+                                class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined text-sm">done</span>
                             </div>
                             <div>
                                 <h4 class="font-bold text-on-background dark:text-white text-lg">Chat integrado</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Comunícate de forma segura y directa con el corredor captador para coordinar visitas rápidamente.</p>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Comunícate de forma segura y directa
+                                    con el corredor captador para coordinar visitas rápidamente.</p>
                             </div>
                         </li>
                         <li class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <div
+                                class="mt-1 w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined text-sm">done</span>
                             </div>
                             <div>
                                 <h4 class="font-bold text-on-background dark:text-white text-lg">Fichas ciegas</h4>
-                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Envía la propiedad de un colega a tu cliente con tu propio logo y datos de contacto, manteniendo el profesionalismo.</p>
+                                <p class="text-zinc-600 dark:text-zinc-400 mt-1">Envía la propiedad de un colega a tu
+                                    cliente con tu propio logo y datos de contacto, manteniendo el profesionalismo.</p>
                             </div>
                         </li>
                     </ul>
@@ -410,7 +404,9 @@
             <div class="max-w-[1280px] mx-auto px-4 md:px-8 relative z-10 text-center">
                 <span class="material-symbols-outlined text-5xl opacity-40 mb-6 block">format_quote</span>
                 <h2 class="font-headline text-2xl md:text-4xl font-semibold leading-relaxed max-w-4xl mx-auto mb-10">
-                    "Desde que implementamos Hábitat en nuestra inmobiliaria, nuestras ventas aumentaron un 30% en el primer trimestre. La posibilidad de centralizar leads y publicar en todos los portales nos ahorra más de 20 horas a la semana."
+                    "Desde que implementamos Hábitat en nuestra inmobiliaria, nuestras ventas aumentaron un 30% en el
+                    primer trimestre. La posibilidad de centralizar leads y publicar en todos los portales nos ahorra
+                    más de 20 horas a la semana."
                 </h2>
                 <div class="flex items-center justify-center gap-4">
                     <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold text-xl">
@@ -426,23 +422,28 @@
 
         <!-- Pricing / CTA Section -->
         <section class="max-w-[1000px] mx-auto px-4 md:px-8 py-24 text-center animate-on-scroll">
-            <h2 class="font-headline text-3xl md:text-5xl font-extrabold mb-6 text-on-background dark:text-white tracking-tight">
+            <h2
+                class="font-headline text-3xl md:text-5xl font-extrabold mb-6 text-on-background dark:text-white tracking-tight">
                 Planes diseñados para tu crecimiento
             </h2>
             <p class="font-body text-zinc-600 dark:text-zinc-400 text-lg mb-12 max-w-2xl mx-auto">
-                Sin contratos a largo plazo ni costos de implementación. Elige el plan que mejor se adapte al volumen de tu inmobiliaria.
+                Sin contratos a largo plazo ni costos de implementación. Elige el plan que mejor se adapte al volumen de
+                tu inmobiliaria.
             </p>
-            
-            <div class="bg-surface-container-lowest dark:bg-zinc-900 rounded-[32px] p-8 md:p-12 shadow-2xl border border-outline-variant/30 dark:border-zinc-800 relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
+
+            <div
+                class="bg-surface-container-lowest dark:bg-zinc-900 rounded-[32px] p-8 md:p-12 shadow-2xl border border-outline-variant/30 dark:border-zinc-800 relative overflow-hidden">
+                <div
+                    class="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-4 py-1 rounded-bl-xl uppercase tracking-wider">
                     Más popular
                 </div>
-                <h3 class="font-headline text-2xl font-bold text-on-background dark:text-white mb-2">Plan Inmobiliaria Pro</h3>
+                <h3 class="font-headline text-2xl font-bold text-on-background dark:text-white mb-2">Plan Inmobiliaria
+                    Pro</h3>
                 <div class="flex items-baseline justify-center gap-1 mb-8">
                     <span class="text-4xl md:text-5xl font-extrabold text-on-background dark:text-white">$49.990</span>
                     <span class="text-zinc-500 font-medium">/ mes</span>
                 </div>
-                
+
                 <ul class="text-left max-w-md mx-auto space-y-4 mb-10">
                     <li class="flex items-center gap-3 text-zinc-700 dark:text-zinc-300">
                         <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
@@ -466,24 +467,30 @@
                     </li>
                 </ul>
 
-                <button class="bg-primary text-on-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-container transition-all shadow-xl hover:scale-105 active:scale-95 w-full sm:w-auto">
+                <button
+                    class="bg-primary text-on-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-container transition-all shadow-xl hover:scale-105 active:scale-95 w-full sm:w-auto">
                     Crear cuenta de Corredor
                 </button>
-                <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">14 días de prueba gratis. Cancela cuando quieras.</p>
+                <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">14 días de prueba gratis. Cancela cuando
+                    quieras.</p>
             </div>
         </section>
     </main>
 
     <!-- Footer -->
     <footer class="bg-zinc-50 dark:bg-zinc-950 w-full border-t border-zinc-200/50 dark:border-zinc-800/50">
-        <div class="flex flex-col md:flex-row justify-between items-center px-4 md:px-12 py-8 w-full font-['Inter'] text-sm tracking-normal max-w-[1920px] mx-auto">
+        <div
+            class="flex flex-col md:flex-row justify-between items-center px-4 md:px-12 py-8 w-full font-['Inter'] text-sm tracking-normal max-w-[1920px] mx-auto">
             <div class="flex items-center gap-2">
-                <span class="font-['Manrope'] font-bold text-zinc-900 dark:text-zinc-100 text-lg tracking-tight">Hábitat</span>
+                <span
+                    class="font-['Manrope'] font-bold text-zinc-900 dark:text-zinc-100 text-lg tracking-tight">Hábitat</span>
                 <span class="text-zinc-500 dark:text-zinc-400">© 2026. Todos los derechos reservados.</span>
             </div>
             <div class="flex gap-6 mt-4 md:mt-0">
-                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-colors" href="#">Política de Privacidad</a>
-                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-colors" href="terminos.html">Términos de Servicio</a>
+                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-colors" href="#">Política de
+                    Privacidad</a>
+                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-colors"
+                    href="terminos.html">Términos de Servicio</a>
                 <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-700 transition-colors" href="#">Soporte</a>
             </div>
         </div>
@@ -501,16 +508,16 @@
                     }
                 });
             }, observerOptions);
-            
+
             document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-            
+
             // Theme toggle logic
             const themeToggle = document.querySelector('.theme-switch__checkbox');
             if (themeToggle) {
                 if (document.documentElement.classList.contains('dark')) {
                     themeToggle.checked = true;
                 }
-                themeToggle.addEventListener('change', function() {
+                themeToggle.addEventListener('change', function () {
                     if (this.checked) {
                         document.documentElement.classList.add('dark');
                         localStorage.setItem('theme', 'dark');
@@ -560,6 +567,8 @@
             }
         });
     </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="text/javascript"
+        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>

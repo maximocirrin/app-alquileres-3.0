@@ -544,118 +544,238 @@
                 text-align: center;
             }
         }
+
+
+        .ghost-action {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--background);
+            color: var(--foreground);
+            padding: 0.55rem 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .map-panel {
+            position: sticky;
+            top: 4rem;
+            height: calc(100vh - 4rem);
+            padding: 1rem;
+            background: var(--background);
+        }
+
+        .map-canvas {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--search-map);
+        }
+
+        #rentals-map {
+            width: 100%;
+            height: 100%;
+            background: var(--search-map);
+        }
+
+        .map-toolbar {
+            position: absolute;
+            left: 1rem;
+            right: 1rem;
+            top: 1rem;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .map-toolbar>* {
+            pointer-events: auto;
+        }
+
+        .map-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-height: 2.5rem;
+            padding: 0 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--search-shell) 92%, transparent);
+            color: var(--foreground);
+            font-size: 0.85rem;
+            font-weight: 800;
+            backdrop-filter: blur(14px);
+        }
+
+        .province-reset {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            min-height: 2.5rem;
+            padding: 0 0.85rem;
+            background: color-mix(in srgb, var(--search-shell) 92%, transparent);
+            color: var(--foreground);
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            backdrop-filter: blur(14px);
+        }
+
+        .property-map-marker {
+            transform: translate(-50%, -100%);
+        }
+
+        .property-map-marker span {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0.45rem 0.62rem;
+            background: var(--search-marker);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 800;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+            white-space: nowrap;
+        }
+
+        .property-map-marker span::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -0.28rem;
+            width: 0.58rem;
+            height: 0.58rem;
+            background: inherit;
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        .empty-state {
+            display: none;
+            padding: 2rem;
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            color: var(--muted-foreground);
+        }
+
+        .empty-state.is-visible {
+            display: block;
+        }
+
+        .mobile-map-toggle {
+            display: none;
+        }
+
+        @media (max-width: 1040px) {
+            .search-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .results-panel {
+                border-right: 0;
+                overflow: visible;
+            }
+
+            .map-panel {
+                position: relative;
+                top: auto;
+                order: -1;
+                height: clamp(22rem, 56vh, 34rem);
+                padding: 1rem clamp(1rem, 2vw, 1.5rem) 0;
+            }
+
+            .search-hero h1 {
+                max-width: 16ch;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .search-header {
+                gap: 0.55rem;
+            }
+
+            .search-form,
+            .listing-card {
+                grid-template-columns: 1fr;
+            }
+
+            .primary-action {
+                width: 100%;
+            }
+
+            .listing-media {
+                min-height: 13rem;
+            }
+
+            .listing-top,
+            .results-meta {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .sort-control {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .results-panel {
+                padding-inline: 0.75rem;
+            }
+
+            .map-panel {
+                padding-inline: 0.75rem;
+            }
+
+            .filter-chip {
+                flex: 1 1 calc(50% - 0.55rem);
+                text-align: center;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="search-page" id="landing-marketplace-view">
-        <nav
-            class="landing-nav-enhanced bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)] border-b border-outline-variant/20 dark:border-zinc-800">
-            <div
-                class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
-                <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                    <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group">
-                        <img src="img/logo-lite.png" alt="Habitat Logo"
-                            class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
-                    </a>
-                    <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base landing-legacy-nav">
-                        <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer"
-                            href="buscar.html">Marketplace</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
-                            href="#">Portfolio</a>
-                        <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer"
-                            href="#">Insights</a>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-                    <div class="relative group inline-block z-[110]">
-                        <button
-                            class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors"
-                            type="button">
-                            <span class="material-symbols-outlined text-lg">language</span>
-                            <span class="current-lang-display hidden sm:inline">ES</span>
-                            <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
-                        </button>
-                        <div
-                            class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
-                            <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate"
-                                translate="no">
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('es', 'ES')" type="button">Español</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('de', 'DE')" type="button">Deutsch</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('en', 'EN')" type="button">English</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('fr', 'FR')" type="button">Français</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('pt', 'PT')" type="button">Português</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('it', 'IT')" type="button">Italiano</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('ja', 'JA')" type="button">日本語</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('zh-CN', 'ZH')" type="button">中文</button></li>
-                                <li><button
-                                        class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors"
-                                        onclick="changeLanguage('ru', 'RU')" type="button">Русский</button></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="hidden md:flex items-center gap-4 text-zinc-500 landing-desktop-hidden">
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate"
-                            translate="no">favorite</span>
-                        <span
-                            class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer notranslate"
-                            translate="no">notifications</span>
-                    </div>
-
-                    <label class="theme-switch flex-shrink-0 cursor-pointer"
-                        style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
-                        <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                        <div class="theme-switch__container">
-                            <div class="theme-switch__clouds"></div>
-                            <div class="theme-switch__stars-container"></div>
-                            <div class="theme-switch__circle-container">
-                                <div class="theme-switch__sun-moon-container">
-                                    <div class="theme-switch__moon">
-                                        <div class="theme-switch__spot"></div>
-                                        <div class="theme-switch__spot"></div>
-                                        <div class="theme-switch__spot"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <button
-                        class="menu-btn w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0"
-                        aria-label="Menu" aria-controls="mobile-menu" aria-expanded="false" type="button">
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                        <span
-                            class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
-                    </button>
-                </div>
-            </div>
-        </nav>
-
+        <!-- TopNavBar Component -->
+        <script src="js/navbar.js"></script>
 
         <main class="search-layout">
             <section class="results-panel" aria-label="Resultados de alquileres">
+                <div class="search-hero">
+                    <span class="eyebrow"><span class="material-symbols-rounded"
+                            aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
+                    <h1>Encontrá tu próximo alquiler.</h1>
+                    <p>Buscá por zona, compará precios y filtrá propiedades listas para avanzar con validación digital,
+                        contrato online y gestión desde Habitat.</p>
+                </div>
+
+                <div class="search-card">
+                    <form class="search-form" id="search-form">
+                        <label class="search-input" for="location-search">
+                            <span class="material-symbols-rounded" aria-hidden="true">search</span>
+                            <input id="location-search" type="search" autocomplete="off"
+                                placeholder="Ciudad, barrio o dirección">
+                        </label>
+                        <button class="primary-action" type="submit">
+                            <span class="material-symbols-rounded" aria-hidden="true">manage_search</span>
+                            Buscar
+                        </button>
+                    </form>
+                    <div class="filter-row" aria-label="Filtros rápidos">
+                        <button class="filter-chip is-active" type="button" data-filter="all">Todos</button>
+                        <button class="filter-chip" type="button" data-filter="apartment">Departamento</button>
+                        <button class="filter-chip" type="button" data-filter="studio">Estudio</button>
+                        <button class="filter-chip" type="button" data-filter="pet">Mascotas</button>
+                        <button class="filter-chip" type="button" data-filter="verified">Verificados</button>
+                    </div>
                 <div class="search-hero">
                     <span class="eyebrow"><span class="material-symbols-rounded"
                             aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
@@ -1265,3 +1385,4 @@
 </body>
 
 </html>
+

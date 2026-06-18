@@ -3878,7 +3878,6 @@ const App = {
     setupMarketPlaceListeners: () => {
         const startBtn = document.getElementById('publish-property-trigger');
         const contactModal = document.getElementById('marketplace-contact-modal');
-        const wizardModal = document.getElementById('marketplace-wizard-modal');
         const contactForm = document.getElementById('marketplace-contact-form');
 
         if (startBtn && contactModal) {
@@ -3888,13 +3887,13 @@ const App = {
             });
         }
 
-        if (contactForm && wizardModal) {
+        if (contactForm) {
             contactForm.addEventListener('submit', (e) => {
                 e.preventDefault(); // Prevent page reload
                 // Here we would normally validate and store the contact form data.
                 // For now, we proceed to the wizard.
                 if (contactModal) contactModal.classList.add('hidden');
-                wizardModal.classList.remove('hidden');
+                App.showPublishWizard();
             });
         }
 
@@ -4975,11 +4974,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar sesión</a>
                         </div>
                         <nav class="landing-menu__nav hidden" id="premium-menu-logged-in" aria-label="Cuenta">
-                            <a class="landing-menu__link" href="administrador.html">Perfil</a>
-                            <a class="landing-menu__link" href="#">Búsquedas guardadas</a>
-                            <a class="landing-menu__link" href="#">Reservas</a>
-                            <a class="landing-menu__link" href="#">Ayuda a un Amigo</a>
-                            <a class="landing-menu__link" href="#">Pagos</a>
+                            <a class="landing-menu__link" href="administrador.html">Administrar alquileres</a>
+                            <a class="landing-menu__link" href="#">Alquilar</a>
+                            <a class="landing-menu__link" href="#">Encontra un corredor inmobiliario</a>
+                            <a class="landing-menu__link" href="#">Proximamente</a>
+                            <a class="landing-menu__link" href="#">Proximamente</a>
                             <button class="landing-menu__link" type="button" id="premium-menu-logout" style="color: #f24822;">Cerrar sesión</button>
                         </nav>
                         <div class="landing-menu__divider"></div>
@@ -5229,6 +5228,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.add('hidden'));
+                
+                document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.add('hidden'));
+                const initialStr = (profile?.full_name || user?.email || 'U').charAt(0).toUpperCase();
+                document.querySelectorAll('.auth-user-initial').forEach(el => el.textContent = initialStr);
             } else {
                 const loggedInEl = document.getElementById('drawer-user-logged-in');
                 const loggedOutEl = document.getElementById('drawer-user-logged-out');
@@ -5242,6 +5246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
+                
+                document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.remove('hidden'));
             }
         } catch (err) {
             console.warn('Could not load user profile for dropdown:', err);
@@ -5273,6 +5280,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
+            
+            document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.remove('hidden'));
         }
     });
 

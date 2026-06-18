@@ -75,67 +75,8 @@
 </head>
 
 <body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body min-h-screen">
-    <nav
-        class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
-        <div
-            class="relative flex justify-between items-center px-2 sm:px-4 md:px-12 h-16 md:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
-            <div class="flex items-center gap-1 sm:gap-4 md:gap-12">
-                <a href="propietarios.html" class="flex items-center gap-1.5 md:gap-2 group"
-                    aria-label="Volver al inicio">
-                    <img src="img/logo-lite.png" alt="Habitat Logo"
-                        class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
-                </a>
-                <div class="hidden lg:flex items-center gap-4 md:gap-8 text-sm md:text-base">
-                    <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1"
-                        href="propietarios.html">Propietarios</a>
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors"
-                        href="index.html">Portfolio</a>
-                    <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors"
-                        href="index.html">Insights</a>
-                </div>
-            </div>
-            <div
-                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2 md:gap-4 z-10">
-                <a href="index.html"
-                    class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
-                    Soy Inquilino
-                </a>
-                <a href="administrador.html"
-                    class="bg-surface-dim dark:bg-zinc-900 px-2 py-1 md:px-3 md:py-2 text-[10px] md:text-sm rounded-full text-zinc-700 dark:text-zinc-100 hover:text-red-800 dark:hover:text-red-400 transition-colors font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 flex-shrink-0">
-                    Administrar
-                </a>
-                <label class="theme-switch flex-shrink-0"
-                    style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
-                    <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                    <div class="theme-switch__container">
-                        <div class="theme-switch__clouds"></div>
-                        <div class="theme-switch__stars-container"></div>
-                        <div class="theme-switch__circle-container">
-                            <div class="theme-switch__sun-moon-container">
-                                <div class="theme-switch__moon">
-                                    <div class="theme-switch__spot"></div>
-                                    <div class="theme-switch__spot"></div>
-                                    <div class="theme-switch__spot"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </label>
-            </div>
-            <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-                <div class="hidden md:flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
-                    <span
-                        class="material-symbols-outlined hover:bg-zinc-50 dark:hover:bg-zinc-900 p-2 rounded-full transition-all cursor-pointer">favorite</span>
-                    <span
-                        class="material-symbols-outlined hover:bg-zinc-50 dark:hover:bg-zinc-900 p-2 rounded-full transition-all cursor-pointer">notifications</span>
-                </div>
-                <button
-                    class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden text-center flex items-center justify-center font-bold text-zinc-500 dark:text-zinc-300 flex-shrink-0 hover:ring-2 hover:ring-primary/40 transition-all">
-                    U
-                </button>
-            </div>
-        </div>
-    </nav>
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
 
     <main class="pt-24 md:pt-28 pb-20">
         <section class="max-w-[1280px] mx-auto px-4 md:px-8">
