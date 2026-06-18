@@ -13,6 +13,21 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#811b1e",
+                        "on-primary": "#ffffff",
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         :root {
             --background: #f9f9f9;
@@ -82,20 +97,12 @@
             object-fit: cover;
         }
 
-        .owner-auth-language {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text);
-            font-size: 16px;
-            font-weight: 800;
-        }
 
         .owner-auth-main {
-            min-height: calc(100vh - 96px);
+            min-height: 100vh;
             display: grid;
             place-items: center;
-            padding: 56px 20px;
+            padding: 110px 20px 56px;
         }
 
         .owner-auth-card {
@@ -297,13 +304,10 @@
                 height: 34px;
             }
 
-            .owner-auth-language {
-                font-size: 14px;
-            }
 
             .owner-auth-main {
-                min-height: calc(100vh - 78px);
-                padding: 28px 14px;
+                min-height: 100vh;
+                padding: 100px 14px 28px;
                 align-items: start;
             }
 
@@ -324,17 +328,8 @@
 </head>
 
 <body>
-    <header class="owner-auth-header">
-        <a class="owner-auth-logo" href="propietarios.html" aria-label="Volver a H&aacute;bitat">
-            <img src="img/isotipo-lite.jpg" alt="">
-            <span>H&aacute;bitat</span>
-        </a>
-        <div class="owner-auth-language" aria-label="Idioma">
-            <span class="material-symbols-outlined">language</span>
-            <span>Espa&ntilde;ol</span>
-            <span class="material-symbols-outlined">expand_more</span>
-        </div>
-    </header>
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
 
     <main class="owner-auth-main">
         <section class="owner-auth-card" aria-labelledby="owner-auth-title">

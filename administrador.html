@@ -96,6 +96,104 @@
                     "fontFamily": {
                         "headline": ["Manrope"],
                         "body": ["Inter"],
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador | HÃ¡bitat</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Icons -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <!-- Leaflet Map -->
+    <!-- Removed Google Maps script from here -->
+
+
+    <!-- Tailwind & Stitch Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1a1c1c",
+                        "inverse-surface": "#2f3131",
+                        "tertiary-fixed-dim": "#ffb3b1",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "error": "#ba1a1a",
+                        "surface": "#f9f9f9",
+                        "secondary-container": "#e1dfdf",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-tertiary-container": "#ffc3c1",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-variant": "#e2e2e2",
+                        "tertiary": "#7b2327",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#ffc3bf",
+                        "primary-fixed-dim": "#ffb3ae",
+                        "on-primary-fixed": "#410005",
+                        "tertiary-fixed": "#ffdad8",
+                        "on-surface": "#1a1c1c",
+                        "surface-bright": "#f9f9f9",
+                        "primary": "#811b1e",
+                        "surface-tint": "#a73737",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#871f22",
+                        "surface-container-low": "#f3f3f3",
+                        "secondary": "#5e5e5e",
+                        "outline": "#8b716f",
+                        "on-error": "#ffffff",
+                        "background": "#f9f9f9",
+                        "primary-fixed": "#ffdad7",
+                        "on-secondary-fixed-variant": "#464747",
+                        "surface-container": "#eeeeee",
+                        "on-tertiary-fixed": "#410007",
+                        "on-surface-variant": "#574140",
+                        "tertiary-container": "#9a3a3c",
+                        "secondary-fixed": "#e4e2e2",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-tertiary-fixed-variant": "#80272b",
+                        "surface-dim": "#dadada",
+                        "surface-container-high": "#e8e8e8",
+                        "outline-variant": "#debfbd",
+                        "inverse-primary": "#ffb3ae",
+                        "primary-container": "#a13333",
+                        "on-secondary-container": "#636262"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
                         "label": ["Inter"]
                     }
                 },
@@ -103,68 +201,6 @@
         }
     </script>
     <style>
-        /* Google Translate Custom Overrides */
-        iframe.goog-te-banner-frame {
-            display: none !important;
-        }
-
-        .goog-te-banner-frame {
-            display: none !important;
-        }
-
-        .goog-te-banner-frame.skiptranslate {
-            display: none !important;
-        }
-
-        .skiptranslate>iframe {
-            display: none !important;
-        }
-
-        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
-            display: none !important;
-        }
-
-        .VIpgJd-ZVi9od-ORHb-OEVmcd {
-            display: none !important;
-        }
-
-        body {
-            top: 0px !important;
-            position: static !important;
-        }
-
-        html {
-            top: 0px !important;
-            position: static !important;
-        }
-
-        #google_translate_element {
-            display: none !important;
-        }
-
-        .goog-tooltip {
-            display: none !important;
-        }
-
-        .goog-tooltip:hover {
-            display: none !important;
-        }
-
-        .goog-text-highlight {
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        /* Fix for highlight on hover */
-        font {
-            background-color: transparent !important;
-            box-shadow: none !important;
-        }
-
-        #goog-gt-tt {
-            display: none !important;
-        }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -2433,44 +2469,6 @@
 
 
         <!-- End Scripts -->
-        <!-- Google Translate Integration -->
-        <div id="google_translate_element" style="display: none;"></div>
-        <script type="text/javascript">
-            function googleTranslateElementInit() {
-                // Prevent Material Icons from being translated
-                document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
-                    icon.setAttribute('translate', 'no');
-                    icon.classList.add('notranslate');
-                });
-
-                new google.translate.TranslateElement({
-                    pageLanguage: 'es',
-                    includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
-                    autoDisplay: false
-                }, 'google_translate_element');
-            }
-
-            function changeLanguage(langCode, displayText) {
-                // Set cookie for Google Translate
-                document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
-                document.cookie = "googtrans=/es/" + langCode + "; path=/";
-
-                // Update displays and reload to trigger translation
-                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
-                window.location.reload();
-            }
-
-            document.addEventListener("DOMContentLoaded", function () {
-                let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
-                let lang = match ? match[1].split('/')[2] : 'es';
-                let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT', 'it': 'IT', 'ja': 'JA', 'zh-CN': 'ZH', 'ru': 'RU' };
-                if (labels[lang]) {
-                    document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
-                }
-            });
-        </script>
-        <script type="text/javascript"
-            src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

@@ -6,47 +6,6 @@
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
             </button>
-            <div class="hidden md:flex items-center gap-4 md:gap-8 text-sm md:text-base">
-                <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer" href="index.html">Marketplace</a>
-                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="propietarios.html">Portfolio</a>
-                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="#">Insights</a>
-            </div>
-        </div>
-
-        <!-- Center Section (Logo) -->
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center pointer-events-none z-10">
-            <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group pointer-events-auto">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
-            </a>
-        </div>
-
-        <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
-            <!-- Custom Language Selector -->
-            <div class="relative group inline-block z-[110]">
-                <button class="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 font-bold text-sm cursor-pointer hover:text-primary dark:hover:text-red-400 transition-colors">
-                    <span class="material-symbols-outlined text-lg">language</span>
-                    <span class="current-lang-display hidden sm:inline">ES</span>
-                    <span class="material-symbols-outlined text-base hidden sm:inline">expand_more</span>
-                </button>
-                <!-- Dropdown menu -->
-                <div class="absolute right-0 mt-2 w-32 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden">
-                    <ul class="py-2 text-sm text-zinc-700 dark:text-zinc-300 m-0 p-0 list-none notranslate" translate="no">
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('es', 'ES')">Español</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('de', 'DE')">Deutsch</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('en', 'EN')">English</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('fr', 'FR')">Français</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('pt', 'PT')">Português</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('it', 'IT')">Italiano</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('ja', 'JA')">日本語</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('zh-CN', 'ZH')">中文</button></li>
-                        <li><button class="w-full text-left px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-primary dark:hover:text-red-400 transition-colors" onclick="changeLanguage('ru', 'RU')">Русский</button></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="hidden md:flex items-center gap-4 text-zinc-500">
-                <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
-                <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
-            </div>
             <label class="theme-switch flex-shrink-0" style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
                 <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
                 <div class="theme-switch__container">
@@ -67,6 +26,26 @@
                     </div>
                 </div>
             </label>
+            <div class="hidden md:flex items-center gap-4 md:gap-8 text-sm md:text-base">
+                <a class="text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer" href="index.html">Marketplace</a>
+                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="propietarios.html">Portfolio</a>
+                <a class="text-zinc-500 dark:text-zinc-400 hover:text-red-800 transition-colors cursor-pointer" href="#">Insights</a>
+            </div>
+        </div>
+
+        <!-- Center Section (Logo) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center pointer-events-none z-10">
+            <a href="index.html" class="flex items-center gap-1.5 md:gap-2 group pointer-events-auto">
+                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-14 sm:h-16 md:h-24 w-auto object-contain transition-all">
+            </a>
+        </div>
+
+        <div class="flex items-center gap-1 sm:gap-2 md:gap-6 ml-auto">
+
+            <div class="hidden md:flex items-center gap-4 text-zinc-500">
+                <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">favorite</span>
+                <span class="material-symbols-outlined hover:bg-zinc-50 p-2 rounded-full transition-all cursor-pointer">notifications</span>
+            </div>
             <div id="desktop-auth-container" class="max-md:hidden flex items-center ml-2 mr-2">
                 <div class="auth-ui-state logged-out flex items-center gap-2">
                     <a href="login.html?mode=login" class="text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors">Ingresar</a>
@@ -90,8 +69,9 @@
                 </div>
             </div>
             <div id="mobile-auth-container" class="md:hidden flex items-center ml-1">
-                <div class="auth-ui-state logged-out">
-                    <a href="login.html?mode=login" class="text-xs font-bold text-primary dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">Entrar</a>
+                <div class="auth-ui-state logged-out flex items-center gap-1.5">
+                    <a href="login.html?mode=login" class="text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors">Ingresar</a>
+                    <a href="login.html?mode=register" class="text-xs font-bold text-white bg-primary dark:bg-red-800 px-3 py-1.5 rounded-full hover:bg-red-800 dark:hover:bg-red-700 transition-colors shadow-md">Registrarse</a>
                 </div>
                 <div class="auth-ui-state logged-in hidden relative group">
                     <button class="w-8 h-8 rounded-full bg-primary dark:bg-red-800 text-white flex items-center justify-center text-sm font-bold shadow-md hover:opacity-90 transition-opacity auth-user-initial cursor-pointer">U</button>

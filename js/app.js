@@ -62,6 +62,19 @@ const App = {
         }
     },
 
+    logout: async () => {
+        try {
+            if (window.DataManager) {
+                await window.DataManager.logout();
+            }
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error("Error during logout:", error);
+            window.location.href = 'index.html';
+        }
+    },
+
+
     setupTheme: () => {
         const themeSwitches = document.querySelectorAll('.theme-switch__checkbox');
         const mobileThemeBtn = document.getElementById('mobile-theme-toggle');
@@ -3567,11 +3580,15 @@ const App = {
         App.setupMarketPlaceListeners();
 
         // Quick Add Tenant Button (Simulate opening modal for now)
-        document.getElementById('quick-add-tenant-btn').addEventListener('click', () => {
-            // For now, re-use the property modal or show a message
-            document.getElementById('add-property-fab').click();
-            // In a real app, this would open a tenant-specific modal or pre-fill the form
-        });
+        const quickAddTenantBtn = document.getElementById('quick-add-tenant-btn');
+        if (quickAddTenantBtn) {
+            quickAddTenantBtn.addEventListener('click', () => {
+                // For now, re-use the property modal or show a message
+                const addPropFab = document.getElementById('add-property-fab');
+                if (addPropFab) addPropFab.click();
+                // In a real app, this would open a tenant-specific modal or pre-fill the form
+            });
+        }
 
 
     },
@@ -4037,7 +4054,10 @@ const App = {
 
         // Update UI Classes
         document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
-        document.getElementById(viewId).classList.remove('hidden');
+        const viewEl = document.getElementById(viewId);
+        if (viewEl) {
+            viewEl.classList.remove('hidden');
+        }
 
         // Update Nav Active State
         document.querySelectorAll('.nav-link, .nav-item').forEach(el => {
@@ -4975,11 +4995,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <nav class="landing-menu__nav hidden" id="premium-menu-logged-in" aria-label="Cuenta">
                             <a class="landing-menu__link" href="administrador.html">Administrar alquileres</a>
-                            <a class="landing-menu__link" href="#">Alquilar</a>
+                            <a class="landing-menu__link" href="#">Buscar Alquiler</a>
                             <a class="landing-menu__link" href="#">Encontra un corredor inmobiliario</a>
-                            <a class="landing-menu__link" href="#">Proximamente</a>
-                            <a class="landing-menu__link" href="#">Proximamente</a>
-                            <button class="landing-menu__link" type="button" id="premium-menu-logout" style="color: #f24822;">Cerrar sesión</button>
                         </nav>
                         <div class="landing-menu__divider"></div>
                         <button class="landing-menu__help landing-menu__text-btn" type="button" data-menu-action="help">

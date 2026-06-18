@@ -533,42 +533,7 @@
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js?v=4"></script>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            // Prevent Material Icons from being translated
-            document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
-                icon.setAttribute('translate', 'no');
-                icon.classList.add('notranslate');
-            });
 
-            new google.translate.TranslateElement({
-                pageLanguage: 'es',
-                includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-
-        function changeLanguage(langCode, displayText) {
-            // Set cookie for Google Translate
-            document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
-            document.cookie = "googtrans=/es/" + langCode + "; path=/";
-
-            // Update displays and reload to trigger translation
-            document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
-            window.location.reload();
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
-            let lang = match ? match[1].split('/')[2] : 'es';
-            let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT', 'it': 'IT', 'ja': 'JA', 'zh-CN': 'ZH', 'ru': 'RU' };
-            if (labels[lang]) {
-                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
-            }
-        });
-    </script>
-    <script type="text/javascript"
-        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

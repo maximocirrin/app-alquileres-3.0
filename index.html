@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -868,68 +868,7 @@
             opacity: 0;
         }
 
-        /* Google Translate Custom Overrides */
-        iframe.goog-te-banner-frame {
-            display: none !important;
-        }
 
-        .goog-te-banner-frame {
-            display: none !important;
-        }
-
-        .goog-te-banner-frame.skiptranslate {
-            display: none !important;
-        }
-
-        .skiptranslate>iframe {
-            display: none !important;
-        }
-
-        .VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
-            display: none !important;
-        }
-
-        .VIpgJd-ZVi9od-ORHb-OEVmcd {
-            display: none !important;
-        }
-
-        body {
-            top: 0px !important;
-            position: static !important;
-        }
-
-        html {
-            top: 0px !important;
-            position: static !important;
-        }
-
-        #google_translate_element {
-            display: none !important;
-        }
-
-        .goog-tooltip {
-            display: none !important;
-        }
-
-        .goog-tooltip:hover {
-            display: none !important;
-        }
-
-        .goog-text-highlight {
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        /* Fix for highlight on hover */
-        font {
-            background-color: transparent !important;
-            box-shadow: none !important;
-        }
-
-        #goog-gt-tt {
-            display: none !important;
-        }
     </style>
 </head>
 <script>
@@ -2070,44 +2009,7 @@
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initIndexSearch"></script>
 
-    <!-- Google Translate Integration -->
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            // Prevent Material Icons from being translated
-            document.querySelectorAll('[class*="material-symbols"]').forEach(function (icon) {
-                icon.setAttribute('translate', 'no');
-                icon.classList.add('notranslate');
-            });
 
-            new google.translate.TranslateElement({
-                pageLanguage: 'es',
-                includedLanguages: 'es,en,de,fr,pt,it,ja,zh-CN,ru',
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-
-        function changeLanguage(langCode, displayText) {
-            // Set cookie for Google Translate
-            document.cookie = "googtrans=/es/" + langCode + "; path=/; domain=" + window.location.hostname;
-            document.cookie = "googtrans=/es/" + langCode + "; path=/";
-
-            // Update displays and reload to trigger translation
-            document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = displayText);
-            window.location.reload();
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            let match = document.cookie.match(/(?:^|;)\s*googtrans=([^;]*)/);
-            let lang = match ? match[1].split('/')[2] : 'es';
-            let labels = { 'es': 'ES', 'en': 'EN', 'de': 'DE', 'fr': 'FR', 'pt': 'PT' };
-            if (labels[lang]) {
-                document.querySelectorAll('.current-lang-display').forEach(el => el.textContent = labels[lang]);
-            }
-        });
-    </script>
-    <script type="text/javascript"
-        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

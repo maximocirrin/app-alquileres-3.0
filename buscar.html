@@ -776,33 +776,6 @@
                         <button class="filter-chip" type="button" data-filter="pet">Mascotas</button>
                         <button class="filter-chip" type="button" data-filter="verified">Verificados</button>
                     </div>
-                <div class="search-hero">
-                    <span class="eyebrow"><span class="material-symbols-rounded"
-                            aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
-                    <h1>Encontrá tu próximo alquiler.</h1>
-                    <p>Buscá por zona, compará precios y filtrá propiedades listas para avanzar con validación digital,
-                        contrato online y gestión desde Habitat.</p>
-                </div>
-
-                <div class="search-card">
-                    <form class="search-form" id="search-form">
-                        <label class="search-input" for="location-search">
-                            <span class="material-symbols-rounded" aria-hidden="true">search</span>
-                            <input id="location-search" type="search" autocomplete="off"
-                                placeholder="Ciudad, barrio o dirección">
-                        </label>
-                        <button class="primary-action" type="submit">
-                            <span class="material-symbols-rounded" aria-hidden="true">manage_search</span>
-                            Buscar
-                        </button>
-                    </form>
-                    <div class="filter-row" aria-label="Filtros rápidos">
-                        <button class="filter-chip is-active" type="button" data-filter="all">Todos</button>
-                        <button class="filter-chip" type="button" data-filter="apartment">Departamento</button>
-                        <button class="filter-chip" type="button" data-filter="studio">Estudio</button>
-                        <button class="filter-chip" type="button" data-filter="pet">Mascotas</button>
-                        <button class="filter-chip" type="button" data-filter="verified">Verificados</button>
-                    </div>
                 </div>
 
                 <div class="results-meta">
@@ -1183,7 +1156,6 @@
                                         googleMarkers.push(marker);
                                     });
 
-                                    // Agrupar pines si están muy cerca o superpuestos
                                     if (window.markerClusterer) {
                                         if (markerCluster) {
                                             markerCluster.clearMarkers();
@@ -1191,8 +1163,17 @@
                                         markerCluster = new markerClusterer.MarkerClusterer({
                                             map: googleMap,
                                             markers: googleMarkers,
+                                            algorithm: new markerClusterer.SuperClusterAlgorithm({ radius: 60 }),
+                                            onClusterClick: (event, cluster, map) => {
+                                                map.panTo(cluster.position);
+                                                // Dejamos que Google Maps maneje la transición de zoom nativamente
+                                                setTimeout(() => {
+                                                    map.setZoom(map.getZoom() + 2);
+                                                }, 150);
+                                            },
                                             renderer: {
-                                                render: function({ count, position }) {
+                                                render: function (cluster) {
+                                                    const { count, position } = cluster;
                                                     return new google.maps.Marker({
                                                         position: position,
                                                         label: {
@@ -1273,6 +1254,10 @@
 
                                 const urlParams = new URLSearchParams(window.location.search);
                                 const locationParam = urlParams.get('location');
+
+                                // Render listings and markers now that the map is ready
+                                renderNewListings();
+
                                 if (locationParam) {
                                     const locNorm = normalize(locationParam);
                                     let foundProv = '';
@@ -1353,15 +1338,6 @@
                                     renderNewListings();
                                 });
                             });
-
-                            window.changeLanguage = (langCode, displayText) => {
-                                document.cookie = `googtrans=/es/${langCode}; path=/; domain=${window.location.hostname}`;
-                                document.cookie = `googtrans=/es/${langCode}; path=/`;
-                                document.querySelectorAll('.current-lang-display').forEach((el) => {
-                                    el.textContent = displayText;
-                                });
-                                window.location.reload();
-                            };
 
                             const urlParams = new URLSearchParams(window.location.search);
                             const locationParam = urlParams.get('location');
