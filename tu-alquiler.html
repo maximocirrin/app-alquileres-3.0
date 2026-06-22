@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu alquiler | Hábitat</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=8">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#1a1c1c",
+                        "background": "#f9f9f9",
+                        "surface": "#f9f9f9",
+                        "surface-container-low": "#f3f3f3",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "surface-container-high": "#e8e8e8",
+                        "primary": "#811b1e",
+                        "primary-container": "#a13333",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#debfbd"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope"],
+                        body: ["Inter"],
+                        label: ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Ocultar el contenido inactivo */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+</head>
+
+<body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
+
+    <main class="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-[1280px] mx-auto w-full flex flex-col">
+        <!-- Título superior -->
+        <div class="mb-6 md:mb-8">
+            <h1 class="font-headline text-3xl md:text-[38px] font-extrabold text-zinc-900 dark:text-white">
+                Tu alquiler
+            </h1>
+        </div>
+
+        <!-- Cabecera de Tabs -->
+        <div class="flex border-b border-zinc-200 dark:border-zinc-800 mb-8 gap-6">
+            <button id="tab-alquiler" class="py-3 text-sm md:text-base font-bold transition-colors border-b-2 border-primary text-primary dark:border-red-500 dark:text-red-400">
+                Alquiler
+            </button>
+            <button id="tab-documentos" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent">
+                Documentos
+            </button>
+        </div>
+
+        <!-- Contenido de las Tabs -->
+        <div class="w-full">
+            
+            <!-- Tab: Alquiler -->
+            <div id="content-alquiler" class="tab-content active w-full">
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                    
+                    <!-- Top section (light gray) -->
+                    <div class="bg-zinc-100 dark:bg-zinc-800/50 p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between">
+                        <div class="max-w-xl">
+                            <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white mb-4">
+                                <span class="text-[#0d6b4d] dark:text-[#34d399]">Construye tu historial</span> crediticio al pagar el alquiler
+                            </h2>
+                            <p class="text-sm md:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                Tus pagos a tiempo pueden añadirse a tu informe de crédito, como los pagos de préstamos o tarjetas de crédito. Es una forma sencilla de construir tu historial crediticio mientras alquilas.
+                            </p>
+                        </div>
+                        
+                        <!-- Illustration SVG -->
+                        <div class="flex-shrink-0 w-32 md:w-48">
+                            <svg viewBox="0 0 160 140" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M120 20 C140 10 160 30 150 60 C160 100 130 130 100 130 C60 130 30 110 30 80 C20 40 50 10 80 20 Z" fill="#ffdad6" opacity="0.6" class="dark:fill-red-950/40"/>
+                                <!-- Document -->
+                                <g transform="rotate(-10 80 70)">
+                                    <rect x="40" y="30" width="80" height="90" fill="#ffffff" class="dark:fill-zinc-900" stroke="#0d6b4d" stroke-width="4" stroke-linejoin="round" />
+                                    <!-- Gauge -->
+                                    <path d="M 50 60 A 30 30 0 0 1 110 60" fill="none" stroke="#e2e8f0" stroke-width="15" class="dark:stroke-zinc-700"/>
+                                    <path d="M 50 60 A 30 30 0 0 1 80 30" fill="none" stroke="#f59e0b" stroke-width="15" />
+                                    <path d="M 80 30 A 30 30 0 0 1 110 60" fill="none" stroke="#0d6b4d" stroke-width="15" />
+                                    <!-- Needle -->
+                                    <polygon points="80,60 76,40 84,40" fill="#1e293b" class="dark:fill-zinc-300"/>
+                                    <!-- Lines -->
+                                    <line x1="55" y1="80" x2="105" y2="80" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                                    <line x1="55" y1="92" x2="105" y2="92" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                                    <line x1="55" y1="104" x2="85" y2="104" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Bottom section (white) -->
+                    <div class="p-6 md:p-10">
+                        <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white mb-6">
+                            Elige la opción que mejor funcione para ti
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Card 1 (Free) -->
+                            <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-start bg-white dark:bg-zinc-900 shadow-sm">
+                                <span class="bg-[#eefcf3] text-[#0d6b4d] dark:bg-emerald-900/30 dark:text-emerald-400 font-bold text-xs py-1.5 px-3 rounded-lg mb-4">
+                                    Gratis
+                                </span>
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">
+                                    Pídele a tu propietario que use los pagos de Hábitat y obtén acceso al reporte de alquiler. Los pagos son gratuitos si pagas con transferencia bancaria directa.
+                                </p>
+                                <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors text-sm w-full sm:w-auto shadow-sm">
+                                    Solicitar pagos por Hábitat
+                                </button>
+                            </div>
+
+                            <!-- Card 2 (Yearly) -->
+                            <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-start bg-white dark:bg-zinc-900 shadow-sm">
+                                <span class="bg-[#fef3c7] text-[#92400e] dark:bg-amber-900/30 dark:text-amber-400 font-bold text-xs py-1.5 px-3 rounded-lg mb-4">
+                                    $20 al año
+                                </span>
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">
+                                    Únete a más de 5 millones de inquilinos inscritos en la membresía de construcción de crédito con nuestro socio de confianza.
+                                </p>
+                                <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors text-sm w-full sm:w-auto shadow-sm">
+                                    Inscríbete ahora
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Documentos -->
+            <div id="content-documentos" class="tab-content w-full">
+                <!-- Grid de tarjetas -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Tarjeta 1: Contrato -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <!-- Icono -->
+                        <div class="w-12 h-12 rounded-xl bg-[#811b1e] text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">history_edu</span>
+                        </div>
+                        <!-- Textos -->
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Agrega tu contrato de alquiler
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Subir tu contrato a Hábitat hace que acceder a él sea rápido y fácil. Envía el enlace a continuación a tu propietario para pedirle que lo suba.
+                        </p>
+                        <!-- Enlace de acción -->
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Copiar enlace para invitar al propietario
+                        </button>
+                    </div>
+
+                    <!-- Tarjeta 2: Informe de estado -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <!-- Icono -->
+                        <div class="w-12 h-12 rounded-xl bg-zinc-800 text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">assignment_turned_in</span>
+                        </div>
+                        <!-- Textos -->
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Agrega un informe de estado de la propiedad
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Los inquilinos que documentan el estado de la propiedad al mudarse tienen más probabilidades de recuperar su depósito completo. Envía el enlace a continuación a tu propietario para pedirle que lo inicie.
+                        </p>
+                        <!-- Enlace de acción -->
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Copiar enlace para invitar al propietario
+                        </button>
+                    </div>
+
+                    <!-- Tarjeta 3: Seguro -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <!-- Icono -->
+                        <div class="w-12 h-12 rounded-xl bg-purple-900 text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">health_and_safety</span>
+                        </div>
+                        <!-- Textos -->
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Obtén un seguro para inquilinos
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Protege las cosas que amas. Obtén cobertura para tus artículos personales contra robo, incendio u otros eventos inesperados.
+                        </p>
+                        <!-- Enlace de acción -->
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Comenzar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <footer id="footer"
+        class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body mt-auto">
+        <div class="max-w-[1580px] mx-auto">
+            <div
+                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Hábitat</h3>
+                    <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        <a href="como-funciona.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
+                    </nav>
+                </div>
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Inquilinos</h3>
+                    <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        <a href="index.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
+                        <a href="como-funciona.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                    </nav>
+                </div>
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Propietarios</h3>
+                    <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        <a href="propietarios.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
+                        <a href="como-funciona.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                    </nav>
+                </div>
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Legal</h3>
+                    <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        <a href="#"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de privacidad</a>
+                        <a href="#"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de cookies</a>
+                        <a href="terminos.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y condiciones</a>
+                    </nav>
+                </div>
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Soporte</h3>
+                    <div class="flex flex-col items-start gap-4">
+                        <a href="#faq"
+                            class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
+                            <div class="flex -space-x-2.5">
+                                <img src="img/tenant-profile-1.jpg" alt="Avatar 1"
+                                    class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900">
+                                <img src="img/tenant-profile-2.jpg" alt="Avatar 2"
+                                    class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900">
+                            </div>
+                            <span
+                                class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro
+                                de ayuda</span>
+                        </a>
+                        <a href="#"
+                            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
+                    </div>
+                </div>
+                <div>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Síguenos</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="#" aria-label="Instagram"
+                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">IG</a>
+                        <a href="#" aria-label="X"
+                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">X</a>
+                        <a href="#" aria-label="LinkedIn"
+                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">in</a>
+                        <a href="#" aria-label="YouTube"
+                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">YT</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+                <div class="flex items-center gap-3.5 flex-wrap">
+                    <img src="img/logo-lite.png" alt="Habitat Logo"
+                        class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 Hábitat - Todos los derechos reservados</span>
+                </div>
+                <div
+                    class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
+                    <span
+                        class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Métodos de pago</span>
+                    <div
+                        class="flex flex-wrap items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
+                        <span
+                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
+                        <span
+                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
+                        <span
+                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
+                        <span
+                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-bold text-sm">
+                    <span class="material-symbols-outlined text-lg">language</span>
+                    <span>Español</span>
+                    <span class="material-symbols-outlined text-base">expand_more</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- App Scripts -->
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/app.js?v=8"></script>
+
+    <!-- Script para los Tabs -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.App) {
+                App.setupTheme();
+            }
+
+            // Tab logic
+            const tabAlquiler = document.getElementById('tab-alquiler');
+            const tabDocumentos = document.getElementById('tab-documentos');
+            const contentAlquiler = document.getElementById('content-alquiler');
+            const contentDocumentos = document.getElementById('content-documentos');
+
+            const activeClassTab = ['font-bold', 'border-primary', 'text-primary', 'dark:border-red-500', 'dark:text-red-400'];
+            const inactiveClassTab = ['font-semibold', 'text-zinc-500', 'dark:text-zinc-400', 'hover:text-zinc-800', 'dark:hover:text-zinc-200', 'border-transparent'];
+
+            function setActiveTab(isAlquiler) {
+                if (isAlquiler) {
+                    tabAlquiler.classList.add(...activeClassTab);
+                    tabAlquiler.classList.remove(...inactiveClassTab);
+                    
+                    tabDocumentos.classList.remove(...activeClassTab);
+                    tabDocumentos.classList.add(...inactiveClassTab);
+                    
+                    contentAlquiler.classList.add('active');
+                    contentDocumentos.classList.remove('active');
+                } else {
+                    tabDocumentos.classList.add(...activeClassTab);
+                    tabDocumentos.classList.remove(...inactiveClassTab);
+                    
+                    tabAlquiler.classList.remove(...activeClassTab);
+                    tabAlquiler.classList.add(...inactiveClassTab);
+                    
+                    contentDocumentos.classList.add('active');
+                    contentAlquiler.classList.remove('active');
+                }
+            }
+
+            tabAlquiler.addEventListener('click', () => setActiveTab(true));
+            tabDocumentos.addEventListener('click', () => setActiveTab(false));
+        });
+    </script>
+</body>
+
+</html>

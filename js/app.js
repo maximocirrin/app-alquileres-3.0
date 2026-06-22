@@ -4827,7 +4827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Desktop navigation for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const landingNavs = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav, #landing-propietarios-view > nav, #landing-corredores-view > nav'
+        '#landing-marketplace-view > nav, #landing-propietarios-view > nav, #landing-corredores-view > nav, body > nav'
     ));
 
     if (!landingNavs.length) return;
@@ -4957,7 +4957,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Premium hamburger menu for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const menuButtons = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn'
+        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn, body > nav .menu-btn'
     ));
 
     if (!menuButtons.length) return;
