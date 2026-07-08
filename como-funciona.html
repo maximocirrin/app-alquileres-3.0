@@ -436,69 +436,6 @@
         <script src="js/navbar.js"></script>
         <div class="scroll-progress" aria-hidden="true"><span id="how-scroll-progress"></span></div>
 
-        <aside id="landing-premium-menu" class="landing-menu" aria-hidden="true">
-            <div class="landing-menu__scrim" data-menu-close></div>
-            <div class="landing-menu__panel" role="dialog" aria-modal="true" aria-label="Menu principal">
-                <div class="landing-menu__content">
-                    <div class="landing-menu__top">
-                        <a class="landing-menu__brand" href="index.html" aria-label="Inicio">
-                            <img src="img/logo-lite.png" alt="Habitat">
-                        </a>
-                        <button class="landing-menu__close" type="button" aria-label="Cerrar menu" data-menu-close>
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
-                    </div>
-                    <div class="landing-menu__main">
-                        <nav class="landing-menu__nav" aria-label="Navegacion principal">
-                            <a class="landing-menu__link" href="index.html">Inicio</a>
-                            <a class="landing-menu__link" href="propietarios.html">Soy Propietario</a>
-                            <a class="landing-menu__link" href="corredores.html">Soy inmobiliaria</a>
-                            <a class="landing-menu__link" href="como-funciona.html">C&oacute;mo funciona</a>
-                            <a class="landing-menu__link"
-                                href="login.html?redirect=favorites&amp;mode=login">Favoritos</a>
-                        </nav>
-                        <div class="landing-menu__lower">
-                            <div class="landing-menu__divider"></div>
-                            <div class="landing-menu__auth" id="premium-menu-logged-out" aria-label="Cuenta">
-                                <a class="landing-menu__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
-                                <span class="landing-menu__auth-separator" aria-hidden="true"></span>
-                                <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar
-                                    sesi&oacute;n</a>
-                            </div>
-                            <nav class="landing-menu__nav hidden" id="premium-menu-logged-in" aria-label="Cuenta">
-                                <a class="landing-menu__link" href="administrador.html">Administrar alquileres</a>
-                                <a class="landing-menu__link" href="#">Buscar Alquiler</a>
-                                <a class="landing-menu__link" href="#">Encontra un corredor inmobiliario</a>
-                            </nav>
-                            <div class="landing-menu__divider"></div>
-                            <a class="landing-menu__contact landing-menu__text-btn" href="#faq" data-menu-close>Centro
-                                de ayuda</a>
-                            <a class="landing-menu__language landing-menu__text-btn" href="#footer"
-                                data-menu-close>Contacto</a>
-                        </div>
-                    </div>
-                    <div class="landing-menu__download">
-                        <div class="landing-menu__download-title">Descarga la app</div>
-                        <div class="landing-menu__store-row">
-                            <a class="landing-menu__store" href="#" aria-label="Descargar en Google Play">
-                                <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                                <span>
-                                    <span class="landing-menu__store-small">GET IT ON</span>
-                                    <span class="landing-menu__store-large">Google Play</span>
-                                </span>
-                            </a>
-                            <a class="landing-menu__store" href="#" aria-label="Descargar en App Store">
-                                <span class="material-symbols-outlined" aria-hidden="true">phone_iphone</span>
-                                <span>
-                                    <span class="landing-menu__store-small">Download on the</span>
-                                    <span class="landing-menu__store-large">App Store</span>
-                                </span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
         <main class="pt-16 md:pt-20">
             <section class="how-hero relative min-h-[560px] lg:min-h-[640px] overflow-hidden flex items-end">
                 <img src="img/pareja-viendo-celular.jpg" alt="Personas revisando una reserva de alquiler"
@@ -1063,42 +1000,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const menu = document.getElementById('landing-premium-menu');
-            const menuButton = document.querySelector('.menu-btn');
-            const closeTriggers = document.querySelectorAll('[data-menu-close]');
             const progress = document.getElementById('how-scroll-progress');
             const revealItems = document.querySelectorAll('.reveal');
-
-            const openMenu = () => {
-                if (!menu || !menuButton) return;
-                menu.classList.add('is-open');
-                document.body.classList.add('landing-menu-open');
-                menu.setAttribute('aria-hidden', 'false');
-                menuButton.classList.add('active');
-                menuButton.setAttribute('aria-expanded', 'true');
-            };
-
-            const closeMenu = () => {
-                if (!menu || !menuButton) return;
-                menu.classList.remove('is-open');
-                document.body.classList.remove('landing-menu-open');
-                menu.setAttribute('aria-hidden', 'true');
-                menuButton.classList.remove('active');
-                menuButton.setAttribute('aria-expanded', 'false');
-            };
-
-            menuButton?.addEventListener('click', () => {
-                if (menu.classList.contains('is-open')) {
-                    closeMenu();
-                    return;
-                }
-                openMenu();
-            });
-
-            closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeMenu));
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && menu.classList.contains('is-open')) closeMenu();
-            });
 
             const updateProgress = () => {
                 if (!progress) return;

@@ -4827,13 +4827,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Desktop navigation for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const landingNavs = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav, #landing-propietarios-view > nav, #landing-corredores-view > nav, body > nav'
+        '#landing-marketplace-view > nav, #landing-propietarios-view > nav, #landing-corredores-view > nav, #how-it-works-view > nav, #consultar-valor-view > nav, body > nav'
     ));
 
     if (!landingNavs.length) return;
 
     const visibleLanding = () => (
-        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #landing-corredores-view'))
+        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #landing-corredores-view, #how-it-works-view, #consultar-valor-view'))
             .find((section) => !section.classList.contains('hidden'))
     );
 
@@ -4876,56 +4876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    landingNavs.forEach((nav) => {
-        if (nav.querySelector('.landing-desktop-nav')) return;
 
-        const landing = nav.closest('section');
-        const isOwnersLanding = landing?.id === 'landing-propietarios-view';
-        const navInner = nav.firstElementChild;
-        const rightControls = navInner?.lastElementChild;
-        const legacyNav = nav.querySelector('.hidden.lg\\:flex');
-        const centeredCta = nav.querySelector('.absolute.left-1\\/2');
-        const iconGroup = rightControls?.querySelector('.hidden.md\\:flex');
-        const themeSwitch = rightControls?.querySelector('.theme-switch');
-
-        nav.classList.add('landing-nav-enhanced');
-        legacyNav?.classList.add('landing-legacy-nav');
-        centeredCta?.classList.add('landing-nav-primary-cta');
-        iconGroup?.classList.add('landing-desktop-hidden');
-
-        const roleHref = isOwnersLanding ? 'index.html' : 'propietarios.html';
-        const roleLabel = isOwnersLanding ? 'Soy Inquilino' : 'Soy Propietario';
-
-        const desktopNav = document.createElement('div');
-        desktopNav.className = 'landing-desktop-nav';
-        desktopNav.setAttribute('aria-label', 'Navegacion principal');
-        desktopNav.innerHTML = `
-            <a class="landing-desktop-nav__item" href="como-funciona.html">C&oacute;mo funciona</a>
-            <button class="landing-desktop-nav__item" type="button" data-desktop-nav-action="favorites">Favoritos</button>
-            <span class="landing-desktop-nav__auth" id="desktop-nav-logged-out">
-                <a class="landing-desktop-nav__auth-link" href="login.html?mode=register">Reg&iacute;strate</a>
-                <span class="landing-desktop-nav__auth-separator" aria-hidden="true">|</span>
-                <a class="landing-desktop-nav__auth-link" href="login.html?mode=login">Iniciar sesi&oacute;n</a>
-            </span>
-            <span class="landing-desktop-nav__auth hidden" id="desktop-nav-logged-in">
-                <a class="landing-desktop-nav__auth-link" href="administrador.html" style="font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">account_circle</span>
-                    Cuenta
-                </a>
-            </span>
-            <div class="landing-desktop-nav__dropdown">
-                <button class="landing-desktop-nav__dropdown-trigger" type="button" aria-expanded="false">
-                    Ayuda
-                    <span class="material-symbols-outlined landing-desktop-nav__chevron" aria-hidden="true">expand_more</span>
-                </button>
-                <div class="landing-desktop-nav__menu" role="menu">
-                    <button class="landing-desktop-nav__menu-item" type="button" role="menuitem" data-desktop-nav-action="contact-agent">Contactar a un agente</button>
-                    <button class="landing-desktop-nav__menu-item" type="button" role="menuitem" data-desktop-nav-action="help-guide">Gu&iacute;a de ayuda</button>
-                </div>
-        `;
-
-        rightControls?.prepend(desktopNav);
-    });
 
     document.addEventListener('click', (event) => {
         const dropdownTrigger = event.target.closest('.landing-desktop-nav__dropdown-trigger');
@@ -4957,7 +4908,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Premium hamburger menu for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const menuButtons = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn, body > nav .menu-btn'
+        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn, #how-it-works-view > nav .menu-btn, #consultar-valor-view > nav .menu-btn, body > nav .menu-btn'
     ));
 
     if (!menuButtons.length) return;
@@ -4994,8 +4945,74 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a class="landing-menu__auth-link" href="login.html?mode=login">Iniciar sesión</a>
                         </div>
                         <nav class="landing-menu__nav hidden" id="premium-menu-logged-in" aria-label="Cuenta">
-                            <a class="landing-menu__link" href="administrador.html">Administrar alquileres</a>
-                            <a class="landing-menu__link" href="#">Buscar Alquiler</a>
+                            <div class="landing-menu__accordion w-full">
+                                <button type="button" class="landing-menu__link flex items-center justify-between w-full text-left" id="admin-rentals-toggle">
+                                    <span class="flex-1 font-bold">Administrar alquileres</span>
+                                    <span class="w-px h-5 bg-zinc-300 dark:bg-zinc-700 mx-3"></span>
+                                    <span class="material-symbols-outlined transition-transform duration-200 text-primary dark:text-red-400" id="admin-rentals-icon">expand_more</span>
+                                </button>
+                                <div id="admin-rentals-wrapper" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
+                                    <div class="overflow-hidden">
+                                        <div id="admin-rentals-content" class="flex flex-col gap-6 px-4 py-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-b-xl border-t-0 border border-zinc-200 dark:border-zinc-800 mt-1 mb-2">
+                                            <div>
+                                                <h4 class="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-3">Tareas de gesti&oacute;n</h4>
+                                                <div class="flex flex-col gap-3">
+                                                    <a href="administrador.html" class="text-[15px] text-primary dark:text-red-400 hover:underline">Publicar propiedad en alquiler</a>
+                                                    <a href="propietarios.html" class="text-[15px] text-primary dark:text-red-400 hover:underline">Ver mis propiedades</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Leer mis mensajes</a>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-3">Herramientas para administradores</h4>
+                                                <div class="flex flex-col gap-3">
+                                                    <a href="consultar-valor.html" class="text-[15px] text-primary dark:text-red-400 hover:underline">Consultar valor de alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Evaluar inquilinos con postulaciones</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Crear y gestionar contratos</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Cobrar alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Aprender sobre c&oacute;mo alquilar</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Buscar en centro de ayuda</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Explorar Administrador de Alquileres</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="landing-menu__accordion w-full mt-2">
+                                <button type="button" class="landing-menu__link flex items-center justify-between w-full text-left" id="search-rentals-toggle">
+                                    <span class="flex-1 font-bold">Buscar Alquiler</span>
+                                    <span class="w-px h-5 bg-zinc-300 dark:bg-zinc-700 mx-3"></span>
+                                    <span class="material-symbols-outlined transition-transform duration-200 text-primary dark:text-red-400" id="search-rentals-icon">expand_more</span>
+                                </button>
+                                <div id="search-rentals-wrapper" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
+                                    <div class="overflow-hidden">
+                                        <div id="search-rentals-content" class="flex flex-col gap-6 px-4 py-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-b-xl border-t-0 border border-zinc-200 dark:border-zinc-800 mt-1 mb-2">
+                                            <div>
+                                                <h4 class="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-3">Listados de alquiler</h4>
+                                                <div class="flex flex-col gap-3">
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Buscar departamentos en alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Buscar casas en alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Buscar todos los alquileres</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Explorar edificios de alquiler</a>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-3">Herramientas para inquilinos</h4>
+                                                <div class="flex flex-col gap-3">
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Estimar cu&aacute;nto pod&eacute;s pagar</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Ver tus postulaciones</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Gestionar tus visitas</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Pagar tu alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Construir tu historial crediticio</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Obtener seguro de alquiler</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Explorar programas de ayuda</a>
+                                                    <a href="#" class="text-[15px] text-primary dark:text-red-400 hover:underline">Aprender m&aacute;s sobre alquilar</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <a class="landing-menu__link" href="#">Encontra un corredor inmobiliario</a>
                         </nav>
                         <div class="landing-menu__divider"></div>
@@ -5035,12 +5052,54 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(menu);
 
+    const adminToggle = menu.querySelector('#admin-rentals-toggle');
+    const adminWrapper = menu.querySelector('#admin-rentals-wrapper');
+    const adminIcon = menu.querySelector('#admin-rentals-icon');
+
+    if (adminToggle && adminWrapper && adminIcon) {
+        adminToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (adminWrapper.classList.contains('grid-rows-[0fr]')) {
+                adminWrapper.classList.remove('grid-rows-[0fr]', 'opacity-0');
+                adminWrapper.classList.add('grid-rows-[1fr]', 'opacity-100');
+            } else {
+                adminWrapper.classList.remove('grid-rows-[1fr]', 'opacity-100');
+                adminWrapper.classList.add('grid-rows-[0fr]', 'opacity-0');
+            }
+            
+            adminIcon.classList.toggle('rotate-180');
+        });
+    }
+
+    const searchToggle = menu.querySelector('#search-rentals-toggle');
+    const searchWrapper = menu.querySelector('#search-rentals-wrapper');
+    const searchIcon = menu.querySelector('#search-rentals-icon');
+
+    if (searchToggle && searchWrapper && searchIcon) {
+        searchToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (searchWrapper.classList.contains('grid-rows-[0fr]')) {
+                searchWrapper.classList.remove('grid-rows-[0fr]', 'opacity-0');
+                searchWrapper.classList.add('grid-rows-[1fr]', 'opacity-100');
+            } else {
+                searchWrapper.classList.remove('grid-rows-[1fr]', 'opacity-100');
+                searchWrapper.classList.add('grid-rows-[0fr]', 'opacity-0');
+            }
+            
+            searchIcon.classList.toggle('rotate-180');
+        });
+    }
+
     const closeButton = menu.querySelector('.landing-menu__close');
     let activeButton = null;
     let closeTimer = null;
 
     const visibleLanding = () => (
-        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view'))
+        Array.from(document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #landing-corredores-view, #how-it-works-view, #consultar-valor-view'))
             .find((section) => !section.classList.contains('hidden'))
     );
 
