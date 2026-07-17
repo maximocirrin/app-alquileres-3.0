@@ -300,11 +300,175 @@ const App = {
             }
         };
 
+        const handleBackStepMobile = (e) => {
+            e.preventDefault();
+
+            const stepOperacion = document.getElementById('step-operacion');
+            const stepUbicacion = document.getElementById('step-ubicacion');
+            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+            const step1Container = document.getElementById('wizard-step-1-container');
+            const step2Container = document.getElementById('wizard-step-2-container');
+            const step3Container = document.getElementById('wizard-step-3-container');
+            const step4Container = document.getElementById('wizard-step-4-container');
+            const tabOperacion = document.getElementById('tab-operacion');
+            const tabUbicacion = document.getElementById('tab-ubicacion');
+            const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+            const pasoSubtitle = document.getElementById('paso-subtitle');
+            const publishMainTitle = document.getElementById('publish-main-title');
+            
+            // Step 4 -> Step 3
+            if (step4Container && !step4Container.classList.contains('hidden')) {
+                step4Container.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+                step4Container.classList.add('opacity-0', 'translate-y-8', 'scale-95');
+                setTimeout(() => {
+                    step4Container.classList.add('hidden');
+                    step4Container.style.height = '0';
+                    step3Container.classList.remove('hidden');
+                    step3Container.style.height = 'auto';
+                    setTimeout(() => {
+                        step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95');
+                        step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    }, 50);
+                }, 300);
+                
+                const pStep3 = document.getElementById('progress-step-3');
+                const pStep4 = document.getElementById('progress-step-4');
+                const pLine3 = document.getElementById('progress-line-3');
+                if (pStep3) {
+                    pStep3.classList.remove('opacity-50');
+                    pStep3.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">3</div>
+                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Condiciones</span>
+                    `;
+                }
+                if (pStep4) {
+                    pStep4.classList.add('opacity-50');
+                    pStep4.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-outline-variant/30 dark:border-white/5">4</div>
+                        <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Publicar</span>
+                    `;
+                }
+                if (pLine3) pLine3.className = 'w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300';
+                
+                document.querySelectorAll('button[form="form-planes"]').forEach(btn => {
+                    btn.setAttribute('form', 'form-extras');
+                });
+                return;
+            }
+
+            // Step 3 -> Step 2
+            if (step3Container && !step3Container.classList.contains('hidden')) {
+                step3Container.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+                step3Container.classList.add('opacity-0', 'translate-y-8', 'scale-95');
+                setTimeout(() => {
+                    step3Container.classList.add('hidden');
+                    step3Container.style.height = '0';
+                    step2Container.classList.remove('hidden');
+                    step2Container.style.height = 'auto';
+                    setTimeout(() => {
+                        step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95');
+                        step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    }, 50);
+                }, 300);
+                
+                const pStep2 = document.getElementById('progress-step-2');
+                const pStep3 = document.getElementById('progress-step-3');
+                const pLine2 = document.getElementById('progress-line-2');
+                if (pStep2) {
+                    pStep2.classList.remove('opacity-50');
+                    pStep2.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">2</div>
+                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
+                    `;
+                }
+                if (pStep3) {
+                    pStep3.classList.add('opacity-50');
+                    pStep3.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-outline-variant/30 dark:border-white/5">3</div>
+                        <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Condiciones</span>
+                    `;
+                }
+                if (pLine2) pLine2.className = 'w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300';
+
+                document.querySelectorAll('button[form="form-extras"]').forEach(btn => {
+                    btn.setAttribute('form', 'form-multimedia');
+                });
+                return;
+            }
+
+            // Step 2 -> Step 1
+            if (step2Container && !step2Container.classList.contains('hidden')) {
+                step2Container.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+                step2Container.classList.add('opacity-0', 'translate-y-8', 'scale-95');
+                setTimeout(() => {
+                    step2Container.classList.add('hidden');
+                    step2Container.style.height = '0';
+                    step1Container.classList.remove('hidden', 'opacity-0', 'scale-95');
+                    step1Container.style.height = 'auto';
+                    step1Container.classList.add('opacity-100', 'scale-100');
+                    if (publishMainTitle) publishMainTitle.style.opacity = '1';
+                    if (pasoSubtitle) pasoSubtitle.style.opacity = '1';
+                }, 300);
+                
+                const pStep1 = document.getElementById('progress-step-1');
+                const pStep2 = document.getElementById('progress-step-2');
+                const pLine1 = document.getElementById('progress-line-1');
+                if (pStep1) {
+                    pStep1.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
+                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
+                    `;
+                }
+                if (pStep2) {
+                    pStep2.classList.add('opacity-50');
+                    pStep2.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-outline-variant/30 dark:border-white/5">2</div>
+                        <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
+                    `;
+                }
+                if (pLine1) pLine1.className = 'w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300';
+
+                document.querySelectorAll('button[form="form-multimedia"]').forEach(btn => {
+                    btn.setAttribute('form', 'form-caracteristicas');
+                });
+                return;
+            }
+
+            // Step 1: Características -> Ubicación
+            if (stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden')) {
+                stepCaracteristicas.classList.add('hidden');
+                stepUbicacion.classList.remove('hidden');
+                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
+                document.querySelectorAll('button[form="form-caracteristicas"]').forEach(btn => {
+                    btn.setAttribute('form', 'form-ubicacion');
+                });
+                return;
+            }
+
+            // Step 1: Ubicación -> Operación
+            if (stepUbicacion && !stepUbicacion.classList.contains('hidden')) {
+                stepUbicacion.classList.add('hidden');
+                stepOperacion.classList.remove('hidden');
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
+                document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
+                    btn.setAttribute('form', 'form-principales');
+                });
+                return;
+            }
+
+            // Very first step (operacion), close wizard
+            handleBackFromPublish(e);
+        };
+
         if (btnBackFromPublish) {
             btnBackFromPublish.addEventListener('click', handleBackFromPublish);
         }
         if (btnBackMobile) {
-            btnBackMobile.addEventListener('click', handleBackFromPublish);
+            btnBackMobile.addEventListener('click', handleBackStepMobile);
         }
 
         // Form 'Principales' Validation & Submit Interceptor
@@ -4908,7 +5072,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Premium hamburger menu for landing pages
 document.addEventListener('DOMContentLoaded', () => {
     const menuButtons = Array.from(document.querySelectorAll(
-        '#landing-marketplace-view > nav .menu-btn, #landing-propietarios-view > nav .menu-btn, #landing-corredores-view > nav .menu-btn, #how-it-works-view > nav .menu-btn, #consultar-valor-view > nav .menu-btn, body > nav .menu-btn'
+        'nav .menu-btn'
     ));
 
     if (!menuButtons.length) return;

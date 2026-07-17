@@ -100,21 +100,19 @@
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Tipo
                                             de operación *</label>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <label class="cursor-pointer relative">
-                                                <input checked="" class="peer sr-only" name="operacion" type="radio" />
+                                            <label class="cursor-not-allowed relative block h-full opacity-60">
+                                                <input disabled class="peer sr-only" name="operacion" type="radio" value="venta" />
                                                 <div
-                                                    class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
+                                                    class="h-full p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent transition-all text-center flex flex-col items-center justify-center gap-1">
                                                     <span
-                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Venta</span>
+                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1]">Venta</span>
+                                                    <span class="text-[10px] uppercase tracking-wider font-bold text-primary dark:text-red-500 bg-primary/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">Próximamente</span>
                                                 </div>
-                                                <span
-                                                    class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity"
-                                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                             </label>
-                                            <label class="cursor-pointer relative">
-                                                <input class="peer sr-only" name="operacion" type="radio" />
+                                            <label class="cursor-pointer relative block h-full">
+                                                <input checked="" class="peer sr-only" name="operacion" type="radio" value="alquiler" />
                                                 <div
-                                                    class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
+                                                    class="h-full p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center flex items-center justify-center">
                                                     <span
                                                         class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Alquiler</span>
                                                 </div>
@@ -122,16 +120,14 @@
                                                     class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity"
                                                     style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                             </label>
-                                            <label class="cursor-pointer relative">
-                                                <input class="peer sr-only" name="operacion" type="radio" />
+                                            <label class="cursor-not-allowed relative block h-full opacity-60">
+                                                <input disabled class="peer sr-only" name="operacion" type="radio" value="temporada" />
                                                 <div
-                                                    class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
+                                                    class="h-full p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent transition-all text-center flex flex-col items-center justify-center gap-1">
                                                     <span
-                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Temporada</span>
+                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1]">Temporada</span>
+                                                    <span class="text-[10px] uppercase tracking-wider font-bold text-primary dark:text-red-500 bg-primary/10 dark:bg-red-500/10 px-2 py-0.5 rounded-full">Próximamente</span>
                                                 </div>
-                                                <span
-                                                    class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity"
-                                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                             </label>
                                         </div>
                                     </div>
@@ -278,47 +274,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- ¿Cómo querés mostrar tu ubicación? -->
-                                    <div class="space-y-4 pt-4 border-t border-outline-variant/30 dark:border-white/5">
-                                        <label
-                                            class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">¿Cómo
-                                            querés mostrar tu ubicación?</label>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <label class="cursor-pointer relative">
-                                                <input checked="" class="peer sr-only" name="precision" type="radio"
-                                                    value="exacta" />
-                                                <div
-                                                    class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
-                                                    <span
-                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Exacta</span>
-                                                </div>
-                                                <span
-                                                    class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity"
-                                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                            </label>
-                                            <label class="cursor-pointer relative">
-                                                <input class="peer sr-only" name="precision" type="radio"
-                                                    value="aproximada" />
-                                                <div
-                                                    class="p-4 rounded-lg bg-surface-container-high dark:bg-[#282828] border-2 border-transparent peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-surface-container-lowest dark:peer-checked:bg-[#0c0c0e] transition-all text-center">
-                                                    <span
-                                                        class="font-headline font-bold text-on-background dark:text-[#f1f1f1] peer-checked:text-primary dark:peer-checked:text-red-500">Aproximada</span>
-                                                </div>
-                                                <span
-                                                    class="absolute top-2 right-2 material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity"
-                                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                            </label>
-                                        </div>
-                                    </div>
 
-                                    <!-- Banner Info -->
-                                    <div
-                                        class="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 rounded-r-lg mt-6 flex items-start gap-4">
-                                        <span class="material-symbols-outlined text-blue-500 mt-0.5">info</span>
-                                        <p class="font-body text-sm font-medium text-slate-700 dark:text-[#c7c6c6]">
-                                            Recordá que al seleccionar "Aproximada" tu propiedad no aparecerá en el mapa
-                                            de búsqueda.</p>
-                                    </div>
 
                                     <!-- Google Map Interactive -->
                                     <div class="mt-8">
@@ -2151,7 +2107,7 @@
             <button id="btn-back-mobile"
                 class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[4rem]">
                 <span class="material-symbols-outlined text-[22px]">arrow_back</span>
-                <span class="font-inter text-[10px] font-medium mt-1">Inicio</span>
+                <span class="font-inter text-[10px] font-medium mt-1">Atrás</span>
             </button>
             <button
                 class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[5rem]">
