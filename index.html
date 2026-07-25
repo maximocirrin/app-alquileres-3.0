@@ -965,6 +965,247 @@
                 </div>
             </section>
 
+            <!-- Marketplace Featured Properties Section -->
+            <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 pb-6 animate-on-scroll" id="landing-featured-properties-section">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 bg-primary/10 dark:bg-red-500/20 text-primary dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+                            <span class="material-symbols-outlined text-sm">home_work</span>
+                            Marketplace
+                        </span>
+                        <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
+                            Propiedades destacadas en alquiler
+                        </h2>
+                        <p class="font-body text-zinc-600 dark:text-zinc-400 text-base sm:text-lg mt-2">
+                            Explorá viviendas verificadas listas para postularte online.
+                        </p>
+                    </div>
+                    <a href="buscar.html" class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-5 py-3 rounded-full font-body font-bold text-sm transition-all shadow-sm shrink-0 active:scale-[0.98]">
+                        <span>Ver todas en el Marketplace</span>
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </a>
+                </div>
+
+                <!-- Horizontal scrolling row of property cards -->
+                <div class="relative group/carousel">
+                    <!-- Carousel Controls for Desktop -->
+                    <button type="button" id="marketplace-scroll-left" class="hidden sm:flex absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 shadow-xl items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-0" aria-label="Anterior">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button type="button" id="marketplace-scroll-right" class="hidden sm:flex absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 shadow-xl items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover/carousel:opacity-100" aria-label="Siguiente">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+
+                    <!-- Scroll container -->
+                    <div id="landing-featured-properties-grid" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', async () => {
+                    const grid = document.getElementById('landing-featured-properties-grid');
+                    if (!grid) return;
+
+                    const fallbackProperties = [
+                        {
+                            title: 'Departamento luminoso con balcón',
+                            address: 'Palermo Soho, Buenos Aires',
+                            province: 'Ciudad Autónoma de Buenos Aires',
+                            price: 420000,
+                            image: 'img/pisos-inquilinos.jpg',
+                            images: ['img/pisos-inquilinos.jpg'],
+                            type: 'apartment',
+                            tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
+                            note: 'Contrato digital, garantía online y gestión directa.',
+                            pet: true,
+                            verified: true,
+                            featured: 'Visita disponible'
+                        },
+                        {
+                            title: 'Estudio amoblado cerca del metro',
+                            address: 'Recoleta, Buenos Aires',
+                            province: 'Ciudad Autónoma de Buenos Aires',
+                            price: 380000,
+                            image: 'img/estudios-inquilinos.jpg',
+                            images: ['img/estudios-inquilinos.jpg'],
+                            type: 'studio',
+                            tags: ['Estudio', 'Amoblado', 'Amenities'],
+                            note: 'Ideal para mudanza rápida con firma remota.',
+                            pet: false,
+                            verified: true,
+                            featured: 'Nuevo'
+                        },
+                        {
+                            title: 'Piso familiar con cochera',
+                            address: 'Belgrano, Buenos Aires',
+                            province: 'Ciudad Autónoma de Buenos Aires',
+                            price: 690000,
+                            image: 'img/residencias-inquilinos.jpg',
+                            images: ['img/residencias-inquilinos.jpg'],
+                            type: 'apartment',
+                            tags: ['3 dormitorios', '2 baños', 'Cochera'],
+                            note: 'Publicación validada por propietario.',
+                            pet: true,
+                            verified: true,
+                            featured: 'Premium'
+                        },
+                        {
+                            title: 'Departamento en barrio residencial',
+                            address: 'Godoy Cruz, Mendoza',
+                            province: 'Mendoza',
+                            price: 455000,
+                            image: 'img/mendoza-inquilinos.jpg',
+                            images: ['img/mendoza-inquilinos.jpg'],
+                            type: 'apartment',
+                            tags: ['2 dormitorios', 'Patio', 'Mascotas'],
+                            note: 'Apto mascotas y listo para iniciar solicitud.',
+                            pet: true,
+                            verified: true,
+                            featured: 'Apto mascotas'
+                        },
+                        {
+                            title: 'Dúplex con terraza privada',
+                            address: 'Rosario Centro, Santa Fe',
+                            province: 'Santa Fe',
+                            price: 570000,
+                            image: 'img/hero-marketplace.jpg',
+                            images: ['img/hero-marketplace.jpg'],
+                            type: 'apartment',
+                            tags: ['Dúplex', 'Terraza', '2 baños'],
+                            note: 'Para estadías medias con onboarding digital.',
+                            pet: true,
+                            verified: true,
+                            featured: 'Alta demanda'
+                        }
+                    ];
+
+                    let displayProperties = [...fallbackProperties];
+
+                    try {
+                        if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
+                            const dbProps = await window.DataManager.getPublicMarketplaceProperties(10);
+                            if (dbProps && dbProps.length > 0) {
+                                const formattedDb = dbProps.map(p => {
+                                    let extraInfo = {};
+                                    if (p.description && p.description.includes('Detalles: ')) {
+                                        try { extraInfo = JSON.parse(p.description.split('Detalles: ')[1]); } catch(e){}
+                                    }
+                                    let fotos = p.images || [];
+                                    if (p.propiedad_imagenes && p.propiedad_imagenes.length > 0) {
+                                        fotos = p.propiedad_imagenes.sort((a,b) => a.orden - b.orden).map(img => img.url);
+                                    }
+                                    return {
+                                        id: p.id,
+                                        title: p.title || 'Propiedad en alquiler',
+                                        address: p.address || 'Mendoza, Argentina',
+                                        province: extraInfo.provincia || '',
+                                        price: p.price || 0,
+                                        image: fotos[0] || 'img/hero-marketplace.jpg',
+                                        images: fotos,
+                                        type: extraInfo.tipo || 'apartment',
+                                        tags: [
+                                            extraInfo.dormitorios ? `${extraInfo.dormitorios} dormitorios` : null,
+                                            extraInfo.banos ? `${extraInfo.banos} baños` : null,
+                                            'Verificado'
+                                        ].filter(Boolean),
+                                        note: p.description ? p.description.split('Detalles: ')[0] : '',
+                                        pet: extraInfo.mascotas || false,
+                                        verified: true,
+                                        featured: (extraInfo.operacion || 'Alquiler').toUpperCase(),
+                                        propiedad_imagenes: p.propiedad_imagenes,
+                                        description: p.description
+                                    };
+                                });
+                                displayProperties = [...formattedDb, ...fallbackProperties];
+                            }
+                        }
+                    } catch(e) {
+                        console.warn("Could not fetch DB properties for landing featured row:", e);
+                    }
+
+                    grid.innerHTML = '';
+                    displayProperties.slice(0, 8).forEach(prop => {
+                        const priceFormatted = `$${Math.round(prop.price / 1000)}k / mes`;
+                        const card = document.createElement('article');
+                        card.className = 'snap-start shrink-0 w-[280px] sm:w-[320px] md:w-[340px] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer';
+
+                        card.onclick = (e) => {
+                            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                window.openMarketplacePropertyDetailModal(prop);
+                            } else {
+                                window.location.href = 'buscar.html';
+                            }
+                        };
+
+                        const photosCount = prop.images ? prop.images.length : 1;
+
+                        card.innerHTML = `
+                            <div>
+                                <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-4 bg-zinc-100 dark:bg-zinc-800">
+                                    <img src="${prop.image}" alt="${prop.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <span class="absolute top-3 left-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md">
+                                        ${prop.featured || 'Destacado'}
+                                    </span>
+                                    ${prop.verified ? `
+                                        <span class="absolute top-3 right-3 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
+                                            <span class="material-symbols-outlined text-xs">verified</span>
+                                            Verificado
+                                        </span>
+                                    ` : ''}
+                                    <div class="absolute bottom-3 left-3 bg-zinc-950/80 backdrop-blur-md text-white text-sm font-extrabold px-3 py-1 rounded-lg border border-white/10 shadow-lg">
+                                        ${priceFormatted}
+                                    </div>
+                                    ${photosCount > 1 ? `
+                                        <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">photo_camera</span>
+                                            ${photosCount}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <h3 class="font-headline text-base sm:text-lg font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                    ${prop.title}
+                                </h3>
+                                <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
+                                    <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
+                                    ${prop.address}
+                                </p>
+                                <div class="flex flex-wrap gap-1.5 mb-4">
+                                    ${prop.tags.slice(0, 3).map(tag => `
+                                        <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
+                                            ${tag}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <button type="button" class="w-full bg-zinc-100 dark:bg-zinc-800/80 group-hover:bg-primary group-hover:text-white dark:group-hover:bg-red-700 text-zinc-800 dark:text-zinc-200 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                                <span class="material-symbols-outlined text-base">visibility</span>
+                                Ver detalle y postularse
+                            </button>
+                        `;
+
+                        grid.appendChild(card);
+                    });
+
+                    const leftBtn = document.getElementById('marketplace-scroll-left');
+                    const rightBtn = document.getElementById('marketplace-scroll-right');
+                    if (leftBtn && rightBtn && grid) {
+                        leftBtn.addEventListener('click', () => {
+                            grid.scrollBy({ left: -340, behavior: 'smooth' });
+                        });
+                        rightBtn.addEventListener('click', () => {
+                            grid.scrollBy({ left: 340, behavior: 'smooth' });
+                        });
+                    }
+
+                    if (window.marketplaceObserver) {
+                        const newSec = document.getElementById('landing-featured-properties-section');
+                        if (newSec) window.marketplaceObserver.observe(newSec);
+                    }
+                });
+            </script>
+
             <!-- Discovery & Filter Section -->
             <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-12 lg:py-16">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
@@ -1679,7 +1920,7 @@
             class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body">
             <div class="max-w-[1580px] mx-auto">
                 <div
-                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
                     <!-- Col 1: Hábitat -->
                     <div>
                         <h3
@@ -1782,33 +2023,7 @@
                         </div>
                     </div>
 
-                    <!-- Col 5: Descarga la app -->
-                    <div>
-                        <h3
-                            class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                            Descarga la app</h3>
-                        <div class="flex flex-col gap-2.5">
-                            <a href="#"
-                                class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
-                                <span class="material-symbols-outlined text-2xl">play_arrow</span>
-                                <span class="leading-tight text-left">
-                                    <span class="block text-[8px] uppercase tracking-wide text-white/75">Get it
-                                        on</span>
-                                    <span class="block text-sm font-bold">Google Play</span>
-                                </span>
-                            </a>
-                            <a href="#"
-                                class="inline-flex w-[160px] items-center gap-3 rounded-lg bg-black px-3.5 py-2 text-white shadow-sm ring-1 ring-white/10 transition-transform hover:-translate-y-0.5">
-                                <span class="material-symbols-outlined text-2xl">phone_iphone</span>
-                                <span class="leading-tight text-left">
-                                    <span class="block text-[8px] tracking-wide text-white/75">Download on the</span>
-                                    <span class="block text-sm font-bold">App Store</span>
-                                </span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Col 6: Síguenos -->
+                    <!-- Col 5: Síguenos -->
                     <div>
                         <h3
                             class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">

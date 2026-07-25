@@ -6241,26 +6241,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="landing-menu__contact landing-menu__text-btn" type="button" data-menu-action="contact">Contáctanos</button>
                     </div>
                 </div>
-
-                <div class="landing-menu__download">
-                    <div class="landing-menu__download-title">Descarga la app</div>
-                    <div class="landing-menu__store-row">
-                        <a class="landing-menu__store" href="#" aria-label="Descargar en Google Play">
-                            <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                            <span>
-                                <span class="landing-menu__store-small">GET IT ON</span>
-                                <span class="landing-menu__store-large">Google Play</span>
-                            </span>
-                        </a>
-                        <a class="landing-menu__store" href="#" aria-label="Descargar en App Store">
-                            <span class="material-symbols-outlined" aria-hidden="true">phone_iphone</span>
-                            <span>
-                                <span class="landing-menu__store-small">Download on the</span>
-                                <span class="landing-menu__store-large">App Store</span>
-                            </span>
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     `;
