@@ -537,7 +537,7 @@ label {
     font-weight: 500;
 }
 
-input, select {
+input, select, textarea {
     width: 100%;
     max-width: 100%;
     padding: 14px;
@@ -547,6 +547,15 @@ input, select {
     font-size: 1rem;
     transition: all 0.2s;
     color: var(--foreground);
+}
+
+/* Evitar zoom automático en dispositivos móviles (iOS/Android) al hacer foco en inputs/selects */
+@media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }
 
 select option {
@@ -1007,6 +1016,45 @@ input:focus, select:focus {
     .details-body {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* Property Details Modern Modal Specific Overrides */
+#property-details-modal .modal-content {
+    max-width: 900px !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 92vh !important;
+    border-radius: 1.5rem !important;
+}
+
+#property-details-modal .details-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+}
+
+#property-details-modal .calendar-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#property-details-modal .calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    width: 100% !important;
+}
+
+#property-details-modal .calendar-day {
+    aspect-ratio: 1 !important;
+    font-size: 0.75rem !important;
+    padding: 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .details-info p {

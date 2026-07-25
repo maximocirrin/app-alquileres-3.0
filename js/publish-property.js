@@ -486,6 +486,40 @@
                                         </div>
                                     </div>
 
+                                     <!-- Equipamiento / Amoblado -->
+                                     <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
+                                         <label
+                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Equipamiento / Amoblado</label>
+                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                             <label class="cursor-pointer relative block">
+                                                 <input type="radio" name="amoblado" value="sin-amoblar" class="peer sr-only" checked>
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">chair_alt</span>
+                                                     <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Sin amoblar</span>
+                                                     <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Sin muebles incluidos</span>
+                                                 </div>
+                                             </label>
+
+                                             <label class="cursor-pointer relative block">
+                                                 <input type="radio" name="amoblado" value="semiamoblado" class="peer sr-only">
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">weekend</span>
+                                                     <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Semiamoblado</span>
+                                                     <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Muebles básicos integrados</span>
+                                                 </div>
+                                             </label>
+
+                                             <label class="cursor-pointer relative block">
+                                                 <input type="radio" name="amoblado" value="totalmente-amoblado" class="peer sr-only">
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">single_bed</span>
+                                                     <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Totalmente amoblado</span>
+                                                     <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Listo para mudarse con todo</span>
+                                                 </div>
+                                             </label>
+                                         </div>
+                                     </div>
+
                                     <!-- Precio -->
                                     <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
                                         <label
@@ -624,6 +658,7 @@
                                     <div id="preview-fotos-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 empty:hidden">
                                         <!-- Las previews de fotos se insertarán aquí dinámicamente -->
                                     </div>
+                                    <div id="fotos-error-msg" class="hidden bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl p-3.5 mt-4 text-sm font-semibold flex items-center gap-2"></div>
                                 </div>
 
                                 <!-- Sección Video -->
@@ -1244,6 +1279,50 @@
                                                                     <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Oeste</span>
                                                                 </label>
                                                             </div>
+                                                            <div class="checkbox-wrapper w-max">
+                                                                <input id="ori-noreste" name="orientacion-noreste" type="checkbox">
+                                                                <label class="terms-label" for="ori-noreste">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                                                        <mask fill="white" id="path-1-inside-1_noreste"><rect height="200" width="200" rx="30"></rect></mask>
+                                                                        <rect mask="url(#path-1-inside-1_noreste)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                                                        <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                                                    </svg>
+                                                                    <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Noreste</span>
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox-wrapper w-max">
+                                                                <input id="ori-noroeste" name="orientacion-noroeste" type="checkbox">
+                                                                <label class="terms-label" for="ori-noroeste">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                                                        <mask fill="white" id="path-1-inside-1_noroeste"><rect height="200" width="200" rx="30"></rect></mask>
+                                                                        <rect mask="url(#path-1-inside-1_noroeste)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                                                        <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                                                    </svg>
+                                                                    <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Noroeste</span>
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox-wrapper w-max">
+                                                                <input id="ori-sudeste" name="orientacion-sudeste" type="checkbox">
+                                                                <label class="terms-label" for="ori-sudeste">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                                                        <mask fill="white" id="path-1-inside-1_sudeste"><rect height="200" width="200" rx="30"></rect></mask>
+                                                                        <rect mask="url(#path-1-inside-1_sudeste)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                                                        <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                                                    </svg>
+                                                                    <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sudeste</span>
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox-wrapper w-max">
+                                                                <input id="ori-sudoeste" name="orientacion-sudoeste" type="checkbox">
+                                                                <label class="terms-label" for="ori-sudoeste">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                                                        <mask fill="white" id="path-1-inside-1_sudoeste"><rect height="200" width="200" rx="30"></rect></mask>
+                                                                        <rect mask="url(#path-1-inside-1_sudoeste)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
+                                                                        <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
+                                                                    </svg>
+                                                                    <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Sudoeste</span>
+                                                                </label>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -1465,46 +1544,58 @@
                                             </div>
                                         </div>
                                     </div>
+                                    </div>
                                 </div>
 
-                                <!-- Card 3: Agenda de Visitas a la Propiedad (Tours) -->
-                                <div class="bg-surface-container/50 dark:bg-[#141417]/80 rounded-2xl p-6 md:p-8 border border-outline-variant/20 dark:border-white/10 space-y-6">
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Paso 5: Agenda de Visitas Presenciales (Tours) -->
+                    <div id="wizard-step-5-container"
+                        class="hidden opacity-0 translate-y-8 scale-95 h-0 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform origin-top w-full max-w-4xl mx-auto pb-24 md:pb-8">
+                        <div
+                            class="bg-surface/50 dark:bg-[#121212]/50 backdrop-blur-md rounded-3xl p-4 sm:p-6 md:p-12 border border-outline-variant/30 dark:border-white/5 shadow-2xl">
+                            <form id="form-visitas" class="space-y-8 md:space-y-10">
+
+                                <!-- Card Principal: Agenda de Visitas Presenciales -->
+                                <div class="bg-surface-container/50 dark:bg-[#141417]/80 rounded-2xl p-4 sm:p-6 md:p-8 border border-outline-variant/20 dark:border-white/10 space-y-6">
                                     
                                     <!-- Encabezado con Icono y Toggle Principal -->
                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-outline-variant/20 dark:border-white/10">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-12 h-12 rounded-xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center shrink-0">
-                                                <span class="material-symbols-outlined text-2xl">calendar_month</span>
+                                        <div class="flex items-center gap-3.5 sm:gap-4">
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-xl sm:text-2xl">calendar_month</span>
                                             </div>
                                             <div>
-                                                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Agenda de Visitas Presenciales</h3>
-                                                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm">Permití a los interesados agendar visitas a tu propiedad directamente desde Hábitat</p>
+                                                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base sm:text-lg md:text-xl">Agenda de Visitas y Tours Presenciales</h3>
+                                                <p class="font-body text-secondary dark:text-[#c7c6c6] text-xs sm:text-sm">¿Querés usar Hábitat para agendar tours y mostrar la propiedad?</p>
                                             </div>
                                         </div>
 
                                         <!-- Switch: Usar agenda de visitas -->
-                                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                        <label class="relative inline-flex items-center cursor-pointer shrink-0 self-start sm:self-center">
                                             <input type="checkbox" id="usar-agenda-visitas" class="sr-only peer" checked>
-                                            <div class="w-14 h-8 bg-surface-container-high dark:bg-[#282828] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary dark:peer-checked:bg-red-500"></div>
-                                            <span class="ml-3 font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]" id="usar-agenda-label">Sí, activar agenda</span>
+                                            <div class="w-12 sm:w-14 h-7 sm:h-8 bg-surface-container-high dark:bg-[#282828] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 sm:after:h-6 after:w-5 sm:after:w-6 after:transition-all peer-checked:bg-primary dark:peer-checked:bg-red-500"></div>
+                                            <span class="ml-3 font-headline font-bold text-xs sm:text-sm text-on-background dark:text-[#f1f1f1]" id="usar-agenda-label">Sí, activar agenda</span>
                                         </label>
                                     </div>
 
                                     <!-- Detalle de Visitas -->
-                                    <div id="visitas-detalles-container" class="space-y-8 transition-all duration-300">
+                                    <div id="visitas-detalles-container" class="space-y-6 sm:space-y-8 transition-all duration-300">
                                         
                                         <!-- Modalidad de Agendamiento -->
                                         <div class="space-y-4">
                                             <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-secondary dark:text-[#a0a0a0]">Modalidad de Agendamiento</h4>
                                             
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <!-- Agendar Instantáneamente -->
                                                 <label class="cursor-pointer relative block">
                                                     <input type="radio" name="modalidad-visitas" value="instantaneo" class="peer sr-only">
-                                                    <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all space-y-2 h-full">
+                                                    <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all space-y-2 h-full">
                                                         <div class="flex items-center justify-between">
-                                                            <div class="flex items-center gap-2 text-primary dark:text-red-500 font-headline font-bold text-base">
-                                                                <span class="material-symbols-outlined text-xl">bolt</span>
+                                                            <div class="flex items-center gap-2 text-primary dark:text-red-500 font-headline font-bold text-sm sm:text-base">
+                                                                <span class="material-symbols-outlined text-lg sm:text-xl">bolt</span>
                                                                 Agendar instantáneamente
                                                             </div>
                                                             <span class="material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity">check_circle</span>
@@ -1518,10 +1609,10 @@
                                                 <!-- Confirmar para agendar -->
                                                 <label class="cursor-pointer relative block">
                                                     <input type="radio" name="modalidad-visitas" value="confirmar" class="peer sr-only" checked>
-                                                    <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all space-y-2 h-full">
+                                                    <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all space-y-2 h-full">
                                                         <div class="flex items-center justify-between">
-                                                            <div class="flex items-center gap-2 text-primary dark:text-red-500 font-headline font-bold text-base">
-                                                                <span class="material-symbols-outlined text-xl">mark_email_read</span>
+                                                            <div class="flex items-center gap-2 text-primary dark:text-red-500 font-headline font-bold text-sm sm:text-base">
+                                                                <span class="material-symbols-outlined text-lg sm:text-xl">mark_email_read</span>
                                                                 Confirmar para agendar
                                                             </div>
                                                             <span class="material-symbols-outlined text-primary dark:text-red-500 opacity-0 peer-checked:opacity-100 transition-opacity">check_circle</span>

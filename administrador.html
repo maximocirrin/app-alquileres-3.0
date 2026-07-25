@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Administrador | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2129,37 +2129,64 @@
                 <script src="js/publish-property.js"></script>
 
                 <!-- Property Details Modal with Calendar -->
-                <div id="property-details-modal" class="modal hidden">
-                    <div class="modal-content glass-card" style="max-width: 800px;">
-                        <header class="modal-header">
-                            <h2 id="details-title">Detalles de Propiedad</h2>
-                            <button class="close-modal" id="close-details-modal"><span
-                                    class="material-symbols-rounded">close</span></button>
-                        </header>
-                        <div class="details-body">
-                            <div class="details-info" id="details-info-container">
-                                <!-- Info injected here -->
+                <div id="property-details-modal" class="modal hidden fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md transition-all duration-300">
+                    <div class="modal-content bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-0 text-on-background dark:text-zinc-100">
+                        <!-- Header Container -->
+                        <header class="sticky top-0 z-20 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-zinc-200/60 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center font-bold shrink-0">
+                                    <span class="material-symbols-outlined text-xl">apartment</span>
+                                </div>
+                                <div>
+                                    <h2 id="details-title" class="font-headline font-extrabold text-lg sm:text-xl leading-tight text-zinc-900 dark:text-white">Detalles de Propiedad</h2>
+                                    <p id="details-subtitle" class="font-body text-xs text-zinc-500 dark:text-zinc-400">Gestión de aviso y estado financiero</p>
+                                </div>
                             </div>
-                            <div class="calendar-section">
-                                <h3>Calendario de Pagos</h3>
-                                <div class="calendar-container glass-panel">
-                                    <div class="calendar-header">
-                                        <button id="prev-month" class="icon-btn"><span
-                                                class="material-symbols-rounded">chevron_left</span></button>
-                                        <span id="calendar-month-year">Enero 2024</span>
-                                        <button id="next-month" class="icon-btn"><span
-                                                class="material-symbols-rounded">chevron_right</span></button>
+                            <button class="close-modal w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors flex items-center justify-center shrink-0" id="close-details-modal" aria-label="Cerrar">
+                                <span class="material-symbols-rounded text-xl">close</span>
+                            </button>
+                        </header>
+
+                        <div class="details-body p-5 md:p-8 space-y-6">
+                            <!-- Metrics Banner (Hardcoded/Dynamic: Días activa, Vistas, Estado, Interesados) -->
+                            <div id="details-metrics-banner" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+
+                            <!-- Content Grid: Details Info + Calendar -->
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                <div class="lg:col-span-7 space-y-5" id="details-info-container">
+                                    <!-- Info injected here by JS -->
+                                </div>
+
+                                <div class="lg:col-span-5 bg-surface-container-low dark:bg-zinc-950/60 rounded-2xl p-5 border border-zinc-200/60 dark:border-zinc-800/80 calendar-section">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="font-headline font-bold text-sm text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary dark:text-red-400 text-lg">calendar_month</span>
+                                            Calendario de Pagos
+                                        </h3>
                                     </div>
-                                    <div class="calendar-grid" id="calendar-grid">
-                                        <!-- Days injected here -->
-                                    </div>
-                                    <div class="calendar-legend">
-                                        <div class="legend-item"><span class="dot dot-due"></span> Vencimiento</div>
-                                        <div class="legend-item"><span class="dot dot-increase"></span> Aumento</div>
-                                        <div class="legend-item"><span class="dot dot-start-end"></span> Inicio/Fin
+                                    <div class="calendar-container">
+                                        <div class="calendar-header flex items-center justify-between mb-3 text-sm font-semibold">
+                                            <button id="prev-month" class="icon-btn p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"><span class="material-symbols-rounded">chevron_left</span></button>
+                                            <span id="calendar-month-year" class="font-headline font-bold">Enero 2026</span>
+                                            <button id="next-month" class="icon-btn p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"><span class="material-symbols-rounded">chevron_right</span></button>
+                                        </div>
+                                        <div class="calendar-grid" id="calendar-grid">
+                                            <!-- Days injected here -->
+                                        </div>
+                                        <div class="calendar-legend flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 mt-4 pt-3 border-t border-zinc-200/50 dark:border-zinc-800">
+                                            <div class="legend-item flex items-center gap-1.5"><span class="dot dot-due w-2.5 h-2.5 rounded-full bg-amber-500"></span> Vencimiento</div>
+                                            <div class="legend-item flex items-center gap-1.5"><span class="dot dot-increase w-2.5 h-2.5 rounded-full bg-blue-500"></span> Aumento</div>
+                                            <div class="legend-item flex items-center gap-1.5"><span class="dot dot-start-end w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Inicio/Fin</div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Footer Action Bar -->
+                            <div id="details-actions-bar" class="pt-5 border-t border-zinc-200/60 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+                                <!-- Action Buttons injected dynamically -->
                             </div>
                         </div>
                     </div>

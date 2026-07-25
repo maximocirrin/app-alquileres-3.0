@@ -15,8 +15,10 @@ const App = {
             App.setupEventListeners();
             App.applyPageContext();
 
-            // Load marketplace public listings
-            loadMarketplaceListings();
+            // Load marketplace public listings if defined
+            if (typeof loadMarketplaceListings === 'function') {
+                loadMarketplaceListings();
+            }
 
             // Check if user is logged in
             const { data: { session } } = await window.supabaseClient.auth.getSession();
@@ -336,7 +338,7 @@ const App = {
             const tabCaracteristicas = document.getElementById('tab-caracteristicas');
             const pasoSubtitle = document.getElementById('paso-subtitle');
             const publishMainTitle = document.getElementById('publish-main-title');
-            
+
             // Step 4 -> Step 3
             if (step4Container && !step4Container.classList.contains('hidden')) {
                 step4Container.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
@@ -351,7 +353,7 @@ const App = {
                         step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
                     }, 50);
                 }, 300);
-                
+
                 const pStep3 = document.getElementById('progress-step-3');
                 const pStep4 = document.getElementById('progress-step-4');
                 const pLine3 = document.getElementById('progress-line-3');
@@ -370,7 +372,7 @@ const App = {
                     `;
                 }
                 if (pLine3) pLine3.className = 'w-4 flex-1 md:flex-none md:w-8 border-t-2 border-surface-dim dark:border-[#1e1e1e] mt-4 md:mt-0 shrink-[2] transition-colors duration-300';
-                
+
                 document.querySelectorAll('button[form="form-planes"]').forEach(btn => {
                     btn.setAttribute('form', 'form-extras');
                 });
@@ -391,7 +393,7 @@ const App = {
                         step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
                     }, 50);
                 }, 300);
-                
+
                 const pStep2 = document.getElementById('progress-step-2');
                 const pStep3 = document.getElementById('progress-step-3');
                 const pLine2 = document.getElementById('progress-line-2');
@@ -430,7 +432,7 @@ const App = {
                     if (publishMainTitle) publishMainTitle.style.opacity = '1';
                     if (pasoSubtitle) pasoSubtitle.style.opacity = '1';
                 }, 300);
-                
+
                 const pStep1 = document.getElementById('progress-step-1');
                 const pStep2 = document.getElementById('progress-step-2');
                 const pLine1 = document.getElementById('progress-line-1');
@@ -771,31 +773,7 @@ const App = {
                         }
 
                         // Update Progress Indicator
-                        const pStep1 = document.getElementById('progress-step-1');
-                        const pStep2 = document.getElementById('progress-step-2');
-
-                        if (pStep1) {
-                            pStep1.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
-                                    <span class="material-symbols-outlined text-[18px]">check</span>
-                                </div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Principales</span>
-                            `;
-                        }
-
-                        if (pStep2) {
-                            pStep2.classList.remove('opacity-50');
-                            pStep2.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">2</div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Multimedia</span>
-                            `;
-                        }
-
-                        const pLine1 = document.getElementById('progress-line-1');
-                        if (pLine1) {
-                            pLine1.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
-                            pLine1.classList.add('border-primary', 'dark:border-red-500');
-                        }
+                        updateHeaderProgress(2);
 
                         if (step2Container) {
                             // Show Step 2
@@ -984,6 +962,63 @@ const App = {
             }
         });
 
+        // Global Progress Header Helpers
+        const getStepName = (step) => {
+            const names = { 1: 'Principales', 2: 'Multimedia', 3: 'Extras', 4: 'Preferencias', 5: 'Visitas', 6: 'Publicar' };
+            return names[step] || '';
+        };
+
+        const updateHeaderProgress = (activeStep) => {
+            const mobBadge = document.getElementById('mobile-step-badge');
+            const mobPercent = document.getElementById('mobile-step-percent');
+            const mobBar = document.getElementById('mobile-progress-bar');
+
+            const percent = Math.round((activeStep / 6) * 100);
+            if (mobBadge) mobBadge.innerHTML = `Paso ${activeStep} de 6 &bull; ${getStepName(activeStep)}`;
+            if (mobPercent) mobPercent.textContent = `${percent}%`;
+            if (mobBar) mobBar.style.width = `${percent}%`;
+
+            for (let i = 1; i <= 6; i++) {
+                const pStep = document.getElementById(`progress-step-${i}`);
+                const pLine = document.getElementById(`progress-line-${i - 1}`);
+
+                if (pStep) {
+                    if (i < activeStep) {
+                        pStep.classList.remove('opacity-50');
+                        pStep.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                                <span class="material-symbols-outlined text-[18px]">check</span>
+                            </div>
+                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                        `;
+                    } else if (i === activeStep) {
+                        pStep.classList.remove('opacity-50');
+                        pStep.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
+                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                        `;
+                    } else {
+                        pStep.classList.add('opacity-50');
+                        pStep.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">${i}</div>
+                            <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                        `;
+                    }
+                }
+
+                if (pLine) {
+                    if (i <= activeStep) {
+                        pLine.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
+                        pLine.classList.add('border-primary', 'dark:border-red-500');
+                    } else {
+                        pLine.classList.remove('border-primary', 'dark:border-red-500');
+                        pLine.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
+                    }
+                }
+            }
+        };
+        window.updateHeaderProgress = updateHeaderProgress;
+
         // Form 'Multimedia' & 'Extras' Delegated Submit Interceptors
         document.addEventListener('submit', (e) => {
             if (!e.target) return;
@@ -999,8 +1034,11 @@ const App = {
                 if (photoCount < 5 || photoCount > 50) {
                     isValid = false;
                     if (fotosErrorMsg) {
-                        fotosErrorMsg.textContent = `Debes cargar al menos 5 fotos (máximo 50). Actualmente tienes ${photoCount}.`;
-                        fotosErrorMsg.classList.remove('hidden');
+                        fotosErrorMsg.innerHTML = `<span class="material-symbols-outlined text-[20px]">warning</span><span>Debes cargar al menos 5 fotos para continuar (máximo 50). Actualmente tienes ${photoCount}.</span>`;
+                        fotosErrorMsg.className = 'bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl p-3.5 mt-4 text-sm font-semibold flex items-center gap-2';
+                        fotosErrorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        alert(`Debes cargar al menos 5 fotos para continuar (máximo 50). Actualmente tienes ${photoCount}.`);
                     }
                 } else {
                     if (fotosErrorMsg) fotosErrorMsg.classList.add('hidden');
@@ -1165,8 +1203,8 @@ const App = {
                         if (step5Container) {
                             step5Container.classList.remove('hidden');
 
-                            if (title) title.textContent = 'Agenda de Visitas Presenciales';
-                            if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para mostrar la propiedad';
+                            if (title) title.textContent = 'Agenda de Visitas y Tours Presenciales';
+                            if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad';
 
                             void step5Container.offsetWidth;
 
@@ -1262,7 +1300,7 @@ const App = {
         });
 
         // Global Wizard Back Navigation Handler
-        window.handleWizardBack = function() {
+        window.handleWizardBack = function () {
             const stepOperacion = document.getElementById('step-operacion');
             const stepUbicacion = document.getElementById('step-ubicacion');
             const stepCaracteristicas = document.getElementById('step-caracteristicas');
@@ -1276,63 +1314,6 @@ const App = {
 
             const title = document.getElementById('publish-main-title');
             const subtitle = document.getElementById('paso-subtitle');
-
-            const getStepName = (step) => {
-                const names = { 1: 'Principales', 2: 'Multimedia', 3: 'Extras', 4: 'Preferencias', 5: 'Visitas', 6: 'Publicar' };
-                return names[step] || '';
-            };
-
-            const updateHeaderProgress = (activeStep) => {
-                // Update mobile step indicator
-                const mobBadge = document.getElementById('mobile-step-badge');
-                const mobPercent = document.getElementById('mobile-step-percent');
-                const mobBar = document.getElementById('mobile-progress-bar');
-                
-                const percent = Math.round((activeStep / 6) * 100);
-                if (mobBadge) mobBadge.innerHTML = `Paso ${activeStep} de 6 &bull; ${getStepName(activeStep)}`;
-                if (mobPercent) mobPercent.textContent = `${percent}%`;
-                if (mobBar) mobBar.style.width = `${percent}%`;
-
-                // Update desktop step indicators
-                for (let i = 1; i <= 6; i++) {
-                    const pStep = document.getElementById(`progress-step-${i}`);
-                    const pLine = document.getElementById(`progress-line-${i - 1}`);
-
-                    if (pStep) {
-                        if (i < activeStep) {
-                            pStep.classList.remove('opacity-50');
-                            pStep.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
-                                    <span class="material-symbols-outlined text-[18px]">check</span>
-                                </div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
-                            `;
-                        } else if (i === activeStep) {
-                            pStep.classList.remove('opacity-50');
-                            pStep.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
-                            `;
-                        } else {
-                            pStep.classList.add('opacity-50');
-                            pStep.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">${i}</div>
-                                <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
-                            `;
-                        }
-                    }
-
-                    if (pLine) {
-                        if (i <= activeStep) {
-                            pLine.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
-                            pLine.classList.add('border-primary', 'dark:border-red-500');
-                        } else {
-                            pLine.classList.remove('border-primary', 'dark:border-red-500');
-                            pLine.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
-                        }
-                    }
-                }
-            };
 
             const setSubmitButton = (formId, text) => {
                 const btnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
@@ -1351,8 +1332,8 @@ const App = {
                     step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
                     step5Container.style.height = '';
                 }
-                if (title) title.textContent = 'Agenda de Visitas Presenciales';
-                if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para mostrar la propiedad';
+                if (title) title.textContent = 'Agenda de Visitas y Tours Presenciales';
+                if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad';
                 updateHeaderProgress(5);
                 setSubmitButton('form-visitas', 'Continuar');
                 window.currentWizardStep = 5;
@@ -1626,6 +1607,7 @@ const App = {
                         banos: getVal('banos-new'),
                         cocheras: getVal('cocheras-new'),
                         antiguedad: getRadioValue('antiguedad'),
+                        amoblado: getRadioValue('amoblado') || 'sin-amoblar',
 
                         // Ubicacion (Paso 1.1)
                         calleAltura: getVal('calle-altura'),
@@ -1653,7 +1635,7 @@ const App = {
                             cantidadPlantas: document.querySelector('#form-extras select:nth-of-type(1)')?.value,
                             coberturaCochera: document.querySelector('#form-extras select:nth-of-type(2)')?.value,
                             luminoso: document.querySelector('#form-extras select:nth-of-type(3)')?.value,
-                            orientacion: document.querySelector('#form-extras select:nth-of-type(4)')?.value,
+                            orientacion: getCheckedValues('#content-orientacion-adicionales'),
                             frenteTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(1)')?.value,
                             largoTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(2)')?.value
                         },
@@ -4196,107 +4178,227 @@ const App = {
     openPropertyDetails: (property) => {
         const modal = document.getElementById('property-details-modal');
         const infoContainer = document.getElementById('details-info-container');
+        const metricsBanner = document.getElementById('details-metrics-banner');
+        const actionsBar = document.getElementById('details-actions-bar');
         const closeBtn = document.getElementById('close-details-modal');
+        const detailsTitle = document.getElementById('details-title');
 
-        // ADDED: Bottom Right Delete Button Logic
-        const modalContent = modal.querySelector('.modal-content');
+        if (!modal || !infoContainer) return;
 
-        // Remove existing from header (legacy fix) or content or calendar section
-        const existingBtnHeader = modal.querySelector('.modal-header .delete-property-btn');
-        if (existingBtnHeader) existingBtnHeader.remove();
+        // Set Title
+        if (detailsTitle) detailsTitle.textContent = property.title || property.address || 'Detalles de Propiedad';
 
-        const existingBtn = modal.querySelector('.calendar-section .delete-property-btn');
-        if (existingBtn) existingBtn.remove();
+        // 1. Metrics & Hardcoded Fallbacks for Admin Dashboard
+        const activeDays = property.created_at
+            ? Math.max(1, Math.floor((new Date() - new Date(property.created_at)) / (1000 * 60 * 60 * 24)))
+            : (property.activeDays || 14);
 
-        // Also remove if it was directly in modal content/previous location
-        const existingBtnContent = modalContent.querySelector('.delete-property-btn');
-        if (existingBtnContent) existingBtnContent.remove();
+        const viewsCount = property.views_count || property.views || 342;
+        const inquiriesCount = property.inquiries_count || property.inquiries || 8;
+        const rawStatus = property.status || 'disponible';
+        const formattedStatus = rawStatus === 'disponible' ? 'Activa' : (rawStatus === 'alquilada' ? 'Alquilada' : 'Pausada');
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-property-btn text-danger';
-        deleteBtn.innerHTML = '<span class="material-symbols-rounded">delete</span> Eliminar Propiedad';
-        deleteBtn.title = 'Eliminar Propiedad';
-
-        // Append to calendar section
-        const calendarSection = modal.querySelector('.calendar-section');
-        if (calendarSection) {
-            calendarSection.appendChild(deleteBtn);
-        } else {
-            modalContent.appendChild(deleteBtn);
+        let statusPillClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+        let statusDotClass = 'bg-emerald-500';
+        if (rawStatus === 'alquilada') {
+            statusPillClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30';
+            statusDotClass = 'bg-blue-500';
+        } else if (rawStatus === 'pausada') {
+            statusPillClass = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30';
+            statusDotClass = 'bg-amber-500';
         }
 
-        deleteBtn.onclick = async () => {
-            if (confirm('¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.')) {
-                try {
-                    await DataManager.deleteProperty(property.id);
-                    modal.classList.add('hidden');
-                    document.body.classList.remove('no-scroll');
-                    await App.refreshData();
-                } catch (error) {
-                    alert('Error al eliminar la propiedad');
-                    console.error(error);
-                }
-            }
-        };
+        // Render Metrics Banner (Estado, Días activa, Personas que la vieron, Interesados)
+        if (metricsBanner) {
+            metricsBanner.innerHTML = `
+                <div class="bg-surface-container-low dark:bg-zinc-800/60 rounded-2xl p-3.5 border border-zinc-200/50 dark:border-zinc-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-xl">sensors</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Estado</p>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${statusPillClass} mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full ${statusDotClass} animate-pulse"></span>
+                            ${formattedStatus}
+                        </span>
+                    </div>
+                </div>
 
-        // Calculate Status
+                <div class="bg-surface-container-low dark:bg-zinc-800/60 rounded-2xl p-3.5 border border-zinc-200/50 dark:border-zinc-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-xl">schedule</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Días Activa</p>
+                        <p class="font-headline font-extrabold text-sm text-zinc-900 dark:text-white truncate">${activeDays} días</p>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-low dark:bg-zinc-800/60 rounded-2xl p-3.5 border border-zinc-200/50 dark:border-zinc-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-xl">visibility</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Visualizaciones</p>
+                        <p class="font-headline font-extrabold text-sm text-zinc-900 dark:text-white truncate">${viewsCount} vistas</p>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-low dark:bg-zinc-800/60 rounded-2xl p-3.5 border border-zinc-200/50 dark:border-zinc-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-xl">group</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Interesados</p>
+                        <p class="font-headline font-extrabold text-sm text-zinc-900 dark:text-white truncate">${inquiriesCount} consultas</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Calculate Expiration Date & Payment Status
         const today = new Date();
-        // Check if current day is past rentDueDay
-        // Note: strictly greater means overdue. e.g. Due 10th. Today 11th -> Overdue.
-        const isOverdue = today.getDate() > property.rentDueDay;
+        const isOverdue = property.rentDueDay ? today.getDate() > property.rentDueDay : false;
+        const paymentStatusHtml = isOverdue
+            ? `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">Vencido</span>`
+            : `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Al día</span>`;
 
-        // Since we don't track payments yet, we'll assume "Al día" if not overdue, or "Vencido" if overdue.
-        // In a real app, we'd check if a payment exists for this month.
-        const statusHtml = isOverdue
-            ? `<span class="status-badge status-overdue">Vencido</span>`
-            : `<span class="status-badge status-pending">Al día</span>`;
-
-        // Calculate Expiration Date (Current Month)
-        // We always show the due date for the *current* month to align with the status
         const dueYear = today.getFullYear();
         const dueMonth = today.getMonth();
         const maxDaysInMonth = new Date(dueYear, dueMonth + 1, 0).getDate();
         const dueDaySafe = Math.min(property.rentDueDay || 1, maxDaysInMonth);
-
         const expirationDate = new Date(dueYear, dueMonth, dueDaySafe);
         const expirationDateStr = expirationDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-        // Populate Info
+        const formattedPrice = property.price ? `$${parseFloat(property.price).toLocaleString('es-AR')}` : 'No especificado';
+        const photoUrl = property.photoUrl || (property.images && property.images.length > 0 ? property.images[0] : null);
+
+        // Populate Left Info Container
         infoContainer.innerHTML = `
-            <p><strong>Dirección:</strong> ${property.address}</p>
-            <p><strong>Estado:</strong> ${statusHtml}</p>
-            <p><strong>Vencimiento:</strong> ${expirationDateStr}</p>
-            <p><strong>Inquilino:</strong> ${property.tenantName}</p>
-            <p><strong>Precio:</strong> $${property.price.toLocaleString()}</p>
-            <p><strong>Aumento:</strong> ${property.increaseRate}% cada ${property.increaseFrequency} meses</p>
-            <p><strong>Vencimiento Alquiler:</strong> Día ${property.rentDueDay}</p>
-            <p><strong>Contrato:</strong> ${property.contractStartDate} al ${property.contractEndDate}</p>
-            ${property.contract ? `<p><strong>Archivo:</strong> <a href="${property.contract.data}" download="${property.contract.name}" style="color:var(--primary-color)">Descargar Contrato</a></p>` : ''}
+            <!-- Main Photo & Address Header Card -->
+            <div class="relative overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-800">
+                ${photoUrl ? `<img src="${photoUrl}" alt="${property.address || 'Propiedad'}" class="w-full h-44 object-cover">` : ''}
+                <div class="p-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h4 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white leading-snug">${property.address || property.title || 'Propiedad sin dirección'}</h4>
+                            <p class="font-body text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-1">
+                                <span class="material-symbols-outlined text-sm">location_on</span> ${property.address || 'Mendoza, Argentina'}
+                            </p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="font-headline font-extrabold text-xl text-primary dark:text-red-400 block">${formattedPrice}</span>
+                            <span class="text-[11px] text-zinc-400 font-medium">/ mes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-body">
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80 space-y-2.5">
+                    <h5 class="font-headline font-bold text-xs text-zinc-400 uppercase tracking-wider mb-2">Condiciones de Alquiler</h5>
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-100 dark:border-zinc-800/60">
+                        <span class="text-zinc-500 dark:text-zinc-400">Estado de Pago:</span>
+                        ${paymentStatusHtml}
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-100 dark:border-zinc-800/60">
+                        <span class="text-zinc-500 dark:text-zinc-400">Día de Cobro:</span>
+                        <span class="font-bold text-zinc-800 dark:text-zinc-200">Día ${property.rentDueDay || '10'}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-100 dark:border-zinc-800/60">
+                        <span class="text-zinc-500 dark:text-zinc-400">Próx. Vencimiento:</span>
+                        <span class="font-bold text-zinc-800 dark:text-zinc-200">${expirationDateStr}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-zinc-500 dark:text-zinc-400">Aumento Programado:</span>
+                        <span class="font-bold text-zinc-800 dark:text-zinc-200">${property.increaseRate || '15'}% c/${property.increaseFrequency || '3'} meses</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80 space-y-2.5">
+                    <h5 class="font-headline font-bold text-xs text-zinc-400 uppercase tracking-wider mb-2">Inquilino y Contrato</h5>
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-100 dark:border-zinc-800/60">
+                        <span class="text-zinc-500 dark:text-zinc-400">Inquilino:</span>
+                        <span class="font-bold text-zinc-800 dark:text-zinc-200">${property.tenantName || 'Sin asignar'}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-zinc-100 dark:border-zinc-800/60">
+                        <span class="text-zinc-500 dark:text-zinc-400">Vigencia Contrato:</span>
+                        <span class="font-bold text-zinc-800 dark:text-zinc-200">${property.contractStartDate || '01/01/2026'} - ${property.contractEndDate || '31/12/2026'}</span>
+                    </div>
+                    ${property.contract ? `
+                        <div class="pt-2">
+                            <a href="${property.contract.data}" download="${property.contract.name}" class="inline-flex items-center gap-1.5 text-xs font-bold text-primary dark:text-red-400 hover:underline">
+                                <span class="material-symbols-outlined text-base">description</span> Descargar Contrato (PDF)
+                            </a>
+                        </div>
+                    ` : `
+                        <div class="pt-1 text-zinc-400 text-[11px] italic">No hay adjunto en formato digital</div>
+                    `}
+                </div>
+            </div>
         `;
 
-        // Calendar State
+        // Action Buttons Bar
+        if (actionsBar) {
+            actionsBar.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <a href="buscar.html" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors">
+                        <span class="material-symbols-outlined text-base">open_in_new</span>
+                        Ver en Marketplace
+                    </a>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-delete-property-modal" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors">
+                        <span class="material-symbols-outlined text-base">delete</span>
+                        Eliminar Propiedad
+                    </button>
+                </div>
+            `;
+
+            const btnDelete = document.getElementById('btn-delete-property-modal');
+            if (btnDelete) {
+                btnDelete.onclick = async () => {
+                    if (confirm('¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.')) {
+                        try {
+                            await DataManager.deleteProperty(property.id);
+                            modal.classList.add('hidden');
+                            document.body.classList.remove('no-scroll');
+                            await App.refreshData();
+                        } catch (error) {
+                            alert('Error al eliminar la propiedad');
+                            console.error(error);
+                        }
+                    }
+                };
+            }
+        }
+
+        // Calendar Navigation Logic
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
 
         const render = () => App.renderCalendar(currentYear, currentMonth, property);
 
-        // Navigation Handlers (remove old listeners to avoid duplicates if any - simple approach here)
         const prevBtn = document.getElementById('prev-month');
         const nextBtn = document.getElementById('next-month');
 
-        prevBtn.onclick = () => {
-            currentMonth--;
-            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-            render();
-        };
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                render();
+            };
+        }
 
-        nextBtn.onclick = () => {
-            currentMonth++;
-            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-            render();
-        };
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                render();
+            };
+        }
 
-        // Initial Render
         render();
 
         // Show Modal
@@ -4304,10 +4406,13 @@ const App = {
         document.body.classList.add('no-scroll');
 
         // Close Handlers
-        closeBtn.onclick = () => {
-            modal.classList.add('hidden');
-            document.body.classList.remove('no-scroll');
-        };
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('no-scroll');
+            };
+        }
+
         modal.onclick = (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
@@ -4573,6 +4678,12 @@ const App = {
                     const form = document.getElementById('form-extras');
                     if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                 } else if (window.currentWizardStep === 4) {
+                    const form = document.getElementById('form-preferencias');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                } else if (window.currentWizardStep === 5) {
+                    const form = document.getElementById('form-visitas');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                } else if (window.currentWizardStep === 6) {
                     const form = document.getElementById('form-planes');
                     if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                 }
@@ -4796,9 +4907,12 @@ const App = {
 
         // Update Payment Stats
         const stats = await DataManager.getPaymentStats();
-        document.getElementById('payments-total-paid').textContent = `$${stats.totalPaid.toLocaleString()}`;
-        document.getElementById('payments-pending-count').textContent = stats.pendingCount;
-        document.getElementById('payments-total-transactions').textContent = stats.totalTransactions;
+        const totalPaid = document.getElementById('payments-total-paid');
+        if (totalPaid) totalPaid.textContent = `$${stats.totalPaid.toLocaleString()}`;
+        const pendingCount = document.getElementById('payments-pending-count');
+        if (pendingCount) pendingCount.textContent = stats.pendingCount;
+        const totalTransactions = document.getElementById('payments-total-transactions');
+        if (totalTransactions) totalTransactions.textContent = stats.totalTransactions;
     },
 
     toggleMenu: (event, type, id) => {
@@ -4966,44 +5080,527 @@ window.App = App;
 // document.addEventListener('DOMContentLoaded', App.init);
 
 // ============================================================
-// Marketplace Public Listings Renderer
+// Marketplace Property Detail & Photo Gallery Modal
 // ============================================================
-async function loadMarketplaceListings() {
-    const grid = document.getElementById('marketplace-property-grid');
-    const emptyState = document.getElementById('marketplace-empty-state');
-    if (!grid) return;
+window.openMarketplacePropertyDetailModal = function (prop) {
+    if (!prop) return;
 
-    try {
-        const properties = await window.DataManager.getPublicMarketplaceProperties(12);
+    // Parse extraInfo if description contains 'Detalles: '
+    let extraInfo = {};
+    let descriptionText = prop.description || prop.note || 'Sin descripción disponible para esta propiedad.';
+    if (typeof descriptionText === 'string' && descriptionText.includes('Detalles: ')) {
+        const parts = descriptionText.split('Detalles: ');
+        descriptionText = parts[0].trim();
+        try {
+            extraInfo = JSON.parse(parts[1]);
+        } catch (e) {
+            console.warn('Error parsing extraInfo JSON', e);
+        }
+    }
 
-        // Remove skeleton cards
-        grid.querySelectorAll('.marketplace-skeleton').forEach(el => el.remove());
+    // Collect photos
+    let photos = [];
+    if (prop.propiedad_imagenes && prop.propiedad_imagenes.length > 0) {
+        photos = prop.propiedad_imagenes.sort((a, b) => (a.orden || 0) - (b.orden || 0)).map(i => i.url);
+    } else if (Array.isArray(prop.images) && prop.images.length > 0) {
+        photos = prop.images;
+    } else if (prop.image) {
+        photos = [prop.image];
+    } else if (prop.photoUrl) {
+        photos = [prop.photoUrl];
+    }
+    if (!photos || photos.length === 0) {
+        photos = ['img/hero-marketplace.jpg'];
+    }
 
-        if (!properties || properties.length === 0) {
-            grid.classList.add('hidden');
-            if (emptyState) emptyState.classList.remove('hidden');
-            return;
+    // Helper to extract numeric metrics from tags array if extraInfo is missing
+    const extractTagMetric = (tags, keywords) => {
+        if (!tags || !Array.isArray(tags)) return null;
+        for (const tag of tags) {
+            const lower = tag.toLowerCase();
+            if (keywords.some(k => lower.includes(k))) {
+                const match = tag.match(/\d+/);
+                if (match) return match[0];
+                return tag;
+            }
+        }
+        return null;
+    };
+
+    // Normalize property details
+    const title = prop.title || 'Propiedad en alquiler';
+    const address = prop.address || prop.ubicacion || 'Ubicación no especificada';
+    const province = prop.province || extraInfo.provincia || '';
+    const fullAddress = (province && !address.toLowerCase().includes(province.toLowerCase()))
+        ? `${address}, ${province}`
+        : address;
+
+    const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
+    const priceFormatted = prop.price
+        ? `${moneda} ${Number(prop.price).toLocaleString('es-AR')}`
+        : 'Consultar precio';
+
+    const operacion = (extraInfo.operacion || prop.featured || prop.type || 'En Alquiler').toUpperCase();
+    const dormitorios = extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']);
+    const banos = extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']);
+    const ambientes = extraInfo.ambientes || null;
+    const supCubierta = extraInfo.sup_cubierta || extractTagMetric(prop.tags, ['m²', 'm2']);
+    const petFriendly = extraInfo.mascotas || prop.pet || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('mascota')));
+    const verified = prop.verified || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')));
+
+    // Extract tags list
+    let tagsList = prop.tags || [];
+    if (extraInfo.caracteristicas && Array.isArray(extraInfo.caracteristicas)) {
+        tagsList = Array.from(new Set([...tagsList, ...extraInfo.caracteristicas]));
+    }
+
+    let activeImageIndex = 0;
+
+    // Create or select modal container
+    let modal = document.getElementById('marketplace-property-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'marketplace-property-modal';
+        document.body.appendChild(modal);
+    }
+
+    modal.className = 'fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-opacity duration-300 overflow-y-auto';
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    modal.style.pointerEvents = 'auto';
+
+    modal.innerHTML = `
+        <div class="relative w-full max-w-4xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-zinc-200/60 dark:border-zinc-800 my-auto text-on-background dark:text-white font-body" onclick="event.stopPropagation()">
+            
+            <!-- Header / Close button -->
+            <div class="sticky top-0 z-30 flex items-center justify-between px-5 py-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-3 py-1 text-xs font-black tracking-wider rounded-full uppercase bg-red-100 dark:bg-red-950/60 text-primary dark:text-red-400">
+                        ${operacion}
+                    </span>
+                    ${verified ? `
+                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                            <span class="material-symbols-outlined text-sm">verified</span> Verificado
+                        </span>
+                    ` : ''}
+                    ${petFriendly ? `
+                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
+                            <span class="material-symbols-outlined text-sm">pets</span> Apto Mascotas
+                        </span>
+                    ` : ''}
+                </div>
+                <button id="close-marketplace-modal-btn" type="button" aria-label="Cerrar modal" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined pointer-events-none">close</span>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto p-5 sm:p-7 space-y-6 flex-1">
+                
+                <!-- Main Image Gallery Display -->
+                <div id="mp-modal-main-img-container" class="relative group rounded-2xl overflow-hidden bg-zinc-950 aspect-[16/10] sm:aspect-[21/9] shadow-md border border-zinc-200/20 dark:border-zinc-800 cursor-pointer">
+                    <img id="mp-modal-main-img" src="${photos[0]}" alt="${title}" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" onerror="this.src='img/hero-marketplace.jpg'">
+                    
+                    ${photos.length > 1 ? `
+                        <button id="mp-modal-prev-btn" type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur flex items-center justify-center transition-all hover:scale-110 shadow-lg cursor-pointer">
+                            <span class="material-symbols-outlined pointer-events-none">chevron_left</span>
+                        </button>
+                        <button id="mp-modal-next-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur flex items-center justify-center transition-all hover:scale-110 shadow-lg cursor-pointer">
+                            <span class="material-symbols-outlined pointer-events-none">chevron_right</span>
+                        </button>
+                        <div id="mp-modal-counter" class="absolute bottom-3 right-3 bg-black/70 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
+                            1 / ${photos.length}
+                        </div>
+                    ` : ''}
+
+                    <div class="absolute top-3 left-3 bg-black/60 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg border border-white/20 transition-all group-hover:scale-105">
+                        <span class="material-symbols-outlined text-sm">fullscreen</span>
+                        <span>Ver foto completa</span>
+                    </div>
+                </div>
+
+                <!-- Thumbnails Bar -->
+                ${photos.length > 1 ? `
+                    <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
+                        ${photos.map((url, i) => `
+                            <button type="button" data-img-idx="${i}" class="mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === 0 ? 'border-primary dark:border-red-500 ring-2 ring-primary/30 opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}">
+                                <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Title, Location & Price -->
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-6">
+                    <div class="space-y-2">
+                        <h2 class="font-headline text-2xl sm:text-3xl font-extrabold text-on-background dark:text-white leading-tight">
+                            ${title}
+                        </h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base flex items-center gap-1.5 font-medium">
+                            <span class="material-symbols-outlined text-primary dark:text-red-400">location_on</span>
+                            ${fullAddress}
+                        </p>
+                    </div>
+                    <div class="sm:text-right shrink-0 bg-zinc-50 dark:bg-zinc-800/60 px-4 py-3 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
+                        <span class="block text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider mb-0.5">Precio de alquiler</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-primary dark:text-red-400">${priceFormatted}</span>
+                    </div>
+                </div>
+
+                <!-- Features & Spec Cards Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    ${dormitorios ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">bed</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Dormitorios</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${dormitorios}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${banos ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">bathtub</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Baños</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${banos}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${ambientes ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">home</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Ambientes</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${ambientes}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${supCubierta ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">square_foot</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Superficie</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${supCubierta} m²</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Full Description Section -->
+                <div class="space-y-2 pt-2">
+                    <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Descripción de la propiedad</h3>
+                    <div class="bg-zinc-50/60 dark:bg-zinc-800/30 p-5 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/60">
+                        <p class="font-body text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                            ${descriptionText}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Characteristics / Tags Chips -->
+                ${tagsList.length > 0 ? `
+                    <div class="space-y-3 pt-2">
+                        <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Comodidades y características</h3>
+                        <div class="flex flex-wrap gap-2">
+                            ${tagsList.map(tag => `
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200/50 dark:border-zinc-700/50">
+                                    <span class="material-symbols-outlined text-base text-primary dark:text-red-400">check_circle</span>
+                                    ${tag}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="sticky bottom-0 z-30 px-5 py-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="hidden sm:block">
+                    <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión Habitat</span>
+                    <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Contrato online, validación y pagos digitales</p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button id="mp-modal-contact-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-on-background dark:text-white font-bold px-5 py-3 rounded-xl transition-all text-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-base">chat</span>
+                        Consultar
+                    </button>
+                    <a href="index.html#seccion-garantia" id="mp-modal-apply-btn" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-lg shadow-primary/20 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">badge</span>
+                        Postularse con Pasaporte
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    `;
+
+    document.body.classList.add('no-scroll');
+    document.body.style.overflow = 'hidden';
+
+    // Fade in modal smoothly
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+    });
+
+    // Fullscreen Lightbox function
+    function openLightbox(startIdx) {
+        let lightbox = document.getElementById('mp-lightbox-modal');
+        if (!lightbox) {
+            lightbox = document.createElement('div');
+            lightbox.id = 'mp-lightbox-modal';
+            document.body.appendChild(lightbox);
         }
 
-        if (emptyState) emptyState.classList.add('hidden');
-        grid.classList.remove('hidden');
+        lightbox.className = 'fixed inset-0 z-[100000] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl transition-opacity duration-300 p-4 font-body';
+        lightbox.style.display = 'flex';
+        lightbox.style.opacity = '0';
 
-        properties.forEach((prop, i) => {
-            const card = createMarketplaceCard(prop, i);
-            grid.appendChild(card);
+        let currentLbIdx = startIdx;
+
+        lightbox.innerHTML = `
+            <!-- Lightbox Header -->
+            <div class="w-full flex items-center justify-between px-2 sm:px-4 py-2 z-20 shrink-0">
+                <div class="text-white text-sm font-bold flex items-center gap-2 max-w-[70%] truncate">
+                    <span class="material-symbols-outlined text-red-500">photo_camera</span>
+                    <span class="truncate">${title}</span>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <span id="lb-counter" class="text-white/90 text-xs font-bold bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+                        ${currentLbIdx + 1} / ${photos.length}
+                    </span>
+                    <button id="lb-close-btn" type="button" aria-label="Cerrar vista completa" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined pointer-events-none">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Fullscreen Image Container -->
+            <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-auto p-2 sm:p-4">
+                <img id="lb-main-img" src="${photos[currentLbIdx]}" alt="${title}" class="max-w-full max-h-[80vh] sm:max-h-[84vh] object-contain transition-all duration-300 rounded-xl shadow-2xl" onerror="this.src='img/hero-marketplace.jpg'">
+
+                ${photos.length > 1 ? `
+                    <button id="lb-prev-btn" type="button" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/20 cursor-pointer">
+                        <span class="material-symbols-outlined pointer-events-none text-2xl">chevron_left</span>
+                    </button>
+                    <button id="lb-next-btn" type="button" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/20 cursor-pointer">
+                        <span class="material-symbols-outlined pointer-events-none text-2xl">chevron_right</span>
+                    </button>
+                ` : ''}
+            </div>
+
+            <!-- Lightbox Footer Thumbnails -->
+            ${photos.length > 1 ? `
+                <div class="w-full flex items-center justify-center gap-3 overflow-x-auto py-2 px-2 z-20 scrollbar-thin shrink-0">
+                    ${photos.map((url, i) => `
+                        <button type="button" data-lb-idx="${i}" class="lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === currentLbIdx ? 'border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'}">
+                            <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
+                        </button>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
+
+        requestAnimationFrame(() => {
+            lightbox.style.opacity = '1';
         });
 
-        // Re-observe for scroll animations
-        grid.querySelectorAll('.animate-on-scroll').forEach(el => {
-            if (window.marketplaceObserver) window.marketplaceObserver.observe(el);
+        function setLbImage(idx) {
+            if (idx < 0) idx = photos.length - 1;
+            if (idx >= photos.length) idx = 0;
+            currentLbIdx = idx;
+
+            const lbImg = document.getElementById('lb-main-img');
+            const lbCounter = document.getElementById('lb-counter');
+            if (lbImg) {
+                lbImg.style.opacity = '0.3';
+                setTimeout(() => {
+                    lbImg.src = photos[currentLbIdx];
+                    lbImg.style.opacity = '1';
+                }, 100);
+            }
+            if (lbCounter) {
+                lbCounter.textContent = `${currentLbIdx + 1} / ${photos.length}`;
+            }
+
+            const thumbs = lightbox.querySelectorAll('.lb-thumb');
+            thumbs.forEach((th, i) => {
+                if (i === currentLbIdx) {
+                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105 cursor-pointer';
+                } else {
+                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-50 hover:opacity-100 cursor-pointer';
+                }
+            });
+        }
+
+        const closeLb = () => {
+            lightbox.style.opacity = '0';
+            window.removeEventListener('keydown', handleLbKey);
+            setTimeout(() => {
+                lightbox.style.display = 'none';
+            }, 250);
+        };
+
+        const lbCloseBtn = document.getElementById('lb-close-btn');
+        if (lbCloseBtn) {
+            lbCloseBtn.onclick = (e) => {
+                e.stopPropagation();
+                closeLb();
+            };
+        }
+
+        lightbox.onclick = (e) => {
+            if (e.target === lightbox || e.target.id === 'lb-main-img') {
+                closeLb();
+            }
+        };
+
+        const lbPrevBtn = document.getElementById('lb-prev-btn');
+        const lbNextBtn = document.getElementById('lb-next-btn');
+        if (lbPrevBtn) lbPrevBtn.onclick = (e) => { e.stopPropagation(); setLbImage(currentLbIdx - 1); };
+        if (lbNextBtn) lbNextBtn.onclick = (e) => { e.stopPropagation(); setLbImage(currentLbIdx + 1); };
+
+        lightbox.querySelectorAll('.lb-thumb').forEach(th => {
+            th.onclick = (e) => {
+                e.stopPropagation();
+                const idx = Number(th.dataset.lbIdx);
+                setLbImage(idx);
+            };
         });
 
-    } catch (err) {
-        console.error('Error loading marketplace listings:', err);
-        grid.querySelectorAll('.marketplace-skeleton').forEach(el => el.remove());
-        if (emptyState) emptyState.classList.remove('hidden');
+        const handleLbKey = (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                closeLb();
+            }
+            if (e.key === 'ArrowLeft' && photos.length > 1) {
+                e.stopPropagation();
+                setLbImage(currentLbIdx - 1);
+            }
+            if (e.key === 'ArrowRight' && photos.length > 1) {
+                e.stopPropagation();
+                setLbImage(currentLbIdx + 1);
+            }
+        };
+        window.addEventListener('keydown', handleLbKey);
     }
-}
+
+    // Attach click listener to main photo container to open Lightbox
+    const mainImgContainer = document.getElementById('mp-modal-main-img-container');
+    if (mainImgContainer) {
+        mainImgContainer.onclick = (e) => {
+            if (e.target.closest('#mp-modal-prev-btn') || e.target.closest('#mp-modal-next-btn')) return;
+            openLightbox(activeImageIndex);
+        };
+    }
+
+    // Image navigation handler helper
+    function setImage(idx) {
+        if (idx < 0) idx = photos.length - 1;
+        if (idx >= photos.length) idx = 0;
+        activeImageIndex = idx;
+
+        const mainImg = document.getElementById('mp-modal-main-img');
+        const counter = document.getElementById('mp-modal-counter');
+        if (mainImg) {
+            mainImg.style.opacity = '0.4';
+            setTimeout(() => {
+                mainImg.src = photos[activeImageIndex];
+                mainImg.style.opacity = '1';
+            }, 120);
+        }
+        if (counter) {
+            counter.textContent = `${activeImageIndex + 1} / ${photos.length}`;
+        }
+
+        // Update thumbnails UI
+        const thumbs = modal.querySelectorAll('.mp-modal-thumb');
+        thumbs.forEach((th, i) => {
+            if (i === activeImageIndex) {
+                th.className = 'mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-primary dark:border-red-500 ring-2 ring-primary/30 opacity-100 scale-105 cursor-pointer';
+            } else {
+                th.className = 'mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-60 hover:opacity-100 cursor-pointer';
+            }
+        });
+    }
+
+    // Prev / Next button listeners
+    const prevBtn = document.getElementById('mp-modal-prev-btn');
+    const nextBtn = document.getElementById('mp-modal-next-btn');
+    if (prevBtn) prevBtn.onclick = (e) => { e.stopPropagation(); setImage(activeImageIndex - 1); };
+    if (nextBtn) nextBtn.onclick = (e) => { e.stopPropagation(); setImage(activeImageIndex + 1); };
+
+    // Thumbnail listeners
+    modal.querySelectorAll('.mp-modal-thumb').forEach(th => {
+        th.onclick = (e) => {
+            e.stopPropagation();
+            const idx = Number(th.dataset.imgIdx);
+            setImage(idx);
+        };
+    });
+
+    // Reliable Close handler
+    const closeModal = () => {
+        modal.style.opacity = '0';
+        modal.style.pointerEvents = 'none';
+        document.body.classList.remove('no-scroll');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 280);
+    };
+
+    const closeBtn = document.getElementById('close-marketplace-modal-btn');
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        };
+    }
+
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'ArrowLeft' && photos.length > 1) setImage(activeImageIndex - 1);
+        if (e.key === 'ArrowRight' && photos.length > 1) setImage(activeImageIndex + 1);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Contact button listener
+    const contactBtn = document.getElementById('mp-modal-contact-btn');
+    if (contactBtn) {
+        contactBtn.onclick = (e) => {
+            e.preventDefault();
+            closeModal();
+            if (typeof window.openContactModal === 'function') {
+                window.openContactModal(title);
+            } else {
+                alert(`Para consultar por "${title}", podés comunicarte a través del canal de atención o registrarte en Habitat.`);
+            }
+        };
+    }
+
+    // Apply button listener
+    const applyBtn = document.getElementById('mp-modal-apply-btn');
+    if (applyBtn) {
+        applyBtn.onclick = () => {
+            closeModal();
+        };
+    }
+};
 
 function createMarketplaceCard(prop, index) {
     const delays = ['delay-100', 'delay-200', 'delay-300'];
@@ -5023,7 +5620,7 @@ function createMarketplaceCard(prop, index) {
         'venta': 'EN VENTA',
         'alquiler': 'EN ALQUILER',
         'temporada': 'TEMPORADA'
-    }[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion?.toUpperCase() || 'EN VENTA';
+    }[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion?.toUpperCase() || 'EN ALQUILER';
 
     const moneda = extraInfo.moneda === 'USD' ? 'U$S' : '$';
     const precio = prop.price
@@ -5051,6 +5648,12 @@ function createMarketplaceCard(prop, index) {
 
     const card = document.createElement('div');
     card.className = `group cursor-pointer animate-on-scroll ${delay}`;
+    card.onclick = () => {
+        if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+            window.openMarketplacePropertyDetailModal(prop);
+        }
+    };
+
     card.innerHTML = `
         <div class="relative overflow-hidden rounded-xl mb-6 aspect-[4/5] border-none shadow-none">
             <img alt="${titulo}"
@@ -5077,12 +5680,23 @@ function createMarketplaceCard(prop, index) {
                     ${supCubierta ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} m²</span></div>` : ''}
                 </div>
                 <button class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
-                    Ver más
+                    Ver más y fotos
                     <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                 </button>
             </div>
         </div>
     `;
+
+    const btnVerMas = card.querySelector('button');
+    if (btnVerMas) {
+        btnVerMas.onclick = (e) => {
+            e.stopPropagation();
+            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                window.openMarketplacePropertyDetailModal(prop);
+            }
+        };
+    }
+
     return card;
 }
 // Real Interactive Map using Google Maps JS API
@@ -5660,7 +6274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminToggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             if (adminWrapper.classList.contains('grid-rows-[0fr]')) {
                 adminWrapper.classList.remove('grid-rows-[0fr]', 'opacity-0');
                 adminWrapper.classList.add('grid-rows-[1fr]', 'opacity-100');
@@ -5668,7 +6282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminWrapper.classList.remove('grid-rows-[1fr]', 'opacity-100');
                 adminWrapper.classList.add('grid-rows-[0fr]', 'opacity-0');
             }
-            
+
             adminIcon.classList.toggle('rotate-180');
         });
     }
@@ -5681,7 +6295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchToggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             if (searchWrapper.classList.contains('grid-rows-[0fr]')) {
                 searchWrapper.classList.remove('grid-rows-[0fr]', 'opacity-0');
                 searchWrapper.classList.add('grid-rows-[1fr]', 'opacity-100');
@@ -5689,7 +6303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchWrapper.classList.remove('grid-rows-[1fr]', 'opacity-100');
                 searchWrapper.classList.add('grid-rows-[0fr]', 'opacity-0');
             }
-            
+
             searchIcon.classList.toggle('rotate-180');
         });
     }
@@ -5904,7 +6518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.add('hidden'));
-                
+
                 document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.add('hidden'));
                 const initialStr = (profile?.full_name || user?.email || 'U').charAt(0).toUpperCase();
@@ -5922,7 +6536,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
-                
+
                 document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.remove('hidden'));
             }
@@ -5956,7 +6570,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
-            
+
             document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.remove('hidden'));
         }
@@ -6258,12 +6872,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="hidden sm:inline">${dormitorios ? dormitorios + ' dorm.' : ''} ${banos ? banos + ' baños' : ''} ${supCubierta ? supCubierta + 'm²' : ''}</span>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver"><span class="material-symbols-outlined text-lg">visibility</span></button>
+                    <button class="btn-ver-aviso p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver"><span class="material-symbols-outlined text-lg">visibility</span></button>
                     <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Editar"><span class="material-symbols-outlined text-lg">edit</span></button>
                     <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Compartir"><span class="material-symbols-outlined text-lg">share</span></button>
                 </div>
             </div>
         `;
+
+        const btnVer = card.querySelector('.btn-ver-aviso');
+        if (btnVer) {
+            btnVer.onclick = (e) => {
+                e.stopPropagation();
+                if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                    window.openMarketplacePropertyDetailModal(aviso);
+                }
+            };
+        }
+
         return card;
     }
 });

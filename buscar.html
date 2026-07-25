@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Buscar alquileres | Habitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -959,7 +959,6 @@
                                 // Ya no filtramos por provincia para que el resto de propiedades no desaparezca al hacer zoom
                                 return matchesText && matchesFilter;
                             }
-
                             function getVisibleRentals() {
                                 const visible = properties.filter(matchesRental);
                                 if (sortEl.value === 'price-asc') visible.sort((a, b) => a.price - b.price);
@@ -969,43 +968,152 @@
 
                             function renderNewListings() {
                                 visibleRentals = getVisibleRentals();
-                                gridEl.innerHTML = visibleRentals.map((rental) => `
-                    <article class="listing-card">
-                        <div class="listing-media">
-                            <img src="${rental.image}" alt="${rental.title}">
-                            <span class="status-badge">${rental.featured}</span>
-                            <button class="favorite-btn" type="button" aria-label="Guardar ${rental.title}">
-                                <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
-                            </button>
-                        </div>
-                        <div class="listing-body">
-                            <div class="listing-top">
-                                <div>
-                                    <strong class="listing-price">${moneyLabel(rental.price)} / mes</strong>
-                                    <h2 class="listing-title">${rental.title}</h2>
-                                </div>
-                                <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
-                            </div>
-                            <span class="listing-address">${rental.address}</span>
-                            <ul class="spec-list">
-                                ${rental.tags.map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
-                            </ul>
-                            <p class="listing-note">${rental.note}</p>
-                            <div class="card-actions">
-                                <button class="primary-action" type="button">Contactar</button>
-                                <button class="ghost-action" type="button">
-                                    <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
-                                    Agendar visita
-                                </button>
-                            </div>
-                        </div>
-                    </article>
-                `).join('');
+                                gridEl.innerHTML = '';
+                                
+                                if (!visibleRentals || visibleRentals.length === 0) {
+                                    countEl.textContent = '0 alquileres disponibles';
+                                    emptyEl.classList.add('is-visible');
+                                    renderMarkers();
+                                    return;
+                                }
 
+                                emptyEl.classList.remove('is-visible');
                                 countEl.textContent = `${visibleRentals.length} alquiler${visibleRentals.length === 1 ? '' : 'es'} disponible${visibleRentals.length === 1 ? '' : 's'}`;
-                                emptyEl.classList.toggle('is-visible', visibleRentals.length === 0);
+
+                                visibleRentals.forEach((rental) => {
+                                    const card = document.createElement('article');
+                                    card.className = 'listing-card cursor-pointer group transition-all duration-300';
+                                    card.style.cursor = 'pointer';
+                                    card.onclick = (e) => {
+                                        if (e.target.closest('.favorite-btn')) return;
+                                        if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                            window.openMarketplacePropertyDetailModal(rental);
+                                        }
+                                    };
+
+                                    const photosCount = (rental.images && rental.images.length > 0) ? rental.images.length : (rental.propiedad_imagenes ? rental.propiedad_imagenes.length : 1);
+
+                                    card.innerHTML = `
+                                        <div class="listing-media relative overflow-hidden">
+                                            <img src="${rental.image}" alt="${rental.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                            <span class="status-badge">${rental.featured}</span>
+                                            <button class="favorite-btn" type="button" aria-label="Guardar ${rental.title}">
+                                                <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
+                                            </button>
+                                            ${photosCount > 1 ? `
+                                                <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-xs">photo_camera</span>
+                                                    ${photosCount} fotos
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        <div class="listing-body">
+                                            <div class="listing-top">
+                                                <div>
+                                                    <strong class="listing-price">${moneyLabel(rental.price)} / mes</strong>
+                                                    <h2 class="listing-title">${rental.title}</h2>
+                                                </div>
+                                                <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
+                                            </div>
+                                            <span class="listing-address">${rental.address}</span>
+                                            <ul class="spec-list">
+                                                ${rental.tags.map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
+                                            </ul>
+                                            <p class="listing-note">${rental.note}</p>
+                                            <div class="card-actions">
+                                                <button class="primary-action btn-open-detail" type="button">
+                                                    <span class="material-symbols-rounded" aria-hidden="true">visibility</span>
+                                                    Ver detalles y fotos
+                                                </button>
+                                                <button class="ghost-action btn-contact-direct" type="button">
+                                                    <span class="material-symbols-rounded" aria-hidden="true">chat</span>
+                                                    Consultar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+
+                                    const btnDetail = card.querySelector('.btn-open-detail');
+                                    if (btnDetail) {
+                                        btnDetail.onclick = (e) => {
+                                            e.stopPropagation();
+                                            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                                window.openMarketplacePropertyDetailModal(rental);
+                                            }
+                                        };
+                                    }
+
+                                    const btnContact = card.querySelector('.btn-contact-direct');
+                                    if (btnContact) {
+                                        btnContact.onclick = (e) => {
+                                            e.stopPropagation();
+                                            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                                window.openMarketplacePropertyDetailModal(rental);
+                                            }
+                                        };
+                                    }
+
+                                    gridEl.appendChild(card);
+                                });
+
                                 renderMarkers();
                             }
+
+                            async function syncDbPropertiesForSearch() {
+                                if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
+                                    try {
+                                        const dbProps = await window.DataManager.getPublicMarketplaceProperties(30);
+                                        if (dbProps && dbProps.length > 0) {
+                                            dbProps.forEach(p => {
+                                                if (properties.some(existing => existing.id === p.id)) return;
+                                                let extraInfo = {};
+                                                if (p.description && p.description.includes('Detalles: ')) {
+                                                    try { extraInfo = JSON.parse(p.description.split('Detalles: ')[1]); } catch(e){}
+                                                }
+                                                let fotos = p.images || [];
+                                                if (p.propiedad_imagenes && p.propiedad_imagenes.length > 0) {
+                                                    fotos = p.propiedad_imagenes.sort((a,b) => a.orden - b.orden).map(img => img.url);
+                                                }
+                                                const mainImage = fotos[0] || 'img/hero-marketplace.jpg';
+                                                const prov = extraInfo.provincia || 'Mendoza';
+                                                const operacion = (extraInfo.operacion || 'Alquiler').toUpperCase();
+
+                                                properties.unshift({
+                                                    id: p.id,
+                                                    title: p.title || 'Propiedad publicada',
+                                                    address: p.address || 'Mendoza, Argentina',
+                                                    province: prov,
+                                                    coords: [-32.8898, -68.8373],
+                                                    price: p.price || 0,
+                                                    image: mainImage,
+                                                    images: fotos,
+                                                    type: extraInfo.tipo || 'apartment',
+                                                    tags: [
+                                                        extraInfo.dormitorios ? `${extraInfo.dormitorios} dormitorios` : null,
+                                                        extraInfo.banos ? `${extraInfo.banos} baños` : null,
+                                                        extraInfo.sup_cubierta ? `${extraInfo.sup_cubierta} m²` : null,
+                                                        'Verificado'
+                                                    ].filter(Boolean),
+                                                    note: p.description ? p.description.split('Detalles: ')[0] : '',
+                                                    pet: extraInfo.mascotas || false,
+                                                    verified: true,
+                                                    featured: operacion,
+                                                    propiedad_imagenes: p.propiedad_imagenes,
+                                                    description: p.description
+                                                });
+                                            });
+                                            renderNewListings();
+                                        }
+                                    } catch(err) {
+                                        console.warn('Could not sync DB properties for search:', err);
+                                    }
+                                }
+                            }
+
+                            // Sync DB properties on DOM load
+                            document.addEventListener('DOMContentLoaded', () => {
+                                syncDbPropertiesForSearch();
+                            });
 
                             let infoWindow;
 
@@ -1142,15 +1250,27 @@
 
                                         marker.addListener('click', () => {
                                             const content = `
-                                <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 220px;">
-                                    <strong style="display:block; margin-bottom:4px; font-size: 14px;">${rental.title}</strong>
-                                    <span style="display:block; color: #666; font-size: 13px; margin-bottom:4px;">${rental.address}</span>
-                                    <strong style="display:block; color: #811b1e; font-size: 14px;">${moneyLabel(rental.price)} / mes</strong>
-                                </div>
-                            `;
+                                                <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 220px; color:#1a1a1a;">
+                                                    <strong style="display:block; margin-bottom:4px; font-size: 14px;">${rental.title}</strong>
+                                                    <span style="display:block; color: #666; font-size: 12px; margin-bottom:4px;">${rental.address}</span>
+                                                    <strong style="display:block; color: #811b1e; font-size: 14px; margin-bottom: 8px;">${moneyLabel(rental.price)} / mes</strong>
+                                                    <button class="map-info-detail-btn" style="width:100%; background:#811b1e; color:white; border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:bold; cursor:pointer;">Ver detalles y fotos</button>
+                                                </div>
+                                            `;
                                             if (!infoWindow) infoWindow = new google.maps.InfoWindow();
                                             infoWindow.setContent(content);
                                             infoWindow.open(googleMap, marker);
+
+                                            google.maps.event.addListenerOnce(infoWindow, 'domready', () => {
+                                                const btn = document.querySelector('.map-info-detail-btn');
+                                                if (btn) {
+                                                    btn.onclick = () => {
+                                                        if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                                            window.openMarketplacePropertyDetailModal(rental);
+                                                        }
+                                                    };
+                                                }
+                                            });
                                         });
 
                                         googleMarkers.push(marker);
