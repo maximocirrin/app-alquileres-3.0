@@ -24,12 +24,16 @@ const App = {
             const params = new URLSearchParams(window.location.search);
             const shouldOpenPublish = params.get('publish') === '1';
             const shouldOpenAdmin = params.get('admin') === '1';
+            const viewParam = params.get('view');
             const pageContext = App.getPageContext();
 
             if (user) {
-                if (pageContext === 'admin' || shouldOpenAdmin) {
+                if (pageContext === 'admin' || shouldOpenAdmin || viewParam === 'properties') {
                     await App.openAdminDashboard(user);
-                    if (shouldOpenAdmin) window.history.replaceState({}, document.title, window.location.pathname);
+                    if (viewParam === 'properties') {
+                        App.navigateTo('properties-view');
+                    }
+                    if (shouldOpenAdmin || viewParam) window.history.replaceState({}, document.title, window.location.pathname);
                 } else if (shouldOpenPublish) {
                     App.showPublishWizard();
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -242,6 +246,23 @@ const App = {
                 window.location.href = 'administrador.html';
             });
         }
+
+        // Listener para deshabilitar expensas si se selecciona 'expensas incluidas'
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'expensas-incluidas') {
+                const expensasInput = document.getElementById('expensas');
+                if (expensasInput) {
+                    if (e.target.checked) {
+                        expensasInput.value = '';
+                        expensasInput.disabled = true;
+                        expensasInput.classList.add('opacity-40', 'cursor-not-allowed');
+                    } else {
+                        expensasInput.disabled = false;
+                        expensasInput.classList.remove('opacity-40', 'cursor-not-allowed');
+                    }
+                }
+            }
+        });
 
         const btnBackFromPublish = document.getElementById('btn-back-from-publish');
         const btnBackMobile = document.getElementById('btn-back-mobile');
@@ -820,104 +841,165 @@ const App = {
             });
         }
         // --- Image Upload Logic ---
-        const fotosDropzone = document.getElementById('fotos-dropzone');
-        const fotosInput = document.getElementById('fotos-input');
-        const fotosPreviewContainer = document.getElementById('fotos-preview-container');
-        const fotosErrorMsg = document.getElementById('fotos-error-msg');
-        window.selectedPropertyPhotos = [];
+        // --- Robust Delegated Image Upload Logic ---
+        window.selectedPropertyPhotos = window.selectedPropertyPhotos || [];
 
-        if (fotosDropzone && fotosInput && fotosPreviewContainer) {
-            fotosDropzone.addEventListener('click', () => {
-                fotosInput.click();
-            });
+        function renderPhotoPreviews() {
+            const fotosPreviewContainer = document.getElementById('fotos-preview-container') || document.getElementById('preview-fotos-grid');
+            if (!fotosPreviewContainer) return;
 
-            fotosInput.addEventListener('change', async (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length > 0) {
-                    const imageFiles = files.filter(f => f.type.startsWith('image/'));
-
-                    const cropAndOptimizeImage1to1 = (file) => {
-                        return new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onload = function (ev) {
-                                const img = new Image();
-                                img.onload = function () {
-                                    const size = Math.min(img.width, img.height);
-                                    const sx = (img.width - size) / 2;
-                                    const sy = (img.height - size) / 2;
-
-                                    const MAX_SIZE = 1920;
-                                    const targetSize = Math.min(size, MAX_SIZE);
-
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = targetSize;
-                                    canvas.height = targetSize;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
-
-                                    canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.8);
-                                };
-                                img.src = ev.target.result;
-                            };
-                            reader.readAsDataURL(file);
-                        });
-                    };
-
-                    const processedBlobs = await Promise.all(imageFiles.map(cropAndOptimizeImage1to1));
-                    window.selectedPropertyPhotos = [...window.selectedPropertyPhotos, ...processedBlobs];
-
-                    if (window.selectedPropertyPhotos.length > 50) {
-                        window.selectedPropertyPhotos = window.selectedPropertyPhotos.slice(0, 50);
-                    }
-
-                    renderPhotoPreviews();
-                }
-            });
-
-            function renderPhotoPreviews() {
-                fotosPreviewContainer.innerHTML = '';
-                if (window.selectedPropertyPhotos.length > 0) {
-                    fotosPreviewContainer.classList.remove('hidden');
-                } else {
-                    fotosPreviewContainer.classList.add('hidden');
-                }
-
-                window.selectedPropertyPhotos.forEach((blob, index) => {
-                    const url = URL.createObjectURL(blob);
-                    const div = document.createElement('div');
-                    div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10';
-                    div.innerHTML = `
-                        <img src="${url}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button type="button" class="text-white hover:text-red-500 transition-colors delete-photo-btn" data-index="${index}">
-                                <span class="material-symbols-outlined text-3xl">delete</span>
-                            </button>
-                        </div>
-                    `;
-                    fotosPreviewContainer.appendChild(div);
-
-                    div.querySelector('.delete-photo-btn').addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        window.selectedPropertyPhotos.splice(index, 1);
-                        renderPhotoPreviews();
-                    });
-                });
+            fotosPreviewContainer.innerHTML = '';
+            if (window.selectedPropertyPhotos.length > 0) {
+                fotosPreviewContainer.classList.remove('hidden');
+            } else {
+                fotosPreviewContainer.classList.add('hidden');
             }
+
+            window.selectedPropertyPhotos.forEach((blob, index) => {
+                const url = URL.createObjectURL(blob);
+                const div = document.createElement('div');
+                div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10';
+                div.innerHTML = `
+                    <img src="${url}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="button" class="text-white hover:text-red-500 transition-colors delete-photo-btn" data-index="${index}">
+                            <span class="material-symbols-outlined text-3xl">delete</span>
+                        </button>
+                    </div>
+                `;
+                fotosPreviewContainer.appendChild(div);
+
+                div.querySelector('.delete-photo-btn').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    window.selectedPropertyPhotos.splice(index, 1);
+                    renderPhotoPreviews();
+                });
+            });
         }
 
-        // Form 'Multimedia' Submit Interceptor (Transition to Step 3)
-        const formMultimedia = document.getElementById('form-multimedia');
-        if (formMultimedia) {
-            formMultimedia.addEventListener('submit', (e) => {
+        async function processAndAddPhotos(files) {
+            if (!files || files.length === 0) return;
+            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+
+            const cropAndOptimizeImage1to1 = (file) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function (ev) {
+                        const img = new Image();
+                        img.onload = function () {
+                            const size = Math.min(img.width, img.height);
+                            const sx = (img.width - size) / 2;
+                            const sy = (img.height - size) / 2;
+
+                            const MAX_SIZE = 1920;
+                            const targetSize = Math.min(size, MAX_SIZE);
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = targetSize;
+                            canvas.height = targetSize;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
+
+                            canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.8);
+                        };
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const processedBlobs = await Promise.all(imageFiles.map(cropAndOptimizeImage1to1));
+            window.selectedPropertyPhotos = [...window.selectedPropertyPhotos, ...processedBlobs];
+
+            if (window.selectedPropertyPhotos.length > 50) {
+                window.selectedPropertyPhotos = window.selectedPropertyPhotos.slice(0, 50);
+            }
+
+            renderPhotoPreviews();
+        }
+
+        // Delegated click listener for dropzone to trigger input file picker safely
+        document.addEventListener('click', (e) => {
+            const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
+            if (dropzone) {
+                const fotosInput = document.getElementById('fotos-input') || document.getElementById('input-fotos');
+                if (fotosInput && e.target !== fotosInput) {
+                    fotosInput.click();
+                }
+            }
+        });
+
+        // Delegated change listener for file input selection & pet toggle
+        document.addEventListener('change', (e) => {
+            if (e.target && (e.target.id === 'fotos-input' || e.target.id === 'input-fotos')) {
+                const files = Array.from(e.target.files);
+                processAndAddPhotos(files);
+            }
+            if (e.target && e.target.id === 'permite-mascotas') {
+                const detallesContainer = document.getElementById('mascotas-detalles-container');
+                const label = document.getElementById('permite-mascotas-label');
+                if (e.target.checked) {
+                    if (detallesContainer) detallesContainer.classList.remove('hidden');
+                    if (label) label.textContent = 'Sí permite';
+                } else {
+                    if (detallesContainer) detallesContainer.classList.add('hidden');
+                    if (label) label.textContent = 'No permite';
+                }
+            }
+            if (e.target && e.target.id === 'usar-agenda-visitas') {
+                const detallesContainer = document.getElementById('visitas-detalles-container');
+                const label = document.getElementById('usar-agenda-label');
+                if (e.target.checked) {
+                    if (detallesContainer) detallesContainer.classList.remove('hidden');
+                    if (label) label.textContent = 'Sí, activar agenda';
+                } else {
+                    if (detallesContainer) detallesContainer.classList.add('hidden');
+                    if (label) label.textContent = 'No usar agenda';
+                }
+            }
+        });
+
+        // Drag and drop handlers
+        document.addEventListener('dragover', (e) => {
+            const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
+            if (dropzone) {
+                e.preventDefault();
+                dropzone.classList.add('border-primary', 'dark:border-red-500');
+            }
+        });
+        document.addEventListener('dragleave', (e) => {
+            const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
+            if (dropzone) {
+                dropzone.classList.remove('border-primary', 'dark:border-red-500');
+            }
+        });
+        document.addEventListener('drop', (e) => {
+            const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
+            if (dropzone) {
+                e.preventDefault();
+                dropzone.classList.remove('border-primary', 'dark:border-red-500');
+                if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+                    processAndAddPhotos(Array.from(e.dataTransfer.files));
+                }
+            }
+        });
+
+        // Form 'Multimedia' & 'Extras' Delegated Submit Interceptors
+        document.addEventListener('submit', (e) => {
+            if (!e.target) return;
+
+            // Form 2: Multimedia -> Step 3
+            if (e.target.id === 'form-multimedia') {
                 e.preventDefault();
 
                 let isValid = true;
-
+                const fotosErrorMsg = document.getElementById('fotos-error-msg');
                 const photoCount = window.selectedPropertyPhotos ? window.selectedPropertyPhotos.length : 0;
+
                 if (photoCount < 5 || photoCount > 50) {
                     isValid = false;
                     if (fotosErrorMsg) {
-                        fotosErrorMsg.textContent = `Debes cargar entre 5 y 50 fotos. Actualmente tienes ${photoCount}.`;
+                        fotosErrorMsg.textContent = `Debes cargar al menos 5 fotos (máximo 50). Actualmente tienes ${photoCount}.`;
                         fotosErrorMsg.classList.remove('hidden');
                     }
                 } else {
@@ -932,11 +1014,9 @@ const App = {
                     const title = document.getElementById('publish-main-title');
                     const subtitle = document.getElementById('paso-subtitle');
 
-                    // Fade out title and subtitle
                     if (title) title.style.opacity = '0';
                     if (subtitle) subtitle.style.opacity = '0';
 
-                    // Hide step 2 with animation
                     if (step2Container) {
                         step2Container.classList.remove('opacity-100', 'scale-100');
                         step2Container.classList.add('opacity-0', 'scale-95');
@@ -948,56 +1028,25 @@ const App = {
                             step2Container.style.height = '0';
                         }
 
-                        // Update Progress Indicator
-                        const pStep2 = document.getElementById('progress-step-2');
-                        const pStep3 = document.getElementById('progress-step-3');
-                        const pLine2 = document.getElementById('progress-line-2');
-
-                        if (pStep2) {
-                            pStep2.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
-                                    <span class="material-symbols-outlined text-[18px]">check</span>
-                                </div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
-                            `;
-                        }
-
-                        if (pStep3) {
-                            pStep3.classList.remove('opacity-50');
-                            pStep3.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">3</div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Extras</span>
-                            `;
-                        }
-
-                        if (pLine2) {
-                            pLine2.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
-                            pLine2.classList.add('border-primary', 'dark:border-red-500');
-                        }
+                        updateHeaderProgress(3);
 
                         if (step3Container) {
-                            // Show Step 3
                             step3Container.classList.remove('hidden');
 
-                            // Update titles
                             if (title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
                             if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
 
-                            // Trigger reflow
                             void step3Container.offsetWidth;
 
-                            // Fade in Step 3 and titles
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
                             step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
                             step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step3Container.style.height = ''; // Limpiar inline style
+                            step3Container.style.height = '';
 
-                            // Scroll up if necessary
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            // Change action buttons text/behavior if needed
                             const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
                             const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
 
@@ -1010,37 +1059,30 @@ const App = {
                                 continueBtnMob.setAttribute('form', 'form-extras');
                             }
 
-                            // Set global state
                             window.currentWizardStep = 3;
                         }
 
-                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                    }, 400);
                 }
-            });
-        }
+            }
 
-        // Form 'Extras' Submit Interceptor (Transition to Step 4)
-        const formExtras = document.getElementById('form-extras');
-        if (formExtras) {
-            formExtras.addEventListener('submit', (e) => {
+            // Form 3: Extras -> Step 4 (Preferencias)
+            if (e.target.id === 'form-extras') {
                 e.preventDefault();
 
-                // TODO: Add extras validation logic here if needed
                 let isValid = true;
 
                 if (isValid) {
-                    console.log('¡Datos Extras completos! Transicionando al paso 4: Publicar...');
+                    console.log('¡Datos Extras completos! Transicionando al paso 4: Preferencias...');
 
                     const step3Container = document.getElementById('wizard-step-3-container');
                     const step4Container = document.getElementById('wizard-step-4-container');
                     const title = document.getElementById('publish-main-title');
                     const subtitle = document.getElementById('paso-subtitle');
 
-                    // Fade out title and subtitle
                     if (title) title.style.opacity = '0';
                     if (subtitle) subtitle.style.opacity = '0';
 
-                    // Hide step 3 with animation
                     if (step3Container) {
                         step3Container.classList.remove('opacity-100', 'scale-100');
                         step3Container.classList.add('opacity-0', 'scale-95');
@@ -1052,76 +1094,432 @@ const App = {
                             step3Container.style.height = '0';
                         }
 
-                        // Update Progress Indicator
-                        const pStep3 = document.getElementById('progress-step-3');
-                        const pStep4 = document.getElementById('progress-step-4');
-                        const pLine3 = document.getElementById('progress-line-3');
-
-                        if (pStep3) {
-                            pStep3.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
-                                    <span class="material-symbols-outlined text-[18px]">check</span>
-                                </div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Extras</span>
-                            `;
-                        }
-
-                        if (pStep4) {
-                            pStep4.classList.remove('opacity-50');
-                            pStep4.innerHTML = `
-                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">4</div>
-                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Publicar</span>
-                            `;
-                        }
-
-                        if (pLine3) {
-                            pLine3.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
-                            pLine3.classList.add('border-primary', 'dark:border-red-500');
-                        }
+                        updateHeaderProgress(4);
 
                         if (step4Container) {
-                            // Show Step 4
                             step4Container.classList.remove('hidden');
 
-                            // Update titles
-                            if (title) title.textContent = '¡Estás a un paso de terminar!';
-                            if (subtitle) subtitle.textContent = 'Revisá y elegí tu plan de publicación';
+                            if (title) title.textContent = 'Preferencias de alquiler';
+                            if (subtitle) subtitle.textContent = 'Configurá las condiciones para tus futuros inquilinos';
 
-                            // Trigger reflow
                             void step4Container.offsetWidth;
 
-                            // Fade in Step 4 and titles
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
                             step4Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
                             step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step4Container.style.height = ''; // Limpiar inline style
+                            step4Container.style.height = '';
 
-                            // Scroll up if necessary
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            // Change action buttons text/behavior if needed
                             const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
                             const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
 
                             if (continueBtnDesk) {
-                                continueBtnDesk.textContent = 'Publicar Aviso';
-                                continueBtnDesk.setAttribute('form', 'form-planes');
+                                continueBtnDesk.textContent = 'Continuar';
+                                continueBtnDesk.setAttribute('form', 'form-preferencias');
                             }
                             if (continueBtnMob) {
-                                continueBtnMob.textContent = 'Publicar Aviso';
-                                continueBtnMob.setAttribute('form', 'form-planes');
+                                continueBtnMob.textContent = 'Continuar';
+                                continueBtnMob.setAttribute('form', 'form-preferencias');
                             }
 
-                            // Set global state
                             window.currentWizardStep = 4;
                         }
 
-                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                    }, 400);
                 }
-            });
-        }
+            }
+
+            // Form 4: Preferencias -> Step 5 (Visitas Presenciales)
+            if (e.target.id === 'form-preferencias') {
+                e.preventDefault();
+
+                let isValid = true;
+
+                if (isValid) {
+                    console.log('¡Datos Preferencias completos! Transicionando al paso 5: Visitas...');
+
+                    const step4Container = document.getElementById('wizard-step-4-container');
+                    const step5Container = document.getElementById('wizard-step-5-container');
+                    const title = document.getElementById('publish-main-title');
+                    const subtitle = document.getElementById('paso-subtitle');
+
+                    if (title) title.style.opacity = '0';
+                    if (subtitle) subtitle.style.opacity = '0';
+
+                    if (step4Container) {
+                        step4Container.classList.remove('opacity-100', 'scale-100');
+                        step4Container.classList.add('opacity-0', 'scale-95');
+                    }
+
+                    setTimeout(() => {
+                        if (step4Container) {
+                            step4Container.classList.add('hidden');
+                            step4Container.style.height = '0';
+                        }
+
+                        updateHeaderProgress(5);
+
+                        if (step5Container) {
+                            step5Container.classList.remove('hidden');
+
+                            if (title) title.textContent = 'Agenda de Visitas Presenciales';
+                            if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para mostrar la propiedad';
+
+                            void step5Container.offsetWidth;
+
+                            if (title) title.style.opacity = '1';
+                            if (subtitle) subtitle.style.opacity = '1';
+
+                            step5Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                            step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                            step5Container.style.height = '';
+
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+
+                            if (continueBtnDesk) {
+                                continueBtnDesk.textContent = 'Continuar';
+                                continueBtnDesk.setAttribute('form', 'form-visitas');
+                            }
+                            if (continueBtnMob) {
+                                continueBtnMob.textContent = 'Continuar';
+                                continueBtnMob.setAttribute('form', 'form-visitas');
+                            }
+
+                            window.currentWizardStep = 5;
+                        }
+
+                    }, 400);
+                }
+            }
+
+            // Form 5: Visitas -> Step 6 (Publicar/Planes)
+            if (e.target.id === 'form-visitas') {
+                e.preventDefault();
+
+                console.log('¡Datos Visitas completos! Transicionando al paso 6: Publicar...');
+
+                const step5Container = document.getElementById('wizard-step-5-container');
+                const step6Container = document.getElementById('wizard-step-6-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
+
+                if (title) title.style.opacity = '0';
+                if (subtitle) subtitle.style.opacity = '0';
+
+                if (step5Container) {
+                    step5Container.classList.remove('opacity-100', 'scale-100');
+                    step5Container.classList.add('opacity-0', 'scale-95');
+                }
+
+                setTimeout(() => {
+                    if (step5Container) {
+                        step5Container.classList.add('hidden');
+                        step5Container.style.height = '0';
+                    }
+
+                    updateHeaderProgress(6);
+
+                    if (step6Container) {
+                        step6Container.classList.remove('hidden');
+
+                        if (title) title.textContent = '¡Estás a un paso de terminar!';
+                        if (subtitle) subtitle.textContent = 'Revisá y elegí tu plan de publicación';
+
+                        void step6Container.offsetWidth;
+
+                        if (title) title.style.opacity = '1';
+                        if (subtitle) subtitle.style.opacity = '1';
+
+                        step6Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                        step6Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                        step6Container.style.height = '';
+
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+
+                        if (continueBtnDesk) {
+                            continueBtnDesk.textContent = 'Publicar Aviso';
+                            continueBtnDesk.setAttribute('form', 'form-planes');
+                        }
+                        if (continueBtnMob) {
+                            continueBtnMob.textContent = 'Publicar Aviso';
+                            continueBtnMob.setAttribute('form', 'form-planes');
+                        }
+
+                        window.currentWizardStep = 6;
+                    }
+
+                }, 400);
+            }
+        });
+
+        // Global Wizard Back Navigation Handler
+        window.handleWizardBack = function() {
+            const stepOperacion = document.getElementById('step-operacion');
+            const stepUbicacion = document.getElementById('step-ubicacion');
+            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+
+            const step1Container = document.getElementById('wizard-step-1-container');
+            const step2Container = document.getElementById('wizard-step-2-container');
+            const step3Container = document.getElementById('wizard-step-3-container');
+            const step4Container = document.getElementById('wizard-step-4-container');
+            const step5Container = document.getElementById('wizard-step-5-container');
+            const step6Container = document.getElementById('wizard-step-6-container');
+
+            const title = document.getElementById('publish-main-title');
+            const subtitle = document.getElementById('paso-subtitle');
+
+            const getStepName = (step) => {
+                const names = { 1: 'Principales', 2: 'Multimedia', 3: 'Extras', 4: 'Preferencias', 5: 'Visitas', 6: 'Publicar' };
+                return names[step] || '';
+            };
+
+            const updateHeaderProgress = (activeStep) => {
+                // Update mobile step indicator
+                const mobBadge = document.getElementById('mobile-step-badge');
+                const mobPercent = document.getElementById('mobile-step-percent');
+                const mobBar = document.getElementById('mobile-progress-bar');
+                
+                const percent = Math.round((activeStep / 6) * 100);
+                if (mobBadge) mobBadge.innerHTML = `Paso ${activeStep} de 6 &bull; ${getStepName(activeStep)}`;
+                if (mobPercent) mobPercent.textContent = `${percent}%`;
+                if (mobBar) mobBar.style.width = `${percent}%`;
+
+                // Update desktop step indicators
+                for (let i = 1; i <= 6; i++) {
+                    const pStep = document.getElementById(`progress-step-${i}`);
+                    const pLine = document.getElementById(`progress-line-${i - 1}`);
+
+                    if (pStep) {
+                        if (i < activeStep) {
+                            pStep.classList.remove('opacity-50');
+                            pStep.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            `;
+                        } else if (i === activeStep) {
+                            pStep.classList.remove('opacity-50');
+                            pStep.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
+                                <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            `;
+                        } else {
+                            pStep.classList.add('opacity-50');
+                            pStep.innerHTML = `
+                                <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">${i}</div>
+                                <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            `;
+                        }
+                    }
+
+                    if (pLine) {
+                        if (i <= activeStep) {
+                            pLine.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
+                            pLine.classList.add('border-primary', 'dark:border-red-500');
+                        } else {
+                            pLine.classList.remove('border-primary', 'dark:border-red-500');
+                            pLine.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
+                        }
+                    }
+                }
+            };
+
+            const setSubmitButton = (formId, text) => {
+                const btnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
+                const btnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
+                if (btnDesk) { btnDesk.setAttribute('form', formId); btnDesk.textContent = text; }
+                if (btnMob) { btnMob.setAttribute('form', formId); btnMob.textContent = text; }
+            };
+
+            // Case 0: Step 6 -> Step 5
+            if (step6Container && !step6Container.classList.contains('hidden')) {
+                step6Container.classList.add('hidden');
+                step6Container.style.height = '0';
+                if (step5Container) {
+                    step5Container.classList.remove('hidden');
+                    step5Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    step5Container.style.height = '';
+                }
+                if (title) title.textContent = 'Agenda de Visitas Presenciales';
+                if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para mostrar la propiedad';
+                updateHeaderProgress(5);
+                setSubmitButton('form-visitas', 'Continuar');
+                window.currentWizardStep = 5;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 1: Step 5 -> Step 4
+            if (step5Container && !step5Container.classList.contains('hidden')) {
+                step5Container.classList.add('hidden');
+                step5Container.style.height = '0';
+                if (step4Container) {
+                    step4Container.classList.remove('hidden');
+                    step4Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    step4Container.style.height = '';
+                }
+                if (title) title.textContent = 'Preferencias de alquiler';
+                if (subtitle) subtitle.textContent = 'Configurá las condiciones para tus futuros inquilinos';
+                updateHeaderProgress(4);
+                setSubmitButton('form-preferencias', 'Continuar');
+                window.currentWizardStep = 4;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 2: Step 4 -> Step 3
+            if (step4Container && !step4Container.classList.contains('hidden')) {
+                step4Container.classList.add('hidden');
+                step4Container.style.height = '0';
+                if (step3Container) {
+                    step3Container.classList.remove('hidden');
+                    step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    step3Container.style.height = '';
+                }
+                if (title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
+                if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
+                updateHeaderProgress(3);
+                setSubmitButton('form-extras', 'Continuar');
+                window.currentWizardStep = 3;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 3: Step 3 -> Step 2
+            if (step3Container && !step3Container.classList.contains('hidden')) {
+                step3Container.classList.add('hidden');
+                step3Container.style.height = '0';
+                if (step2Container) {
+                    step2Container.classList.remove('hidden');
+                    step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    step2Container.style.height = '';
+                }
+                if (title) title.textContent = 'Agregá fotos y videos';
+                if (subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
+                updateHeaderProgress(2);
+                setSubmitButton('form-multimedia', 'Continuar');
+                window.currentWizardStep = 2;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 4: Step 2 -> Step 1 (Características)
+            if (step2Container && !step2Container.classList.contains('hidden')) {
+                step2Container.classList.add('hidden');
+                step2Container.style.height = '0';
+                if (step1Container) {
+                    step1Container.classList.remove('hidden');
+                    step1Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    step1Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    step1Container.style.height = '';
+                }
+                if (stepOperacion) stepOperacion.classList.add('hidden');
+                if (stepUbicacion) stepUbicacion.classList.add('hidden');
+                if (stepCaracteristicas) stepCaracteristicas.classList.remove('hidden');
+
+                const tabUbicacion = document.getElementById('tab-ubicacion');
+                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
+                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+
+                if (title) title.textContent = '¡Empecemos a crear tu aviso!';
+                if (subtitle) subtitle.textContent = 'Detalles de tu propiedad';
+                updateHeaderProgress(1);
+                setSubmitButton('form-caracteristicas', 'Continuar');
+                window.currentWizardStep = 1;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 5: Step 1.3 (Características) -> Step 1.2 (Ubicación)
+            if (stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden')) {
+                stepCaracteristicas.classList.add('hidden');
+                if (stepUbicacion) stepUbicacion.classList.remove('hidden');
+
+                const tabOperacion = document.getElementById('tab-operacion');
+                const tabUbicacion = document.getElementById('tab-ubicacion');
+                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+                if (tabOperacion) tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+
+                if (subtitle) subtitle.textContent = '¿Dónde está ubicada tu propiedad?';
+                setSubmitButton('form-ubicacion', 'Continuar');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 6: Step 1.2 (Ubicación) -> Step 1.1 (Operación)
+            if (stepUbicacion && !stepUbicacion.classList.contains('hidden')) {
+                stepUbicacion.classList.add('hidden');
+                if (stepOperacion) stepOperacion.classList.remove('hidden');
+
+                const tabOperacion = document.getElementById('tab-operacion');
+                const tabUbicacion = document.getElementById('tab-ubicacion');
+                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+
+                if (subtitle) subtitle.textContent = '¿Qué querés publicar?';
+                setSubmitButton('form-principales', 'Continuar');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Case 7: Step 1.1 (Operación) -> Cancel/Close wizard
+            const publishView = document.getElementById('publish-property-view');
+            if (publishView) {
+                publishView.classList.add('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        // Delegated listener for Continue buttons & Day Selection Pill buttons
+        document.addEventListener('click', (e) => {
+            const diaBtn = e.target.closest('.dia-visita-btn');
+            if (diaBtn) {
+                e.preventDefault();
+                diaBtn.classList.toggle('active-dia');
+                if (diaBtn.classList.contains('active-dia')) {
+                    diaBtn.classList.remove('bg-surface-container-high', 'dark:bg-[#282828]', 'text-secondary', 'dark:text-[#c7c6c6]', 'border-outline-variant/30', 'dark:border-white/5');
+                    diaBtn.classList.add('bg-primary', 'text-white', 'dark:bg-red-500', 'border-primary', 'dark:border-red-500', 'shadow-sm');
+                } else {
+                    diaBtn.classList.remove('bg-primary', 'text-white', 'dark:bg-red-500', 'border-primary', 'dark:border-red-500', 'shadow-sm');
+                    diaBtn.classList.add('bg-surface-container-high', 'dark:bg-[#282828]', 'text-secondary', 'dark:text-[#c7c6c6]', 'border-outline-variant/30', 'dark:border-white/5');
+                }
+            }
+
+            const btn = e.target.closest('#desktop-action-buttons button[type="submit"]') || e.target.closest('nav.md\\:hidden button[type="submit"]');
+            if (btn) {
+                const formId = btn.getAttribute('form');
+                if (formId) {
+                    const form = document.getElementById(formId);
+                    if (form) {
+                        e.preventDefault();
+                        if (typeof form.requestSubmit === 'function') {
+                            form.requestSubmit();
+                        } else {
+                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                        }
+                    }
+                }
+            }
+        });
 
         // Form 'Planes' Submit Interceptor (Final Submit to Supabase)
         const formPlanes = document.getElementById('form-planes');
@@ -1153,7 +1551,7 @@ const App = {
                 `;
 
                 overlay.innerHTML = `
-                    <img src="img/logo-Hábitat.svg" alt="Hábitat" style="height: 60px; margin-bottom: 2rem; opacity: 0.8;">
+                    <div style="height: 60px; width: 220px; margin-bottom: 2rem; background-color: #811b1e; -webkit-mask: url('img/logo-habitat-web.svg') no-repeat center / contain; mask: url('img/logo-habitat-web.svg') no-repeat center / contain;"></div>
                     <div class="loader-pub" style="
                         width: fit-content; font-weight: bold; font-family: monospace; font-size: 30px;
                         background: radial-gradient(circle closest-side,#811b1e 94%,#0000) right/calc(200% - 1em) 100%;
@@ -1226,7 +1624,6 @@ const App = {
                         ambientes: getVal('ambientes-new'),
                         dormitorios: getVal('dormitorios-new'),
                         banos: getVal('banos-new'),
-                        toilettes: getVal('toilettes-new'),
                         cocheras: getVal('cocheras-new'),
                         antiguedad: getRadioValue('antiguedad'),
 
@@ -1244,6 +1641,7 @@ const App = {
                         precio: getVal('precio'),
                         moneda: document.getElementById('precio')?.previousElementSibling?.value === 'U$S' ? 'USD' : 'ARS',
                         expensas: getVal('expensas'),
+                        expensasIncluidas: document.getElementById('expensas-incluidas')?.checked || false,
                         tituloAviso: getVal('titulo-aviso'),
                         descripcionAviso: getVal('descripcion-aviso'),
 
@@ -1257,12 +1655,43 @@ const App = {
                             luminoso: document.querySelector('#form-extras select:nth-of-type(3)')?.value,
                             orientacion: document.querySelector('#form-extras select:nth-of-type(4)')?.value,
                             frenteTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(1)')?.value,
-                            largoTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(2)')?.value,
-                            supSemicubierta: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(3)')?.value
+                            largoTerreno: document.querySelector('#form-extras input[placeholder="0"]:nth-of-type(2)')?.value
                         },
 
-                        // Planes (Paso 4)
-                        planPublicacion: 'gratis', // For now, hardcoded as default or extract from UI if implemented
+                        // Preferencias (Paso 4)
+                        preferenciasAlquiler: {
+                            permiteMascotas: document.getElementById('permite-mascotas')?.checked || false,
+                            mascotas: {
+                                gatos: parseInt(document.getElementById('cant-gato')?.value || 0),
+                                perrosPequenos: parseInt(document.getElementById('cant-perro-pequeno')?.value || 0),
+                                perrosGrandes: parseInt(document.getElementById('cant-perro-grande')?.value || 0),
+                                negociable: document.getElementById('mascotas-negociable')?.checked || false,
+                                tarifaIngreso: parseFloat(document.getElementById('tarifa-mascota')?.value || 0),
+                                tarifaReembolsable: document.getElementById('tarifa-reembolsable')?.value === 'si',
+                                alquilerMensualMascota: parseFloat(document.getElementById('alquiler-mascota')?.value || 0)
+                            }
+                        },
+
+                        // Condiciones del Contrato (Paso 4)
+                        condicionesContrato: {
+                            duracionContrato: document.getElementById('duracion-contrato')?.value || '24-meses',
+                            indiceActualizacion: document.getElementById('indice-actualizacion')?.value || 'ipc',
+                            frecuenciaActualizacion: document.getElementById('frecuencia-actualizacion')?.value || 'cuatrimestral'
+                        },
+
+                        // Agenda de Visitas / Tours (Paso 4)
+                        agendaVisitas: {
+                            activo: document.getElementById('usar-agenda-visitas')?.checked || false,
+                            modalidad: document.querySelector('input[name="modalidad-visitas"]:checked')?.value || 'confirmar',
+                            duracionVisita: document.getElementById('duracion-visita')?.value || '30-min',
+                            horaDesde: document.getElementById('visitas-hora-desde')?.value || '09:00',
+                            horaHasta: document.getElementById('visitas-hora-hasta')?.value || '18:00',
+                            diasDisponibles: Array.from(document.querySelectorAll('#dias-visitas-container .dia-visita-btn.active-dia')).map(b => b.dataset.dia),
+                            notasVisitas: document.getElementById('notas-visitas')?.value || ''
+                        },
+
+                        // Planes (Paso 5)
+                        planPublicacion: 'gratis', // Default plan
 
                         // Multimedia
                         photos: window.selectedPropertyPhotos || []
@@ -1325,9 +1754,16 @@ const App = {
                     overlay.style.opacity = '0';
                     await new Promise(resolve => setTimeout(resolve, 500));
 
-                    // Remove overlay and redirect
+                    // Remove overlay and redirect to administrator properties view
                     overlay.remove();
-                    document.getElementById('btn-back-from-publish').click();
+                    document.getElementById('btn-back-from-publish')?.click();
+
+                    if (window.location.pathname.includes('administrador.html')) {
+                        await App.openAdminDashboard();
+                        App.navigateTo('properties-view');
+                    } else {
+                        window.location.href = 'administrador.html?view=properties';
+                    }
                     return;
 
                 } catch (error) {

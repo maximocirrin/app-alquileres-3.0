@@ -549,6 +549,20 @@ input, select {
     color: var(--foreground);
 }
 
+select option {
+    background-color: #ffffff;
+    color: #1a1c1c;
+    padding: 12px 16px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 15px;
+}
+
+html.dark select option,
+[data-theme="dark"] select option {
+    background-color: #1a1a1e !important;
+    color: #f1f1f1 !important;
+}
+
 input:focus, select:focus {
     outline: none;
     border-color: var(--ring);

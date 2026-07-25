@@ -1,0 +1,3 @@
+@echo off
+powershell -Command "$html = [System.IO.File]::ReadAllBytes('c:\Users\maxim\OneDrive\Escritorio\Proyectos\PropManager\app-alquileres-3.0\components\publish-property-view.html'); $b64 = [Convert]::ToBase64String($html); $js = '(function() { var b64 = ''' + $b64 + '''; var decoded = decodeURIComponent(escape(window.atob(b64))); var div = document.createElement(''div''); div.innerHTML = decoded; while(div.firstChild) { document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript); } })();'; [System.IO.File]::WriteAllText('c:\Users\maxim\OneDrive\Escritorio\Proyectos\PropManager\app-alquileres-3.0\js\publish-property.js', $js, [System.Text.Encoding]::UTF8)"
+echo DONE
