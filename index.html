@@ -1021,7 +1021,7 @@
                             note: 'Contrato digital, garantía online y gestión directa.',
                             pet: true,
                             verified: true,
-                            featured: 'Visita disponible'
+                            expensasIncluidas: true
                         },
                         {
                             title: 'Estudio amoblado cerca del metro',
@@ -1035,7 +1035,8 @@
                             note: 'Ideal para mudanza rápida con firma remota.',
                             pet: false,
                             verified: true,
-                            featured: 'Nuevo'
+                            expensasIncluidas: false,
+                            expensas: 45000
                         },
                         {
                             title: 'Piso familiar con cochera',
@@ -1049,7 +1050,8 @@
                             note: 'Publicación validada por propietario.',
                             pet: true,
                             verified: true,
-                            featured: 'Premium'
+                            expensasIncluidas: false,
+                            expensas: 85000
                         },
                         {
                             title: 'Departamento en barrio residencial',
@@ -1063,7 +1065,7 @@
                             note: 'Apto mascotas y listo para iniciar solicitud.',
                             pet: true,
                             verified: true,
-                            featured: 'Apto mascotas'
+                            expensasIncluidas: true
                         },
                         {
                             title: 'Dúplex con terraza privada',
@@ -1077,7 +1079,8 @@
                             note: 'Para estadías medias con onboarding digital.',
                             pet: true,
                             verified: true,
-                            featured: 'Alta demanda'
+                            expensasIncluidas: false,
+                            expensas: 60000
                         }
                     ];
 
@@ -1096,6 +1099,14 @@
                                     if (p.propiedad_imagenes && p.propiedad_imagenes.length > 0) {
                                         fotos = p.propiedad_imagenes.sort((a,b) => a.orden - b.orden).map(img => img.url);
                                     }
+                                    const isExpensasIncluidas = Boolean(
+                                        extraInfo.expensasIncluidas ||
+                                        extraInfo.expensas_incluidas ||
+                                        p.expensas_incluidas ||
+                                        p.expensasIncluidas ||
+                                        extraInfo.expensas === 0 ||
+                                        p.expensas === 0
+                                    );
                                     return {
                                         id: p.id,
                                         title: p.title || 'Propiedad en alquiler',
@@ -1113,6 +1124,8 @@
                                         note: p.description ? p.description.split('Detalles: ')[0] : '',
                                         pet: extraInfo.mascotas || false,
                                         verified: true,
+                                        expensasIncluidas: isExpensasIncluidas,
+                                        expensas: extraInfo.expensas || p.expensas || 0,
                                         featured: (extraInfo.operacion || 'Alquiler').toUpperCase(),
                                         propiedad_imagenes: p.propiedad_imagenes,
                                         description: p.description
@@ -1140,31 +1153,28 @@
                         };
 
                         const photosCount = prop.images ? prop.images.length : 1;
+                        const isIncluidas = prop.expensasIncluidas;
+                        const expensasVal = prop.expensas ? (prop.expensas >= 1000 ? `$${Math.round(prop.expensas / 1000)}k` : `$${prop.expensas}`) : '';
+                        const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
 
                         card.innerHTML = `
                             <div>
-                                <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-4 bg-zinc-100 dark:bg-zinc-800">
+                                <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
                                     <img src="${prop.image}" alt="${prop.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                                    <span class="absolute top-3 left-3 bg-primary/90 backdrop-blur-md text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md">
-                                        ${prop.featured || 'Destacado'}
-                                    </span>
-                                    ${prop.verified ? `
-                                        <span class="absolute top-3 right-3 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-                                            <span class="material-symbols-outlined text-xs">verified</span>
-                                            Verificado
-                                        </span>
-                                    ` : ''}
-                                    <div class="absolute bottom-3 left-3 bg-zinc-950/80 backdrop-blur-md text-white text-sm font-extrabold px-3 py-1 rounded-lg border border-white/10 shadow-lg">
-                                        ${priceFormatted}
-                                    </div>
                                     ${photosCount > 1 ? `
-                                        <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                        <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">photo_camera</span>
-                                            ${photosCount}
+                                            ${photosCount} fotos
                                         </div>
                                     ` : ''}
                                 </div>
-                                <h3 class="font-headline text-base sm:text-lg font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <strong class="text-base sm:text-lg font-black text-zinc-900 dark:text-white">${priceFormatted}</strong>
+                                    <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${isIncluidas ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-200'}">
+                                        ${expensasText}
+                                    </span>
+                                </div>
+                                <h3 class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
                                     ${prop.title}
                                 </h3>
                                 <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">

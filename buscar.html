@@ -318,16 +318,199 @@
             display: block;
         }
 
-        .status-badge {
+        .favorite-btn {
             position: absolute;
-            left: 0.65rem;
-            top: 0.65rem;
+            right: 0.55rem;
+            top: 0.55rem;
+            width: 2.2rem;
+            height: 2.2rem;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.92);
-            color: #1a1a1a;
-            padding: 0.38rem 0.55rem;
-            font-size: 0.72rem;
+            border: 0;
+            background: rgba(0, 0, 0, 0.48);
+            color: white;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .listing-body {
+            min-width: 0;
+            padding: 0.95rem;
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .listing-top {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .listing-price {
+            font-size: 1.3rem;
             font-weight: 800;
+            color: var(--foreground);
+            white-space: nowrap;
+        }
+
+        .listing-title {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.25;
+        }
+
+        .listing-address,
+        .listing-note {
+            color: var(--muted-foreground);
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .spec-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .spec-list li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            border-radius: 999px;
+            background: var(--secondary);
+            padding: 0.38rem 0.55rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--secondary-foreground);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .ghost-action {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--background);
+            color: var(--foreground);
+            padding: 0.55rem 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .map-panel {
+            position: sticky;
+            top: 4rem;
+            height: calc(100vh - 4rem);
+            padding: 1rem;
+            background: var(--background);
+        }
+
+        .map-canvas {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--search-map);
+        }
+
+        #rentals-map {
+            width: 100%;
+            height: 100%;
+            background: var(--search-map);
+        }
+
+        .map-toolbar {
+            position: absolute;
+            left: 1rem;
+            right: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-chip .material-symbols-rounded {
+            font-size: 1.15rem;
+            color: var(--muted-foreground);
+            transition: color 0.2s ease;
+        }
+
+        .filter-chip:hover {
+            border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
+            background: color-mix(in srgb, var(--primary) 5%, var(--background));
+            transform: translateY(-1px);
+        }
+
+        .filter-chip.is-active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
+        }
+
+        .filter-chip.is-active .material-symbols-rounded {
+            color: #ffffff;
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1.1rem 0 0.8rem;
+            color: var(--muted-foreground);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+
+        .sort-control {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-height: 2.5rem;
+            padding: 0 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--card);
+            color: var(--foreground);
+        }
+
+        .listing-grid {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .listing-card {
+            display: grid;
+            grid-template-columns: 9.5rem 1fr;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--card-foreground);
+        }
+
+        .listing-media {
+            position: relative;
+            min-height: 11rem;
+            background: var(--muted);
+        }
+
+        .listing-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .favorite-btn {
@@ -516,199 +699,25 @@
             transform: translateX(-50%) rotate(45deg);
         }
 
-        .empty-state {
-            display: none;
-            padding: 2rem;
-            text-align: center;
-            border: 1px dashed var(--border);
-            border-radius: 8px;
-            color: var(--muted-foreground);
-        }
-
-        .empty-state.is-visible {
-            display: block;
-        }
-
-        .mobile-map-toggle {
-            display: none;
-        }
-
-        @media (max-width: 1040px) {
-            .search-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .results-panel {
-                border-right: 0;
-                overflow: visible;
-            }
-
-            .map-panel {
-                position: relative;
-                top: auto;
-                order: -1;
-                height: clamp(22rem, 56vh, 34rem);
-                padding: 1rem clamp(1rem, 2vw, 1.5rem) 0;
-            }
-
-            .search-hero h1 {
-                max-width: 16ch;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .search-header {
-                gap: 0.55rem;
-            }
-
-            .search-form,
-            .listing-card {
-                grid-template-columns: 1fr;
-            }
-
-            .primary-action {
-                width: 100%;
-            }
-
-            .listing-media {
-                min-height: 13rem;
-            }
-
-            .listing-top,
-            .results-meta {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .sort-control {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 460px) {
-            .results-panel {
-                padding-inline: 0.75rem;
-            }
-
-            .map-panel {
-                padding-inline: 0.75rem;
-            }
-
-            .filter-chip {
-                flex: 1 1 calc(50% - 0.55rem);
-                text-align: center;
-            }
-        }
-
-
-        .ghost-action {
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: var(--background);
-            color: var(--foreground);
-            padding: 0.55rem 0.8rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
-        .map-panel {
-            position: sticky;
-            top: 4rem;
-            height: calc(100vh - 4rem);
-            padding: 1rem;
-            background: var(--background);
-        }
-
-        .map-canvas {
-            position: relative;
-            height: 100%;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--search-map);
-        }
-
-        #rentals-map {
-            width: 100%;
-            height: 100%;
-            background: var(--search-map);
-        }
-
-        .map-toolbar {
-            position: absolute;
-            left: 1rem;
-            right: 1rem;
-            top: 1rem;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            pointer-events: none;
-        }
-
-        .map-toolbar>* {
-            pointer-events: auto;
-        }
-
-        .map-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            min-height: 2.5rem;
-            padding: 0 0.85rem;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: color-mix(in srgb, var(--search-shell) 92%, transparent);
-            color: var(--foreground);
-            font-size: 0.85rem;
-            font-weight: 800;
-            backdrop-filter: blur(14px);
-        }
-
-        .province-reset {
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            min-height: 2.5rem;
-            padding: 0 0.85rem;
-            background: color-mix(in srgb, var(--search-shell) 92%, transparent);
-            color: var(--foreground);
-            font-size: 0.85rem;
-            font-weight: 800;
-            cursor: pointer;
-            backdrop-filter: blur(14px);
-        }
-
-        .property-map-marker {
-            transform: translate(-50%, -100%);
-        }
-
-        .property-map-marker span {
-            position: relative;
+        .status-badge {
             display: inline-flex;
             align-items: center;
             border-radius: 999px;
-            padding: 0.45rem 0.62rem;
-            background: var(--search-marker);
-            color: white;
-            font-size: 0.78rem;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.7rem;
             font-weight: 800;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+            line-height: 1;
             white-space: nowrap;
         }
 
-        .property-map-marker span::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            bottom: -0.28rem;
-            width: 0.58rem;
-            height: 0.58rem;
-            background: inherit;
-            transform: translateX(-50%) rotate(45deg);
+        .status-badge.status-expensas-incluidas {
+            background: #059669 !important;
+            color: #ffffff !important;
+        }
+
+        .status-badge.status-expensas-mas {
+            background: #27272a !important;
+            color: #ffffff !important;
         }
 
         .empty-state {
@@ -725,7 +734,7 @@
         }
 
         .mobile-map-floating-btn {
-            display: none;
+            display: none !important;
         }
 
         @media (max-width: 1040px) {
@@ -738,6 +747,20 @@
                 overflow: visible;
             }
 
+            .map-panel {
+                position: relative;
+                top: auto;
+                order: -1;
+                height: clamp(22rem, 50vh, 34rem);
+                padding: 1rem clamp(1rem, 2vw, 1.5rem) 0;
+            }
+
+            .search-hero h1 {
+                max-width: 16ch;
+            }
+        }
+
+        @media (max-width: 768px) {
             .map-panel {
                 display: none;
             }
@@ -757,7 +780,7 @@
             }
 
             .mobile-map-floating-btn {
-                display: inline-flex;
+                display: inline-flex !important;
                 align-items: center;
                 gap: 0.55rem;
                 position: fixed;
@@ -786,10 +809,6 @@
 
             .mobile-map-floating-btn:active {
                 transform: translateX(-50%) scale(0.94);
-            }
-
-            .search-hero h1 {
-                max-width: 16ch;
             }
         }
 
@@ -907,7 +926,6 @@
                         </select>
                     </label>
                 </div>
-
                 <div class="listing-grid" id="listing-grid"></div>
                 <div class="empty-state" id="empty-state">
                     No encontramos propiedades para esa búsqueda. Probá con otra zona o quitá un filtro.
@@ -932,7 +950,7 @@
                                 note: 'Contrato digital, garantía online y administración desde Habitat.',
                                 pet: true,
                                 verified: true,
-                                featured: 'Visita disponible'
+                                expensasIncluidas: true
                             },
                             {
                                 title: 'Estudio amoblado cerca del metro',
@@ -946,7 +964,8 @@
                                 note: 'Ideal para mudanza rápida con firma remota.',
                                 pet: false,
                                 verified: true,
-                                featured: 'Nuevo'
+                                expensasIncluidas: false,
+                                expensas: 45000
                             },
                             {
                                 title: 'Piso familiar con cochera',
@@ -960,7 +979,8 @@
                                 note: 'Publicación validada por propietario con documentación completa.',
                                 pet: true,
                                 verified: true,
-                                featured: 'Premium'
+                                expensasIncluidas: false,
+                                expensas: 85000
                             },
                             {
                                 title: 'Monoambiente moderno',
@@ -974,7 +994,7 @@
                                 note: 'Expensas claras y proceso de reserva digital.',
                                 pet: false,
                                 verified: false,
-                                featured: 'Oportunidad'
+                                expensasIncluidas: true
                             },
                             {
                                 title: 'Departamento en barrio residencial',
@@ -988,7 +1008,8 @@
                                 note: 'Apto mascotas y listo para iniciar solicitud.',
                                 pet: true,
                                 verified: false,
-                                featured: 'Apto mascotas'
+                                expensasIncluidas: false,
+                                expensas: 35000
                             },
                             {
                                 title: 'Dúplex con terraza privada',
@@ -1002,7 +1023,7 @@
                                 note: 'Para estadías medias con onboarding digital.',
                                 pet: true,
                                 verified: true,
-                                featured: 'Alta demanda'
+                                expensasIncluidas: true
                             }
                         ];
 
@@ -1074,7 +1095,6 @@
                                     rental.type === currentFilter ||
                                     (currentFilter === 'pet' && rental.pet) ||
                                     (currentFilter === 'verified' && rental.verified);
-                                // Ya no filtramos por provincia para que el resto de propiedades no desaparezca al hacer zoom
                                 return matchesText && matchesFilter;
                             }
                             function getVisibleRentals() {
@@ -1110,11 +1130,13 @@
                                     };
 
                                     const photosCount = (rental.images && rental.images.length > 0) ? rental.images.length : (rental.propiedad_imagenes ? rental.propiedad_imagenes.length : 1);
+                                    const isIncluidas = rental.expensasIncluidas;
+                                    const expensasVal = rental.expensas ? (rental.expensas >= 1000 ? `$${Math.round(rental.expensas / 1000)}k` : `$${rental.expensas}`) : '';
+                                    const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
 
                                     card.innerHTML = `
                                         <div class="listing-media relative overflow-hidden">
                                             <img src="${rental.image}" alt="${rental.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                            <span class="status-badge">${rental.featured}</span>
                                             <button class="favorite-btn" type="button" aria-label="Guardar ${rental.title}">
                                                 <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
                                             </button>
@@ -1128,7 +1150,10 @@
                                         <div class="listing-body">
                                             <div class="listing-top">
                                                 <div>
-                                                    <strong class="listing-price">${moneyLabel(rental.price)} / mes</strong>
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                                        <strong class="listing-price" style="margin: 0; display: inline-block;">${moneyLabel(rental.price)} / mes</strong>
+                                                        <span class="status-badge ${isIncluidas ? 'status-expensas-incluidas' : 'status-expensas-mas'}">${expensasText}</span>
+                                                    </div>
                                                     <h2 class="listing-title">${rental.title}</h2>
                                                 </div>
                                                 <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
@@ -1195,6 +1220,14 @@
                                                 const mainImage = fotos[0] || 'img/hero-marketplace.jpg';
                                                 const prov = extraInfo.provincia || 'Mendoza';
                                                 const operacion = (extraInfo.operacion || 'Alquiler').toUpperCase();
+                                                const isExpensasIncluidas = Boolean(
+                                                    extraInfo.expensasIncluidas ||
+                                                    extraInfo.expensas_incluidas ||
+                                                    p.expensas_incluidas ||
+                                                    p.expensasIncluidas ||
+                                                    extraInfo.expensas === 0 ||
+                                                    p.expensas === 0
+                                                );
 
                                                 properties.unshift({
                                                     id: p.id,
@@ -1215,6 +1248,8 @@
                                                     note: p.description ? p.description.split('Detalles: ')[0] : '',
                                                     pet: extraInfo.mascotas || false,
                                                     verified: true,
+                                                    expensasIncluidas: isExpensasIncluidas,
+                                                    expensas: extraInfo.expensas || p.expensas || 0,
                                                     featured: operacion,
                                                     propiedad_imagenes: p.propiedad_imagenes,
                                                     description: p.description
@@ -1228,40 +1263,6 @@
                                 }
                             }
 
-                            // Sync DB properties and initialize mobile map toggle on DOM load
-                            document.addEventListener('DOMContentLoaded', () => {
-                                syncDbPropertiesForSearch();
-
-                                const toggleBtn = document.getElementById('mobile-map-toggle-btn');
-                                const searchLayout = document.querySelector('.search-layout');
-                                const iconEl = document.getElementById('mobile-map-toggle-icon');
-                                const textEl = document.getElementById('mobile-map-toggle-text');
-
-                                if (toggleBtn && searchLayout) {
-                                    toggleBtn.addEventListener('click', () => {
-                                        const isShowingMap = searchLayout.classList.toggle('show-mobile-map');
-                                        if (isShowingMap) {
-                                            if (textEl) textEl.textContent = 'Ver lista';
-                                            if (iconEl) iconEl.textContent = 'format_list_bulleted';
-                                            if (googleMap) {
-                                                setTimeout(() => {
-                                                    google.maps.event.trigger(googleMap, 'resize');
-                                                    if (currentProvince && provinceCapitals[currentProvince]) {
-                                                        const coords = provinceCapitals[currentProvince];
-                                                        googleMap.setCenter({ lat: coords.lat, lng: coords.lng });
-                                                    } else {
-                                                        googleMap.setCenter({ lat: -38.4161, lng: -63.6167 });
-                                                    }
-                                                }, 100);
-                                            }
-                                        } else {
-                                            if (textEl) textEl.textContent = 'Ver mapa';
-                                            if (iconEl) iconEl.textContent = 'map';
-                                        }
-                                    });
-                                }
-                            });
-
                             let infoWindow;
 
                             function clearMarkers() {
@@ -1271,7 +1272,6 @@
                                 googleMarkers.forEach(m => m.setMap(null));
                                 googleMarkers = [];
                             }
-
 
                             function renderMarkers() {
                                 if (!googleMap) return;
@@ -1396,11 +1396,16 @@
                                         });
 
                                         marker.addListener('click', () => {
+                                            const mapExpensasVal = rental.expensas ? (rental.expensas >= 1000 ? `$${Math.round(rental.expensas / 1000)}k` : `$${rental.expensas}`) : '';
+                                            const mapExpensasText = rental.expensasIncluidas ? 'Incluye expensas' : (mapExpensasVal ? `+ ${mapExpensasVal} expensas` : '+ expensas');
                                             const content = `
-                                                <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 220px; color:#1a1a1a;">
+                                                <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 230px; color:#1a1a1a;">
                                                     <strong style="display:block; margin-bottom:4px; font-size: 14px;">${rental.title}</strong>
                                                     <span style="display:block; color: #666; font-size: 12px; margin-bottom:4px;">${rental.address}</span>
-                                                    <strong style="display:block; color: #811b1e; font-size: 14px; margin-bottom: 8px;">${moneyLabel(rental.price)} / mes</strong>
+                                                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+                                                        <strong style="color: #811b1e; font-size: 14px;">${moneyLabel(rental.price)} / mes</strong>
+                                                        <span style="font-size:10px; font-weight:800; padding:2px 6px; border-radius:99px; color:white; background:${rental.expensasIncluidas ? '#059669' : '#27272a'};">${mapExpensasText}</span>
+                                                    </div>
                                                     <button class="map-info-detail-btn" style="width:100%; background:#811b1e; color:white; border:none; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:bold; cursor:pointer;">Ver detalles y fotos</button>
                                                 </div>
                                             `;
@@ -1596,6 +1601,31 @@
                             });
 
                             sortEl.addEventListener('change', renderNewListings);
+
+                            const mapToggleBtn = document.getElementById('mobile-map-toggle-btn');
+                            if (mapToggleBtn) {
+                                mapToggleBtn.addEventListener('click', () => {
+                                    const searchLayout = document.querySelector('.search-layout');
+                                    const iconSpan = document.getElementById('mobile-map-toggle-icon');
+                                    const textSpan = document.getElementById('mobile-map-toggle-text');
+
+                                    if (searchLayout) {
+                                        const isShowingMap = searchLayout.classList.toggle('show-mobile-map');
+                                        if (isShowingMap) {
+                                            if (textSpan) textSpan.textContent = 'Ver lista';
+                                            if (iconSpan) iconSpan.textContent = 'format_list_bulleted';
+                                            if (googleMap) {
+                                                setTimeout(() => {
+                                                    google.maps.event.trigger(googleMap, 'resize');
+                                                }, 100);
+                                            }
+                                        } else {
+                                            if (textSpan) textSpan.textContent = 'Ver mapa';
+                                            if (iconSpan) iconSpan.textContent = 'map';
+                                        }
+                                    }
+                                });
+                            }
 
                             document.querySelectorAll('.filter-chip').forEach((chip) => {
                                 chip.addEventListener('click', () => {

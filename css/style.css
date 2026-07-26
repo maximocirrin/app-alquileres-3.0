@@ -549,6 +549,13 @@ input, select, textarea {
     color: var(--foreground);
 }
 
+select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+}
+
 /* Evitar zoom automático en dispositivos móviles (iOS/Android) al hacer foco en inputs/selects */
 @media screen and (max-width: 768px) {
     input:not([type="checkbox"]):not([type="radio"]),

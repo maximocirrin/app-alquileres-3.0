@@ -503,12 +503,19 @@ const App = {
                 let isValid = true;
                 const errorTipo = document.getElementById('error-tipo');
                 const errorSubtipo = document.getElementById('error-subtipo');
+                const errorPiso = document.getElementById('error-piso');
+                const errorDepto = document.getElementById('error-depto');
+
                 const selectTipo = document.getElementById('tipo-propiedad');
                 const selectSubtipo = document.getElementById('subtipo-propiedad');
+                const inputPiso = document.getElementById('piso-propiedad');
+                const inputDepto = document.getElementById('depto-propiedad');
 
                 // Reset error visuals
                 if (errorTipo) errorTipo.classList.add('hidden');
                 if (errorSubtipo) errorSubtipo.classList.add('hidden');
+                if (errorPiso) errorPiso.classList.add('hidden');
+                if (errorDepto) errorDepto.classList.add('hidden');
 
                 // Custom validation for 'Tipo de propiedad'
                 if (selectTipo && !selectTipo.value) {
@@ -520,6 +527,18 @@ const App = {
                 if (selectSubtipo && selectSubtipo.required && !selectSubtipo.value) {
                     if (errorSubtipo) errorSubtipo.classList.remove('hidden');
                     isValid = false;
+                }
+
+                // Custom validation for Piso y Depto (required if Departamento or PH)
+                if (selectTipo && (selectTipo.value === 'departamento' || selectTipo.value === 'ph')) {
+                    if (inputPiso && !inputPiso.value.trim()) {
+                        if (errorPiso) errorPiso.classList.remove('hidden');
+                        isValid = false;
+                    }
+                    if (inputDepto && !inputDepto.value.trim()) {
+                        if (errorDepto) errorDepto.classList.remove('hidden');
+                        isValid = false;
+                    }
                 }
 
                 if (isValid) {
@@ -583,9 +602,10 @@ const App = {
             });
         }
 
-        // Dependent Dropdowns Logic for Property Publishing
+        // Dependent Dropdowns & Conditional Inputs Logic for Property Publishing
         const selectTipoPropiedad = document.getElementById('tipo-propiedad');
         const selectSubtipoPropiedad = document.getElementById('subtipo-propiedad');
+        const containerPisoDepto = document.getElementById('container-piso-depto');
 
         if (selectTipoPropiedad && selectSubtipoPropiedad) {
             const subtiposConfig = {
@@ -612,11 +632,41 @@ const App = {
                     { value: 'ph', label: 'PH' },
                     { value: 'prefabricada', label: 'Prefabricada' },
                     { value: 'triplex', label: 'Tríplex' }
+                ],
+                ph: [
+                    { value: 'planta-baja', label: 'Planta baja' },
+                    { value: 'primer-piso', label: 'Primer piso' },
+                    { value: 'duplex', label: 'Dúplex' },
+                    { value: 'triplex', label: 'Tríplex' }
+                ],
+                'local-comercial': [
+                    { value: 'local-a-calle', label: 'Local a la calle' },
+                    { value: 'galeria', label: 'En galería' },
+                    { value: 'centro-comercial', label: 'En centro comercial' }
                 ]
             };
 
             selectTipoPropiedad.addEventListener('change', (e) => {
                 const tipo = e.target.value;
+
+                // Toggle Piso y Depto inputs for Departamento and PH
+                const containerPisoDepto = document.getElementById('container-piso-depto');
+                const errorPiso = document.getElementById('error-piso');
+                const errorDepto = document.getElementById('error-depto');
+                if (errorPiso) errorPiso.classList.add('hidden');
+                if (errorDepto) errorDepto.classList.add('hidden');
+
+                if (containerPisoDepto) {
+                    if (tipo === 'departamento' || tipo === 'ph') {
+                        containerPisoDepto.classList.remove('hidden');
+                    } else {
+                        containerPisoDepto.classList.add('hidden');
+                        const inputPiso = document.getElementById('piso-propiedad');
+                        const inputDepto = document.getElementById('depto-propiedad');
+                        if (inputPiso) inputPiso.value = '';
+                        if (inputDepto) inputDepto.value = '';
+                    }
+                }
 
                 // Clear existing subtipos but keep the default disabled placeholder
                 selectSubtipoPropiedad.innerHTML = '<option disabled selected value="">Selecciona un subtipo (opcional)</option>';
@@ -1601,6 +1651,8 @@ const App = {
                         operacion: getRadioValue('operacion') || 'alquiler',
                         tipoPropiedad: getVal('tipo-propiedad'),
                         subtipoPropiedad: getVal('subtipo-propiedad'),
+                        piso: getVal('piso-propiedad'),
+                        depto: getVal('depto-propiedad'),
 
                         ambientes: getVal('ambientes-new'),
                         dormitorios: getVal('dormitorios-new'),

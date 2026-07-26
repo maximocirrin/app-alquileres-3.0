@@ -136,19 +136,10 @@
                                                 class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors cursor-pointer">
                                                 <option disabled="" selected="" value="" class="bg-white dark:bg-[#1a1a1e] text-gray-400 dark:text-[#888]">Selecciona el tipo de propiedad
                                                 </option>
+                                                <option value="departamento">Departamento</option>
                                                 <option value="casa">Casa</option>
-                                                <option value="consultorio">Consultorio</option>
-                                                <option value="deposito">Depósito</option>
-                                                <option value="edificio">Edificio</option>
-                                                <option value="fondo-de-comercio">Fondo de comercio</option>
-                                                <option value="cochera">Cochera</option>
-                                                <option value="hotel">Hotel</option>
-                                                <option value="local-comercial">Local comercial</option>
-                                                <option value="oficina-comercial">Oficina comercial</option>
                                                 <option value="ph">PH</option>
-                                                <option value="quinta-vacacional">Quinta vacacional</option>
-                                                <option value="rancho">Rancho</option>
-                                                <option value="terreno">Terreno</option>
+                                                <option value="local-comercial">Local comercial</option>
                                             </select>
                                             <div
                                                 class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
@@ -178,6 +169,27 @@
                                         <p id="error-subtipo"
                                             class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
                                             Completa este campo</p>
+                                    </div>
+                                    <!-- Piso y Depto (condicional para Departamento y PH) -->
+                                    <div id="container-piso-depto" class="hidden space-y-4">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="space-y-2">
+                                                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Piso *</label>
+                                                <div class="relative">
+                                                    <input type="text" id="piso-propiedad" placeholder="Ej: 4"
+                                                        class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                </div>
+                                                <p id="error-piso" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Depto *</label>
+                                                <div class="relative">
+                                                    <input type="text" id="depto-propiedad" placeholder="Ej: B"
+                                                        class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                </div>
+                                                <p id="error-depto" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
@@ -1395,7 +1407,7 @@
                                                 <!-- Gato -->
                                                 <div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5">
                                                     <div class="flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6]">cat</span>
+                                                        <svg class="w-6 h-6 text-secondary dark:text-[#c7c6c6] fill-current shrink-0" viewBox="0 0 24 24"><path d="M4 3l4 4.5C9.3 7 10.6 6.5 12 6.5s2.7.5 4 1L20 3l-1.2 7.2C20.2 11.9 21 13.8 21 16c0 3.9-4 7-9 7s-9-3.1-9-7c0-2.2.8-4.1 2.2-5.8L4 3zm4.5 11c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm7 0c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm-3.5 3c-1.2 0-2 .5-2 1h4c0-.5-.8-1-2-1z"/></svg>
                                                         <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm">Gatos</span>
                                                     </div>
                                                     <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5">
@@ -1434,15 +1446,15 @@
                                         </div>
 
                                         <!-- Negociable Checkbox -->
-                                        <div class="checkbox-wrapper w-max">
+                                        <div class="checkbox-wrapper w-full max-w-full">
                                             <input id="mascotas-negociable" name="mascotas-negociable" type="checkbox">
-                                            <label class="terms-label" for="mascotas-negociable">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
+                                            <label class="terms-label flex items-start sm:items-center cursor-pointer" for="mascotas-negociable">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg shrink-0 mt-0.5 sm:mt-0">
                                                     <mask fill="white" id="path-1-inside-1_negociable"><rect height="200" width="200" rx="30"></rect></mask>
                                                     <rect mask="url(#path-1-inside-1_negociable)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
                                                     <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
                                                 </svg>
-                                                <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Negociable (evaluar según el caso del inquilino)</span>
+                                                <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-sm sm:text-base leading-tight break-words ml-3 flex-1 min-w-0">Negociable (evaluar según el caso del inquilino)</span>
                                             </label>
                                         </div>
 

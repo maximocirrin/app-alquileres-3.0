@@ -285,6 +285,8 @@ const DataManager = {
         const extraInfo = {
             operacion: propertyData.operacion || 'venta',
             tipo: propertyData.tipoPropiedad || 'departamento',
+            piso: propertyData.piso || null,
+            depto: propertyData.depto || null,
             ambientes: propertyData.ambientes,
             dormitorios: propertyData.dormitorios,
             banos: propertyData.banos,
