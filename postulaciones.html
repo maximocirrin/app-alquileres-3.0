@@ -84,55 +84,9 @@
             </h1>
         </div>
 
-        <!-- Contenedor Principal (Tarjeta) -->
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 md:p-12 shadow-sm flex flex-col items-start w-full transition-colors">
-            
-            <!-- SVG Ilustración -->
-            <svg viewBox="0 0 120 120" width="110" height="110" xmlns="http://www.w3.org/2000/svg" class="mb-8 drop-shadow-sm">
-                <!-- Background Circle -->
-                <circle cx="60" cy="50" r="45" fill="#ffdad6" class="dark:fill-red-950/40"/>
-                
-                <!-- House (behind the glass) -->
-                <g transform="translate(10, 5)">
-                    <rect x="40" y="30" width="20" height="25" fill="#a13333" class="dark:fill-red-800"/>
-                    <polygon points="35,30 50,15 65,30" fill="#574140" class="dark:fill-zinc-800"/>
-                    <rect x="44" y="35" width="12" height="6" fill="#ffffff" class="dark:fill-zinc-300"/>
-                    <line x1="50" y1="35" x2="50" y2="41" stroke="#a13333" stroke-width="1.5" class="dark:stroke-red-800"/>
-                    <rect x="46" y="45" width="8" height="10" fill="#debfbd" class="dark:fill-red-950"/>
-                </g>
-                
-                <!-- Magnifying Glass Lens -->
-                <circle cx="60" cy="45" r="30" fill="#e0f2fe" opacity="0.3" class="dark:fill-[#e0f2fe]/10"/>
-                <circle cx="60" cy="45" r="30" fill="none" stroke="#2c0b0c" stroke-width="5" class="dark:stroke-zinc-800"/>
-                <!-- Glass Sheen -->
-                <path d="M40 30 A 20 20 0 0 1 60 20" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
-                
-                <!-- Magnifying Glass Handle -->
-                <line x1="39" y1="66" x2="15" y2="90" stroke="#811b1e" stroke-width="12" stroke-linecap="round" class="dark:stroke-red-700"/>
-                <!-- Handle details -->
-                <line x1="33" y1="67" x2="22" y2="78" stroke="#a13333" stroke-width="2" stroke-linecap="round" class="dark:stroke-red-600"/>
-                <line x1="29" y1="71" x2="18" y2="82" stroke="#a13333" stroke-width="2" stroke-linecap="round" class="dark:stroke-red-600"/>
-                <line x1="25" y1="75" x2="14" y2="86" stroke="#a13333" stroke-width="2" stroke-linecap="round" class="dark:stroke-red-600"/>
-            </svg>
-
-            <!-- Textos -->
-            <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
-                Encuentra el alquiler que buscas
-            </h2>
-            <p class="text-sm md:text-base text-zinc-600 dark:text-zinc-400 mb-8 max-w-2xl leading-relaxed">
-                Explora y postúlate a todas las propiedades que desees en Hábitat.
-            </p>
-
-            <!-- Botones -->
-            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <a href="index.html" class="inline-flex justify-center items-center bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm whitespace-nowrap">
-                    Ver todas las propiedades
-                </a>
-                <a href="como-funciona.html" class="inline-flex justify-center items-center border border-zinc-300 dark:border-zinc-700 bg-transparent text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-bold py-2.5 px-6 rounded-lg transition-colors whitespace-nowrap">
-                    Más información
-                </a>
-            </div>
-
+        <!-- Contenedor Principal (Lista dinámica o Empty State) -->
+        <div id="postulaciones-container" class="w-full">
+            <!-- Carga dinamica desde JS -->
         </div>
     </main>
 
@@ -262,9 +216,81 @@
     <script src="js/data.js"></script>
     <script src="js/app.js?v=8"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.App) {
                 App.setupTheme();
+            }
+
+            const container = document.getElementById('postulaciones-container');
+            if (!container || !window.DataManager) return;
+
+            try {
+                const applications = await window.DataManager.getApplications();
+
+                if (!applications || applications.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 md:p-12 shadow-sm flex flex-col items-start w-full transition-colors">
+                            <div class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center mb-6">
+                                <span class="material-symbols-outlined text-3xl">post_add</span>
+                            </div>
+                            <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
+                                Aún no te has postulado a ninguna propiedad
+                            </h2>
+                            <p class="text-sm md:text-base text-zinc-600 dark:text-zinc-400 mb-8 max-w-2xl leading-relaxed">
+                                Explora las propiedades disponibles en Hábitat y presiona el botón "Postularme al Alquiler" para enviar tu solicitud al propietario.
+                            </p>
+                            <a href="index.html" class="inline-flex justify-center items-center bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm">
+                                Buscar propiedades en alquiler
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const statusBadges = {
+                    pendiente: '<span class="px-3 py-1 text-xs font-extrabold rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300/40">Pendiente de Revisión</span>',
+                    aceptada: '<span class="px-3 py-1 text-xs font-extrabold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">¡Aceptada por Propietario!</span>',
+                    rechazada: '<span class="px-3 py-1 text-xs font-extrabold rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300/40">No Seleccionada</span>'
+                };
+
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        ${applications.map(app => `
+                            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all hover:shadow-md">
+                                <div class="space-y-3 flex-1">
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">
+                                            ${app.property_title}
+                                        </h3>
+                                        ${statusBadges[app.status] || ''}
+                                    </div>
+                                    <p class="text-xs md:text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 font-medium">
+                                        <span class="material-symbols-outlined text-primary dark:text-red-400 text-base">location_on</span>
+                                        ${app.property_address}
+                                    </p>
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-700/50 text-xs space-y-1">
+                                        <p class="text-zinc-700 dark:text-zinc-300"><b>Comprobante presentado:</b> ${app.income_proof}</p>
+                                        ${app.message ? `<p class="text-zinc-500 dark:text-zinc-400 italic">"${app.message}"</p>` : ''}
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col items-start md:items-end gap-3 shrink-0">
+                                    <span class="text-[11px] font-bold uppercase text-zinc-400">
+                                        Enviada el ${new Date(app.created_at).toLocaleDateString('es-AR')}
+                                    </span>
+                                    ${app.status === 'aceptada' ? `
+                                        <a href="tu-alquiler.html" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow transition-colors">
+                                            <span class="material-symbols-outlined text-base">key</span>
+                                            Ir a Mi Alquiler Activo
+                                        </a>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Error cargando postulaciones:", err);
             }
         });
     </script>

@@ -94,11 +94,15 @@
         </div>
 
         <!-- Cabecera de Tabs -->
-        <div class="flex border-b border-zinc-200 dark:border-zinc-800 mb-8 gap-6">
-            <button id="tab-alquiler" class="py-3 text-sm md:text-base font-bold transition-colors border-b-2 border-primary text-primary dark:border-red-500 dark:text-red-400">
-                Alquiler
+        <div class="flex border-b border-zinc-200 dark:border-zinc-800 mb-8 gap-6 overflow-x-auto">
+            <button id="tab-alquiler" class="py-3 text-sm md:text-base font-bold transition-colors border-b-2 border-primary text-primary dark:border-red-500 dark:text-red-400 whitespace-nowrap">
+                Mi Alquiler Activo
             </button>
-            <button id="tab-documentos" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent">
+            <button id="tab-mantenimiento" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent whitespace-nowrap flex items-center gap-2">
+                <span>Tickets de Mantenimiento</span>
+                <span id="tenant-ticket-count" class="px-2 py-0.5 text-xs rounded-full bg-red-100 dark:bg-red-950 text-primary dark:text-red-400 font-bold hidden">0</span>
+            </button>
+            <button id="tab-documentos" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent whitespace-nowrap">
                 Documentos
             </button>
         </div>
@@ -106,83 +110,89 @@
         <!-- Contenido de las Tabs -->
         <div class="w-full">
             
-            <!-- Tab: Alquiler -->
-            <div id="content-alquiler" class="tab-content active w-full">
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
-                    
-                    <!-- Top section (light gray) -->
-                    <div class="bg-zinc-100 dark:bg-zinc-800/50 p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between">
-                        <div class="max-w-xl">
-                            <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white mb-4">
-                                <span class="text-[#0d6b4d] dark:text-[#34d399]">Construye tu historial</span> crediticio al pagar el alquiler
-                            </h2>
-                            <p class="text-sm md:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                                Tus pagos a tiempo pueden añadirse a tu informe de crédito, como los pagos de préstamos o tarjetas de crédito. Es una forma sencilla de construir tu historial crediticio mientras alquilas.
-                            </p>
-                        </div>
-                        
-                        <!-- Illustration SVG -->
-                        <div class="flex-shrink-0 w-32 md:w-48">
-                            <svg viewBox="0 0 160 140" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M120 20 C140 10 160 30 150 60 C160 100 130 130 100 130 C60 130 30 110 30 80 C20 40 50 10 80 20 Z" fill="#ffdad6" opacity="0.6" class="dark:fill-red-950/40"/>
-                                <!-- Document -->
-                                <g transform="rotate(-10 80 70)">
-                                    <rect x="40" y="30" width="80" height="90" fill="#ffffff" class="dark:fill-zinc-900" stroke="#0d6b4d" stroke-width="4" stroke-linejoin="round" />
-                                    <!-- Gauge -->
-                                    <path d="M 50 60 A 30 30 0 0 1 110 60" fill="none" stroke="#e2e8f0" stroke-width="15" class="dark:stroke-zinc-700"/>
-                                    <path d="M 50 60 A 30 30 0 0 1 80 30" fill="none" stroke="#f59e0b" stroke-width="15" />
-                                    <path d="M 80 30 A 30 30 0 0 1 110 60" fill="none" stroke="#0d6b4d" stroke-width="15" />
-                                    <!-- Needle -->
-                                    <polygon points="80,60 76,40 84,40" fill="#1e293b" class="dark:fill-zinc-300"/>
-                                    <!-- Lines -->
-                                    <line x1="55" y1="80" x2="105" y2="80" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
-                                    <line x1="55" y1="92" x2="105" y2="92" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
-                                    <line x1="55" y1="104" x2="85" y2="104" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
-                                </g>
-                            </svg>
-                        </div>
+            <!-- Tab: Mi Alquiler Activo -->
+            <div id="content-alquiler" class="tab-content active w-full space-y-6">
+                <!-- Se carga dinámicamente desde JS -->
+                <div id="tenant-rental-dashboard">
+                    <div class="p-8 text-center text-zinc-500">Cargando detalles del alquiler activo...</div>
+                </div>
+            </div>
+
+            <!-- Tab: Tickets de Mantenimiento -->
+            <div id="content-mantenimiento" class="tab-content w-full space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+                    <div>
+                        <h2 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">Solicitudes y Reparaciones</h2>
+                        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Reporta problemas de plomería, electricidad o fallas en la propiedad directamente al propietario.</p>
                     </div>
+                    <button id="btn-nuevo-ticket" type="button" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">build</span>
+                        Crear Ticket de Mantenimiento
+                    </button>
+                </div>
 
-                    <!-- Bottom section (white) -->
-                    <div class="p-6 md:p-10">
-                        <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white mb-6">
-                            Elige la opción que mejor funcione para ti
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            <!-- Card 1 (Free) -->
-                            <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-start bg-white dark:bg-zinc-900 shadow-sm">
-                                <span class="bg-[#eefcf3] text-[#0d6b4d] dark:bg-emerald-900/30 dark:text-emerald-400 font-bold text-xs py-1.5 px-3 rounded-lg mb-4">
-                                    Gratis
-                                </span>
-                                <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">
-                                    Pídele a tu propietario que use los pagos de Hábitat y obtén acceso al reporte de alquiler. Los pagos son gratuitos si pagas con transferencia bancaria directa.
-                                </p>
-                                <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors text-sm w-full sm:w-auto shadow-sm">
-                                    Solicitar pagos por Hábitat
-                                </button>
-                            </div>
-
-                            <!-- Card 2 (Yearly) -->
-                            <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-start bg-white dark:bg-zinc-900 shadow-sm">
-                                <span class="bg-[#fef3c7] text-[#92400e] dark:bg-amber-900/30 dark:text-amber-400 font-bold text-xs py-1.5 px-3 rounded-lg mb-4">
-                                    $20 al año
-                                </span>
-                                <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">
-                                    Únete a más de 5 millones de inquilinos inscritos en la membresía de construcción de crédito con nuestro socio de confianza.
-                                </p>
-                                <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors text-sm w-full sm:w-auto shadow-sm">
-                                    Inscríbete ahora
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
+                <div id="tenant-tickets-list" class="space-y-4">
+                    <!-- Se renderiza desde JS -->
                 </div>
             </div>
 
             <!-- Tab: Documentos -->
             <div id="content-documentos" class="tab-content w-full">
+                <!-- Grid de tarjetas de documentos -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Tarjeta 1: Contrato -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-[#811b1e] text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">history_edu</span>
+                        </div>
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Contrato de Alquiler Firmado
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Acceso digital permanente a las cláusulas, inventario e índice de reajuste de tu alquiler.
+                        </p>
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Descargar Contrato PDF
+                        </button>
+                    </div>
+
+                    <!-- Tarjeta 2: Informe de estado -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-zinc-800 text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">assignment_turned_in</span>
+                        </div>
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Informe de Estado e Inventario
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Documentación fotográfica del estado del inmueble al momento de la entrega de llaves.
+                        </p>
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Ver Informe de Inventario
+                        </button>
+                    </div>
+
+                    <!-- Tarjeta 3: Seguro -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-purple-900 text-white flex items-center justify-center mb-6">
+                            <span class="material-symbols-outlined text-[26px]">health_and_safety</span>
+                        </div>
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-3">
+                            Póliza de Seguro de Hogar
+                        </h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
+                            Cobertura de incendio, cristales y responsabilidad civil del inmueble alquilado.
+                        </p>
+                        <button class="text-left text-sm font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                            Ver Póliza Activa
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div>
                 <!-- Grid de tarjetas -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
@@ -375,47 +385,387 @@
     <script src="js/data.js"></script>
     <script src="js/app.js?v=8"></script>
 
-    <!-- Script para los Tabs -->
+    <!-- Script para los Tabs y Funcionalidad del Inquilino -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.App) {
                 App.setupTheme();
             }
 
-            // Tab logic
             const tabAlquiler = document.getElementById('tab-alquiler');
+            const tabMantenimiento = document.getElementById('tab-mantenimiento');
             const tabDocumentos = document.getElementById('tab-documentos');
             const contentAlquiler = document.getElementById('content-alquiler');
+            const contentMantenimiento = document.getElementById('content-mantenimiento');
             const contentDocumentos = document.getElementById('content-documentos');
 
             const activeClassTab = ['font-bold', 'border-primary', 'text-primary', 'dark:border-red-500', 'dark:text-red-400'];
             const inactiveClassTab = ['font-semibold', 'text-zinc-500', 'dark:text-zinc-400', 'hover:text-zinc-800', 'dark:hover:text-zinc-200', 'border-transparent'];
 
-            function setActiveTab(isAlquiler) {
-                if (isAlquiler) {
-                    tabAlquiler.classList.add(...activeClassTab);
-                    tabAlquiler.classList.remove(...inactiveClassTab);
-                    
-                    tabDocumentos.classList.remove(...activeClassTab);
-                    tabDocumentos.classList.add(...inactiveClassTab);
-                    
-                    contentAlquiler.classList.add('active');
-                    contentDocumentos.classList.remove('active');
-                } else {
-                    tabDocumentos.classList.add(...activeClassTab);
-                    tabDocumentos.classList.remove(...inactiveClassTab);
-                    
-                    tabAlquiler.classList.remove(...activeClassTab);
-                    tabAlquiler.classList.add(...inactiveClassTab);
-                    
-                    contentDocumentos.classList.add('active');
-                    contentAlquiler.classList.remove('active');
+            function switchTab(activeTab, activeContent) {
+                [tabAlquiler, tabMantenimiento, tabDocumentos].forEach(t => {
+                    if (t) {
+                        t.classList.remove(...activeClassTab);
+                        t.classList.add(...inactiveClassTab);
+                    }
+                });
+                [contentAlquiler, contentMantenimiento, contentDocumentos].forEach(c => {
+                    if (c) c.classList.remove('active');
+                });
+
+                if (activeTab) {
+                    activeTab.classList.add(...activeClassTab);
+                    activeTab.classList.remove(...inactiveClassTab);
                 }
+                if (activeContent) activeContent.classList.add('active');
             }
 
-            tabAlquiler.addEventListener('click', () => setActiveTab(true));
-            tabDocumentos.addEventListener('click', () => setActiveTab(false));
+            if (tabAlquiler) tabAlquiler.addEventListener('click', () => switchTab(tabAlquiler, contentAlquiler));
+            if (tabMantenimiento) tabMantenimiento.addEventListener('click', () => switchTab(tabMantenimiento, contentMantenimiento));
+            if (tabDocumentos) tabDocumentos.addEventListener('click', () => switchTab(tabDocumentos, contentDocumentos));
+
+            // Load Dashboard & Tickets
+            await renderTenantDashboard();
+            await renderTenantTickets();
+
+            // Setup New Ticket Modal Button
+            const btnNuevoTicket = document.getElementById('btn-nuevo-ticket');
+            if (btnNuevoTicket) {
+                btnNuevoTicket.onclick = () => openCreateTicketModal();
+            }
         });
+
+        async function renderTenantDashboard() {
+            const container = document.getElementById('tenant-rental-dashboard');
+            if (!container || !window.DataManager) return;
+
+            try {
+                const contract = await window.DataManager.getActiveContract();
+                if (!contract) {
+                    container.innerHTML = `
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center space-y-4">
+                            <h3 class="font-headline text-xl font-bold">No tienes un contrato de alquiler activo</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Postúlate a una propiedad en Hábitat. Cuando el propietario acepte tu postulación, tu panel se activará aquí.</p>
+                            <a href="index.html" class="inline-block px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">Explorar Propiedades</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const payment = await window.DataManager.getCurrentPayment(contract.id);
+                const punitives = window.DataManager.calculatePunitiveInterests(contract, payment);
+
+                const isPaid = payment && payment.status === 'pagado';
+                const isWaived = payment && payment.is_punitive_waived;
+
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
+                        <!-- Top Banner: Propiedad Alquilada -->
+                        <div class="bg-zinc-100 dark:bg-zinc-800/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 uppercase">
+                                        Contrato Activo
+                                    </span>
+                                    <span class="text-xs font-bold text-zinc-500">
+                                        Ajuste ${contract.adjustment_index} (${contract.adjustment_frequency_months} meses)
+                                    </span>
+                                </div>
+                                <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
+                                    ${contract.property_title}
+                                </h2>
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-primary text-base">location_on</span>
+                                    ${contract.property_address}
+                                </p>
+                            </div>
+                            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700/60 text-right shrink-0">
+                                <span class="block text-[10px] uppercase font-bold text-zinc-400">Canon Locativo Mensual</span>
+                                <span class="text-2xl font-extrabold text-primary dark:text-red-400">$ ${Number(contract.monthly_rent).toLocaleString('es-AR')}</span>
+                            </div>
+                        </div>
+
+                        <!-- Card de Pago del Mes -->
+                        <div class="p-6 md:p-8 space-y-6">
+                            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                                <div>
+                                    <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white">
+                                        Estado de Pago - ${payment ? payment.period : 'Julio 2026'}
+                                    </h3>
+                                    <p class="text-xs text-zinc-500">Vencimiento oficial: Días ${contract.payment_due_day} de cada mes</p>
+                                </div>
+                                <div>
+                                    ${isPaid ? `
+                                        <span class="px-4 py-1.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-base">check_circle</span> PAGADO
+                                        </span>
+                                    ` : `
+                                        <span class="px-4 py-1.5 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- Desglose Financiero -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                                    <span class="block text-xs font-bold uppercase text-zinc-400">Alquiler Base</span>
+                                    <span class="text-lg font-extrabold text-zinc-900 dark:text-white">$ ${Number(payment ? payment.amount_base : contract.monthly_rent).toLocaleString('es-AR')}</span>
+                                </div>
+
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                                    <span class="block text-xs font-bold uppercase text-zinc-400">Intereses Punitorios</span>
+                                    ${isWaived ? `
+                                        <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
+                                            <span class="material-symbols-outlined text-base">verified</span> Perdonados ($0)
+                                        </span>
+                                    ` : (punitives.punitiveAmount > 0 ? `
+                                        <span class="text-lg font-extrabold text-rose-600 dark:text-rose-400">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
+                                        <span class="block text-[11px] text-rose-500 font-medium">(${punitives.daysLate} días de mora a ${punitives.dailyRate}% diario)</span>
+                                    ` : `
+                                        <span class="text-lg font-extrabold text-zinc-700 dark:text-zinc-300">$ 0</span>
+                                        <span class="block text-[11px] text-emerald-600 font-medium">Sin recargos</span>
+                                    `)}
+                                </div>
+
+                                <div class="bg-primary/5 dark:bg-red-950/20 p-4 rounded-xl border border-primary/20 dark:border-red-500/20">
+                                    <span class="block text-xs font-bold uppercase text-primary dark:text-red-400">Total Final a Pagar</span>
+                                    <span class="text-xl font-black text-primary dark:text-red-400">$ ${Number(isPaid ? (payment.amount_base) : punitives.totalAmount).toLocaleString('es-AR')}</span>
+                                </div>
+                            </div>
+
+                            <!-- Botón de Pago -->
+                            <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div class="text-xs text-zinc-500">
+                                    <span>Alias CBU para transferir: </span>
+                                    <b class="text-zinc-800 dark:text-zinc-200 font-mono bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-md select-all">${contract.cbu_alias}</b>
+                                </div>
+
+                                ${!isPaid ? `
+                                    <button id="btn-pagar-alquiler" type="button" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md cursor-pointer">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        Informar Pago de Alquiler
+                                    </button>
+                                ` : `
+                                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-base">task_alt</span> Pago notificado correctamente el ${new Date(payment.paid_at).toLocaleDateString('es-AR')}
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const btnPagar = document.getElementById('btn-pagar-alquiler');
+                if (btnPagar && payment) {
+                    btnPagar.onclick = () => openPayRentModal(payment, punitives.totalAmount);
+                }
+
+            } catch (err) {
+                console.error("Error renderizando dashboard de inquilino:", err);
+            }
+        }
+
+        function openPayRentModal(payment, totalAmount) {
+            let modal = document.getElementById('habitat-pay-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'habitat-pay-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300 font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-lg font-extrabold">Informar Pago de Alquiler</h3>
+                        <button type="button" id="close-pay-modal" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="bg-zinc-50 dark:bg-zinc-800 p-3.5 rounded-xl space-y-1">
+                            <p class="text-zinc-500">Monto total a informar:</p>
+                            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">$ ${Number(totalAmount).toLocaleString('es-AR')}</p>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold uppercase text-zinc-500 mb-1">Medio de Pago utilizado</label>
+                            <select id="pay-method-select" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-sm">
+                                <option value="Transferencia Bancaria" selected>Transferencia Bancaria / Mercado Pago</option>
+                                <option value="Efectivo en persona">Efectivo entregado al Propietario</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold uppercase text-zinc-500 mb-1">Comprobante de Pago (opcional)</label>
+                            <input type="file" id="pay-receipt-file" class="w-full text-xs text-zinc-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white hover:file:bg-primary-container cursor-pointer">
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" id="btn-cancel-pay" class="flex-1 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-bold">Cancelar</button>
+                            <button type="button" id="btn-confirm-pay" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow">Confirmar Pago</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const closeFn = () => { modal.style.display = 'none'; };
+            document.getElementById('close-pay-modal').onclick = closeFn;
+            document.getElementById('btn-cancel-pay').onclick = closeFn;
+
+            document.getElementById('btn-confirm-pay').onclick = async () => {
+                const method = document.getElementById('pay-method-select').value;
+                if (window.DataManager) {
+                    await window.DataManager.markPaymentAsPaid(payment.id, method);
+                }
+                closeFn();
+                alert("¡El pago ha sido registrado e informado al propietario!");
+                await renderTenantDashboard();
+            };
+        }
+
+        async function renderTenantTickets() {
+            const container = document.getElementById('tenant-tickets-list');
+            const countBadge = document.getElementById('tenant-ticket-count');
+            if (!container || !window.DataManager) return;
+
+            try {
+                const tickets = await window.DataManager.getMaintenanceTickets();
+                if (countBadge) {
+                    countBadge.textContent = tickets.length;
+                    countBadge.classList.toggle('hidden', tickets.length === 0);
+                }
+
+                if (!tickets || tickets.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center text-zinc-500">
+                            <p class="text-sm">No tienes tickets de mantenimiento abiertos.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const statusBadges = {
+                    abierto: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">Abierto</span>',
+                    en_proceso: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">En Proceso</span>',
+                    resuelto: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Resuelto</span>'
+                };
+
+                container.innerHTML = tickets.map(t => `
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 text-xs font-bold rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${t.category}</span>
+                                <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Prioridad ${t.priority}</span>
+                            </div>
+                            ${statusBadges[t.status] || ''}
+                        </div>
+
+                        <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${t.title}</h3>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">${t.description}</p>
+
+                        ${t.landlord_response ? `
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-xs space-y-1">
+                                <span class="font-extrabold text-primary dark:text-red-400">Respuesta del Propietario:</span>
+                                <p class="text-zinc-700 dark:text-zinc-300">${t.landlord_response}</p>
+                            </div>
+                        ` : ''}
+
+                        <span class="block text-[10px] text-zinc-400">Creado el ${new Date(t.created_at).toLocaleDateString('es-AR')}</span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error("Error renderizando tickets:", err);
+            }
+        }
+
+        function openCreateTicketModal() {
+            let modal = document.getElementById('habitat-ticket-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'habitat-ticket-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300 font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-xl font-extrabold">Crear Ticket de Mantenimiento</h3>
+                        <button type="button" id="close-ticket-modal" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <form id="form-create-ticket" class="space-y-4 text-xs">
+                        <div>
+                            <label class="block font-bold uppercase text-zinc-500 mb-1">Título o Falla</label>
+                            <input type="text" id="tkt-title" required placeholder="Ej: Filtración en mesada de cocina" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-bold uppercase text-zinc-500 mb-1">Categoría</label>
+                                <select id="tkt-category" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs font-bold">
+                                    <option value="Plomería">Plomería</option>
+                                    <option value="Electricidad">Electricidad</option>
+                                    <option value="Gas">Gas</option>
+                                    <option value="Cerrajería">Cerrajería</option>
+                                    <option value="Estructural">Estructural</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold uppercase text-zinc-500 mb-1">Prioridad</label>
+                                <select id="tkt-priority" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs font-bold">
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media" selected>Media</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold uppercase text-zinc-500 mb-1">Descripción detallada</label>
+                            <textarea id="tkt-desc" rows="3" required placeholder="Describe lo que sucede..." class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-medium"></textarea>
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" id="btn-cancel-tkt" class="flex-1 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 font-bold text-sm">Cancelar</button>
+                            <button type="submit" class="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-sm shadow">Enviar Reporte</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            const closeFn = () => { modal.style.display = 'none'; };
+            document.getElementById('close-ticket-modal').onclick = closeFn;
+            document.getElementById('btn-cancel-tkt').onclick = closeFn;
+
+            document.getElementById('form-create-ticket').onsubmit = async (e) => {
+                e.preventDefault();
+                const ticketData = {
+                    title: document.getElementById('tkt-title').value,
+                    category: document.getElementById('tkt-category').value,
+                    priority: document.getElementById('tkt-priority').value,
+                    description: document.getElementById('tkt-desc').value
+                };
+
+                if (window.DataManager) {
+                    await window.DataManager.createMaintenanceTicket(ticketData);
+                }
+                closeFn();
+                alert("¡El ticket de mantenimiento ha sido creado!");
+                await renderTenantTickets();
+            };
+        }
     </script>
 </body>
 

@@ -378,14 +378,13 @@
     <script src="js/data.js"></script>
     <script src="js/app.js?v=8"></script>
     
-    <!-- Script para los Tabs -->
+    <!-- Script para los Tabs y Renderizado Dinámico -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.App) {
                 App.setupTheme();
             }
 
-            // Tab logic
             const tabUpcoming = document.getElementById('tab-upcoming');
             const tabPast = document.getElementById('tab-past');
             const contentUpcoming = document.getElementById('content-upcoming');
@@ -416,8 +415,76 @@
                 }
             }
 
-            tabUpcoming.addEventListener('click', () => setActiveTab(true));
-            tabPast.addEventListener('click', () => setActiveTab(false));
+            if (tabUpcoming && tabPast) {
+                tabUpcoming.addEventListener('click', () => setActiveTab(true));
+                tabPast.addEventListener('click', () => setActiveTab(false));
+            }
+
+            // Render visits from DataManager
+            if (window.DataManager) {
+                try {
+                    const visits = await window.DataManager.getVisits();
+                    const upcomingVisits = visits.filter(v => v.status === 'programada');
+                    const pastVisits = visits.filter(v => v.status !== 'programada');
+
+                    if (upcomingVisits.length > 0) {
+                        contentUpcoming.className = 'tab-content active text-left w-full space-y-4';
+                        contentUpcoming.innerHTML = upcomingVisits.map(v => `
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-3">
+                                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                                            Confirmada
+                                        </span>
+                                        <span class="text-xs text-zinc-500 font-bold">
+                                            ${v.visit_date} - ${v.visit_time}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">
+                                        ${v.property_title}
+                                    </h3>
+                                    <p class="text-xs md:text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-primary text-base">location_on</span>
+                                        ${v.property_address}
+                                    </p>
+                                    <p class="text-xs text-zinc-500">Visitante: <b>${v.visitor_name}</b> (${v.visitor_phone})</p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button onclick="window.location.href='index.html'" class="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-100">
+                                        Ver Propiedad
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    if (pastVisits.length > 0) {
+                        contentPast.className = 'tab-content text-left w-full space-y-4';
+                        contentPast.innerHTML = pastVisits.map(v => `
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 opacity-75">
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-3">
+                                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                                            ${v.status === 'realizada' ? 'Realizada' : 'Cancelada'}
+                                        </span>
+                                        <span class="text-xs text-zinc-500 font-bold">
+                                            ${v.visit_date}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">
+                                        ${v.property_title}
+                                    </h3>
+                                    <p class="text-xs md:text-sm text-zinc-600 dark:text-zinc-400">
+                                        ${v.property_address}
+                                    </p>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } catch (err) {
+                    console.error("Error cargando visitas:", err);
+                }
+            }
         });
     </script>
 </body>

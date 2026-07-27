@@ -413,7 +413,493 @@ const DataManager = {
             return [];
         }
         return data || [];
+    },
+
+    // ==========================================
+    // MOCK DATA ENGINE & STORAGE PERSISTENCE
+    // ==========================================
+    _STORAGE_KEYS: {
+        APPLICATIONS: 'habitat_applications_v1',
+        VISITS: 'habitat_visits_v1',
+        CONTRACTS: 'habitat_contracts_v1',
+        PAYMENTS: 'habitat_payments_v1',
+        TICKETS: 'habitat_tickets_v1'
+    },
+
+    _initMockStorage: function() {
+        if (!localStorage.getItem(this._STORAGE_KEYS.APPLICATIONS)) {
+            const initialApplications = [
+                {
+                    id: 'app-1',
+                    property_id: 'prop-101',
+                    property_title: 'Departamento 2 Ambientes en Belgrano',
+                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
+                    tenant_id: 'tenant-100',
+                    tenant_name: 'Carlos Gómez',
+                    tenant_email: 'carlos.gomez@gmail.com',
+                    tenant_phone: '+54 9 11 4567-8901',
+                    income_proof: 'Recibo de sueldo - $950.000 / mes',
+                    message: 'Hola! Me interesa mucho la propiedad. Tengo garantía finaer y puedo ingresar este mismo mes.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 86400000 * 2).toISOString()
+                },
+                {
+                    id: 'app-2',
+                    property_id: 'prop-101',
+                    property_title: 'Departamento 2 Ambientes en Belgrano',
+                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
+                    tenant_id: 'tenant-101',
+                    tenant_name: 'Mariana López',
+                    tenant_email: 'mariana.lopez@yahoo.com',
+                    tenant_phone: '+54 9 11 8899-2211',
+                    income_proof: 'Monotributo Cat F + Garantía propietaria',
+                    message: 'Buenas tardes, quisiéramos coordinar para firmar contrato si está disponible.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 86400000 * 1).toISOString()
+                }
+            ];
+            localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(initialApplications));
+        }
+
+        if (!localStorage.getItem(this._STORAGE_KEYS.VISITS)) {
+            const initialVisits = [
+                {
+                    id: 'vis-1',
+                    property_id: 'prop-101',
+                    property_title: 'Departamento 2 Ambientes en Belgrano',
+                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
+                    visitor_name: 'Carlos Gómez',
+                    visitor_email: 'carlos.gomez@gmail.com',
+                    visitor_phone: '+54 9 11 4567-8901',
+                    visit_date: '2026-07-29',
+                    visit_time: '16:30 hs',
+                    status: 'programada',
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: 'vis-2',
+                    property_id: 'prop-102',
+                    property_title: 'PH 3 Ambientes con Terraza en Palermo',
+                    property_address: 'Honduras 4820, Palermo, CABA',
+                    visitor_name: 'Lucía Benítez',
+                    visitor_email: 'lucia.b@gmail.com',
+                    visitor_phone: '+54 9 11 3344-5566',
+                    visit_date: '2026-07-20',
+                    visit_time: '11:00 hs',
+                    status: 'realizada',
+                    created_at: new Date(Date.now() - 86400000 * 7).toISOString()
+                }
+            ];
+            localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(initialVisits));
+        }
+
+        if (!localStorage.getItem(this._STORAGE_KEYS.CONTRACTS)) {
+            const initialContracts = [
+                {
+                    id: 'contract-1',
+                    property_id: 'prop-200',
+                    property_title: 'Departamento 3 Ambientes con Balcón',
+                    property_address: 'Av. Santa Fe 2450, 4º B, Recoleta, CABA',
+                    property_image: 'img/property-1.jpg',
+                    owner_name: 'Ana Martínez',
+                    owner_email: 'propietario@habitat.com',
+                    tenant_id: 'tenant-100',
+                    tenant_name: 'Carlos Gómez',
+                    tenant_email: 'inquilino@habitat.com',
+                    tenant_phone: '+54 9 11 4567-8901',
+                    monthly_rent: 380000,
+                    payment_due_day: 10,
+                    punitive_daily_rate: 0.5, // 0.5% diario por mora
+                    adjustment_index: 'IPC', // IPC o ICL
+                    adjustment_frequency_months: 3, // Trimestral
+                    last_adjustment_date: '2026-04-01',
+                    next_adjustment_date: '2026-07-01',
+                    status: 'activo',
+                    cbu_alias: 'HABITAT.RECOLETA.MP'
+                }
+            ];
+            localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(initialContracts));
+        }
+
+        if (!localStorage.getItem(this._STORAGE_KEYS.PAYMENTS)) {
+            const initialPayments = [
+                {
+                    id: 'pay-2026-07',
+                    contract_id: 'contract-1',
+                    period: 'Julio 2026',
+                    amount_base: 380000,
+                    due_date: '2026-07-10',
+                    status: 'pendiente', // 'pendiente', 'pagado'
+                    payment_method: null, // 'Transferencia', 'Efectivo', 'Mercado Pago'
+                    receipt_url: null,
+                    is_punitive_waived: false,
+                    paid_at: null,
+                    invoice_sent_at: null
+                },
+                {
+                    id: 'pay-2026-06',
+                    contract_id: 'contract-1',
+                    period: 'Junio 2026',
+                    amount_base: 380000,
+                    due_date: '2026-06-10',
+                    status: 'pagado',
+                    payment_method: 'Transferencia',
+                    receipt_url: 'uploads/comprobante_junio.pdf',
+                    is_punitive_waived: false,
+                    paid_at: '2026-06-08T14:20:00Z',
+                    invoice_sent_at: '2026-06-08T15:00:00Z'
+                }
+            ];
+            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(initialPayments));
+        }
+
+        if (!localStorage.getItem(this._STORAGE_KEYS.TICKETS)) {
+            const initialTickets = [
+                {
+                    id: 'tkt-1',
+                    contract_id: 'contract-1',
+                    property_address: 'Av. Santa Fe 2450, 4º B, Recoleta',
+                    tenant_name: 'Carlos Gómez',
+                    title: 'Pérdida de agua bajo el lavamanos del baño',
+                    category: 'Plomería',
+                    priority: 'Alta',
+                    description: 'Comenzó a gotear la cañería del lavamanos ayer a la noche. Coloqué un balde pero se llena rápido.',
+                    photo_url: null,
+                    status: 'en_proceso', // 'abierto', 'en_proceso', 'resuelto'
+                    landlord_response: 'El plomero se comunicará hoy por la tarde para coordinar el arreglo.',
+                    created_at: new Date(Date.now() - 86400000 * 3).toISOString()
+                }
+            ];
+            localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(initialTickets));
+        }
+    },
+
+    // ------------------------------------------
+    // Postulaciones (Applications)
+    // ------------------------------------------
+    getApplications: async function() {
+        this._initMockStorage();
+        const data = localStorage.getItem(this._STORAGE_KEYS.APPLICATIONS);
+        return data ? JSON.parse(data) : [];
+    },
+
+    submitApplication: async function(appData) {
+        this._initMockStorage();
+        const apps = await this.getApplications();
+        const newApp = {
+            id: 'app-' + Date.now(),
+            property_id: appData.propertyId || 'prop-101',
+            property_title: appData.propertyTitle || 'Propiedad en Alquiler',
+            property_address: appData.propertyAddress || 'Dirección no especificada',
+            tenant_id: appData.tenantId || 'tenant-current',
+            tenant_name: appData.tenantName || 'Inquilino Postulante',
+            tenant_email: appData.tenantEmail || 'inquilino@email.com',
+            tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
+            income_proof: appData.incomeProof || 'Comprobante adjuntado',
+            message: appData.message || '',
+            status: 'pendiente',
+            created_at: new Date().toISOString()
+        };
+        apps.unshift(newApp);
+        localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
+        return newApp;
+    },
+
+    acceptApplication: async function(appId) {
+        this._initMockStorage();
+        const apps = await this.getApplications();
+        const app = apps.find(a => a.id === appId);
+        if (!app) throw new Error("Postulación no encontrada");
+
+        // Mark this app as accepted and others for the same property as rejected
+        apps.forEach(a => {
+            if (a.id === appId) {
+                a.status = 'aceptada';
+            } else if (a.property_id === app.property_id && a.status === 'pendiente') {
+                a.status = 'rechazada';
+            }
+        });
+        localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
+
+        // Create new active contract
+        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
+        const newContract = {
+            id: 'contract-' + Date.now(),
+            property_id: app.property_id,
+            property_title: app.property_title,
+            property_address: app.property_address,
+            property_image: 'img/property-1.jpg',
+            owner_name: 'Propietario',
+            owner_email: 'propietario@habitat.com',
+            tenant_id: app.tenant_id,
+            tenant_name: app.tenant_name,
+            tenant_email: app.tenant_email,
+            tenant_phone: app.tenant_phone,
+            monthly_rent: 380000,
+            payment_due_day: 10,
+            punitive_daily_rate: 0.5,
+            adjustment_index: 'IPC',
+            adjustment_frequency_months: 3,
+            last_adjustment_date: new Date().toISOString().split('T')[0],
+            next_adjustment_date: new Date(Date.now() + 86400000 * 90).toISOString().split('T')[0],
+            status: 'activo',
+            cbu_alias: 'HABITAT.ALQUILER.MP'
+        };
+        contracts.unshift(newContract);
+        localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(contracts));
+
+        // Create current month payment record for this new contract
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        payments.unshift({
+            id: 'pay-' + Date.now(),
+            contract_id: newContract.id,
+            period: 'Julio 2026',
+            amount_base: 380000,
+            due_date: '2026-07-10',
+            status: 'pendiente',
+            payment_method: null,
+            receipt_url: null,
+            is_punitive_waived: false,
+            paid_at: null,
+            invoice_sent_at: null
+        });
+        localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+
+        return app;
+    },
+
+    rejectApplication: async function(appId) {
+        this._initMockStorage();
+        const apps = await this.getApplications();
+        const app = apps.find(a => a.id === appId);
+        if (app) {
+            app.status = 'rechazada';
+            localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
+        }
+        return app;
+    },
+
+    // ------------------------------------------
+    // Visitas Programadas (Scheduled Visits)
+    // ------------------------------------------
+    getVisits: async function() {
+        this._initMockStorage();
+        const data = localStorage.getItem(this._STORAGE_KEYS.VISITS);
+        return data ? JSON.parse(data) : [];
+    },
+
+    scheduleVisit: async function(visitData) {
+        this._initMockStorage();
+        const visits = await this.getVisits();
+        const newVisit = {
+            id: 'vis-' + Date.now(),
+            property_id: visitData.propertyId || 'prop-101',
+            property_title: visitData.propertyTitle || 'Propiedad',
+            property_address: visitData.propertyAddress || 'Dirección de visita',
+            visitor_name: visitData.visitorName || 'Visitante Interesado',
+            visitor_email: visitData.visitorEmail || 'visitante@email.com',
+            visitor_phone: visitData.visitorPhone || '+54 9 11 1122-3344',
+            visit_date: visitData.visitDate || new Date().toISOString().split('T')[0],
+            visit_time: visitData.visitTime || '16:00 hs',
+            status: 'programada',
+            created_at: new Date().toISOString()
+        };
+        visits.unshift(newVisit);
+        localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(visits));
+        return newVisit;
+    },
+
+    cancelVisit: async function(visitId) {
+        this._initMockStorage();
+        const visits = await this.getVisits();
+        const visit = visits.find(v => v.id === visitId);
+        if (visit) {
+            visit.status = 'cancelada';
+            localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(visits));
+        }
+        return visit;
+    },
+
+    // ------------------------------------------
+    // Contrato Activo, Pagos y Punitorios
+    // ------------------------------------------
+    getActiveContract: async function() {
+        this._initMockStorage();
+        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
+        return contracts.find(c => c.status === 'activo') || contracts[0] || null;
+    },
+
+    getCurrentPayment: async function(contractId) {
+        this._initMockStorage();
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        const contractPayments = payments.filter(p => p.contract_id === contractId);
+        return contractPayments.find(p => p.status === 'pendiente') || contractPayments[0] || null;
+    },
+
+    calculatePunitiveInterests: function(contract, payment) {
+        if (!contract || !payment) return { daysLate: 0, dailyRate: 0, punitiveAmount: 0, totalAmount: 0 };
+        
+        if (payment.status === 'pagado' || payment.is_punitive_waived) {
+            return {
+                daysLate: 0,
+                dailyRate: contract.punitive_daily_rate || 0.5,
+                punitiveAmount: 0,
+                totalAmount: payment.amount_base
+            };
+        }
+
+        const today = new Date();
+        const dueDate = new Date(payment.due_date);
+        
+        // Calculate days past due
+        const diffTime = today - dueDate;
+        const daysLate = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+        if (daysLate <= 0) {
+            return {
+                daysLate: 0,
+                dailyRate: contract.punitive_daily_rate || 0.5,
+                punitiveAmount: 0,
+                totalAmount: payment.amount_base
+            };
+        }
+
+        const dailyRate = contract.punitive_daily_rate || 0.5; // % per day
+        const punitiveAmount = Math.round(payment.amount_base * (dailyRate / 100) * daysLate);
+        const totalAmount = payment.amount_base + punitiveAmount;
+
+        return {
+            daysLate,
+            dailyRate,
+            punitiveAmount,
+            totalAmount
+        };
+    },
+
+    waivePunitiveInterests: async function(paymentId) {
+        this._initMockStorage();
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        const payment = payments.find(p => p.id === paymentId);
+        if (payment) {
+            payment.is_punitive_waived = true;
+            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        }
+        return payment;
+    },
+
+    markPaymentAsPaid: async function(paymentId, method = 'Transferencia') {
+        this._initMockStorage();
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        const payment = payments.find(p => p.id === paymentId);
+        if (payment) {
+            payment.status = 'pagado';
+            payment.payment_method = method;
+            payment.paid_at = new Date().toISOString();
+            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        }
+        return payment;
+    },
+
+    sendInvoiceEmail: async function(paymentId) {
+        this._initMockStorage();
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        const payment = payments.find(p => p.id === paymentId);
+        if (payment) {
+            payment.invoice_sent_at = new Date().toISOString();
+            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        }
+        return {
+            success: true,
+            invoiceNumber: 'FAC-' + Math.floor(100000 + Math.random() * 900000),
+            sentAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+    },
+
+    applyIndexAdjustment: async function(contractId, indexType, frequencyMonths) {
+        this._initMockStorage();
+        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
+        const contract = contracts.find(c => c.id === contractId);
+        if (!contract) throw new Error("Contrato no encontrado");
+
+        // Rates table simulation
+        const rates = {
+            IPC: 12.8, // +12.8% acumulado período
+            ICL: 10.5  // +10.5% acumulado período
+        };
+
+        const pct = rates[indexType] || 12.0;
+        const oldRent = contract.monthly_rent;
+        const newRent = Math.round(oldRent * (1 + pct / 100));
+
+        contract.monthly_rent = newRent;
+        contract.adjustment_index = indexType;
+        contract.adjustment_frequency_months = frequencyMonths;
+        contract.last_adjustment_date = new Date().toISOString().split('T')[0];
+        
+        localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(contracts));
+
+        // Update pending payment amount if exists
+        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
+        const pendingPay = payments.find(p => p.contract_id === contractId && p.status === 'pendiente');
+        if (pendingPay) {
+            pendingPay.amount_base = newRent;
+            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        }
+
+        return {
+            oldRent,
+            newRent,
+            pct,
+            indexType
+        };
+    },
+
+    // ------------------------------------------
+    // Tickets de Mantenimiento
+    // ------------------------------------------
+    getMaintenanceTickets: async function() {
+        this._initMockStorage();
+        const data = localStorage.getItem(this._STORAGE_KEYS.TICKETS);
+        return data ? JSON.parse(data) : [];
+    },
+
+    createMaintenanceTicket: async function(ticketData) {
+        this._initMockStorage();
+        const tickets = await this.getMaintenanceTickets();
+        const contract = await this.getActiveContract();
+        
+        const newTicket = {
+            id: 'tkt-' + Date.now(),
+            contract_id: contract ? contract.id : 'contract-1',
+            property_address: contract ? contract.property_address : 'Propiedad alquilada',
+            tenant_name: ticketData.tenantName || 'Carlos Gómez',
+            title: ticketData.title || 'Solicitud de reparación',
+            category: ticketData.category || 'General',
+            priority: ticketData.priority || 'Media',
+            description: ticketData.description || '',
+            photo_url: ticketData.photoUrl || null,
+            status: 'abierto',
+            landlord_response: null,
+            created_at: new Date().toISOString()
+        };
+
+        tickets.unshift(newTicket);
+        localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(tickets));
+        return newTicket;
+    },
+
+    updateTicketStatus: async function(ticketId, newStatus, responseText) {
+        this._initMockStorage();
+        const tickets = await this.getMaintenanceTickets();
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket) {
+            if (newStatus) ticket.status = newStatus;
+            if (responseText !== undefined) ticket.landlord_response = responseText;
+            localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(tickets));
+        }
+        return ticket;
     }
 };
 
 window.DataManager = DataManager;
+
