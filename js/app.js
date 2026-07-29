@@ -1663,6 +1663,8 @@ const App = {
 
                         // Ubicacion (Paso 1.1)
                         calleAltura: getVal('calle-altura'),
+                        latitud: window.selectedPropertyLat || (typeof window.propertyMarker?.position?.lat === 'function' ? window.propertyMarker.position.lat() : window.propertyMarker?.position?.lat) || null,
+                        longitud: window.selectedPropertyLng || (typeof window.propertyMarker?.position?.lng === 'function' ? window.propertyMarker.position.lng() : window.propertyMarker?.position?.lng) || null,
                         provincia: getVal('provincia'),
                         ciudad: getVal('ciudad'),
                         barrio: getVal('barrio'),
@@ -6034,21 +6036,32 @@ window.initGoogleMap = async function () {
             window.propertyMap.panTo(place.geometry.location);
             window.propertyMarker.position = place.geometry.location;
 
+            // Store exact lat/lng
+            window.selectedPropertyLat = typeof place.geometry.location.lat === 'function' ? place.geometry.location.lat() : place.geometry.location.lat;
+            window.selectedPropertyLng = typeof place.geometry.location.lng === 'function' ? place.geometry.location.lng() : place.geometry.location.lng;
+
             const label = document.getElementById('map-address-label');
             if (label) label.textContent = place.formatted_address;
 
-            // Extract components
+            // Extract components (route, street_number, provincia, departamento)
             let provinciaStr = '';
             let departamentoStr = '';
+            let routeStr = '';
+            let streetNumberStr = '';
 
             for (const component of place.address_components) {
                 const types = component.types;
-                if (types.includes('administrative_area_level_1')) {
-                    provinciaStr = component.long_name;
-                }
+                if (types.includes('route')) routeStr = component.long_name;
+                if (types.includes('street_number')) streetNumberStr = component.long_name;
+                if (types.includes('administrative_area_level_1')) provinciaStr = component.long_name;
                 if (types.includes('administrative_area_level_2') || types.includes('locality')) {
                     if (!departamentoStr) departamentoStr = component.long_name;
                 }
+            }
+
+            if (routeStr) {
+                window.selectedPropertyStreetNumber = streetNumberStr;
+                inputCalle.value = `${routeStr} ${streetNumberStr}`.trim();
             }
 
             // Clean string helper for flexible matching
@@ -6726,7 +6739,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const initialEl = document.getElementById('user-avatar-initial');
 
                 if (nameEl) nameEl.textContent = profile?.full_name || user?.email || 'Usuario';
-                if (idEl) idEl.textContent = `Identificador: ${user?.id?.substring(0, 8) || ''}`;
+                if (idEl) idEl.textContent = `Identificador: ${String(user?.id || '').substring(0, 8)}`;
                 if (initialEl && (profile?.full_name || user?.email)) {
                     initialEl.textContent = (profile?.full_name || user?.email).charAt(0).toUpperCase();
                 }
@@ -6930,7 +6943,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const term = (avisosSearch?.value || '').toLowerCase();
         const sortVal = avisosSort?.value || 'recent';
         let filtered = allAvisos.filter(a => {
-            const searchable = [a.titulo_aviso, a.calle_altura, a.ciudad, a.provincia, a.tipo_propiedad, a.id?.substring(0, 8)].filter(Boolean).join(' ').toLowerCase();
+            const searchable = [a.titulo_aviso, a.calle_altura, a.ciudad, a.provincia, a.tipo_propiedad, String(a.id || '').substring(0, 8)].filter(Boolean).join(' ').toLowerCase();
             return searchable.includes(term);
         });
         if (sortVal === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -7515,7 +7528,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ubicacion = aviso.address || 'Sin ubicación';
         const titulo = aviso.title || `${tipo} en ${op}`;
         const date = aviso.created_at ? new Date(aviso.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-        const shortId = aviso.id ? aviso.id.substring(0, 8) : '';
+        const shortId = aviso.id ? String(aviso.id).substring(0, 8) : '';
 
         // Get image from propiedad_imagenes join or images array
         let imgSrc = 'img/hero-marketplace.jpg';

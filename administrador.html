@@ -453,8 +453,7 @@
                                     <span class="text-xs text-zinc-400">/ mes</span>
                                 </div>
                             </div>
-                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs">
-                                <span class="text-zinc-400 font-mono text-[11px]">ID ${p.id.substring(0, 8)}</span>
+                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end items-center text-xs">
                                 <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="font-bold text-primary dark:text-red-400 hover:underline flex items-center gap-1">
                                     Ver Ficha <span class="material-symbols-outlined text-sm">arrow_forward</span>
                                 </button>
@@ -873,7 +872,7 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn-save-tkt-reply px-4 py-2 bg-primary text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5">
+                            <button type="button" class="btn-save-tkt-reply px-4 py-2 bg-primary text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5" data-id="${t.id}">
                                 <span class="material-symbols-outlined text-base">save</span>
                                 Guardar Respuesta y Estado
                             </button>

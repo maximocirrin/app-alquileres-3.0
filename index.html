@@ -14,8 +14,10 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-    <!-- Leaflet Map -->
-    <!-- Removed Google Maps script from here -->
+    <!-- Supabase & Data Manager -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
 
 
     <!-- Tailwind & Stitch Fonts -->
@@ -1004,134 +1006,17 @@
             </section>
 
             <script>
-                document.addEventListener('DOMContentLoaded', async () => {
+                async function renderLandingFeaturedProperties() {
                     const grid = document.getElementById('landing-featured-properties-grid');
                     if (!grid) return;
 
-                    const fallbackProperties = [
-                        {
-                            title: 'Departamento luminoso con balcón',
-                            address: 'Palermo Soho, Buenos Aires',
-                            province: 'Ciudad Autónoma de Buenos Aires',
-                            price: 420000,
-                            image: 'img/pisos-inquilinos.jpg',
-                            images: ['img/pisos-inquilinos.jpg'],
-                            type: 'apartment',
-                            tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
-                            note: 'Contrato digital, garantía online y gestión directa.',
-                            pet: true,
-                            verified: true,
-                            expensasIncluidas: true
-                        },
-                        {
-                            title: 'Estudio amoblado cerca del metro',
-                            address: 'Recoleta, Buenos Aires',
-                            province: 'Ciudad Autónoma de Buenos Aires',
-                            price: 380000,
-                            image: 'img/estudios-inquilinos.jpg',
-                            images: ['img/estudios-inquilinos.jpg'],
-                            type: 'studio',
-                            tags: ['Estudio', 'Amoblado', 'Amenities'],
-                            note: 'Ideal para mudanza rápida con firma remota.',
-                            pet: false,
-                            verified: true,
-                            expensasIncluidas: false,
-                            expensas: 45000
-                        },
-                        {
-                            title: 'Piso familiar con cochera',
-                            address: 'Belgrano, Buenos Aires',
-                            province: 'Ciudad Autónoma de Buenos Aires',
-                            price: 690000,
-                            image: 'img/residencias-inquilinos.jpg',
-                            images: ['img/residencias-inquilinos.jpg'],
-                            type: 'apartment',
-                            tags: ['3 dormitorios', '2 baños', 'Cochera'],
-                            note: 'Publicación validada por propietario.',
-                            pet: true,
-                            verified: true,
-                            expensasIncluidas: false,
-                            expensas: 85000
-                        },
-                        {
-                            title: 'Departamento en barrio residencial',
-                            address: 'Godoy Cruz, Mendoza',
-                            province: 'Mendoza',
-                            price: 455000,
-                            image: 'img/mendoza-inquilinos.jpg',
-                            images: ['img/mendoza-inquilinos.jpg'],
-                            type: 'apartment',
-                            tags: ['2 dormitorios', 'Patio', 'Mascotas'],
-                            note: 'Apto mascotas y listo para iniciar solicitud.',
-                            pet: true,
-                            verified: true,
-                            expensasIncluidas: true
-                        },
-                        {
-                            title: 'Dúplex con terraza privada',
-                            address: 'Rosario Centro, Santa Fe',
-                            province: 'Santa Fe',
-                            price: 570000,
-                            image: 'img/hero-marketplace.jpg',
-                            images: ['img/hero-marketplace.jpg'],
-                            type: 'apartment',
-                            tags: ['Dúplex', 'Terraza', '2 baños'],
-                            note: 'Para estadías medias con onboarding digital.',
-                            pet: true,
-                            verified: true,
-                            expensasIncluidas: false,
-                            expensas: 60000
-                        }
-                    ];
-
-                    let displayProperties = [...fallbackProperties];
+                    let displayProperties = [];
 
                     try {
                         if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
                             const dbProps = await window.DataManager.getPublicMarketplaceProperties(10);
                             if (dbProps && dbProps.length > 0) {
-                                const formattedDb = dbProps.map(p => {
-                                    let extraInfo = {};
-                                    if (p.description && p.description.includes('Detalles: ')) {
-                                        try { extraInfo = JSON.parse(p.description.split('Detalles: ')[1]); } catch(e){}
-                                    }
-                                    let fotos = p.images || [];
-                                    if (p.propiedad_imagenes && p.propiedad_imagenes.length > 0) {
-                                        fotos = p.propiedad_imagenes.sort((a,b) => a.orden - b.orden).map(img => img.url);
-                                    }
-                                    const isExpensasIncluidas = Boolean(
-                                        extraInfo.expensasIncluidas ||
-                                        extraInfo.expensas_incluidas ||
-                                        p.expensas_incluidas ||
-                                        p.expensasIncluidas ||
-                                        extraInfo.expensas === 0 ||
-                                        p.expensas === 0
-                                    );
-                                    return {
-                                        id: p.id,
-                                        title: p.title || 'Propiedad en alquiler',
-                                        address: p.address || 'Mendoza, Argentina',
-                                        province: extraInfo.provincia || '',
-                                        price: p.price || 0,
-                                        image: fotos[0] || 'img/hero-marketplace.jpg',
-                                        images: fotos,
-                                        type: extraInfo.tipo || 'apartment',
-                                        tags: [
-                                            extraInfo.dormitorios ? `${extraInfo.dormitorios} dormitorios` : null,
-                                            extraInfo.banos ? `${extraInfo.banos} baños` : null,
-                                            'Verificado'
-                                        ].filter(Boolean),
-                                        note: p.description ? p.description.split('Detalles: ')[0] : '',
-                                        pet: extraInfo.mascotas || false,
-                                        verified: true,
-                                        expensasIncluidas: isExpensasIncluidas,
-                                        expensas: extraInfo.expensas || p.expensas || 0,
-                                        featured: (extraInfo.operacion || 'Alquiler').toUpperCase(),
-                                        propiedad_imagenes: p.propiedad_imagenes,
-                                        description: p.description
-                                    };
-                                });
-                                displayProperties = [...formattedDb, ...fallbackProperties];
+                                displayProperties = dbProps;
                             }
                         }
                     } catch(e) {
@@ -1139,6 +1024,11 @@
                     }
 
                     grid.innerHTML = '';
+                    if (!displayProperties || displayProperties.length === 0) {
+                        grid.innerHTML = '<div class="w-full text-center py-8 text-zinc-500 dark:text-zinc-400 font-body text-sm">No hay propiedades publicadas actualmente en el Marketplace. ¡Sé el primero en publicar una!</div>';
+                        return;
+                    }
+
                     displayProperties.slice(0, 8).forEach(prop => {
                         const priceFormatted = `$${Math.round(prop.price / 1000)}k / mes`;
                         const card = document.createElement('article');
@@ -1209,11 +1099,9 @@
                         });
                     }
 
-                    if (window.marketplaceObserver) {
-                        const newSec = document.getElementById('landing-featured-properties-section');
-                        if (newSec) window.marketplaceObserver.observe(newSec);
-                    }
-                });
+                }
+                document.addEventListener('DOMContentLoaded', renderLandingFeaturedProperties);
+                window.addEventListener('load', renderLandingFeaturedProperties);
             </script>
 
             <!-- Discovery & Filter Section -->

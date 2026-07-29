@@ -17,6 +17,10 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet">
+    <!-- Supabase & Data Manager -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
     <link rel="stylesheet" href="css/style.css?v=8">
     <script>
         const originalWarn = console.warn;
@@ -937,95 +941,7 @@
                     <div id="rentals-map" aria-label="Mapa interactivo de propiedades en Argentina"></div>
 
                     <script>
-                        const properties = [
-                            {
-                                title: 'Departamento luminoso con balcón',
-                                address: 'Palermo Soho, Buenos Aires',
-                                province: 'Ciudad Autónoma de Buenos Aires',
-                                coords: [-34.5836, -58.4285],
-                                price: 420000,
-                                image: 'img/pisos-inquilinos.jpg',
-                                type: 'apartment',
-                                tags: ['2 dormitorios', '1 baño', 'Balcón', 'Verificado'],
-                                note: 'Contrato digital, garantía online y administración desde Habitat.',
-                                pet: true,
-                                verified: true,
-                                expensasIncluidas: true
-                            },
-                            {
-                                title: 'Estudio amoblado cerca del metro',
-                                address: 'Recoleta, Buenos Aires',
-                                province: 'Ciudad Autónoma de Buenos Aires',
-                                coords: [-34.5885, -58.3970],
-                                price: 380000,
-                                image: 'img/estudios-inquilinos.jpg',
-                                type: 'studio',
-                                tags: ['Estudio', 'Amoblado', 'Amenities'],
-                                note: 'Ideal para mudanza rápida con firma remota.',
-                                pet: false,
-                                verified: true,
-                                expensasIncluidas: false,
-                                expensas: 45000
-                            },
-                            {
-                                title: 'Piso familiar con cochera',
-                                address: 'Belgrano, Buenos Aires',
-                                province: 'Ciudad Autónoma de Buenos Aires',
-                                coords: [-34.5615, -58.4566],
-                                price: 690000,
-                                image: 'img/residencias-inquilinos.jpg',
-                                type: 'apartment',
-                                tags: ['3 dormitorios', '2 baños', 'Cochera'],
-                                note: 'Publicación validada por propietario con documentación completa.',
-                                pet: true,
-                                verified: true,
-                                expensasIncluidas: false,
-                                expensas: 85000
-                            },
-                            {
-                                title: 'Monoambiente moderno',
-                                address: 'Córdoba Centro, Córdoba',
-                                province: 'Córdoba',
-                                coords: [-31.4167, -64.1833],
-                                price: 310000,
-                                image: 'img/habitaciones-inquilinos.jpg',
-                                type: 'studio',
-                                tags: ['Monoambiente', 'Laundry', 'Seguridad'],
-                                note: 'Expensas claras y proceso de reserva digital.',
-                                pet: false,
-                                verified: false,
-                                expensasIncluidas: true
-                            },
-                            {
-                                title: 'Departamento en barrio residencial',
-                                address: 'Godoy Cruz, Mendoza',
-                                province: 'Mendoza',
-                                coords: [-32.9167, -68.8333],
-                                price: 455000,
-                                image: 'img/mendoza-inquilinos.jpg',
-                                type: 'apartment',
-                                tags: ['2 dormitorios', 'Patio', 'Mascotas'],
-                                note: 'Apto mascotas y listo para iniciar solicitud.',
-                                pet: true,
-                                verified: false,
-                                expensasIncluidas: false,
-                                expensas: 35000
-                            },
-                            {
-                                title: 'Dúplex con terraza privada',
-                                address: 'Rosario Centro, Santa Fe',
-                                province: 'Santa Fe',
-                                coords: [-32.9468, -60.6393],
-                                price: 570000,
-                                image: 'img/hero-marketplace.jpg',
-                                type: 'apartment',
-                                tags: ['Dúplex', 'Terraza', '2 baños'],
-                                note: 'Para estadías medias con onboarding digital.',
-                                pet: true,
-                                verified: true,
-                                expensasIncluidas: true
-                            }
-                        ];
+                        const properties = [];
 
                     </script>
                     <script>
@@ -1203,58 +1119,13 @@
                             }
 
                             async function syncDbPropertiesForSearch() {
+                                window.syncDbPropertiesForSearch = syncDbPropertiesForSearch;
                                 if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
                                     try {
-                                        const dbProps = await window.DataManager.getPublicMarketplaceProperties(30);
+                                        const dbProps = await window.DataManager.getPublicMarketplaceProperties(50);
                                         if (dbProps && dbProps.length > 0) {
-                                            dbProps.forEach(p => {
-                                                if (properties.some(existing => existing.id === p.id)) return;
-                                                let extraInfo = {};
-                                                if (p.description && p.description.includes('Detalles: ')) {
-                                                    try { extraInfo = JSON.parse(p.description.split('Detalles: ')[1]); } catch(e){}
-                                                }
-                                                let fotos = p.images || [];
-                                                if (p.propiedad_imagenes && p.propiedad_imagenes.length > 0) {
-                                                    fotos = p.propiedad_imagenes.sort((a,b) => a.orden - b.orden).map(img => img.url);
-                                                }
-                                                const mainImage = fotos[0] || 'img/hero-marketplace.jpg';
-                                                const prov = extraInfo.provincia || 'Mendoza';
-                                                const operacion = (extraInfo.operacion || 'Alquiler').toUpperCase();
-                                                const isExpensasIncluidas = Boolean(
-                                                    extraInfo.expensasIncluidas ||
-                                                    extraInfo.expensas_incluidas ||
-                                                    p.expensas_incluidas ||
-                                                    p.expensasIncluidas ||
-                                                    extraInfo.expensas === 0 ||
-                                                    p.expensas === 0
-                                                );
-
-                                                properties.unshift({
-                                                    id: p.id,
-                                                    title: p.title || 'Propiedad publicada',
-                                                    address: p.address || 'Mendoza, Argentina',
-                                                    province: prov,
-                                                    coords: [-32.8898, -68.8373],
-                                                    price: p.price || 0,
-                                                    image: mainImage,
-                                                    images: fotos,
-                                                    type: extraInfo.tipo || 'apartment',
-                                                    tags: [
-                                                        extraInfo.dormitorios ? `${extraInfo.dormitorios} dormitorios` : null,
-                                                        extraInfo.banos ? `${extraInfo.banos} baños` : null,
-                                                        extraInfo.sup_cubierta ? `${extraInfo.sup_cubierta} m²` : null,
-                                                        'Verificado'
-                                                    ].filter(Boolean),
-                                                    note: p.description ? p.description.split('Detalles: ')[0] : '',
-                                                    pet: extraInfo.mascotas || false,
-                                                    verified: true,
-                                                    expensasIncluidas: isExpensasIncluidas,
-                                                    expensas: extraInfo.expensas || p.expensas || 0,
-                                                    featured: operacion,
-                                                    propiedad_imagenes: p.propiedad_imagenes,
-                                                    description: p.description
-                                                });
-                                            });
+                                            properties.length = 0;
+                                            dbProps.forEach(p => properties.push(p));
                                             renderNewListings();
                                         }
                                     } catch(err) {
@@ -1469,7 +1340,6 @@
                                             }
                                         });
                                     } else {
-                                        // Fallback si no cargó la librería
                                         googleMarkers.forEach(m => m.setMap(googleMap));
                                     }
                                 }
@@ -1484,7 +1354,7 @@
                                 renderNewListings();
                             }
 
-                            window.initInteractiveMap = function () {
+                            window.initInteractiveMap = async function () {
                                 const mapEl = document.getElementById('rentals-map');
                                 if (!mapEl) return;
 
@@ -1508,8 +1378,6 @@
                                     fullscreenControl: false
                                 });
 
-                                // Capa GeoJSON eliminada para evitar pines por defecto
-
                                 const autocomplete = new google.maps.places.Autocomplete(document.getElementById('location-search'), {
                                     types: ['(regions)'],
                                     componentRestrictions: { country: 'ar' }
@@ -1524,56 +1392,12 @@
                                     }
                                 });
 
-                                const urlParams = new URLSearchParams(window.location.search);
-                                const locationParam = urlParams.get('location');
-
-                                // Render listings and markers now that the map is ready
-                                renderNewListings();
-
-                                if (locationParam) {
-                                    const locNorm = normalize(locationParam);
-                                    let foundProv = '';
-                                    for (const prov of Object.keys(provinceCapitals)) {
-                                        if (normalize(prov).includes(locNorm)) {
-                                            foundProv = prov;
-                                            break;
-                                        }
-                                    }
-
-                                    if (foundProv && googleMap) {
-                                        const marker = googleMarkers.find(m => m.getTitle() === foundProv);
-                                        if (marker) {
-                                            google.maps.event.trigger(marker, 'click');
-                                        }
-                                    } else if (visibleRentals.length > 0 && googleMap) {
-                                        const bounds = new google.maps.LatLngBounds();
-                                        visibleRentals.forEach(r => {
-                                            bounds.extend(new google.maps.LatLng(r.coords[0], r.coords[1]));
-                                        });
-                                        if (!bounds.isEmpty()) {
-                                            googleMap.fitBounds(bounds);
-                                            if (visibleRentals.length === 1) {
-                                                const listener = google.maps.event.addListener(googleMap, "idle", function() { 
-                                                    if (googleMap.getZoom() > 14) googleMap.setZoom(14); 
-                                                    google.maps.event.removeListener(listener); 
-                                                });
-                                            }
-                                        }
-                                    } else if (googleMap) {
-                                        const geocoder = new google.maps.Geocoder();
-                                        geocoder.geocode({ address: locationParam }, (results, status) => {
-                                            if (status === 'OK' && results[0]) {
-                                                if (results[0].geometry.viewport) {
-                                                    googleMap.fitBounds(results[0].geometry.viewport);
-                                                } else {
-                                                    googleMap.panTo(results[0].geometry.location);
-                                                    googleMap.setZoom(14);
-                                                }
-                                            }
-                                        });
-                                    }
+                                if (typeof syncDbPropertiesForSearch === 'function') {
+                                    await syncDbPropertiesForSearch();
+                                } else {
+                                    renderNewListings();
                                 }
-                            }
+                            };
 
                             function applyNavTheme(theme) {
                                 document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -1586,18 +1410,6 @@
 
                             document.querySelector('.theme-switch__checkbox')?.addEventListener('change', function () {
                                 applyNavTheme(this.checked ? 'dark' : 'light');
-                            });
-
-
-                            document.getElementById('search-form').addEventListener('submit', (event) => {
-                                event.preventDefault();
-                                currentTerm = inputEl.value.trim();
-                                renderNewListings();
-                            });
-
-                            inputEl.addEventListener('input', () => {
-                                currentTerm = inputEl.value.trim();
-                                renderNewListings();
                             });
 
                             sortEl.addEventListener('change', renderNewListings);
@@ -1642,20 +1454,22 @@
                                 inputEl.value = locationParam;
                                 currentTerm = locationParam.trim();
                             }
+                            syncDbPropertiesForSearch();
                             renderNewListings();
 
                             applyNavTheme(localStorage.getItem('theme') || 'light');
                         })();
                     </script>
                     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-                    <script
-                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap"
-                        async defer></script>
-                    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-                    <script src="js/supabaseClient.js"></script>
-                    <script src="js/data.js"></script>
+                    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap&loading=async&v=weekly"></script>
                     <script src="js/app.js?v=4"></script>
+                    <script>
+                        window.addEventListener('load', () => {
+                            if (typeof syncDbPropertiesForSearch === 'function') {
+                                syncDbPropertiesForSearch();
+                            }
+                        });
+                    </script>
 </body>
 
 </html>
-

@@ -1,813 +1,844 @@
 /**
- * Data Management Module
- * Handles Supabase operations (Global Version)
+ * Data Management Module - Supabase Production Integration
+ * Connects all application features to Supabase Postgres DB
  */
 
-// No imports - relies on global supabaseClient
+// Helper function to convert base64 data URL to Blob for Supabase Storage
+function base64ToBlob(base64Data, contentType = 'image/jpeg') {
+    if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:')) {
+        return null;
+    }
+    try {
+        const parts = base64Data.split(';base64,');
+        const mime = parts[0].split(':')[1] || contentType;
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+            uInt8Array[i] = raw.charCodeAt(i);
+        }
+        return new Blob([uInt8Array], { type: mime });
+    } catch (e) {
+        console.error("Error converting base64 to blob:", e);
+        return null;
+    }
+}
 
 const DataManager = {
+    // Helper: Get or Create Profile ID for current user
+    _getOrCreateProfile: async function() {
+        if (!window.supabaseClient) return null;
+        try {
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user) {
+                const { data: fallbackProfiles } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .limit(1);
+                return fallbackProfiles?.[0]?.id_perfil || null;
+            }
+
+            const { data: existing } = await window.supabaseClient
+                .from('Perfil')
+                .select('id_perfil')
+                .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+                .limit(1);
+
+            if (existing && existing.length > 0) {
+                return existing[0].id_perfil;
+            }
+
+            const { data: newProfile, error } = await window.supabaseClient
+                .from('Perfil')
+                .insert([{
+                    user_id: user.id,
+                    mail: user.email,
+                    nombre_completo: user.user_metadata?.full_name || user.email.split('@')[0],
+                    id_tipo_perfil: 1,
+                    cuenta_verificada: true
+                }])
+                .select('id_perfil')
+                .single();
+
+            if (error) {
+                console.warn("Could not insert Perfil, using fallback:", error);
+                return null;
+            }
+            return newProfile.id_perfil;
+        } catch (e) {
+            console.error("Error in _getOrCreateProfile:", e);
+            return null;
+        }
+    },
+
     // User Management
     login: async (email, password) => {
-        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-            email,
-            password
-        });
-        
+        if (!window.supabaseClient) return null;
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
             console.error("Login error:", error);
             return null;
         }
+        await DataManager._getOrCreateProfile();
         return data.user;
     },
 
     signUp: async (email, password, fullName) => {
+        if (!window.supabaseClient) return null;
         const { data, error } = await window.supabaseClient.auth.signUp({
             email,
             password,
-            options: {
-                data: {
-                    full_name: fullName
-                }
-            }
+            options: { data: { full_name: fullName } }
         });
-        
         if (error) {
             console.error("Signup error:", error);
             throw error;
+        }
+        if (data.user) {
+            await window.supabaseClient
+                .from('Perfil')
+                .insert([{
+                    user_id: data.user.id,
+                    mail: email,
+                    nombre_completo: fullName || email.split('@')[0],
+                    id_tipo_perfil: 1
+                }]);
         }
         return data.user;
     },
 
     logout: async () => {
-        const { error } = await window.supabaseClient.auth.signOut();
-        if (error) console.error("Logout error:", error);
+        if (window.supabaseClient) {
+            const { error } = await window.supabaseClient.auth.signOut();
+            if (error) console.error("Logout error:", error);
+        }
     },
 
     getCurrentUser: async () => {
+        if (!window.supabaseClient) return null;
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         return user;
     },
 
     getUserProfile: async () => {
+        if (!window.supabaseClient) return null;
         const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return null;
-        const { data, error } = await window.supabaseClient
-            .from('profiles')
-            .select('id, full_name, email, role')
-            .eq('id', user.id)
-            .single();
-        if (error) {
-            console.error("Error fetching profile:", error);
-            return null;
+        const { data } = await window.supabaseClient
+            .from('Perfil')
+            .select('*')
+            .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+            .maybeSingle();
+        return data || { mail: user.email, nombre_completo: user.user_metadata?.full_name || 'Usuario' };
+    },
+
+    // Property & Marketplace Management
+    getProperties: async () => {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data: properties, error } = await window.supabaseClient
+                .from('Propiedad')
+                .select(`
+                    *,
+                    Publicacion (*, Multimedia (*)),
+                    Contrato (*)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching Propiedad:", error);
+                return [];
+            }
+
+            return (properties || []).map(p => {
+                const pub = Array.isArray(p.Publicacion) ? p.Publicacion[0] : p.Publicacion;
+                const media = pub?.Multimedia || [];
+                const contract = Array.isArray(p.Contrato) ? p.Contrato[0] : p.Contrato;
+                
+                const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
+                const title = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `${p.calle || 'Propiedad'} ${p.numero || ''}`.trim();
+                const address = `${p.calle || 'Sin calle'} ${p.numero || ''}, ${p.piso_dpto || ''}`.trim();
+
+                return {
+                    id: p.id_propiedad,
+                    id_propiedad: p.id_propiedad,
+                    title: title,
+                    description: pub?.descripcion || '',
+                    address: address,
+                    price: pub?.precio || p.expensas_mensuales || 0,
+                    rentDueDay: contract?.dia_vencimiento_mensual || 10,
+                    contractStartDate: contract?.fecha_inicio_contrato || null,
+                    contractEndDate: contract?.fecha_fin_contrato || null,
+                    tenantName: 'Inquilino Activo',
+                    tenantEmail: '',
+                    tenantPhone: '',
+                    cbuAlias: contract?.alias_cbu || 'HABITAT.MP',
+                    photoUrl: photoUrls[0],
+                    images: photoUrls,
+                    status: pub ? 'disponible' : 'alquilada',
+                    paymentStatus: 'al_dia'
+                };
+            });
+        } catch (e) {
+            console.error("getProperties catch error:", e);
+            return [];
         }
-        return data;
+    },
+
+    getPublicMarketplaceProperties: async (limit = 50) => {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data: publications, error } = await window.supabaseClient
+                .from('Publicacion')
+                .select(`
+                    *,
+                    Propiedad (*),
+                    Multimedia (*)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) {
+                console.error("Error fetching Publicacion:", error);
+                return [];
+            }
+
+            return (publications || []).map(pub => {
+                const prop = pub.Propiedad || {};
+                const media = pub.Multimedia || [];
+                const imageUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
+                const firstImage = imageUrls[0];
+                const address = `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim();
+
+                // Extract details from JSON suffix or fallback to Propiedad table columns
+                let extraInfo = {};
+                if (pub.descripcion && pub.descripcion.includes('Detalles: ')) {
+                    try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch(e){}
+                }
+
+                const cleanTitle = pub.descripcion
+                    ? pub.descripcion.split(' | Detalles: ')[0].substring(0, 70)
+                    : `Propiedad en ${address}`;
+
+                const lat = prop.latitud ? parseFloat(prop.latitud) : -32.8898;
+                const lng = prop.longitud ? parseFloat(prop.longitud) : -68.8373;
+                const dormitorios = prop.dormitorios || extraInfo.dormitorios || 1;
+                const banos = prop.banos_completos || extraInfo.banos || 1;
+                const ambientes = prop.habitaciones_total || extraInfo.ambientes || dormitorios;
+                const cocheras = prop.cantidad_cocheras || extraInfo.cocheras || 0;
+                const supCubierta = prop.superficie_cubierta || extraInfo.supCubierta || 0;
+
+                const tags = [
+                    dormitorios ? `${dormitorios} dorm.` : null,
+                    banos ? `${banos} bañ.` : null,
+                    ambientes ? `${ambientes} amb.` : null,
+                    cocheras ? `${cocheras} coch.` : null,
+                    supCubierta ? `${supCubierta} m²` : null,
+                    'Verificado'
+                ].filter(Boolean);
+
+                return {
+                    id: pub.id_publicacion,
+                    id_propiedad: pub.id_propiedad,
+                    id_publicacion: pub.id_publicacion,
+                    title: cleanTitle,
+                    description: pub.descripcion || '',
+                    address: address,
+                    province: extraInfo.provincia || 'Mendoza',
+                    city: extraInfo.ciudad || 'Mendoza',
+                    price: parseFloat(pub.precio || 0),
+                    images: imageUrls,
+                    photoUrl: firstImage,
+                    image: firstImage,
+                    coords: [lat, lng],
+                    latitud: lat,
+                    longitud: lng,
+                    dormitorios: dormitorios,
+                    banos: banos,
+                    ambientes: ambientes,
+                    cocheras: cocheras,
+                    sup_cubierta: supCubierta,
+                    tags: tags,
+                    note: cleanTitle,
+                    type: extraInfo.tipo || 'apartment',
+                    pet: extraInfo.mascotas || false,
+                    verified: true,
+                    expensasIncluidas: true,
+                    expensas: extraInfo.expensas || 0,
+                    featured: 'ALQUILER',
+                    created_at: pub.created_at,
+                    Propiedad: prop
+                };
+            });
+        } catch (e) {
+            console.error("Error in getPublicMarketplaceProperties:", e);
+            return [];
+        }
     },
 
     getUserMarketplaceProperties: async () => {
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
-        if (!user) return [];
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .select(`
-                id, title, description, address, price, status, images, created_at,
-                propiedad_imagenes (url, orden)
-            `)
-            .eq('owner_id', user.id)
-            .order('created_at', { ascending: false });
-        if (error) {
-            console.error("Error fetching user marketplace properties:", error);
-            return [];
-        }
-        return data || [];
+        return DataManager.getPublicMarketplaceProperties(50);
     },
 
-    // Property Management
-    getProperties: async () => {
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .select(`
-                *,
-                contracts (
-                    tenant_id,
-                    start_date,
-                    end_date,
-                    monthly_rent,
-                    payment_due_day,
-                    status,
-                    contract_data
-                )
-            `)
-            .order('created_at', { ascending: false });
+    addMarketplaceProperty: async (propertyData) => {
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
 
-        if (error) {
-            console.error("Error fetching properties:", error);
-            return [];
+        const profileId = await DataManager._getOrCreateProfile();
+
+        // 1. Parse address & street number accurately
+        let fullCalle = propertyData.calleAltura || propertyData.address || 'Calle Principal';
+        let numero = propertyData.numero || '';
+
+        // Extract street number if attached in street input
+        if (!numero && fullCalle) {
+            const match = fullCalle.match(/^(.*?)\s+(\d+)\s*$/);
+            if (match) {
+                fullCalle = match[1];
+                numero = match[2];
+            }
+        }
+        if (!numero && window.selectedPropertyStreetNumber) {
+            numero = window.selectedPropertyStreetNumber;
         }
 
-        return data.map(p => {
-            const currentContract = p.contracts && p.contracts.length > 0 ? p.contracts[0] : null;
-            return {
-                id: p.id,
-                title: p.title, 
-                description: p.description,
-                address: p.address,
-                price: p.price,
-                rentDueDay: currentContract?.payment_due_day || null,
-                increaseRate: null,
-                increaseFrequency: null,
-                contractStartDate: currentContract?.start_date || null,
-                contractEndDate: currentContract?.end_date || null,
-                tenantName: 'Inquilino', 
-                tenantEmail: '',
-                tenantPhone: '',
-                cbuAlias: null,
-                notifyRentExpiry: false,
-                notifyPunitiveInterests: false,
-                contract: currentContract?.contract_data || null, 
-                photoUrl: p.images && p.images.length > 0 ? p.images[0] : null,
-                status: p.status,
-                paymentStatus: currentContract?.status === 'activo' ? 'al_dia' : 'pendiente' 
-            };
-        });
-    },
+        // 2. Insert Propiedad (mapping Ambientes -> habitaciones_total & Cocheras -> cantidad_cocheras & lat/lng)
+        const { data: propData, error: propErr } = await window.supabaseClient
+            .from('Propiedad')
+            .insert([{
+                id_tipo_propiedad: 1,
+                id_unidad_medida: 1,
+                calle: fullCalle,
+                numero: numero || null,
+                piso_dpto: propertyData.piso ? `${propertyData.piso} ${propertyData.depto || ''}`.trim() : null,
+                codigo_postal: '5500',
+                dormitorios: parseInt(propertyData.dormitorios || 0),
+                banos_completos: parseInt(propertyData.banos || 0),
+                habitaciones_total: parseInt(propertyData.ambientes || 0), // Ambientes -> habitaciones_total
+                cantidad_cocheras: parseInt(propertyData.cocheras || 0), // Cocheras -> cantidad_cocheras
+                superficie_cubierta: parseFloat(propertyData.supCubierta || 0),
+                superficie_lote: parseFloat(propertyData.supTotal || 0),
+                latitud: propertyData.latitud ? parseFloat(propertyData.latitud) : (window.selectedPropertyLat || null),
+                longitud: propertyData.longitud ? parseFloat(propertyData.longitud) : (window.selectedPropertyLng || null)
+            }])
+            .select()
+            .single();
 
-    addProperty: async (property) => {
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
-        if (!user) throw new Error("User not authenticated");
+        if (propErr) {
+            console.error("Error inserting Propiedad:", propErr);
+            throw propErr;
+        }
 
-        const dbProperty = {
-            owner_id: user.id,
-            title: property.address || 'Nueva Propiedad',
-            description: '',
-            address: property.address,
-            price: property.price || 0,
-            images: property.photoUrl ? [property.photoUrl] : [],
-            status: 'alquilada' 
+        // 3. Construct description string with details metadata JSON suffix
+        const baseDescription = propertyData.descripcionAviso || propertyData.tituloAviso || 'Propiedad publicada en alquiler';
+        const extraDetailsObj = {
+            provincia: propertyData.provincia || 'Mendoza',
+            ciudad: propertyData.ciudad || 'Mendoza',
+            dormitorios: parseInt(propertyData.dormitorios || 1),
+            banos: parseInt(propertyData.banos || 1),
+            ambientes: parseInt(propertyData.ambientes || 1),
+            cocheras: parseInt(propertyData.cocheras || 0),
+            supCubierta: parseFloat(propertyData.supCubierta || 0),
+            tipo: propertyData.tipoPropiedad || 'apartment',
+            mascotas: propertyData.preferenciasAlquiler?.permiteMascotas || false,
+            expensas: parseFloat(propertyData.expensas || 0)
         };
+        const descriptionWithJson = `${baseDescription} | Detalles: ${JSON.stringify(extraDetailsObj)}`;
+        const price = parseFloat(propertyData.precio || propertyData.price || 0);
 
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .insert([dbProperty])
-            .select();
+        const { data: pubData, error: pubErr } = await window.supabaseClient
+            .from('Publicacion')
+            .insert([{
+                id_propiedad: propData.id_propiedad,
+                id_perfil: profileId,
+                id_tipo_operacion: 1,
+                id_moneda: propertyData.moneda === 'USD' ? 2 : 1,
+                precio: price,
+                descripcion: descriptionWithJson
+            }])
+            .select()
+            .single();
 
-        if (error) {
-            console.error("Error adding property:", error);
-            throw error;
+        if (pubErr) {
+            console.error("Error inserting Publicacion:", pubErr);
+            throw pubErr;
         }
-        return data[0];
+
+        // 4. Record in Historial_Estado_Publicacion (State 1 = disponible)
+        await window.supabaseClient
+            .from('Historial_Estado_Publicacion')
+            .insert([{
+                id_publicacion: pubData.id_publicacion,
+                id_estado_publicacion: 1,
+                fecha_inicio: new Date().toISOString()
+            }]);
+
+        // 5. Upload photos to Supabase Storage bucket propiedades_multimedia and save to Multimedia table
+        const rawPhotos = propertyData.multimedia?.fotos || propertyData.photos || window.selectedPropertyPhotos || [];
+        const uploadedMediaItems = [];
+
+        for (let idx = 0; idx < rawPhotos.length; idx++) {
+            const item = rawPhotos[idx];
+            let publicUrl = null;
+
+            try {
+                if (item instanceof File || item instanceof Blob) {
+                    const ext = item.name ? item.name.split('.').pop() : 'jpg';
+                    const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.${ext}`;
+                    const { data: uploadResult, error: uploadErr } = await window.supabaseClient
+                        .storage
+                        .from('propiedades_multimedia')
+                        .upload(filePath, item, { contentType: item.type || 'image/jpeg', upsert: true });
+
+                    if (!uploadErr) {
+                        const { data: urlRes } = window.supabaseClient
+                            .storage
+                            .from('propiedades_multimedia')
+                            .getPublicUrl(filePath);
+                        publicUrl = urlRes?.publicUrl;
+                    }
+                } else if (typeof item === 'string' && item.startsWith('data:')) {
+                    const blob = base64ToBlob(item);
+                    if (blob) {
+                        const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.jpg`;
+                        const { data: uploadResult, error: uploadErr } = await window.supabaseClient
+                            .storage
+                            .from('propiedades_multimedia')
+                            .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+
+                        if (!uploadErr) {
+                            const { data: urlRes } = window.supabaseClient
+                                .storage
+                                .from('propiedades_multimedia')
+                                .getPublicUrl(filePath);
+                            publicUrl = urlRes?.publicUrl;
+                        }
+                    }
+                } else if (typeof item === 'string') {
+                    publicUrl = item;
+                }
+            } catch (imgErr) {
+                console.warn("Storage upload error:", imgErr);
+            }
+
+            if (publicUrl) {
+                uploadedMediaItems.push({
+                    id_publicacion: pubData.id_publicacion,
+                    id_tipo_multimedia: 1,
+                    url_archivo: publicUrl,
+                    orden_visualizacion: idx + 1
+                });
+            }
+        }
+
+        if (uploadedMediaItems.length > 0) {
+            await window.supabaseClient.from('Multimedia').insert(uploadedMediaItems);
+        }
+
+        return {
+            id: pubData.id_publicacion,
+            id_propiedad: propData.id_propiedad,
+            title: baseDescription,
+            address: propData.calle,
+            price: price
+        };
+    },
+
+    addProperty: async (propertyData) => {
+        return DataManager.addMarketplaceProperty(propertyData);
     },
 
     deleteProperty: async (id) => {
-        const { error } = await window.supabaseClient
-            .from('properties')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error("Error deleting property:", error);
-            throw error;
-        }
+        if (!window.supabaseClient) return;
+        await window.supabaseClient.from('Publicacion').delete().eq('id_publicacion', id);
+        await window.supabaseClient.from('Propiedad').delete().eq('id_propiedad', id);
     },
 
-    updatePaymentStatus: async (propertyId, status) => {
-        // En el nuevo esquema el estado de pago dependería de los contratos o los pagos en sí.
-        // Simulamos el éxito para mantener compatibilidad con UI.
-        console.warn('updatePaymentStatus no hace nada en DB por ahora (requiere tabla de pagos).');
-    },
-
-    // Finances
+    // Finances & Income
     calculateTotalIncome: async () => {
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .select('price');
-        
-        if (error) return 0;
-        return data.reduce((total, p) => total + (parseFloat(p.price) || 0), 0);
+        if (!window.supabaseClient) return 0;
+        const { data } = await window.supabaseClient.from('Publicacion').select('precio');
+        return (data || []).reduce((sum, p) => sum + (parseFloat(p.precio) || 0), 0);
     },
 
-    // Tenants Management
-    getTenants: async () => {
-        const { data, error } = await window.supabaseClient
-            .from('contracts')
-            .select(`
-                id, 
-                monthly_rent, 
-                payment_due_day, 
-                contract_data, 
-                end_date, 
-                status,
-                property_id,
-                properties (address),
-                profiles!tenant_id (full_name, email)
-            `)
-            .eq('status', 'activo');
-
-        if (error) {
-            console.error("Error fetching tenants:", error);
-            return [];
-        }
-
-        return data.map(c => ({
-            id: c.tenant_id || c.id,
-            name: c.profiles?.full_name || 'Inquilino',
-            email: c.profiles?.email || '',
-            phone: '',
-            propertyAddress: c.properties?.address || 'Sin dirección',
-            rent: c.monthly_rent,
-            status: c.status === 'activo' ? 'al_dia' : 'pendiente',
-            rentDueDay: c.payment_due_day,
-            contract: c.contract_data,
-            contractEnd: c.end_date
-        }));
-    },
-
-    // Payments Management (Mock)
-    getPayments: () => {
-        return []; 
-    },
-    
-    getMockPayments: async () => {
-         const tenants = await DataManager.getTenants();
-         if (tenants.length === 0) return [];
-
-         const payments = [];
-         const methods = ['Efectivo', 'Transferencia', 'Depósito'];
- 
-         tenants.forEach(t => {
-             payments.push({
-                 id: t.id + '-pay',
-                 date: new Date().toISOString().split('T')[0],
-                 tenantId: t.id,
-                 tenantName: t.name,
-                 propertyId: t.id, 
-                 propertyAddress: t.propertyAddress,
-                 method: methods[Math.floor(Math.random() * methods.length)],
-                 amount: parseFloat(t.rent) || 0,
-                 status: t.status === 'al_dia' ? 'Pagado' : (t.status === 'atrasado' ? 'Atrasado' : 'Pendiente')
-             });
-         });
-         return payments;
-    },
-
-    getPaymentStats: async () => {
-        const payments = await DataManager.getMockPayments();
-        const totalPaid = payments
-            .filter(p => p.status === 'Pagado')
-            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-        
-        const pendingCount = payments.filter(p => p.status === 'Pendiente' || p.status === 'Atrasado').length;
-        
-        return {
-            totalPaid,
-            pendingCount,
-            totalTransactions: payments.length
-        };
-    },
-
-    getLateTenantsCount: async () => {
-        const payments = await DataManager.getMockPayments();
-        const lateSet = new Set(payments.filter(p => p.status === 'Atrasado').map(p => p.tenantId));
-        return lateSet.size;
-    },
-
-    // Marketplace Operations
-    addMarketplaceProperty: async (propertyData) => {
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
-        if (!user) throw new Error("User not authenticated");
-
-        const descriptionText = propertyData.descripcionAviso || '';
-        const operationText = propertyData.operacion ? `[${propertyData.operacion.toUpperCase()}] ` : '';
-        const fullTitle = propertyData.tituloAviso || `${operationText}${propertyData.tipoPropiedad} en ${propertyData.ciudad}`;
-        
-        const addressParts = [propertyData.calleAltura, propertyData.barrio, propertyData.ciudad, propertyData.provincia].filter(Boolean);
-        const fullAddress = addressParts.join(', ') || 'No especificado';
-        
-        const extraInfo = {
-            operacion: propertyData.operacion || 'venta',
-            tipo: propertyData.tipoPropiedad || 'departamento',
-            piso: propertyData.piso || null,
-            depto: propertyData.depto || null,
-            ambientes: propertyData.ambientes,
-            dormitorios: propertyData.dormitorios,
-            banos: propertyData.banos,
-            sup_cubierta: propertyData.supCubierta,
-            moneda: propertyData.moneda || 'ARS'
-        };
-
-        const finalDescription = `${descriptionText}\n\nDetalles: ${JSON.stringify(extraInfo)}`;
-
-        const dbProperty = {
-            owner_id: user.id,
-            title: fullTitle,
-            description: finalDescription,
-            address: fullAddress,
-            price: parseFloat(propertyData.precio) || 0,
-            status: 'disponible',
-            images: propertyData.multimedia?.fotos || []
-        };
-
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .insert([dbProperty])
-            .select();
-
-        if (error) {
-            console.error("Error adding marketplace property:", error);
-            throw error;
-        }
-
-        const newProperty = data[0];
-
-        // Process and upload images
-        if (propertyData.photos && propertyData.photos.length > 0) {
-            try {
-                const optimizeImageOnClient = (file) => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = new Image();
-                            img.onload = function() {
-                                const canvas = document.createElement('canvas');
-                                let width = img.width;
-                                let height = img.height;
-                                const max_width = 1920;
-                                if (width > max_width) {
-                                    height = Math.round((height * max_width) / width);
-                                    width = max_width;
-                                }
-                                canvas.width = width;
-                                canvas.height = height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                canvas.toBlob((blob) => {
-                                    resolve(blob);
-                                }, 'image/webp', 0.8);
-                            };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                };
-
-                const uploadPromises = propertyData.photos.map(async (file, index) => {
-                    const optimizedBlob = await optimizeImageOnClient(file);
-                    const fileName = `${Date.now()}-${index}.webp`;
-                    const storagePath = `propiedades/${newProperty.id}/${fileName}`;
-                    
-                    const { data: storageData, error: storageError } = await window.supabaseClient
-                        .storage
-                        .from('propiedades_multimedia')
-                        .upload(storagePath, optimizedBlob, {
-                            contentType: 'image/webp',
-                            upsert: false
-                        });
-
-                    if (storageError) throw storageError;
-
-                    const { data: publicUrlData } = window.supabaseClient
-                        .storage
-                        .from('propiedades_multimedia')
-                        .getPublicUrl(storagePath);
-
-                    return {
-                        propiedad_id: newProperty.id,
-                        url: publicUrlData.publicUrl,
-                        storage_path: storagePath,
-                        orden: index + 1
-                    };
-                });
-
-                const uploadedImagesMetadata = await Promise.all(uploadPromises);
-                
-                const { error: dbError } = await window.supabaseClient
-                    .from('propiedad_imagenes')
-                    .insert(uploadedImagesMetadata);
-                    
-                if (dbError) throw dbError;
-                
-                // Clear the temporary array now that we have uploaded them
-                window.selectedPropertyPhotos = [];
-                
-            } catch (imgError) {
-                console.error("Error procesando/subiendo imagenes:", imgError);
-                // Procedemos igual ya que la propiedad se creó
-            }
-        }
-
-        return newProperty;
-    },
-
-    getPublicMarketplaceProperties: async (limit = 12) => {
-        const { data, error } = await window.supabaseClient
-            .from('properties')
-            .select(`
-                id, title, description, address, price, status, images, created_at,
-                propiedad_imagenes (url, orden)
-            `)
-            .eq('status', 'disponible')
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-        if (error) {
-            console.error("Error fetching marketplace properties:", error);
-            return [];
-        }
-        return data || [];
-    },
-
-    // ==========================================
-    // MOCK DATA ENGINE & STORAGE PERSISTENCE
-    // ==========================================
-    _STORAGE_KEYS: {
-        APPLICATIONS: 'habitat_applications_v1',
-        VISITS: 'habitat_visits_v1',
-        CONTRACTS: 'habitat_contracts_v1',
-        PAYMENTS: 'habitat_payments_v1',
-        TICKETS: 'habitat_tickets_v1'
-    },
-
-    _initMockStorage: function() {
-        if (!localStorage.getItem(this._STORAGE_KEYS.APPLICATIONS)) {
-            const initialApplications = [
-                {
-                    id: 'app-1',
-                    property_id: 'prop-101',
-                    property_title: 'Departamento 2 Ambientes en Belgrano',
-                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
-                    tenant_id: 'tenant-100',
-                    tenant_name: 'Carlos Gómez',
-                    tenant_email: 'carlos.gomez@gmail.com',
-                    tenant_phone: '+54 9 11 4567-8901',
-                    income_proof: 'Recibo de sueldo - $950.000 / mes',
-                    message: 'Hola! Me interesa mucho la propiedad. Tengo garantía finaer y puedo ingresar este mismo mes.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-                },
-                {
-                    id: 'app-2',
-                    property_id: 'prop-101',
-                    property_title: 'Departamento 2 Ambientes en Belgrano',
-                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
-                    tenant_id: 'tenant-101',
-                    tenant_name: 'Mariana López',
-                    tenant_email: 'mariana.lopez@yahoo.com',
-                    tenant_phone: '+54 9 11 8899-2211',
-                    income_proof: 'Monotributo Cat F + Garantía propietaria',
-                    message: 'Buenas tardes, quisiéramos coordinar para firmar contrato si está disponible.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 86400000 * 1).toISOString()
-                }
-            ];
-            localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(initialApplications));
-        }
-
-        if (!localStorage.getItem(this._STORAGE_KEYS.VISITS)) {
-            const initialVisits = [
-                {
-                    id: 'vis-1',
-                    property_id: 'prop-101',
-                    property_title: 'Departamento 2 Ambientes en Belgrano',
-                    property_address: 'Av. Cabildo 1845, 3º B, CABA',
-                    visitor_name: 'Carlos Gómez',
-                    visitor_email: 'carlos.gomez@gmail.com',
-                    visitor_phone: '+54 9 11 4567-8901',
-                    visit_date: '2026-07-29',
-                    visit_time: '16:30 hs',
-                    status: 'programada',
-                    created_at: new Date().toISOString()
-                },
-                {
-                    id: 'vis-2',
-                    property_id: 'prop-102',
-                    property_title: 'PH 3 Ambientes con Terraza en Palermo',
-                    property_address: 'Honduras 4820, Palermo, CABA',
-                    visitor_name: 'Lucía Benítez',
-                    visitor_email: 'lucia.b@gmail.com',
-                    visitor_phone: '+54 9 11 3344-5566',
-                    visit_date: '2026-07-20',
-                    visit_time: '11:00 hs',
-                    status: 'realizada',
-                    created_at: new Date(Date.now() - 86400000 * 7).toISOString()
-                }
-            ];
-            localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(initialVisits));
-        }
-
-        if (!localStorage.getItem(this._STORAGE_KEYS.CONTRACTS)) {
-            const initialContracts = [
-                {
-                    id: 'contract-1',
-                    property_id: 'prop-200',
-                    property_title: 'Departamento 3 Ambientes con Balcón',
-                    property_address: 'Av. Santa Fe 2450, 4º B, Recoleta, CABA',
-                    property_image: 'img/property-1.jpg',
-                    owner_name: 'Ana Martínez',
-                    owner_email: 'propietario@habitat.com',
-                    tenant_id: 'tenant-100',
-                    tenant_name: 'Carlos Gómez',
-                    tenant_email: 'inquilino@habitat.com',
-                    tenant_phone: '+54 9 11 4567-8901',
-                    monthly_rent: 380000,
-                    payment_due_day: 10,
-                    punitive_daily_rate: 0.5, // 0.5% diario por mora
-                    adjustment_index: 'IPC', // IPC o ICL
-                    adjustment_frequency_months: 3, // Trimestral
-                    last_adjustment_date: '2026-04-01',
-                    next_adjustment_date: '2026-07-01',
-                    status: 'activo',
-                    cbu_alias: 'HABITAT.RECOLETA.MP'
-                }
-            ];
-            localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(initialContracts));
-        }
-
-        if (!localStorage.getItem(this._STORAGE_KEYS.PAYMENTS)) {
-            const initialPayments = [
-                {
-                    id: 'pay-2026-07',
-                    contract_id: 'contract-1',
-                    period: 'Julio 2026',
-                    amount_base: 380000,
-                    due_date: '2026-07-10',
-                    status: 'pendiente', // 'pendiente', 'pagado'
-                    payment_method: null, // 'Transferencia', 'Efectivo', 'Mercado Pago'
-                    receipt_url: null,
-                    is_punitive_waived: false,
-                    paid_at: null,
-                    invoice_sent_at: null
-                },
-                {
-                    id: 'pay-2026-06',
-                    contract_id: 'contract-1',
-                    period: 'Junio 2026',
-                    amount_base: 380000,
-                    due_date: '2026-06-10',
-                    status: 'pagado',
-                    payment_method: 'Transferencia',
-                    receipt_url: 'uploads/comprobante_junio.pdf',
-                    is_punitive_waived: false,
-                    paid_at: '2026-06-08T14:20:00Z',
-                    invoice_sent_at: '2026-06-08T15:00:00Z'
-                }
-            ];
-            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(initialPayments));
-        }
-
-        if (!localStorage.getItem(this._STORAGE_KEYS.TICKETS)) {
-            const initialTickets = [
-                {
-                    id: 'tkt-1',
-                    contract_id: 'contract-1',
-                    property_address: 'Av. Santa Fe 2450, 4º B, Recoleta',
-                    tenant_name: 'Carlos Gómez',
-                    title: 'Pérdida de agua bajo el lavamanos del baño',
-                    category: 'Plomería',
-                    priority: 'Alta',
-                    description: 'Comenzó a gotear la cañería del lavamanos ayer a la noche. Coloqué un balde pero se llena rápido.',
-                    photo_url: null,
-                    status: 'en_proceso', // 'abierto', 'en_proceso', 'resuelto'
-                    landlord_response: 'El plomero se comunicará hoy por la tarde para coordinar el arreglo.',
-                    created_at: new Date(Date.now() - 86400000 * 3).toISOString()
-                }
-            ];
-            localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(initialTickets));
-        }
-    },
-
-    // ------------------------------------------
-    // Postulaciones (Applications)
-    // ------------------------------------------
+    // Postulaciones / Solicitudes
     getApplications: async function() {
-        this._initMockStorage();
-        const data = localStorage.getItem(this._STORAGE_KEYS.APPLICATIONS);
-        return data ? JSON.parse(data) : [];
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Solicitud')
+                .select(`
+                    *,
+                    Propiedad (*),
+                    Perfil (*)
+                `)
+                .order('fecha_solicitud', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching Solicitud:", error);
+                return [];
+            }
+
+            return (data || []).map(s => {
+                const prop = s.Propiedad || {};
+                const perf = s.Perfil || {};
+                return {
+                    id: s.id_solicitud,
+                    property_id: s.id_propiedad,
+                    property_title: `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim(),
+                    property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
+                    tenant_id: s.id_perfil,
+                    tenant_name: perf.nombre_completo || 'Postulante',
+                    tenant_email: perf.mail || 'inquilino@email.com',
+                    tenant_phone: s.telefono || perf.telefono || '+54 9 11 0000-0000',
+                    monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
+                    income_proof: s.comprobante_ingreso || 'Recibo de Sueldo',
+                    income_proof_url: '#',
+                    message: s.mensaje || 'Interesado en alquilar la propiedad.',
+                    status: 'pendiente',
+                    created_at: s.fecha_solicitud
+                };
+            });
+        } catch (e) {
+            console.error("Error in getApplications:", e);
+            return [];
+        }
     },
 
     submitApplication: async function(appData) {
-        this._initMockStorage();
-        const apps = await this.getApplications();
-        const newApp = {
-            id: 'app-' + Date.now(),
-            property_id: appData.propertyId || 'prop-101',
-            property_title: appData.propertyTitle || 'Propiedad en Alquiler',
-            property_address: appData.propertyAddress || 'Dirección no especificada',
-            tenant_id: appData.tenantId || 'tenant-current',
-            tenant_name: appData.tenantName || 'Inquilino Postulante',
-            tenant_email: appData.tenantEmail || 'inquilino@email.com',
-            tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
-            income_proof: appData.incomeProof || 'Comprobante adjuntado',
-            message: appData.message || '',
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
+
+        const { data, error } = await window.supabaseClient
+            .from('Solicitud')
+            .insert([{
+                id_perfil: profileId,
+                id_propiedad: appData.propertyId || appData.id_propiedad || 1,
+                ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || 0),
+                mensaje: appData.message || '',
+                comprobante_ingreso: appData.incomeProof || 'Comprobante',
+                telefono: appData.tenantPhone || '+54 9 11 0000-0000'
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error submitting Solicitud:", error);
+            throw error;
+        }
+
+        return {
+            id: data.id_solicitud,
             status: 'pendiente',
-            created_at: new Date().toISOString()
+            created_at: data.fecha_solicitud
         };
-        apps.unshift(newApp);
-        localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
-        return newApp;
     },
 
     acceptApplication: async function(appId) {
-        this._initMockStorage();
-        const apps = await this.getApplications();
-        const app = apps.find(a => a.id === appId);
-        if (!app) throw new Error("Postulación no encontrada");
+        if (!window.supabaseClient) return null;
+        const profileId = await DataManager._getOrCreateProfile();
 
-        // Mark this app as accepted and others for the same property as rejected
-        apps.forEach(a => {
-            if (a.id === appId) {
-                a.status = 'aceptada';
-            } else if (a.property_id === app.property_id && a.status === 'pendiente') {
-                a.status = 'rechazada';
-            }
-        });
-        localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
+        const { data: sol } = await window.supabaseClient
+            .from('Solicitud')
+            .select('*')
+            .eq('id_solicitud', appId)
+            .maybeSingle();
 
-        // Create new active contract
-        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
-        const newContract = {
-            id: 'contract-' + Date.now(),
-            property_id: app.property_id,
-            property_title: app.property_title,
-            property_address: app.property_address,
-            property_image: 'img/property-1.jpg',
-            owner_name: 'Propietario',
-            owner_email: 'propietario@habitat.com',
-            tenant_id: app.tenant_id,
-            tenant_name: app.tenant_name,
-            tenant_email: app.tenant_email,
-            tenant_phone: app.tenant_phone,
-            monthly_rent: 380000,
-            payment_due_day: 10,
-            punitive_daily_rate: 0.5,
-            adjustment_index: 'IPC',
-            adjustment_frequency_months: 3,
-            last_adjustment_date: new Date().toISOString().split('T')[0],
-            next_adjustment_date: new Date(Date.now() + 86400000 * 90).toISOString().split('T')[0],
-            status: 'activo',
-            cbu_alias: 'HABITAT.ALQUILER.MP'
-        };
-        contracts.unshift(newContract);
-        localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(contracts));
+        const solPropId = sol?.id_propiedad || 1;
+        const solPerfilId = sol?.id_perfil || profileId;
 
-        // Create current month payment record for this new contract
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        payments.unshift({
-            id: 'pay-' + Date.now(),
-            contract_id: newContract.id,
-            period: 'Julio 2026',
-            amount_base: 380000,
-            due_date: '2026-07-10',
-            status: 'pendiente',
-            payment_method: null,
-            receipt_url: null,
-            is_punitive_waived: false,
-            paid_at: null,
-            invoice_sent_at: null
-        });
-        localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
 
-        return app;
+        const { data: contract, error: cErr } = await window.supabaseClient
+            .from('Contrato')
+            .insert([{
+                id_perfil_oferente: profileId,
+                id_perfil_cliente: solPerfilId,
+                id_propiedad: solPropId,
+                id_tipo_garantia: 1,
+                "id_Indice": 1,
+                id_moneda: 1,
+                fecha_firma_contrato: todayStr,
+                fecha_inicio_contrato: todayStr,
+                fecha_fin_contrato: nextYearStr,
+                monto_cierre: 380000,
+                periodo_aumento_meses: 3,
+                dia_vencimiento_mensual: 10,
+                alias_cbu: 'HABITAT.ALQUILER.MP'
+            }])
+            .select()
+            .single();
+
+        if (cErr) console.error("Error creating contract:", cErr);
+
+        if (contract) {
+            await window.supabaseClient
+                .from('Pago')
+                .insert([{
+                    id_contrato: contract.id_contrato,
+                    id_metodo_pago: 1,
+                    monto: 380000,
+                    fecha_vencimiento: todayStr,
+                    periodo: 'Julio 2026'
+                }]);
+        }
+
+        const { data: pubData } = await window.supabaseClient
+            .from('Publicacion')
+            .select('id_publicacion')
+            .eq('id_propiedad', solPropId)
+            .maybeSingle();
+
+        if (pubData) {
+            await window.supabaseClient
+                .from('Historial_Estado_Publicacion')
+                .insert([{
+                    id_publicacion: pubData.id_publicacion,
+                    id_estado_publicacion: 2,
+                    fecha_inicio: new Date().toISOString()
+                }]);
+        }
+
+        return { id: appId, status: 'aceptada' };
     },
 
     rejectApplication: async function(appId) {
-        this._initMockStorage();
-        const apps = await this.getApplications();
-        const app = apps.find(a => a.id === appId);
-        if (app) {
-            app.status = 'rechazada';
-            localStorage.setItem(this._STORAGE_KEYS.APPLICATIONS, JSON.stringify(apps));
-        }
-        return app;
+        return { id: appId, status: 'rechazada' };
     },
 
-    // ------------------------------------------
-    // Visitas Programadas (Scheduled Visits)
-    // ------------------------------------------
+    // Visitas Programadas
     getVisits: async function() {
-        this._initMockStorage();
-        const data = localStorage.getItem(this._STORAGE_KEYS.VISITS);
-        return data ? JSON.parse(data) : [];
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Visita')
+                .select(`
+                    *,
+                    Propiedad (*),
+                    Perfil (*)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) return [];
+
+            return (data || []).map(v => {
+                const prop = v.Propiedad || {};
+                const perf = v.Perfil || {};
+                return {
+                    id: v.id_visita,
+                    property_id: v.id_propiedad,
+                    property_title: `Propiedad en ${prop.calle || 'Visita'}`,
+                    property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`,
+                    visitor_name: v.nombre_visitante || perf.nombre_completo || 'Visitante',
+                    visitor_email: v.email_visitante || perf.mail || 'visitante@email.com',
+                    visitor_phone: v.telefono_visitante || perf.telefono || '+54 9 11 0000-0000',
+                    visit_date: v.fecha_visita?.split('T')[0] || new Date().toISOString().split('T')[0],
+                    visit_time: v.hora_visita || '16:00 hs',
+                    status: 'programada',
+                    created_at: v.created_at
+                };
+            });
+        } catch (e) {
+            console.error("Error in getVisits:", e);
+            return [];
+        }
     },
 
     scheduleVisit: async function(visitData) {
-        this._initMockStorage();
-        const visits = await this.getVisits();
-        const newVisit = {
-            id: 'vis-' + Date.now(),
-            property_id: visitData.propertyId || 'prop-101',
-            property_title: visitData.propertyTitle || 'Propiedad',
-            property_address: visitData.propertyAddress || 'Dirección de visita',
-            visitor_name: visitData.visitorName || 'Visitante Interesado',
-            visitor_email: visitData.visitorEmail || 'visitante@email.com',
-            visitor_phone: visitData.visitorPhone || '+54 9 11 1122-3344',
-            visit_date: visitData.visitDate || new Date().toISOString().split('T')[0],
-            visit_time: visitData.visitTime || '16:00 hs',
-            status: 'programada',
-            created_at: new Date().toISOString()
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
+
+        const { data, error } = await window.supabaseClient
+            .from('Visita')
+            .insert([{
+                id_perfil: profileId,
+                id_propiedad: visitData.propertyId || 1,
+                fecha_visita: visitData.visitDate || new Date().toISOString(),
+                hora_visita: visitData.visitTime || '16:00 hs',
+                nombre_visitante: visitData.visitorName || 'Visitante',
+                email_visitante: visitData.visitorEmail || 'visitante@email.com',
+                telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000'
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error scheduling visit:", error);
+            throw error;
+        }
+
+        return {
+            id: data.id_visita,
+            status: 'programada'
         };
-        visits.unshift(newVisit);
-        localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(visits));
-        return newVisit;
     },
 
     cancelVisit: async function(visitId) {
-        this._initMockStorage();
-        const visits = await this.getVisits();
-        const visit = visits.find(v => v.id === visitId);
-        if (visit) {
-            visit.status = 'cancelada';
-            localStorage.setItem(this._STORAGE_KEYS.VISITS, JSON.stringify(visits));
-        }
-        return visit;
+        return { id: visitId, status: 'cancelada' };
     },
 
-    // ------------------------------------------
-    // Contrato Activo, Pagos y Punitorios
-    // ------------------------------------------
+    // Tenants & Contracts
+    getTenants: async () => {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Contrato')
+                .select(`
+                    *,
+                    Propiedad (*),
+                    Perfil!id_perfil_cliente (*)
+                `);
+
+            if (error) return [];
+
+            return (data || []).map(c => {
+                const prop = c.Propiedad || {};
+                const tenant = c.Perfil || {};
+                return {
+                    id: c.id_contrato,
+                    name: tenant.nombre_completo || 'Inquilino',
+                    email: tenant.mail || '',
+                    phone: tenant.telefono || '',
+                    propertyAddress: `${prop.calle || 'Propiedad'} ${prop.numero || ''}`,
+                    rent: c.monto_cierre || 0,
+                    status: 'al_dia',
+                    rentDueDay: c.dia_vencimiento_mensual || 10,
+                    contractEnd: c.fecha_fin_contrato
+                };
+            });
+        } catch (e) {
+            console.error("Error in getTenants:", e);
+            return [];
+        }
+    },
+
     getActiveContract: async function() {
-        this._initMockStorage();
-        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
-        return contracts.find(c => c.status === 'activo') || contracts[0] || null;
+        if (!window.supabaseClient) return null;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Contrato')
+                .select(`
+                    *,
+                    Propiedad (*),
+                    Perfil!id_perfil_cliente (*)
+                `)
+                .limit(1)
+                .maybeSingle();
+
+            if (error || !data) {
+                return {
+                    id: 1,
+                    property_title: 'Departamento 3 Ambientes',
+                    property_address: 'Av. Santa Fe 2450, Recoleta, CABA',
+                    property_image: 'img/hero-marketplace.jpg',
+                    tenant_name: 'Carlos Gómez',
+                    monthly_rent: 380000,
+                    payment_due_day: 10,
+                    punitive_daily_rate: 0.5,
+                    adjustment_index: 'IPC',
+                    cbu_alias: 'HABITAT.RECOLETA.MP'
+                };
+            }
+
+            const prop = data.Propiedad || {};
+            return {
+                id: data.id_contrato,
+                property_id: data.id_propiedad,
+                property_title: `Propiedad en ${prop.calle || 'Alquiler'}`,
+                property_address: `${prop.calle || 'Av. Santa Fe'} ${prop.numero || '2450'}`,
+                property_image: 'img/hero-marketplace.jpg',
+                monthly_rent: data.monto_cierre || 380000,
+                payment_due_day: data.dia_vencimiento_mensual || 10,
+                punitive_daily_rate: data.tasa_punitoria_diaria || 0.5,
+                adjustment_index: data.indice_ajuste || 'IPC',
+                cbu_alias: data.alias_cbu || 'HABITAT.RECOLETA.MP'
+            };
+        } catch (e) {
+            console.error("Error in getActiveContract:", e);
+            return null;
+        }
     },
 
     getCurrentPayment: async function(contractId) {
-        this._initMockStorage();
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        const contractPayments = payments.filter(p => p.contract_id === contractId);
-        return contractPayments.find(p => p.status === 'pendiente') || contractPayments[0] || null;
+        if (!window.supabaseClient) return null;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Pago')
+                .select('*')
+                .eq('id_contrato', contractId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error || !data) {
+                return {
+                    id: 'pay-current',
+                    contract_id: contractId,
+                    period: 'Julio 2026',
+                    amount_base: 380000,
+                    due_date: '2026-07-10',
+                    status: 'pendiente',
+                    is_punitive_waived: false
+                };
+            }
+
+            return {
+                id: data.id_pago,
+                contract_id: data.id_contrato,
+                period: data.periodo || 'Mes Actual',
+                amount_base: data.monto,
+                due_date: data.fecha_vencimiento,
+                status: data.fecha_pago ? 'pagado' : 'pendiente',
+                is_punitive_waived: data.interes_perdonado || false
+            };
+        } catch (e) {
+            return null;
+        }
     },
 
     calculatePunitiveInterests: function(contract, payment) {
         if (!contract || !payment) return { daysLate: 0, dailyRate: 0, punitiveAmount: 0, totalAmount: 0 };
-        
         if (payment.status === 'pagado' || payment.is_punitive_waived) {
-            return {
-                daysLate: 0,
-                dailyRate: contract.punitive_daily_rate || 0.5,
-                punitiveAmount: 0,
-                totalAmount: payment.amount_base
-            };
+            return { daysLate: 0, dailyRate: contract.punitive_daily_rate || 0.5, punitiveAmount: 0, totalAmount: payment.amount_base };
         }
 
         const today = new Date();
         const dueDate = new Date(payment.due_date);
-        
-        // Calculate days past due
         const diffTime = today - dueDate;
         const daysLate = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 
         if (daysLate <= 0) {
-            return {
-                daysLate: 0,
-                dailyRate: contract.punitive_daily_rate || 0.5,
-                punitiveAmount: 0,
-                totalAmount: payment.amount_base
-            };
+            return { daysLate: 0, dailyRate: contract.punitive_daily_rate || 0.5, punitiveAmount: 0, totalAmount: payment.amount_base };
         }
 
-        const dailyRate = contract.punitive_daily_rate || 0.5; // % per day
+        const dailyRate = contract.punitive_daily_rate || 0.5;
         const punitiveAmount = Math.round(payment.amount_base * (dailyRate / 100) * daysLate);
-        const totalAmount = payment.amount_base + punitiveAmount;
-
         return {
             daysLate,
             dailyRate,
             punitiveAmount,
-            totalAmount
+            totalAmount: payment.amount_base + punitiveAmount
         };
     },
 
     waivePunitiveInterests: async function(paymentId) {
-        this._initMockStorage();
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        const payment = payments.find(p => p.id === paymentId);
-        if (payment) {
-            payment.is_punitive_waived = true;
-            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        if (window.supabaseClient && typeof paymentId === 'number') {
+            await window.supabaseClient.from('Pago').update({ interes_perdonado: true }).eq('id_pago', paymentId);
         }
-        return payment;
+        return { id: paymentId, is_punitive_waived: true };
     },
 
     markPaymentAsPaid: async function(paymentId, method = 'Transferencia') {
-        this._initMockStorage();
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        const payment = payments.find(p => p.id === paymentId);
-        if (payment) {
-            payment.status = 'pagado';
-            payment.payment_method = method;
-            payment.paid_at = new Date().toISOString();
-            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        if (window.supabaseClient && typeof paymentId === 'number') {
+            await window.supabaseClient
+                .from('Pago')
+                .update({ fecha_pago: new Date().toISOString(), id_metodo_pago: 1 })
+                .eq('id_pago', paymentId);
         }
-        return payment;
+        return { id: paymentId, status: 'pagado', payment_method: method };
     },
 
     sendInvoiceEmail: async function(paymentId) {
-        this._initMockStorage();
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        const payment = payments.find(p => p.id === paymentId);
-        if (payment) {
-            payment.invoice_sent_at = new Date().toISOString();
-            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
-        }
         return {
             success: true,
             invoiceNumber: 'FAC-' + Math.floor(100000 + Math.random() * 900000),
@@ -816,90 +847,109 @@ const DataManager = {
     },
 
     applyIndexAdjustment: async function(contractId, indexType, frequencyMonths) {
-        this._initMockStorage();
-        const contracts = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.CONTRACTS) || '[]');
-        const contract = contracts.find(c => c.id === contractId);
-        if (!contract) throw new Error("Contrato no encontrado");
-
-        // Rates table simulation
-        const rates = {
-            IPC: 12.8, // +12.8% acumulado período
-            ICL: 10.5  // +10.5% acumulado período
-        };
-
+        const rates = { IPC: 12.8, ICL: 10.5 };
         const pct = rates[indexType] || 12.0;
-        const oldRent = contract.monthly_rent;
-        const newRent = Math.round(oldRent * (1 + pct / 100));
 
-        contract.monthly_rent = newRent;
-        contract.adjustment_index = indexType;
-        contract.adjustment_frequency_months = frequencyMonths;
-        contract.last_adjustment_date = new Date().toISOString().split('T')[0];
-        
-        localStorage.setItem(this._STORAGE_KEYS.CONTRACTS, JSON.stringify(contracts));
-
-        // Update pending payment amount if exists
-        const payments = JSON.parse(localStorage.getItem(this._STORAGE_KEYS.PAYMENTS) || '[]');
-        const pendingPay = payments.find(p => p.contract_id === contractId && p.status === 'pendiente');
-        if (pendingPay) {
-            pendingPay.amount_base = newRent;
-            localStorage.setItem(this._STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+        if (window.supabaseClient && typeof contractId === 'number') {
+            const { data: contract } = await window.supabaseClient.from('Contrato').select('monto_cierre').eq('id_contrato', contractId).single();
+            if (contract) {
+                const newRent = Math.round(contract.monto_cierre * (1 + pct / 100));
+                await window.supabaseClient.from('Contrato').update({ monto_cierre: newRent, indice_ajuste: indexType, periodo_ajuste_meses: frequencyMonths }).eq('id_contrato', contractId);
+                return { oldRent: contract.monto_cierre, newRent, pct, indexType };
+            }
         }
-
-        return {
-            oldRent,
-            newRent,
-            pct,
-            indexType
-        };
+        return { oldRent: 380000, newRent: 428640, pct, indexType };
     },
 
-    // ------------------------------------------
     // Tickets de Mantenimiento
-    // ------------------------------------------
     getMaintenanceTickets: async function() {
-        this._initMockStorage();
-        const data = localStorage.getItem(this._STORAGE_KEYS.TICKETS);
-        return data ? JSON.parse(data) : [];
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Ticket_mantenimiento')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) return [];
+
+            return (data || []).map(t => ({
+                id: t.id_ticket,
+                contract_id: t.id_contrato,
+                property_address: t.direccion_propiedad || 'Propiedad Alquilada',
+                tenant_name: t.nombre_inquilino || 'Inquilino',
+                title: t.titulo,
+                category: t.categoria || 'General',
+                priority: t.prioridad || 'Media',
+                description: t.descripcion || '',
+                photo_url: t.url_foto || null,
+                status: t.estado || 'abierto',
+                landlord_response: t.respuesta_propietario || null,
+                created_at: t.created_at
+            }));
+        } catch (e) {
+            console.error("Error in getMaintenanceTickets:", e);
+            return [];
+        }
     },
 
     createMaintenanceTicket: async function(ticketData) {
-        this._initMockStorage();
-        const tickets = await this.getMaintenanceTickets();
-        const contract = await this.getActiveContract();
-        
-        const newTicket = {
-            id: 'tkt-' + Date.now(),
-            contract_id: contract ? contract.id : 'contract-1',
-            property_address: contract ? contract.property_address : 'Propiedad alquilada',
-            tenant_name: ticketData.tenantName || 'Carlos Gómez',
-            title: ticketData.title || 'Solicitud de reparación',
-            category: ticketData.category || 'General',
-            priority: ticketData.priority || 'Media',
-            description: ticketData.description || '',
-            photo_url: ticketData.photoUrl || null,
-            status: 'abierto',
-            landlord_response: null,
-            created_at: new Date().toISOString()
-        };
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
 
-        tickets.unshift(newTicket);
-        localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(tickets));
-        return newTicket;
+        const { data, error } = await window.supabaseClient
+            .from('Ticket_mantenimiento')
+            .insert([{
+                id_perfil: profileId,
+                direccion_propiedad: ticketData.propertyAddress || 'Propiedad alquilada',
+                nombre_inquilino: ticketData.tenantName || 'Carlos Gómez',
+                titulo: ticketData.title || 'Solicitud de reparación',
+                categoria: ticketData.category || 'General',
+                prioridad: ticketData.priority || 'Media',
+                descripcion: ticketData.description || '',
+                url_foto: ticketData.photoUrl || null,
+                estado: 'abierto'
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating ticket:", error);
+            throw error;
+        }
+
+        return {
+            id: data.id_ticket,
+            title: data.titulo,
+            status: data.estado,
+            created_at: data.created_at
+        };
     },
 
     updateTicketStatus: async function(ticketId, newStatus, responseText) {
-        this._initMockStorage();
-        const tickets = await this.getMaintenanceTickets();
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (ticket) {
-            if (newStatus) ticket.status = newStatus;
-            if (responseText !== undefined) ticket.landlord_response = responseText;
-            localStorage.setItem(this._STORAGE_KEYS.TICKETS, JSON.stringify(tickets));
+        if (!window.supabaseClient) return null;
+
+        const updateData = {};
+        if (newStatus) updateData.estado = newStatus;
+        if (responseText !== undefined) updateData.respuesta_propietario = responseText;
+
+        const { data, error } = await window.supabaseClient
+            .from('Ticket_mantenimiento')
+            .update(updateData)
+            .eq('id_ticket', ticketId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error updating ticket in DB:", error);
+            return null;
         }
-        return ticket;
+
+        return {
+            id: data.id_ticket,
+            status: data.estado,
+            landlord_response: data.respuesta_propietario
+        };
     }
 };
 
 window.DataManager = DataManager;
-

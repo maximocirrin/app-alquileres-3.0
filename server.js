@@ -18,7 +18,16 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 // Serve Static Files
 app.use(express.static(path.join(__dirname)));
 
-// API Endpoints - TO BE IMPLEMENTED WITH SUPABASE
+// API Endpoints - Supabase Status & Health
+app.get('/api/status', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('Propiedad').select('id_propiedad').limit(1);
+        if (error) throw error;
+        res.json({ status: 'connected', database: 'supabase', active: true });
+    } catch (err) {
+        res.status(500).json({ status: 'error', error: err.message });
+    }
+});
 
 const fs = require('fs');
 
