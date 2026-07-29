@@ -30,6 +30,9 @@
             <div class="flex max-xl:hidden items-center gap-3 xl:gap-6 font-medium">
                 <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px]" href="index.html">Inicio</a>
                 <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px]" href="como-funciona.html">Cómo funciona</a>
+                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px] font-semibold text-primary dark:text-red-400 flex items-center gap-1" href="pasaporte-habitat.html">
+                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-sm">badge</span> Pasaporte Hábitat
+                </a>
                 <button class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px] flex items-center gap-1" type="button" data-desktop-nav-action="favorites">
                     <span class="material-symbols-outlined text-rose-500 text-sm">favorite</span> Favoritos
                 </button>
@@ -95,9 +98,12 @@
                     <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 min-w-[580px] right-0 left-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
                         <div>
                             <h4 class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tu Contrato
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tu Contrato & Credencial
                             </h4>
                             <div class="flex flex-col gap-2">
+                                <a href="pasaporte-habitat.html" class="landing-desktop-nav__menu-item font-bold text-primary dark:text-red-400 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-base">badge</span> Pasaporte Hábitat
+                                </a>
                                 <a href="tu-alquiler.html" class="landing-desktop-nav__menu-item font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-emerald-600 text-base">key</span> Mi Alquiler Activo & Pagos
                                 </a>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pasaporte Hábitat | Credencial Digital del Inquilino</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=8">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#1a1c1c",
+                        "background": "#f9f9f9",
+                        "surface": "#f9f9f9",
+                        "surface-container-low": "#f3f3f3",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "surface-container-high": "#e8e8e8",
+                        "primary": "#811b1e",
+                        "primary-container": "#a13333",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#debfbd"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope"],
+                        body: ["Inter"],
+                        label: ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Passport Custom Styles */
+        .passport-card-glow {
+            background: radial-gradient(circle at 50% 0%, rgba(129, 27, 30, 0.12), transparent 70%);
+        }
+
+        html.dark .passport-card-glow {
+            background: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.15), transparent 70%);
+        }
+
+        .passport-tab-btn.active {
+            background-color: #811b1e;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(129, 27, 30, 0.25);
+        }
+
+        html.dark .passport-tab-btn.active {
+            background-color: #991b1b;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(153, 27, 27, 0.4);
+        }
+
+        .passport-badge-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+    </style>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+</head>
+
+<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased min-h-screen">
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
+
+    <main class="pt-20 md:pt-24 pb-20">
+        <!-- Hero Header -->
+        <section class="max-w-[1280px] mx-auto px-4 md:px-8 pt-8 pb-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <span class="inline-flex items-center gap-2 bg-primary/10 dark:bg-red-500/20 text-primary dark:text-red-400 px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider mb-4 border border-primary/20">
+                    <span class="material-symbols-outlined text-sm">badge</span>
+                    Credencial Oficial Inquilinos • $20.000 ARS
+                </span>
+                <h1 class="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-tight mb-4">
+                    Pasaporte Hábitat
+                </h1>
+                <p class="font-body text-base sm:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed mb-6">
+                    Tu identidad, perfil fiscal y solvencia financiera en una credencial digital verificada. Alquilá más rápido, sin papeleo duplicado y con el respaldo directo para que el propietario apruebe tu postulación.
+                </p>
+
+                <!-- Action CTA & Price Badge -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button type="button" onclick="alert('Iniciando proceso de emisión de Pasaporte Hábitat por $20.000 ARS.')" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-headline font-black text-base transition-all shadow-xl hover:scale-[1.02] cursor-pointer">
+                        <span class="material-symbols-outlined text-xl">workspace_premium</span>
+                        <span>Generar Pasaporte</span>
+                    </button>
+                    <div class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-5 py-3.5 rounded-full text-sm font-bold border border-zinc-200 dark:border-zinc-700">
+                        <span class="material-symbols-outlined text-emerald-500 text-base">payments</span>
+                        <span>Precio único: <strong>$20.000 ARS</strong> (60 días)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Passport Card Section -->
+        <section class="max-w-[1100px] mx-auto px-4 md:px-8 mb-20">
+            <div class="text-center mb-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span class="text-xs font-extrabold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 font-headline">
+                    Ejemplo de Pasaporte Verificado en la Red
+                </span>
+                <span class="text-xs font-bold text-primary dark:text-red-400 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                    Costo de emisión: $20.000 ARS
+                </span>
+            </div>
+
+            <!-- Main Digital Passport Container -->
+            <div class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden passport-card-glow transition-all duration-300">
+                
+                <!-- Passport Top Banner / Header Bar -->
+                <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-6 sm:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 text-center sm:text-left">
+                        <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto bg-white/10 p-1.5 rounded-xl backdrop-blur-md">
+                        <div>
+                            <h2 class="font-headline text-xl font-black tracking-tight uppercase">HABITAT PASSPORT</h2>
+                            <p class="text-xs text-white/90 font-mono tracking-widest font-bold">ID: HBT-2026-9824-X9</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-2 rounded-full text-xs font-headline font-black backdrop-blur-md uppercase tracking-wider">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 passport-badge-pulse"></span>
+                        PERFIL 100% VERIFICADO
+                    </div>
+                </div>
+
+                <!-- Passport Body Details -->
+                <div class="p-6 sm:p-10">
+                    <!-- Profile Basic Header -->
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-6 pb-8 border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="relative">
+                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center text-3xl font-black shadow-inner overflow-hidden shrink-0">
+                                <span class="material-symbols-outlined text-5xl">person</span>
+                            </div>
+                            <span class="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1 rounded-full shadow-md">
+                                <span class="material-symbols-outlined text-sm font-bold block">verified</span>
+                            </span>
+                        </div>
+
+                        <div class="flex-1 text-center md:text-left">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="font-headline text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                        Sofía M. Rossi
+                                    </h3>
+                                    <p class="font-headline text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-1">
+                                        Inquilina Verificada • DNI: 38.XXX.912 • CUIT/CUIL: 27-38XXX912-4
+                                    </p>
+                                </div>
+                                <div class="mt-2 md:mt-0 inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-200 px-4 py-2 rounded-2xl text-xs font-headline font-extrabold border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                                    <span class="material-symbols-outlined text-base text-amber-500">stars</span>
+                                    <span>Score Hábitat: <strong class="text-emerald-600 dark:text-emerald-400 text-sm font-black">950 / 1000</strong></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex flex-wrap justify-center md:justify-start gap-2.5">
+                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-3.5 py-1.5 rounded-xl text-xs font-headline font-extrabold flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">fingerprint</span> Identidad Validada
+                                </span>
+                                <span class="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-3.5 py-1.5 rounded-xl text-xs font-headline font-extrabold flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">account_balance</span> Perfil Fiscal Regular
+                                </span>
+                                <span class="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 px-3.5 py-1.5 rounded-xl text-xs font-headline font-extrabold flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">gavel</span> Sin Historial Judicial
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passport Interactive Tabs navigation -->
+                    <div class="mt-8">
+                        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-zinc-200 dark:border-zinc-800">
+                            <button type="button" onclick="switchPassportTab('tab-general', this)" class="passport-tab-btn active px-4 py-2.5 rounded-xl text-xs font-headline font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-sm">grid_view</span>
+                                <span>Vista General</span>
+                            </button>
+                            <button type="button" onclick="switchPassportTab('tab-identidad', this)" class="passport-tab-btn bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-headline font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-sm">badge</span>
+                                <span>Identidad y Perfil Fiscal</span>
+                            </button>
+                            <button type="button" onclick="switchPassportTab('tab-financiero', this)" class="passport-tab-btn bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-headline font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-sm">trending_up</span>
+                                <span>Historial Crediticio</span>
+                            </button>
+                            <button type="button" onclick="switchPassportTab('tab-judicial', this)" class="passport-tab-btn bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-headline font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-sm">gavel</span>
+                                <span>Situación Judicial</span>
+                            </button>
+                        </div>
+
+                        <!-- Tab Content 1: Vista General -->
+                        <div id="tab-general" class="passport-tab-content pt-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="bg-zinc-50 dark:bg-zinc-800/50 p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                                        <span class="material-symbols-outlined text-xl">face</span>
+                                    </div>
+                                    <p class="text-xs font-headline font-extrabold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Prueba Biométrica</p>
+                                    <p class="text-lg font-headline font-black text-zinc-900 dark:text-white mt-1">Match Facial 99.8%</p>
+                                    <span class="inline-block mt-2 text-xs font-headline font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-1 rounded-md">Validada con éxito</span>
+                                </div>
+
+                                <div class="bg-zinc-50 dark:bg-zinc-800/50 p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                                        <span class="material-symbols-outlined text-xl">receipt_long</span>
+                                    </div>
+                                    <p class="text-xs font-headline font-extrabold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Condición Fiscal</p>
+                                    <p class="text-lg font-headline font-black text-zinc-900 dark:text-white mt-1">Monotributo Cat. H</p>
+                                    <span class="inline-block mt-2 text-xs font-headline font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/80 px-2.5 py-1 rounded-md">Aportes al día</span>
+                                </div>
+
+                                <div class="bg-zinc-50 dark:bg-zinc-800/50 p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
+                                        <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+                                    </div>
+                                    <p class="text-xs font-headline font-extrabold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Central Crediticia</p>
+                                    <p class="text-lg font-headline font-black text-zinc-900 dark:text-white mt-1">Situación 1 (Normal)</p>
+                                    <span class="inline-block mt-2 text-xs font-headline font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-950/80 px-2.5 py-1 rounded-md">0 Atrasos bancarios</span>
+                                </div>
+
+                                <div class="bg-zinc-50 dark:bg-zinc-800/50 p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
+                                        <span class="material-symbols-outlined text-xl">verified_user</span>
+                                    </div>
+                                    <p class="text-xs font-headline font-extrabold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Antecedentes Legales</p>
+                                    <p class="text-lg font-headline font-black text-zinc-900 dark:text-white mt-1">Sin Registros</p>
+                                    <span class="inline-block mt-2 text-xs font-headline font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/80 px-2.5 py-1 rounded-md">Historial Limpio</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content 2: Identidad y Fiscal -->
+                        <div id="tab-identidad" class="passport-tab-content hidden pt-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
+                                    <h4 class="font-headline font-black text-xl text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">badge</span> Validaciones de Identidad
+                                    </h4>
+                                    <ul class="space-y-3 font-body text-sm">
+                                        <li class="flex items-center justify-between py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Autenticidad de DNI:</span>
+                                            <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><span class="material-symbols-outlined text-base">check_circle</span> Documento Legítimo</span>
+                                        </li>
+                                        <li class="flex items-center justify-between py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Prueba de Vida Biométrica:</span>
+                                            <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><span class="material-symbols-outlined text-base">check_circle</span> Selfie Verificada</span>
+                                        </li>
+                                        <li class="flex items-center justify-between py-2">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Coincidencia de Titularidad:</span>
+                                            <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><span class="material-symbols-outlined text-base">check_circle</span> 100% Match</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
+                                    <h4 class="font-headline font-black text-xl text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">domain</span> Estado y Padrón Fiscal
+                                    </h4>
+                                    <ul class="space-y-3 font-body text-sm">
+                                        <li class="flex items-center justify-between py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Condición Fiscal:</span>
+                                            <span class="font-headline font-black text-zinc-900 dark:text-white">Monotributista Activo</span>
+                                        </li>
+                                        <li class="flex items-center justify-between py-2 border-b border-zinc-200/60 dark:border-zinc-800">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Ingresos Brutos (IIBB):</span>
+                                            <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400">Inscripto / Al día</span>
+                                        </li>
+                                        <li class="flex items-center justify-between py-2">
+                                            <span class="text-zinc-600 dark:text-zinc-400 font-semibold">Relación Cuota / Ingreso:</span>
+                                            <span class="font-headline font-bold text-emerald-600 dark:text-emerald-400">Óptima (&lt; 25%)</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content 3: Historial Financiero -->
+                        <div id="tab-financiero" class="passport-tab-content hidden pt-6">
+                            <div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
+                                <h4 class="font-headline font-black text-xl text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">analytics</span> Calificación Financiera y Deudas
+                                </h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                                    <div class="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center">
+                                        <p class="text-xs text-zinc-500 font-headline font-extrabold uppercase tracking-wider">NIVEL DE RIESGO</p>
+                                        <p class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400 mt-1">Muy Bajo</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center">
+                                        <p class="text-xs text-zinc-500 font-headline font-extrabold uppercase tracking-wider">CHEQUES RECHAZADOS</p>
+                                        <p class="text-2xl font-headline font-black text-zinc-900 dark:text-white mt-1">0</p>
+                                    </div>
+                                    <div class="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center">
+                                        <p class="text-xs text-zinc-500 font-headline font-extrabold uppercase tracking-wider">DÍAS DE MORA</p>
+                                        <p class="text-2xl font-headline font-black text-zinc-900 dark:text-white mt-1">0 Días</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-body">
+                                    * Certificación crediticia integrada. La situación crediticia 1 indica cumplimiento normal de compromisos financieros asumidos en los últimos 24 meses.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content 4: Situación Judicial -->
+                        <div id="tab-judicial" class="passport-tab-content hidden pt-6">
+                            <div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 bg-zinc-50/50 dark:bg-zinc-800/30">
+                                <h4 class="font-headline font-black text-xl text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">balance</span> Auditoría de Antecedentes Judiciales
+                                </h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                                        <span class="text-sm font-headline font-bold text-zinc-700 dark:text-zinc-300">Juicios por desalojo previos:</span>
+                                        <span class="text-xs font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl">SIN REGISTROS</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                                        <span class="text-sm font-headline font-bold text-zinc-700 dark:text-zinc-300">Ejecuciones de alquileres o cobros:</span>
+                                        <span class="text-xs font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl">SIN REGISTROS</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                                        <span class="text-sm font-headline font-bold text-zinc-700 dark:text-zinc-300">Embargos, concursos o quiebras:</span>
+                                        <span class="text-xs font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl">SIN REGISTROS</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passport Bottom Actions -->
+                    <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-2 text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400">
+                            <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
+                            <span>Validez: 60 días • Emitido por Red Hábitat</span>
+                        </div>
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <button type="button" onclick="alert('Generando Pasaporte Hábitat por $20.000 ARS...')" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-headline font-black text-xs transition-all shadow-md cursor-pointer hover:scale-[1.02]">
+                                <span class="material-symbols-outlined text-base">workspace_premium</span>
+                                Generar Pasaporte ($20.000 ARS)
+                            </button>
+                            <button type="button" onclick="alert('Link temporal copiado al portapapeles.')" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-5 py-3 rounded-2xl font-headline font-extrabold text-xs transition-all shadow-sm cursor-pointer">
+                                <span class="material-symbols-outlined text-base">share</span>
+                                Compartir
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Explanation Section (Explicación de qué es) -->
+        <section class="max-w-[1280px] mx-auto px-4 md:px-8 py-12 border-t border-zinc-200 dark:border-zinc-800">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-4">
+                    ¿Qué es el Pasaporte Hábitat?
+                </h2>
+                <p class="font-body text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Es la credencial digital inmutable que certifica tu perfil como inquilino de confianza en 1 solo paso por un costo único de <strong>$20.000 ARS</strong>. El propietario puede evaluar tu solvencia con absoluta seguridad y aprobar tu contrato sin demoras.
+                </p>
+            </div>
+
+            <!-- 3 Core Pillars Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+                <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-3xl">badge</span>
+                    </div>
+                    <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
+                        Identidad y Perfil Fiscal
+                    </h3>
+                    <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                        Verifica la validez de tu documento mediante biometría facial en tiempo real y confirma tu categoría impositiva o condición laboral para dar total certidumbre al propietario.
+                    </p>
+                </article>
+
+                <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-3xl">analytics</span>
+                    </div>
+                    <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
+                        Historial Financiero y Crediticio
+                    </h3>
+                    <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                        Genera un indicador objetivo de solvencia y cumplimiento bancario que el propietario consulta directamente para verificar tu capacidad de pago real.
+                    </p>
+                </article>
+
+                <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-3xl">balance</span>
+                    </div>
+                    <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
+                        Certificación de Historial Judicial
+                    </h3>
+                    <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+                        Audita antecedentes legales asegurando que no existan juicios por desalojo ni ejecuciones pendientes, garantizando la máxima confianza para el arrendador.
+                    </p>
+                </article>
+            </div>
+
+            <!-- Key Advantages Section -->
+            <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white rounded-3xl p-8 sm:p-12 mb-20 shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="text-primary-container text-xs font-headline font-extrabold uppercase tracking-widest block mb-2">Precio Fijo • $20.000 ARS</span>
+                        <h3 class="font-headline text-3xl sm:text-4xl font-extrabold leading-tight mb-4">
+                            Un único pago de $20.000 ARS, 60 días de oportunidades.
+                        </h3>
+                        <p class="text-zinc-300 text-sm sm:text-base leading-relaxed mb-6 font-body">
+                            Abonás una sola vez tu Pasaporte Hábitat. Si el propietario elige otro postulante o decidís postularte a más propiedades dentro de la red, tu credencial sigue 100% activa durante 60 días sin costo adicional.
+                        </p>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" onclick="alert('Iniciando proceso de emisión por $20.000 ARS.')" class="bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-full font-headline font-black text-sm transition-all shadow-lg cursor-pointer">
+                                Generar Pasaporte
+                            </button>
+                            <div class="flex items-center gap-2 bg-white/10 px-4 py-3 rounded-full text-xs font-bold backdrop-blur-md">
+                                <span class="material-symbols-outlined text-emerald-400">check_circle</span>
+                                <span>Aprobación en 24h</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
+                        <h4 class="font-headline font-extrabold text-lg text-white mb-4">Paso a paso para generarlo</h4>
+                        <ol class="space-y-4 text-xs sm:text-sm text-zinc-300 font-body">
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</span>
+                                <span>Hacé click en <strong>Generar Pasaporte</strong> y aboná el fee único de $20.000 ARS.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</span>
+                                <span>Realizás la validación biométrica con selfie y carga de documentos de ingresos.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</span>
+                                <span>¡Listo! El propietario podrá acceder a tu Pasaporte verificado y aprobar tu postulación.</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Updated FAQ Section (Propietarios SÍ ven la información) -->
+            <div class="max-w-3xl mx-auto">
+                <h3 class="font-headline text-3xl font-extrabold text-center text-zinc-900 dark:text-white mb-8">
+                    Preguntas Frecuentes
+                </h3>
+                <div class="space-y-4">
+                    <details class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 group">
+                        <summary class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white cursor-pointer flex items-center justify-between">
+                            ¿El propietario va a ver la información de mi Pasaporte Hábitat?
+                            <span class="material-symbols-outlined text-zinc-400 group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed font-body">
+                            <strong>Sí</strong>. El propietario e inmobiliaria tienen acceso completo a la información validada de tu Pasaporte Hábitat al momento de evaluar tu postulación: tu identidad verificada biométricamente, tu perfil e ingresos fiscales declarados, tu score crediticio y la certificación de que posees un historial judicial limpio (sin juicios por desalojo ni ejecuciones). Esto es exactamente lo que les otorga tranquilidad para aprobar tu alquiler rápidamente.
+                        </p>
+                    </details>
+
+                    <details class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 group">
+                        <summary class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white cursor-pointer flex items-center justify-between">
+                            ¿Por qué los propietarios prefieren postulantes con Pasaporte Hábitat?
+                            <span class="material-symbols-outlined text-zinc-400 group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed font-body">
+                            Porque elimina la incertidumbre y las carpetas de papel. El propietario puede tomar decisiones en menos de 24 horas confiando en que tu perfil fiscal, capacidad de pago y solvencia han sido auditados digitalmente por la plataforma Hábitat.
+                        </p>
+                    </details>
+
+                    <details class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 group">
+                        <summary class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white cursor-pointer flex items-center justify-between">
+                            ¿Cuánto cuesta generar mi Pasaporte Hábitat?
+                            <span class="material-symbols-outlined text-zinc-400 group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed font-body">
+                            Tiene un costo de emisión único de <strong>$20.000 ARS</strong>. La validez de tu credencial es de 60 días corridos y podés utilizarla para postularte a todas las propiedades que desees sin pagar nuevamente.
+                        </p>
+                    </details>
+
+                    <details class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 group">
+                        <summary class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white cursor-pointer flex items-center justify-between">
+                            ¿Cómo le entrego el Pasaporte Hábitat al propietario?
+                            <span class="material-symbols-outlined text-zinc-400 group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed font-body">
+                            Al enviar una solicitud de postulación dentro de la plataforma Hábitat, tu Pasaporte queda automáticamente adjuntado a tu perfil para que el propietario lo revise. También podés copiar el enlace de tu credencial o descargar el certificado en PDF para enviarlo directamente.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Supabase JS & App Integration Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/app.js?v=8"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.App && window.App.setupTheme) {
+                window.App.setupTheme();
+            }
+        });
+
+        function switchPassportTab(tabId, btn) {
+            document.querySelectorAll('.passport-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.passport-tab-btn').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('bg-zinc-100', 'dark:bg-zinc-800', 'text-zinc-600', 'dark:text-zinc-300');
+            });
+            const target = document.getElementById(tabId);
+            if (target) target.classList.remove('hidden');
+            if (btn) {
+                btn.classList.add('active');
+                btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800', 'text-zinc-600', 'dark:text-zinc-300');
+            }
+        }
+    </script>
+</body>
+
+</html>

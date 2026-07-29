@@ -6661,6 +6661,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
                                 <span>Cómo funciona</span>
                             </a>
+                            <a href="pasaporte-habitat.html" class="menu-item-clean">
+                                <span class="material-symbols-outlined text-primary text-xl">badge</span>
+                                <span class="font-bold text-primary dark:text-red-400">Pasaporte Hábitat</span>
+                            </a>
                             <a href="buscar.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
                                 <span>Buscar Alquileres</span>
@@ -6704,6 +6708,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Para Inquilinos
                         </h4>
                         <div class="flex flex-col gap-2">
+                            <a href="pasaporte-habitat.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                    <span class="material-symbols-outlined text-xl">badge</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Pasaporte Hábitat</span>
+                                    <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
+                                </div>
+                            </a>
                             <a href="tu-alquiler.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
                                 <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                                     <span class="material-symbols-outlined text-xl">key</span>
