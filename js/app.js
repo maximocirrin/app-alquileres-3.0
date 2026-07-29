@@ -270,57 +270,8 @@ const App = {
         const btnBackMobile = document.getElementById('btn-back-mobile');
 
         const handleBackFromPublish = (e) => {
-            e.preventDefault();
-
-            // Cerrar la vista (Cancelar)
-
-            // Forzar vuelta al sub-paso 1 (Operación) antes de cerrar para que al reabrir esté limpio
-            const stepOperacion = document.getElementById('step-operacion');
-            const stepUbicacion = document.getElementById('step-ubicacion');
-            const stepCaracteristicas = document.getElementById('step-caracteristicas');
-            const tabOperacion = document.getElementById('tab-operacion');
-            const tabUbicacion = document.getElementById('tab-ubicacion');
-            const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-            const pasoSubtitle = document.getElementById('paso-subtitle');
-            const publishMainTitle = document.getElementById('publish-main-title');
-
-            if (stepOperacion) stepOperacion.classList.remove('hidden');
-            if (stepUbicacion) stepUbicacion.classList.add('hidden');
-            if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
-
-            if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-            if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-            if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-
-            if (publishMainTitle) publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
-            if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
-
-            // Reset forms and continue button bindings
-            document.querySelectorAll('button[type="submit"]').forEach(btn => {
-                if (btn.hasAttribute('form')) btn.setAttribute('form', 'form-principales');
-            });
-
-            const publishElem = document.getElementById('publish-property-view');
-            if (publishElem) publishElem.classList.add('hidden');
-
-            if (App.state.currentUser) {
-                document.getElementById('main-layout')?.classList.remove('hidden');
-                if (App.getPageContext() === 'admin') {
-                    document.getElementById('app')?.classList.remove('hidden');
-                }
-            } else {
-                App.applyPageContext();
-            }
-
-            window.scrollTo(0, 0);
-
-            // Reiniciar animaciones de scroll
-            if (window.marketplaceObserver) {
-                document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                    el.classList.remove('is-visible');
-                    window.marketplaceObserver.observe(el);
-                });
-            }
+            if (e) e.preventDefault();
+            App.closePublishWizard();
         };
 
         const handleBackStepMobile = (e) => {
@@ -505,17 +456,20 @@ const App = {
                 const errorSubtipo = document.getElementById('error-subtipo');
                 const errorPiso = document.getElementById('error-piso');
                 const errorDepto = document.getElementById('error-depto');
+                const errorNumeroLocal = document.getElementById('error-numero-local');
 
                 const selectTipo = document.getElementById('tipo-propiedad');
                 const selectSubtipo = document.getElementById('subtipo-propiedad');
                 const inputPiso = document.getElementById('piso-propiedad');
                 const inputDepto = document.getElementById('depto-propiedad');
+                const inputNumeroLocal = document.getElementById('numero-local');
 
                 // Reset error visuals
                 if (errorTipo) errorTipo.classList.add('hidden');
                 if (errorSubtipo) errorSubtipo.classList.add('hidden');
                 if (errorPiso) errorPiso.classList.add('hidden');
                 if (errorDepto) errorDepto.classList.add('hidden');
+                if (errorNumeroLocal) errorNumeroLocal.classList.add('hidden');
 
                 // Custom validation for 'Tipo de propiedad'
                 if (selectTipo && !selectTipo.value) {
@@ -537,6 +491,14 @@ const App = {
                     }
                     if (inputDepto && !inputDepto.value.trim()) {
                         if (errorDepto) errorDepto.classList.remove('hidden');
+                        isValid = false;
+                    }
+                }
+
+                // Custom validation for 'Subtipo En galería' (required N° de Local)
+                if (selectSubtipo && selectSubtipo.value === 'galeria') {
+                    if (inputNumeroLocal && !inputNumeroLocal.value.trim()) {
+                        if (errorNumeroLocal) errorNumeroLocal.classList.remove('hidden');
                         isValid = false;
                     }
                 }
@@ -592,11 +554,7 @@ const App = {
                             document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
                                 btn.setAttribute('form', 'form-principales');
                             });
-
-
                         }
-
-
                     }
                 }
             });
@@ -605,39 +563,14 @@ const App = {
         // Dependent Dropdowns & Conditional Inputs Logic for Property Publishing
         const selectTipoPropiedad = document.getElementById('tipo-propiedad');
         const selectSubtipoPropiedad = document.getElementById('subtipo-propiedad');
-        const containerPisoDepto = document.getElementById('container-piso-depto');
 
         if (selectTipoPropiedad && selectSubtipoPropiedad) {
             const subtiposConfig = {
                 departamento: [
-                    { value: 'apartaestudio', label: 'Apartaestudio' },
                     { value: 'duplex', label: 'Dúplex' },
                     { value: 'estandar', label: 'Estándar' },
-                    { value: 'loft', label: 'Loft' },
                     { value: 'monoambiente', label: 'Monoambiente' },
-                    { value: 'penthouse', label: 'Penthouse' },
-                    { value: 'piso', label: 'Piso' },
-                    { value: 'semipiso', label: 'Semipiso' },
-                    { value: 'triplex', label: 'Tríplex' }
-                ],
-                casa: [
-                    { value: 'barrio-acceso-controlado', label: 'Barrio con acceso controlado' },
-                    { value: 'bungalow', label: 'Bungalow' },
-                    { value: 'cabana', label: 'Cabaña' },
-                    { value: 'casa', label: 'Casa' },
-                    { value: 'casa-de-playa', label: 'Casa de playa' },
-                    { value: 'chalet', label: 'Chalet' },
-                    { value: 'condominio', label: 'Condominio' },
-                    { value: 'duplex', label: 'Dúplex' },
-                    { value: 'ph', label: 'PH' },
-                    { value: 'prefabricada', label: 'Prefabricada' },
-                    { value: 'triplex', label: 'Tríplex' }
-                ],
-                ph: [
-                    { value: 'planta-baja', label: 'Planta baja' },
-                    { value: 'primer-piso', label: 'Primer piso' },
-                    { value: 'duplex', label: 'Dúplex' },
-                    { value: 'triplex', label: 'Tríplex' }
+                    { value: 'piso', label: 'Piso' }
                 ],
                 'local-comercial': [
                     { value: 'local-a-calle', label: 'Local a la calle' },
@@ -668,11 +601,22 @@ const App = {
                     }
                 }
 
+                // Reset container subtipos & container numero local
+                const containerSubtipo = document.getElementById('container-subtipo-propiedad');
+                const containerNumeroLocal = document.getElementById('container-numero-local');
+                const errorNumeroLocal = document.getElementById('error-numero-local');
+                if (containerNumeroLocal) containerNumeroLocal.classList.add('hidden');
+                if (errorNumeroLocal) errorNumeroLocal.classList.add('hidden');
+                const inputNumeroLocal = document.getElementById('numero-local');
+                const inputSectorLocal = document.getElementById('sector-local');
+                if (inputNumeroLocal) inputNumeroLocal.value = '';
+                if (inputSectorLocal) inputSectorLocal.value = '';
+
                 // Clear existing subtipos but keep the default disabled placeholder
                 selectSubtipoPropiedad.innerHTML = '<option disabled selected value="">Selecciona un subtipo (opcional)</option>';
 
-                if (tipo && subtiposConfig[tipo]) {
-                    // Unlock the field, make it required, and populate the respective options
+                if (tipo && subtiposConfig[tipo] && subtiposConfig[tipo].length > 0) {
+                    if (containerSubtipo) containerSubtipo.classList.remove('hidden');
                     selectSubtipoPropiedad.disabled = false;
                     selectSubtipoPropiedad.required = true;
                     subtiposConfig[tipo].forEach(sub => {
@@ -682,7 +626,7 @@ const App = {
                         selectSubtipoPropiedad.appendChild(option);
                     });
                 } else {
-                    // Lock the field, make it not required
+                    if (containerSubtipo) containerSubtipo.classList.add('hidden');
                     selectSubtipoPropiedad.disabled = true;
                     selectSubtipoPropiedad.required = false;
                 }
@@ -691,6 +635,28 @@ const App = {
                 const errorTipo = document.getElementById('error-tipo');
                 const errorSubtipo = document.getElementById('error-subtipo');
                 if (errorTipo) errorTipo.classList.add('hidden');
+                if (errorSubtipo) errorSubtipo.classList.add('hidden');
+            });
+
+            selectSubtipoPropiedad.addEventListener('change', (e) => {
+                const subtipo = e.target.value;
+                const containerNumeroLocal = document.getElementById('container-numero-local');
+                const errorNumeroLocal = document.getElementById('error-numero-local');
+                if (errorNumeroLocal) errorNumeroLocal.classList.add('hidden');
+
+                if (containerNumeroLocal) {
+                    if (subtipo === 'galeria') {
+                        containerNumeroLocal.classList.remove('hidden');
+                    } else {
+                        containerNumeroLocal.classList.add('hidden');
+                        const inputNumeroLocal = document.getElementById('numero-local');
+                        const inputSectorLocal = document.getElementById('sector-local');
+                        if (inputNumeroLocal) inputNumeroLocal.value = '';
+                        if (inputSectorLocal) inputSectorLocal.value = '';
+                    }
+                }
+
+                const errorSubtipo = document.getElementById('error-subtipo');
                 if (errorSubtipo) errorSubtipo.classList.add('hidden');
             });
         }
@@ -703,19 +669,23 @@ const App = {
                 let isValid = true;
 
                 const calle = document.getElementById('calle-altura');
-                const prov = document.getElementById('provincia');
-                const ciudad = document.getElementById('ciudad');
                 const errCalle = document.getElementById('error-calle');
-                const errProv = document.getElementById('error-provincia');
-                const errCiudad = document.getElementById('error-ciudad');
 
                 if (errCalle) errCalle.classList.add('hidden');
-                if (errProv) errProv.classList.add('hidden');
-                if (errCiudad) errCiudad.classList.add('hidden');
 
-                if (calle && !calle.value) { if (errCalle) errCalle.classList.remove('hidden'); isValid = false; }
-                if (prov && !prov.value) { if (errProv) errProv.classList.remove('hidden'); isValid = false; }
-                if (ciudad && ciudad.required && !ciudad.value) { if (errCiudad) errCiudad.classList.remove('hidden'); isValid = false; }
+                if (!calle || !calle.value.trim()) {
+                    if (errCalle) {
+                        errCalle.textContent = 'Completa este campo';
+                        errCalle.classList.remove('hidden');
+                    }
+                    isValid = false;
+                } else if (!window.selectedPropertyFromGoogle || !window.selectedPropertyStreetNumber) {
+                    if (errCalle) {
+                        errCalle.textContent = 'Debes seleccionar una dirección de la lista desplegable de sugerencias que incluya el número de calle (altura).';
+                        errCalle.classList.remove('hidden');
+                    }
+                    isValid = false;
+                }
 
                 if (isValid) {
                     console.log('¡Datos Ubicación completos y validados! Transicionando a Características...');
@@ -872,6 +842,10 @@ const App = {
         // --- Robust Delegated Image Upload Logic ---
         window.selectedPropertyPhotos = window.selectedPropertyPhotos || [];
 
+        let draggedPhotoIndex = null;
+        let touchGhost = null;
+        let touchTargetIndex = null;
+
         function renderPhotoPreviews() {
             const fotosPreviewContainer = document.getElementById('fotos-preview-container') || document.getElementById('preview-fotos-grid');
             if (!fotosPreviewContainer) return;
@@ -886,22 +860,169 @@ const App = {
             window.selectedPropertyPhotos.forEach((blob, index) => {
                 const url = URL.createObjectURL(blob);
                 const div = document.createElement('div');
-                div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10';
-                div.innerHTML = `
-                    <img src="${url}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button type="button" class="text-white hover:text-red-500 transition-colors delete-photo-btn" data-index="${index}">
-                            <span class="material-symbols-outlined text-3xl">delete</span>
-                        </button>
-                    </div>
-                `;
-                fotosPreviewContainer.appendChild(div);
+                div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10 shadow-sm cursor-grab active:cursor-grabbing transition-all select-none touch-none';
+                div.setAttribute('draggable', 'true');
+                div.dataset.index = index;
 
-                div.querySelector('.delete-photo-btn').addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    window.selectedPropertyPhotos.splice(index, 1);
-                    renderPhotoPreviews();
+                const isCover = index === 0;
+
+                div.innerHTML = `
+                    <img src="${url}" class="w-full h-full object-cover pointer-events-none select-none">
+                    
+                    <!-- Badge Portada / Posición -->
+                    <div class="absolute top-2 left-2 z-10 pointer-events-none">
+                        ${isCover 
+                            ? '<span class="bg-primary text-white text-[11px] font-bold px-2.5 py-0.5 rounded-md shadow-md flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">star</span>Portada</span>'
+                            : `<span class="bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold px-2 py-0.5 rounded-md shadow-md">#${index + 1}</span>`
+                        }
+                    </div>
+
+                    <!-- Botón Eliminar a la derecha -->
+                    <button type="button" class="delete-photo-btn absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center backdrop-blur-md shadow-md transition-all group-hover:bg-red-600" title="Eliminar foto">
+                        <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                `;
+
+                // --- Mouse HTML5 Drag & Drop Handlers ---
+                div.addEventListener('dragstart', (e) => {
+                    draggedPhotoIndex = index;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', index);
+                    setTimeout(() => div.classList.add('opacity-30', 'scale-95'), 0);
                 });
+
+                div.addEventListener('dragend', () => {
+                    draggedPhotoIndex = null;
+                    div.classList.remove('opacity-30', 'scale-95');
+                });
+
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    div.classList.add('ring-2', 'ring-primary', 'scale-105');
+                });
+
+                div.addEventListener('dragleave', () => {
+                    div.classList.remove('ring-2', 'ring-primary', 'scale-105');
+                });
+
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.classList.remove('ring-2', 'ring-primary', 'scale-105');
+                    if (draggedPhotoIndex !== null && draggedPhotoIndex !== index) {
+                        const item = window.selectedPropertyPhotos.splice(draggedPhotoIndex, 1)[0];
+                        window.selectedPropertyPhotos.splice(index, 0, item);
+                        renderPhotoPreviews();
+                    }
+                });
+
+                // --- Touch Events Drag & Drop Handlers (Pantallas Táctiles - Acelerado por GPU) ---
+                let animFrameId = null;
+
+                div.addEventListener('touchstart', (e) => {
+                    if (e.target.closest('.delete-photo-btn')) return;
+                    if (e.touches.length !== 1) return;
+
+                    const touch = e.touches[0];
+                    draggedPhotoIndex = index;
+
+                    const rect = div.getBoundingClientRect();
+                    const halfW = rect.width / 2;
+                    const halfH = rect.height / 2;
+
+                    touchGhost = div.cloneNode(true);
+                    touchGhost.style.position = 'fixed';
+                    touchGhost.style.left = '0px';
+                    touchGhost.style.top = '0px';
+                    touchGhost.style.width = `${rect.width}px`;
+                    touchGhost.style.height = `${rect.height}px`;
+                    touchGhost.style.zIndex = '999999';
+                    touchGhost.style.pointerEvents = 'none';
+                    touchGhost.style.transition = 'none'; // Quitar retardos de transición CSS
+                    touchGhost.style.willChange = 'transform';
+                    touchGhost.style.opacity = '0.92';
+                    touchGhost.style.boxShadow = '0 15px 35px rgba(0,0,0,0.5)';
+                    touchGhost.style.transform = `translate3d(${touch.clientX - halfW}px, ${touch.clientY - halfH}px, 0) scale(1.06)`;
+
+                    document.body.appendChild(touchGhost);
+                    div.classList.add('opacity-30', 'scale-95');
+                }, { passive: true });
+
+                div.addEventListener('touchmove', (e) => {
+                    if (!touchGhost || e.touches.length !== 1) return;
+                    if (e.cancelable) e.preventDefault();
+
+                    const touch = e.touches[0];
+                    const clientX = touch.clientX;
+                    const clientY = touch.clientY;
+                    const rect = div.getBoundingClientRect();
+                    const halfW = rect.width / 2;
+                    const halfH = rect.height / 2;
+
+                    if (animFrameId) cancelAnimationFrame(animFrameId);
+
+                    animFrameId = requestAnimationFrame(() => {
+                        if (!touchGhost) return;
+                        // Transform 3D ultra fluido directo por GPU compositor
+                        touchGhost.style.transform = `translate3d(${clientX - halfW}px, ${clientY - halfH}px, 0) scale(1.06)`;
+
+                        const elemBelow = document.elementFromPoint(clientX, clientY);
+                        const targetCard = elemBelow?.closest('#fotos-preview-container > div, #preview-fotos-grid > div');
+
+                        fotosPreviewContainer.querySelectorAll('div[data-index]').forEach(card => {
+                            card.classList.remove('ring-2', 'ring-primary', 'scale-105');
+                        });
+
+                        if (targetCard && targetCard !== div) {
+                            touchTargetIndex = parseInt(targetCard.dataset.index);
+                            targetCard.classList.add('ring-2', 'ring-primary', 'scale-105');
+                        } else {
+                            touchTargetIndex = null;
+                        }
+                    });
+                }, { passive: false });
+
+                const handleTouchEnd = (e) => {
+                    if (animFrameId) cancelAnimationFrame(animFrameId);
+                    if (touchGhost) {
+                        touchGhost.remove();
+                        touchGhost = null;
+                    }
+                    div.classList.remove('opacity-30', 'scale-95');
+
+                    fotosPreviewContainer.querySelectorAll('div[data-index]').forEach(card => {
+                        card.classList.remove('ring-2', 'ring-primary', 'scale-105');
+                    });
+
+                    if (draggedPhotoIndex !== null && touchTargetIndex !== null && draggedPhotoIndex !== touchTargetIndex) {
+                        const target = touchTargetIndex;
+                        const origin = draggedPhotoIndex;
+                        draggedPhotoIndex = null;
+                        touchTargetIndex = null;
+                        const item = window.selectedPropertyPhotos.splice(origin, 1)[0];
+                        window.selectedPropertyPhotos.splice(target, 0, item);
+                        renderPhotoPreviews();
+                    } else {
+                        draggedPhotoIndex = null;
+                        touchTargetIndex = null;
+                    }
+                };
+
+                div.addEventListener('touchend', handleTouchEnd);
+                div.addEventListener('touchcancel', handleTouchEnd);
+
+                // Delete Button Handler
+                const deleteBtn = div.querySelector('.delete-photo-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        window.selectedPropertyPhotos.splice(index, 1);
+                        renderPhotoPreviews();
+                    });
+                }
+
+                fotosPreviewContainer.appendChild(div);
             });
         }
 
@@ -1513,9 +1634,14 @@ const App = {
             }
 
             // Case 7: Step 1.1 (Operación) -> Cancel/Close wizard
-            const publishView = document.getElementById('publish-property-view');
-            if (publishView) {
-                publishView.classList.add('hidden');
+            if (window.App && typeof window.App.closePublishWizard === 'function') {
+                window.App.closePublishWizard();
+            } else {
+                const publishView = document.getElementById('publish-property-view');
+                if (publishView) publishView.classList.add('hidden');
+                if (window.App && typeof window.App.applyPageContext === 'function') {
+                    window.App.applyPageContext();
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
@@ -4021,6 +4147,8 @@ const App = {
             const calle = document.getElementById('calle-altura');
             if (calle) {
                 calle.addEventListener('input', () => {
+                    window.selectedPropertyFromGoogle = false;
+                    window.selectedPropertyStreetNumber = '';
                     const errCalle = document.getElementById('error-calle');
                     if (errCalle) errCalle.classList.add('hidden');
                 });
@@ -4648,6 +4776,49 @@ const App = {
         if (publishElem) {
             publishElem.classList.remove('hidden');
             window.scrollTo(0, 0);
+        }
+    },
+
+    closePublishWizard: () => {
+        window.currentWizardStep = 1;
+
+        const publishElem = document.getElementById('publish-property-view');
+        if (publishElem) {
+            publishElem.classList.add('hidden');
+        }
+
+        const stepOperacion = document.getElementById('step-operacion');
+        const stepUbicacion = document.getElementById('step-ubicacion');
+        const stepCaracteristicas = document.getElementById('step-caracteristicas');
+        const tabOperacion = document.getElementById('tab-operacion');
+        const tabUbicacion = document.getElementById('tab-ubicacion');
+        const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+        const pasoSubtitle = document.getElementById('paso-subtitle');
+        const publishMainTitle = document.getElementById('publish-main-title');
+
+        if (stepOperacion) stepOperacion.classList.remove('hidden');
+        if (stepUbicacion) stepUbicacion.classList.add('hidden');
+        if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
+
+        if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+        if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+        if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
+
+        if (publishMainTitle) publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
+        if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
+
+        document.querySelectorAll('button[type="submit"]').forEach(btn => {
+            if (btn.hasAttribute('form')) btn.setAttribute('form', 'form-principales');
+        });
+
+        App.applyPageContext();
+        window.scrollTo(0, 0);
+
+        if (window.marketplaceObserver) {
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                el.classList.remove('is-visible');
+                window.marketplaceObserver.observe(el);
+            });
         }
     },
 
@@ -5996,6 +6167,10 @@ window.initGoogleMap = async function () {
                     });
                     if (route) {
                         inputCalle.value = `${route} ${streetNumber}`.trim();
+                        if (streetNumber) {
+                            window.selectedPropertyFromGoogle = true;
+                            window.selectedPropertyStreetNumber = streetNumber;
+                        }
                     }
                 }
             }
@@ -6030,7 +6205,16 @@ window.initGoogleMap = async function () {
 
         autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
-            if (!place.geometry || !place.geometry.location) return;
+            const errCalle = document.getElementById('error-calle');
+            if (!place || !place.geometry || !place.geometry.location) {
+                window.selectedPropertyFromGoogle = false;
+                window.selectedPropertyStreetNumber = '';
+                if (errCalle) {
+                    errCalle.textContent = 'Debes seleccionar una dirección válida del autocompletado.';
+                    errCalle.classList.remove('hidden');
+                }
+                return;
+            }
 
             // Update map
             window.propertyMap.panTo(place.geometry.location);
@@ -6043,68 +6227,39 @@ window.initGoogleMap = async function () {
             const label = document.getElementById('map-address-label');
             if (label) label.textContent = place.formatted_address;
 
-            // Extract components (route, street_number, provincia, departamento)
-            let provinciaStr = '';
-            let departamentoStr = '';
+            // Extract components (route, street_number)
             let routeStr = '';
             let streetNumberStr = '';
 
-            for (const component of place.address_components) {
-                const types = component.types;
-                if (types.includes('route')) routeStr = component.long_name;
-                if (types.includes('street_number')) streetNumberStr = component.long_name;
-                if (types.includes('administrative_area_level_1')) provinciaStr = component.long_name;
-                if (types.includes('administrative_area_level_2') || types.includes('locality')) {
-                    if (!departamentoStr) departamentoStr = component.long_name;
+            if (place.address_components) {
+                for (const component of place.address_components) {
+                    const types = component.types;
+                    if (types.includes('route')) routeStr = component.long_name;
+                    if (types.includes('street_number')) streetNumberStr = component.long_name;
                 }
+            }
+
+            // Fallback: check if a number was typed in the input or formatted_address
+            if (!streetNumberStr) {
+                const matchNumber = (place.formatted_address || inputCalle.value || '').match(/\b\d{1,5}\b/);
+                if (matchNumber) streetNumberStr = matchNumber[0];
             }
 
             if (routeStr) {
-                window.selectedPropertyStreetNumber = streetNumberStr;
                 inputCalle.value = `${routeStr} ${streetNumberStr}`.trim();
             }
 
-            // Clean string helper for flexible matching
-            const cleanStr = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-
-            const provSelect = document.getElementById('provincia');
-            const depSelect = document.getElementById('ciudad');
-
-            if (provSelect && provinciaStr) {
-                const searchProv = cleanStr(provinciaStr);
-                let matchedProv = false;
-                for (let i = 0; i < provSelect.options.length; i++) {
-                    const optText = cleanStr(provSelect.options[i].text);
-                    // Match province names
-                    if (optText.includes(searchProv) || searchProv.includes(optText)) {
-                        provSelect.selectedIndex = i;
-                        matchedProv = true;
-                        provSelect.dispatchEvent(new Event('change'));
-
-                        // Clear error UI if present
-                        const errProv = document.getElementById('error-provincia');
-                        if (errProv) errProv.classList.add('hidden');
-                        break;
-                    }
+            if (!streetNumberStr) {
+                window.selectedPropertyFromGoogle = false;
+                window.selectedPropertyStreetNumber = '';
+                if (errCalle) {
+                    errCalle.textContent = 'La dirección seleccionada debe incluir el número de calle (altura).';
+                    errCalle.classList.remove('hidden');
                 }
-
-                // If province matched, try to match department
-                if (matchedProv && depSelect && departamentoStr) {
-                    setTimeout(() => {
-                        const searchDep = cleanStr(departamentoStr);
-                        for (let i = 0; i < depSelect.options.length; i++) {
-                            const optText = cleanStr(depSelect.options[i].text);
-                            if (optText.includes(searchDep) || searchDep.includes(optText)) {
-                                depSelect.selectedIndex = i;
-                                depSelect.dispatchEvent(new Event('change'));
-
-                                const errDep = document.getElementById('error-ciudad');
-                                if (errDep) errDep.classList.add('hidden');
-                                break;
-                            }
-                        }
-                    }, 50); // slight delay to allow department list to render after province change
-                }
+            } else {
+                window.selectedPropertyFromGoogle = true;
+                window.selectedPropertyStreetNumber = streetNumberStr;
+                if (errCalle) errCalle.classList.add('hidden');
             }
         });
     }

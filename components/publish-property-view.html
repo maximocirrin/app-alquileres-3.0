@@ -104,7 +104,7 @@
                                     class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">Características</button>
                             </div>
                             <div id="step-operacion" class="block">
-                                <form id="form-principales" class="space-y-8" novalidate>
+                                <form id="form-principales" name="form-principales" class="space-y-8" novalidate autocomplete="off">
                                     <!-- Tipo de operación -->
                                     <div class="space-y-4">
                                         <label
@@ -189,6 +189,26 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Número de local (condicional para Subtipo En galería) -->
+                                    <div id="container-numero-local" class="hidden space-y-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="space-y-2">
+                                                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">N° de Local *</label>
+                                                <div class="relative">
+                                                    <input type="text" id="numero-local" name="num_local_galeria" autocomplete="off" placeholder="Ej: 12"
+                                                        class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                </div>
+                                                <p id="error-numero-local" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Piso / Sector <span class="text-secondary dark:text-[#c7c6c6] text-xs font-normal">(opcional)</span></label>
+                                                <div class="relative">
+                                                    <input type="text" id="sector-local" name="sector_galeria" autocomplete="off" placeholder="Ej: Planta baja"
+                                                        class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
 
@@ -208,75 +228,6 @@
                                         <p id="error-calle"
                                             class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
                                             Completa este campo</p>
-                                    </div>
-
-                                    <!-- Provincia y Ciudad -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div class="space-y-4">
-                                            <label
-                                                class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Provincia
-                                                *</label>
-                                            <div class="relative">
-                                                <select id="provincia" required
-                                                    class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer">
-                                                    <option disabled selected value="">Selecciona la provincia</option>
-                                                    <option value="buenos-aires">Buenos Aires</option>
-                                                    <option value="caba">Ciudad Autónoma de Buenos Aires</option>
-                                                    <option value="catamarca">Catamarca</option>
-                                                    <option value="chaco">Chaco</option>
-                                                    <option value="chubut">Chubut</option>
-                                                    <option value="cordoba">Córdoba</option>
-                                                    <option value="corrientes">Corrientes</option>
-                                                    <option value="entre-rios">Entre Ríos</option>
-                                                    <option value="formosa">Formosa</option>
-                                                    <option value="jujuy">Jujuy</option>
-                                                    <option value="la-pampa">La Pampa</option>
-                                                    <option value="la-rioja">La Rioja</option>
-                                                    <option value="mendoza">Mendoza</option>
-                                                    <option value="misiones">Misiones</option>
-                                                    <option value="neuquen">Neuquén</option>
-                                                    <option value="rio-negro">Río Negro</option>
-                                                    <option value="salta">Salta</option>
-                                                    <option value="san-juan">San Juan</option>
-                                                    <option value="san-luis">San Luis</option>
-                                                    <option value="santa-cruz">Santa Cruz</option>
-                                                    <option value="santa-fe">Santa Fe</option>
-                                                    <option value="santiago-del-estero">Santiago del Estero</option>
-                                                    <option value="tierra-del-fuego">Tierra del Fuego, Antártida e Islas
-                                                        del Atlántico Sur</option>
-                                                    <option value="tucuman">Tucumán</option>
-                                                </select>
-                                                <div
-                                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
-                                                    <span class="material-symbols-outlined">expand_more</span>
-                                                </div>
-                                            </div>
-                                            <p id="error-provincia"
-                                                class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
-                                                Completa este campo</p>
-                                        </div>
-
-                                        <div class="space-y-4">
-                                            <label
-                                                class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Departamento
-                                                *</label>
-                                            <div class="relative">
-                                                <select id="ciudad" disabled required
-                                                    class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    <option disabled selected value="">Selecciona el departamento
-                                                    </option>
-                                                </select>
-                                                <div
-                                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-secondary dark:text-[#c7c6c6]">
-                                                    <span class="material-symbols-outlined">expand_more</span>
-                                                </div>
-                                            </div>
-                                            <p id="error-ciudad"
-                                                class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
-                                                Completa este campo</p>
-                                        </div>
-                                    </div>
-
 
 
                                     <!-- Google Map Interactive -->
@@ -286,8 +237,7 @@
                                                 class="material-symbols-outlined text-on-background dark:text-[#f1f1f1] text-xl"
                                                 style="font-variation-settings: 'FILL' 0;">location_on</span>
                                             <span id="map-address-label"
-                                                class="font-body text-secondary dark:text-[#c7c6c6] text-sm md:text-base">olegario
-                                                v andrade 724, Ciudad de Mendoza, Mendoza</span>
+                                                class="font-body text-secondary dark:text-[#c7c6c6] text-sm md:text-base">Av. San Martín 123, Ciudad de Mendoza, Mendoza</span>
                                         </div>
 
                                         <div id="real-map-container"
@@ -364,27 +314,6 @@
                                                         class="material-symbols-outlined">add</span></button>
                                             </div>
                                         </div>
-
-                                        <div class="flex items-center justify-between">
-                                            <label
-                                                class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Cocheras
-                                                <span
-                                                    class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span></label>
-                                            <div
-                                                class="flex items-center gap-2 md:gap-4 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0 flex-none">
-                                                <button type="button"
-                                                    class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none"
-                                                    onclick="const input = document.getElementById('cocheras-new'); input.value = Math.max(0, parseInt(input.value || 0) - 1)"><span
-                                                        class="material-symbols-outlined">remove</span></button>
-                                                <input type="number" id="cocheras-new"
-                                                    class="!w-8 !min-w-[2rem] !max-w-[2rem] text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-lg focus:ring-0 select-none shrink-0 flex-none"
-                                                    value="0" readonly>
-                                                <button type="button"
-                                                    class="!w-10 !h-10 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0 flex-none"
-                                                    onclick="const input = document.getElementById('cocheras-new'); input.value = parseInt(input.value || 0) + 1"><span
-                                                        class="material-symbols-outlined">add</span></button>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <!-- Superficie -->
@@ -392,23 +321,6 @@
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Superficie</label>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div class="space-y-2">
-                                                <label
-                                                    class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie
-                                                    cubierta *</label>
-                                                <div
-                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
-                                                    <div
-                                                        class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">
-                                                        m2</div>
-                                                    <input type="number" id="sup-cubierta" required
-                                                        class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50"
-                                                        placeholder="0">
-                                                </div>
-                                                <p id="error-sup-cubierta"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
-                                                    Completa este campo</p>
-                                            </div>
                                             <div class="space-y-2">
                                                 <label
                                                     class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie
@@ -423,6 +335,23 @@
                                                         placeholder="0">
                                                 </div>
                                                 <p id="error-sup-total"
+                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    Completa este campo</p>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie
+                                                    cubierta *</label>
+                                                <div
+                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                                                    <div
+                                                        class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">
+                                                        m2</div>
+                                                    <input type="number" id="sup-cubierta" required
+                                                        class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50"
+                                                        placeholder="0">
+                                                </div>
+                                                <p id="error-sup-cubierta"
                                                     class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
@@ -656,7 +585,7 @@
                                             *</label>
                                         <p
                                             class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-2 leading-relaxed">
-                                            Cargá entre 5 y 50 fotos. Se admiten los formatos jpg, jpeg, png y webp.</p>
+                                            Cargá entre 5 y 50 fotos (jpg, jpeg, png, webp). Arrastralas para cambiar su orden. La primera foto será la portada.</p>
                                     </div>
 
                                     <div id="fotos-dropzone"

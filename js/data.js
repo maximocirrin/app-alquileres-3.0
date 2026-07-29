@@ -26,7 +26,7 @@ function base64ToBlob(base64Data, contentType = 'image/jpeg') {
 
 const DataManager = {
     // Helper: Get or Create Profile ID for current user
-    _getOrCreateProfile: async function() {
+    _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
         try {
             const { data: { user } } = await window.supabaseClient.auth.getUser();
@@ -154,7 +154,7 @@ const DataManager = {
                 const pub = Array.isArray(p.Publicacion) ? p.Publicacion[0] : p.Publicacion;
                 const media = pub?.Multimedia || [];
                 const contract = Array.isArray(p.Contrato) ? p.Contrato[0] : p.Contrato;
-                
+
                 const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
                 const title = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `${p.calle || 'Propiedad'} ${p.numero || ''}`.trim();
                 const address = `${p.calle || 'Sin calle'} ${p.numero || ''}, ${p.piso_dpto || ''}`.trim();
@@ -213,7 +213,7 @@ const DataManager = {
                 // Extract details from JSON suffix or fallback to Propiedad table columns
                 let extraInfo = {};
                 if (pub.descripcion && pub.descripcion.includes('Detalles: ')) {
-                    try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch(e){}
+                    try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) { }
                 }
 
                 const cleanTitle = pub.descripcion
@@ -461,7 +461,7 @@ const DataManager = {
     },
 
     // Postulaciones / Solicitudes
-    getApplications: async function() {
+    getApplications: async function () {
         if (!window.supabaseClient) return [];
         try {
             const { data, error } = await window.supabaseClient
@@ -504,7 +504,7 @@ const DataManager = {
         }
     },
 
-    submitApplication: async function(appData) {
+    submitApplication: async function (appData) {
         if (!window.supabaseClient) throw new Error("Supabase client not available");
         const profileId = await DataManager._getOrCreateProfile();
 
@@ -533,7 +533,7 @@ const DataManager = {
         };
     },
 
-    acceptApplication: async function(appId) {
+    acceptApplication: async function (appId) {
         if (!window.supabaseClient) return null;
         const profileId = await DataManager._getOrCreateProfile();
 
@@ -602,12 +602,12 @@ const DataManager = {
         return { id: appId, status: 'aceptada' };
     },
 
-    rejectApplication: async function(appId) {
+    rejectApplication: async function (appId) {
         return { id: appId, status: 'rechazada' };
     },
 
     // Visitas Programadas
-    getVisits: async function() {
+    getVisits: async function () {
         if (!window.supabaseClient) return [];
         try {
             const { data, error } = await window.supabaseClient
@@ -644,7 +644,7 @@ const DataManager = {
         }
     },
 
-    scheduleVisit: async function(visitData) {
+    scheduleVisit: async function (visitData) {
         if (!window.supabaseClient) throw new Error("Supabase client not available");
         const profileId = await DataManager._getOrCreateProfile();
 
@@ -673,7 +673,7 @@ const DataManager = {
         };
     },
 
-    cancelVisit: async function(visitId) {
+    cancelVisit: async function (visitId) {
         return { id: visitId, status: 'cancelada' };
     },
 
@@ -712,7 +712,7 @@ const DataManager = {
         }
     },
 
-    getActiveContract: async function() {
+    getActiveContract: async function () {
         if (!window.supabaseClient) return null;
         try {
             const { data, error } = await window.supabaseClient
@@ -759,7 +759,7 @@ const DataManager = {
         }
     },
 
-    getCurrentPayment: async function(contractId) {
+    getCurrentPayment: async function (contractId) {
         if (!window.supabaseClient) return null;
         try {
             const { data, error } = await window.supabaseClient
@@ -796,7 +796,7 @@ const DataManager = {
         }
     },
 
-    calculatePunitiveInterests: function(contract, payment) {
+    calculatePunitiveInterests: function (contract, payment) {
         if (!contract || !payment) return { daysLate: 0, dailyRate: 0, punitiveAmount: 0, totalAmount: 0 };
         if (payment.status === 'pagado' || payment.is_punitive_waived) {
             return { daysLate: 0, dailyRate: contract.punitive_daily_rate || 0.5, punitiveAmount: 0, totalAmount: payment.amount_base };
@@ -821,14 +821,14 @@ const DataManager = {
         };
     },
 
-    waivePunitiveInterests: async function(paymentId) {
+    waivePunitiveInterests: async function (paymentId) {
         if (window.supabaseClient && typeof paymentId === 'number') {
             await window.supabaseClient.from('Pago').update({ interes_perdonado: true }).eq('id_pago', paymentId);
         }
         return { id: paymentId, is_punitive_waived: true };
     },
 
-    markPaymentAsPaid: async function(paymentId, method = 'Transferencia') {
+    markPaymentAsPaid: async function (paymentId, method = 'Transferencia') {
         if (window.supabaseClient && typeof paymentId === 'number') {
             await window.supabaseClient
                 .from('Pago')
@@ -838,7 +838,7 @@ const DataManager = {
         return { id: paymentId, status: 'pagado', payment_method: method };
     },
 
-    sendInvoiceEmail: async function(paymentId) {
+    sendInvoiceEmail: async function (paymentId) {
         return {
             success: true,
             invoiceNumber: 'FAC-' + Math.floor(100000 + Math.random() * 900000),
@@ -846,7 +846,7 @@ const DataManager = {
         };
     },
 
-    applyIndexAdjustment: async function(contractId, indexType, frequencyMonths) {
+    applyIndexAdjustment: async function (contractId, indexType, frequencyMonths) {
         const rates = { IPC: 12.8, ICL: 10.5 };
         const pct = rates[indexType] || 12.0;
 
@@ -862,7 +862,7 @@ const DataManager = {
     },
 
     // Tickets de Mantenimiento
-    getMaintenanceTickets: async function() {
+    getMaintenanceTickets: async function () {
         if (!window.supabaseClient) return [];
         try {
             const { data, error } = await window.supabaseClient
@@ -892,7 +892,7 @@ const DataManager = {
         }
     },
 
-    createMaintenanceTicket: async function(ticketData) {
+    createMaintenanceTicket: async function (ticketData) {
         if (!window.supabaseClient) throw new Error("Supabase client not available");
         const profileId = await DataManager._getOrCreateProfile();
 
@@ -925,7 +925,7 @@ const DataManager = {
         };
     },
 
-    updateTicketStatus: async function(ticketId, newStatus, responseText) {
+    updateTicketStatus: async function (ticketId, newStatus, responseText) {
         if (!window.supabaseClient) return null;
 
         const updateData = {};
