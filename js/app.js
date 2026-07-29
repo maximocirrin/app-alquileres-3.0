@@ -311,8 +311,8 @@ const App = {
                 if (pStep3) {
                     pStep3.classList.remove('opacity-50');
                     pStep3.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">3</div>
-                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Condiciones</span>
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">3</div>
+                        <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Condiciones</span>
                     `;
                 }
                 if (pStep4) {
@@ -351,8 +351,8 @@ const App = {
                 if (pStep2) {
                     pStep2.classList.remove('opacity-50');
                     pStep2.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">2</div>
-                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">2</div>
+                        <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
                     `;
                 }
                 if (pStep3) {
@@ -390,7 +390,7 @@ const App = {
                 if (pStep1) {
                     pStep1.innerHTML = `
                         <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
-                        <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-[11px] md:text-base">Principales</span>
+                        <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base">Principales</span>
                     `;
                 }
                 if (pStep2) {
@@ -413,7 +413,7 @@ const App = {
                 stepCaracteristicas.classList.add('hidden');
                 stepUbicacion.classList.remove('hidden');
                 if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                 if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
                 document.querySelectorAll('button[form="form-caracteristicas"]').forEach(btn => {
                     btn.setAttribute('form', 'form-ubicacion');
@@ -426,7 +426,7 @@ const App = {
                 stepUbicacion.classList.add('hidden');
                 stepOperacion.classList.remove('hidden');
                 if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                 if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
                 document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
                     btn.setAttribute('form', 'form-principales');
@@ -445,6 +445,54 @@ const App = {
             btnBackMobile.addEventListener('click', handleBackStepMobile);
         }
 
+        // Helper functions for Form Validation Feedback
+        function highlightInvalidInput(el) {
+            if (!el) return;
+            el.classList.add('!border-2', '!border-red-500', 'dark:!border-[#A13333]', '!ring-2', '!ring-red-500/40', 'dark:!ring-[#A13333]/40');
+            const onInputOrChange = () => {
+                el.classList.remove('!border-2', '!border-red-500', 'dark:!border-[#A13333]', '!ring-2', '!ring-red-500/40', 'dark:!ring-[#A13333]/40');
+                el.removeEventListener('input', onInputOrChange);
+                el.removeEventListener('change', onInputOrChange);
+            };
+            el.addEventListener('input', onInputOrChange);
+            el.addEventListener('change', onInputOrChange);
+        }
+
+        function showValidationToast(message = 'Por favor, completá los campos obligatorios marcados en rojo antes de continuar.') {
+            let existingToast = document.getElementById('validation-toast-notification');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'validation-toast-notification';
+            toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[200] max-w-md w-[92%] bg-red-600 dark:bg-red-700 text-white font-headline font-bold text-sm sm:text-base px-5 py-4 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] flex items-center justify-between gap-3 transition-all duration-300 transform -translate-y-4 opacity-0 border border-white/20';
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-2xl shrink-0">error</span>
+                    <span class="leading-snug">${message}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-white/80 hover:text-white shrink-0 p-1">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('-translate-y-4', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            setTimeout(() => {
+                if (toast && toast.parentElement) {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('-translate-y-4', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+        window.showValidationToast = showValidationToast;
+        window.highlightInvalidInput = highlightInvalidInput;
+
         // Form 'Principales' Validation & Submit Interceptor
         const formPrincipales = document.getElementById('form-principales');
         if (formPrincipales) {
@@ -452,6 +500,8 @@ const App = {
                 e.preventDefault();
 
                 let isValid = true;
+                let invalidElements = [];
+
                 const errorTipo = document.getElementById('error-tipo');
                 const errorSubtipo = document.getElementById('error-subtipo');
                 const errorPiso = document.getElementById('error-piso');
@@ -474,12 +524,16 @@ const App = {
                 // Custom validation for 'Tipo de propiedad'
                 if (selectTipo && !selectTipo.value) {
                     if (errorTipo) errorTipo.classList.remove('hidden');
+                    highlightInvalidInput(selectTipo);
+                    invalidElements.push(selectTipo);
                     isValid = false;
                 }
 
                 // Custom validation for 'Subtipo de propiedad'
                 if (selectSubtipo && selectSubtipo.required && !selectSubtipo.value) {
                     if (errorSubtipo) errorSubtipo.classList.remove('hidden');
+                    highlightInvalidInput(selectSubtipo);
+                    invalidElements.push(selectSubtipo);
                     isValid = false;
                 }
 
@@ -487,10 +541,14 @@ const App = {
                 if (selectTipo && (selectTipo.value === 'departamento' || selectTipo.value === 'ph')) {
                     if (inputPiso && !inputPiso.value.trim()) {
                         if (errorPiso) errorPiso.classList.remove('hidden');
+                        highlightInvalidInput(inputPiso);
+                        invalidElements.push(inputPiso);
                         isValid = false;
                     }
                     if (inputDepto && !inputDepto.value.trim()) {
                         if (errorDepto) errorDepto.classList.remove('hidden');
+                        highlightInvalidInput(inputDepto);
+                        invalidElements.push(inputDepto);
                         isValid = false;
                     }
                 }
@@ -499,11 +557,19 @@ const App = {
                 if (selectSubtipo && selectSubtipo.value === 'galeria') {
                     if (inputNumeroLocal && !inputNumeroLocal.value.trim()) {
                         if (errorNumeroLocal) errorNumeroLocal.classList.remove('hidden');
+                        highlightInvalidInput(inputNumeroLocal);
+                        invalidElements.push(inputNumeroLocal);
                         isValid = false;
                     }
                 }
 
-                if (isValid) {
+                if (!isValid) {
+                    if (invalidElements.length > 0) {
+                        invalidElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        invalidElements[0].focus();
+                    }
+                    showValidationToast('Por favor, completá los campos obligatorios marcados en rojo antes de continuar.');
+                } else {
                     console.log('¡Datos Principales completos y validados (Custom)! Avanzando al subpaso de Ubicación...');
 
                     // Manejar DOM para mostrar Ubicación
@@ -515,7 +581,7 @@ const App = {
 
                     if (tabOperacion && tabUbicacion && stepOperacion && stepUbicacion) {
                         tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                        tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
 
                         stepOperacion.classList.add('hidden');
                         stepUbicacion.classList.remove('hidden');
@@ -542,7 +608,7 @@ const App = {
                         tabOperacion.onclick = (event) => {
                             event.preventDefault();
                             tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                             stepUbicacion.classList.add('hidden');
                             stepOperacion.classList.remove('hidden');
 
@@ -678,12 +744,20 @@ const App = {
                         errCalle.textContent = 'Completa este campo';
                         errCalle.classList.remove('hidden');
                     }
+                    highlightInvalidInput(calle);
+                    calle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    calle.focus();
+                    showValidationToast('Por favor, completá la calle y altura de tu propiedad.');
                     isValid = false;
                 } else if (!window.selectedPropertyFromGoogle || !window.selectedPropertyStreetNumber) {
                     if (errCalle) {
                         errCalle.textContent = 'Debes seleccionar una dirección de la lista desplegable de sugerencias que incluya el número de calle (altura).';
                         errCalle.classList.remove('hidden');
                     }
+                    highlightInvalidInput(calle);
+                    calle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    calle.focus();
+                    showValidationToast('Debés seleccionar una dirección sugerida con número de calle.');
                     isValid = false;
                 }
 
@@ -698,7 +772,7 @@ const App = {
 
                     if (tabUbicacion && tabCaracteristicas && stepUbicacion && stepCaracteristicas) {
                         tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                        tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
 
                         stepUbicacion.classList.add('hidden');
                         stepCaracteristicas.classList.remove('hidden');
@@ -717,7 +791,7 @@ const App = {
                         tabUbicacion.onclick = (event) => {
                             event.preventDefault();
                             tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                            tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                             stepCaracteristicas.classList.add('hidden');
                             stepUbicacion.classList.remove('hidden');
 
@@ -743,6 +817,7 @@ const App = {
             formCaracteristicas.addEventListener('submit', (e) => {
                 e.preventDefault();
                 let isValid = true;
+                let invalidElements = [];
 
                 const supCubierta = document.getElementById('sup-cubierta');
                 const supTotal = document.getElementById('sup-total');
@@ -762,13 +837,19 @@ const App = {
                 if (errTitulo) errTitulo.classList.add('hidden');
                 if (errDescripcion) errDescripcion.classList.add('hidden');
 
-                if (supCubierta && !supCubierta.value) { if (errSupCubierta) errSupCubierta.classList.remove('hidden'); isValid = false; }
-                if (supTotal && !supTotal.value) { if (errSupTotal) errSupTotal.classList.remove('hidden'); isValid = false; }
-                if (precio && !precio.value) { if (errPrecio) errPrecio.classList.remove('hidden'); isValid = false; }
-                if (titulo && !titulo.value) { if (errTitulo) errTitulo.classList.remove('hidden'); isValid = false; }
-                if (descripcion && !descripcion.value) { if (errDescripcion) errDescripcion.classList.remove('hidden'); isValid = false; }
+                if (supCubierta && !supCubierta.value) { if (errSupCubierta) errSupCubierta.classList.remove('hidden'); highlightInvalidInput(supCubierta); invalidElements.push(supCubierta); isValid = false; }
+                if (supTotal && !supTotal.value) { if (errSupTotal) errSupTotal.classList.remove('hidden'); highlightInvalidInput(supTotal); invalidElements.push(supTotal); isValid = false; }
+                if (precio && !precio.value) { if (errPrecio) errPrecio.classList.remove('hidden'); highlightInvalidInput(precio); invalidElements.push(precio); isValid = false; }
+                if (titulo && !titulo.value) { if (errTitulo) errTitulo.classList.remove('hidden'); highlightInvalidInput(titulo); invalidElements.push(titulo); isValid = false; }
+                if (descripcion && !descripcion.value) { if (errDescripcion) errDescripcion.classList.remove('hidden'); highlightInvalidInput(descripcion); invalidElements.push(descripcion); isValid = false; }
 
-                if (isValid) {
+                if (!isValid) {
+                    if (invalidElements.length > 0) {
+                        invalidElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        invalidElements[0].focus();
+                    }
+                    showValidationToast('Por favor, completá los campos obligatorios marcados en rojo antes de continuar.');
+                } else {
                     console.log('¡Datos Características completos y validados! Transicionando al paso 2: Multimedia...');
 
                     const step1Container = document.getElementById('wizard-step-1-container');
@@ -1113,20 +1194,20 @@ const App = {
             const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
             if (dropzone) {
                 e.preventDefault();
-                dropzone.classList.add('border-primary', 'dark:border-red-500');
+                dropzone.classList.add('border-primary', 'dark:border-[#A13333]');
             }
         });
         document.addEventListener('dragleave', (e) => {
             const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
             if (dropzone) {
-                dropzone.classList.remove('border-primary', 'dark:border-red-500');
+                dropzone.classList.remove('border-primary', 'dark:border-[#A13333]');
             }
         });
         document.addEventListener('drop', (e) => {
             const dropzone = e.target.closest('#fotos-dropzone') || e.target.closest('#dropzone-fotos');
             if (dropzone) {
                 e.preventDefault();
-                dropzone.classList.remove('border-primary', 'dark:border-red-500');
+                dropzone.classList.remove('border-primary', 'dark:border-[#A13333]');
                 if (e.dataTransfer && e.dataTransfer.files.length > 0) {
                     processAndAddPhotos(Array.from(e.dataTransfer.files));
                 }
@@ -1157,16 +1238,16 @@ const App = {
                     if (i < activeStep) {
                         pStep.classList.remove('opacity-50');
                         pStep.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-red-500/20">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 dark:bg-[#A13333]/10 text-primary dark:text-[#A13333] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">
                                 <span class="material-symbols-outlined text-[18px]">check</span>
                             </div>
-                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
                         `;
                     } else if (i === activeStep) {
                         pStep.classList.remove('opacity-50');
                         pStep.innerHTML = `
                             <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
-                            <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
                         `;
                     } else {
                         pStep.classList.add('opacity-50');
@@ -1180,9 +1261,9 @@ const App = {
                 if (pLine) {
                     if (i <= activeStep) {
                         pLine.classList.remove('border-surface-dim', 'dark:border-[#1e1e1e]');
-                        pLine.classList.add('border-primary', 'dark:border-red-500');
+                        pLine.classList.add('border-primary', 'dark:border-[#A13333]');
                     } else {
-                        pLine.classList.remove('border-primary', 'dark:border-red-500');
+                        pLine.classList.remove('border-primary', 'dark:border-[#A13333]');
                         pLine.classList.add('border-surface-dim', 'dark:border-[#1e1e1e]');
                     }
                 }
@@ -1204,13 +1285,15 @@ const App = {
 
                 if (photoCount < 5 || photoCount > 50) {
                     isValid = false;
+                    const dropzone = document.getElementById('dropzone-fotos') || document.getElementById('fotos-dropzone');
+                    if (dropzone) highlightInvalidInput(dropzone);
+
                     if (fotosErrorMsg) {
                         fotosErrorMsg.innerHTML = `<span class="material-symbols-outlined text-[20px]">warning</span><span>Debes cargar al menos 5 fotos para continuar (máximo 50). Actualmente tienes ${photoCount}.</span>`;
                         fotosErrorMsg.className = 'bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl p-3.5 mt-4 text-sm font-semibold flex items-center gap-2';
                         fotosErrorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        alert(`Debes cargar al menos 5 fotos para continuar (máximo 50). Actualmente tienes ${photoCount}.`);
                     }
+                    showValidationToast(`Debés cargar al menos 5 fotos para continuar (máximo 50). Actualmente tenés ${photoCount}.`);
                 } else {
                     if (fotosErrorMsg) fotosErrorMsg.classList.add('hidden');
                 }
@@ -1242,7 +1325,7 @@ const App = {
                         if (step3Container) {
                             step3Container.classList.remove('hidden');
 
-                            if (title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
+                            if (title) title.textContent = '¡Agregá los amenities de tu propiedad!';
                             if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
 
                             void step3Container.offsetWidth;
@@ -1541,7 +1624,7 @@ const App = {
                     step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
                     step3Container.style.height = '';
                 }
-                if (title) title.textContent = '¡Agregá las comodidades de tu propiedad!';
+                if (title) title.textContent = '¡Agregá los amenities de tu propiedad!';
                 if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
                 updateHeaderProgress(3);
                 setSubmitButton('form-extras', 'Continuar');
@@ -1586,7 +1669,7 @@ const App = {
                 const tabUbicacion = document.getElementById('tab-ubicacion');
                 const tabCaracteristicas = document.getElementById('tab-caracteristicas');
                 if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
 
                 if (title) title.textContent = '¡Empecemos a crear tu aviso!';
                 if (subtitle) subtitle.textContent = 'Detalles de tu propiedad';
@@ -1606,7 +1689,7 @@ const App = {
                 const tabUbicacion = document.getElementById('tab-ubicacion');
                 const tabCaracteristicas = document.getElementById('tab-caracteristicas');
                 if (tabOperacion) tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                 if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
 
                 if (subtitle) subtitle.textContent = '¿Dónde está ubicada tu propiedad?';
@@ -1623,7 +1706,7 @@ const App = {
                 const tabOperacion = document.getElementById('tab-operacion');
                 const tabUbicacion = document.getElementById('tab-ubicacion');
                 const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
                 if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
                 if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
 
@@ -1654,9 +1737,9 @@ const App = {
                 diaBtn.classList.toggle('active-dia');
                 if (diaBtn.classList.contains('active-dia')) {
                     diaBtn.classList.remove('bg-surface-container-high', 'dark:bg-[#282828]', 'text-secondary', 'dark:text-[#c7c6c6]', 'border-outline-variant/30', 'dark:border-white/5');
-                    diaBtn.classList.add('bg-primary', 'text-white', 'dark:bg-red-500', 'border-primary', 'dark:border-red-500', 'shadow-sm');
+                    diaBtn.classList.add('bg-primary', 'text-white', 'dark:bg-[#A13333]', 'border-primary', 'dark:border-[#A13333]', 'shadow-sm');
                 } else {
-                    diaBtn.classList.remove('bg-primary', 'text-white', 'dark:bg-red-500', 'border-primary', 'dark:border-red-500', 'shadow-sm');
+                    diaBtn.classList.remove('bg-primary', 'text-white', 'dark:bg-[#A13333]', 'border-primary', 'dark:border-[#A13333]', 'shadow-sm');
                     diaBtn.classList.add('bg-surface-container-high', 'dark:bg-[#282828]', 'text-secondary', 'dark:text-[#c7c6c6]', 'border-outline-variant/30', 'dark:border-white/5');
                 }
             }
@@ -4800,7 +4883,7 @@ const App = {
         if (stepUbicacion) stepUbicacion.classList.add('hidden');
         if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
 
-        if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
+        if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
         if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
         if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
 

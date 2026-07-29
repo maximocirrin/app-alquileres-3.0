@@ -7,8 +7,8 @@
             class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-white/5">
             <div class="flex justify-between items-center px-6 h-16 w-full">
                 <div class="flex items-center gap-4">
-                    <button id="btn-back-from-publish"
-                        class="flex items-center gap-1 text-primary dark:text-red-500 hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
+                    <button id="btn-back-from-publish" onclick="App.closePublishWizard()"
+                        class="flex items-center gap-1 text-primary dark:text-[#A13333] hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
                         <span class="material-symbols-outlined" id="btn-back-icon">close</span>
                         <span id="btn-back-text" class="font-body font-bold text-sm">Cancelar</span>
                     </button>
@@ -32,7 +32,7 @@
                             <!-- Mobile-Only Progress Header (< sm / smartphones) -->
                             <div class="sm:hidden mb-6 space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs font-headline font-bold uppercase tracking-wider text-primary dark:text-red-500 bg-primary/10 dark:bg-red-500/10 px-3.5 py-1.5 rounded-full border border-primary/20 dark:border-red-500/20 shadow-sm" id="mobile-step-badge">
+                                    <span class="text-xs font-headline font-bold uppercase tracking-wider text-primary dark:text-[#A13333] bg-primary/10 dark:bg-[#A13333]/10 px-3.5 py-1.5 rounded-full border border-primary/20 dark:border-[#A13333]/20 shadow-sm" id="mobile-step-badge">
                                         Paso 1 de 6 &bull; Principales
                                     </span>
                                     <span class="text-xs font-headline font-extrabold text-on-background dark:text-[#f1f1f1] bg-surface-container-high dark:bg-[#282828] px-3 py-1 rounded-lg" id="mobile-step-percent">
@@ -40,7 +40,7 @@
                                     </span>
                                 </div>
                                 <div class="w-full bg-surface-container-high dark:bg-[#282828] h-2.5 rounded-full overflow-hidden p-0.5 border border-outline-variant/20 dark:border-white/5">
-                                    <div id="mobile-progress-bar" class="bg-primary dark:bg-red-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_12px_rgba(161,51,51,0.5)]" style="width: 16.66%;"></div>
+                                    <div id="mobile-progress-bar" class="bg-primary dark:bg-[#A13333] h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_12px_rgba(161,51,51,0.5)]" style="width: 16.66%;"></div>
                                 </div>
                             </div>
 
@@ -49,9 +49,9 @@
                                 id="publish-progress-indicator">
                                 <div class="flex flex-col items-center gap-1.5 shrink-0" id="progress-step-1">
                                     <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">1</div>
-                                    <span class="font-headline font-bold text-primary dark:text-red-500 whitespace-nowrap text-xs sm:text-sm text-center">Principales</span>
+                                    <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">Principales</span>
                                 </div>
-                                <div id="progress-line-1" class="flex-1 min-w-[15px] max-w-[60px] border-t-2 border-primary dark:border-red-500 transition-colors duration-300 mt-4"></div>
+                                <div id="progress-line-1" class="flex-1 min-w-[15px] max-w-[60px] border-t-2 border-primary dark:border-[#A13333] transition-colors duration-300 mt-4"></div>
 
                                 <div class="flex flex-col items-center gap-1.5 shrink-0 opacity-50" id="progress-step-2">
                                     <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">2</div>
@@ -98,7 +98,7 @@
                             <!-- Sub-navigation tabs -->
                             <div class="flex gap-8 mb-10 overflow-x-auto pb-2">
                                 <button id="tab-operacion"
-                                    class="font-headline font-bold text-primary dark:text-red-500 border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación
+                                    class="font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación
                                     y tipo de propiedad</button>
                                 <button id="tab-ubicacion"
                                     class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">Ubicación</button>
@@ -111,16 +111,16 @@
                                     <div class="space-y-4">
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Tipo
-                                            de operación *</label>
+                                            de operación <span class="text-primary dark:text-[#A13333] font-extrabold text-lg ml-0.5" title="Campo obligatorio">*</span></label>
                                         <div class="grid grid-cols-1 gap-4 max-w-xs">
                                             <label class="cursor-pointer relative block h-full">
                                                 <input checked="" class="peer sr-only" name="operacion" type="radio" value="alquiler" />
                                                 <div
-                                                    class="h-full p-4 rounded-xl bg-surface-container-high dark:bg-[#282828] border-2 border-primary dark:border-red-500 bg-surface-container-lowest dark:bg-[#0c0c0e] transition-all text-center flex items-center justify-between px-6">
+                                                    class="h-full p-4 rounded-xl bg-surface-container-high dark:bg-[#282828] border-2 border-primary dark:border-[#A13333] bg-surface-container-lowest dark:bg-[#0c0c0e] transition-all text-center flex items-center justify-between px-6">
                                                     <span
-                                                        class="font-headline font-bold text-primary dark:text-red-500 text-base">Alquiler</span>
+                                                        class="font-headline font-bold text-primary dark:text-[#A13333] text-base">Alquiler</span>
                                                     <span
-                                                        class="material-symbols-outlined text-primary dark:text-red-500"
+                                                        class="material-symbols-outlined text-primary dark:text-[#A13333]"
                                                         style="font-variation-settings: 'FILL' 1;">check_circle</span>
                                                 </div>
                                             </label>
@@ -130,10 +130,10 @@
                                     <div class="space-y-4">
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Tipo
-                                            de propiedad *</label>
+                                            de propiedad <span class="text-primary dark:text-[#A13333] font-extrabold text-lg ml-0.5" title="Campo obligatorio">*</span></label>
                                         <div class="relative">
                                             <select id="tipo-propiedad" required
-                                                class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors cursor-pointer">
+                                                class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] ![background-image:none] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 pr-12 font-body text-sm md:text-base truncate focus:ring-1 focus:ring-primary dark:focus:ring-[#A13333] transition-colors cursor-pointer">
                                                 <option disabled="" selected="" value="" class="bg-white dark:bg-[#1a1a1e] text-gray-400 dark:text-[#888]">Selecciona el tipo de propiedad
                                                 </option>
                                                 <option value="departamento">Departamento</option>
@@ -147,7 +147,7 @@
                                             </div>
                                         </div>
                                         <p id="error-tipo"
-                                            class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                            class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                             Completa este campo</p>
                                     </div>
                                     <!-- Subtipo de propiedad -->
@@ -167,27 +167,27 @@
                                              </div>
                                          </div>
                                          <p id="error-subtipo"
-                                             class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                             class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                              Completa este campo</p>
                                      </div>
                                      <!-- Piso y Depto (condicional para Departamento y PH) -->
                                      <div id="container-piso-depto" class="hidden space-y-4">
                                          <div class="grid grid-cols-2 gap-4">
                                              <div class="space-y-2">
-                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Piso *</label>
+                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Piso <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                  <div class="relative">
                                                      <input type="text" id="piso-propiedad" placeholder="Ej: 4"
-                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-[#A13333] transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
                                                  </div>
-                                                 <p id="error-piso" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                                 <p id="error-piso" class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">Completa este campo</p>
                                              </div>
                                              <div class="space-y-2">
-                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Depto *</label>
+                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Depto <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                  <div class="relative">
                                                      <input type="text" id="depto-propiedad" placeholder="Ej: B"
-                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-[#A13333] transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
                                                  </div>
-                                                 <p id="error-depto" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                                 <p id="error-depto" class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">Completa este campo</p>
                                              </div>
                                          </div>
                                      </div>
@@ -195,12 +195,12 @@
                                      <div id="container-numero-local" class="hidden space-y-4">
                                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                              <div class="space-y-2">
-                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">N° de Local *</label>
+                                                 <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">N° de Local <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                  <div class="relative">
                                                      <input type="text" id="numero-local" name="num_local_galeria" autocomplete="off" placeholder="Ej: 12"
-                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-red-500 transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
+                                                         class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-sm md:text-base focus:ring-1 focus:ring-primary dark:focus:ring-[#A13333] transition-colors placeholder:text-secondary/50 dark:placeholder:text-[#c7c6c6]/50">
                                                  </div>
-                                                 <p id="error-numero-local" class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">Completa este campo</p>
+                                                 <p id="error-numero-local" class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">Completa este campo</p>
                                              </div>
                                              <div class="space-y-2">
                                                  <label class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base">Piso / Sector <span class="text-secondary dark:text-[#c7c6c6] text-xs font-normal">(opcional)</span></label>
@@ -221,7 +221,7 @@
                                     <div class="space-y-4">
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg">Calle
-                                            y altura *</label>
+                                            y altura <span class="text-primary dark:text-red-500 font-extrabold text-lg ml-0.5" title="Campo obligatorio">*</span></label>
                                         <div class="relative">
                                             <input type="text" id="calle-altura" required
                                                 placeholder="Ej: Av. del Libertador 1000"
@@ -326,9 +326,9 @@
                                             <div class="space-y-2">
                                                 <label
                                                     class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie
-                                                    total *</label>
+                                                    total <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                 <div
-                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-[#A13333]">
                                                     <div
                                                         class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">
                                                         m2</div>
@@ -337,15 +337,15 @@
                                                         placeholder="0">
                                                 </div>
                                                 <p id="error-sup-total"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
                                             <div class="space-y-2">
                                                 <label
                                                     class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Superficie
-                                                    cubierta *</label>
+                                                    cubierta <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                 <div
-                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
+                                                    class="flex bg-surface-container-high dark:bg-[#282828] rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-[#A13333]">
                                                     <div
                                                         class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm min-w-[60px]">
                                                         m2</div>
@@ -354,7 +354,7 @@
                                                         placeholder="0">
                                                 </div>
                                                 <p id="error-sup-cubierta"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
                                         </div>
@@ -434,8 +434,8 @@
                                          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                              <label class="cursor-pointer relative block">
                                                  <input type="radio" name="amoblado" value="sin-amoblar" class="peer sr-only" checked>
-                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
-                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">chair_alt</span>
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-[#A13333] peer-checked:bg-primary/5 dark:peer-checked:bg-[#A13333]/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-[#A13333] text-2xl">chair_alt</span>
                                                      <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Sin amoblar</span>
                                                      <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Sin muebles incluidos</span>
                                                  </div>
@@ -443,8 +443,8 @@
 
                                              <label class="cursor-pointer relative block">
                                                  <input type="radio" name="amoblado" value="semiamoblado" class="peer sr-only">
-                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
-                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">weekend</span>
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-[#A13333] peer-checked:bg-primary/5 dark:peer-checked:bg-[#A13333]/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-[#A13333] text-2xl">weekend</span>
                                                      <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Semiamoblado</span>
                                                      <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Muebles básicos integrados</span>
                                                  </div>
@@ -452,8 +452,8 @@
 
                                              <label class="cursor-pointer relative block">
                                                  <input type="radio" name="amoblado" value="totalmente-amoblado" class="peer sr-only">
-                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-red-500 peer-checked:bg-primary/5 dark:peer-checked:bg-red-500/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
-                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-red-500 text-2xl">single_bed</span>
+                                                 <div class="p-4 rounded-2xl bg-surface-container-lowest dark:bg-[#0c0c0e] border-2 border-outline-variant/30 dark:border-white/10 peer-checked:border-primary dark:peer-checked:border-[#A13333] peer-checked:bg-primary/5 dark:peer-checked:bg-[#A13333]/5 transition-all text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                                                     <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] peer-checked:text-primary dark:peer-checked:text-[#A13333] text-2xl">single_bed</span>
                                                      <span class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Totalmente amoblado</span>
                                                      <span class="font-body text-xs text-secondary dark:text-[#c7c6c6]">Listo para mudarse con todo</span>
                                                  </div>
@@ -465,7 +465,7 @@
                                     <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Precio
-                                            del alquiler *</label>
+                                            del alquiler <span class="text-primary dark:text-[#A13333] font-extrabold text-xl ml-0.5" title="Campo obligatorio">*</span></label>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div class="relative md:col-span-1">
                                                 <select id="moneda" required
@@ -482,7 +482,7 @@
                                                 <input type="number" id="precio" required placeholder="Ej: 150000"
                                                     class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors placeholder:text-secondary/50">
                                                 <p id="error-precio"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
                                         </div>
@@ -524,28 +524,28 @@
                                     <div class="space-y-4 pt-8 border-t border-outline-variant/30 dark:border-white/5">
                                         <label
                                             class="block font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">Título
-                                            y Descripción del aviso *</label>
+                                            y Descripción del aviso <span class="text-primary dark:text-[#A13333] font-extrabold text-xl ml-0.5" title="Campo obligatorio">*</span></label>
                                         <div class="space-y-4">
                                             <div>
                                                 <label
                                                     class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm mb-2">Título
-                                                    del aviso *</label>
+                                                    del aviso <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                 <input type="text" id="titulo-aviso" required
                                                     placeholder="Ej: Excelente departamento de 2 ambientes con balcón"
                                                     class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-sm h-14 px-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors placeholder:text-secondary/50">
                                                 <p id="error-titulo"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
                                             <div>
                                                 <label
                                                     class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm mb-2">Descripción
-                                                    detallada *</label>
+                                                    detallada <span class="text-primary dark:text-[#A13333] font-extrabold text-base ml-0.5" title="Campo obligatorio">*</span></label>
                                                 <textarea id="descripcion-aviso" required rows="6"
                                                     placeholder="Contá las mejores características de la propiedad, estado, ubicación, etc..."
                                                     class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-sm p-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary transition-colors placeholder:text-secondary/50"></textarea>
                                                 <p id="error-descripcion"
-                                                    class="hidden text-primary dark:text-red-500 text-sm font-body mt-1">
+                                                    class="hidden text-primary dark:text-[#A13333] text-sm font-body mt-1">
                                                     Completa este campo</p>
                                             </div>
                                         </div>
@@ -568,18 +568,18 @@
                                     <div>
                                         <h3
                                             class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl md:text-2xl">
-                                            Fotos de la propiedad</h3>
+                                            Fotos de la propiedad <span class="text-primary dark:text-[#A13333] font-extrabold text-xl ml-0.5" title="Campo obligatorio">*</span></h3>
                                         <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm md:text-base mt-1">
                                             Cargá entre 5 y 50 fotos (jpg, jpeg, png, webp). Arrastralas para cambiar su orden. La primera foto será la portada.</p>
                                     </div>
 
                                     <!-- Dropzone para fotos -->
                                     <div id="dropzone-fotos"
-                                        class="border-2 border-dashed border-outline-variant/40 dark:border-white/10 hover:border-primary dark:hover:border-red-500/50 rounded-2xl p-8 text-center bg-surface-container-lowest/50 dark:bg-[#0c0c0e]/50 transition-all duration-300 cursor-pointer group">
+                                        class="border-2 border-dashed border-outline-variant/40 dark:border-white/10 hover:border-primary dark:hover:border-[#A13333]/50 rounded-2xl p-8 text-center bg-surface-container-lowest/50 dark:bg-[#0c0c0e]/50 transition-all duration-300 cursor-pointer group">
                                         <input type="file" id="input-fotos" multiple accept="image/*" class="hidden">
                                         <div class="flex flex-col items-center justify-center gap-3">
                                             <div
-                                                class="w-16 h-16 rounded-full bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                class="w-16 h-16 rounded-full bg-primary/10 dark:bg-[#A13333]/10 text-primary dark:text-[#A13333] flex items-center justify-center group-hover:scale-110 transition-transform">
                                                 <span class="material-symbols-outlined text-3xl">add_a_photo</span>
                                             </div>
                                             <div>
@@ -589,7 +589,7 @@
                                                 <p
                                                     class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-0.5">
                                                     o <span
-                                                        class="text-primary dark:text-red-500 font-semibold underline underline-offset-2">explorá
+                                                        class="text-primary dark:text-[#A13333] font-semibold underline underline-offset-2">explorá
                                                         tus archivos</span></p>
                                             </div>
                                         </div>
@@ -602,26 +602,6 @@
                                     <div id="fotos-error-msg" class="hidden bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl p-3.5 mt-4 text-sm font-semibold flex items-center gap-2"></div>
                                 </div>
 
-                                <!-- Sección Video -->
-                                <div class="space-y-6 pt-8 border-t border-outline-variant/30 dark:border-white/5">
-                                    <div>
-                                        <h3
-                                            class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl md:text-2xl">
-                                            Video de la propiedad <span
-                                                class="text-secondary dark:text-[#c7c6c6] text-base font-normal">(opcional)</span>
-                                        </h3>
-                                        <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm md:text-base mt-1">
-                                            Podés agregar un enlace de YouTube o Vimeo.</p>
-                                    </div>
-
-                                    <div class="relative">
-                                        <input type="url" id="video-url"
-                                            placeholder="https://www.youtube.com/watch?v=..."
-                                            class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border border-outline-variant/30 dark:border-white/10 text-on-background dark:text-[#f1f1f1] rounded-xl h-14 pl-12 pr-4 font-body text-base focus:ring-0 focus:bg-surface-container-lowest focus:outline focus:outline-1 focus:outline-primary dark:focus:outline-red-500 transition-colors placeholder:text-secondary/50">
-                                        <span
-                                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary dark:text-[#c7c6c6]">play_circle</span>
-                                    </div>
-                                </div>
 
                             </form>
                         </div>
@@ -869,22 +849,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Sub-sección: Otros -->
-                                                    <div class="space-y-3 pt-4 border-t border-outline-variant/20 dark:border-white/5">
-                                                        <span class="font-headline font-bold text-xs uppercase tracking-wider text-secondary dark:text-[#a0a0a0]">Otros</span>
-                                                        <div class="checkbox-wrapper w-max">
-                                                            <input id="amoblado" name="amoblado" type="checkbox">
-                                                            <label class="terms-label" for="amoblado">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg">
-                                                                    <mask fill="white" id="path-1-inside-1_amoblado"><rect height="200" width="200" rx="30"></rect></mask>
-                                                                    <rect mask="url(#path-1-inside-1_amoblado)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
-                                                                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
-                                                                </svg>
-                                                                <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-base whitespace-nowrap ml-3">Amueblado</span>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-
                                                 </div>
                                             </div>
                                         </div>
@@ -896,7 +860,7 @@
                                             onclick="toggleAccordion('content-property-parking', this)">
                                             <div class="flex items-center gap-3">
                                                 <span class="material-symbols-outlined text-primary dark:text-red-500 text-2xl">directions_car</span>
-                                                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base md:text-lg">Property Amenities & Parking</span>
+                                                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base md:text-lg">Cochera y Estacionamiento</span>
                                             </div>
                                             <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon rotate-180">expand_more</span>
                                         </div>
@@ -938,7 +902,7 @@
                                             onclick="toggleAccordion('content-outdoor', this)">
                                             <div class="flex items-center gap-3">
                                                 <span class="material-symbols-outlined text-primary dark:text-red-500 text-2xl">deck</span>
-                                                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base md:text-lg">Outdoor Amenities (Exteriores)</span>
+                                                <span class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-base md:text-lg">Amenities de Exterior</span>
                                             </div>
                                             <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] transition-transform duration-300 transform accordion-icon rotate-180">expand_more</span>
                                         </div>
@@ -1332,43 +1296,46 @@
                                         <div class="space-y-4">
                                             <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-secondary dark:text-[#a0a0a0]">Tipos de mascotas permitidas y cantidades máximas</h4>
                                             
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 <!-- Gato -->
-                                                <div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5">
-                                                    <div class="flex items-center gap-3">
+                                                <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-3">
+                                                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 overflow-hidden">
                                                         <svg class="w-6 h-6 text-secondary dark:text-[#c7c6c6] fill-current shrink-0" viewBox="0 0 24 24"><path d="M4 3l4 4.5C9.3 7 10.6 6.5 12 6.5s2.7.5 4 1L20 3l-1.2 7.2C20.2 11.9 21 13.8 21 16c0 3.9-4 7-9 7s-9-3.1-9-7c0-2.2.8-4.1 2.2-5.8L4 3zm4.5 11c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm7 0c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm-3.5 3c-1.2 0-2 .5-2 1h4c0-.5-.8-1-2-1z"/></svg>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm">Gatos</span>
+                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm truncate">Gatos</span>
                                                     </div>
-                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5">
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-gato'); i.value = Math.max(0, parseInt(i.value||0)-1)"><span class="material-symbols-outlined text-sm">remove</span></button>
-                                                        <input type="number" id="cant-gato" class="w-6 text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm focus:ring-0" value="0" readonly>
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-gato'); i.value = parseInt(i.value||0)+1"><span class="material-symbols-outlined text-sm">add</span></button>
+                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 sm:p-1.5 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-gato'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-gato-display').textContent = i.value;"><span class="material-symbols-outlined text-base">remove</span></button>
+                                                        <span class="w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm select-none" id="cant-gato-display">0</span>
+                                                        <input type="hidden" id="cant-gato" value="0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-gato'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-gato-display').textContent = i.value;"><span class="material-symbols-outlined text-base">add</span></button>
                                                     </div>
                                                 </div>
 
                                                 <!-- Perro Pequeño -->
-                                                <div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5">
-                                                    <div class="flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6]">sound_detection_dog_barking</span>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm">Perro Pequeño</span>
+                                                <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-3">
+                                                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 overflow-hidden">
+                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] shrink-0 text-[22px]">sound_detection_dog_barking</span>
+                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm truncate">Perro Pequeño</span>
                                                     </div>
-                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5">
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = Math.max(0, parseInt(i.value||0)-1)"><span class="material-symbols-outlined text-sm">remove</span></button>
-                                                        <input type="number" id="cant-perro-pequeno" class="w-6 text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm focus:ring-0" value="0" readonly>
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = parseInt(i.value||0)+1"><span class="material-symbols-outlined text-sm">add</span></button>
+                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 sm:p-1.5 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-perro-pequeno-display').textContent = i.value;"><span class="material-symbols-outlined text-base">remove</span></button>
+                                                        <span class="w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm select-none" id="cant-perro-pequeno-display">0</span>
+                                                        <input type="hidden" id="cant-perro-pequeno" value="0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-perro-pequeno-display').textContent = i.value;"><span class="material-symbols-outlined text-base">add</span></button>
                                                     </div>
                                                 </div>
 
                                                 <!-- Perro Grande -->
-                                                <div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5">
-                                                    <div class="flex items-center gap-3">
-                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6]">pets</span>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm">Perro Grande</span>
+                                                <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-3">
+                                                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 overflow-hidden">
+                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] shrink-0 text-[22px]">pets</span>
+                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-sm truncate">Perro Grande</span>
                                                     </div>
-                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5">
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-perro-grande'); i.value = Math.max(0, parseInt(i.value||0)-1)"><span class="material-symbols-outlined text-sm">remove</span></button>
-                                                        <input type="number" id="cant-perro-grande" class="w-6 text-center bg-transparent border-none p-0 text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm focus:ring-0" value="0" readonly>
-                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors" onclick="const i = document.getElementById('cant-perro-grande'); i.value = parseInt(i.value||0)+1"><span class="material-symbols-outlined text-sm">add</span></button>
+                                                    <div class="flex items-center gap-2 bg-surface-container-high dark:bg-[#282828] p-1 sm:p-1.5 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-grande'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-perro-grande-display').textContent = i.value;"><span class="material-symbols-outlined text-base">remove</span></button>
+                                                        <span class="w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-sm select-none" id="cant-perro-grande-display">0</span>
+                                                        <input type="hidden" id="cant-perro-grande" value="0">
+                                                        <button type="button" class="w-8 h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-grande'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-perro-grande-display').textContent = i.value;"><span class="material-symbols-outlined text-base">add</span></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1391,18 +1358,22 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-outline-variant/20 dark:border-white/10">
                                             
                                             <!-- Tarifa por mascota (depósito) -->
-                                            <div class="space-y-2">
-                                                <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Tarifa de ingreso por mascota</label>
+                                            <div class="flex flex-col justify-between space-y-2">
+                                                <div class="min-h-[2.5rem] flex items-end">
+                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">Tarifa de ingreso por mascota</label>
+                                                </div>
                                                 <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
                                                     <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm">$</div>
-                                                    <input type="number" id="tarifa-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0">
+                                                    <input type="number" id="tarifa-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0" onfocus="if(this.value==='0') this.value='';" onblur="if(this.value.trim()==='') this.value='0';">
                                                 </div>
                                                 <p class="text-[12px] text-secondary dark:text-[#c7c6c6]">($0 si no se cobra depósito adicional)</p>
                                             </div>
 
                                             <!-- Se puede reembolsar (SÍ / NO) -->
-                                            <div class="space-y-2">
-                                                <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">¿Tarifa reembolsable?</label>
+                                            <div class="flex flex-col justify-between space-y-2">
+                                                <div class="min-h-[2.5rem] flex items-end">
+                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">¿Tarifa reembolsable?</label>
+                                                </div>
                                                 <div class="relative">
                                                     <select id="tarifa-reembolsable" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 pr-10 font-body text-base focus:ring-0 cursor-pointer">
                                                         <option value="si" selected>Sí</option>
@@ -1410,14 +1381,17 @@
                                                     </select>
                                                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
                                                 </div>
+                                                <p class="text-[12px] text-secondary dark:text-[#c7c6c6] opacity-0 select-none" aria-hidden="true">&nbsp;</p>
                                             </div>
 
                                             <!-- Alquiler mensual adicional por mascota -->
-                                            <div class="space-y-2">
-                                                <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm">Alquiler mensual por mascota</label>
+                                            <div class="flex flex-col justify-between space-y-2">
+                                                <div class="min-h-[2.5rem] flex items-end">
+                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">Alquiler mensual por mascota</label>
+                                                </div>
                                                 <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-red-500">
                                                     <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm">$</div>
-                                                    <input type="number" id="alquiler-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0">
+                                                    <input type="number" id="alquiler-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0" onfocus="if(this.value==='0') this.value='';" onblur="if(this.value.trim()==='') this.value='0';">
                                                 </div>
                                                 <p class="text-[12px] text-secondary dark:text-[#c7c6c6]">($0 si no se cobra adicional por mes)</p>
                                             </div>
@@ -1844,9 +1818,9 @@
                         class="flex-row justify-between items-center gap-4 mt-12 pt-8 border-t border-outline-variant/30 dark:border-white/5">
                         <button type="button" id="btn-back-desktop"
                             class="px-6 py-4 rounded-xl font-headline font-bold text-secondary dark:text-[#c7c6c6] bg-transparent hover:bg-surface-container transition-colors flex items-center gap-2"
-                            onclick="document.getElementById('btn-back-from-publish').click()">
-                            <span class="material-symbols-outlined" id="btn-back-desktop-icon">close</span>
-                            <span id="btn-back-desktop-text">Cancelar</span>
+                            onclick="handleWizardBack()">
+                            <span class="material-symbols-outlined" id="btn-back-desktop-icon">arrow_back</span>
+                            <span id="btn-back-desktop-text">Atrás</span>
                         </button>
                         <div class="flex flex-row gap-4">
                             <button type="button"
