@@ -141,7 +141,10 @@ const DataManager = {
                 .select(`
                     *,
                     Publicacion (*, Multimedia (*)),
-                    Contrato (*)
+                    Contrato (*),
+                    Propiedad_caracteristica (
+                        Caracteristica (*)
+                    )
                 `)
                 .order('created_at', { ascending: false });
 
@@ -158,6 +161,7 @@ const DataManager = {
                 const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
                 const title = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `${p.calle || 'Propiedad'} ${p.numero || ''}`.trim();
                 const address = `${p.calle || 'Sin calle'} ${p.numero || ''}, ${p.piso_dpto || ''}`.trim();
+                const dbCaracteristicas = (p.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
 
                 return {
                     id: p.id_propiedad,
@@ -175,6 +179,7 @@ const DataManager = {
                     cbuAlias: contract?.alias_cbu || 'HABITAT.MP',
                     photoUrl: photoUrls[0],
                     images: photoUrls,
+                    caracteristicas: dbCaracteristicas,
                     status: pub ? 'disponible' : 'alquilada',
                     paymentStatus: 'al_dia'
                 };
@@ -192,7 +197,22 @@ const DataManager = {
                 .from('Publicacion')
                 .select(`
                     *,
-                    Propiedad (*),
+                    Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
+                    Propiedad (
+                        *,
+                        Antiguedad (*),
+                        Subtipo_propiedad (*),
+                        Barrio (
+                            *,
+                            Departamento (
+                                *,
+                                Provincia (*)
+                            )
+                        ),
+                        Propiedad_caracteristica (
+                            Caracteristica (*)
+                        )
+                    ),
                     Multimedia (*)
                 `)
                 .order('created_at', { ascending: false })
@@ -216,6 +236,14 @@ const DataManager = {
                     try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) { }
                 }
 
+                const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
+                if (dbCaracteristicas.length > 0) {
+                    extraInfo.caracteristicas = Array.from(new Set([
+                        ...(extraInfo.caracteristicas || []),
+                        ...dbCaracteristicas
+                    ]));
+                }
+
                 const cleanTitle = pub.descripcion
                     ? pub.descripcion.split(' | Detalles: ')[0].substring(0, 70)
                     : `Propiedad en ${address}`;
@@ -237,6 +265,31 @@ const DataManager = {
                     'Verificado'
                 ].filter(Boolean);
 
+                const dbBarrio = prop.Barrio?.nombre;
+                const dbDepartamento = prop.Barrio?.Departamento?.nombre;
+                const dbProvincia = prop.Barrio?.Departamento?.Provincia?.nombre;
+                const dbSubtipo = prop.Subtipo_propiedad?.subtipo;
+                const dbAntiguedad = prop.Antiguedad?.nombre;
+
+                // Resolve current active status from Historial_Estado_Publicacion
+                let currentPropStatus = 'disponible';
+                if (pub.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
+                    const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+                    const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
+                    const estadoNombre = (activeHist.Estado_Publicacion?.nombre || '').toLowerCase();
+                    if (estadoNombre === 'pausada' || activeHist.id_estado_publicacion === 4) {
+                        currentPropStatus = 'paused';
+                    } else if (estadoNombre === 'eliminada' || estadoNombre === 'eliminado' || activeHist.id_estado_publicacion === 5) {
+                        currentPropStatus = 'deleted';
+                    } else if (estadoNombre === 'alquilada' || activeHist.id_estado_publicacion === 2) {
+                        currentPropStatus = 'alquilada';
+                    } else if (estadoNombre === 'vendida' || activeHist.id_estado_publicacion === 3) {
+                        currentPropStatus = 'vendida';
+                    } else {
+                        currentPropStatus = 'disponible';
+                    }
+                }
+
                 return {
                     id: pub.id_publicacion,
                     id_propiedad: pub.id_propiedad,
@@ -244,8 +297,8 @@ const DataManager = {
                     title: cleanTitle,
                     description: pub.descripcion || '',
                     address: address,
-                    province: extraInfo.provincia || 'Mendoza',
-                    city: extraInfo.ciudad || 'Mendoza',
+                    province: dbProvincia || extraInfo.provincia || 'Mendoza',
+                    city: dbDepartamento || extraInfo.ciudad || 'Mendoza',
                     price: parseFloat(pub.precio || 0),
                     images: imageUrls,
                     photoUrl: firstImage,
@@ -255,21 +308,36 @@ const DataManager = {
                     longitud: lng,
                     dormitorios: dormitorios,
                     banos: banos,
+                    toilettes: extraInfo.toilettes || prop.toilettes || 0,
                     ambientes: ambientes,
                     cocheras: cocheras,
                     sup_cubierta: supCubierta,
+                    sup_total: prop.superficie_lote || extraInfo.supTotal || extraInfo.sup_total || 0,
+                    piso_dpto: prop.piso_dpto || extraInfo.piso_dpto || '',
+                    numero_local: prop.numero_local || extraInfo.numero_local || '',
+                    antiguedad: dbAntiguedad || extraInfo.antiguedad || '',
+                    disposicion: extraInfo.disposicion || '',
+                    orientacion: extraInfo.orientacion || '',
+                    barrio: dbBarrio || extraInfo.barrio || '',
+                    subtipo_propiedad: dbSubtipo || extraInfo.subtipoPropiedad || '',
+                    caracteristicas: extraInfo.caracteristicas || dbCaracteristicas || [],
                     tags: tags,
                     note: cleanTitle,
                     type: extraInfo.tipo || 'apartment',
                     pet: extraInfo.mascotas || false,
                     verified: true,
-                    expensasIncluidas: true,
+                    status: currentPropStatus,
+                    expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
                     expensas: extraInfo.expensas || 0,
-                    featured: 'ALQUILER',
+                    featured: (extraInfo.operacion || 'ALQUILER').toUpperCase(),
                     created_at: pub.created_at,
+                    cantidad_visualizaciones_total: pub.cantidad_visualizaciones_total || 0,
+                    views_count: pub.cantidad_visualizaciones_total || 0,
+                    views: pub.cantidad_visualizaciones_total || 0,
+                    extraInfo: extraInfo,
                     Propiedad: prop
                 };
-            });
+            }).filter(p => p.status !== 'deleted');
         } catch (e) {
             console.error("Error in getPublicMarketplaceProperties:", e);
             return [];
@@ -278,6 +346,50 @@ const DataManager = {
 
     getUserMarketplaceProperties: async () => {
         return DataManager.getPublicMarketplaceProperties(50);
+    },
+
+    recordPublicationView: async (id_publicacion) => {
+        if (!window.supabaseClient || !id_publicacion) return;
+        try {
+            let profileId = null;
+            try {
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
+                if (user) {
+                    const { data: profile } = await window.supabaseClient
+                        .from('Perfil')
+                        .select('id_perfil')
+                        .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+                        .maybeSingle();
+                    if (profile) profileId = profile.id_perfil;
+                }
+            } catch (e) {}
+
+            // 1. Insert row into Registro_visualizacion
+            const { error: insertErr } = await window.supabaseClient
+                .from('Registro_visualizacion')
+                .insert([{ id_publicacion: id_publicacion, id_perfil: profileId }]);
+
+            if (insertErr) {
+                console.warn("Could not insert Registro_visualizacion:", insertErr);
+            }
+
+            // 2. Fetch current views count and update Publicacion table
+            const { data: pubData } = await window.supabaseClient
+                .from('Publicacion')
+                .select('cantidad_visualizaciones_total')
+                .eq('id_publicacion', id_publicacion)
+                .maybeSingle();
+
+            const newTotal = (pubData?.cantidad_visualizaciones_total || 0) + 1;
+
+            await window.supabaseClient
+                .from('Publicacion')
+                .update({ cantidad_visualizaciones_total: newTotal })
+                .eq('id_publicacion', id_publicacion);
+
+        } catch (err) {
+            console.error("Error recording publication view:", err);
+        }
     },
 
     addMarketplaceProperty: async (propertyData) => {
@@ -301,20 +413,163 @@ const DataManager = {
             numero = window.selectedPropertyStreetNumber;
         }
 
-        // 2. Insert Propiedad (mapping Ambientes -> habitaciones_total & Cocheras -> cantidad_cocheras & lat/lng)
+        // 1. Map tipoPropiedad to id_tipo_propiedad integer
+        const tipoSlug = (propertyData.tipoPropiedad || 'departamento').toLowerCase();
+        const tipoMap = {
+            'departamento': 1,
+            'casa': 2,
+            'ph': 3,
+            'lote': 4,
+            'oficina': 5,
+            'local-comercial': 6,
+            'local': 6,
+            'cochera': 7
+        };
+        const idTipoPropiedad = tipoMap[tipoSlug] || 1;
+
+        // 2. Lookup id_subtipo_propiedad dynamically from Subtipo_propiedad table
+        let idSubtipoPropiedad = null;
+        const directSubtipoMap = {
+            'duplex': 1,
+            'estandar': 2,
+            'monoambiente': 3,
+            'piso': 4,
+            'local-a-calle': 23,
+            'galeria': 24,
+            'galpon': 26,
+            'deposito': 27
+        };
+
+        if (propertyData.subtipoPropiedad) {
+            const rawSub = propertyData.subtipoPropiedad.toLowerCase();
+            idSubtipoPropiedad = directSubtipoMap[rawSub] || null;
+
+            if (!idSubtipoPropiedad) {
+                const { data: dbSubtipos } = await window.supabaseClient
+                    .from('Subtipo_propiedad')
+                    .select('id_subtipo_propiedad, subtipo')
+                    .eq('id_tipo_propiedad', idTipoPropiedad);
+
+                if (dbSubtipos && dbSubtipos.length > 0) {
+                    const matched = dbSubtipos.find(s => {
+                        const dbName = s.subtipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        const rawSubNorm = rawSub.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+                        const dbSlug = dbName.replace(/[^a-z0-9]/g, '');
+                        return dbSlug === rawSubNorm || dbName === rawSub || dbName.includes(rawSubNorm) || rawSubNorm.includes(dbSlug);
+                    });
+                    if (matched) {
+                        idSubtipoPropiedad = matched.id_subtipo_propiedad;
+                    }
+                }
+            }
+        }
+
+        // 2.1 Map id_antiguedad integer (1: A estrenar, 2: Años de antigüedad, 3: Remodelado)
+        let idAntiguedad = null;
+        if (propertyData.antiguedad) {
+            const rawAnt = String(propertyData.antiguedad).toLowerCase();
+            const antMap = {
+                'a-estrenar': 1,
+                'estrenar': 1,
+                'anos-antiguedad': 2,
+                'anios': 2,
+                'anos': 2,
+                'remodelado': 3
+            };
+            idAntiguedad = antMap[rawAnt] || null;
+        }
+
+        // 3. Auto-populate Provincia, Departamento, Barrio & get id_barrio
+        let idBarrio = null;
+        try {
+            const provinciaName = (propertyData.provincia || 'Mendoza').trim();
+            const ciudadName = (propertyData.ciudad || 'Mendoza').trim();
+            const barrioName = (propertyData.barrio || 'Centro').trim();
+
+            if (provinciaName) {
+                let { data: prov } = await window.supabaseClient
+                    .from('Provincia')
+                    .select('id_provincia')
+                    .ilike('nombre', provinciaName)
+                    .maybeSingle();
+
+                if (!prov) {
+                    const { data: newProv } = await window.supabaseClient
+                        .from('Provincia')
+                        .insert([{ nombre: provinciaName }])
+                        .select('id_provincia')
+                        .single();
+                    prov = newProv;
+                }
+
+                if (prov && ciudadName) {
+                    let { data: deptoGeog } = await window.supabaseClient
+                        .from('Departamento')
+                        .select('id_departamento')
+                        .eq('id_provincia', prov.id_provincia)
+                        .ilike('nombre', ciudadName)
+                        .maybeSingle();
+
+                    if (!deptoGeog) {
+                        const { data: newDepto } = await window.supabaseClient
+                            .from('Departamento')
+                            .insert([{ nombre: ciudadName, id_provincia: prov.id_provincia }])
+                            .select('id_departamento')
+                            .single();
+                        deptoGeog = newDepto;
+                    }
+
+                    if (deptoGeog && barrioName) {
+                        let { data: bar } = await window.supabaseClient
+                            .from('Barrio')
+                            .select('id_barrio')
+                            .eq('id_departamento', deptoGeog.id_departamento)
+                            .ilike('nombre', barrioName)
+                            .maybeSingle();
+
+                        if (!bar) {
+                            const { data: newBar } = await window.supabaseClient
+                                .from('Barrio')
+                                .insert([{ nombre: barrioName, id_departamento: deptoGeog.id_departamento }])
+                                .select('id_barrio')
+                                .single();
+                            bar = newBar;
+                        }
+
+                        if (bar) {
+                            idBarrio = bar.id_barrio;
+                        }
+                    }
+                }
+            }
+        } catch (geoErr) {
+            console.error("Error auto-populating geographic tables:", geoErr);
+        }
+
+        const expensasVal = propertyData.expensasIncluidas ? 0 : parseFloat(propertyData.expensas || 0);
+        const resolvedCp = (typeof window.resolvePostalCode === 'function')
+            ? window.resolvePostalCode(fullCalle, propertyData.provincia, propertyData.ciudad, propertyData.codigoPostal || window.selectedPropertyPostalCode)
+            : (propertyData.codigoPostal || window.selectedPropertyPostalCode || '5500');
+
+        // 4. Insert Propiedad
         const { data: propData, error: propErr } = await window.supabaseClient
             .from('Propiedad')
             .insert([{
-                id_tipo_propiedad: 1,
+                id_tipo_propiedad: idTipoPropiedad,
+                id_subtipo_propiedad: idSubtipoPropiedad,
+                id_barrio: idBarrio,
+                id_antiguedad: idAntiguedad,
                 id_unidad_medida: 1,
                 calle: fullCalle,
                 numero: numero || null,
                 piso_dpto: propertyData.piso ? `${propertyData.piso} ${propertyData.depto || ''}`.trim() : null,
-                codigo_postal: '5500',
+                numero_local: propertyData.numeroLocal || propertyData.numero_local || null,
+                codigo_postal: resolvedCp,
+                expensas_mensuales: expensasVal,
                 dormitorios: parseInt(propertyData.dormitorios || 0),
                 banos_completos: parseInt(propertyData.banos || 0),
-                habitaciones_total: parseInt(propertyData.ambientes || 0), // Ambientes -> habitaciones_total
-                cantidad_cocheras: parseInt(propertyData.cocheras || 0), // Cocheras -> cantidad_cocheras
+                habitaciones_total: parseInt(propertyData.ambientes || 0),
+                cantidad_cocheras: parseInt(propertyData.cocheras || 0),
                 superficie_cubierta: parseFloat(propertyData.supCubierta || 0),
                 superficie_lote: parseFloat(propertyData.supTotal || 0),
                 latitud: propertyData.latitud ? parseFloat(propertyData.latitud) : (window.selectedPropertyLat || null),
@@ -328,21 +583,70 @@ const DataManager = {
             throw propErr;
         }
 
-        // 3. Construct description string with details metadata JSON suffix
+        // 2.1 Save Caracteristica & Propiedad_caracteristica for Extras step checkboxes
+        const rawCaracteristicas = Array.isArray(propertyData.caracteristicas) ? propertyData.caracteristicas : [];
+        const featureNames = Array.from(new Set(rawCaracteristicas.filter(Boolean)));
+
+        if (featureNames.length > 0) {
+            try {
+                // Fetch existing characteristics matching these names
+                const { data: existingFeats, error: selectErr } = await window.supabaseClient
+                    .from('Caracteristica')
+                    .select('id_caracteristica, nombre')
+                    .in('nombre', featureNames);
+
+                if (selectErr) {
+                    console.error("Error fetching existing Caracteristica:", selectErr);
+                }
+
+                const existingMap = new Map();
+                (existingFeats || []).forEach(f => {
+                    existingMap.set(f.nombre, f.id_caracteristica);
+                });
+
+                // Identify feature names not yet in Caracteristica table
+                const missingNames = featureNames.filter(name => !existingMap.has(name));
+
+                if (missingNames.length > 0) {
+                    const { data: insertedFeats, error: insertErr } = await window.supabaseClient
+                        .from('Caracteristica')
+                        .insert(missingNames.map(nombre => ({ nombre })))
+                        .select('id_caracteristica, nombre');
+
+                    if (insertErr) {
+                        console.error("Error inserting into Caracteristica:", insertErr);
+                    } else if (insertedFeats) {
+                        insertedFeats.forEach(f => {
+                            existingMap.set(f.nombre, f.id_caracteristica);
+                        });
+                    }
+                }
+
+                // Map to Propiedad_caracteristica records
+                const propFeatRows = featureNames
+                    .map(name => existingMap.get(name))
+                    .filter(Boolean)
+                    .map(id_caracteristica => ({
+                        id_propiedad: propData.id_propiedad,
+                        id_caracteristica: id_caracteristica
+                    }));
+
+                if (propFeatRows.length > 0) {
+                    const { error: relErr } = await window.supabaseClient
+                        .from('Propiedad_caracteristica')
+                        .insert(propFeatRows);
+
+                    if (relErr) {
+                        console.error("Error inserting Propiedad_caracteristica:", relErr);
+                    }
+                }
+            } catch (featErr) {
+                console.error("Error saving property characteristics:", featErr);
+            }
+        }
+
+        // 3. Construct clean description string (only publication description, no JSON metadata)
         const baseDescription = propertyData.descripcionAviso || propertyData.tituloAviso || 'Propiedad publicada en alquiler';
-        const extraDetailsObj = {
-            provincia: propertyData.provincia || 'Mendoza',
-            ciudad: propertyData.ciudad || 'Mendoza',
-            dormitorios: parseInt(propertyData.dormitorios || 1),
-            banos: parseInt(propertyData.banos || 1),
-            ambientes: parseInt(propertyData.ambientes || 1),
-            cocheras: parseInt(propertyData.cocheras || 0),
-            supCubierta: parseFloat(propertyData.supCubierta || 0),
-            tipo: propertyData.tipoPropiedad || 'apartment',
-            mascotas: propertyData.preferenciasAlquiler?.permiteMascotas || false,
-            expensas: parseFloat(propertyData.expensas || 0)
-        };
-        const descriptionWithJson = `${baseDescription} | Detalles: ${JSON.stringify(extraDetailsObj)}`;
         const price = parseFloat(propertyData.precio || propertyData.price || 0);
 
         const { data: pubData, error: pubErr } = await window.supabaseClient
@@ -353,7 +657,7 @@ const DataManager = {
                 id_tipo_operacion: 1,
                 id_moneda: propertyData.moneda === 'USD' ? 2 : 1,
                 precio: price,
-                descripcion: descriptionWithJson
+                descripcion: baseDescription
             }])
             .select()
             .single();
@@ -372,13 +676,48 @@ const DataManager = {
                 fecha_inicio: new Date().toISOString()
             }]);
 
+        // 4.1 Save Politica_Mascota & Limite_mascota
+        try {
+            const petPref = propertyData.preferenciasAlquiler?.mascotas || {};
+            const permiteMascotas = Boolean(propertyData.preferenciasAlquiler?.permiteMascotas || petPref.permiteMascotas);
+
+            await window.supabaseClient
+                .from('Politica_Mascota')
+                .insert([{
+                    id_publicacion: pubData.id_publicacion,
+                    permite_mascotas: permiteMascotas,
+                    es_negociable: Boolean(petPref.negociable),
+                    tarifa_ingreso: parseFloat(petPref.tarifaIngreso || 0),
+                    tarifa_reembolsable: Boolean(petPref.tarifaReembolsable),
+                    alquiler_mensual_extra: parseFloat(petPref.alquilerMensualMascota || 0)
+                }]);
+
+            const limits = [];
+            if (parseInt(petPref.perrosPequenos || 0) > 0) limits.push({ id_publicacion: pubData.id_publicacion, id_tipo_mascota: 1, cantidad: parseInt(petPref.perrosPequenos) });
+            if (parseInt(petPref.perrosGrandes || 0) > 0) limits.push({ id_publicacion: pubData.id_publicacion, id_tipo_mascota: 2, cantidad: parseInt(petPref.perrosGrandes) });
+            if (parseInt(petPref.gatos || 0) > 0) limits.push({ id_publicacion: pubData.id_publicacion, id_tipo_mascota: 3, cantidad: parseInt(petPref.gatos) });
+
+            if (limits.length > 0) {
+                await window.supabaseClient.from('Limite_mascota').insert(limits);
+            }
+        } catch (petErr) {
+            console.error("Error saving Politica_Mascota:", petErr);
+        }
+
         // 5. Upload photos to Supabase Storage bucket propiedades_multimedia and save to Multimedia table
-        const rawPhotos = propertyData.multimedia?.fotos || propertyData.photos || window.selectedPropertyPhotos || [];
+        let rawPhotos = propertyData.photos || propertyData.multimedia?.fotos || window.selectedPropertyPhotos || [];
+        if (!Array.isArray(rawPhotos) || rawPhotos.length === 0) {
+            rawPhotos = ['img/hero-marketplace.jpg'];
+        }
         const uploadedMediaItems = [];
 
         for (let idx = 0; idx < rawPhotos.length; idx++) {
-            const item = rawPhotos[idx];
+            let item = rawPhotos[idx];
             let publicUrl = null;
+
+            if (item && typeof item === 'object' && !(item instanceof File) && !(item instanceof Blob)) {
+                item = item.file || item.blob || item.url || item.src || item.preview || item;
+            }
 
             try {
                 if (item instanceof File || item instanceof Blob) {
@@ -395,6 +734,8 @@ const DataManager = {
                             .from('propiedades_multimedia')
                             .getPublicUrl(filePath);
                         publicUrl = urlRes?.publicUrl;
+                    } else {
+                        console.error("Storage upload error:", uploadErr);
                     }
                 } else if (typeof item === 'string' && item.startsWith('data:')) {
                     const blob = base64ToBlob(item);
@@ -413,11 +754,16 @@ const DataManager = {
                             publicUrl = urlRes?.publicUrl;
                         }
                     }
+                    if (!publicUrl) publicUrl = item;
                 } else if (typeof item === 'string') {
                     publicUrl = item;
                 }
             } catch (imgErr) {
-                console.warn("Storage upload error:", imgErr);
+                console.warn("Storage upload exception:", imgErr);
+            }
+
+            if (!publicUrl && typeof item === 'string') {
+                publicUrl = item;
             }
 
             if (publicUrl) {
@@ -431,7 +777,10 @@ const DataManager = {
         }
 
         if (uploadedMediaItems.length > 0) {
-            await window.supabaseClient.from('Multimedia').insert(uploadedMediaItems);
+            const { error: mediaErr } = await window.supabaseClient.from('Multimedia').insert(uploadedMediaItems);
+            if (mediaErr) {
+                console.error("Error inserting Multimedia rows:", mediaErr);
+            }
         }
 
         return {
@@ -447,10 +796,58 @@ const DataManager = {
         return DataManager.addMarketplaceProperty(propertyData);
     },
 
-    deleteProperty: async (id) => {
-        if (!window.supabaseClient) return;
-        await window.supabaseClient.from('Publicacion').delete().eq('id_publicacion', id);
-        await window.supabaseClient.from('Propiedad').delete().eq('id_propiedad', id);
+    deleteProperty: async (id_publicacion) => {
+        if (!window.supabaseClient || !id_publicacion) return;
+        const nowIso = new Date().toISOString();
+        try {
+            // Close active status history
+            await window.supabaseClient
+                .from('Historial_Estado_Publicacion')
+                .update({ fecha_fin: nowIso })
+                .eq('id_publicacion', id_publicacion)
+                .is('fecha_fin', null);
+
+            // Insert new status history with id_estado_publicacion = 5 ('eliminada')
+            await window.supabaseClient
+                .from('Historial_Estado_Publicacion')
+                .insert([{
+                    id_publicacion: id_publicacion,
+                    id_estado_publicacion: 5,
+                    fecha_inicio: nowIso
+                }]);
+        } catch (e) {
+            console.error("Error setting property status to eliminada:", e);
+        }
+    },
+
+    togglePauseProperty: async (id_publicacion, currentStatus) => {
+        if (!window.supabaseClient || !id_publicacion) return 'paused';
+        const isPaused = (currentStatus === 'paused' || currentStatus === 'pausado');
+        const newStatus = isPaused ? 'disponible' : 'paused';
+        const newEstadoId = isPaused ? 1 : 4; // 4 = pausada, 1 = disponible
+
+        const nowIso = new Date().toISOString();
+
+        try {
+            // Close active status history
+            await window.supabaseClient
+                .from('Historial_Estado_Publicacion')
+                .update({ fecha_fin: nowIso })
+                .eq('id_publicacion', id_publicacion)
+                .is('fecha_fin', null);
+
+            // Insert new status history with correct id_estado_publicacion (4 for pausada)
+            await window.supabaseClient
+                .from('Historial_Estado_Publicacion')
+                .insert([{
+                    id_publicacion: id_publicacion,
+                    id_estado_publicacion: newEstadoId,
+                    fecha_inicio: nowIso
+                }]);
+        } catch (e) {
+            console.warn("Historial_Estado_Publicacion update error:", e);
+        }
+        return newStatus;
     },
 
     // Finances & Income

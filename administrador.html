@@ -133,6 +133,12 @@
             }
         })();
     </script>
+
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
@@ -153,10 +159,10 @@
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
-                <a href="index.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95">
+                <button type="button" onclick="window.App && window.App.showPublishWizard()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">add</span>
                     Publicar Propiedad
-                </a>
+                </button>
             </div>
         </div>
 
@@ -308,7 +314,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/app.js?v=11"></script>
+    <script src="js/app.js?v=12"></script>
 
     <!-- Interactive Script Handlers -->
     <script>
@@ -427,7 +433,7 @@
                             <span class="material-symbols-outlined text-4xl text-zinc-400">home_work</span>
                             <h3 class="font-headline font-bold text-base">No tienes propiedades publicadas</h3>
                             <p class="text-xs text-zinc-500">Publica tu primer aviso para recibir postulantes e inquilinos verificados.</p>
-                            <a href="index.html" class="inline-block px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs shadow-md">Publicar Propiedad</a>
+                             <button type="button" onclick="window.App && window.App.showPublishWizard()" class="inline-block px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs shadow-md cursor-pointer">Publicar Propiedad</button>
                         </div>
                     `;
                     return;
@@ -437,8 +443,8 @@
                     <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group">
                         <div class="h-44 bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                             <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <span class="absolute top-3 left-3 px-3 py-1 text-[11px] font-black rounded-full bg-emerald-500 text-white uppercase shadow">
-                                ${p.status || 'Publicado'}
+                            <span class="absolute top-3 left-3 px-3 py-1 text-[11px] font-black rounded-full ${p.status === 'paused' || p.status === 'pausado' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'} uppercase shadow">
+                                ${p.status === 'paused' || p.status === 'pausado' ? 'Pausada' : (p.status === 'alquilada' ? 'Alquilada' : 'Publicada')}
                             </span>
                         </div>
                         <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
@@ -453,8 +459,11 @@
                                     <span class="text-xs text-zinc-400">/ mes</span>
                                 </div>
                             </div>
-                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end items-center text-xs">
-                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="font-bold text-primary dark:text-red-400 hover:underline flex items-center gap-1">
+                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs">
+                                <span class="text-zinc-500 font-medium flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm text-zinc-400">visibility</span> ${p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0} vistas
+                                </span>
+                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')}, { isOwner: true })" class="font-bold text-primary dark:text-red-400 hover:underline flex items-center gap-1">
                                     Ver Ficha <span class="material-symbols-outlined text-sm">arrow_forward</span>
                                 </button>
                             </div>

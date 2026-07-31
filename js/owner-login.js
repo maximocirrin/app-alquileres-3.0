@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? 'propietarios.html?publish=1'
         : redirect === 'admin'
             ? 'administrador.html'
-            : 'propietarios.html';
+            : redirect === 'favorites'
+                ? 'index.html?fav=1'
+                : 'propietarios.html';
 
     const title = document.getElementById('owner-auth-title');
     const subtitle = document.getElementById('owner-auth-subtitle');

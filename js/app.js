@@ -2,6 +2,428 @@
  * Main Application Logic
  */
 
+// Custom Modal Dialog System for Styled Confirm & Alert
+window.showCustomAlert = function (msgOrOpts) {
+    return new Promise((resolve) => {
+        let title = 'Notificación';
+        let message = '';
+        let icon = 'info';
+        let buttonText = 'Entendido';
+
+        if (typeof msgOrOpts === 'object' && msgOrOpts !== null) {
+            title = msgOrOpts.title || title;
+            message = msgOrOpts.message || '';
+            icon = msgOrOpts.icon || icon;
+            buttonText = msgOrOpts.buttonText || buttonText;
+        } else {
+            message = String(msgOrOpts || '');
+            if (message.toLowerCase().includes('éxito') || message.toLowerCase().includes('exitosa') || message.toLowerCase().includes('cread') || message.toLowerCase().includes('activad') || message.toLowerCase().includes('enviad') || message.toLowerCase().includes('eliminad')) {
+                icon = 'check_circle';
+                title = '¡Operación Exitosa!';
+            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('inválid')) {
+                icon = 'error';
+                title = 'Atención';
+            }
+        }
+
+        let modal = document.getElementById('custom-alert-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'custom-alert-modal';
+            document.body.appendChild(modal);
+        }
+        modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-200 font-body';
+        modal.style.display = 'flex';
+
+        modal.innerHTML = `
+            <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white space-y-5" onclick="event.stopPropagation()">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl ${icon === 'error' ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'} flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-2xl">${icon}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white leading-snug">${title}</h3>
+                    </div>
+                </div>
+
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal">${message.replace(/\n/g, '<br>')}</p>
+
+                <div class="pt-2">
+                    <button type="button" id="custom-alert-ok-btn" class="w-full px-5 py-3 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-sm shadow-md transition-all cursor-pointer text-center">
+                        ${buttonText}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const btnOk = document.getElementById('custom-alert-ok-btn');
+        if (btnOk) {
+            btnOk.onclick = () => {
+                modal.style.display = 'none';
+                resolve(true);
+            };
+        }
+    });
+};
+
+window.showCustomConfirm = function (msgOrOpts) {
+    return new Promise((resolve) => {
+        let title = '¿Estás seguro?';
+        let message = '';
+        let confirmText = 'Confirmar';
+        let cancelText = 'Cancelar';
+        let isDanger = false;
+
+        if (typeof msgOrOpts === 'object' && msgOrOpts !== null) {
+            title = msgOrOpts.title || title;
+            message = msgOrOpts.message || '';
+            confirmText = msgOrOpts.confirmText || confirmText;
+            cancelText = msgOrOpts.cancelText || cancelText;
+            isDanger = Boolean(msgOrOpts.isDanger);
+        } else {
+            message = String(msgOrOpts || '');
+            if (message.toLowerCase().includes('eliminar') || message.toLowerCase().includes('deshacer') || message.toLowerCase().includes('irreversible')) {
+                isDanger = true;
+                title = '¿Eliminar elemento?';
+                confirmText = 'Sí, eliminar';
+            }
+        }
+
+        let modal = document.getElementById('custom-confirm-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'custom-confirm-modal';
+            document.body.appendChild(modal);
+        }
+        modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-200 font-body';
+        modal.style.display = 'flex';
+
+        modal.innerHTML = `
+            <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white space-y-5" onclick="event.stopPropagation()">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl ${isDanger ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400'} flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-2xl">${isDanger ? 'delete_forever' : 'help_outline'}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white leading-snug">${title}</h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Confirmación de acción</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal">${message.replace(/\n/g, '<br>')}</p>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" id="custom-confirm-cancel-btn" class="flex-1 px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-center">
+                        ${cancelText}
+                    </button>
+                    <button type="button" id="custom-confirm-ok-btn" class="flex-1 px-4 py-3 rounded-xl ${isDanger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-primary hover:bg-primary/90'} text-white font-bold text-sm shadow-md transition-colors cursor-pointer text-center">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const closeModal = (val) => {
+            modal.style.display = 'none';
+            resolve(val);
+        };
+
+        const btnCancel = document.getElementById('custom-confirm-cancel-btn');
+        const btnOk = document.getElementById('custom-confirm-ok-btn');
+        if (btnCancel) btnCancel.onclick = () => closeModal(false);
+        if (btnOk) btnOk.onclick = () => closeModal(true);
+    });
+};
+
+window.alert = function (msg) {
+    return window.showCustomAlert(msg);
+};
+
+window.setupInputValidations = function () {
+    // Pure numeric inputs (only numbers 0-9 and decimal dot)
+    const numericSelectors = [
+        '#dormitorios-new', '#banos-new', '#ambientes-new', '#cocheras-new',
+        '#precio', '#expensas-new', '#expensas', '#tarifa-mascota', '#alquiler-mascota',
+        '#sup-cubierta', '#sup-total', '#cant-gato', '#cant-perro-pequeno', '#cant-perro-grande'
+    ];
+
+    numericSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(input => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            });
+        });
+    });
+
+    // Alphanumeric inputs (letters, numbers, spaces only)
+    const alphaNumericSelectors = [
+        '#piso-propiedad', '#depto-propiedad', '#numero-local', '#sector-local'
+    ];
+
+    alphaNumericSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(input => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+            });
+        });
+    });
+
+    // Title & Description (letters, numbers, spaces, commas, periods, parentheses ONLY)
+    const textCleanSelectors = ['#titulo-aviso', '#descripcion-aviso'];
+    textCleanSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(input => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s,.\(\)]/g, '');
+            });
+        });
+    });
+};
+
+window.resolvePostalCode = function (address, provincia, ciudad, googlePostalCode) {
+    if (googlePostalCode && String(googlePostalCode).trim().length >= 4) {
+        return String(googlePostalCode).trim();
+    }
+
+    const provStr = (provincia || '').toLowerCase();
+    const cityStr = (ciudad || '').toLowerCase();
+    const addrStr = (address || '').toLowerCase();
+
+    let baseCode = 5500;
+    if (provStr.includes('buenos aires') || cityStr.includes('caba') || cityStr.includes('capital federal')) baseCode = 1000;
+    else if (provStr.includes('córdoba') || provStr.includes('cordoba')) baseCode = 5000;
+    else if (provStr.includes('santa fe')) baseCode = 3000;
+    else if (provStr.includes('salta')) baseCode = 4400;
+    else if (provStr.includes('neuquén') || provStr.includes('neuquen')) baseCode = 8300;
+    else if (provStr.includes('san juan')) baseCode = 5400;
+    else if (provStr.includes('san luis')) baseCode = 5700;
+    else if (provStr.includes('tucumán') || provStr.includes('tucuman')) baseCode = 4000;
+    else if (provStr.includes('corrientes')) baseCode = 3400;
+    else if (provStr.includes('entre ríos') || provStr.includes('entre rios')) baseCode = 3100;
+    else if (provStr.includes('misiones')) baseCode = 3300;
+
+    const numMatch = addrStr.match(/\d+/);
+    const numOffset = numMatch ? (parseInt(numMatch[0]) % 250) : ((addrStr.length * 7) % 250);
+
+    return String(baseCode + numOffset);
+};
+
+// Favorites Manager System
+window.FavoritesManager = {
+    favoritesSet: new Set(),
+
+    init: async function () {
+        try {
+            const local = JSON.parse(localStorage.getItem('habitat_favorites') || '[]');
+            (local || []).forEach(id => window.FavoritesManager.favoritesSet.add(Number(id)));
+        } catch (e) { }
+
+        if (window.supabaseClient) {
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const { data: favs } = await window.supabaseClient
+                        .from('Favorito')
+                        .select('id_publicacion')
+                        .eq('user_id', session.user.id);
+
+                    if (favs && favs.length > 0) {
+                        favs.forEach(f => window.FavoritesManager.favoritesSet.add(Number(f.id_publicacion)));
+                    }
+                }
+            } catch (err) {
+                console.warn("Error syncing favorites from DB:", err);
+            }
+        }
+
+        window.FavoritesManager.saveLocal();
+        window.FavoritesManager.updateAllHeartIcons();
+    },
+
+    saveLocal: function () {
+        const arr = Array.from(window.FavoritesManager.favoritesSet);
+        localStorage.setItem('habitat_favorites', JSON.stringify(arr));
+    },
+
+    isFavorite: function (id_publicacion) {
+        return window.FavoritesManager.favoritesSet.has(Number(id_publicacion));
+    },
+
+    toggleFavorite: async function (id_publicacion, event = null) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
+        // Require authentication before favoriting
+        let session = null;
+        if (window.supabaseClient) {
+            try {
+                const res = await window.supabaseClient.auth.getSession();
+                session = res.data?.session;
+            } catch (err) { }
+        }
+
+        if (!session) {
+            window.location.href = 'login.html?redirect=favorites';
+            return false;
+        }
+
+        const pubId = Number(id_publicacion);
+        if (!pubId) return false;
+
+        const isFav = window.FavoritesManager.isFavorite(pubId);
+
+        if (isFav) {
+            window.FavoritesManager.favoritesSet.delete(pubId);
+        } else {
+            window.FavoritesManager.favoritesSet.add(pubId);
+        }
+
+        window.FavoritesManager.saveLocal();
+        window.FavoritesManager.updateAllHeartIcons();
+
+        if (window.supabaseClient) {
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    if (isFav) {
+                        await window.supabaseClient
+                            .from('Favorito')
+                            .delete()
+                            .eq('user_id', session.user.id)
+                            .eq('id_publicacion', pubId);
+                    } else {
+                        await window.supabaseClient
+                            .from('Favorito')
+                            .insert([{
+                                user_id: session.user.id,
+                                id_publicacion: pubId
+                            }]);
+                    }
+                }
+            } catch (err) {
+                console.warn("DB fav sync error:", err);
+            }
+        }
+
+        return !isFav;
+    },
+
+    updateAllHeartIcons: function () {
+        document.querySelectorAll('.btn-favorite').forEach(btn => {
+            const pubId = Number(btn.dataset.pubId);
+            const isFav = window.FavoritesManager.isFavorite(pubId);
+            const icon = btn.querySelector('.material-symbols-outlined');
+
+            if (isFav) {
+                btn.classList.add('is-favorite');
+                if (icon) {
+                    icon.textContent = 'favorite';
+                    icon.className = 'material-symbols-outlined text-xl text-rose-500 fill-1 transition-all duration-200 scale-110';
+                }
+                btn.setAttribute('title', 'Quitar de favoritos');
+            } else {
+                btn.classList.remove('is-favorite');
+                if (icon) {
+                    icon.textContent = 'favorite';
+                    icon.className = 'material-symbols-outlined text-xl text-white/90 hover:text-rose-500 transition-all duration-200';
+                }
+                btn.setAttribute('title', 'Guardar en favoritos');
+            }
+        });
+    },
+
+    showFavoritesModal: async function () {
+        const favIds = Array.from(window.FavoritesManager.favoritesSet);
+
+        let allProperties = [];
+        if (window.DataManager && typeof window.DataManager.getPublicMarketplaceProperties === 'function') {
+            allProperties = await window.DataManager.getPublicMarketplaceProperties();
+        }
+
+        const favProperties = allProperties.filter(p => favIds.includes(Number(p.id || p.id_publicacion)));
+
+        let modal = document.getElementById('favorites-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'favorites-modal';
+            document.body.appendChild(modal);
+        }
+
+        modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-200 font-body';
+        modal.style.display = 'flex';
+
+        modal.innerHTML = `
+            <div class="relative w-full max-w-4xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-2xl fill-1">favorite</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">Mis Propiedades Favoritas</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">${favProperties.length} ${favProperties.length === 1 ? 'propiedad guardada' : 'propiedades guardadas'}</p>
+                        </div>
+                    </div>
+                    <button type="button" id="close-fav-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto flex-1">
+                    ${favProperties.length === 0 ? `
+                        <div class="text-center py-16 space-y-4">
+                            <div class="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-400 mx-auto flex items-center justify-center">
+                                <span class="material-symbols-outlined text-3xl">favorite_border</span>
+                            </div>
+                            <h4 class="font-headline font-bold text-base text-zinc-800 dark:text-zinc-200">Aún no guardaste propiedades en favoritos</h4>
+                            <p class="text-xs text-zinc-500 max-w-sm mx-auto">Explorá el Marketplace y tocá el ícono del corazón en cualquier aviso para guardarlo aquí y consultarlo cuando quieras.</p>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="fav-modal-grid">
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('close-fav-modal').onclick = () => {
+            modal.style.display = 'none';
+        };
+
+        if (favProperties.length > 0) {
+            const grid = document.getElementById('fav-modal-grid');
+            favProperties.forEach(prop => {
+                const card = document.createElement('article');
+                card.className = 'bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between cursor-pointer group relative';
+                card.onclick = () => {
+                    modal.style.display = 'none';
+                    if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                        window.openMarketplacePropertyDetailModal(prop);
+                    }
+                };
+
+                const isFav = window.FavoritesManager.isFavorite(prop.id || prop.id_publicacion);
+
+                card.innerHTML = `
+                    <div>
+                        <div class="relative h-44 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
+                            <img src="${prop.image || 'img/hero-marketplace.jpg'}" alt="${prop.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                            <button type="button" class="btn-favorite ${isFav ? 'is-favorite' : ''} absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${prop.id || prop.id_publicacion}" onclick="event.stopPropagation(); window.FavoritesManager.toggleFavorite(${prop.id || prop.id_publicacion}, event);">
+                                <span class="material-symbols-outlined text-lg ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'}">favorite</span>
+                            </button>
+                        </div>
+                        <h4 class="font-headline text-sm font-bold text-zinc-900 dark:text-white line-clamp-1">${prop.title}</h4>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1">${prop.address}</p>
+                        <p class="font-extrabold text-sm text-primary dark:text-red-400 mt-2">$${Number(prop.price || 0).toLocaleString('es-AR')}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    }
+};
+
 const App = {
     state: {
         currentUser: null,
@@ -14,6 +436,10 @@ const App = {
             App.setupTheme();
             App.setupEventListeners();
             App.applyPageContext();
+            if (typeof window.setupInputValidations === 'function') window.setupInputValidations();
+            if (window.FavoritesManager && typeof window.FavoritesManager.init === 'function') {
+                window.FavoritesManager.init();
+            }
 
             // Load marketplace public listings if defined
             if (typeof loadMarketplaceListings === 'function') {
@@ -26,8 +452,16 @@ const App = {
             const params = new URLSearchParams(window.location.search);
             const shouldOpenPublish = params.get('publish') === '1';
             const shouldOpenAdmin = params.get('admin') === '1';
+            const shouldOpenFavs = params.get('fav') === '1';
             const viewParam = params.get('view');
             const pageContext = App.getPageContext();
+
+            if (shouldOpenFavs) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                if (window.FavoritesManager && typeof window.FavoritesManager.showFavoritesModal === 'function') {
+                    window.FavoritesManager.showFavoritesModal();
+                }
+            }
 
             if (user) {
                 if (pageContext === 'admin' || shouldOpenAdmin || viewParam === 'properties') {
@@ -217,10 +651,79 @@ const App = {
             App.showPublishWizard();
         };
 
-        const btnPublicarMarketplace = document.getElementById('btn-publicar-marketplace');
-        if (btnPublicarMarketplace) {
-            btnPublicarMarketplace.addEventListener('click', openPublishMarketplace);
-        }
+        // Global delegate for ALL 'Publicar aviso' / 'Publicar propiedad' links and buttons
+        document.addEventListener('click', async (e) => {
+            const target = e.target.closest('a, button, [data-action="publish"]');
+            if (!target) return;
+
+            // Ignore buttons inside the wizard itself
+            if (target.closest('#publish-property-view')) return;
+
+            const txt = (target.textContent || '').trim().toLowerCase();
+            const href = (target.getAttribute('href') || '').toLowerCase();
+            const id = (target.id || '').toLowerCase();
+            const cls = (target.className || '').toLowerCase();
+
+            if (
+                txt.includes('publicar aviso') ||
+                txt.includes('publicar propiedad') ||
+                txt.includes('publicar mi propiedad') ||
+                txt.includes('publica tu propiedad') ||
+                txt === 'publicar' ||
+                href.includes('publish') ||
+                href.includes('publicar') ||
+                id.includes('publicar') ||
+                cls.includes('btn-publicar')
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = 'login.html?redirect=publish';
+                    return;
+                }
+                if (window.App && typeof window.App.showPublishWizard === 'function') {
+                    await window.App.showPublishWizard();
+                }
+            }
+        });
+
+        // Global delegate for ALL 'Favoritos' links and buttons
+        document.addEventListener('click', async (e) => {
+            const target = e.target.closest('a, button, [data-action="favorites"], [data-desktop-nav-action="favorites"], [data-menu-action="favorites"]');
+            if (!target) return;
+
+            // Ignore buttons inside the favorites modal or property cards heart icons
+            if (target.closest('#favorites-modal') || target.classList.contains('btn-favorite')) return;
+
+            const txt = (target.textContent || '').trim().toLowerCase();
+            const href = (target.getAttribute('href') || '').toLowerCase();
+            const id = (target.id || '').toLowerCase();
+            const cls = (target.className || '').toLowerCase();
+            const action = target.dataset.action || target.dataset.menuAction || target.dataset.desktopNavAction || '';
+
+            if (
+                txt.includes('favorito') ||
+                href.includes('favorites') ||
+                href.includes('favoritos') ||
+                id.includes('fav') ||
+                cls.includes('favoritos') ||
+                action === 'favorites'
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Close any open hamburger menu
+                if (typeof window.closeLandingMenu === 'function') window.closeLandingMenu();
+                const mobMenu = document.getElementById('mobile-menu');
+                if (mobMenu) mobMenu.classList.add('hidden');
+
+                if (window.FavoritesManager && typeof window.FavoritesManager.showFavoritesModal === 'function') {
+                    await window.FavoritesManager.showFavoritesModal();
+                }
+            }
+        });
 
         const btnPublicarPropietariosHero = document.getElementById('btn-publicar-propietarios-hero');
         if (btnPublicarPropietariosHero) {
@@ -633,15 +1136,16 @@ const App = {
         if (selectTipoPropiedad && selectSubtipoPropiedad) {
             const subtiposConfig = {
                 departamento: [
-                    { value: 'duplex', label: 'Dúplex' },
                     { value: 'estandar', label: 'Estándar' },
                     { value: 'monoambiente', label: 'Monoambiente' },
+                    { value: 'duplex', label: 'Dúplex' },
                     { value: 'piso', label: 'Piso' }
                 ],
                 'local-comercial': [
                     { value: 'local-a-calle', label: 'Local a la calle' },
                     { value: 'galeria', label: 'En galería' },
-                    { value: 'centro-comercial', label: 'En centro comercial' }
+                    { value: 'galpon', label: 'Galpón' },
+                    { value: 'deposito', label: 'Depósito' }
                 ]
             };
 
@@ -671,12 +1175,19 @@ const App = {
                 const containerSubtipo = document.getElementById('container-subtipo-propiedad');
                 const containerNumeroLocal = document.getElementById('container-numero-local');
                 const errorNumeroLocal = document.getElementById('error-numero-local');
-                if (containerNumeroLocal) containerNumeroLocal.classList.add('hidden');
                 if (errorNumeroLocal) errorNumeroLocal.classList.add('hidden');
-                const inputNumeroLocal = document.getElementById('numero-local');
-                const inputSectorLocal = document.getElementById('sector-local');
-                if (inputNumeroLocal) inputNumeroLocal.value = '';
-                if (inputSectorLocal) inputSectorLocal.value = '';
+
+                if (containerNumeroLocal) {
+                    if (tipo === 'local-comercial') {
+                        containerNumeroLocal.classList.remove('hidden');
+                    } else {
+                        containerNumeroLocal.classList.add('hidden');
+                        const inputNumeroLocal = document.getElementById('numero-local');
+                        const inputSectorLocal = document.getElementById('sector-local');
+                        if (inputNumeroLocal) inputNumeroLocal.value = '';
+                        if (inputSectorLocal) inputSectorLocal.value = '';
+                    }
+                }
 
                 // Clear existing subtipos but keep the default disabled placeholder
                 selectSubtipoPropiedad.innerHTML = '<option disabled selected value="">Selecciona un subtipo (opcional)</option>';
@@ -1841,6 +2352,45 @@ const App = {
                         return Array.from(checked).map(cb => cb.name);
                     };
 
+                    // Helper to get selected feature labels from #form-extras
+                    const getCheckedFeatures = (formSelector = '#form-extras') => {
+                        const form = document.querySelector(formSelector);
+                        if (!form) return [];
+                        const checked = form.querySelectorAll('input[type="checkbox"]:checked');
+                        const features = [];
+                        checked.forEach(cb => {
+                            let name = '';
+                            const wrapper = cb.closest('.checkbox-wrapper') || cb.parentElement;
+                            if (wrapper) {
+                                const textSpan = wrapper.querySelector('.terms-label span') || wrapper.querySelector('span');
+                                if (textSpan && textSpan.textContent.trim()) {
+                                    name = textSpan.textContent.trim();
+                                }
+                            }
+                            if (!name && cb.nextElementSibling) {
+                                const span = cb.nextElementSibling.querySelector('span') || cb.nextElementSibling;
+                                if (span && span.textContent.trim()) {
+                                    name = span.textContent.trim();
+                                }
+                            }
+                            if (!name) {
+                                name = cb.name || cb.id;
+                            }
+                            if (name) features.push(name);
+                        });
+
+                        const chipsContainer = document.getElementById('selected-features-container');
+                        if (chipsContainer) {
+                            const chipSpans = chipsContainer.querySelectorAll('span.font-body');
+                            chipSpans.forEach(s => {
+                                const t = s.textContent.trim();
+                                if (t) features.push(t);
+                            });
+                        }
+
+                        return Array.from(new Set(features));
+                    };
+
                     const getVal = (id) => {
                         const el = document.getElementById(id);
                         return el ? el.value : null;
@@ -1862,6 +2412,7 @@ const App = {
                         subtipoPropiedad: getVal('subtipo-propiedad'),
                         piso: getVal('piso-propiedad'),
                         depto: getVal('depto-propiedad'),
+                        numeroLocal: getVal('numero-local'),
 
                         ambientes: getVal('ambientes-new'),
                         dormitorios: getVal('dormitorios-new'),
@@ -1874,9 +2425,10 @@ const App = {
                         calleAltura: getVal('calle-altura'),
                         latitud: window.selectedPropertyLat || (typeof window.propertyMarker?.position?.lat === 'function' ? window.propertyMarker.position.lat() : window.propertyMarker?.position?.lat) || null,
                         longitud: window.selectedPropertyLng || (typeof window.propertyMarker?.position?.lng === 'function' ? window.propertyMarker.position.lng() : window.propertyMarker?.position?.lng) || null,
-                        provincia: getVal('provincia'),
-                        ciudad: getVal('ciudad'),
-                        barrio: getVal('barrio'),
+                        provincia: window.selectedPropertyProvincia || getVal('provincia') || 'Mendoza',
+                        ciudad: window.selectedPropertyCiudad || getVal('ciudad') || 'Mendoza',
+                        barrio: window.selectedPropertyBarrio || getVal('barrio') || 'Centro',
+                        codigoPostal: window.selectedPropertyPostalCode || getVal('codigo-postal') || getVal('cp') || '5500',
                         subzona: getVal('subzona'),
                         ubicacionExacta: getRadioValue('precision') === 'exacta',
 
@@ -1884,14 +2436,18 @@ const App = {
                         supCubierta: getVal('sup-cubierta'),
                         supTotal: getVal('sup-total'),
                         precio: getVal('precio'),
-                        moneda: document.getElementById('precio')?.previousElementSibling?.value === 'U$S' ? 'USD' : 'ARS',
+                        moneda: (function() {
+                            const monEl = document.getElementById('moneda') || document.getElementById('precio')?.previousElementSibling;
+                            const monVal = monEl ? monEl.value : 'ARS';
+                            return (monVal === 'USD' || monVal === 'usd' || monVal === 'U$S') ? 'USD' : 'ARS';
+                        })(),
                         expensas: getVal('expensas'),
                         expensasIncluidas: document.getElementById('expensas-incluidas')?.checked || false,
                         tituloAviso: getVal('titulo-aviso'),
                         descripcionAviso: getVal('descripcion-aviso'),
 
-                        // Extras (Paso 3)
-                        caracteristicas: getCheckedValues('#content-caracteristicas'),
+                        // Extras (Paso 3) - Todos los checkboxes seleccionados
+                        caracteristicas: getCheckedFeatures('#form-extras'),
                         ambientesExtras: getCheckedValues('#content-ambientes'),
                         servicios: getCheckedValues('#content-servicios'),
                         adicionales: {
@@ -4441,6 +4997,11 @@ const App = {
     },
 
     openPropertyDetails: (property) => {
+        if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+            window.openMarketplacePropertyDetailModal(property, { isOwner: true });
+            return;
+        }
+
         const modal = document.getElementById('property-details-modal');
         const infoContainer = document.getElementById('details-info-container');
         const metricsBanner = document.getElementById('details-metrics-banner');
@@ -4458,7 +5019,9 @@ const App = {
             ? Math.max(1, Math.floor((new Date() - new Date(property.created_at)) / (1000 * 60 * 60 * 24)))
             : (property.activeDays || 14);
 
-        const viewsCount = property.views_count || property.views || 342;
+        const viewsCount = (property.cantidad_visualizaciones_total !== undefined && property.cantidad_visualizaciones_total !== null)
+            ? property.cantidad_visualizaciones_total
+            : ((property.views_count !== undefined && property.views_count !== null) ? property.views_count : (property.views || 0));
         const inquiriesCount = property.inquiries_count || property.inquiries || 8;
         const rawStatus = property.status || 'disponible';
         const formattedStatus = rawStatus === 'disponible' ? 'Activa' : (rawStatus === 'alquilada' ? 'Alquilada' : 'Pausada');
@@ -4848,17 +5411,69 @@ const App = {
         await App.render();
     },
 
-    showPublishWizard: () => {
+    showPublishWizard: async (editingProp = null) => {
         window.currentWizardStep = 1;
 
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view').forEach(el => {
-            if (el) el.classList.add('hidden');
+        // Automatically close hamburger menu / mobile menu drawer if open
+        if (typeof window.closeLandingMenu === 'function') {
+            window.closeLandingMenu();
+        }
+        const premiumMenu = document.getElementById('landing-premium-menu');
+        if (premiumMenu) {
+            premiumMenu.classList.remove('is-open');
+            premiumMenu.setAttribute('aria-hidden', 'true');
+        }
+        const mobMenu = document.getElementById('mobile-menu');
+        if (mobMenu) {
+            mobMenu.classList.add('hidden');
+        }
+        document.body.classList.remove('landing-menu-open', 'overflow-hidden');
+        document.body.style.overflow = '';
+        document.querySelectorAll('nav .menu-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
         });
 
-        const publishElem = document.getElementById('publish-property-view');
-        if (publishElem) {
-            publishElem.classList.remove('hidden');
-            window.scrollTo(0, 0);
+        let publishElem = document.getElementById('publish-property-view');
+        if (!publishElem) {
+            try {
+                const resp = await fetch('components/publish-property-view.html');
+                if (resp.ok) {
+                    const html = await resp.text();
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = html;
+                    publishElem = wrapper.firstElementChild;
+                    document.body.appendChild(publishElem);
+                    if (typeof window.initPublishWizardEvents === 'function') {
+                        window.initPublishWizardEvents();
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching publish-property-view.html:", err);
+            }
+        }
+
+        if (!publishElem) {
+            window.location.href = 'index.html?publish=1';
+            return;
+        }
+
+        // Hide all main page content containers
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view)').forEach(el => {
+            if (el && el !== publishElem && !publishElem.contains(el)) {
+                el.classList.add('hidden');
+            }
+        });
+
+        publishElem.classList.remove('hidden');
+        window.scrollTo(0, 0);
+
+        if (typeof window.setupInputValidations === 'function') {
+            window.setupInputValidations();
+        }
+
+        if (typeof window.initGoogleMap === 'function') {
+            setTimeout(() => { window.initGoogleMap(); }, 250);
         }
     },
 
@@ -4869,6 +5484,13 @@ const App = {
         if (publishElem) {
             publishElem.classList.add('hidden');
         }
+
+        // Unhide page main content sections
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, main, body > section:not(#publish-property-view)').forEach(el => {
+            if (el && el !== publishElem) {
+                el.classList.remove('hidden');
+            }
+        });
 
         const stepOperacion = document.getElementById('step-operacion');
         const stepUbicacion = document.getElementById('step-ubicacion');
@@ -4890,19 +5512,8 @@ const App = {
         if (publishMainTitle) publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
         if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
 
-        document.querySelectorAll('button[type="submit"]').forEach(btn => {
-            if (btn.hasAttribute('form')) btn.setAttribute('form', 'form-principales');
-        });
-
         App.applyPageContext();
         window.scrollTo(0, 0);
-
-        if (window.marketplaceObserver) {
-            document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                el.classList.remove('is-visible');
-                window.marketplaceObserver.observe(el);
-            });
-        }
     },
 
     setupMarketPlaceListeners: () => {
@@ -5390,17 +6001,40 @@ window.App = App;
 // ============================================================
 // Marketplace Property Detail & Photo Gallery Modal
 // ============================================================
-window.openMarketplacePropertyDetailModal = function (prop) {
+window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     if (!prop) return;
 
+    const isOwner = Boolean(
+        options.isOwner ||
+        prop.isOwner ||
+        window.location.pathname.includes('administrador') ||
+        window.location.pathname.includes('propietarios') ||
+        (document.getElementById('mis-avisos-view') && !document.getElementById('mis-avisos-view').classList.contains('hidden')) ||
+        document.getElementById('panel-content-avisos') ||
+        document.getElementById('owner-grid-props')
+    );
+
+    // Record view in DB when property details are opened (ONLY for non-owner visitors)
+    if (!isOwner) {
+        const pubId = prop.id_publicacion || prop.id;
+        if (pubId && window.DataManager && typeof window.DataManager.recordPublicationView === 'function') {
+            window.DataManager.recordPublicationView(pubId);
+            if (prop.cantidad_visualizaciones_total !== undefined) {
+                prop.cantidad_visualizaciones_total += 1;
+                prop.views_count = prop.cantidad_visualizaciones_total;
+                prop.views = prop.cantidad_visualizaciones_total;
+            }
+        }
+    }
+
     // Parse extraInfo if description contains 'Detalles: '
-    let extraInfo = {};
+    let extraInfo = prop.extraInfo || {};
     let descriptionText = prop.description || prop.note || 'Sin descripción disponible para esta propiedad.';
     if (typeof descriptionText === 'string' && descriptionText.includes('Detalles: ')) {
         const parts = descriptionText.split('Detalles: ');
         descriptionText = parts[0].trim();
         try {
-            extraInfo = JSON.parse(parts[1]);
+            extraInfo = { ...extraInfo, ...JSON.parse(parts[1]) };
         } catch (e) {
             console.warn('Error parsing extraInfo JSON', e);
         }
@@ -5435,7 +6069,8 @@ window.openMarketplacePropertyDetailModal = function (prop) {
         return null;
     };
 
-    // Normalize property details
+    // Normalize property details from Wizard & DB
+    const pubId = prop.id_publicacion || prop.id;
     const title = prop.title || 'Propiedad en alquiler';
     const address = prop.address || prop.ubicacion || 'Ubicación no especificada';
     const province = prop.province || extraInfo.provincia || '';
@@ -5449,15 +6084,29 @@ window.openMarketplacePropertyDetailModal = function (prop) {
         : 'Consultar precio';
 
     const operacion = (extraInfo.operacion || prop.featured || prop.type || 'En Alquiler').toUpperCase();
-    const dormitorios = extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']);
-    const banos = extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']);
-    const ambientes = extraInfo.ambientes || null;
-    const supCubierta = extraInfo.sup_cubierta || extractTagMetric(prop.tags, ['m²', 'm2']);
+    const dormitorios = prop.dormitorios || extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']);
+    const banos = prop.banos || extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']);
+    const toilettes = prop.toilettes || extraInfo.toilettes || null;
+    const ambientes = prop.ambientes || extraInfo.ambientes || null;
+    const cocheras = prop.cocheras !== undefined ? prop.cocheras : (extraInfo.cocheras || null);
+    const supCubierta = prop.sup_cubierta || prop.supCubierta || extraInfo.sup_cubierta || extraInfo.supCubierta || extractTagMetric(prop.tags, ['m²', 'm2']);
+    const supTotal = prop.sup_total || prop.superficie_lote || extraInfo.sup_total || extraInfo.supTotal || null;
+    const expensas = prop.expensas !== undefined ? prop.expensas : (extraInfo.expensas || null);
+    const expensasIncluidas = prop.expensasIncluidas !== undefined ? prop.expensasIncluidas : (extraInfo.expensasIncluidas !== false);
+    const pisoDpto = prop.piso_dpto || extraInfo.piso_dpto || prop.piso || extraInfo.piso || '';
+    const numeroLocal = prop.numero_local || extraInfo.numero_local || prop.numeroLocal || '';
+    const antiguedad = prop.antiguedad || extraInfo.antiguedad || '';
+    const disposicion = prop.disposicion || extraInfo.disposicion || '';
+    const orientacion = prop.orientacion || extraInfo.orientacion || '';
+    const barrio = prop.barrio || extraInfo.barrio || '';
+    const status = prop.status || extraInfo.status || 'disponible';
+    const viewsCount = prop.cantidad_visualizaciones_total ?? prop.views_count ?? prop.views ?? 0;
+
     const petFriendly = extraInfo.mascotas || prop.pet || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('mascota')));
     const verified = prop.verified || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')));
 
     // Extract tags list
-    let tagsList = prop.tags || [];
+    let tagsList = prop.caracteristicas || prop.tags || [];
     if (extraInfo.caracteristicas && Array.isArray(extraInfo.caracteristicas)) {
         tagsList = Array.from(new Set([...tagsList, ...extraInfo.caracteristicas]));
     }
@@ -5496,10 +6145,24 @@ window.openMarketplacePropertyDetailModal = function (prop) {
                             <span class="material-symbols-outlined text-sm">pets</span> Apto Mascotas
                         </span>
                     ` : ''}
+                    ${isOwner ? `
+                        <span id="mp-modal-status-badge" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full ${status === 'paused' || status === 'pausado' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">
+                            <span class="material-symbols-outlined text-sm">${status === 'paused' || status === 'pausado' ? 'pause_circle' : 'check_circle'}</span>
+                            ${status === 'paused' || status === 'pausado' ? 'Pausada' : 'Publicada'}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300" title="Visualizaciones totales">
+                            <span class="material-symbols-outlined text-sm">visibility</span> ${viewsCount} vistas
+                        </span>
+                    ` : ''}
                 </div>
-                <button id="close-marketplace-modal-btn" type="button" aria-label="Cerrar modal" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0 cursor-pointer">
-                    <span class="material-symbols-outlined pointer-events-none">close</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(pubId) ? 'is-favorite' : ''} w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${pubId}, event);">
+                        <span class="material-symbols-outlined text-xl ${window.FavoritesManager?.isFavorite(pubId) ? 'text-rose-500 fill-1 scale-110' : 'text-zinc-600 dark:text-zinc-300 hover:text-rose-500'}">favorite</span>
+                    </button>
+                    <button id="close-marketplace-modal-btn" type="button" aria-label="Cerrar modal" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0 cursor-pointer">
+                        <span class="material-symbols-outlined pointer-events-none">close</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable Content -->
@@ -5546,16 +6209,21 @@ window.openMarketplacePropertyDetailModal = function (prop) {
                         </h2>
                         <p class="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base flex items-center gap-1.5 font-medium">
                             <span class="material-symbols-outlined text-primary dark:text-red-400">location_on</span>
-                            ${fullAddress}
+                            ${fullAddress} ${barrio ? `(${barrio})` : ''}
                         </p>
                     </div>
                     <div class="sm:text-right shrink-0 bg-zinc-50 dark:bg-zinc-800/60 px-4 py-3 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
                         <span class="block text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider mb-0.5">Precio de alquiler</span>
                         <span class="text-2xl sm:text-3xl font-extrabold text-primary dark:text-red-400">${priceFormatted}</span>
+                        ${expensas !== null && expensas !== undefined ? `
+                            <span class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-1">
+                                ${Number(expensas) > 0 ? `+ $${Number(expensas).toLocaleString('es-AR')} expensas` : (expensasIncluidas ? 'Expensas incluidas' : 'Sin expensas')}
+                            </span>
+                        ` : ''}
                     </div>
                 </div>
 
-                <!-- Features & Spec Cards Grid -->
+                <!-- Features & Spec Cards Grid (Wizard Steps 2 & 3 Data) -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     ${dormitorios ? `
                         <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
@@ -5575,7 +6243,7 @@ window.openMarketplacePropertyDetailModal = function (prop) {
                             </div>
                             <div>
                                 <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Baños</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${banos}</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${banos}${toilettes ? ` (+${toilettes} toil)` : ''}</span>
                             </div>
                         </div>
                     ` : ''}
@@ -5590,14 +6258,69 @@ window.openMarketplacePropertyDetailModal = function (prop) {
                             </div>
                         </div>
                     ` : ''}
+                    ${cocheras !== null && cocheras !== undefined ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">directions_car</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Cocheras</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${cocheras}</span>
+                            </div>
+                        </div>
+                    ` : ''}
                     ${supCubierta ? `
                         <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined text-xl">square_foot</span>
                             </div>
                             <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Superficie</span>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Sup. Cubierta</span>
                                 <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${supCubierta} m²</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${supTotal ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">straighten</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Sup. Total</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${supTotal} m²</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${pisoDpto ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">apartment</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Piso / Dpto</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${pisoDpto}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${numeroLocal ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">store</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">N° Local</span>
+                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${numeroLocal}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${antiguedad || disposicion || orientacion ? `
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">info</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Disposición</span>
+                                <span class="font-extrabold text-xs sm:text-sm text-on-background dark:text-white">${[disposicion, antiguedad ? `${antiguedad} a.` : null].filter(Boolean).join(' • ') || 'Estándar'}</span>
                             </div>
                         </div>
                     ` : ''}
@@ -5613,10 +6336,10 @@ window.openMarketplacePropertyDetailModal = function (prop) {
                     </div>
                 </div>
 
-                <!-- Characteristics / Tags Chips -->
+                <!-- Characteristics / Tags Chips (Wizard Step 4 Data) -->
                 ${tagsList.length > 0 ? `
                     <div class="space-y-3 pt-2">
-                        <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Comodidades y características</h3>
+                        <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Comodidades y características del Wizard</h3>
                         <div class="flex flex-wrap gap-2">
                             ${tagsList.map(tag => `
                                 <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200/50 dark:border-zinc-700/50">
@@ -5632,20 +6355,41 @@ window.openMarketplacePropertyDetailModal = function (prop) {
 
             <!-- Modal Footer Actions -->
             <div class="sticky bottom-0 z-30 px-5 py-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div class="hidden sm:block">
-                    <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión Hábitat</span>
-                    <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Contrato online, visitas guiadas y postulación directa</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                    <button id="mp-modal-visit-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
-                        <span class="material-symbols-outlined text-base">calendar_month</span>
-                        Agendar Visita
-                    </button>
-                    <button id="mp-modal-apply-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-lg shadow-primary/20 cursor-pointer">
-                        <span class="material-symbols-outlined text-base">how_to_reg</span>
-                        Postularme al Alquiler
-                    </button>
-                </div>
+                ${isOwner ? `
+                    <div class="hidden sm:block">
+                        <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión del Propietario</span>
+                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Administra o modifica la publicación de tu inmueble</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                        <button id="mp-modal-pause-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 ${status === 'paused' || status === 'pausado' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
+                            <span class="material-symbols-outlined text-base">${status === 'paused' || status === 'pausado' ? 'play_circle' : 'pause_circle'}</span>
+                            <span id="mp-modal-pause-text">${status === 'paused' || status === 'pausado' ? 'Reanudar publicación' : 'Pausar publicación'}</span>
+                        </button>
+                        <button id="mp-modal-edit-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-3 rounded-xl transition-all text-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">edit</span>
+                            Editar
+                        </button>
+                        <button id="mp-modal-delete-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                            Eliminar publicación
+                        </button>
+                    </div>
+                ` : `
+                    <div class="hidden sm:block">
+                        <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión Hábitat</span>
+                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Contrato online, visitas guiadas y postulación directa</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                        <button id="mp-modal-visit-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
+                            <span class="material-symbols-outlined text-base">calendar_month</span>
+                            Agendar Visita
+                        </button>
+                        <button id="mp-modal-apply-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-lg shadow-primary/20 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">how_to_reg</span>
+                            Postularme al Alquiler
+                        </button>
+                    </div>
+                `}
             </div>
 
         </div>
@@ -5887,28 +6631,122 @@ window.openMarketplacePropertyDetailModal = function (prop) {
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Visit scheduling button listener
-    const visitBtn = document.getElementById('mp-modal-visit-btn');
-    if (visitBtn) {
-        visitBtn.onclick = (e) => {
-            e.preventDefault();
-            closeModal();
-            if (typeof window.openAgendarVisitaModal === 'function') {
-                window.openAgendarVisitaModal(prop);
-            }
-        };
-    }
+    if (isOwner) {
+        // Owner Action Handlers: Delete, Edit, Pause
+        const deleteBtn = document.getElementById('mp-modal-delete-btn');
+        if (deleteBtn) {
+            deleteBtn.onclick = async (e) => {
+                e.preventDefault();
+                const confirmed = await window.showCustomConfirm({
+                    title: '¿Eliminar publicación?',
+                    message: `¿Estás seguro de que deseas eliminar la publicación "${title}"?\nEsta acción es irreversible.`,
+                    confirmText: 'Sí, eliminar',
+                    cancelText: 'Cancelar',
+                    isDanger: true
+                });
+                if (confirmed) {
+                    closeModal();
+                    try {
+                        if (window.DataManager && typeof window.DataManager.deleteProperty === 'function') {
+                            await window.DataManager.deleteProperty(pubId);
+                        }
+                        await window.showCustomAlert({
+                            title: 'Publicación eliminada',
+                            message: 'La publicación ha sido eliminada con éxito.',
+                            icon: 'check_circle'
+                        });
+                        if (typeof window.loadMisAvisos === 'function') window.loadMisAvisos();
+                        if (typeof window.loadOwnerAvisos === 'function') window.loadOwnerAvisos();
+                        if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
+                        if (window.App && typeof window.App.refreshData === 'function') window.App.refreshData();
+                    } catch (err) {
+                        console.error('Error al eliminar la propiedad:', err);
+                        await window.showCustomAlert({
+                            title: 'Error',
+                            message: 'Ocurrió un error al intentar eliminar la propiedad.',
+                            icon: 'error'
+                        });
+                    }
+                }
+            };
+        }
 
-    // Apply / Postulación button listener
-    const applyBtn = document.getElementById('mp-modal-apply-btn');
-    if (applyBtn) {
-        applyBtn.onclick = (e) => {
-            e.preventDefault();
-            closeModal();
-            if (typeof window.openPostulacionModal === 'function') {
-                window.openPostulacionModal(prop);
-            }
-        };
+        const pauseBtn = document.getElementById('mp-modal-pause-btn');
+        if (pauseBtn) {
+            let currentPubStatus = status;
+            pauseBtn.onclick = async (e) => {
+                e.preventDefault();
+                try {
+                    if (window.DataManager && typeof window.DataManager.togglePauseProperty === 'function') {
+                        const newStatus = await window.DataManager.togglePauseProperty(pubId, currentPubStatus);
+                        currentPubStatus = newStatus;
+                        prop.status = newStatus;
+
+                        const isNowPaused = (newStatus === 'paused' || newStatus === 'pausado');
+                        const pauseTextEl = document.getElementById('mp-modal-pause-text');
+                        const statusBadgeEl = document.getElementById('mp-modal-status-badge');
+
+                        if (pauseTextEl) pauseTextEl.textContent = isNowPaused ? 'Reanudar publicación' : 'Pausar publicación';
+                        pauseBtn.className = `flex-1 sm:flex-none inline-flex items-center justify-center gap-2 ${isNowPaused ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer`;
+                        const iconSpan = pauseBtn.querySelector('.material-symbols-outlined');
+                        if (iconSpan) iconSpan.textContent = isNowPaused ? 'play_circle' : 'pause_circle';
+
+                        if (statusBadgeEl) {
+                            statusBadgeEl.innerHTML = `<span class="material-symbols-outlined text-sm">${isNowPaused ? 'pause_circle' : 'check_circle'}</span> ${isNowPaused ? 'Pausada' : 'Publicada'}`;
+                            statusBadgeEl.className = `inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full ${isNowPaused ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}`;
+                        }
+
+                        await window.showCustomAlert({
+                            title: isNowPaused ? 'Publicación Pausada' : 'Publicación Reanudada',
+                            message: isNowPaused ? 'La publicación ha sido pausada correctamente.' : 'La publicación ha sido reanudada exitosamente.',
+                            icon: isNowPaused ? 'pause_circle' : 'check_circle'
+                        });
+                        if (typeof window.loadMisAvisos === 'function') window.loadMisAvisos();
+                        if (typeof window.loadOwnerAvisos === 'function') window.loadOwnerAvisos();
+                        if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
+                        if (typeof renderLandlordAvisos === 'function') renderLandlordAvisos();
+                    }
+                } catch (err) {
+                    console.error('Error al cambiar el estado de la publicación:', err);
+                }
+            };
+        }
+
+        const editBtn = document.getElementById('mp-modal-edit-btn');
+        if (editBtn) {
+            editBtn.onclick = (e) => {
+                e.preventDefault();
+                closeModal();
+                if (window.App && typeof window.App.showPublishWizard === 'function') {
+                    window.App.showPublishWizard(prop);
+                } else {
+                    alert('Acción de edición iniciada para: ' + title);
+                }
+            };
+        }
+    } else {
+        // Public Action Handlers: Visit & Apply
+        const visitBtn = document.getElementById('mp-modal-visit-btn');
+        if (visitBtn) {
+            visitBtn.onclick = (e) => {
+                e.preventDefault();
+                closeModal();
+                if (typeof window.openAgendarVisitaModal === 'function') {
+                    window.openAgendarVisitaModal(prop);
+                }
+            };
+        }
+
+        const applyBtn = document.getElementById('mp-modal-apply-btn');
+        if (applyBtn) {
+            applyBtn.onclick = (e) => {
+                e.preventDefault();
+                closeModal();
+                if (typeof window.openPostulacionModal === 'function') {
+                    window.openPostulacionModal(prop);
+                }
+            };
+        }
     }
 };
 
@@ -6241,13 +7079,26 @@ window.initGoogleMap = async function () {
 
                 const inputCalle = document.getElementById('calle-altura');
                 if (inputCalle && !inputCalle.value) {
-                    const addressComponents = results[0].address_components;
+                    const addressComponents = results[0].address_components || [];
                     let route = '';
                     let streetNumber = '';
+                    let provincia = '';
+                    let ciudad = '';
+                    let barrio = '';
                     addressComponents.forEach(comp => {
                         if (comp.types.includes('route')) route = comp.long_name;
                         if (comp.types.includes('street_number')) streetNumber = comp.long_name;
+                        if (comp.types.includes('administrative_area_level_1')) provincia = comp.long_name;
+                        if (comp.types.includes('locality') || comp.types.includes('administrative_area_level_2')) {
+                            if (!ciudad) ciudad = comp.long_name;
+                        }
+                        if (comp.types.includes('neighborhood') || comp.types.includes('sublocality_level_1') || comp.types.includes('sublocality')) {
+                            if (!barrio) barrio = comp.long_name;
+                        }
                     });
+                    if (provincia) window.selectedPropertyProvincia = provincia;
+                    if (ciudad) window.selectedPropertyCiudad = ciudad;
+                    if (barrio) window.selectedPropertyBarrio = barrio;
                     if (route) {
                         inputCalle.value = `${route} ${streetNumber}`.trim();
                         if (streetNumber) {
@@ -6310,17 +7161,34 @@ window.initGoogleMap = async function () {
             const label = document.getElementById('map-address-label');
             if (label) label.textContent = place.formatted_address;
 
-            // Extract components (route, street_number)
+            // Extract components (route, street_number, provincia, ciudad, barrio)
             let routeStr = '';
             let streetNumberStr = '';
+            let provinciaStr = '';
+            let ciudadStr = '';
+            let barrioStr = '';
 
             if (place.address_components) {
                 for (const component of place.address_components) {
                     const types = component.types;
                     if (types.includes('route')) routeStr = component.long_name;
                     if (types.includes('street_number')) streetNumberStr = component.long_name;
+                    if (types.includes('administrative_area_level_1')) provinciaStr = component.long_name;
+                    if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+                        if (!ciudadStr) ciudadStr = component.long_name;
+                    }
+                    if (types.includes('neighborhood') || types.includes('sublocality_level_1') || types.includes('sublocality')) {
+                        if (!barrioStr) barrioStr = component.long_name;
+                    }
+                    if (types.includes('postal_code')) {
+                        window.selectedPropertyPostalCode = component.long_name;
+                    }
                 }
             }
+
+            if (provinciaStr) window.selectedPropertyProvincia = provinciaStr;
+            if (ciudadStr) window.selectedPropertyCiudad = ciudadStr;
+            if (barrioStr) window.selectedPropertyBarrio = barrioStr;
 
             // Fallback: check if a number was typed in the input or formatted_address
             if (!streetNumberStr) {
@@ -6579,7 +7447,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (action === 'favorites') {
-            window.location.href = 'login.html?redirect=favorites&mode=login';
+            if (window.FavoritesManager && typeof window.FavoritesManager.showFavoritesModal === 'function') {
+                window.FavoritesManager.showFavoritesModal();
+            }
         }
 
         if (action === 'help-guide') {
@@ -6884,7 +7754,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (action === 'favorites') {
-            window.location.href = 'login.html?redirect=favorites&mode=login';
+            closeMenu();
+            if (window.FavoritesManager && typeof window.FavoritesManager.showFavoritesModal === 'function') {
+                window.FavoritesManager.showFavoritesModal();
+            }
         }
 
         if (action === 'help') {
@@ -7837,7 +8710,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Stats (desktop) -->
                 <div class="hidden lg:flex items-center gap-6 flex-shrink-0">
                     <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Exposición</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
-                    <div class="text-center min-w-[80px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Visualizaciones</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
+                    <div class="text-center min-w-[80px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Visualizaciones</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">${aviso.cantidad_visualizaciones_total ?? aviso.views_count ?? aviso.views ?? 0}</p></div>
                     <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-primary dark:text-red-400">Ver consultas</p></div>
                 </div>
             </div>
@@ -7861,10 +8734,31 @@ document.addEventListener('DOMContentLoaded', () => {
             btnVer.onclick = (e) => {
                 e.stopPropagation();
                 if (typeof window.openMarketplacePropertyDetailModal === 'function') {
-                    window.openMarketplacePropertyDetailModal(aviso);
+                    window.openMarketplacePropertyDetailModal(aviso, { isOwner: true });
                 }
             };
         }
+
+        const buttons = card.querySelectorAll('.flex.items-center.gap-1 button');
+        if (buttons && buttons.length >= 2) {
+            const btnEditarCard = buttons[1];
+            if (btnEditarCard) {
+                btnEditarCard.onclick = (e) => {
+                    e.stopPropagation();
+                    if (window.App && typeof window.App.showPublishWizard === 'function') {
+                        window.App.showPublishWizard(aviso);
+                    }
+                };
+            }
+        }
+
+        card.style.cursor = 'pointer';
+        card.onclick = (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                window.openMarketplacePropertyDetailModal(aviso, { isOwner: true });
+            }
+        };
 
         return card;
     }

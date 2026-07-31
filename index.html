@@ -872,6 +872,12 @@
 
 
     </style>
+
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <script>
         (function () {
@@ -1051,6 +1057,9 @@
                             <div>
                                 <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
                                     <img src="${prop.image}" alt="${prop.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(prop.id) ? 'is-favorite' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${prop.id}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${prop.id}, event);">
+                                        <span class="material-symbols-outlined text-xl ${window.FavoritesManager?.isFavorite(prop.id) ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all">favorite</span>
+                                    </button>
                                     ${photosCount > 1 ? `
                                         <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">photo_camera</span>
