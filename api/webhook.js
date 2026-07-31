@@ -27,8 +27,10 @@ export default async function handler(req, res) {
     // 2. Extraer datos del evento enviado por Didit
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     
-    // Didit suele enviar status / decision, session_id, vendor_data (userId)
+    // Didit suele enviar event / type, status / decision, session_id, vendor_data (userId)
     const {
+      event,
+      type,
       session_id,
       vendor_data,
       status,
@@ -37,11 +39,13 @@ export default async function handler(req, res) {
       created_at
     } = body;
 
+    const eventType = event || type || 'status.updated';
     const currentStatus = status || (decision ? decision.status : 'Unknown');
     const userId = vendor_data;
 
-    console.log(`[Didit Webhook] Evento recibido para Usuario: ${userId} | Sesión: ${session_id} | Estado: ${currentStatus}`);
+    console.log(`[Didit Webhook] Evento: ${eventType} | Usuario: ${userId} | Sesión: ${session_id} | Estado: ${currentStatus}`);
     console.log('[Didit Webhook Payload Completo]:', JSON.stringify(body, null, 2));
+
 
     // 3. Lógica según el estado del KYC (Approved, Declined, In Review, etc.)
     switch (currentStatus.toLowerCase()) {
