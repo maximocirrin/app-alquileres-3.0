@@ -41,8 +41,11 @@ async function iniciarKYC(userId, options = {}) {
     const data = await response.json();
 
     if (!response.ok || !data.success || !data.url) {
-      throw new Error(data.message || data.error || 'Error al obtener la URL de sesión de Didit.');
+      const errorDetail = data.message || data.error || 'Error al obtener la URL de sesión de Didit.';
+      console.error('[KYC Frontend Response Error Body]:', data);
+      throw new Error(errorDetail);
     }
+
 
     const verificationUrl = data.url;
     console.log('[KYC Frontend] Sesión creada con éxito. Redirect URL:', verificationUrl);
