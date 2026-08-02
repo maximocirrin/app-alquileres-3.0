@@ -1,7 +1,7 @@
 (function() {
     var html = `<nav class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
     <div class="relative flex justify-between items-center px-2 sm:px-4 lg:px-6 xl:px-12 h-16 lg:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
-        <div class="flex items-center gap-1 sm:gap-4 lg:gap-6 xl:gap-10 flex-1">
+        <div class="flex items-center gap-1 sm:gap-3 xl:gap-5 flex-1 max-w-[calc(50%-70px)]">
             <button class="menu-btn xl:hidden w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0" type="button" aria-label="Menu" aria-controls="landing-premium-menu" aria-expanded="false">
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
@@ -27,13 +27,13 @@
                     </div>
                 </div>
             </label>
-            <div class="flex max-xl:hidden items-center gap-3 xl:gap-6 font-medium">
-                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px]" href="index.html">Inicio</a>
-                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px]" href="como-funciona.html">Cómo funciona</a>
-                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px] font-semibold text-primary dark:text-red-400 flex items-center gap-1" href="pasaporte-habitat.html">
+            <div class="flex max-xl:hidden items-center gap-2.5 xl:gap-3.5 2xl:gap-5 font-medium">
+                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer text-[13px] xl:text-[13.5px] 2xl:text-[14.5px]" href="index.html">Inicio</a>
+                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer text-[13px] xl:text-[13.5px] 2xl:text-[14.5px]" href="como-funciona.html">Cómo funciona</a>
+                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer text-[13px] xl:text-[13.5px] 2xl:text-[14.5px] font-semibold text-primary dark:text-red-400 flex items-center gap-1" href="pasaporte-habitat.html">
                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-sm">badge</span> Pasaporte Hábitat
                 </a>
-                <button class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px] flex items-center gap-1" type="button" data-desktop-nav-action="favorites">
+                <button class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer text-[13px] xl:text-[13.5px] 2xl:text-[14.5px] flex items-center gap-1" type="button" data-desktop-nav-action="favorites">
                     <span class="material-symbols-outlined text-rose-500 text-sm">favorite</span> Favoritos
                 </button>
             </div>
@@ -42,47 +42,53 @@
         <!-- Center Section (Logo) -->
         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center pointer-events-none z-10">
             <a href="index.html" class="flex items-center gap-1.5 lg:gap-2 group pointer-events-auto">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-12 sm:h-14 lg:h-16 xl:h-20 w-auto object-contain transition-all">
+                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-9 sm:h-11 lg:h-12 xl:h-13 2xl:h-15 w-auto object-contain transition-all">
             </a>
         </div>
 
-        <div class="flex items-center gap-1 sm:gap-2 lg:gap-3 xl:gap-6 ml-auto z-20">
+        <div class="flex items-center gap-1 sm:gap-2 xl:gap-3.5 2xl:gap-5 ml-auto z-20 max-w-[calc(50%-70px)] justify-end">
             <!-- Right side options (Desktop only) -->
-            <div class="flex max-xl:hidden items-center gap-3 xl:gap-6 mr-2 xl:mr-4 font-medium">
+            <div class="flex max-xl:hidden items-center gap-1 xl:gap-1.5 2xl:gap-2.5 mr-1 xl:mr-2 font-medium">
                 
                 <!-- Dropdown: Para Propietarios -->
-                <div class="landing-desktop-nav__dropdown">
-                    <button class="landing-desktop-nav__dropdown-trigger flex items-center gap-1 text-primary dark:text-red-400 font-bold transition-colors lg:!text-[14px] xl:!text-[15px]" type="button" aria-expanded="false">
+                <div class="landing-desktop-nav__dropdown landing-desktop-nav__dropdown--left">
+                    <button class="landing-desktop-nav__dropdown-trigger flex items-center gap-0.5 text-primary dark:text-red-400 font-bold transition-colors text-[12px] xl:text-[12.5px] 2xl:text-[13.5px]" type="button" aria-expanded="false">
                         Para Propietarios
-                        <span class="material-symbols-outlined landing-desktop-nav__chevron text-primary dark:text-red-400" aria-hidden="true" style="font-size: 18px;">expand_more</span>
+                        <span class="material-symbols-outlined landing-desktop-nav__chevron text-primary dark:text-red-400" aria-hidden="true" style="font-size: 15px;">expand_more</span>
                     </button>
-                    <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 min-w-[580px] right-0 left-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
+                    <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 w-[560px] min-w-[560px] rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
                         <div>
                             <h4 class="text-[11px] font-black text-primary dark:text-red-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Gestión de Propiedad
+                                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Gestión de Propiedades
                             </h4>
                             <div class="flex flex-col gap-2">
                                 <a href="administrador.html" class="landing-desktop-nav__menu-item font-bold text-primary dark:text-red-400 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-primary text-base">manage_accounts</span> Panel del Propietario
                                 </a>
-                                <a href="administrador.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-base">add_home</span> Publicar aviso de alquiler
+                                <a href="administrador.html#avisos" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-base">home_work</span> Mis Propiedades & Avisos
+                                </a>
+                                <a href="administrador.html#postulaciones" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-amber-500 text-base">how_to_reg</span> Postulaciones & Selección
+                                </a>
+                                <a href="administrador.html#visitas" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-base">calendar_month</span> Agenda de Visitas
                                 </a>
                             </div>
                         </div>
                         <div>
                             <h4 class="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Herramientas & Cobranzas
+                                <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Contrato & Servicios
                             </h4>
                             <div class="flex flex-col gap-2">
-                                <a href="administrador.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-amber-500 text-base">how_to_reg</span> Postulaciones recibidas
+                                <a href="administrador.html#alquiler-activo" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-emerald-600 text-base">payments</span> Alquiler Activo & Cobros
                                 </a>
-                                <a href="administrador.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-emerald-600 text-base">payments</span> Cobros e Índice IPC/ICL
+                                <a href="administrador.html#mantenimiento" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-zinc-500 text-base">build</span> Tickets de Mantenimiento
                                 </a>
-                                <a href="consultar-valor.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-zinc-500 text-base">analytics</span> Consultar valor de mercado
+                                <a href="propietarios.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-base">info</span> Soluciones para Propietarios
                                 </a>
                             </div>
                         </div>
@@ -90,12 +96,12 @@
                 </div>
 
                 <!-- Dropdown: Para Inquilinos -->
-                <div class="landing-desktop-nav__dropdown">
-                    <button class="landing-desktop-nav__dropdown-trigger flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold transition-colors lg:!text-[14px] xl:!text-[15px]" type="button" aria-expanded="false">
+                <div class="landing-desktop-nav__dropdown landing-desktop-nav__dropdown--center">
+                    <button class="landing-desktop-nav__dropdown-trigger flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-bold transition-colors text-[12px] xl:text-[12.5px] 2xl:text-[13.5px]" type="button" aria-expanded="false">
                         Para Inquilinos
-                        <span class="material-symbols-outlined landing-desktop-nav__chevron text-emerald-600 dark:text-emerald-400" aria-hidden="true" style="font-size: 18px;">expand_more</span>
+                        <span class="material-symbols-outlined landing-desktop-nav__chevron text-emerald-600 dark:text-emerald-400" aria-hidden="true" style="font-size: 15px;">expand_more</span>
                     </button>
-                    <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 min-w-[580px] right-0 left-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
+                    <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 w-[560px] min-w-[560px] rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
                         <div>
                             <h4 class="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tu Contrato & Credencial
@@ -131,7 +137,47 @@
                     </div>
                 </div>
 
-                <a class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer lg:!text-[14px] xl:!text-[15px]" href="corredores.html">Corredores</a>
+                <!-- Dropdown: Para Corredores (Azul Oscuro Distintivo - Abre hacia la izquierda) -->
+                <div class="landing-desktop-nav__dropdown landing-desktop-nav__dropdown--right">
+                    <button class="landing-desktop-nav__dropdown-trigger flex items-center gap-0.5 text-blue-900 dark:text-blue-400 font-bold transition-colors text-[12px] xl:text-[12.5px] 2xl:text-[13.5px]" type="button" aria-expanded="false">
+                        Para Corredores
+                        <span class="material-symbols-outlined landing-desktop-nav__chevron text-blue-900 dark:text-blue-400" aria-hidden="true" style="font-size: 15px;">expand_more</span>
+                    </button>
+                    <div class="landing-desktop-nav__menu p-6 grid grid-cols-2 gap-6 w-[560px] min-w-[560px] rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl" role="menu">
+                        <div>
+                            <h4 class="text-[11px] font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-900"></span> Gestión CRM & Cartera
+                            </h4>
+                            <div class="flex flex-col gap-2">
+                                <a href="panel-corredor.html" class="landing-desktop-nav__menu-item font-bold text-blue-900 dark:text-blue-400 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-base">dashboard_customize</span> Panel CRM del Corredor
+                                </a>
+                                <a href="panel-corredor.html#avisos" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-base">table_rows</span> Cartera de Propiedades en Filas
+                                </a>
+                                <a href="panel-corredor.html#contactos" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-amber-500 text-base">groups</span> Contactos & Clientes (Inquilinos/Prop.)
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-3 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Operaciones & Red
+                            </h4>
+                            <div class="flex flex-col gap-2">
+                                <a href="panel-corredor.html#alquileres" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-emerald-600 text-base">payments</span> Alquileres Activos & Cobros
+                                </a>
+                                <a href="panel-corredor.html#operaciones" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-purple-600 text-base">handshake</span> Embudo Kanban, MLS & Tasaciones
+                                </a>
+                                <a href="corredores.html" class="landing-desktop-nav__menu-item flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-base">rocket_launch</span> Soluciones CRM & Planes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="desktop-auth-container" class="max-xl:hidden flex items-center ml-2 mr-2">
@@ -142,11 +188,14 @@
                 <div class="auth-ui-state logged-in hidden relative group">
                     <button class="w-10 h-10 rounded-full bg-primary dark:bg-red-800 text-white flex items-center justify-center text-base font-bold shadow-md hover:scale-105 transition-transform cursor-pointer auth-user-initial">U</button>
                     <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden z-[120] flex flex-col py-2">
+                        <a href="tu-alquiler.html" class="px-4 py-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 text-base">key</span> Mi Alquiler Activo
+                        </a>
                         <a href="administrador.html" class="px-4 py-2 text-sm font-bold text-primary dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-base">manage_accounts</span> Panel Propietario
                         </a>
-                        <a href="tu-alquiler.html" class="px-4 py-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
-                            <span class="material-symbols-outlined text-emerald-600 text-base">key</span> Mi Alquiler Activo
+                        <a href="panel-corredor.html" class="px-4 py-2 text-sm font-bold text-blue-900 dark:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
+                            <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-base">dashboard_customize</span> Panel Corredor
                         </a>
                         <hr class="my-1 border-zinc-200 dark:border-zinc-700">
                         <a href="postulaciones.html" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
@@ -173,11 +222,14 @@
                 <div class="auth-ui-state logged-in hidden relative group">
                     <button class="w-8 h-8 rounded-full bg-primary dark:bg-red-800 text-white flex items-center justify-center text-sm font-bold shadow-md hover:opacity-90 transition-opacity auth-user-initial cursor-pointer">U</button>
                     <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden z-[120] flex flex-col py-2">
+                        <a href="tu-alquiler.html" class="px-4 py-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 text-base">key</span> Mi Alquiler Activo
+                        </a>
                         <a href="administrador.html" class="px-4 py-2 text-sm font-bold text-primary dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-base">manage_accounts</span> Panel Propietario
                         </a>
-                        <a href="tu-alquiler.html" class="px-4 py-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
-                            <span class="material-symbols-outlined text-emerald-600 text-base">key</span> Mi Alquiler Activo
+                        <a href="panel-corredor.html" class="px-4 py-2 text-sm font-bold text-blue-900 dark:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
+                            <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-base">dashboard_customize</span> Panel Corredor
                         </a>
                         <hr class="my-1 border-zinc-200 dark:border-zinc-700">
                         <a href="postulaciones.html" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
@@ -203,5 +255,11 @@
     div.innerHTML = html;
     while(div.firstChild) {
         document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript);
+    }
+
+    if (!document.querySelector('script[src*="footer.js"]')) {
+        var fScript = document.createElement('script');
+        fScript.src = 'js/footer.js';
+        document.head.appendChild(fScript);
     }
 })();

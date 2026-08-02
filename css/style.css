@@ -2505,55 +2505,117 @@ body.no-scroll {
 
 .landing-desktop-nav__menu {
     position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    min-width: 210px;
-    padding: 8px;
+    top: calc(100% + 12px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(-6px);
+    width: min(560px, calc(100vw - 2rem));
+    padding: 1.5rem;
     border: 1px solid rgba(5, 5, 5, 0.12);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.98);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+    border-radius: 1.25rem;
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
     opacity: 0;
-    transform: translateY(-4px);
     pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 250;
+}
+
+.landing-desktop-nav__menu::before {
+    content: '';
+    position: absolute;
+    top: -16px;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: transparent;
 }
 
 .landing-desktop-nav__dropdown.is-open .landing-desktop-nav__menu {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* Alineación Izquierda (Para Propietarios) */
+.landing-desktop-nav__dropdown--left .landing-desktop-nav__menu {
+    left: 0;
+    right: auto;
+    transform: translateY(-6px);
+}
+.landing-desktop-nav__dropdown--left.is-open .landing-desktop-nav__menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Alineación Central (Para Inquilinos) */
+.landing-desktop-nav__dropdown--center .landing-desktop-nav__menu {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(-6px);
+}
+.landing-desktop-nav__dropdown--center.is-open .landing-desktop-nav__menu {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* Alineación Derecha (Para Corredores - Abre hacia la izquierda para nunca cortarse) */
+.landing-desktop-nav__dropdown--right .landing-desktop-nav__menu {
+    right: 0;
+    left: auto;
+    transform: translateY(-6px);
+}
+.landing-desktop-nav__dropdown--right.is-open .landing-desktop-nav__menu {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
 }
 
 .landing-desktop-nav__menu-item {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     width: 100%;
-    padding: 11px 12px;
+    padding: 0.6rem 0.85rem;
     border: 0;
-    border-radius: 6px;
+    border-radius: 0.75rem;
     background: transparent;
-    color: #111;
-    font: 700 14px/1.2 'Manrope', 'Inter', sans-serif;
+    color: #1a1c1c;
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.3;
     text-align: left;
-    white-space: nowrap;
+    white-space: normal;
+    text-decoration: none;
     cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.landing-desktop-nav__dropdown-trigger {
+    transition: opacity 0.18s ease;
+}
+
+.landing-desktop-nav__dropdown-trigger:hover {
+    opacity: 0.8;
 }
 
 .landing-desktop-nav__menu-item:hover,
 .landing-desktop-nav__item:hover,
-.landing-desktop-nav__auth-link:hover,
-.landing-desktop-nav__dropdown-trigger:hover {
+.landing-desktop-nav__auth-link:hover {
     color: #7f1d1d;
 }
 
 .landing-desktop-nav__menu-item:hover {
     background: rgba(127, 29, 29, 0.07);
+    transform: translateX(3px);
 }
 
 html.dark .landing-desktop-nav__role,
 html.dark .landing-desktop-nav__item,
 html.dark .landing-desktop-nav__auth-link,
-html.dark .landing-desktop-nav__dropdown-trigger,
 html.dark .landing-desktop-nav__auth-separator {
     color: #f4f4f5;
 }
@@ -2564,7 +2626,8 @@ html.dark .landing-desktop-nav__role {
 
 html.dark .landing-desktop-nav__menu {
     border-color: rgba(244, 244, 245, 0.14);
-    background: rgba(9, 9, 11, 0.98);
+    background: #18181b;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 html.dark .landing-desktop-nav__menu-item {
@@ -2667,6 +2730,7 @@ html.dark .landing-desktop-nav__menu-item {
 }
 
 .landing-menu__top {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2689,13 +2753,18 @@ html.dark .landing-desktop-nav__menu-item {
 }
 
 .landing-menu__close {
+    position: sticky;
+    top: 0.75rem;
+    float: right;
+    z-index: 200;
+    margin-bottom: -3.25rem;
     flex: 0 0 auto;
     width: 2.75rem;
     height: 2.75rem;
     border: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.62);
-    color: #111;
+    background: transparent;
+    color: inherit;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2704,8 +2773,12 @@ html.dark .landing-desktop-nav__menu-item {
 }
 
 .landing-menu__close:hover {
-    transform: rotate(90deg) scale(1.04);
-    background: #ffffff;
+    transform: rotate(90deg) scale(1.1);
+    background: rgba(0, 0, 0, 0.06);
+}
+
+html.dark .landing-menu__close:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .landing-menu__main {

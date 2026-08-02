@@ -7463,6 +7463,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    let dropdownHoverTimeout = null;
+
+    const setupDropdownHoverEvents = () => {
+        document.querySelectorAll('.landing-desktop-nav__dropdown').forEach((dropdown) => {
+            const trigger = dropdown.querySelector('.landing-desktop-nav__dropdown-trigger');
+
+            dropdown.addEventListener('mouseenter', () => {
+                if (dropdownHoverTimeout) {
+                    clearTimeout(dropdownHoverTimeout);
+                    dropdownHoverTimeout = null;
+                }
+                closeDropdowns(dropdown);
+                dropdown.classList.add('is-open');
+                if (trigger) trigger.setAttribute('aria-expanded', 'true');
+            });
+
+            dropdown.addEventListener('mouseleave', () => {
+                dropdownHoverTimeout = setTimeout(() => {
+                    dropdown.classList.remove('is-open');
+                    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                }, 180);
+            });
+        });
+    };
+
+    setupDropdownHoverEvents();
+
     document.addEventListener('click', (event) => {
         const dropdownTrigger = event.target.closest('.landing-desktop-nav__dropdown-trigger');
         if (dropdownTrigger) {
@@ -7505,14 +7532,14 @@ document.addEventListener('DOMContentLoaded', () => {
     menu.innerHTML = `
         <div class="landing-menu__scrim" data-menu-close></div>
         <div class="landing-menu__panel" role="dialog" aria-modal="true" aria-label="Menú principal">
+            <button class="landing-menu__close" type="button" aria-label="Cerrar menú" data-menu-close>
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
             <div class="landing-menu__content">
                 <div class="landing-menu__top">
                     <a class="landing-menu__brand" href="index.html" aria-label="Inicio">
                         <img src="img/logo-lite.png" alt="Habitat">
                     </a>
-                    <button class="landing-menu__close" type="button" aria-label="Cerrar menú" data-menu-close>
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
                 </div>
 
                 <div class="landing-menu__main p-1 space-y-6">
@@ -7546,64 +7573,133 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 2: PROPIETARIOS -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 pb-5">
-                        <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Para Propietarios
-                        </h4>
-                        <div class="flex flex-col gap-2">
-                            <a href="administrador.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                                    <span class="material-symbols-outlined text-xl">manage_accounts</span>
-                                </div>
-                                <div>
-                                    <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Panel del Propietario</span>
-                                    <span class="block text-[11px] text-zinc-500">Postulaciones, visitas, cobros e IPC</span>
-                                </div>
-                            </a>
-                            <a href="index.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-primary text-xl">add_home</span>
-                                <span>Publicar propiedad en alquiler</span>
-                            </a>
-                            <a href="consultar-valor.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-zinc-500 text-xl">analytics</span>
-                                <span>Consultar valor de mercado</span>
-                            </a>
+                    <!-- SECCIÓN 1: INQUILINOS (Verde Esmeralda - Colapsable) -->
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                            <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Para Inquilinos
+                            </h4>
+                            <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
+                        </button>
+                        <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
+                            <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                <a href="tu-alquiler.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">key</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Mi Alquiler Activo</span>
+                                        <span class="block text-[11px] text-zinc-500">Pagar alquiler, informar pago y tickets</span>
+                                    </div>
+                                </a>
+                                <a href="pasaporte-habitat.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">badge</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Pasaporte Hábitat</span>
+                                        <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
+                                    </div>
+                                </a>
+                                <a href="postulaciones.html" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
+                                    <span>Mis Postulaciones</span>
+                                </a>
+                                <a href="visitas.html" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 text-xl">calendar_month</span>
+                                    <span>Mis Visitas Agendadas</span>
+                                </a>
+                                <a href="buscar.html" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
+                                    <span>Buscar Alquileres</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 3: INQUILINOS -->
-                    <div class="landing-menu__section pb-2">
-                        <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Para Inquilinos
-                        </h4>
-                        <div class="flex flex-col gap-2">
-                            <a href="pasaporte-habitat.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                                    <span class="material-symbols-outlined text-xl">badge</span>
-                                </div>
-                                <div>
-                                    <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Pasaporte Hábitat</span>
-                                    <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
-                                </div>
-                            </a>
-                            <a href="tu-alquiler.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                                    <span class="material-symbols-outlined text-xl">key</span>
-                                </div>
-                                <div>
-                                    <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Mi Alquiler Activo</span>
-                                    <span class="block text-[11px] text-zinc-500">Pagar alquiler, informar pago y tickets</span>
-                                </div>
-                            </a>
-                            <a href="postulaciones.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
-                                <span>Mis Postulaciones</span>
-                            </a>
-                            <a href="visitas.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-emerald-600 text-xl">calendar_month</span>
-                                <span>Mis Visitas Agendadas</span>
-                            </a>
+                    <!-- SECCIÓN 2: PROPIETARIOS (Rojo Borgoña - Colapsable) -->
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                            <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-primary"></span> Para Propietarios
+                            </h4>
+                            <span class="material-symbols-outlined text-primary dark:text-red-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
+                        </button>
+                        <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
+                            <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                <a href="administrador.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">manage_accounts</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Panel del Propietario</span>
+                                        <span class="block text-[11px] text-zinc-500">Gestión de alquileres, cobros e IPC</span>
+                                    </div>
+                                </a>
+                                <a href="administrador.html#avisos" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-primary text-xl">home_work</span>
+                                    <span>Mis Propiedades & Avisos</span>
+                                </a>
+                                <a href="administrador.html#postulaciones" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-amber-500 text-xl">how_to_reg</span>
+                                    <span>Postulaciones & Selección</span>
+                                </a>
+                                <a href="administrador.html#visitas" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-blue-500 text-xl">calendar_month</span>
+                                    <span>Agenda de Visitas</span>
+                                </a>
+                                <a href="administrador.html#alquiler-activo" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 text-xl">payments</span>
+                                    <span>Alquiler Activo & Cobros</span>
+                                </a>
+                                <a href="administrador.html#mantenimiento" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-zinc-500 text-xl">build</span>
+                                    <span>Tickets de Mantenimiento</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: CORREDORES E INMOBILIARIAS (Azul Oscuro - Colapsable) -->
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                            <h4 class="font-headline text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-900"></span> Para Corredores & Inmobiliarias
+                            </h4>
+                            <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
+                        </button>
+                        <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
+                            <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                <a href="panel-corredor.html" class="menu-item-card bg-blue-900/5 dark:bg-blue-950/20 border border-blue-900/20 hover:border-blue-900/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">dashboard_customize</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Panel CRM del Corredor</span>
+                                        <span class="block text-[11px] text-zinc-500">Gestión en filas, Kanban, MLS & Tasaciones</span>
+                                    </div>
+                                </a>
+                                <a href="panel-corredor.html#avisos" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">table_rows</span>
+                                    <span>Cartera de Propiedades en Filas</span>
+                                </a>
+                                <a href="panel-corredor.html#contactos" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-amber-500 text-xl">groups</span>
+                                    <span>Contactos & Clientes (Inquilinos/Prop.)</span>
+                                </a>
+                                <a href="panel-corredor.html#alquileres" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 text-xl">payments</span>
+                                    <span>Alquileres Activos & Cobros</span>
+                                </a>
+                                <a href="panel-corredor.html#operaciones" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-purple-600 text-xl">handshake</span>
+                                    <span>Embudo Kanban, MLS & Tasaciones</span>
+                                </a>
+                                <a href="corredores.html" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">rocket_launch</span>
+                                    <span>Soluciones CRM & Planes</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -7624,6 +7720,43 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     `;
     document.body.appendChild(menu);
+
+    // Event listeners para Acordeón del Menú Hamburguesa
+    menu.querySelectorAll('.drawer-accordion-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const parent = btn.closest('.landing-menu__section');
+            if (!parent) return;
+
+            const content = parent.querySelector('.drawer-accordion-content');
+            const chevron = btn.querySelector('.accordion-chevron');
+            if (!content) return;
+
+            const isHidden = content.classList.contains('grid-rows-[0fr]');
+
+            // Colapsar otras secciones para mantener acordeón limpio
+            menu.querySelectorAll('.drawer-accordion-content').forEach(otherContent => {
+                if (otherContent !== content) {
+                    otherContent.classList.remove('grid-rows-[1fr]', 'opacity-100');
+                    otherContent.classList.add('grid-rows-[0fr]', 'opacity-0');
+                    const otherChevron = otherContent.closest('.landing-menu__section')?.querySelector('.accordion-chevron');
+                    if (otherChevron) otherChevron.classList.remove('rotate-180');
+                }
+            });
+
+            if (isHidden) {
+                content.classList.remove('grid-rows-[0fr]', 'opacity-0');
+                content.classList.add('grid-rows-[1fr]', 'opacity-100');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                content.classList.remove('grid-rows-[1fr]', 'opacity-100');
+                content.classList.add('grid-rows-[0fr]', 'opacity-0');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        });
+    });
 
     const adminToggle = menu.querySelector('#admin-rentals-toggle');
     const adminWrapper = menu.querySelector('#admin-rentals-wrapper');

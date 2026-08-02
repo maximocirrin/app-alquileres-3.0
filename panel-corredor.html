@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Panel CRM de Corredores | Hábitat</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=12">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Chart.js para Gráficos Estadísticos del CRM -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#1a1c1c",
+                        "background": "#f8fafc",
+                        "surface": "#ffffff",
+                        "primary": "#811b1e",
+                        "primary-hover": "#9e2226",
+                        "primary-light": "rgba(129, 27, 30, 0.08)"
+                    },
+                    borderRadius: {
+                        "2xl": "1.25rem",
+                        "3xl": "1.75rem"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope", "sans-serif"],
+                        body: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        html.dark .glass-card {
+            background: rgba(24, 24, 27, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        #broker-floating-dock-container {
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+        }
+
+        #broker-floating-dock-container.is-hidden {
+            transform: translateY(140%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .floating-dock {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+        }
+
+        html.dark .floating-dock {
+            background: rgba(18, 18, 20, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(63, 63, 70, 0.7);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        #dock-active-indicator {
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
+            box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+        }
+
+        .broker-dock-btn {
+            transition: color 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .broker-dock-btn.text-white,
+        .broker-dock-btn.text-white * {
+            color: #ffffff !important;
+        }
+
+        .broker-dock-btn.text-white .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .broker-table th {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .broker-table tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .broker-table tr:hover {
+            background-color: rgba(129, 27, 30, 0.04);
+        }
+
+        html.dark .broker-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .kanban-col {
+            min-height: 460px;
+        }
+
+        .kanban-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        html.dark .kanban-card:hover {
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+</head>
+
+<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
+    <!-- TopNavBar Component (Standard App Header) -->
+    <script src="js/navbar.js"></script>
+
+    <main class="flex-grow pt-24 pb-36 px-4 sm:px-6 lg:px-8 max-w-[1580px] mx-auto w-full flex flex-col space-y-6">
+
+        <!-- Header Principal CRM de Corredores -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
+                </div>
+                <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-3xl">dashboard_customize</span>
+                    Panel del Corredor Inmobiliario
+                </h1>
+                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Administración de cartera en filas, postulaciones, citas de visitas, contratos activos, tasaciones y red MLS.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+                <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
+                    Nueva Captación
+                </button>
+                <button type="button" onclick="switchBrokerTab('operaciones')" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-emerald-600 text-base sm:text-lg">calculate</span>
+                    Calculadora Ingreso
+                </button>
+                <button type="button" onclick="openBlindCardModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-blue-600 text-base sm:text-lg">visibility_off</span>
+                    Ficha Ciega
+                </button>
+                <button type="button" onclick="switchBrokerTab('alquileres')" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-amber-500 text-base sm:text-lg">build</span>
+                    Tickets Mantenimiento
+                </button>
+            </div>
+        </div>
+
+        <!-- PESTAÑAS SUPERIORES (5 PESTAÑAS CONSOLIDADAS SIN SCROLL HORRIBLE) -->
+        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>General</span>
+            </button>
+
+            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">table_rows</span>
+                <span>Mis Avisos en Filas</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-primary/10 text-primary dark:bg-red-500/20">52</span>
+            </button>
+
+            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">groups</span>
+                <span>Contactos & Clientes</span>
+                <span class="px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-white">7</span>
+            </button>
+
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">payments</span>
+                <span>Alquileres</span>
+            </button>
+
+            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">handshake</span>
+                <span>Operaciones & Red</span>
+            </button>
+        </div>
+
+        <!-- CONTENIDO DE TODAS LAS PESTAÑAS (CADA PESTAÑA CONTIENE ÚNICAMENTE LO SUYO) -->
+        <div class="w-full">
+
+            <!-- PESTAÑA 1: GENERAL (PANEL GENERAL CON MÉTRICAS Y GRÁFICOS) -->
+            <div id="panel-content-general" class="tab-content active space-y-6">
+                <!-- TARJETAS DE MÉTRICAS FINANCIAL & OPERATIONAL KPIs -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Metric 1: Alquileres Activos -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-primary flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Volumen Alquileres Activos</span>
+                            <h3 class="font-headline text-2xl font-black text-zinc-900 dark:text-white">$ 24.850.000<span class="text-xs text-zinc-400 font-normal"> /mes</span></h3>
+                            <div class="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
+                                <span class="material-symbols-outlined text-base">trending_up</span>
+                                <span>+14.2% vs mes anterior</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">payments</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: Comisiones Cobradas / Estimadas -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-600 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Honorarios & Comisiones</span>
+                            <h3 class="font-headline text-2xl font-black text-emerald-600 dark:text-emerald-400">$ 4.970.000</h3>
+                            <p class="text-xs text-zinc-500 font-medium">5.0% Honorarios prom. • 2 pendientes</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Cartera de Propiedades -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-600 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Propiedades en Cartera</span>
+                            <h3 class="font-headline text-2xl font-black text-zinc-900 dark:text-white">52 <span class="text-xs text-zinc-400 font-normal">inmuebles</span></h3>
+                            <p class="text-xs text-zinc-500 font-medium">38 Alquiler • 14 Venta • 4 Pausadas</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">real_estate_agent</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 4: Embudo de Leads / Consultas -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Leads & Consultas Activas</span>
+                            <h3 class="font-headline text-2xl font-black text-amber-600 dark:text-amber-400">96 <span class="text-xs text-zinc-400 font-normal">clientes</span></h3>
+                            <p class="text-xs text-zinc-500 font-medium">18 Citas agendadas esta semana</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">group</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANEL DE GRÁFICOS CRM (Chart.js) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm lg:col-span-2 space-y-4">
+                        <div class="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                            <div>
+                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-xl">show_chart</span>
+                                    Evolución de Volumen de Alquileres y Comisiones Cobradas
+                                </h3>
+                                <p class="text-xs text-zinc-500">Histórico de cánones cobrados e ingresos por honorarios de corretaje (Últimos 6 meses).</p>
+                            </div>
+                            <span class="text-xs font-bold px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-600 dark:text-zinc-300">2026</span>
+                        </div>
+                        <div class="h-64 w-full relative">
+                            <canvas id="chart-financial-evolution"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
+                        <div class="border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-blue-600 text-xl">pie_chart</span>
+                                Estado de Cartera
+                            </h3>
+                            <p class="text-xs text-zinc-500">Alquiladas vs. Disponibles y Pausadas.</p>
+                        </div>
+                        <div class="h-64 w-full relative flex items-center justify-center">
+                            <canvas id="chart-portfolio-status"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 2: MIS AVISOS EN FILAS / TABLA -->
+            <div id="panel-content-avisos" class="tab-content space-y-4">
+                <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <div class="relative flex-1 min-w-[220px]">
+                            <input id="broker-search-input" type="text" oninput="filterBrokerProperties()" placeholder="Buscar por ID, dirección, título, propietario..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
+                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-base">search</span>
+                        </div>
+
+                        <select id="filter-operacion-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
+                            <option value="todos">Todas las Operaciones</option>
+                            <option value="alquiler">Alquiler Tradicional</option>
+                            <option value="temporal">Alquiler Temporal</option>
+                            <option value="venta">Venta</option>
+                        </select>
+
+                        <select id="filter-estado-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
+                            <option value="todos">Todos los Estados</option>
+                            <option value="publicada">Publicada</option>
+                            <option value="alquilada">Alquilada</option>
+                            <option value="reservada">Reservada</option>
+                            <option value="pausada">Pausada</option>
+                        </select>
+
+                        <select id="filter-agente-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
+                            <option value="todos">Todos los Agentes</option>
+                            <option value="Roberto Gómez">Roberto Gómez</option>
+                            <option value="Mariana Rossi">Mariana Rossi</option>
+                            <option value="Esteban Larrea">Esteban Larrea</option>
+                            <option value="Carlos Méndez">Carlos Méndez</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined text-base">download</span>
+                            <span>Exportar Excel</span>
+                        </button>
+                        <button type="button" id="btn-view-rows" onclick="toggleBrokerView('rows')" class="px-3 py-2 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm">
+                            <span class="material-symbols-outlined text-base">table_rows</span>
+                            <span class="hidden sm:inline">Vista Filas (Tabla)</span>
+                        </button>
+                        <button type="button" id="btn-view-grid" onclick="toggleBrokerView('grid')" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors">
+                            <span class="material-symbols-outlined text-base">grid_view</span>
+                            <span class="hidden sm:inline">Vista Tarjetas</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="container-rows-view" class="glass-card rounded-2xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse broker-table">
+                            <thead>
+                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">
+                                    <th class="p-3 w-8"><input type="checkbox" id="select-all-props" onclick="toggleSelectAllProps(this)" class="rounded border-zinc-300"></th>
+                                    <th class="p-3">Inmueble</th>
+                                    <th class="p-3">ID / Código</th>
+                                    <th class="p-3">Operación</th>
+                                    <th class="p-3">Precio Mensual</th>
+                                    <th class="p-3">Honorarios</th>
+                                    <th class="p-3">Difusión Portales</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Propietario / Agente</th>
+                                    <th class="p-3 text-center">Interesados</th>
+                                    <th class="p-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="broker-rows-tbody" class="divide-y divide-zinc-200/60 dark:divide-zinc-800 text-xs">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="container-grid-view" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- PESTAÑA 3: CONTACTOS & CLIENTES (INQUILINOS Y PROPIETARIOS SEPARADOS) -->
+            <div id="panel-content-contactos" class="tab-content space-y-6">
+                <!-- Header con Selector de Subpestañas Inquilinos vs Propietarios -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-2xl">groups</span>
+                            Directorio de Contactos & Clientes CRM
+                        </h2>
+                        <p class="text-xs text-zinc-500">Gestión segmentada por tipo de cliente: Inquilinos (Postulantes & Citas) y Propietarios (Mandatos & Captación).</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800/80 p-1.5 rounded-xl border border-zinc-200/80 dark:border-zinc-700 shrink-0">
+                        <button type="button" id="subtab-btn-inquilinos" onclick="toggleContactSubtab('inquilinos')" class="px-4 py-2 rounded-lg text-xs font-black transition-all bg-primary text-white shadow-sm flex items-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">person_search</span>
+                            <span>Inquilinos & Citas (3)</span>
+                        </button>
+                        <button type="button" id="subtab-btn-propietarios" onclick="toggleContactSubtab('propietarios')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">real_estate_agent</span>
+                            <span>Propietarios & Mandatos (4)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VISTA 1: SUBPESTAÑA INQUILINOS (Postulaciones & Visitas Programadas) -->
+                <div id="subtab-content-inquilinos" class="space-y-6">
+                    <!-- Subsección Postulaciones -->
+                    <div class="space-y-4">
+                        <div class="glass-card p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                            <div>
+                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white mb-0.5">Postulaciones y Candidatos Verificados</h3>
+                                <p class="text-xs text-zinc-500">Revisa comprobantes de sueldo, scoring crediticio y selecciona el inquilino para la propiedad.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs rounded-full border border-amber-500/20">3 Pendientes</span>
+                        </div>
+
+                        <div id="broker-list-apps" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Subsección Visitas Programadas -->
+                    <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                        <div class="glass-card p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                            <div>
+                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white mb-0.5">Visitas Programadas por Inquilinos</h3>
+                                <p class="text-xs text-zinc-500">Agenda de citas confirmadas por interesados para conocer los inmuebles.</p>
+                            </div>
+                            <button type="button" onclick="alert('Nueva visita agendada.')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer">Agendar Cita</button>
+                        </div>
+
+                        <div id="broker-list-visits" class="space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- VISTA 2: SUBPESTAÑA PROPIETARIOS (Cartera de Clientes Propietarios & Mandatos) -->
+                <div id="subtab-content-propietarios" class="hidden space-y-4">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white mb-0.5">Clientes Propietarios Representados</h3>
+                            <p class="text-xs text-zinc-500">Directorio de propietarios con mandatos de corretaje, comisiones pactadas e inmuebles encomendados.</p>
+                        </div>
+                        <button type="button" onclick="alert('Registrando nuevo propietario...')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base">person_add</span> Nuevo Propietario
+                        </button>
+                    </div>
+
+                    <div id="broker-list-owners" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 4: ALQUILERES & TICKETS (CONSOLIDADOS) -->
+            <div id="panel-content-alquileres" class="tab-content space-y-6">
+                <div id="broker-container-active-rental" class="space-y-6"></div>
+
+                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm">
+                        <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Tickets de Mantenimiento y Reparaciones</h2>
+                        <p class="text-xs text-zinc-500">Gestión de reclamos de conservación enviados por inquilinos activos.</p>
+                    </div>
+
+                    <div id="broker-list-tickets" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 5: OPERACIONES & RED (CONSOLIDADAS: KANBAN, TASACIONES, MLS, CALCULADORA) -->
+            <div id="panel-content-operaciones" class="tab-content space-y-8">
+                <!-- 1. Embudo Kanban -->
+                <div class="space-y-4">
+                    <div class="glass-card p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div>
+                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Embudo CRM Kanban de Leads</h3>
+                            <p class="text-xs text-zinc-500">Seguimiento de candidatos desde el ingreso hasta la firma y cobro de honorarios.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto pb-4">
+                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
+                            <div class="flex items-center justify-between px-1">
+                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Nuevas Consultas
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">3</span>
+                            </div>
+                            <div id="kanban-col-nuevas" class="space-y-3 flex-grow"></div>
+                        </div>
+
+                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
+                            <div class="flex items-center justify-between px-1">
+                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Contacto Realizado
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">2</span>
+                            </div>
+                            <div id="kanban-col-contacto" class="space-y-3 flex-grow"></div>
+                        </div>
+
+                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
+                            <div class="flex items-center justify-between px-1">
+                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> Visita Agendada
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">2</span>
+                            </div>
+                            <div id="kanban-col-visita" class="space-y-3 flex-grow"></div>
+                        </div>
+
+                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
+                            <div class="flex items-center justify-between px-1">
+                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> Reserva / Evaluación
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400">1</span>
+                            </div>
+                            <div id="kanban-col-reserva" class="space-y-3 flex-grow"></div>
+                        </div>
+
+                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
+                            <div class="flex items-center justify-between px-1">
+                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Firmado & Cobrado
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">4</span>
+                            </div>
+                            <div id="kanban-col-firmado" class="space-y-3 flex-grow"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Tasaciones -->
+                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm flex items-center justify-between">
+                        <div>
+                            <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Solicitudes de Tasación de Inmuebles</h2>
+                            <p class="text-xs text-zinc-500">Pedidos de valuación comercial enviados por propietarios para captación.</p>
+                        </div>
+                        <button type="button" onclick="alert('Nueva tasación agendada.')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer">Nueva Tasación</button>
+                    </div>
+
+                    <div id="broker-list-valuations" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- 3. Red MLS -->
+                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
+                            <div>
+                                <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                    Red Inter-Inmobiliaria Hábitat MLS
+                                </span>
+                                <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mt-1">Inventario Compartido entre Colegas</h3>
+                                <p class="text-xs text-zinc-500">Propiedades autorizadas para compartir comisiones al 50/50 y emitir fichas ciegas.</p>
+                            </div>
+                            <button type="button" onclick="openBlindCardModal()" class="px-4 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-all flex items-center gap-1.5 shrink-0">
+                                <span class="material-symbols-outlined text-base">visibility_off</span>
+                                Generar Ficha Ciega PDF
+                            </button>
+                        </div>
+
+                        <div id="broker-mls-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Calculadora de Ingreso -->
+                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="glass-card p-6 rounded-2xl shadow-sm max-w-4xl mx-auto space-y-6">
+                        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-600 text-2xl">calculate</span>
+                                Calculadora de Gastos de Ingreso & Honorarios de Corretaje
+                            </h3>
+                            <p class="text-xs text-zinc-500">Emita presupuestos oficiales de ingreso especificando depósito, honorarios, sellados y primer mes.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Monto del Alquiler Mensual ($)</label>
+                                    <input type="number" id="calc-rent-price" value="450000" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Porcentaje Honorarios de Corretaje (%)</label>
+                                    <input type="number" id="calc-fee-percent" value="4.15" step="0.05" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Meses de Depósito de Garantía</label>
+                                    <select id="calc-deposit-months" onchange="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                        <option value="1">1 Mes de Depósito</option>
+                                        <option value="2">2 Meses de Depósito</option>
+                                        <option value="0">Sin Depósito (Con Garantía de Fianza)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Gastos de Informes & Certificación ($)</label>
+                                    <input type="number" id="calc-reports-cost" value="45000" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                </div>
+                            </div>
+
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex flex-col justify-between space-y-4">
+                                <div>
+                                    <span class="text-xs font-black uppercase text-primary dark:text-red-400 tracking-wider">Desglose de Ingreso</span>
+                                    <div class="mt-4 space-y-2.5 text-xs">
+                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
+                                            <span>Primer mes de alquiler:</span>
+                                            <b id="out-calc-first-month" class="text-zinc-900 dark:text-white">$ 450.000</b>
+                                        </div>
+                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
+                                            <span>Depósito de garantía:</span>
+                                            <b id="out-calc-deposit" class="text-zinc-900 dark:text-white">$ 450.000</b>
+                                        </div>
+                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
+                                            <span>Honorarios de corretaje:</span>
+                                            <b id="out-calc-fee" class="text-primary dark:text-red-400 font-extrabold">$ 224.100</b>
+                                        </div>
+                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
+                                            <span>Informes y certificados:</span>
+                                            <b id="out-calc-reports" class="text-zinc-900 dark:text-white">$ 45.000</b>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                                    <span class="block text-[10px] font-extrabold uppercase text-zinc-400">Total Requerido para Ingresar</span>
+                                    <span id="out-calc-total" class="text-3xl font-black text-emerald-600 dark:text-emerald-400">$ 1.169.100</span>
+                                    <button type="button" onclick="copyCalculatorBudget()" class="mt-4 w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">content_copy</span>
+                                        Copiar Presupuesto para WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (5 BOTONES CONSOLIDADOS - SIN SCROLL HORIZONTAL) -->
+    <div id="broker-floating-dock-container" class="fixed bottom-4 left-4 right-4 z-[100] max-w-md mx-auto">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1.5 flex items-center justify-between shadow-2xl">
+            <!-- Burbuja Deslizante Activa -->
+            <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
+
+            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl">dashboard</span>
+                <span class="text-[10px]">General</span>
+            </button>
+
+            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl">table_rows</span>
+                <span class="text-[10px]">Avisos</span>
+            </button>
+
+            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl">groups</span>
+                <span class="text-[10px]">Contactos</span>
+                <span class="absolute top-1 right-2 w-2 h-2 rounded-full bg-amber-500"></span>
+            </button>
+
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl">payments</span>
+                <span class="text-[10px]">Alquileres</span>
+            </button>
+
+            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl">handshake</span>
+                <span class="text-[10px]">Operaciones</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL: FICHA CIEGA -->
+    <div id="modal-blind-card" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-6 relative animate-on-scroll">
+            <button type="button" onclick="closeBlindCardModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+
+            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Generador de Ficha Ciega</span>
+                <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mt-1">Ficha Comercial Sin Datos de Origen</h3>
+                <p class="text-xs text-zinc-500">Visualice y comparta la propiedad con su propia marca e inmobiliaria, ocultando los datos del propietario o agencia captadora.</p>
+            </div>
+
+            <div id="blind-card-preview" class="border border-zinc-200 dark:border-zinc-700 rounded-2xl p-5 space-y-4 bg-zinc-50 dark:bg-zinc-800/40">
+                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-primary text-white font-black flex items-center justify-center text-xs">MI</div>
+                        <div>
+                            <h4 class="font-headline text-xs font-bold text-zinc-900 dark:text-white">Mi Inmobiliaria SRL</h4>
+                            <span class="text-[10px] text-zinc-400">Corredor Responsable: Matrícula CUCICBA #4892</span>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 text-[10px] font-black uppercase bg-emerald-500 text-white rounded-full">Exclusivo Cliente</span>
+                </div>
+
+                <div class="flex gap-4 items-center">
+                    <img src="img/hero-marketplace.jpg" alt="Propiedad" class="w-24 h-24 rounded-xl object-cover border">
+                    <div>
+                        <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">Departamento 3 Ambientes con Balcón y Cochera</h4>
+                        <p class="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                            <span class="material-symbols-outlined text-sm text-primary">location_on</span> Palermo Hollywood, CABA (Sin dirección exacta)
+                        </p>
+                        <p class="text-lg font-black text-primary dark:text-red-400 mt-2">$ 520.000 / mes <span class="text-xs font-normal text-zinc-400">+ expensas</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-[11px] text-center">
+                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>3</b> Ambientes</div>
+                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>78 m²</b> Totales</div>
+                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>2</b> Baños</div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeBlindCardModal()" class="px-4 py-2.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl">Cerrar</button>
+                <button type="button" onclick="alert('¡Ficha Ciega en PDF generada exitosamente!')" class="px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow hover:bg-blue-700 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">download</span> Descargar PDF Ficha Ciega
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Elegante -->
+    <footer class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
+        <div class="max-w-[1580px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
+                <span>&copy; 2026 Hábitat CRM Inmobiliario - Módulo de Corredores Matriculados</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="corredores.html" class="hover:text-primary transition-colors">Planes Corredor</a>
+                <a href="terminos.html" class="hover:text-primary transition-colors">Términos y Privacidad</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Supabase Client & App scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/app.js?v=12"></script>
+
+    <!-- Interactive Script for Broker CRM State & Mock Data -->
+    <script>
+        // MOCK DATA DE PROPIEDADES EN CARTERA DEL CORREDOR
+        const brokerPropertiesMock = [
+            { id: 'PROP-2026-081', title: 'Departamento 3 Ambientes con Balcón corrido', address: 'Av. Santa Fe 3420, Palermo', operation: 'alquiler', price: 520000, feePercent: 4.15, portals: ['Zonaprop', 'Argenprop', 'Hábitat'], status: 'publicada', owner: 'Roberto Gómez', leadsCount: 14, viewsCount: 382, image: 'img/hero-marketplace.jpg' },
+            { id: 'PROP-2026-082', title: 'Monoambiente Divisible a Estrenar', address: 'Humboldt 1940, Palermo Hollywood', operation: 'alquiler', price: 380000, feePercent: 5.0, portals: ['Argenprop', 'Hábitat'], status: 'alquilada', owner: 'Mariana Rossi', leadsCount: 22, viewsCount: 510, image: 'img/se%C3%B1or-usando-computadora.jpg' },
+            { id: 'PROP-2026-083', title: 'Piso Exclusivo 4 Ambientes con Cochera', address: 'Libertador 2450, Belgrano', operation: 'alquiler', price: 1200000, feePercent: 4.15, portals: ['Zonaprop', 'Argenprop', 'Hábitat'], status: 'reservada', owner: 'Esteban Larrea', leadsCount: 9, viewsCount: 290, image: 'img/pareja-viendo-celular.jpg' },
+            { id: 'PROP-2026-084', title: 'Local Comercial Frente con Doble Vidriera', address: 'Av. Corrientes 1540, Centro', operation: 'alquiler', price: 750000, feePercent: 5.0, portals: ['Zonaprop', 'Hábitat'], status: 'publicada', owner: 'Inversiones SA', leadsCount: 18, viewsCount: 440, image: 'img/personas-dandose-lamano.jpg' },
+            { id: 'PROP-2026-085', title: 'Casa Quinta con Piscina y Parque', address: 'Km 45 Panamericana, Pilar', operation: 'venta', price: 240000000, feePercent: 3.0, portals: ['Zonaprop', 'Argenprop', 'Hábitat'], status: 'publicada', owner: 'Carlos Méndez', leadsCount: 7, viewsCount: 180, image: 'img/hero-marketplace.jpg' },
+            { id: 'PROP-2026-086', title: 'Departamento 2 Ambientes Luminoso', address: 'Cabildo 1820, Belgrano', operation: 'alquiler', price: 410000, feePercent: 4.15, portals: ['Hábitat'], status: 'pausada', owner: 'Lucía Fernández', leadsCount: 5, viewsCount: 120, image: 'img/tenant-profile-1.jpg' }
+        ];
+
+        // MOCK DATA POSTULACIONES
+        const brokerApplicationsMock = [
+            { id: 'APP-101', property_title: 'Av. Santa Fe 3420, Palermo 3 Amb', tenant_name: 'Gonzalo Fernández', tenant_email: 'gonzalo.f@gmail.com', tenant_phone: '+54 11 4455-8899', monthly_income: 1650000, status: 'pendiente', income_proof_url: '#', message: 'Hola! Tengo recibo de sueldo de empresa multinacional y garantía propietaria de CABA.' },
+            { id: 'APP-102', property_title: 'Humboldt 1940, Palermo Hollywood', tenant_name: 'Camila Benítez', tenant_email: 'cami.b@hotmail.com', tenant_phone: '+54 11 6622-1144', monthly_income: 1200000, status: 'aceptada', income_proof_url: '#', message: 'Busco ingresar antes del 15 de este mes.' },
+            { id: 'APP-103', property_title: 'Av. Corrientes 1540, Centro (Local)', tenant_name: 'Comercial SA', tenant_email: 'contacto@comercial.com', tenant_phone: '+54 11 3344-7788', monthly_income: 2800000, status: 'pendiente', income_proof_url: '#', message: 'Presentamos balance firmado por contador y seguro de fianza.' }
+        ];
+
+        // MOCK DATA VISITAS
+        const brokerVisitsMock = [
+            { property_title: 'Av. Santa Fe 3420, Palermo 3 Amb', visitor_name: 'Santiago Ruiz', visitor_email: 'santi.ruiz@gmail.com', visitor_phone: '+54 11 2233-4455', visit_date: '03/08/2026', visit_time: '15:30', status: 'Confirmada' },
+            { property_title: 'Humboldt 1940, Palermo Hollywood', visitor_name: 'Agustina Morales', visitor_email: 'agus.m@yahoo.com', visitor_phone: '+54 11 7788-9900', visit_date: '04/08/2026', visit_time: '11:00', status: 'Confirmada' }
+        ];
+
+        // MOCK DATA TICKETS
+        const brokerTicketsMock = [
+            { id: 'TCK-001', prop: 'Av. Santa Fe 3420 4B', tenant: 'Gonzalo Fernández', title: 'Perdida de agua bajo lavatorio de baño', priority: 'Alta', status: 'En Proceso', date: '01/08/2026' },
+            { id: 'TCK-002', prop: 'Humboldt 1940 2A', tenant: 'Mariana Rossi', title: 'Revision de portero visor', priority: 'Normal', status: 'Pendiente', date: '30/07/2026' }
+        ];
+
+        // MOCK DATA TASACIONES
+        const brokerValuationsMock = [
+            { id: 'TAS-401', address: 'Gorriti 4820, Palermo Hollywood', owner: 'Marcos Alonso', phone: '+54 11 9911-2233', type: 'Departamento 3 Ambientes', estimated: '$ 185.000 USD', status: 'Pendiente de Visita' },
+            { id: 'TAS-402', address: 'Juramento 2150, Belgrano', owner: 'Elena Vázquez', phone: '+54 11 4422-5566', type: 'Piso 4 Amb con Cochera', estimated: '$ 320.000 USD', status: 'Tasación Realizada' }
+        ];
+
+        // MOCK DATA KANBAN LEADS
+        const kanbanLeadsMock = {
+            nuevas: [
+                { name: 'Gonzalo Pérez', prop: 'Palermo 3 Amb ($520k)', budget: '$550.000', phone: '+54 11 4455-8899', source: 'Zonaprop' },
+                { name: 'Camila Benítez', prop: 'Belgrano 2 Amb ($410k)', budget: '$420.000', phone: '+54 11 6622-1144', source: 'Hábitat Directo' },
+                { name: 'Martín Soria', prop: 'Local Corrientes ($750k)', budget: '$800.000', phone: '+54 11 3344-7788', source: 'Argenprop' }
+            ],
+            contacto: [
+                { name: 'Federico López', prop: 'Palermo 3 Amb ($520k)', budget: '$520.000', phone: '+54 11 9988-3322', source: 'Hábitat' },
+                { name: 'Valeria Castro', prop: 'Monoambiente Humboldt', budget: '$380.000', phone: '+54 11 5566-7788', source: 'Red MLS' }
+            ],
+            visita: [
+                { name: 'Santiago Ruiz', prop: 'Piso Libertador 4 Amb', budget: '$1.200.000', phone: '+54 11 2233-4455', date: 'Mañana 15:30 hs' },
+                { name: 'Agustina Morales', prop: 'Palermo 3 Amb ($520k)', budget: '$520.000', phone: '+54 11 7788-9900', date: 'Jueves 11:00 hs' }
+            ],
+            reserva: [
+                { name: 'Ignacio Peralta', prop: 'Piso Libertador 4 Amb', budget: '$1.200.000', status: 'Seña recibida ($100k)' }
+            ],
+            firmado: [
+                { name: 'Sofía Martínez', prop: 'Monoambiente Humboldt', fee: '$228.000', date: '01/08/2026' },
+                { name: 'Lucas Díaz', prop: 'Depto Recoleta 2 Amb', fee: '$210.000', date: '28/07/2026' }
+            ]
+        };
+
+        // MOCK DATA CLIENTES PROPIETARIOS
+        const brokerOwnersMock = [
+            { id: 'PROP-CLI-01', name: 'Roberto Gómez', email: 'roberto.g@gmail.com', phone: '+54 11 4422-9900', propsCount: 2, propsSummary: 'Palermo 3 Amb ($520k) • Belgrano 2 Amb ($410k)', mandateType: 'Exclusivo (Alquiler Tradicional)', commissionRate: '4.15%', status: 'Cliente Activo' },
+            { id: 'PROP-CLI-02', name: 'Mariana Rossi', email: 'mariana.r@gmail.com', phone: '+54 11 5533-1122', propsCount: 1, propsSummary: 'Humboldt 1940 2A ($380k)', mandateType: 'Exclusivo (Alquiler Tradicional)', commissionRate: '5.0%', status: 'Cliente Activo' },
+            { id: 'PROP-CLI-03', name: 'Esteban Larrea', email: 'esteban.l@outlook.com', phone: '+54 11 8899-3344', propsCount: 3, propsSummary: 'Libertador 2450 ($1.2M) • Recoleta 3 Amb', mandateType: 'No Exclusivo (Venta/Alq)', commissionRate: '4.15%', status: 'Cliente Activo' },
+            { id: 'PROP-CLI-04', name: 'Carlos Méndez', email: 'carlos.m@mendez.com', phone: '+54 11 2211-4455', propsCount: 1, propsSummary: 'Casa Quinta Pilar ($240M Venta)', mandateType: 'Exclusivo (Venta Comercial)', commissionRate: '3.0%', status: 'En Negociación' }
+        ];
+
+        let currentBrokerProperties = [...brokerPropertiesMock];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.App) {
+                App.setupTheme();
+            }
+
+            setupLoggedInState();
+            renderBrokerPropertiesRows();
+            renderBrokerApplications();
+            renderBrokerVisits();
+            renderBrokerOwners();
+            renderBrokerActiveRental();
+            renderBrokerTickets();
+            renderBrokerValuations();
+            renderKanbanBoard();
+            renderMlsGrid();
+            initBrokerCharts();
+            calculateEntryCosts();
+
+            // Detect URL hash or default to 'general'
+            const initialTab = mapTabName((window.location.hash || '#general').replace('#', ''));
+            switchBrokerTab(initialTab);
+
+            setupDockSlidingIndicator();
+        });
+
+        function mapTabName(tab) {
+            if (['general', 'avisos', 'contactos', 'alquileres', 'operaciones'].includes(tab)) return tab;
+            if (['propiedades'].includes(tab)) return 'avisos';
+            if (['candidatos', 'postulaciones', 'visitas', 'inquilinos', 'propietarios'].includes(tab)) return 'contactos';
+            if (['contratos', 'alquiler-activo', 'mantenimiento'].includes(tab)) return 'alquileres';
+            if (['herramientas', 'kanban', 'tasaciones', 'mls', 'calculadora'].includes(tab)) return 'operaciones';
+            return 'general';
+        }
+
+        // Ensure user is shown as logged-in in header
+        function setupLoggedInState() {
+            setTimeout(() => {
+                document.querySelectorAll('.auth-ui-state.logged-out').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.auth-ui-state.logged-in').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.auth-user-initial').forEach(el => el.textContent = 'C');
+            }, 100);
+        }
+
+        // Tab Switching Function (5 Consolidate Tabs)
+        function switchBrokerTab(targetTab) {
+            const normalizedTab = mapTabName(targetTab);
+
+            const contents = {
+                'general': document.getElementById('panel-content-general'),
+                'avisos': document.getElementById('panel-content-avisos'),
+                'contactos': document.getElementById('panel-content-contactos'),
+                'alquileres': document.getElementById('panel-content-alquileres'),
+                'operaciones': document.getElementById('panel-content-operaciones')
+            };
+
+            // Update Top Pills
+            document.querySelectorAll('.broker-pill-btn').forEach(btn => {
+                const isTarget = btn.getAttribute('data-tab') === normalizedTab;
+                if (isTarget) {
+                    btn.className = 'broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm';
+                } else {
+                    btn.className = 'broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800';
+                }
+            });
+
+            // Update Bottom Dock Buttons
+            document.querySelectorAll('.broker-dock-btn').forEach(btn => {
+                const isTarget = btn.getAttribute('data-tab') === normalizedTab;
+                if (isTarget) {
+                    btn.className = 'broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-white font-extrabold transition-colors cursor-pointer';
+                    btn.classList.add('text-white');
+                    updateSlidingIndicator(btn);
+                } else {
+                    btn.className = 'broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer';
+                    btn.classList.remove('text-white');
+                }
+            });
+
+            // Show ONLY the target tab content!
+            Object.keys(contents).forEach(key => {
+                if (contents[key]) {
+                    if (key === normalizedTab) {
+                        contents[key].classList.add('active');
+                    } else {
+                        contents[key].classList.remove('active');
+                    }
+                }
+            });
+
+            window.location.hash = normalizedTab;
+        }
+
+        function updateSlidingIndicator(activeBtn) {
+            const nav = document.getElementById('floating-dock-nav');
+            const indicator = document.getElementById('dock-active-indicator');
+            if (!nav || !indicator || !activeBtn) return;
+
+            requestAnimationFrame(() => {
+                const navRect = nav.getBoundingClientRect();
+                const btnRect = activeBtn.getBoundingClientRect();
+
+                if (btnRect.width === 0) return;
+
+                const leftOffset = btnRect.left - navRect.left;
+                indicator.style.left = `${leftOffset}px`;
+                indicator.style.width = `${btnRect.width}px`;
+            });
+        }
+
+        function setupDockSlidingIndicator() {
+            window.addEventListener('resize', () => {
+                const activeDockBtn = document.querySelector('.broker-dock-btn.text-white');
+                if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
+            });
+
+            setTimeout(() => {
+                const currentHash = mapTabName((window.location.hash || '#general').replace('#', ''));
+                const targetBtn = document.querySelector(`.broker-dock-btn[data-tab="${currentHash}"]`) || document.querySelector('.broker-dock-btn[data-tab="general"]');
+                if (targetBtn) {
+                    targetBtn.classList.add('text-white');
+                    updateSlidingIndicator(targetBtn);
+                }
+            }, 100);
+
+            let lastScrollY = window.scrollY;
+            const dockContainer = document.getElementById('broker-floating-dock-container');
+
+            window.addEventListener('scroll', () => {
+                const currentScrollY = window.scrollY;
+                if (!dockContainer) return;
+
+                if (currentScrollY > lastScrollY && currentScrollY > 60) {
+                    dockContainer.classList.add('is-hidden');
+                } else {
+                    dockContainer.classList.remove('is-hidden');
+                }
+                lastScrollY = currentScrollY;
+            }, { passive: true });
+        }
+
+        // Toggle Rows vs Grid View
+        function toggleBrokerView(mode) {
+            const rowsCont = document.getElementById('container-rows-view');
+            const gridCont = document.getElementById('container-grid-view');
+            const btnRows = document.getElementById('btn-view-rows');
+            const btnGrid = document.getElementById('btn-view-grid');
+
+            if (mode === 'rows') {
+                rowsCont.classList.remove('hidden');
+                gridCont.classList.add('hidden');
+                btnRows.className = 'px-3 py-2 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm';
+                btnGrid.className = 'px-3 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1';
+            } else {
+                rowsCont.classList.add('hidden');
+                gridCont.classList.remove('hidden');
+                btnGrid.className = 'px-3 py-2 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm';
+                btnRows.className = 'px-3 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1';
+                renderBrokerPropertiesGrid();
+            }
+        }
+
+        // Render Table Rows
+        function renderBrokerPropertiesRows() {
+            const tbody = document.getElementById('broker-rows-tbody');
+            if (!tbody) return;
+
+            if (currentBrokerProperties.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-400">No se encontraron propiedades con los filtros seleccionados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = currentBrokerProperties.map(p => `
+                <tr class="border-b border-zinc-200/50 dark:border-zinc-800">
+                    <td class="p-3"><input type="checkbox" class="prop-row-checkbox rounded border-zinc-300"></td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-3">
+                            <img src="${p.image}" alt="${p.title}" class="w-12 h-10 rounded-lg object-cover border shrink-0">
+                            <div>
+                                <span class="font-extrabold text-zinc-900 dark:text-white line-clamp-1">${p.title}</span>
+                                <span class="text-[11px] text-zinc-400 flex items-center gap-0.5 line-clamp-1">
+                                    <span class="material-symbols-outlined text-xs">location_on</span> ${p.address}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 font-mono font-bold text-zinc-600 dark:text-zinc-300">${p.id}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-[10px] font-black rounded-md ${p.operation === 'venta' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'} uppercase">
+                            ${p.operation === 'alquiler' ? 'Alq. Tradicional' : (p.operation === 'temporal' ? 'Alq. Temporal' : 'Venta')}
+                        </span>
+                    </td>
+                    <td class="p-3 font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</td>
+                    <td class="p-3 font-bold text-zinc-700 dark:text-zinc-300">${p.feePercent}%</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-1">
+                            ${p.portals.map(pt => `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">${pt}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
+                            p.status === 'publicada' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
+                            (p.status === 'alquilada' ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' :
+                            (p.status === 'reservada' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'))
+                        }">
+                            ${p.status}
+                        </span>
+                    </td>
+                    <td class="p-3 font-medium text-zinc-600 dark:text-zinc-300">${p.owner}</td>
+                    <td class="p-3 text-center">
+                        <span class="font-bold text-amber-600 dark:text-amber-400">${p.leadsCount}</span>
+                        <span class="text-[10px] text-zinc-400 block">(${p.viewsCount} vistas)</span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <button type="button" onclick="openBlindCardModal()" title="Generar Ficha Ciega" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-blue-600">
+                                <span class="material-symbols-outlined text-base">visibility_off</span>
+                            </button>
+                            <button type="button" onclick="alert('Compartiendo por WhatsApp...')" title="Enviar WhatsApp" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-emerald-600">
+                                <span class="material-symbols-outlined text-base">share</span>
+                            </button>
+                            <button type="button" onclick="alert('Editando propiedad ${p.id}')" title="Editar" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500">
+                                <span class="material-symbols-outlined text-base">edit</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Grid View
+        function renderBrokerPropertiesGrid() {
+            const grid = document.getElementById('container-grid-view');
+            if (!grid) return;
+
+            grid.innerHTML = currentBrokerProperties.map(p => `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
+                    <div class="h-44 bg-zinc-100 dark:bg-zinc-800 relative">
+                        <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover">
+                        <span class="absolute top-3 left-3 px-3 py-1 text-[10px] font-black rounded-full uppercase text-white ${p.status === 'publicada' ? 'bg-emerald-500' : 'bg-amber-500'}">
+                            ${p.status}
+                        </span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-primary dark:text-red-400 uppercase">${p.id}</span>
+                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white line-clamp-1">${p.title}</h3>
+                            <p class="text-xs text-zinc-500 line-clamp-1">${p.address}</p>
+                            <p class="text-xl font-black text-primary dark:text-red-400 mt-2">$ ${Number(p.price).toLocaleString('es-AR')}</p>
+                        </div>
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs">
+                            <span class="text-zinc-500 font-bold">${p.leadsCount} Interesados</span>
+                            <button type="button" onclick="openBlindCardModal()" class="font-bold text-blue-600 hover:underline">Ficha Ciega</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Postulaciones
+        function renderBrokerApplications() {
+            const container = document.getElementById('broker-list-apps');
+            if (!container) return;
+
+            container.innerHTML = brokerApplicationsMock.map(a => `
+                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-11 h-11 rounded-full bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 font-extrabold flex items-center justify-center text-base">
+                                ${a.tenant_name.charAt(0)}
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-primary dark:text-red-400 uppercase tracking-wider">${a.property_title}</span>
+                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${a.tenant_name}</h3>
+                                <p class="text-xs text-zinc-500">${a.tenant_email} • Tel: ${a.tenant_phone}</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${a.status === 'pendiente' ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pendiente de Decisión</span>' : ''}
+                            ${a.status === 'aceptada' ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">¡Inquilino Seleccionado!</span>' : ''}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                            <span class="block text-zinc-400 font-bold uppercase text-[10px]">Ingresos Comprobados</span>
+                            <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">$ ${Number(a.monthly_income).toLocaleString('es-AR')} / mes</span>
+                        </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-between">
+                            <div>
+                                <span class="block text-zinc-400 font-bold uppercase text-[10px]">Comprobante de Ingresos</span>
+                                <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Recibo_Sueldo.pdf</span>
+                            </div>
+                            <button type="button" onclick="alert('Visualizando Recibo de Sueldo en PDF')" class="px-3 py-1.5 rounded-lg bg-primary text-white font-bold text-xs flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">visibility</span> Ver PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-primary-light p-3.5 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 space-y-1">
+                        <span class="font-extrabold text-primary dark:text-red-400">Mensaje del Candidato:</span>
+                        <p class="italic">"${a.message}"</p>
+                    </div>
+
+                    ${a.status === 'pendiente' ? `
+                        <div class="pt-2 flex flex-col sm:flex-row gap-3">
+                            <button type="button" onclick="alert('¡Postulación Aceptada! Se ha generado el contrato de alquiler activo.')" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-base">check_circle</span> Aceptar Postulación y Generar Contrato
+                            </button>
+                            <button type="button" onclick="alert('Postulación rechazada.')" class="py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all">
+                                Rechazar
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Render Visitas
+        function renderBrokerVisits() {
+            const container = document.getElementById('broker-list-visits');
+            if (!container) return;
+
+            container.innerHTML = brokerVisitsMock.map(v => `
+                <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">${v.status}</span>
+                            <span class="text-xs font-bold text-zinc-400">${v.property_title}</span>
+                        </div>
+                        <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${v.visitor_name}</h3>
+                        <p class="text-xs text-zinc-500">${v.visitor_email} • Tel: ${v.visitor_phone}</p>
+                    </div>
+
+                    <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
+                        <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cita Programada</span>
+                        <span class="text-sm font-black text-primary dark:text-red-400">${v.visit_date} a las ${v.visit_time} hs</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Propietarios (Clientes Captados & Mandatos)
+        function renderBrokerOwners() {
+            const container = document.getElementById('broker-list-owners');
+            if (!container) return;
+
+            container.innerHTML = brokerOwnersMock.map(o => `
+                <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 border border-primary/20">${o.status}</span>
+                            <span class="text-xs font-mono font-bold text-zinc-400">${o.id}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-full bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 font-extrabold flex items-center justify-center text-base shrink-0">
+                                ${o.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${o.name}</h4>
+                                <p class="text-xs text-zinc-500">${o.email} • Tel: ${o.phone}</p>
+                            </div>
+                        </div>
+                        <div class="pt-2 text-xs space-y-1.5 bg-zinc-50 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                            <div class="flex justify-between"><span class="text-zinc-500">Inmuebles encomendados:</span> <b class="text-zinc-900 dark:text-white">${o.propsCount} propiedades</b></div>
+                            <div class="flex justify-between"><span class="text-zinc-500">Tipo de Mandato:</span> <b class="text-zinc-900 dark:text-white">${o.mandateType}</b></div>
+                            <div class="flex justify-between"><span class="text-zinc-500">Comisión Pactada:</span> <b class="text-emerald-600 dark:text-emerald-400 font-extrabold">${o.commissionRate}</b></div>
+                            <p class="text-[11px] text-zinc-400 pt-1 border-t border-zinc-200/40 dark:border-zinc-700/40 truncate">${o.propsSummary}</p>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="alert('Abriendo chat de WhatsApp con el propietario ${o.name}')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">chat</span> Contactar Propietario por WhatsApp
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Toggle entre Subpestaña Inquilinos y Propietarios
+        function toggleContactSubtab(sub) {
+            const btnInq = document.getElementById('subtab-btn-inquilinos');
+            const btnProp = document.getElementById('subtab-btn-propietarios');
+            const contentInq = document.getElementById('subtab-content-inquilinos');
+            const contentProp = document.getElementById('subtab-content-propietarios');
+
+            if (sub === 'inquilinos') {
+                contentInq?.classList.remove('hidden');
+                contentProp?.classList.add('hidden');
+                if (btnInq) btnInq.className = 'px-4 py-2 rounded-lg text-xs font-black transition-all bg-primary text-white shadow-sm flex items-center gap-1.5 cursor-pointer';
+                if (btnProp) btnProp.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer';
+            } else {
+                contentInq?.classList.add('hidden');
+                contentProp?.classList.remove('hidden');
+                if (btnProp) btnProp.className = 'px-4 py-2 rounded-lg text-xs font-black transition-all bg-primary text-white shadow-sm flex items-center gap-1.5 cursor-pointer';
+                if (btnInq) btnInq.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer';
+            }
+        }
+
+        // Render Alquiler Activo & Cobros
+        function renderBrokerActiveRental() {
+            const container = document.getElementById('broker-container-active-rental');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6">
+                    <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800">
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-0.5 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+                                    Contrato de Alquiler Activo
+                                </span>
+                                <span class="text-xs font-bold text-zinc-400">Reajuste IPC Trimestral</span>
+                            </div>
+                            <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">
+                                Humboldt 1940, Palermo Hollywood 2A
+                            </h2>
+                            <p class="text-xs text-zinc-500">Inquilino: <b>Mariana Rossi</b> (mariana.r@gmail.com)</p>
+                        </div>
+
+                        <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-right shadow-sm shrink-0">
+                            <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Canon Mensual</span>
+                            <span class="text-2xl font-black text-primary dark:text-red-400">$ 380.000</span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
+                            <div>
+                                <h3 class="font-headline text-base font-bold text-zinc-900 dark:text-white">
+                                    Control de Cobranza del Mes - Agosto 2026
+                                </h3>
+                                <p class="text-xs text-zinc-500">Vencimiento oficial: Día 10 de cada mes</p>
+                            </div>
+                            <span class="shrink-0 w-fit whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">check_circle</span> PAGADO (Transferencia)
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                                <span class="block font-bold uppercase text-zinc-400 text-[10px]">Alquiler Base</span>
+                                <span class="text-lg font-extrabold text-zinc-900 dark:text-white mt-1 block">$ 380.000</span>
+                            </div>
+
+                            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
+                                <span class="block font-bold uppercase text-zinc-400 text-[10px]">Intereses Punitorios Mora</span>
+                                <span class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">$ 0</span>
+                                <span class="block text-[11px] text-emerald-600 font-medium">Pago recibido a término</span>
+                            </div>
+
+                            <div class="bg-primary-light p-4 rounded-xl border border-primary/20">
+                                <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Honorario Inmobiliaria (5%)</span>
+                                <span class="text-xl font-black text-primary dark:text-red-400 mt-1 block">$ 19.000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Tickets
+        function renderBrokerTickets() {
+            const container = document.getElementById('broker-list-tickets');
+            if (!container) return;
+
+            container.innerHTML = brokerTicketsMock.map(t => `
+                <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase ${t.status === 'En Proceso' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-zinc-500/10 text-zinc-500'}">${t.status}</span>
+                            <span class="text-xs font-mono font-bold text-zinc-400">${t.id}</span>
+                            <span class="text-xs font-bold text-primary">${t.prop}</span>
+                        </div>
+                        <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${t.title}</h3>
+                        <p class="text-xs text-zinc-500">Inquilino: <b>${t.tenant}</b> • Fecha: ${t.date}</p>
+                    </div>
+                    <button type="button" onclick="alert('Gestionando ticket de reparación ${t.id}')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer">Gestionar Ticket</button>
+                </div>
+            `).join('');
+        }
+
+        // Render Tasaciones
+        function renderBrokerValuations() {
+            const grid = document.getElementById('broker-list-valuations');
+            if (!grid) return;
+
+            grid.innerHTML = brokerValuationsMock.map(v => `
+                <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center text-[10px] font-bold text-primary mb-1">
+                            <span>${v.id}</span>
+                            <span class="px-2 py-0.5 rounded bg-primary/10 text-primary dark:text-red-400 border border-primary/20">${v.status}</span>
+                        </div>
+                        <h4 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">${v.address}</h4>
+                        <p class="text-xs text-zinc-500 mt-0.5">${v.type}</p>
+                        <p class="text-xs text-zinc-500">Solicitante: <b>${v.owner}</b> (${v.phone})</p>
+                    </div>
+                    <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                        <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">${v.estimated}</span>
+                        <button type="button" onclick="alert('Generando informe comercial de tasación para ${v.id}')" class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow">Ver Informe</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filtering Properties with Agent filter support
+        function filterBrokerProperties() {
+            const searchTerm = (document.getElementById('broker-search-input')?.value || '').toLowerCase();
+            const opFilter = document.getElementById('filter-operacion-select')?.value || 'todos';
+            const statusFilter = document.getElementById('filter-estado-select')?.value || 'todos';
+            const agentFilter = document.getElementById('filter-agente-select')?.value || 'todos';
+
+            currentBrokerProperties = brokerPropertiesMock.filter(p => {
+                const matchSearch = [p.id, p.title, p.address, p.owner].join(' ').toLowerCase().includes(searchTerm);
+                const matchOp = opFilter === 'todos' || p.operation === opFilter;
+                const matchStatus = statusFilter === 'todos' || p.status === statusFilter;
+                const matchAgent = agentFilter === 'todos' || p.owner === agentFilter;
+                return matchSearch && matchOp && matchStatus && matchAgent;
+            });
+
+            renderBrokerPropertiesRows();
+            renderBrokerPropertiesGrid();
+        }
+
+        function exportPropertiesExcel() {
+            alert('¡Reporte de Cartera Inmobiliaria exportado en formato Excel / CSV exitosamente!');
+        }
+
+        function toggleSelectAllProps(master) {
+            document.querySelectorAll('.prop-row-checkbox').forEach(cb => cb.checked = master.checked);
+        }
+
+        // Render Kanban Board
+        function renderKanbanBoard() {
+            const makeCard = (item) => `
+                <div class="glass-card p-3.5 rounded-xl shadow-sm space-y-2 border border-zinc-200/70 dark:border-zinc-700/70 kanban-card">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-headline text-xs font-black text-zinc-900 dark:text-white">${item.name}</h4>
+                        ${item.source ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">${item.source}</span>` : ''}
+                    </div>
+                    <p class="text-[11px] font-medium text-zinc-500 line-clamp-1">${item.prop}</p>
+                    ${item.budget ? `<span class="block text-xs font-extrabold text-primary dark:text-red-400">Presupuesto: ${item.budget}</span>` : ''}
+                    ${item.fee ? `<span class="block text-xs font-extrabold text-emerald-600">Comisión: ${item.fee}</span>` : ''}
+                    ${item.date ? `<span class="block text-[10px] text-amber-600 font-bold">Cita: ${item.date}</span>` : ''}
+                    <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-[10px]">
+                        <button type="button" onclick="alert('Abriendo chat de WhatsApp con ${item.name}')" class="font-bold text-emerald-600 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">chat</span> WhatsApp
+                        </button>
+                        <button type="button" onclick="alert('Avanzando de etapa a ${item.name}')" class="font-bold text-primary hover:underline">Mover →</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('kanban-col-nuevas').innerHTML = kanbanLeadsMock.nuevas.map(makeCard).join('');
+            document.getElementById('kanban-col-contacto').innerHTML = kanbanLeadsMock.contacto.map(makeCard).join('');
+            document.getElementById('kanban-col-visita').innerHTML = kanbanLeadsMock.visita.map(makeCard).join('');
+            document.getElementById('kanban-col-reserva').innerHTML = kanbanLeadsMock.reserva.map(makeCard).join('');
+            document.getElementById('kanban-col-firmado').innerHTML = kanbanLeadsMock.firmado.map(makeCard).join('');
+        }
+
+        // Render Red MLS Shared Listings
+        function renderMlsGrid() {
+            const grid = document.getElementById('broker-mls-grid');
+            if (!grid) return;
+
+            const mlsItems = [
+                { title: 'Semipiso 4 Amb en Recoleta', agency: 'Juárez Propiedades', feeSplit: '50% / 50%', price: 950000, img: 'img/hero-marketplace.jpg' },
+                { title: 'Triplex con Terraza en Belgrano C', agency: 'Boutique Real Estate', feeSplit: '50% / 50%', price: 1400000, img: 'img/se%C3%B1or-usando-computadora.jpg' },
+                { title: 'Monoambiente Apto Profesional Belgrano', agency: 'Inmobiliaria Norte', feeSplit: '50% / 50%', price: 340000, img: 'img/pareja-viendo-celular.jpg' }
+            ];
+
+            grid.innerHTML = mlsItems.map(m => `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-3 p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center text-[10px] font-bold text-blue-600 mb-2">
+                            <span>RED MLS HÁBITAT</span>
+                            <span class="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">Comisión ${m.feeSplit}</span>
+                        </div>
+                        <img src="${m.img}" alt="${m.title}" class="w-full h-36 rounded-xl object-cover border mb-3">
+                        <h4 class="font-headline font-extrabold text-sm text-zinc-900 dark:text-white">${m.title}</h4>
+                        <p class="text-xs text-zinc-500">Captador: <b>${m.agency}</b></p>
+                        <p class="text-lg font-black text-primary dark:text-red-400 mt-2">$ ${Number(m.price).toLocaleString('es-AR')}</p>
+                    </div>
+                    <button type="button" onclick="openBlindCardModal()" class="w-full py-2 bg-blue-600 text-white font-bold text-xs rounded-xl shadow hover:bg-blue-700 flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-base">visibility_off</span> Generar Ficha Ciega
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Chart.js Graphs with Dark Mode Adapters
+        function initBrokerCharts() {
+            const ctxFin = document.getElementById('chart-financial-evolution')?.getContext('2d');
+            const ctxPort = document.getElementById('chart-portfolio-status')?.getContext('2d');
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#f1f1f1' : '#1a1c1c';
+            const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+
+            if (ctxFin) {
+                new Chart(ctxFin, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'],
+                        datasets: [
+                            {
+                                label: 'Volumen Alquileres ($)',
+                                data: [18000000, 19500000, 21000000, 22400000, 23800000, 24850000],
+                                backgroundColor: 'rgba(129, 27, 30, 0.75)',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Comisiones Cobradas ($)',
+                                data: [3600000, 3900000, 4200000, 4480000, 4760000, 4970000],
+                                type: 'line',
+                                borderColor: '#10b981',
+                                borderWidth: 3,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { family: 'Inter', weight: 'bold' } } }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+
+            if (ctxPort) {
+                new Chart(ctxPort, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Alquiladas (65%)', 'Disponibles (25%)', 'En Reserva (7%)', 'Pausadas (3%)'],
+                        datasets: [{
+                            data: [34, 13, 3, 2],
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6b7280']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Inter', weight: 'bold' } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Entry Cost Calculator Logic
+        function calculateEntryCosts() {
+            const rent = Number(document.getElementById('calc-rent-price')?.value) || 0;
+            const feePct = Number(document.getElementById('calc-fee-percent')?.value) || 0;
+            const depMonths = Number(document.getElementById('calc-deposit-months')?.value) || 0;
+            const reports = Number(document.getElementById('calc-reports-cost')?.value) || 0;
+
+            const deposit = rent * depMonths;
+            const fee = (rent * 24) * (feePct / 100);
+            const total = rent + deposit + fee + reports;
+
+            if (document.getElementById('out-calc-first-month')) document.getElementById('out-calc-first-month').textContent = `$ ${rent.toLocaleString('es-AR')}`;
+            if (document.getElementById('out-calc-deposit')) document.getElementById('out-calc-deposit').textContent = `$ ${deposit.toLocaleString('es-AR')}`;
+            if (document.getElementById('out-calc-fee')) document.getElementById('out-calc-fee').textContent = `$ ${Math.round(fee).toLocaleString('es-AR')}`;
+            if (document.getElementById('out-calc-reports')) document.getElementById('out-calc-reports').textContent = `$ ${reports.toLocaleString('es-AR')}`;
+            if (document.getElementById('out-calc-total')) document.getElementById('out-calc-total').textContent = `$ ${Math.round(total).toLocaleString('es-AR')}`;
+        }
+
+        function copyCalculatorBudget() {
+            const rent = Number(document.getElementById('calc-rent-price')?.value) || 0;
+            const total = document.getElementById('out-calc-total')?.textContent || '';
+            const txt = `*PRESUPUESTO DE INGRESO - HÁBITAT CRM*\n\n- Primer Mes de Alquiler: $${rent.toLocaleString('es-AR')}\n- Honorarios y Depósito detallados incluidos.\n- *Total Final a Ingresar:* ${total}\n\nQuedamos a su disposición para coordinar la firma.`;
+            navigator.clipboard.writeText(txt);
+            alert('¡Presupuesto copiado al portapapeles listo para enviar por WhatsApp!');
+        }
+
+        // Modals Toggle
+        function openBlindCardModal() {
+            document.getElementById('modal-blind-card')?.classList.remove('hidden');
+        }
+        function closeBlindCardModal() {
+            document.getElementById('modal-blind-card')?.classList.add('hidden');
+        }
+        function openNewPropertyModal() {
+            alert('Abriendo asistente de nueva captación...');
+        }
+    </script>
+</body>
+
+</html>
