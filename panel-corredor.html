@@ -71,49 +71,42 @@
             border: 1px solid rgba(39, 39, 42, 0.9);
         }
 
-        /* Floating Dock Inferior Premium con GPU Hardware Acceleration */
+        /* Floating Dock Inferior Premium con Burbuja Deslizante y Rebote Elástico */
         #broker-floating-dock-container {
-            will-change: transform, opacity;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-transition: -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         #broker-floating-dock-container.is-hidden {
-            -webkit-transform: translate3d(0, 140%, 0);
-            transform: translate3d(0, 140%, 0);
+            -webkit-transform: translateY(140%);
+            transform: translateY(140%);
             opacity: 0;
             pointer-events: none;
         }
 
         .floating-dock {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
         }
 
         html.dark .floating-dock {
-            background: rgba(18, 18, 20, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(18, 18, 20, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(63, 63, 70, 0.7);
             box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
         }
 
         #dock-active-indicator {
-            left: 0;
-            will-change: transform, width;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: left, width;
+            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
             box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
@@ -121,7 +114,7 @@
         .broker-dock-btn {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            transition: color 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: color 0.25s ease;
         }
 
         .broker-dock-btn.text-white,
@@ -410,7 +403,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse broker-table">
                             <thead>
-                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">
+                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
                                     <th class="p-3 w-8"><input type="checkbox" id="select-all-props" onclick="toggleSelectAllProps(this)" class="rounded border-zinc-300"></th>
                                     <th class="p-3">Inmueble</th>
                                     <th class="p-3">ID / Código</th>
@@ -969,16 +962,14 @@
             const indicator = document.getElementById('dock-active-indicator');
             if (!nav || !indicator || !activeBtn) return;
 
-            window.requestAnimationFrame(() => {
-                const navRect = nav.getBoundingClientRect();
-                const btnRect = activeBtn.getBoundingClientRect();
+            const navRect = nav.getBoundingClientRect();
+            const btnRect = activeBtn.getBoundingClientRect();
 
-                if (btnRect.width === 0) return;
+            if (btnRect.width === 0) return;
 
-                const leftOffset = btnRect.left - navRect.left;
-                indicator.style.transform = `translate3d(${leftOffset}px, 0, 0)`;
-                indicator.style.width = `${btnRect.width}px`;
-            });
+            const leftOffset = btnRect.left - navRect.left;
+            indicator.style.left = `${leftOffset}px`;
+            indicator.style.width = `${btnRect.width}px`;
         }
 
         function setupDockSlidingIndicator() {
@@ -1054,10 +1045,10 @@
             }
 
             tbody.innerHTML = currentBrokerProperties.map(p => `
-                <tr class="border-b border-zinc-200/50 dark:border-zinc-800">
-                    <td class="p-3"><input type="checkbox" class="prop-row-checkbox rounded border-zinc-300"></td>
+                <tr class="border-b border-zinc-200/50 dark:border-zinc-800 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                    <td class="p-3 whitespace-nowrap"><input type="checkbox" class="prop-row-checkbox rounded border-zinc-300"></td>
                     <td class="p-3">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 min-w-[200px]">
                             <img src="${p.image}" alt="${p.title}" class="w-12 h-10 rounded-lg object-cover border shrink-0">
                             <div>
                                 <span class="font-extrabold text-zinc-900 dark:text-white line-clamp-1">${p.title}</span>
@@ -1067,34 +1058,40 @@
                             </div>
                         </div>
                     </td>
-                    <td class="p-3 font-mono font-bold text-zinc-600 dark:text-zinc-300">${p.id}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-0.5 text-[10px] font-black rounded-md ${p.operation === 'venta' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'} uppercase">
+                    <td class="p-3 whitespace-nowrap font-mono font-bold text-zinc-600 dark:text-zinc-300">${p.id}</td>
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-md uppercase whitespace-nowrap ${
+                            p.operation === 'venta' 
+                                ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400' 
+                                : (p.operation === 'temporal' 
+                                    ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400' 
+                                    : 'bg-blue-500/10 text-blue-600 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400')
+                        }">
                             ${p.operation === 'alquiler' ? 'Alq. Tradicional' : (p.operation === 'temporal' ? 'Alq. Temporal' : 'Venta')}
                         </span>
                     </td>
-                    <td class="p-3 font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</td>
-                    <td class="p-3 font-bold text-zinc-700 dark:text-zinc-300">${p.feePercent}%</td>
-                    <td class="p-3">
+                    <td class="p-3 whitespace-nowrap font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</td>
+                    <td class="p-3 whitespace-nowrap font-bold text-zinc-700 dark:text-zinc-300">${p.feePercent}%</td>
+                    <td class="p-3 whitespace-nowrap">
                         <div class="flex items-center gap-1">
                             ${p.portals.map(pt => `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">${pt}</span>`).join('')}
                         </div>
                     </td>
-                    <td class="p-3">
-                        <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
-                            p.status === 'publicada' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
-                            (p.status === 'alquilada' ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' :
-                            (p.status === 'reservada' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'))
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-full uppercase whitespace-nowrap ${
+                            p.status === 'publicada' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                            (p.status === 'alquilada' ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400' :
+                            (p.status === 'reservada' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'))
                         }">
                             ${p.status}
                         </span>
                     </td>
-                    <td class="p-3 font-medium text-zinc-600 dark:text-zinc-300">${p.owner}</td>
-                    <td class="p-3 text-center">
+                    <td class="p-3 whitespace-nowrap font-medium text-zinc-600 dark:text-zinc-300">${p.owner}</td>
+                    <td class="p-3 whitespace-nowrap text-center">
                         <span class="font-bold text-amber-600 dark:text-amber-400">${p.leadsCount}</span>
                         <span class="text-[10px] text-zinc-400 block">(${p.viewsCount} vistas)</span>
                     </td>
-                    <td class="p-3 text-right">
+                    <td class="p-3 whitespace-nowrap text-right">
                         <div class="flex items-center justify-end gap-1">
                             <button type="button" onclick="openBlindCardModal()" title="Generar Ficha Ciega" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-blue-600">
                                 <span class="material-symbols-outlined text-base">visibility_off</span>
