@@ -71,49 +71,42 @@
             border: 1px solid rgba(39, 39, 42, 0.9);
         }
 
-        /* Floating Dock Inferior Premium con GPU Hardware Acceleration */
+        /* Floating Dock Inferior Premium con Burbuja Deslizante y Rebote Elástico */
         #broker-floating-dock-container {
-            will-change: transform, opacity;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-transition: -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         #broker-floating-dock-container.is-hidden {
-            -webkit-transform: translate3d(0, 140%, 0);
-            transform: translate3d(0, 140%, 0);
+            -webkit-transform: translateY(140%);
+            transform: translateY(140%);
             opacity: 0;
             pointer-events: none;
         }
 
         .floating-dock {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
         }
 
         html.dark .floating-dock {
-            background: rgba(18, 18, 20, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(18, 18, 20, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(63, 63, 70, 0.7);
             box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
         }
 
         #dock-active-indicator {
-            left: 0;
-            will-change: transform, width;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: left, width;
+            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
             box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
@@ -121,7 +114,7 @@
         .broker-dock-btn {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            transition: color 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: color 0.25s ease;
         }
 
         .broker-dock-btn.text-white,
@@ -219,6 +212,10 @@
                 <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
                     Nueva Captación
+                </button>
+                <button type="button" onclick="openDigitalInventoryModal()" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">inventory_2</span>
+                    Inventario Digital
                 </button>
                 <button type="button" onclick="switchBrokerTab('operaciones')" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-emerald-600 text-base sm:text-lg">calculate</span>
@@ -410,7 +407,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse broker-table">
                             <thead>
-                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">
+                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
                                     <th class="p-3 w-8"><input type="checkbox" id="select-all-props" onclick="toggleSelectAllProps(this)" class="rounded border-zinc-300"></th>
                                     <th class="p-3">Inmueble</th>
                                     <th class="p-3">ID / Código</th>
@@ -781,6 +778,109 @@
         </div>
     </div>
 
+    <!-- MODAL: INVENTARIO DIGITAL OPCIONAL -->
+    <div id="modal-digital-inventory" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 relative my-8 animate-on-scroll">
+            <button type="button" onclick="closeDigitalInventoryModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4 space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                        Módulo Opcional • Acta Digital de Entrega
+                    </span>
+                    <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Fotos Verificadas 4K
+                    </span>
+                </div>
+                <h3 class="font-headline text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-purple-600 text-2xl">inventory_2</span>
+                    Inventario Digital de Inmueble (Opcional)
+                </h3>
+                <p class="text-xs text-zinc-500">Documente el estado de conservación, artefactos, llaves y accesorios de la propiedad antes o al inicio del contrato.</p>
+            </div>
+
+            <!-- Modal Controls Bar -->
+            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex-1 w-full md:w-auto">
+                    <label class="block text-[10px] font-extrabold uppercase text-zinc-400 mb-1">Propiedad Seleccionada</label>
+                    <select id="inventory-property-select" onchange="loadInventoryForProperty(this.value)" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer">
+                        <option value="PROP-2026-081">PROP-2026-081 • Av. Santa Fe 3420, Palermo 3 Amb ($520.000)</option>
+                        <option value="PROP-2026-082" selected>PROP-2026-082 • Humboldt 1940, Palermo Hollywood 2A ($380.000)</option>
+                        <option value="PROP-2026-083">PROP-2026-083 • Libertador 2450, Belgrano 4 Amb ($1.200.000)</option>
+                        <option value="PROP-2026-084">PROP-2026-084 • Av. Corrientes 1540, Local ($750.000)</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0 bg-white dark:bg-zinc-900 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                    <input type="checkbox" id="toggle-inventory-optional" checked onchange="toggleInventoryOptional(this.checked)" class="rounded border-zinc-300 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
+                    <label for="toggle-inventory-optional" class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200 cursor-pointer">
+                        Activar Inventario Digital Opcional en el Contrato
+                    </label>
+                </div>
+            </div>
+
+            <!-- Categories Filter -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-zinc-100 dark:border-zinc-800 text-xs">
+                <button type="button" onclick="filterInventoryCategory('todos')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-extrabold bg-purple-600 text-white cursor-pointer" data-cat="todos">Todos</button>
+                <button type="button" onclick="filterInventoryCategory('living')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="living">Living / Comedor</button>
+                <button type="button" onclick="filterInventoryCategory('cocina')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="cocina">Cocina & Electro</button>
+                <button type="button" onclick="filterInventoryCategory('dormitorio')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="dormitorio">Dormitorios</button>
+                <button type="button" onclick="filterInventoryCategory('bano')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="bano">Baños</button>
+                <button type="button" onclick="filterInventoryCategory('llaves')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="llaves">Llaves & Control</button>
+            </div>
+
+            <!-- Dynamic Items Container -->
+            <div id="inventory-items-container" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+                <!-- Dynamically populated via JS -->
+            </div>
+
+            <!-- Form: Agregar Nuevo Elemento -->
+            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-3">
+                <span class="block text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-purple-600 text-base">add_circle</span>
+                    Agregar Nuevo Elemento al Inventario
+                </span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <input type="text" id="new-inv-title" placeholder="Ej: Aire Split BGH 3000 FC" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none">
+                    <select id="new-inv-cat" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none cursor-pointer">
+                        <option value="living">Living / Comedor</option>
+                        <option value="cocina">Cocina & Electro</option>
+                        <option value="dormitorio">Dormitorios</option>
+                        <option value="bano">Baños</option>
+                        <option value="llaves">Llaves & Control</option>
+                    </select>
+                    <select id="new-inv-state" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none cursor-pointer">
+                        <option value="Excelente">Excelente (Nuevo)</option>
+                        <option value="Bueno" selected>Bueno (Normal)</option>
+                        <option value="Regular">Regular (Uso visible)</option>
+                        <option value="Deteriorado">Deteriorado / Falla</option>
+                    </select>
+                    <button type="button" onclick="addNewInventoryItem()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 px-4 rounded-xl shadow transition-all flex items-center justify-center gap-1 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">add</span> Añadir Item
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Bar -->
+            <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div class="text-zinc-500 font-bold flex items-center gap-2">
+                    <span id="inv-summary-count" class="text-purple-600 font-black">4 Elementos</span>
+                    <span>•</span>
+                    <span class="text-emerald-600 font-extrabold flex items-center gap-0.5"><span class="material-symbols-outlined text-sm">verified</span> Firmado Digitalmente</span>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="closeDigitalInventoryModal()" class="flex-1 sm:flex-none px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-xl cursor-pointer">Cerrar</button>
+                    <button type="button" onclick="downloadInventoryPdf()" class="flex-1 sm:flex-none px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">picture_as_pdf</span> Descargar Acta PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer Elegante -->
     <footer class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
         <div class="max-w-[1580px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -969,16 +1069,14 @@
             const indicator = document.getElementById('dock-active-indicator');
             if (!nav || !indicator || !activeBtn) return;
 
-            window.requestAnimationFrame(() => {
-                const navRect = nav.getBoundingClientRect();
-                const btnRect = activeBtn.getBoundingClientRect();
+            const navRect = nav.getBoundingClientRect();
+            const btnRect = activeBtn.getBoundingClientRect();
 
-                if (btnRect.width === 0) return;
+            if (btnRect.width === 0) return;
 
-                const leftOffset = btnRect.left - navRect.left;
-                indicator.style.transform = `translate3d(${leftOffset}px, 0, 0)`;
-                indicator.style.width = `${btnRect.width}px`;
-            });
+            const leftOffset = btnRect.left - navRect.left;
+            indicator.style.left = `${leftOffset}px`;
+            indicator.style.width = `${btnRect.width}px`;
         }
 
         function setupDockSlidingIndicator() {
@@ -1054,10 +1152,10 @@
             }
 
             tbody.innerHTML = currentBrokerProperties.map(p => `
-                <tr class="border-b border-zinc-200/50 dark:border-zinc-800">
-                    <td class="p-3"><input type="checkbox" class="prop-row-checkbox rounded border-zinc-300"></td>
+                <tr class="border-b border-zinc-200/50 dark:border-zinc-800 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                    <td class="p-3 whitespace-nowrap"><input type="checkbox" class="prop-row-checkbox rounded border-zinc-300"></td>
                     <td class="p-3">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 min-w-[200px]">
                             <img src="${p.image}" alt="${p.title}" class="w-12 h-10 rounded-lg object-cover border shrink-0">
                             <div>
                                 <span class="font-extrabold text-zinc-900 dark:text-white line-clamp-1">${p.title}</span>
@@ -1067,35 +1165,44 @@
                             </div>
                         </div>
                     </td>
-                    <td class="p-3 font-mono font-bold text-zinc-600 dark:text-zinc-300">${p.id}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-0.5 text-[10px] font-black rounded-md ${p.operation === 'venta' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'} uppercase">
+                    <td class="p-3 whitespace-nowrap font-mono font-bold text-zinc-600 dark:text-zinc-300">${p.id}</td>
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-md uppercase whitespace-nowrap ${
+                            p.operation === 'venta' 
+                                ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400' 
+                                : (p.operation === 'temporal' 
+                                    ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400' 
+                                    : 'bg-blue-500/10 text-blue-600 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400')
+                        }">
                             ${p.operation === 'alquiler' ? 'Alq. Tradicional' : (p.operation === 'temporal' ? 'Alq. Temporal' : 'Venta')}
                         </span>
                     </td>
-                    <td class="p-3 font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</td>
-                    <td class="p-3 font-bold text-zinc-700 dark:text-zinc-300">${p.feePercent}%</td>
-                    <td class="p-3">
+                    <td class="p-3 whitespace-nowrap font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</td>
+                    <td class="p-3 whitespace-nowrap font-bold text-zinc-700 dark:text-zinc-300">${p.feePercent}%</td>
+                    <td class="p-3 whitespace-nowrap">
                         <div class="flex items-center gap-1">
                             ${p.portals.map(pt => `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">${pt}</span>`).join('')}
                         </div>
                     </td>
-                    <td class="p-3">
-                        <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
-                            p.status === 'publicada' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' :
-                            (p.status === 'alquilada' ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' :
-                            (p.status === 'reservada' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'))
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-full uppercase whitespace-nowrap ${
+                            p.status === 'publicada' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                            (p.status === 'alquilada' ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400' :
+                            (p.status === 'reservada' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20'))
                         }">
                             ${p.status}
                         </span>
                     </td>
-                    <td class="p-3 font-medium text-zinc-600 dark:text-zinc-300">${p.owner}</td>
-                    <td class="p-3 text-center">
+                    <td class="p-3 whitespace-nowrap font-medium text-zinc-600 dark:text-zinc-300">${p.owner}</td>
+                    <td class="p-3 whitespace-nowrap text-center">
                         <span class="font-bold text-amber-600 dark:text-amber-400">${p.leadsCount}</span>
                         <span class="text-[10px] text-zinc-400 block">(${p.viewsCount} vistas)</span>
                     </td>
-                    <td class="p-3 text-right">
+                    <td class="p-3 whitespace-nowrap text-right">
                         <div class="flex items-center justify-end gap-1">
+                            <button type="button" onclick="openDigitalInventoryModal('${p.id}')" title="Inventario Digital Opcional" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-purple-600">
+                                <span class="material-symbols-outlined text-base">inventory_2</span>
+                            </button>
                             <button type="button" onclick="openBlindCardModal()" title="Generar Ficha Ciega" class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-blue-600">
                                 <span class="material-symbols-outlined text-base">visibility_off</span>
                             </button>
@@ -1336,6 +1443,26 @@
                                 <span class="text-xl font-black text-primary dark:text-red-400 mt-1 block">$ 19.000</span>
                             </div>
                         </div>
+
+                        <!-- Card de Inventario Digital Opcional -->
+                        <div class="pt-4 border-t border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-purple-500/5 dark:bg-purple-950/20 p-4 rounded-xl border border-purple-500/20">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                    <span class="material-symbols-outlined text-xl">inventory_2</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-headline text-sm font-extrabold text-zinc-900 dark:text-white">Inventario Digital Opcional del Inmueble</h4>
+                                        <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded bg-purple-500/20 text-purple-700 dark:text-purple-300">Activo / Opcional</span>
+                                    </div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">4 Elementos auditados con soporte fotográfico 4K • Acta firmada digitalmente al entregar llaves.</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="openDigitalInventoryModal('PROP-2026-082')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">fact_check</span>
+                                Ver / Editar Inventario Digital
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1563,7 +1690,175 @@
             alert('¡Presupuesto copiado al portapapeles listo para enviar por WhatsApp!');
         }
 
-        // Modals Toggle
+        // Modals Toggle & Inventario Digital Logic
+        const brokerInventoryData = {
+            'PROP-2026-081': [
+                { id: 1, title: 'Aire Acondicionado Split BGH 3000 F/C', category: 'living', state: 'Excelente', photo: 'img/hero-marketplace.jpg', notes: 'Incluye control remoto y soporte. Probado en frío/calor.' },
+                { id: 2, title: 'Juego de Llaves de Entrada (x3 juegos)', category: 'llaves', state: 'Excelente', photo: 'img/pareja-viendo-celular.jpg', notes: '3 llaves multipunto de puerta principal + 2 de portería.' },
+                { id: 3, title: 'Heladera Samsung No Frost Inverter', category: 'cocina', state: 'Bueno', photo: 'img/se%C3%B1or-usando-computadora.jpg', notes: 'Ligeros detalles estéticos en puerta lateral. Funcionamiento 100%.' },
+                { id: 4, title: 'Pintura Látex Blanca Muros Completo', category: 'living', state: 'Excelente', photo: 'img/personas-dandose-lamano.jpg', notes: 'Entregado recién pintado a mano sin manchas.' },
+                { id: 5, title: 'Juego Grifería Monocomando FV Baño', category: 'bano', state: 'Bueno', photo: 'img/tenant-profile-1.jpg', notes: 'Sin pérdidas. Tapón de bidet operativo.' }
+            ],
+            'PROP-2026-082': [
+                { id: 10, title: 'Anafe Eléctrico Vitrocerámico Longvie', category: 'cocina', state: 'Excelente', photo: 'img/se%C3%B1or-usando-computadora.jpg', notes: 'Dos hornallas táctiles operativas.' },
+                { id: 11, title: 'Juego de Llaves & Tarjeta Magnética (x2)', category: 'llaves', state: 'Excelente', photo: 'img/pareja-viendo-celular.jpg', notes: 'Incluye chip de acceso al edificio.' },
+                { id: 12, title: 'Cortinas Roller Blackout Beige', category: 'dormitorio', state: 'Bueno', photo: 'img/hero-marketplace.jpg', notes: 'Cadena plástica en perfecto estado.' },
+                { id: 13, title: 'Vanitory Flotante con Espejo LED', category: 'bano', state: 'Excelente', photo: 'img/tenant-profile-1.jpg', notes: 'Espejo retroiluminado funcional.' }
+            ],
+            'PROP-2026-083': [
+                { id: 20, title: 'Cerradura Digital Samsung Biométrica', category: 'llaves', state: 'Excelente', photo: 'img/pareja-viendo-celular.jpg', notes: 'Código pin + 2 tarjetas RFID enviadas.' },
+                { id: 21, title: 'Horno Empotrable a Gas Ariston', category: 'cocina', state: 'Bueno', photo: 'img/hero-marketplace.jpg', notes: 'Limpieza profesional realizada.' }
+            ],
+            'PROP-2026-084': [
+                { id: 30, title: 'Vidriera Templada 10mm Doble Hoja', category: 'living', state: 'Excelente', photo: 'img/personas-dandose-lamano.jpg', notes: 'Cerraduras de piso en funcionamiento.' }
+            ]
+        };
+
+        let currentInvPropertyId = 'PROP-2026-082';
+        let currentInvCategoryFilter = 'todos';
+
+        function openDigitalInventoryModal(propId) {
+            if (propId && brokerInventoryData[propId]) {
+                currentInvPropertyId = propId;
+                const select = document.getElementById('inventory-property-select');
+                if (select) select.value = propId;
+            }
+            renderInventoryItems();
+            document.getElementById('modal-digital-inventory')?.classList.remove('hidden');
+        }
+
+        function closeDigitalInventoryModal() {
+            document.getElementById('modal-digital-inventory')?.classList.add('hidden');
+        }
+
+        function loadInventoryForProperty(propId) {
+            currentInvPropertyId = propId;
+            renderInventoryItems();
+        }
+
+        function filterInventoryCategory(cat) {
+            currentInvCategoryFilter = cat;
+            document.querySelectorAll('.inv-cat-btn').forEach(btn => {
+                if (btn.getAttribute('data-cat') === cat) {
+                    btn.className = 'inv-cat-btn px-3 py-1.5 rounded-lg font-extrabold bg-purple-600 text-white cursor-pointer';
+                } else {
+                    btn.className = 'inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer';
+                }
+            });
+            renderInventoryItems();
+        }
+
+        function renderInventoryItems() {
+            const container = document.getElementById('inventory-items-container');
+            const summaryCount = document.getElementById('inv-summary-count');
+            if (!container) return;
+
+            const items = brokerInventoryData[currentInvPropertyId] || [];
+            const filtered = currentInvCategoryFilter === 'todos' ? items : items.filter(i => i.category === currentInvCategoryFilter);
+
+            if (summaryCount) {
+                summaryCount.textContent = `${items.length} Elemento${items.length === 1 ? '' : 's'}`;
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-zinc-400 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700">
+                        <span class="material-symbols-outlined text-3xl block mb-1">inventory</span>
+                        <p class="text-xs font-semibold">No hay elementos registrados en esta categoría.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const stateBadges = {
+                'Excelente': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+                'Bueno': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+                'Regular': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+                'Deteriorado': 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+            };
+
+            const categoryLabels = {
+                'living': 'Living / Comedor',
+                'cocina': 'Cocina & Electro',
+                'dormitorio': 'Dormitorio',
+                'bano': 'Baño',
+                'llaves': 'Llaves & Control'
+            };
+
+            container.innerHTML = filtered.map(item => `
+                <div class="bg-white dark:bg-zinc-800 p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-700/70 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.photo}" alt="${item.title}" class="w-14 h-12 rounded-xl object-cover border shrink-0">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-headline text-xs font-black text-zinc-900 dark:text-white">${item.title}</h4>
+                                <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase border ${stateBadges[item.state] || 'bg-zinc-100 text-zinc-600'}">
+                                    ${item.state}
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mt-0.5">${categoryLabels[item.category] || item.category}</span>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 italic">"${item.notes}"</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        <button type="button" onclick="alert('Visualizando foto original en alta resolución de ${item.title}')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[10px] font-bold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">photo_camera</span> Foto 4K
+                        </button>
+                        <button type="button" onclick="removeInventoryItem(${item.id})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer" title="Eliminar item">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addNewInventoryItem() {
+            const titleInput = document.getElementById('new-inv-title');
+            const catSelect = document.getElementById('new-inv-cat');
+            const stateSelect = document.getElementById('new-inv-state');
+
+            const title = titleInput?.value.trim();
+            const category = catSelect?.value || 'living';
+            const state = stateSelect?.value || 'Bueno';
+
+            if (!title) {
+                alert('Por favor ingrese el título o nombre del elemento.');
+                return;
+            }
+
+            if (!brokerInventoryData[currentInvPropertyId]) {
+                brokerInventoryData[currentInvPropertyId] = [];
+            }
+
+            const newItem = {
+                id: Date.now(),
+                title: title,
+                category: category,
+                state: state,
+                photo: 'img/hero-marketplace.jpg',
+                notes: 'Agregado manualmente por el corredor en inspección digital.'
+            };
+
+            brokerInventoryData[currentInvPropertyId].push(newItem);
+            titleInput.value = '';
+            renderInventoryItems();
+        }
+
+        function removeInventoryItem(itemId) {
+            if (!brokerInventoryData[currentInvPropertyId]) return;
+            brokerInventoryData[currentInvPropertyId] = brokerInventoryData[currentInvPropertyId].filter(i => i.id !== itemId);
+            renderInventoryItems();
+        }
+
+        function toggleInventoryOptional(enabled) {
+            alert(enabled ? 'El Inventario Digital Opcional ha sido HABILITADO para incluirse en el contrato.' : 'El Inventario Digital ha sido deshabilitado para esta propiedad.');
+        }
+
+        function downloadInventoryPdf() {
+            alert(`¡Acta Oficial de Inventario Digital generada para ${currentInvPropertyId}! Se ha descargado el informe en formato PDF con firma biométrica.`);
+        }
+
         function openBlindCardModal() {
             document.getElementById('modal-blind-card')?.classList.remove('hidden');
         }
