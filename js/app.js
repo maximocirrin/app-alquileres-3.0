@@ -286,17 +286,25 @@ window.FavoritesManager = {
             try {
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
                 if (session && session.user) {
+                    const profileId = (window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function')
+                        ? await window.DataManager._getOrCreateProfile()
+                        : null;
+
                     if (isFav) {
-                        await window.supabaseClient
-                            .from('Favorito')
-                            .delete()
-                            .eq('user_id', session.user.id)
-                            .eq('id_publicacion', pubId);
+                        let query = window.supabaseClient.from('Favorito').delete().eq('id_publicacion', pubId);
+                        if (profileId) {
+                            query = query.eq('id_perfil', profileId);
+                        } else {
+                            query = query.eq('user_id', session.user.id);
+                        }
+                        await query;
                     } else {
+                        const profileIdToUse = profileId || 1;
                         await window.supabaseClient
                             .from('Favorito')
                             .insert([{
                                 user_id: session.user.id,
+                                id_perfil: profileIdToUse,
                                 id_publicacion: pubId
                             }]);
                     }
