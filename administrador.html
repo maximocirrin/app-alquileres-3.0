@@ -68,41 +68,57 @@
             border: 1px solid rgba(39, 39, 42, 0.9);
         }
 
-        /* Floating Dock Inferior Premium con Burbuja Deslizante */
+        /* Floating Dock Inferior Premium con Burbuja Deslizante GPU Hardware Acceleration */
         #owner-floating-dock-container {
+            will-change: transform, opacity;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         #owner-floating-dock-container.is-hidden {
-            transform: translateY(140%);
+            -webkit-transform: translate3d(0, 140%, 0);
+            transform: translate3d(0, 140%, 0);
             opacity: 0;
             pointer-events: none;
         }
 
         .floating-dock {
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+            box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
         }
 
         html.dark .floating-dock {
-            background: rgba(18, 18, 20, 0.88);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(18, 18, 20, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(63, 63, 70, 0.7);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
         }
 
         #dock-active-indicator {
-            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            left: 0;
+            will-change: transform, width;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
             box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
 
         .owner-dock-btn {
-            transition: color 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            transition: color 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .owner-dock-btn.text-white .material-symbols-outlined {
@@ -338,14 +354,16 @@
                 const indicator = document.getElementById('dock-active-indicator');
                 if (!nav || !indicator || !activeBtn) return;
 
-                const navRect = nav.getBoundingClientRect();
-                const btnRect = activeBtn.getBoundingClientRect();
+                window.requestAnimationFrame(() => {
+                    const navRect = nav.getBoundingClientRect();
+                    const btnRect = activeBtn.getBoundingClientRect();
 
-                if (btnRect.width === 0) return;
+                    if (btnRect.width === 0) return;
 
-                const leftOffset = btnRect.left - navRect.left;
-                indicator.style.left = `${leftOffset}px`;
-                indicator.style.width = `${btnRect.width}px`;
+                    const leftOffset = btnRect.left - navRect.left;
+                    indicator.style.transform = `translate3d(${leftOffset}px, 0, 0)`;
+                    indicator.style.width = `${btnRect.width}px`;
+                });
             }
 
             function switchViewTab(target) {
@@ -401,22 +419,30 @@
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             }, 60);
 
-            // Scroll direction detection: hide dock when scrolling down, show when scrolling up
+            // Scroll direction detection with requestAnimationFrame throttling for iOS
             let lastScrollY = window.scrollY;
+            let isScrollTicking = false;
             const dockContainer = document.getElementById('owner-floating-dock-container');
 
             window.addEventListener('scroll', () => {
-                const currentScrollY = window.scrollY;
-                if (!dockContainer) return;
-
-                if (currentScrollY > lastScrollY && currentScrollY > 60) {
-                    // Scrolling DOWN -> hide dock
-                    dockContainer.classList.add('is-hidden');
-                } else {
-                    // Scrolling UP -> show dock
-                    dockContainer.classList.remove('is-hidden');
+                if (!isScrollTicking) {
+                    window.requestAnimationFrame(() => {
+                        const currentScrollY = window.scrollY;
+                        if (dockContainer) {
+                            const scrollDelta = currentScrollY - lastScrollY;
+                            if (Math.abs(scrollDelta) > 6) {
+                                if (currentScrollY > lastScrollY && currentScrollY > 60) {
+                                    dockContainer.classList.add('is-hidden');
+                                } else {
+                                    dockContainer.classList.remove('is-hidden');
+                                }
+                                lastScrollY = currentScrollY;
+                            }
+                        }
+                        isScrollTicking = false;
+                    });
+                    isScrollTicking = true;
                 }
-                lastScrollY = currentScrollY;
             }, { passive: true });
         });
 
