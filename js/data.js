@@ -923,6 +923,16 @@ const DataManager = {
             throw error;
         }
 
+        try {
+            await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                id_solicitud: data.id_solicitud,
+                id_estado_solicitud: 1, // Pendiente
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) {
+            console.warn("Error recording Historial_estado_solicitud:", e);
+        }
+
         return {
             id: data.id_solicitud,
             status: 'pendiente',
@@ -946,6 +956,16 @@ const DataManager = {
         const todayStr = new Date().toISOString().split('T')[0];
         const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
 
+        // 1. Record Historial_estado_solicitud (Aprobada = 2)
+        try {
+            await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                id_solicitud: appId,
+                id_estado_solicitud: 2, // Aprobada
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) { }
+
+        // 2. Create Contrato
         const { data: contract, error: cErr } = await window.supabaseClient
             .from('Contrato')
             .insert([{
@@ -969,7 +989,17 @@ const DataManager = {
         if (cErr) console.error("Error creating contract:", cErr);
 
         if (contract) {
-            await window.supabaseClient
+            // Record Historial_Estado_Contrato (1 = Activo)
+            try {
+                await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
+                    id_contrato: contract.id_contrato,
+                    id_estado_contrato: 1,
+                    fecha_inicio: new Date().toISOString()
+                }]);
+            } catch (e) { }
+
+            // Create initial Pago and record Historial_pago (1 = Pendiente)
+            const { data: pago } = await window.supabaseClient
                 .from('Pago')
                 .insert([{
                     id_contrato: contract.id_contrato,
@@ -977,9 +1007,36 @@ const DataManager = {
                     monto: 380000,
                     fecha_vencimiento: todayStr,
                     periodo: 'Julio 2026'
-                }]);
+                }])
+                .select()
+                .maybeSingle();
+
+            if (pago) {
+                try {
+                    await window.supabaseClient.from('Historial_pago').insert([{
+                        id_pago: pago.id_pago,
+                        id_estado_pago: 1, // Pendiente
+                        fecha_inicio: new Date().toISOString()
+                    }]);
+                } catch (e) { }
+            }
         }
 
+        // 3. Update Propiedad state to 'Alquilada' (id_estado_propiedad = 4)
+        try {
+            await window.supabaseClient
+                .from('Propiedad')
+                .update({ id_estado_propiedad: 4 })
+                .eq('id_propiedad', solPropId);
+
+            await window.supabaseClient.from('Historial_estado_propiedad').insert([{
+                id_propiedad: solPropId,
+                id_estado_propiedad: 4, // Alquilada
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) { }
+
+        // 4. Update Publicacion state
         const { data: pubData } = await window.supabaseClient
             .from('Publicacion')
             .select('id_publicacion')
@@ -1000,6 +1057,15 @@ const DataManager = {
     },
 
     rejectApplication: async function (appId) {
+        if (window.supabaseClient && appId) {
+            try {
+                await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                    id_solicitud: appId,
+                    id_estado_solicitud: 3, // Rechazada
+                    fecha_inicio: new Date().toISOString()
+                }]);
+            } catch (e) { }
+        }
         return { id: appId, status: 'rechazada' };
     },
 
@@ -1064,6 +1130,14 @@ const DataManager = {
             throw error;
         }
 
+        try {
+            await window.supabaseClient.from('Historial_estado_visita').insert([{
+                id_visita: data.id_visita,
+                id_estado_visita: 1, // Programada
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) { }
+
         return {
             id: data.id_visita,
             status: 'programada'
@@ -1071,6 +1145,15 @@ const DataManager = {
     },
 
     cancelVisit: async function (visitId) {
+        if (window.supabaseClient && visitId) {
+            try {
+                await window.supabaseClient.from('Historial_estado_visita').insert([{
+                    id_visita: visitId,
+                    id_estado_visita: 3, // Cancelada
+                    fecha_inicio: new Date().toISOString()
+                }]);
+            } catch (e) { }
+        }
         return { id: visitId, status: 'cancelada' };
     },
 
@@ -1231,8 +1314,94 @@ const DataManager = {
                 .from('Pago')
                 .update({ fecha_pago: new Date().toISOString(), id_metodo_pago: 1 })
                 .eq('id_pago', paymentId);
+
+            try {
+                await window.supabaseClient.from('Historial_pago').insert([{
+                    id_pago: paymentId,
+                    id_estado_pago: 2, // Pagado
+                    fecha_inicio: new Date().toISOString()
+                }]);
+            } catch (e) { }
         }
         return { id: paymentId, status: 'pagado', payment_method: method };
+    },
+
+    updatePublicationPrice: async function (id_publicacion, newPrice) {
+        if (!window.supabaseClient || !id_publicacion) return null;
+        try {
+            const { data: pub } = await window.supabaseClient
+                .from('Publicacion')
+                .select('precio')
+                .eq('id_publicacion', id_publicacion)
+                .single();
+
+            const oldPrice = pub?.precio || 0;
+
+            await window.supabaseClient
+                .from('Publicacion')
+                .update({ precio: newPrice })
+                .eq('id_publicacion', id_publicacion);
+
+            await window.supabaseClient.from('Historial_Precio').insert([{
+                id_publicacion: id_publicacion,
+                precio_antiguo: oldPrice,
+                precio_nuevo: newPrice,
+                fecha_cambio: new Date().toISOString()
+            }]);
+
+            return { id_publicacion, oldPrice, newPrice };
+        } catch (e) {
+            console.error("Error updating publication price:", e);
+            return null;
+        }
+    },
+
+    updatePropertyState: async function (id_propiedad, newEstadoId) {
+        if (!window.supabaseClient || !id_propiedad) return null;
+        try {
+            await window.supabaseClient
+                .from('Propiedad')
+                .update({ id_estado_propiedad: newEstadoId })
+                .eq('id_propiedad', id_propiedad);
+
+            await window.supabaseClient.from('Historial_estado_propiedad').insert([{
+                id_propiedad: id_propiedad,
+                id_estado_propiedad: newEstadoId,
+                fecha_inicio: new Date().toISOString()
+            }]);
+
+            return { id_propiedad, newEstadoId };
+        } catch (e) {
+            console.error("Error updating property state:", e);
+            return null;
+        }
+    },
+
+    createProfessionalConnection: async function (clientId, professionalId) {
+        if (!window.supabaseClient) return null;
+        try {
+            const { data: conn, error } = await window.supabaseClient
+                .from('Conexion_profesional')
+                .insert([{
+                    id_profesional: professionalId,
+                    id_cliente: clientId,
+                    fecha_conexion: new Date().toISOString()
+                }])
+                .select()
+                .single();
+
+            if (conn) {
+                await window.supabaseClient.from('Historial_estado_conexion_profesional').insert([{
+                    id_conexion: conn.id_conexion,
+                    id_estado_conexion: 1, // Activa
+                    fecha_inicio: new Date().toISOString()
+                }]);
+            }
+            return conn;
+        } catch (e) {
+            console.error("Error creating professional connection:", e);
+            return null;
+        }
     },
 
     sendInvoiceEmail: async function (paymentId) {
@@ -1264,25 +1433,42 @@ const DataManager = {
         try {
             const { data, error } = await window.supabaseClient
                 .from('Ticket_mantenimiento')
-                .select('*')
+                .select(`
+                    *,
+                    Estado_ticket (*)
+                `)
                 .order('created_at', { ascending: false });
 
             if (error) return [];
 
-            return (data || []).map(t => ({
-                id: t.id_ticket,
-                contract_id: t.id_contrato,
-                property_address: t.direccion_propiedad || 'Propiedad Alquilada',
-                tenant_name: t.nombre_inquilino || 'Inquilino',
-                title: t.titulo,
-                category: t.categoria || 'General',
-                priority: t.prioridad || 'Media',
-                description: t.descripcion || '',
-                photo_url: t.url_foto || null,
-                status: t.estado || 'abierto',
-                landlord_response: t.respuesta_propietario || null,
-                created_at: t.created_at
-            }));
+            const statusMap = {
+                1: 'abierto',
+                2: 'en_proceso',
+                3: 'resuelto',
+                4: 'cerrado',
+                5: 'cancelado'
+            };
+
+            return (data || []).map(t => {
+                const estadoObj = t.Estado_ticket || {};
+                const mappedStatus = statusMap[t.id_estado_ticket] || (estadoObj.nombre || '').toLowerCase().replace(/\s+/g, '_') || t.estado || 'abierto';
+                return {
+                    id: t.id_ticket,
+                    contract_id: t.id_contrato,
+                    property_address: t.direccion_propiedad || 'Propiedad Alquilada',
+                    tenant_name: t.nombre_inquilino || 'Inquilino',
+                    title: t.titulo,
+                    category: t.categoria || 'General',
+                    priority: t.prioridad || 'Media',
+                    description: t.descripcion || '',
+                    photo_url: t.url_foto || null,
+                    id_estado_ticket: t.id_estado_ticket || 1,
+                    status: mappedStatus,
+                    status_label: estadoObj.nombre || 'Abierto',
+                    landlord_response: t.respuesta_propietario || null,
+                    created_at: t.created_at
+                };
+            });
         } catch (e) {
             console.error("Error in getMaintenanceTickets:", e);
             return [];
@@ -1304,6 +1490,7 @@ const DataManager = {
                 prioridad: ticketData.priority || 'Media',
                 descripcion: ticketData.description || '',
                 url_foto: ticketData.photoUrl || null,
+                id_estado_ticket: 1, // Abierto
                 estado: 'abierto'
             }])
             .select()
@@ -1314,19 +1501,45 @@ const DataManager = {
             throw error;
         }
 
+        try {
+            await window.supabaseClient.from('Historial_estado_ticket').insert([{
+                id_ticket: data.id_ticket,
+                id_estado_ticket: 1, // Abierto
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) {
+            console.warn("Error creating Historial_estado_ticket:", e);
+        }
+
         return {
             id: data.id_ticket,
             title: data.titulo,
-            status: data.estado,
+            status: 'abierto',
+            id_estado_ticket: 1,
             created_at: data.created_at
         };
     },
 
     updateTicketStatus: async function (ticketId, newStatus, responseText) {
-        if (!window.supabaseClient) return null;
+        if (!window.supabaseClient || !ticketId) return null;
+
+        const statusIdMap = {
+            'abierto': 1,
+            'en_proceso': 2,
+            'en proceso': 2,
+            'resuelto': 3,
+            'cerrado': 4,
+            'cancelado': 5
+        };
+
+        const targetEstadoId = typeof newStatus === 'number' ? newStatus : (statusIdMap[String(newStatus).toLowerCase()] || 2);
+        const nowIso = new Date().toISOString();
 
         const updateData = {};
-        if (newStatus) updateData.estado = newStatus;
+        if (newStatus !== undefined) {
+            updateData.id_estado_ticket = targetEstadoId;
+            updateData.estado = String(newStatus).toLowerCase();
+        }
         if (responseText !== undefined) updateData.respuesta_propietario = responseText;
 
         const { data, error } = await window.supabaseClient
@@ -1341,8 +1554,29 @@ const DataManager = {
             return null;
         }
 
+        try {
+            // Close active status history
+            await window.supabaseClient
+                .from('Historial_estado_ticket')
+                .update({ fecha_fin: nowIso })
+                .eq('id_ticket', ticketId)
+                .is('fecha_fin', null);
+
+            // Insert new status history
+            await window.supabaseClient
+                .from('Historial_estado_ticket')
+                .insert([{
+                    id_ticket: ticketId,
+                    id_estado_ticket: targetEstadoId,
+                    fecha_inicio: nowIso
+                }]);
+        } catch (e) {
+            console.warn("Error updating Historial_estado_ticket:", e);
+        }
+
         return {
             id: data.id_ticket,
+            id_estado_ticket: data.id_estado_ticket,
             status: data.estado,
             landlord_response: data.respuesta_propietario
         };
