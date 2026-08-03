@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perfil de Corredor Inmobiliario | Hábitat</title>
+    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=12">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#1a1c1c",
+                        "background": "#f8fafc",
+                        "surface": "#ffffff",
+                        "primary": "#811b1e",
+                        "primary-hover": "#9e2226",
+                        "primary-light": "rgba(129, 27, 30, 0.08)"
+                    },
+                    fontFamily: {
+                        headline: ["Manrope", "sans-serif"],
+                        body: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .fill-1 {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        html.dark .glass-card {
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(39, 39, 42, 0.9);
+        }
+    </style>
+</head>
+
+<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
+
+    <!-- TopNavBar Component -->
+    <script src="js/navbar.js"></script>
+
+    <main class="flex-grow pt-16 md:pt-20 pb-16">
+
+        <!-- BREADCRUMBS -->
+        <div class="max-w-[1280px] mx-auto px-4 sm:px-6 pt-4 pb-2">
+            <div class="flex items-center gap-2 text-xs font-semibold text-zinc-500 overflow-x-auto whitespace-nowrap">
+                <a href="index.html" class="hover:text-primary transition-colors">Inicio</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <a href="agentes.html" class="hover:text-primary transition-colors">Corredores Inmobiliarios</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <span id="breadcrumb-agent-name" class="text-zinc-900 dark:text-white font-bold">Lic. Mariano Gómez</span>
+            </div>
+        </div>
+
+        <div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-8">
+
+            <!-- 1. TOP HEADER BANNER (ZILLOW SCREENSHOT 1 PROFILE HEADER) -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl shadow-lg border border-zinc-200 dark:border-zinc-800 space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    <!-- AGENT LEFT PROFILE SUMMARY -->
+                    <div class="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+                        <div class="relative shrink-0">
+                            <img id="agent-avatar" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80" alt="Avatar Corredor" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-primary/20 shadow-xl">
+                            <div class="absolute -bottom-2 inset-x-0 flex justify-center">
+                                <span id="agent-top-badge" class="px-3 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">verified</span>
+                                    <span>Top Agent</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold border border-emerald-500/20">
+                                <span class="material-symbols-outlined text-sm">shield</span>
+                                <span id="agent-matricula">CUCICBA N° 7842</span>
+                            </div>
+
+                            <h1 id="agent-title-name" class="font-headline font-extrabold text-2xl sm:text-3xl text-zinc-900 dark:text-white tracking-tight">
+                                Lic. Mariano Gómez
+                            </h1>
+                            <p id="agent-agency-role" class="text-xs sm:text-sm font-semibold text-zinc-500">
+                                Gómez & Asociados Propiedades • Director
+                            </p>
+
+                            <!-- Rating & Reviews -->
+                            <div class="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                                <div class="flex items-center gap-1 text-amber-500 font-extrabold text-sm">
+                                    <span class="material-symbols-outlined text-lg fill-1">star</span>
+                                    <span id="agent-rating">5.0</span>
+                                </div>
+                                <a href="#reviews-section" id="agent-reviews-count" class="text-xs text-primary font-bold hover:underline">
+                                    (54 opiniones de clientes)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECENT SALES / LISTINGS CAROUSEL (ZILLOW SCREENSHOT 1 CAROUSEL) -->
+                    <div class="lg:col-span-7 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-zinc-400">Ventas & Alquileres Recientes</span>
+                            <span class="text-xs font-extrabold text-primary">Ver portfolio completo</span>
+                        </div>
+
+                        <!-- 3 Cards Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <!-- Prop 1 -->
+                            <div class="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-2 pb-2">
+                                <div class="relative h-28">
+                                    <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80" alt="Propiedad" class="w-full h-full object-cover">
+                                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-zinc-900/80 text-white text-[10px] font-bold backdrop-blur-sm">Vendida</span>
+                                </div>
+                                <div class="px-2.5 space-y-0.5 text-xs">
+                                    <p class="font-extrabold text-zinc-900 dark:text-white">USD 265.000</p>
+                                    <p class="text-[10px] font-semibold text-zinc-500 truncate">3 dorm • 2 baños • Palermo Soho</p>
+                                </div>
+                            </div>
+
+                            <!-- Prop 2 -->
+                            <div class="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-2 pb-2">
+                                <div class="relative h-28">
+                                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=80" alt="Propiedad" class="w-full h-full object-cover">
+                                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[10px] font-bold backdrop-blur-sm">Alquilada</span>
+                                </div>
+                                <div class="px-2.5 space-y-0.5 text-xs">
+                                    <p class="font-extrabold text-zinc-900 dark:text-white">$650.000 / mes</p>
+                                    <p class="text-[10px] font-semibold text-zinc-500 truncate">2 dorm • Recoleta</p>
+                                </div>
+                            </div>
+
+                            <!-- Prop 3 -->
+                            <div class="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-2 pb-2">
+                                <div class="relative h-28">
+                                    <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&auto=format&fit=crop&q=80" alt="Propiedad" class="w-full h-full object-cover">
+                                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary text-white text-[10px] font-bold">En Venta</span>
+                                </div>
+                                <div class="px-2.5 space-y-0.5 text-xs">
+                                    <p class="font-extrabold text-zinc-900 dark:text-white">USD 320.000</p>
+                                    <p class="text-[10px] font-semibold text-zinc-500 truncate">4 dorm • Belgrano C</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- METRICS BAR (ZILLOW SCREENSHOT 1 METRICS ROW) -->
+                <div class="pt-6 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center divide-x divide-zinc-200 dark:divide-zinc-800">
+                    <div class="px-2">
+                        <span id="metric-sales-year" class="block font-headline font-extrabold text-xl sm:text-2xl text-zinc-900 dark:text-white">272</span>
+                        <span class="text-[11px] font-extrabold text-zinc-400 uppercase">Operaciones '25</span>
+                    </div>
+                    <div class="px-2">
+                        <span id="metric-total-sales" class="block font-headline font-extrabold text-xl sm:text-2xl text-emerald-600 dark:text-emerald-400">3.334</span>
+                        <span class="text-[11px] font-extrabold text-zinc-400 uppercase">Operaciones Totales</span>
+                    </div>
+                    <div class="px-2">
+                        <span id="metric-price-range" class="block font-headline font-extrabold text-xl sm:text-2xl text-zinc-900 dark:text-white">USD 140k - 1.2M</span>
+                        <span class="text-[11px] font-extrabold text-zinc-400 uppercase">Rango de Precios</span>
+                    </div>
+                    <div class="px-2">
+                        <span id="metric-avg-price" class="block font-headline font-extrabold text-xl sm:text-2xl text-primary dark:text-red-400">USD 380k</span>
+                        <span class="text-[11px] font-extrabold text-zinc-400 uppercase">Precio Promedio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TWO-COLUMN MAIN CONTENT (ZILLOW LAYOUT) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <!-- LEFT MAIN COLUMN (70% - ZILLOW SCREENSHOTS 2, 3, 4) -->
+                <div class="lg:col-span-8 space-y-8">
+
+                    <!-- FEATURED PRESENTATION CARD (ZILLOW SCREENSHOT 2 VIDEO BANNER) -->
+                    <div class="rounded-3xl overflow-hidden shadow-xl border border-zinc-200 dark:border-zinc-800 relative bg-zinc-900 text-white min-h-[300px] flex items-end p-6 sm:p-8">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1000&auto=format&fit=crop&q=80" alt="Presentacion" class="absolute inset-0 w-full h-full object-cover opacity-45">
+                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
+
+                        <div class="relative z-10 space-y-3">
+                            <span class="px-3 py-1 rounded-full bg-primary text-white text-[10px] font-extrabold uppercase tracking-wider">
+                                Video Institucional
+                            </span>
+                            <h3 class="font-headline font-extrabold text-xl sm:text-2xl">
+                                Por qué la tecnología y la transparencia son la clave del éxito inmobiliario
+                            </h3>
+                            <p class="text-xs sm:text-sm text-zinc-300">
+                                Lic. Mariano Gómez explica cómo Gómez & Asociados aplica firma digital CUCICBA y fotos 4K para acelerar el alquiler o venta de tu inmueble.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- TEAM MEMBERS SECTION (ZILLOW SCREENSHOT 2 MEET THE TEAM) -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl space-y-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            <div>
+                                <h3 class="font-headline font-extrabold text-xl text-zinc-900 dark:text-white">
+                                    Equipo de <span id="team-title-agency">Gómez & Asociados Propiedades</span>
+                                </h3>
+                                <p class="text-xs text-zinc-500 mt-0.5">12 Agentes y Asesores matriculados</p>
+                            </div>
+                        </div>
+
+                        <!-- Grid of Associated Agents -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Member 1 -->
+                            <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Santiago" class="w-12 h-12 rounded-full object-cover border border-primary/20">
+                                <div class="text-xs space-y-0.5">
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white">Santiago Ruiz</h4>
+                                    <p class="text-[10px] text-zinc-500 font-semibold">USD 450K - 2.5M • 22 vtas</p>
+                                    <div class="flex items-center gap-1 text-amber-500 font-bold text-[11px]">
+                                        <span class="material-symbols-outlined text-sm fill-1">star</span> 5.0 (24)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Member 2 -->
+                            <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" alt="Camila" class="w-12 h-12 rounded-full object-cover border border-primary/20">
+                                <div class="text-xs space-y-0.5">
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white">Federico López</h4>
+                                    <p class="text-[10px] text-zinc-500 font-semibold">USD 180K - 1.4M • 16 vtas</p>
+                                    <div class="flex items-center gap-1 text-amber-500 font-bold text-[11px]">
+                                        <span class="material-symbols-outlined text-sm fill-1">star</span> 4.9 (18)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ABOUT THE BROKER & SPECIALTIES (ZILLOW SCREENSHOT 3 ABOUT SECTION) -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl space-y-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+                        <h3 class="font-headline font-extrabold text-xl text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            Conocé a <span id="about-agent-name">Lic. Mariano Gómez</span>
+                        </h3>
+
+                        <div class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed space-y-3">
+                            <p>
+                                Con más de 12 años de trayectoria ininterrumpida en el mercado inmobiliario de Buenos Aires, Mariano Gómez encabeza un equipo especializado en tasaciones oficiales, comercialización de inmuebles residenciales de alta gama y gestión integral de alquileres bajo la regulación CUCICBA.
+                            </p>
+                            <p>
+                                Miembro activo del Colegio Único de Corredores Inmobiliarios de la Ciudad de Buenos Aires. Nuestro compromiso se basa en brindar un asesoramiento legal y comercial transparente para proteger el patrimonio de propietarios e inversores.
+                            </p>
+                        </div>
+
+                        <!-- Specialties Pills -->
+                        <div class="space-y-2 pt-2">
+                            <span class="text-xs font-black uppercase text-zinc-400 tracking-wider">Especialidades Profesional:</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Agente Vendedor</span>
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Tasaciones Oficiales</span>
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Alquileres Tradicionales</span>
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Propiedades de Lujo</span>
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Desarrollos en Pozo</span>
+                                <span class="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold">Contratos CUCICBA</span>
+                            </div>
+                        </div>
+
+                        <!-- Social & Web Buttons -->
+                        <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-3 flex-wrap">
+                            <a href="#" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                                <span class="material-symbols-outlined text-base">language</span>
+                                <span>Sitio Web Oficial</span>
+                            </a>
+                            <a href="#" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                                <span class="material-symbols-outlined text-base">share</span>
+                                <span>LinkedIn</span>
+                            </a>
+                            <a href="#" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                                <span class="material-symbols-outlined text-base">photo_camera</span>
+                                <span>Instagram</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- SERVICE AREAS / ZONAS DE COBERTURA (ZILLOW SCREENSHOT 5 SERVICE AREAS) -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl space-y-4 shadow-sm border border-zinc-200 dark:border-zinc-800">
+                        <h3 class="font-headline font-extrabold text-xl text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            Zonas de Cobertura en Buenos Aires
+                        </h3>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Palermo Soho</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Palermo Hollywood</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Recoleta</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Belgrano C</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Barrio Norte</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                                <span>Puerto Madero</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT STICKY CONTACT SIDEBAR (30% - ZILLOW SCREENSHOTS 1-5 STICKY SIDEBAR) -->
+                <div class="lg:col-span-4 sticky top-24 space-y-6">
+
+                    <!-- CONTACT BOX CARD -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl shadow-xl border border-zinc-200 dark:border-zinc-800 space-y-6">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase text-primary tracking-wider">Atención Inmediata</span>
+                            <h3 class="font-headline font-extrabold text-xl text-zinc-900 dark:text-white">
+                                Contactar al Corredor
+                            </h3>
+                            <p class="text-xs text-zinc-500">
+                                Recibí asesoramiento directo del equipo de Mariano Gómez.
+                            </p>
+                        </div>
+
+                        <!-- Direct Call Button (Zillow Call The Team Button) -->
+                        <a href="tel:+5491148291029" class="w-full py-3 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-extrabold text-xs rounded-2xl border border-zinc-300 dark:border-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                            <span class="material-symbols-outlined text-base">call</span>
+                            <span>Llamar a la oficina (+54 9 11 4829-1029)</span>
+                        </a>
+
+                        <!-- Sidebar Contact Form -->
+                        <form onsubmit="event.preventDefault(); submitAgentContactForm();" class="space-y-3.5">
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Nombre Completo</label>
+                                <input type="text" id="contact-name" placeholder="Ej: Juan Pérez" required class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Teléfono / WhatsApp</label>
+                                <input type="tel" id="contact-phone" placeholder="+54 9 11 4829-1029" required class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
+                                <input type="email" id="contact-email" placeholder="tuemail@ejemplo.com" required class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Mensaje (Opcional)</label>
+                                <textarea id="contact-msg" rows="3" placeholder="Quisiera tasar mi departamento en Palermo Soho..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 px-4 bg-primary hover:bg-primary-hover text-white font-extrabold text-xs rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">send</span>
+                                <span>Enviar Mensaje al Agente</span>
+                            </button>
+
+                            <!-- WhatsApp Direct CTA -->
+                            <a href="https://wa.me/5491148291029?text=Hola%20Lic.%20Mariano%20G%C3%B3mez,%20quisiera%20consultar%20asesoramiento%20por%20mi%20propiedad." target="_blank" class="w-full py-3.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-base">chat</span>
+                                <span>Escribir por WhatsApp Directo</span>
+                            </a>
+                        </form>
+
+                        <div class="pt-2 text-[10px] text-zinc-400 text-center leading-tight">
+                            Al enviar este formulario aceptás ser contactado por un representante matriculado CUCICBA / CMCPSI.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 3. BOTTOM SUMMARY CARD (ZILLOW SCREENSHOT 5 BOTTOM CARD) -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl shadow-lg border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                    <img id="bottom-avatar" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-primary/20 shadow">
+                    <div>
+                        <h4 id="bottom-agent-name" class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">Lic. Mariano Gómez</h4>
+                        <p id="bottom-agent-role" class="text-xs text-zinc-500 font-semibold">CUCICBA N° 7842 • Gómez & Asociados Propiedades</p>
+                        <p class="text-[11px] text-zinc-400 mt-1">Av. Santa Fe 3200, Palermo Soho, CABA</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="tel:+5491148291029" class="px-5 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-bold text-xs rounded-2xl flex items-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-base">call</span>
+                        <span>(011) 4829-1029</span>
+                    </a>
+                    <a href="https://wa.me/5491148291029" target="_blank" class="px-5 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs rounded-2xl shadow transition-all flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">chat</span>
+                        <span>WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
+        <div class="max-w-[1280px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
+                <span>&copy; 2026 Hábitat - Red de Corredores Matriculados. Todos los derechos reservados.</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="terminos.html" class="hover:text-primary transition-colors">Términos y Privacidad</a>
+                <a href="agentes.html" class="hover:text-primary transition-colors">Ver todos los corredores</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/lead-monetization.js"></script>
+    <script src="js/app.js?v=12"></script>
+
+    <script>
+        // Agent Profile Mock Database
+        const agentsDb = {
+            'ag-1': {
+                name: 'Lic. Mariano Gómez',
+                role: 'Gómez & Asociados Propiedades • Director',
+                matricula: 'CUCICBA N° 7842',
+                avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80',
+                rating: '5.0',
+                reviews: '(54 opiniones de clientes)',
+                salesYear: '272',
+                totalSales: '3.334',
+                priceRange: 'USD 140k - 1.2M',
+                avgPrice: 'USD 380k'
+            },
+            'ag-2': {
+                name: 'Dra. Carolina Benítez',
+                role: 'Benítez Real Estate CABA • Titular',
+                matricula: 'CUCICBA N° 6120',
+                avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
+                rating: '4.9',
+                reviews: '(42 opiniones de clientes)',
+                salesYear: '198',
+                totalSales: '2.140',
+                priceRange: 'USD 210k - 1.4M',
+                avgPrice: 'USD 420k'
+            },
+            'ag-3': {
+                name: 'Martín Sbaraglia',
+                role: 'Sbaraglia Propiedades GBA Norte • Fundador',
+                matricula: 'CMCPSI N° 5840',
+                avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&auto=format&fit=crop&q=80',
+                rating: '4.8',
+                reviews: '(38 opiniones de clientes)',
+                salesYear: '154',
+                totalSales: '1.890',
+                priceRange: 'USD 180k - 2.1M',
+                avgPrice: 'USD 510k'
+            },
+            'ag-4': {
+                name: 'Vesta Preferred Group',
+                role: 'Vesta Partners CABA & GBA • Director',
+                matricula: 'CUCICBA N° 7190',
+                avatar: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&auto=format&fit=crop&q=80',
+                rating: '5.0',
+                reviews: '(114 opiniones de clientes)',
+                salesYear: '310',
+                totalSales: '4.120',
+                priceRange: 'USD 300k - 3.5M',
+                avgPrice: 'USD 650k'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const agentId = urlParams.get('id') || 'ag-1';
+            const agent = agentsDb[agentId] || agentsDb['ag-1'];
+
+            // Update DOM with agent data
+            document.title = `${agent.name} | Corredor Inmobiliario | Hábitat`;
+            document.getElementById('breadcrumb-agent-name').textContent = agent.name;
+            document.getElementById('agent-title-name').textContent = agent.name;
+            document.getElementById('agent-agency-role').textContent = agent.role;
+            document.getElementById('agent-matricula').textContent = agent.matricula;
+            document.getElementById('agent-rating').textContent = agent.rating;
+            document.getElementById('agent-reviews-count').textContent = agent.reviews;
+            document.getElementById('metric-sales-year').textContent = agent.salesYear;
+            document.getElementById('metric-total-sales').textContent = agent.totalSales;
+            document.getElementById('metric-price-range').textContent = agent.priceRange;
+            document.getElementById('metric-avg-price').textContent = agent.avgPrice;
+            document.getElementById('team-title-agency').textContent = agent.role.split('•')[0].trim();
+            document.getElementById('about-agent-name').textContent = agent.name;
+            document.getElementById('bottom-agent-name').textContent = agent.name;
+            document.getElementById('bottom-agent-role').textContent = `${agent.matricula} • ${agent.role}`;
+
+            if (agent.avatar) {
+                document.getElementById('agent-avatar').src = agent.avatar;
+                document.getElementById('bottom-avatar').src = agent.avatar;
+            }
+        });
+
+        function submitAgentContactForm() {
+            const name = document.getElementById('contact-name')?.value || 'Usuario';
+            if (window.HabitatLeadModule && window.HabitatLeadModule.showToast) {
+                window.HabitatLeadModule.showToast(`¡Consulta enviada! El equipo de atención se contactará con vos a la brevedad.`, 'success');
+            } else {
+                alert(`¡Gracias ${name}! Tu consulta ha sido enviada directamente al corredor.`);
+            }
+        }
+    </script>
+</body>
+
+</html>
