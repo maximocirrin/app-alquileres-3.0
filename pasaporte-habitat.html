@@ -530,24 +530,226 @@
             if (window.App && window.App.setupTheme) {
                 window.App.setupTheme();
             }
+            checkExistingPassport();
         });
 
-        async function handleGenerarPasaporte() {
+        async function checkExistingPassport() {
+            if (!window.supabaseClient) return;
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const { data: perfil } = await window.supabaseClient
+                        .from('Perfil')
+                        .select('id_perfil')
+                        .eq('user_id', session.user.id)
+                        .maybeSingle();
+
+                    if (perfil) {
+                        const { data: pasaporte } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('*, Estado_pasaporte(nombre)')
+                            .eq('id_perfil', perfil.id_perfil)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (pasaporte) {
+                            window.currentPasaporteId = pasaporte.id_pasaporte;
+                            console.log("Pasaporte Hábitat activo detectado ID:", pasaporte.id_pasaporte);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Error al consultar pasaporte existente:", e);
+            }
+        }
+
+        function handleGenerarPasaporte() {
+            openPaymentModal();
+        }
+
+        function openPaymentModal() {
+            let modal = document.getElementById('modal-pago-pasaporte');
+            if (modal) modal.remove();
+
+            modal = document.createElement('div');
+            modal.id = 'modal-pago-pasaporte';
+            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 transition-opacity duration-300';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                    <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-6">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-xl">workspace_premium</span>
+                            </span>
+                            <div>
+                                <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white">Generar Pasaporte Hábitat</h3>
+                                <p class="text-xs text-zinc-500 font-body">Credencial de Inquilino Verificado</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closePaymentModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer">
+                            <span class="material-symbols-outlined text-2xl">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Price & Features Box -->
+                    <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white p-5 rounded-2xl mb-6 shadow-md border border-zinc-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-headline font-extrabold uppercase text-amber-400 tracking-wider">Tarifa Única de Emisión</span>
+                            <span class="text-xs font-mono bg-white/10 px-2.5 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-2">
+                            <span class="font-headline text-3xl sm:text-4xl font-extrabold text-white">$20.000</span>
+                            <span class="text-sm text-zinc-400 font-bold">ARS</span>
+                        </div>
+                        <p class="text-xs text-zinc-300 font-body leading-relaxed">
+                            Incluye auditoría de solvencia, validación biométrica DNI con Didit y certificación de antecedentes sin juicios por desalojo.
+                        </p>
+                    </div>
+
+                    <!-- Form simulation & Terms acceptance -->
+                    <form id="form-pago-pasaporte" onsubmit="procesarPagoSimulado(event)">
+                        <div class="space-y-4 mb-6">
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                                <div class="flex items-center justify-between text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                                    <span>Método de Pago (Simulador Activo)</span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-extrabold">
+                                        <span class="material-symbols-outlined text-sm">bolt</span> Sin Pasarela Real
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 font-body">Se simulará la acreditación inmediata de $20.000 ARS para dar acceso completo al pasaporte.</p>
+                            </div>
+
+                            <!-- Terms and Conditions Checkbox -->
+                            <div class="flex items-start gap-3 p-3 rounded-2xl bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60">
+                                <input type="checkbox" id="chk-terminos-pasaporte" required class="mt-1 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 cursor-pointer">
+                                <label for="chk-terminos-pasaporte" class="text-xs text-zinc-700 dark:text-zinc-300 font-body cursor-pointer leading-tight">
+                                    Acepto los <a href="terminos.html" target="_blank" class="text-primary dark:text-red-400 font-bold underline">Términos y Condiciones</a> del Pasaporte Hábitat y autorizo el procesamiento de mis datos para la evaluación crediticia.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3">
+                            <button type="button" onclick="closePaymentModal()" class="px-5 py-3 rounded-2xl font-headline font-extrabold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Cancelar
+                            </button>
+                            <button type="submit" id="btn-confirmar-pago" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3.5 rounded-2xl font-headline font-black text-xs transition-all shadow-lg active:scale-95 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">verified</span>
+                                Confirmar y Simular Pago ($20.000)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('modal-pago-pasaporte');
+            if (modal) {
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+
+        async function procesarPagoSimulado(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-confirmar-pago');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Registrando pago en Supabase...`;
+            }
+
             try {
                 let userId = null;
+                let idPerfil = null;
+
                 if (window.supabaseClient) {
                     const { data: { session } } = await window.supabaseClient.auth.getSession();
                     if (session && session.user) {
                         userId = session.user.id;
+                        
+                        // Check if Perfil exists, if not create one
+                        const { data: perfil } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil')
+                            .eq('user_id', userId)
+                            .maybeSingle();
+
+                        if (perfil) {
+                            idPerfil = perfil.id_perfil;
+                            // Update terms acceptance in Perfil
+                            await window.supabaseClient
+                                .from('Perfil')
+                                .update({
+                                    acepto_terminos: true,
+                                    fecha_aceptacion_terminos: new Date().toISOString()
+                                })
+                                .eq('id_perfil', idPerfil);
+                        }
                     }
                 }
+
                 if (!userId) {
                     userId = localStorage.getItem('habitat_user_id') || 'usr_' + Math.random().toString(36).substring(2, 10);
                     localStorage.setItem('habitat_user_id', userId);
                 }
+
+                // Create Pasaporte_habitat in Supabase if Client and Perfil are available
+                if (window.supabaseClient && idPerfil) {
+                    const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+                    const fechaEmision = new Date();
+                    const fechaVencimiento = new Date();
+                    fechaVencimiento.setDate(fechaEmision.getDate() + 60);
+
+                    const { data: pasaporte, error: errP } = await window.supabaseClient
+                        .from('Pasaporte_habitat')
+                        .insert([{
+                            id_perfil: idPerfil,
+                            id_estado_pasaporte: 3, // Activo
+                            codigo_pasaporte: codigoPasaporte,
+                            monto_pagado: 20000.00,
+                            fecha_emision: fechaEmision.toISOString(),
+                            fecha_vencimiento: fechaVencimiento.toISOString(),
+                            condicion_fiscal: 'Monotributo H',
+                            situacion_crediticia: 'Situación 1 (Normal)',
+                            antecedentes_legales: true
+                        }])
+                        .select()
+                        .single();
+
+                    if (!errP && pasaporte) {
+                        window.currentPasaporteId = pasaporte.id_pasaporte;
+
+                        // Add Entry in Historial_estado_pasaporte
+                        await window.supabaseClient
+                            .from('Historial_estado_pasaporte')
+                            .insert([{
+                                id_pasaporte: pasaporte.id_pasaporte,
+                                id_estado_pasaporte: 3,
+                                observacion: 'Pago simulado de $20.000 ARS acreditado. Pasaporte activado por 60 días.'
+                            }]);
+                    }
+                }
+
+                closePaymentModal();
+                alert('¡Pago de $20.000 ARS simulado con éxito!\n\nIniciando la validación biométrica Didit KYC...');
+
+                // Now start Didit KYC
                 await iniciarKYC(userId);
+
             } catch (err) {
-                console.error('Error al iniciar KYC Didit:', err);
+                console.error("Error al procesar pago simulado:", err);
+                alert("Ocurrió un error al procesar la solicitud: " + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span class="material-symbols-outlined text-base">verified</span> Confirmar y Simular Pago ($20.000)`;
+                }
             }
         }
 
