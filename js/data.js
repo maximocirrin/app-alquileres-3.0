@@ -4,6 +4,13 @@
  */
 
 // Helper function to convert base64 data URL to Blob for Supabase Storage
+window.STORAGE_BUCKETS = {
+    PROPIEDADES_MULTIMEDIA: 'propiedades_multimedia',
+    FOTOS_DE_PERFIL: 'fotos_de_perfil',
+    INVENTARIO_DIGITAL: 'inventario_digital',
+    RAG_DOCUMENTS: 'rag-documents'
+};
+
 function base64ToBlob(base64Data, contentType = 'image/jpeg') {
     if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:')) {
         return null;
@@ -725,13 +732,13 @@ const DataManager = {
                     const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.${ext}`;
                     const { data: uploadResult, error: uploadErr } = await window.supabaseClient
                         .storage
-                        .from('propiedades_multimedia')
+                        .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
                         .upload(filePath, item, { contentType: item.type || 'image/jpeg', upsert: true });
 
                     if (!uploadErr) {
                         const { data: urlRes } = window.supabaseClient
                             .storage
-                            .from('propiedades_multimedia')
+                            .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
                             .getPublicUrl(filePath);
                         publicUrl = urlRes?.publicUrl;
                     } else {
@@ -743,13 +750,13 @@ const DataManager = {
                         const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.jpg`;
                         const { data: uploadResult, error: uploadErr } = await window.supabaseClient
                             .storage
-                            .from('propiedades_multimedia')
+                            .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
                             .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
 
                         if (!uploadErr) {
                             const { data: urlRes } = window.supabaseClient
                                 .storage
-                                .from('propiedades_multimedia')
+                                .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
                                 .getPublicUrl(filePath);
                             publicUrl = urlRes?.publicUrl;
                         }
@@ -1580,6 +1587,290 @@ const DataManager = {
             status: data.estado,
             landlord_response: data.respuesta_propietario
         };
+    },
+
+    // Inventario Digital (N:M con Item, Lectura_Medidor_Inventario 1:N)
+    getDigitalInventories: async function (contractId) {
+        if (!window.supabaseClient) return [];
+        try {
+            let query = window.supabaseClient
+                .from('Inventario_Digital')
+                .select(`
+                    *,
+                    Tipo_inventario (*),
+                    Lectura_Medidor_Inventario (
+                        *,
+                        Tipo_servicio_medidor (*)
+                    ),
+                    Detalle_Inventario_Item (
+                        *,
+                        Item (
+                            *,
+                            Categoria_item (*)
+                        ),
+                        Estado_item (*),
+                        Foto_Item_Inventario (*)
+                    )
+                `)
+                .order('fecha_inspeccion', { ascending: false });
+
+            if (contractId) {
+                query = query.eq('id_contrato', contractId);
+            }
+
+            const { data, error } = await query;
+            if (error) return [];
+
+            return data || [];
+        } catch (e) {
+            console.error("Error in getDigitalInventories:", e);
+            return [];
+        }
+    },
+
+    getInventoryTypes: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Tipo_inventario')
+                .select('*')
+                .order('id_tipo_inventario', { ascending: true });
+            if (error) return [];
+            return data || [];
+        } catch (e) {
+            console.error("Error fetching getInventoryTypes:", e);
+            return [];
+        }
+    },
+
+    createDigitalInventory: async function (invData) {
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
+
+        const { data, error } = await window.supabaseClient
+            .from('Inventario_Digital')
+            .insert([{
+                id_contrato: invData.contractId || 1,
+                id_propiedad: invData.propertyId || 1,
+                id_perfil_creador: profileId,
+                id_tipo_inventario: typeof invData.inventoryTypeId === 'number' ? invData.inventoryTypeId : 1,
+                tipo_inventario: invData.inventoryType || 'Entrega_Inicial',
+                cantidad_llaves_entregadas: invData.keysCount || 1,
+                observaciones_generales: invData.generalNotes || ''
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating digital inventory:", error);
+            throw error;
+        }
+
+        return data;
+    },
+
+    addMeterReadingToInventory: async function (inventoryId, serviceTypeId, readingValue, meterNumber = null, notes = '') {
+        if (!window.supabaseClient || !inventoryId) return null;
+        const { data, error } = await window.supabaseClient
+            .from('Lectura_Medidor_Inventario')
+            .insert([{
+                id_inventario: inventoryId,
+                id_tipo_servicio: serviceTypeId || 1,
+                valor_lectura: String(readingValue),
+                numero_medidor: meterNumber,
+                observaciones: notes
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error adding meter reading:", error);
+            return null;
+        }
+        return data;
+    },
+
+    addItemToInventory: async function (inventoryId, itemId, room = 'General', conditionStateId = 3, notes = '', legacyConditionText = 'Bueno') {
+        if (!window.supabaseClient || !inventoryId) return null;
+        const { data, error } = await window.supabaseClient
+            .from('Detalle_Inventario_Item')
+            .insert([{
+                id_inventario: inventoryId,
+                id_item: itemId || 1,
+                ambiente: room,
+                id_estado_conservacion: typeof conditionStateId === 'number' ? conditionStateId : 3,
+                estado_conservacion: legacyConditionText,
+                observaciones: notes
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error adding item to inventory:", error);
+            return null;
+        }
+        return data;
+    },
+
+    addPhotoToInventoryItem: async function (detalleItemId, photoUrl) {
+        if (!window.supabaseClient || !detalleItemId) return null;
+        const { data, error } = await window.supabaseClient
+            .from('Foto_Item_Inventario')
+            .insert([{
+                id_detalle_item: detalleItemId,
+                url_foto: photoUrl
+            }])
+            .select()
+            .single();
+
+        if (error) return null;
+        return data;
+    },
+
+    // Catálogos de Inventario
+    getConservationStates: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Estado_item')
+                .select('*')
+                .order('id_estado_conservacion', { ascending: true });
+            if (error) return [];
+            return data || [];
+        } catch (e) {
+            console.error("Error fetching getConservationStates:", e);
+            return [];
+        }
+    },
+
+    getItemCategories: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Categoria_item')
+                .select('*')
+                .order('nombre', { ascending: true });
+            if (error) return [];
+            return data || [];
+        } catch (e) {
+            console.error("Error fetching getItemCategories:", e);
+            return [];
+        }
+    },
+
+    getItemCatalog: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Item')
+                .select(`
+                    *,
+                    Categoria_item (*)
+                `)
+                .order('nombre', { ascending: true });
+            if (error) return [];
+            return data || [];
+        } catch (e) {
+            console.error("Error fetching getItemCatalog:", e);
+            return [];
+        }
+    },
+
+    // Storage Upload Helpers per Bucket
+    uploadProfileAvatar: async function (fileOrBase64, userId) {
+        if (!window.supabaseClient) return null;
+        try {
+            let blob = fileOrBase64;
+            if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
+                blob = base64ToBlob(fileOrBase64);
+            }
+            if (!blob) return null;
+
+            const ext = blob.name ? blob.name.split('.').pop() : 'jpg';
+            const filePath = `avatars/user-${userId || Date.now()}.${ext}`;
+
+            const { data, error } = await window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.FOTOS_DE_PERFIL)
+                .upload(filePath, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+
+            if (error) {
+                console.error("Error uploading to fotos_de_perfil:", error);
+                return null;
+            }
+
+            const { data: urlRes } = window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.FOTOS_DE_PERFIL)
+                .getPublicUrl(filePath);
+
+            return urlRes?.publicUrl || null;
+        } catch (e) {
+            console.error("Exception in uploadProfileAvatar:", e);
+            return null;
+        }
+    },
+
+    uploadInventoryPhotoFile: async function (fileOrBase64, inventoryId, itemId) {
+        if (!window.supabaseClient) return null;
+        try {
+            let blob = fileOrBase64;
+            if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
+                blob = base64ToBlob(fileOrBase64);
+            }
+            if (!blob) return null;
+
+            const ext = blob.name ? blob.name.split('.').pop() : 'jpg';
+            const filePath = `inv-${inventoryId || 0}/item-${itemId || 0}-${Date.now()}.${ext}`;
+
+            const { data, error } = await window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.INVENTARIO_DIGITAL)
+                .upload(filePath, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+
+            if (error) {
+                console.error("Error uploading to inventario_digital:", error);
+                return null;
+            }
+
+            const { data: urlRes } = window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.INVENTARIO_DIGITAL)
+                .getPublicUrl(filePath);
+
+            return urlRes?.publicUrl || null;
+        } catch (e) {
+            console.error("Exception in uploadInventoryPhotoFile:", e);
+            return null;
+        }
+    },
+
+    uploadRAGDocumentFile: async function (fileOrBlob, documentName) {
+        if (!window.supabaseClient) return null;
+        try {
+            const fileName = documentName || fileOrBlob.name || `doc-${Date.now()}.pdf`;
+            const filePath = `rag-docs/${fileName}`;
+
+            const { data, error } = await window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.RAG_DOCUMENTS)
+                .upload(filePath, fileOrBlob, { contentType: fileOrBlob.type || 'application/pdf', upsert: true });
+
+            if (error) {
+                console.error("Error uploading to rag-documents:", error);
+                return null;
+            }
+
+            const { data: urlRes } = window.supabaseClient
+                .storage
+                .from(window.STORAGE_BUCKETS.RAG_DOCUMENTS)
+                .getPublicUrl(filePath);
+
+            return urlRes?.publicUrl || null;
+        } catch (e) {
+            console.error("Exception in uploadRAGDocumentFile:", e);
+            return null;
+        }
     }
 };
 
