@@ -1792,10 +1792,12 @@
     <script src="js/data.js"></script>
     <script src="js/app.js?v=12"></script>
     <!-- Google Maps -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
+    <script src="js/google-maps-loader.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.loadGoogleMaps === 'function') {
+                window.loadGoogleMaps('initGoogleMap', 'places');
+            }
             if (window.App) {
                 App.init();
             } else {

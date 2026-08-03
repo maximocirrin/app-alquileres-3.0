@@ -1468,7 +1468,14 @@
                         })();
                     </script>
                     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-                    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initInteractiveMap&loading=async&v=weekly"></script>
+                    <script src="js/google-maps-loader.js"></script>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            if (typeof window.loadGoogleMaps === 'function') {
+                                window.loadGoogleMaps('initInteractiveMap', 'places');
+                            }
+                        });
+                    </script>
                     <script src="js/app.js?v=4"></script>
                     <script>
                         window.addEventListener('load', () => {

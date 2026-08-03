@@ -29,6 +29,14 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
+// API Endpoint - Google Maps Key
+app.get('/api/google-maps-key', (req, res) => {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_API_KEY || '';
+    res.json({ apiKey });
+});
+
+
+
 const fs = require('fs');
 
 // Ensure uploads directory exists
