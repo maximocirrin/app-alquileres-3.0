@@ -537,7 +537,7 @@ label {
     font-weight: 500;
 }
 
-input, select, textarea {
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
     width: 100%;
     max-width: 100%;
     padding: 14px;
@@ -1490,7 +1490,7 @@ input:focus, select:focus {
     }
     
     /* Aggressive fix for input overflow and consistency */
-    input, select, textarea {
+    input:not([type="checkbox"]):not([type="radio"]), select, textarea {
         min-width: 0;
         width: 100% !important;
         max-width: 100% !important;
@@ -1504,6 +1504,22 @@ input:focus, select:focus {
         appearance: none;
         border-radius: var(--radius-sm); /* Enforce our radius */
         background-color: rgba(255,255,255,0.05); /* Enforce background */
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 1.15rem !important;
+        height: 1.15rem !important;
+        min-width: 1.15rem !important;
+        min-height: 1.15rem !important;
+        max-width: 1.15rem !important;
+        max-height: 1.15rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-appearance: checkbox !important;
+        appearance: checkbox !important;
+        cursor: pointer;
+        flex-shrink: 0 !important;
     }
     
     /* Adjust textarea */
@@ -2784,8 +2800,8 @@ html.dark .landing-menu__close:hover {
 .landing-menu__main {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: clamp(2rem, 5vw, 4rem);
+    justify-content: flex-start;
+    gap: 0.75rem;
     min-width: 0;
 }
 

@@ -431,8 +431,13 @@
     <!-- Vercel Analytics -->
     <script>
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && window.location.protocol !== 'file:') {
+            const s = document.createElement('script');
+            s.defer = true;
+            s.src = '/_vercel/insights/script.js';
+            document.head.appendChild(s);
+        }
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body class="bg-background text-on-background font-body antialiased">
