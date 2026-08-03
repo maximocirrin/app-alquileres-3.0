@@ -35,6 +35,14 @@ app.get('/api/google-maps-key', (req, res) => {
     res.json({ apiKey });
 });
 
+// API Endpoint - Supabase Config
+app.get('/api/supabase-config', (req, res) => {
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+    res.json({ url: supabaseUrl, key: supabaseAnonKey });
+});
+
+
 
 
 const fs = require('fs');
