@@ -2048,10 +2048,28 @@
     <script src="js/lead-monetization.js"></script>
     <script src="js/app.js?v=4"></script>
     <!-- Google Maps -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&callback=initGoogleMap&libraries=places&loading=async&v=weekly"></script>
+    <script src="js/google-maps-loader.js"></script>
     <script>
+        function initIndexSearch() {
+            const input = document.getElementById('index-location-search');
+            if (input && window.google) {
+                new google.maps.places.Autocomplete(input, {
+                    componentRestrictions: { country: 'ar' },
+                    fields: ['address_components', 'geometry', 'icon', 'name'],
+                    types: ['(regions)']
+                });
+            }
+        }
+        function initGoogleMapAndSearch() {
+            if (typeof window.initGoogleMap === 'function') {
+                window.initGoogleMap();
+            }
+            initIndexSearch();
+        }
         document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.loadGoogleMaps === 'function') {
+                window.loadGoogleMaps('initGoogleMapAndSearch', 'places');
+            }
             if (window.App) {
                 App.init();
             } else {
@@ -2117,28 +2135,6 @@
             });
         });
     </script>
-
-
-
-
-
-    <!-- End Scripts -->
-
-    <!-- Google Maps Integration -->
-    <script>
-        function initIndexSearch() {
-            const input = document.getElementById('index-location-search');
-            if (input && window.google) {
-                new google.maps.places.Autocomplete(input, {
-                    componentRestrictions: { country: 'ar' },
-                    fields: ['address_components', 'geometry', 'icon', 'name'],
-                    types: ['(regions)']
-                });
-            }
-        }
-    </script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhfpCTOTmrdSqssKvlTvjgkGeljGoaJWo&libraries=places&callback=initIndexSearch"></script>
 
 
     <script src="js/lead-monetization.js"></script>

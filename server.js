@@ -29,6 +29,22 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
+// API Endpoint - Google Maps Key
+app.get('/api/google-maps-key', (req, res) => {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_API_KEY || '';
+    res.json({ apiKey });
+});
+
+// API Endpoint - Supabase Config
+app.get('/api/supabase-config', (req, res) => {
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+    res.json({ url: supabaseUrl, key: supabaseAnonKey });
+});
+
+
+
+
 const fs = require('fs');
 
 // Ensure uploads directory exists
