@@ -15,6 +15,9 @@
 
     // Asynchronously fetch backend environment variables from Vercel / Express
     async function syncSupabaseConfig() {
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        if (isLocalDev) return;
+
         try {
             const res = await fetch('/api/supabase-config');
             if (res.ok) {

@@ -31,7 +31,7 @@ function base64ToBlob(base64Data, contentType = 'image/jpeg') {
     }
 }
 
-const DataManager = {
+var DataManager = {
     // Helper: Get or Create Profile ID for current user
     _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
@@ -1871,6 +1871,53 @@ const DataManager = {
             console.error("Exception in uploadRAGDocumentFile:", e);
             return null;
         }
+    },
+
+    getTenants: async function() {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data } = await window.supabaseClient.from('Perfil').select('*').eq('id_tipo_perfil', 2);
+            return (data || []).map(t => ({
+                id: t.id_perfil,
+                name: t.nombre_completo || 'Inquilino',
+                email: t.mail || '',
+                phone: t.telefono || '-',
+                propertyAddress: '-',
+                rent: 0,
+                contractEnd: '-'
+            }));
+        } catch (e) {
+            return [];
+        }
+    },
+
+    getMockPayments: async function() {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data } = await window.supabaseClient.from('Pago').select('*, Contrato(*)').order('created_at', { ascending: false });
+            return (data || []).map(p => ({
+                id: p.id_pago,
+                date: p.created_at ? new Date(p.created_at).toLocaleDateString() : '-',
+                tenantName: 'Inquilino',
+                propertyAddress: 'Propiedad',
+                method: 'Transferencia',
+                amount: parseFloat(p.monto || 0),
+                status: p.monto ? 'Pagado' : 'Pendiente'
+            }));
+        } catch (e) {
+            return [];
+        }
+    },
+
+    getPaymentStats: async function() {
+        const payments = await DataManager.getMockPayments();
+        const totalPaid = payments.filter(p => p.status === 'Pagado').reduce((sum, p) => sum + p.amount, 0);
+        const pendingCount = payments.filter(p => p.status === 'Pendiente').length;
+        return {
+            totalPaid: totalPaid,
+            pendingCount: pendingCount,
+            totalTransactions: payments.length
+        };
     }
 };
 

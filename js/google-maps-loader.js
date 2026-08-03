@@ -5,6 +5,10 @@
         if (window.GOOGLE_MAPS_API_KEY) {
             return window.GOOGLE_MAPS_API_KEY;
         }
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        if (isLocalDev) {
+            return DEFAULT_KEY;
+        }
         try {
             const res = await fetch('/api/google-maps-key');
             if (res.ok) {

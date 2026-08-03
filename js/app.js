@@ -4915,7 +4915,8 @@ const App = {
         };
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-        document.getElementById('mobile-logout-btn').addEventListener('click', handleLogout);
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+        if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
 
         // Theme Toggle (Menu Button)
         document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
@@ -5735,7 +5736,7 @@ const App = {
 
     // NEW METHODS
     renderTenants: async () => {
-        const tenants = await DataManager.getTenants();
+        const tenants = (window.DataManager && typeof window.DataManager.getTenants === 'function') ? await window.DataManager.getTenants() : [];
         const tbody = document.querySelector('#tenants-table tbody');
         if (!tbody) return;
 
@@ -5786,7 +5787,7 @@ const App = {
 
     renderPayments: async () => {
         // use mock payments for now
-        const payments = await DataManager.getMockPayments();
+        const payments = (window.DataManager && typeof window.DataManager.getMockPayments === 'function') ? await window.DataManager.getMockPayments() : [];
         const tbody = document.querySelector('#payments-table tbody');
         if (!tbody) return;
 
@@ -5833,7 +5834,7 @@ const App = {
         });
 
         // Update Payment Stats
-        const stats = await DataManager.getPaymentStats();
+        const stats = (window.DataManager && typeof window.DataManager.getPaymentStats === 'function') ? await window.DataManager.getPaymentStats() : { totalPaid: 0, pendingCount: 0, totalTransactions: 0 };
         const totalPaid = document.getElementById('payments-total-paid');
         if (totalPaid) totalPaid.textContent = `$${stats.totalPaid.toLocaleString()}`;
         const pendingCount = document.getElementById('payments-pending-count');
@@ -7550,14 +7551,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
                 </div>
 
-                <div class="landing-menu__main p-1 space-y-6">
+                <div class="landing-menu__main p-1 space-y-2">
 
                     <!-- SECCIÓN 1: PRINCIPAL -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 pb-5">
-                        <h4 class="font-headline text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                        <h4 class="font-headline text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> General
                         </h4>
-                        <div class="flex flex-col gap-1.5">
+                        <div class="flex flex-col gap-1">
                             <a href="index.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary text-xl">home</span>
                                 <span>Inicio</span>
@@ -7586,8 +7587,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- SECCIÓN 1: INQUILINOS (Verde Esmeralda - Colapsable) -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
-                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Para Inquilinos
                             </h4>
@@ -7630,8 +7631,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- SECCIÓN 2: PROPIETARIOS (Rojo Borgoña - Colapsable) -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
-                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-primary"></span> Para Propietarios
                             </h4>
@@ -7673,8 +7674,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- SECCIÓN 3: CORREDORES E INMOBILIARIAS (Azul Oscuro - Colapsable) -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-3">
-                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1.5 text-left cursor-pointer group select-none">
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-blue-900"></span> Para Corredores & Inmobiliarias
                             </h4>
