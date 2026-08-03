@@ -23,6 +23,7 @@
         };
     </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="js/lead-monetization.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -168,6 +169,10 @@
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
+                <a href="agentes.html" class="inline-flex items-center gap-2 bg-blue-900 hover:bg-blue-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">handshake</span>
+                    Solicitar Agente
+                </a>
                 <button type="button" onclick="window.App && window.App.showPublishWizard()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">add</span>
                     Publicar Propiedad
@@ -209,6 +214,24 @@
 
             <!-- PESTAÑA 1: MIS AVISOS -->
             <div id="panel-content-avisos" class="tab-content active space-y-6">
+                <!-- Banner: Solicitar Corredor Inmobiliario -->
+                <div class="glass-card p-5 rounded-2xl border border-blue-500/30 bg-blue-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0 shadow">
+                            <span class="material-symbols-outlined text-2xl">real_estate_agent</span>
+                        </div>
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase border border-blue-500/20">Servicio de Corretaje Profesional</span>
+                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white mt-0.5">¿Querés delegar la gestión a un Corredor Matriculado?</h3>
+                            <p class="text-xs text-zinc-500">Un agente verificado CUCICBA/CMCPSI se encargará de la tasación, fotos HD, contratos y filtrado de inquilinos.</p>
+                        </div>
+                    </div>
+                    <a href="agentes.html" class="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer shrink-0 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">handshake</span>
+                        <span>Solicitar Agente Ahora</span>
+                    </a>
+                </div>
+
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-card p-5 rounded-2xl shadow-sm">
                     <div>
                         <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">Propiedades Publicadas</h2>

@@ -26,6 +26,7 @@
 
     <!-- Chart.js para Gráficos Estadísticos del CRM -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/lead-monetization.js"></script>
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -209,6 +210,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+                <button type="button" onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">storefront</span>
+                    Tienda de Leads
+                </button>
                 <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
                     Nueva Captación
@@ -232,11 +237,20 @@
             </div>
         </div>
 
-        <!-- PESTAÑAS SUPERIORES (5 PESTAÑAS CONSOLIDADAS SIN SCROLL HORRIBLE) -->
-        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <!-- BARRA SUPERIOR DE SALDO Y MATRÍCULA VERIFICADA -->
+        <div id="agent-lead-status-bar" class="w-full"></div>
+
+        <!-- PESTAÑAS SUPERIORES (6 PESTAÑAS CONSOLIDADAS) -->
+        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
             <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">dashboard</span>
                 <span>General</span>
+            </button>
+
+            <button data-tab="leads" onclick="switchBrokerTab('leads')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">monetization_on</span>
+                <span>Monetización & Leads</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white">TIENDA</span>
             </button>
 
             <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
@@ -689,39 +703,81 @@
                 </div>
             </div>
 
+            <!-- PESTAÑA 6: MONETIZACIÓN & LEADS (TIENDA Y INBOX) -->
+            <div id="panel-content-leads" class="tab-content space-y-6">
+                <!-- Action Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-emerald-600 text-3xl">storefront</span>
+                            <div>
+                                <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Tienda de Leads por Zona Inmobiliaria</h3>
+                                <p class="text-xs text-zinc-500">Adquirí paquetes exclusivos por barrio (Palermo, Recoleta, Belgrano, etc.) integrados con Mercado Pago.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-base">shopping_cart</span>
+                            <span>Explorar Tienda y Cupos de Zonas</span>
+                        </button>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-blue-500/30 bg-blue-500/5 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-blue-600 text-3xl">verified_user</span>
+                            <div>
+                                <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Validación de Matrícula CUCICBA / CMCPSI</h3>
+                                <p class="text-xs text-zinc-500">Cumplí con las normativas locales y aumentá la conversión mostrando tu badge verificado.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="HabitatLeadModule.openOnboardingModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-base">badge</span>
+                            <span>Cargar / Actualizar Matrícula</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inbox de Leads en Tiempo Real -->
+                <div id="lead-inbox-container"></div>
+            </div>
+
         </div>
     </main>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (5 BOTONES CONSOLIDADOS - SIN SCROLL HORIZONTAL) -->
-    <div id="broker-floating-dock-container" class="fixed bottom-4 left-4 right-4 z-[100] max-w-md mx-auto">
-        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1.5 flex items-center justify-between shadow-2xl">
+    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (6 BOTONES CONSOLIDADOS) -->
+    <div id="broker-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-lg mx-auto">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
             <!-- Burbuja Deslizante Activa -->
             <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
 
-            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">dashboard</span>
-                <span class="text-[10px]">General</span>
+            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">dashboard</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">General</span>
             </button>
 
-            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">table_rows</span>
-                <span class="text-[10px]">Avisos</span>
+            <button data-tab="leads" onclick="switchBrokerTab('leads')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">monetization_on</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Leads</span>
             </button>
 
-            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">groups</span>
-                <span class="text-[10px]">Contactos</span>
-                <span class="absolute top-1 right-2 w-2 h-2 rounded-full bg-amber-500"></span>
+            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">table_rows</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Avisos</span>
             </button>
 
-            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">payments</span>
-                <span class="text-[10px]">Alquileres</span>
+            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">groups</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Contactos</span>
+                <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500"></span>
             </button>
 
-            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">handshake</span>
-                <span class="text-[10px]">Operaciones</span>
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">payments</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Alquileres</span>
+            </button>
+
+            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">handshake</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Red</span>
             </button>
         </nav>
     </div>
@@ -1041,11 +1097,11 @@
             document.querySelectorAll('.broker-dock-btn').forEach(btn => {
                 const isTarget = btn.getAttribute('data-tab') === normalizedTab;
                 if (isTarget) {
-                    btn.className = 'broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-white font-extrabold transition-colors cursor-pointer';
+                    btn.className = 'broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-white font-extrabold transition-colors cursor-pointer text-center';
                     btn.classList.add('text-white');
                     updateSlidingIndicator(btn);
                 } else {
-                    btn.className = 'broker-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer';
+                    btn.className = 'broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center';
                     btn.classList.remove('text-white');
                 }
             });
