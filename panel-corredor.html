@@ -1716,14 +1716,15 @@
 
         let currentInvPropertyId = 'PROP-2026-082';
         let currentInvCategoryFilter = 'todos';
+        let currentInvDbData = [];
 
-        function openDigitalInventoryModal(propId) {
-            if (propId && brokerInventoryData[propId]) {
+        async function openDigitalInventoryModal(propId) {
+            if (propId) {
                 currentInvPropertyId = propId;
                 const select = document.getElementById('inventory-property-select');
                 if (select) select.value = propId;
             }
-            renderInventoryItems();
+            await fetchAndRenderDbInventory();
             document.getElementById('modal-digital-inventory')?.classList.remove('hidden');
         }
 
@@ -1731,9 +1732,9 @@
             document.getElementById('modal-digital-inventory')?.classList.add('hidden');
         }
 
-        function loadInventoryForProperty(propId) {
+        async function loadInventoryForProperty(propId) {
             currentInvPropertyId = propId;
-            renderInventoryItems();
+            await fetchAndRenderDbInventory();
         }
 
         function filterInventoryCategory(cat) {
@@ -1748,13 +1749,37 @@
             renderInventoryItems();
         }
 
+        async function fetchAndRenderDbInventory() {
+            if (window.DataManager) {
+                try {
+                    const dbInventories = await window.DataManager.getDigitalInventories();
+                    if (dbInventories && dbInventories.length > 0) {
+                        const inv = dbInventories[0];
+                        const details = inv.Detalle_Inventario_Item || [];
+                        currentInvDbData = details.map(d => ({
+                            id: d.id_detalle_item,
+                            title: d.Item?.nombre || 'Elemento de Inmueble',
+                            category: (d.Item?.Categoria_item?.nombre || d.ambiente || 'living').toLowerCase(),
+                            categoryLabel: d.ambiente || d.Item?.Categoria_item?.nombre || 'General',
+                            state: d.Estado_item?.nombre || d.estado_conservacion || 'Bueno',
+                            photo: (d.Foto_Item_Inventario && d.Foto_Item_Inventario[0]?.url_foto) || 'img/hero-marketplace.jpg',
+                            notes: d.observaciones || 'Inspeccionado en acta digital.'
+                        }));
+                    }
+                } catch (e) {
+                    console.warn("Could not fetch DB inventory:", e);
+                }
+            }
+            renderInventoryItems();
+        }
+
         function renderInventoryItems() {
             const container = document.getElementById('inventory-items-container');
             const summaryCount = document.getElementById('inv-summary-count');
             if (!container) return;
 
-            const items = brokerInventoryData[currentInvPropertyId] || [];
-            const filtered = currentInvCategoryFilter === 'todos' ? items : items.filter(i => i.category === currentInvCategoryFilter);
+            const items = (currentInvDbData && currentInvDbData.length > 0) ? currentInvDbData : (brokerInventoryData[currentInvPropertyId] || []);
+            const filtered = currentInvCategoryFilter === 'todos' ? items : items.filter(i => String(i.category).includes(currentInvCategoryFilter) || String(i.categoryLabel).toLowerCase().includes(currentInvCategoryFilter));
 
             if (summaryCount) {
                 summaryCount.textContent = `${items.length} Elemento${items.length === 1 ? '' : 's'}`;
@@ -1771,10 +1796,12 @@
             }
 
             const stateBadges = {
+                'Nuevo': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
                 'Excelente': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
                 'Bueno': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
                 'Regular': 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-                'Deteriorado': 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                'Deteriorado': 'bg-rose-500/10 text-rose-600 border-rose-500/20',
+                'Dañado / Inoperativo': 'bg-rose-500/10 text-rose-600 border-rose-500/20'
             };
 
             const categoryLabels = {
@@ -1796,13 +1823,13 @@
                                     ${item.state}
                                 </span>
                             </div>
-                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mt-0.5">${categoryLabels[item.category] || item.category}</span>
+                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mt-0.5">${categoryLabels[item.category] || item.categoryLabel || item.category}</span>
                             <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 italic">"${item.notes}"</p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-                        <button type="button" onclick="alert('Visualizando foto original en alta resolución de ${item.title}')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[10px] font-bold flex items-center gap-1">
+                        <button type="button" onclick="alert('Visualizando foto original de ${item.title}')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[10px] font-bold flex items-center gap-1">
                             <span class="material-symbols-outlined text-xs">photo_camera</span> Foto 4K
                         </button>
                         <button type="button" onclick="removeInventoryItem(${item.id})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer" title="Eliminar item">
@@ -1813,7 +1840,7 @@
             `).join('');
         }
 
-        function addNewInventoryItem() {
+        async function addNewInventoryItem() {
             const titleInput = document.getElementById('new-inv-title');
             const catSelect = document.getElementById('new-inv-cat');
             const stateSelect = document.getElementById('new-inv-state');
@@ -1825,6 +1852,27 @@
             if (!title) {
                 alert('Por favor ingrese el título o nombre del elemento.');
                 return;
+            }
+
+            if (window.DataManager) {
+                try {
+                    let dbInventories = await window.DataManager.getDigitalInventories();
+                    let invId = dbInventories?.[0]?.id_inventario;
+                    if (!invId) {
+                        const newInv = await window.DataManager.createDigitalInventory({ contractId: 1, propertyId: 1 });
+                        invId = newInv?.id_inventario;
+                    }
+
+                    const stateMap = { 'Excelente': 2, 'Bueno': 3, 'Regular': 4, 'Deteriorado': 5 };
+                    const added = await window.DataManager.addItemToInventory(invId, 1, category, stateMap[state] || 3, title);
+                    if (added) {
+                        await fetchAndRenderDbInventory();
+                        if (titleInput) titleInput.value = '';
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("DB insert error:", e);
+                }
             }
 
             if (!brokerInventoryData[currentInvPropertyId]) {
@@ -1841,11 +1889,20 @@
             };
 
             brokerInventoryData[currentInvPropertyId].push(newItem);
-            titleInput.value = '';
+            if (titleInput) titleInput.value = '';
             renderInventoryItems();
         }
 
-        function removeInventoryItem(itemId) {
+        async function removeInventoryItem(itemId) {
+            if (window.supabaseClient && typeof itemId === 'number' && itemId < 1000000000000) {
+                try {
+                    await window.supabaseClient.from('Detalle_Inventario_Item').delete().eq('id_detalle_item', itemId);
+                    await fetchAndRenderDbInventory();
+                    return;
+                } catch (e) {
+                    console.warn("Error deleting DB inventory item:", e);
+                }
+            }
             if (!brokerInventoryData[currentInvPropertyId]) return;
             brokerInventoryData[currentInvPropertyId] = brokerInventoryData[currentInvPropertyId].filter(i => i.id !== itemId);
             renderInventoryItems();
