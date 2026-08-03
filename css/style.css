@@ -3306,3 +3306,54 @@ html.dark .landing-menu__divider {
         font-size: 0.72rem;
     }
 }
+
+/* ==========================================================================
+   MÓDULO CRM LEADS - KANBAN & CARDS CUSTOM STYLING
+   ========================================================================== */
+.kanban-col-scroll {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.kanban-col-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.kanban-col-scroll::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.3);
+    border-radius: 4px;
+}
+
+.animate-on-scroll {
+    animation: fadeInUp 0.35s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.4);
+    border-radius: 6px;
+}
+
+

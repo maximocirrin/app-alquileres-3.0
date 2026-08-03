@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap"
         rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -46,8 +46,9 @@
                         "3xl": "1.75rem"
                     },
                     fontFamily: {
-                        headline: ["Manrope", "sans-serif"],
-                        body: ["Inter", "sans-serif"]
+                        headline: ["Outfit", "Manrope", "sans-serif"],
+                        body: ["Outfit", "Inter", "sans-serif"],
+                        sans: ["Outfit", "Inter", "sans-serif"]
                     }
                 }
             }
@@ -199,18 +200,17 @@
             <div>
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
+                    <span class="text-zinc-300 dark:text-zinc-700">•</span>
+                    <div id="header-lead-balance-badge" class="inline-flex items-center"></div>
                 </div>
                 <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-3xl">dashboard_customize</span>
-                    Panel del Corredor Inmobiliario
+                    Accesos Directos
                 </h1>
-                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Administración de cartera en filas, postulaciones, citas de visitas, contratos activos, tasaciones y red MLS.
-                </p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-                <button type="button" onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                <button type="button" onclick="switchBrokerTab('leads'); HabitatLeadModule.switchLeadsSubtab('store');" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">storefront</span>
                     Tienda de Leads
                 </button>
@@ -222,7 +222,7 @@
                     <span class="material-symbols-outlined text-base sm:text-lg">inventory_2</span>
                     Inventario Digital
                 </button>
-                <button type="button" onclick="switchBrokerTab('operaciones')" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                <button type="button" onclick="switchBrokerTab('operaciones'); setTimeout(() => document.getElementById('section-calculadora')?.scrollIntoView({ behavior: 'smooth' }), 100);" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-emerald-600 text-base sm:text-lg">calculate</span>
                     Calculadora Ingreso
                 </button>
@@ -230,15 +230,12 @@
                     <span class="material-symbols-outlined text-blue-600 text-base sm:text-lg">visibility_off</span>
                     Ficha Ciega
                 </button>
-                <button type="button" onclick="switchBrokerTab('alquileres')" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                <button type="button" onclick="switchBrokerTab('alquileres'); setTimeout(() => document.getElementById('section-tickets')?.scrollIntoView({ behavior: 'smooth' }), 100);" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-amber-500 text-base sm:text-lg">build</span>
                     Tickets Mantenimiento
                 </button>
             </div>
         </div>
-
-        <!-- BARRA SUPERIOR DE SALDO Y MATRÍCULA VERIFICADA -->
-        <div id="agent-lead-status-bar" class="w-full"></div>
 
         <!-- PESTAÑAS SUPERIORES (6 PESTAÑAS CONSOLIDADAS) -->
         <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
@@ -271,8 +268,8 @@
             </button>
 
             <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">handshake</span>
-                <span>Operaciones & Red</span>
+                <span class="material-symbols-outlined text-lg">calendar_month</span>
+                <span>Visitas</span>
             </button>
         </div>
 
@@ -371,46 +368,29 @@
             <!-- PESTAÑA 2: MIS AVISOS EN FILAS / TABLA -->
             <div id="panel-content-avisos" class="tab-content space-y-4">
                 <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-                    <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <div class="relative flex-1 min-w-[220px]">
-                            <input id="broker-search-input" type="text" oninput="filterBrokerProperties()" placeholder="Buscar por ID, dirección, título, propietario..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
-                            <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-base">search</span>
+                    <div class="flex items-center gap-3 flex-1">
+                        <div class="relative flex-1 min-w-[240px]">
+                            <input id="broker-search-input" type="text" oninput="filterBrokerProperties()" placeholder="Buscar por ID, dirección, título, propietario..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
+                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
                         </div>
 
-                        <select id="filter-operacion-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
-                            <option value="todos">Todas las Operaciones</option>
-                            <option value="alquiler">Alquiler Tradicional</option>
-                            <option value="temporal">Alquiler Temporal</option>
-                            <option value="venta">Venta</option>
-                        </select>
-
-                        <select id="filter-estado-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
-                            <option value="todos">Todos los Estados</option>
-                            <option value="publicada">Publicada</option>
-                            <option value="alquilada">Alquilada</option>
-                            <option value="reservada">Reservada</option>
-                            <option value="pausada">Pausada</option>
-                        </select>
-
-                        <select id="filter-agente-select" onchange="filterBrokerProperties()" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
-                            <option value="todos">Todos los Agentes</option>
-                            <option value="Roberto Gómez">Roberto Gómez</option>
-                            <option value="Mariana Rossi">Mariana Rossi</option>
-                            <option value="Esteban Larrea">Esteban Larrea</option>
-                            <option value="Carlos Méndez">Carlos Méndez</option>
-                        </select>
+                        <button type="button" onclick="openBrokerFilterModal()" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs cursor-pointer transition-all shrink-0">
+                            <span class="material-symbols-outlined text-base text-primary">tune</span>
+                            <span>Filtros</span>
+                            <span id="active-filter-badge" class="hidden px-2 py-0.5 text-[9px] bg-primary text-white font-black rounded-full">0</span>
+                        </button>
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
+                        <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
                             <span class="material-symbols-outlined text-base">download</span>
                             <span>Exportar Excel</span>
                         </button>
-                        <button type="button" id="btn-view-rows" onclick="toggleBrokerView('rows')" class="px-3 py-2 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm">
+                        <button type="button" id="btn-view-rows" onclick="toggleBrokerView('rows')" class="px-3 py-2.5 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
                             <span class="material-symbols-outlined text-base">table_rows</span>
                             <span class="hidden sm:inline">Vista Filas (Tabla)</span>
                         </button>
-                        <button type="button" id="btn-view-grid" onclick="toggleBrokerView('grid')" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors">
+                        <button type="button" id="btn-view-grid" onclick="toggleBrokerView('grid')" class="px-3 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
                             <span class="material-symbols-outlined text-base">grid_view</span>
                             <span class="hidden sm:inline">Vista Tarjetas</span>
                         </button>
@@ -520,113 +500,108 @@
             <div id="panel-content-alquileres" class="tab-content space-y-6">
                 <div id="broker-container-active-rental" class="space-y-6"></div>
 
-                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="glass-card p-5 rounded-2xl shadow-sm">
-                        <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Tickets de Mantenimiento y Reparaciones</h2>
-                        <p class="text-xs text-zinc-500">Gestión de reclamos de conservación enviados por inquilinos activos.</p>
+                <div id="section-tickets" class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Tickets de Mantenimiento y Reparaciones</h2>
+                            <p class="text-xs text-zinc-500">Gestión de reclamos edilicios enviados por inquilinos o propietarios.</p>
+                        </div>
+                        <button type="button" onclick="openCreateBrokerTicketModal()" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5 shrink-0">
+                            <span class="material-symbols-outlined text-base">build</span>
+                            <span>+ Nuevo Ticket</span>
+                        </button>
                     </div>
 
                     <div id="broker-list-tickets" class="space-y-4"></div>
                 </div>
             </div>
 
-            <!-- PESTAÑA 5: OPERACIONES & RED (CONSOLIDADAS: KANBAN, TASACIONES, MLS, CALCULADORA) -->
+            <!-- PESTAÑA 5: OPERACIONES & RED (CONSOLIDADAS: CALENDARIO DE VISITAS, TASACIONES, MLS, CALCULADORA) -->
             <div id="panel-content-operaciones" class="tab-content space-y-8">
-                <!-- 1. Embudo Kanban -->
-                <div class="space-y-4">
-                    <div class="glass-card p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                <!-- 1. Calendario Mensual & Agenda Profesional de Citas -->
+                <div class="space-y-6 font-body">
+                    <!-- Header del Calendario (z-30 para superponer el menú emergente de meses) -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
                         <div>
-                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Embudo CRM Kanban de Leads</h3>
-                            <p class="text-xs text-zinc-500">Seguimiento de candidatos desde el ingreso hasta la firma y cobro de honorarios.</p>
+                            <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+                                Calendario Inmobiliario & Agenda de Citas
+                            </h2>
+                            <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato, tasaciones y entregas de llaves.</p>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto pb-4">
-                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
-                            <div class="flex items-center justify-between px-1">
-                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Nuevas Consultas
-                                </span>
-                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">3</span>
+                        <div class="flex items-center gap-3 flex-wrap shrink-0">
+                            <div class="relative">
+                                <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                    <button type="button" onclick="navigateCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                        <span class="material-symbols-outlined text-base">chevron_left</span>
+                                    </button>
+                                    <button type="button" onclick="toggleMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
+                                        <span id="calendar-month-title">Agosto 2026</span>
+                                        <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
+                                    </button>
+                                    <button type="button" onclick="navigateCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                        <span class="material-symbols-outlined text-base">chevron_right</span>
+                                    </button>
+                                </div>
+
+                                <!-- Popover Selector Rápido de Meses y Años -->
+                                <div id="calendar-month-picker-popover" class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3" onclick="event.stopPropagation()">
+                                    <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                        <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
+                                        <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                            <button type="button" onclick="changePickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
+                                            <span id="picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-400 px-1">2026</span>
+                                            <button type="button" onclick="changePickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grilla de 12 Meses -->
+                                    <div id="picker-month-grid" class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
+                                </div>
                             </div>
-                            <div id="kanban-col-nuevas" class="space-y-3 flex-grow"></div>
-                        </div>
 
-                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
-                            <div class="flex items-center justify-between px-1">
-                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> Contacto Realizado
-                                </span>
-                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">2</span>
-                            </div>
-                            <div id="kanban-col-contacto" class="space-y-3 flex-grow"></div>
-                        </div>
-
-                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
-                            <div class="flex items-center justify-between px-1">
-                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> Visita Agendada
-                                </span>
-                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">2</span>
-                            </div>
-                            <div id="kanban-col-visita" class="space-y-3 flex-grow"></div>
-                        </div>
-
-                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
-                            <div class="flex items-center justify-between px-1">
-                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> Reserva / Evaluación
-                                </span>
-                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400">1</span>
-                            </div>
-                            <div id="kanban-col-reserva" class="space-y-3 flex-grow"></div>
-                        </div>
-
-                        <div class="bg-zinc-100/70 dark:bg-zinc-900/70 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex flex-col space-y-3 kanban-col">
-                            <div class="flex items-center justify-between px-1">
-                                <span class="font-headline text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Firmado & Cobrado
-                                </span>
-                                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">4</span>
-                            </div>
-                            <div id="kanban-col-firmado" class="space-y-3 flex-grow"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Tasaciones -->
-                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="glass-card p-5 rounded-2xl shadow-sm flex items-center justify-between">
-                        <div>
-                            <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Solicitudes de Tasación de Inmuebles</h2>
-                            <p class="text-xs text-zinc-500">Pedidos de valuación comercial enviados por propietarios para captación.</p>
-                        </div>
-                        <button type="button" onclick="alert('Nueva tasación agendada.')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer">Nueva Tasación</button>
-                    </div>
-
-                    <div id="broker-list-valuations" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
-
-                <!-- 3. Red MLS -->
-                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
-                            <div>
-                                <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                    Red Inter-Inmobiliaria Hábitat MLS
-                                </span>
-                                <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mt-1">Inventario Compartido entre Colegas</h3>
-                                <p class="text-xs text-zinc-500">Propiedades autorizadas para compartir comisiones al 50/50 y emitir fichas ciegas.</p>
-                            </div>
-                            <button type="button" onclick="openBlindCardModal()" class="px-4 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-all flex items-center gap-1.5 shrink-0">
-                                <span class="material-symbols-outlined text-base">visibility_off</span>
-                                Generar Ficha Ciega PDF
+                            <button type="button" onclick="openCreateVisitModal()" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">event</span>
+                                <span>+ Agendar Cita o Visita</span>
                             </button>
                         </div>
-
-                        <div id="broker-mls-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                     </div>
+
+                    <!-- Filtros Rápidos por Tipo de Evento (Visitas y Entregas de Llaves) -->
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
+                        <button type="button" onclick="filterCalendarEventType('todos')" id="cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all">
+                            Todos los Eventos
+                        </button>
+                        <button type="button" onclick="filterCalendarEventType('visita')" id="cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Visitas / Muestras
+                        </button>
+                        <button type="button" onclick="filterCalendarEventType('entrega')" id="cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Entregas de Llaves
+                        </button>
+                    </div>
+
+                    <!-- Matriz de Grilla del Mes -->
+                    <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
+                        <div class="grid grid-cols-7 gap-1 text-center font-headline text-[11px] font-extrabold uppercase text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                            <div>Dom</div>
+                            <div>Lun</div>
+                            <div>Mar</div>
+                            <div>Mié</div>
+                            <div>Jue</div>
+                            <div>Vie</div>
+                            <div>Sáb</div>
+                        </div>
+
+                        <!-- Celdas de Días -->
+                        <div id="calendar-grid-cells" class="grid grid-cols-7 gap-1.5"></div>
+                    </div>
+
+                    <!-- Listado Detallado de Citas -->
+                    <div id="broker-list-visits" class="space-y-4"></div>
                 </div>
+
+
 
                 <!-- 4. Calculadora de Ingreso -->
                 <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
@@ -703,41 +678,9 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 6: MONETIZACIÓN & LEADS (TIENDA Y INBOX) -->
+            <!-- PESTAÑA 6: GESTIÓN INTEGRAL DE LEADS CRM & MONETIZACIÓN -->
             <div id="panel-content-leads" class="tab-content space-y-6">
-                <!-- Action Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-emerald-600 text-3xl">storefront</span>
-                            <div>
-                                <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Tienda de Leads por Zona Inmobiliaria</h3>
-                                <p class="text-xs text-zinc-500">Adquirí paquetes exclusivos por barrio (Palermo, Recoleta, Belgrano, etc.) integrados con Mercado Pago.</p>
-                            </div>
-                        </div>
-                        <button type="button" onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined text-base">shopping_cart</span>
-                            <span>Explorar Tienda y Cupos de Zonas</span>
-                        </button>
-                    </div>
-
-                    <div class="glass-card p-5 rounded-2xl border border-blue-500/30 bg-blue-500/5 space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-blue-600 text-3xl">verified_user</span>
-                            <div>
-                                <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Validación de Matrícula CUCICBA / CMCPSI</h3>
-                                <p class="text-xs text-zinc-500">Cumplí con las normativas locales y aumentá la conversión mostrando tu badge verificado.</p>
-                            </div>
-                        </div>
-                        <button type="button" onclick="HabitatLeadModule.openOnboardingModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined text-base">badge</span>
-                            <span>Cargar / Actualizar Matrícula</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Inbox de Leads en Tiempo Real -->
-                <div id="lead-inbox-container"></div>
+                <!-- Se renderiza dinámicamente mediante HabitatLeadModule.renderLeadsMainSection() -->
             </div>
 
         </div>
@@ -776,59 +719,40 @@
             </button>
 
             <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">handshake</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Red</span>
+                <span class="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Visitas</span>
             </button>
         </nav>
     </div>
 
-    <!-- MODAL: FICHA CIEGA -->
+    <!-- MODAL: FICHA CIEGA INTERACTIVA CON SELECCIÓN DE PROPIEDAD -->
     <div id="modal-blind-card" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-6 relative animate-on-scroll">
-            <button type="button" onclick="closeBlindCardModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 relative animate-on-scroll font-body">
+            <button type="button" onclick="closeBlindCardModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer">
                 <span class="material-symbols-outlined text-2xl">close</span>
             </button>
 
             <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Generador de Ficha Ciega</span>
+                <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Generador de Ficha Ciega Red MLS</span>
                 <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mt-1">Ficha Comercial Sin Datos de Origen</h3>
                 <p class="text-xs text-zinc-500">Visualice y comparta la propiedad con su propia marca e inmobiliaria, ocultando los datos del propietario o agencia captadora.</p>
             </div>
 
-            <div id="blind-card-preview" class="border border-zinc-200 dark:border-zinc-700 rounded-2xl p-5 space-y-4 bg-zinc-50 dark:bg-zinc-800/40">
-                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-primary text-white font-black flex items-center justify-center text-xs">MI</div>
-                        <div>
-                            <h4 class="font-headline text-xs font-bold text-zinc-900 dark:text-white">Mi Inmobiliaria SRL</h4>
-                            <span class="text-[10px] text-zinc-400">Corredor Responsable: Matrícula CUCICBA #4892</span>
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 text-[10px] font-black uppercase bg-emerald-500 text-white rounded-full">Exclusivo Cliente</span>
-                </div>
-
-                <div class="flex gap-4 items-center">
-                    <img src="img/hero-marketplace.jpg" alt="Propiedad" class="w-24 h-24 rounded-xl object-cover border">
-                    <div>
-                        <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">Departamento 3 Ambientes con Balcón y Cochera</h4>
-                        <p class="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
-                            <span class="material-symbols-outlined text-sm text-primary">location_on</span> Palermo Hollywood, CABA (Sin dirección exacta)
-                        </p>
-                        <p class="text-lg font-black text-primary dark:text-red-400 mt-2">$ 520.000 / mes <span class="text-xs font-normal text-zinc-400">+ expensas</span></p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-[11px] text-center">
-                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>3</b> Ambientes</div>
-                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>78 m²</b> Totales</div>
-                    <div class="bg-white dark:bg-zinc-800 p-2 rounded-lg border"><b>2</b> Baños</div>
-                </div>
+            <!-- Selector de Propiedad -->
+            <div>
+                <label class="block font-headline font-bold text-xs mb-1.5 text-zinc-700 dark:text-zinc-300">Seleccionar Propiedad o Publicación en Cartera:</label>
+                <select id="blind-card-prop-select" onchange="updateBlindCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-headline font-bold text-xs outline-none">
+                </select>
             </div>
 
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeBlindCardModal()" class="px-4 py-2.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl">Cerrar</button>
-                <button type="button" onclick="alert('¡Ficha Ciega en PDF generada exitosamente!')" class="px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow hover:bg-blue-700 flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-base">download</span> Descargar PDF Ficha Ciega
+            <!-- Vista Previa Dinámica de la Ficha Ciega -->
+            <div id="blind-card-preview" class="border border-zinc-200 dark:border-zinc-700 rounded-2xl p-5 space-y-4 bg-zinc-50 dark:bg-zinc-800/40">
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                <button type="button" onclick="closeBlindCardModal()" class="px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl cursor-pointer">Cerrar</button>
+                <button type="button" onclick="alert('¡Ficha Ciega en PDF generada y descargada exitosamente!')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-extrabold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">download</span> Descargar Ficha Ciega (PDF)
                 </button>
             </div>
         </div>
@@ -976,6 +900,68 @@
             { id: 'APP-103', property_title: 'Av. Corrientes 1540, Centro (Local)', tenant_name: 'Comercial SA', tenant_email: 'contacto@comercial.com', tenant_phone: '+54 11 3344-7788', monthly_income: 2800000, status: 'pendiente', income_proof_url: '#', message: 'Presentamos balance firmado por contador y seguro de fianza.' }
         ];
 
+        // MOCK DATA ALQUILERES ACTIVOS
+        let selectedBrokerRentalId = null;
+        const brokerActiveRentalsMock = [
+            {
+                id: 'RENT-001',
+                propertyTitle: 'Humboldt 1940, Palermo Hollywood 2A',
+                propertyAddress: 'Humboldt 1940, Palermo Hollywood',
+                tenantName: 'Mariana Rossi',
+                tenantEmail: 'mariana.r@gmail.com',
+                tenantPhone: '+54 11 5566-7788',
+                ownerName: 'Roberto Gómez',
+                monthlyRent: 380000,
+                feeAmount: 19000,
+                adjustmentType: 'Reajuste IPC Trimestral',
+                dueDay: 10,
+                paymentStatus: 'PAGADO',
+                paymentMethod: 'Transferencia Bancaria',
+                punitives: 0,
+                inventoryId: 'PROP-2026-082',
+                inventoryItemsCount: 4,
+                cbuAlias: 'HABITAT.ROSSETTI.MP'
+            },
+            {
+                id: 'RENT-002',
+                propertyTitle: 'Av. Santa Fe 3420, Palermo 4B',
+                propertyAddress: 'Av. Santa Fe 3420, Palermo',
+                tenantName: 'Gonzalo Fernández',
+                tenantEmail: 'gonzalo.f@gmail.com',
+                tenantPhone: '+54 11 4455-8899',
+                ownerName: 'Esteban Larrea',
+                monthlyRent: 520000,
+                feeAmount: 21580,
+                adjustmentType: 'Reajuste ICL Cuatrimestral',
+                dueDay: 5,
+                paymentStatus: 'PENDIENTE',
+                paymentMethod: 'Pendiente de cobro',
+                punitives: 7800,
+                inventoryId: 'PROP-2026-081',
+                inventoryItemsCount: 6,
+                cbuAlias: 'SANTAFE.3420.HABITAT'
+            },
+            {
+                id: 'RENT-003',
+                propertyTitle: 'Gorriti 4820, Palermo Hollywood 5C',
+                propertyAddress: 'Gorriti 4820, Palermo Hollywood',
+                tenantName: 'Santiago Ruiz',
+                tenantEmail: 'santi.ruiz@gmail.com',
+                tenantPhone: '+54 11 2233-4455',
+                ownerName: 'Lucía Fernández',
+                monthlyRent: 450000,
+                feeAmount: 18675,
+                adjustmentType: 'Reajuste IPC Trimestral',
+                dueDay: 10,
+                paymentStatus: 'PAGADO',
+                paymentMethod: 'Mercado Pago',
+                punitives: 0,
+                inventoryId: 'PROP-2026-083',
+                inventoryItemsCount: 5,
+                cbuAlias: 'GORRITI.HABITAT.CBU'
+            }
+        ];
+
         // MOCK DATA VISITAS
         const brokerVisitsMock = [
             { property_title: 'Av. Santa Fe 3420, Palermo 3 Amb', visitor_name: 'Santiago Ruiz', visitor_email: 'santi.ruiz@gmail.com', visitor_phone: '+54 11 2233-4455', visit_date: '03/08/2026', visit_time: '15:30', status: 'Confirmada' },
@@ -984,8 +970,42 @@
 
         // MOCK DATA TICKETS
         const brokerTicketsMock = [
-            { id: 'TCK-001', prop: 'Av. Santa Fe 3420 4B', tenant: 'Gonzalo Fernández', title: 'Perdida de agua bajo lavatorio de baño', priority: 'Alta', status: 'En Proceso', date: '01/08/2026' },
-            { id: 'TCK-002', prop: 'Humboldt 1940 2A', tenant: 'Mariana Rossi', title: 'Revision de portero visor', priority: 'Normal', status: 'Pendiente', date: '30/07/2026' }
+            {
+                id: 'TCK-001',
+                prop: 'Av. Santa Fe 3420 4B',
+                tenant: 'Gonzalo Fernández',
+                title: 'Pérdida de agua bajo lavatorio de baño',
+                category: 'Plomería',
+                priority: 'Alta',
+                status: 'En Proceso',
+                date: '01/08/2026',
+                description: 'Se detectó goteo persistente en el sifón del baño principal afectando el mueble vanitory.',
+                response: 'Plomero matriculado agendó revisión para mañana entre las 10:00 y las 12:00 hs.'
+            },
+            {
+                id: 'TCK-002',
+                prop: 'Humboldt 1940 2A',
+                tenant: 'Mariana Rossi',
+                title: 'Revisión de portero visor sin audio',
+                category: 'Electricidad / Portero',
+                priority: 'Normal',
+                status: 'Pendiente',
+                date: '30/07/2026',
+                description: 'El portero visor transmite imagen pero el parlante interno no emite sonido al recibir llamadas desde el frente.',
+                response: null
+            },
+            {
+                id: 'TCK-003',
+                prop: 'Gorriti 4820 5C',
+                tenant: 'Santiago Ruiz',
+                title: 'Traba en persiana metálica de balcón',
+                category: 'Cerrajería / Carpintería',
+                priority: 'Alta',
+                status: 'Resuelto',
+                date: '25/07/2026',
+                description: 'La persiana del balcón se atascó a mitad del recorrido impidiendo el cierre completo.',
+                response: 'Se ajustaron las guías laterales y se lubricó el mecanismo. Trabajo finalizado y firmado.'
+            }
         ];
 
         // MOCK DATA TASACIONES
@@ -1036,6 +1056,7 @@
             setupLoggedInState();
             renderBrokerPropertiesRows();
             renderBrokerApplications();
+            renderBrokerCalendarGrid();
             renderBrokerVisits();
             renderBrokerOwners();
             renderBrokerActiveRental();
@@ -1054,7 +1075,8 @@
         });
 
         function mapTabName(tab) {
-            if (['general', 'avisos', 'contactos', 'alquileres', 'operaciones'].includes(tab)) return tab;
+            if (['general', 'leads', 'avisos', 'contactos', 'alquileres', 'operaciones'].includes(tab)) return tab;
+            if (['monetizacion', 'tienda-leads', 'prospectos'].includes(tab)) return 'leads';
             if (['propiedades'].includes(tab)) return 'avisos';
             if (['candidatos', 'postulaciones', 'visitas', 'inquilinos', 'propietarios'].includes(tab)) return 'contactos';
             if (['contratos', 'alquiler-activo', 'mantenimiento'].includes(tab)) return 'alquileres';
@@ -1071,12 +1093,13 @@
             }, 100);
         }
 
-        // Tab Switching Function (5 Consolidate Tabs)
+        // Tab Switching Function (6 Consolidate Tabs)
         function switchBrokerTab(targetTab) {
             const normalizedTab = mapTabName(targetTab);
 
             const contents = {
                 'general': document.getElementById('panel-content-general'),
+                'leads': document.getElementById('panel-content-leads'),
                 'avisos': document.getElementById('panel-content-avisos'),
                 'contactos': document.getElementById('panel-content-contactos'),
                 'alquileres': document.getElementById('panel-content-alquileres'),
@@ -1362,28 +1385,488 @@
             `).join('');
         }
 
-        // Render Visitas
+        // MOCK DATA DE CITAS Y EVENTOS INMOBILIARIOS
+        let brokerEventsMock = [
+            {
+                id: 'EVT-101',
+                type: 'visita',
+                typeLabel: 'Visita Presencial',
+                color: 'rose',
+                property_title: 'Humboldt 1940 2A, Palermo Hollywood',
+                visitor_name: 'Santiago Ruiz',
+                visitor_email: 'santi.ruiz@gmail.com',
+                visitor_phone: '+54 11 2233-4455',
+                visit_date: '2026-08-03',
+                visit_time: '15:30',
+                status: 'Confirmada',
+                notes: 'Interesado en alquiler tradicional 3 amb. Trae recibo de sueldo de empresa multinacional.'
+            },
+            {
+                id: 'EVT-102',
+                type: 'visita',
+                typeLabel: 'Visita Presencial',
+                color: 'rose',
+                property_title: 'Av. Santa Fe 3420 4B, Palermo',
+                visitor_name: 'Agustina Morales',
+                visitor_email: 'agus.m@yahoo.com',
+                visitor_phone: '+54 11 7788-9900',
+                visit_date: '2026-08-04',
+                visit_time: '11:00',
+                status: 'Confirmada',
+                notes: 'Solicitó ver balcón y cochera fija. Viene con garante familiar.'
+            },
+            {
+                id: 'EVT-103',
+                type: 'firma',
+                typeLabel: 'Firma de Contrato',
+                color: 'emerald',
+                property_title: 'Gorriti 4820 5C, Palermo Hollywood',
+                visitor_name: 'Federico López (Inquilino) & Propietario',
+                visitor_email: 'fede.l@gmail.com',
+                visitor_phone: '+54 11 9988-3322',
+                visit_date: '2026-08-05',
+                visit_time: '14:00',
+                status: 'Confirmada',
+                notes: 'Firma de contrato de alquiler 24 meses. Traer certificación de firmas de escribanía y depósito de garantía.'
+            },
+            {
+                id: 'EVT-104',
+                type: 'tasacion',
+                typeLabel: 'Tasación In Situ',
+                color: 'blue',
+                property_title: 'Av. Libertador 2450 12A, Belgrano',
+                visitor_name: 'Carlos Méndez (Propietario)',
+                visitor_email: 'carlos.m@empresa.com',
+                visitor_phone: '+54 11 4455-6677',
+                visit_date: '2026-08-07',
+                visit_time: '10:30',
+                status: 'Pendiente',
+                notes: 'Inspección técnica in situ para informe comercial de tasación de venta / alquiler.'
+            },
+            {
+                id: 'EVT-105',
+                type: 'entrega',
+                typeLabel: 'Entrega de Llaves & Acta',
+                color: 'amber',
+                property_title: 'Humboldt 1940 2A, Palermo',
+                visitor_name: 'Mariana Rossi (Inquilino)',
+                visitor_email: 'mariana.r@gmail.com',
+                visitor_phone: '+54 11 1122-3344',
+                visit_date: '2026-08-07',
+                visit_time: '16:00',
+                status: 'Confirmada',
+                notes: 'Revisión final de inventario digital 4K y entrega de 3 juegos de llaves con acta firmada.'
+            }
+        ];
+
+        let currentCalendarYear = 2026;
+        let currentCalendarMonth = 7; // 0 = Enero, 7 = Agosto
+        let selectedCalendarDay = null;
+        let selectedCalendarTypeFilter = 'todos';
+
+        const monthNamesEs = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        function filterCalendarEventType(type) {
+            selectedCalendarTypeFilter = type;
+            ['todos', 'visita', 'entrega'].forEach(t => {
+                const btn = document.getElementById(`cal-filter-${t}`);
+                if (btn) {
+                    if (t === type) {
+                        btn.className = 'px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all';
+                    } else {
+                        btn.className = 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all';
+                    }
+                }
+            });
+            renderBrokerCalendarGrid();
+            renderBrokerVisits();
+        }
+
+        function selectCalendarDay(dayStr) {
+            selectedCalendarDay = dayStr;
+            renderBrokerCalendarGrid();
+            renderBrokerVisits();
+        }
+
+        let pickerSelectedYear = 2026;
+
+        function toggleMonthPickerPopover(e) {
+            if (e) e.stopPropagation();
+            const popover = document.getElementById('calendar-month-picker-popover');
+            if (!popover) return;
+
+            const isHidden = popover.classList.contains('hidden');
+            if (isHidden) {
+                pickerSelectedYear = currentCalendarYear;
+                renderMonthPickerPopover();
+                popover.classList.remove('hidden');
+            } else {
+                popover.classList.add('hidden');
+            }
+        }
+
+        function changePickerYear(dir) {
+            pickerSelectedYear += dir;
+            renderMonthPickerPopover();
+        }
+
+        function selectQuickMonth(monthIndex) {
+            currentCalendarMonth = monthIndex;
+            currentCalendarYear = pickerSelectedYear;
+            selectedCalendarDay = null;
+
+            const popover = document.getElementById('calendar-month-picker-popover');
+            if (popover) popover.classList.add('hidden');
+
+            renderBrokerCalendarGrid();
+            renderBrokerVisits();
+        }
+
+        function renderMonthPickerPopover() {
+            const yearTitle = document.getElementById('picker-year-title');
+            const grid = document.getElementById('picker-month-grid');
+            if (yearTitle) yearTitle.textContent = pickerSelectedYear;
+            if (!grid) return;
+
+            const monthShortNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+            grid.innerHTML = monthShortNames.map((m, idx) => {
+                const isSelected = (pickerSelectedYear === currentCalendarYear && idx === currentCalendarMonth);
+                return `
+                    <button type="button" onclick="selectQuickMonth(${idx})" class="py-2 px-1 rounded-xl transition-all cursor-pointer ${
+                        isSelected 
+                            ? 'bg-primary text-white shadow-xs font-black' 
+                            : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold'
+                    }">
+                        ${m}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Cierre del Popover al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            const popover = document.getElementById('calendar-month-picker-popover');
+            if (popover && !popover.classList.contains('hidden')) {
+                popover.classList.add('hidden');
+            }
+        });
+
+        function navigateCalendarMonth(dir) {
+            currentCalendarMonth += dir;
+            if (currentCalendarMonth > 11) {
+                currentCalendarMonth = 0;
+                currentCalendarYear++;
+            } else if (currentCalendarMonth < 0) {
+                currentCalendarMonth = 11;
+                currentCalendarYear--;
+            }
+            selectedCalendarDay = null;
+            renderBrokerCalendarGrid();
+            renderBrokerVisits();
+        }
+
+        function renderBrokerCalendarGrid() {
+            const container = document.getElementById('calendar-grid-cells');
+            const titleEl = document.getElementById('calendar-month-title');
+            if (!container) return;
+
+            if (titleEl) {
+                titleEl.textContent = `${monthNamesEs[currentCalendarMonth]} ${currentCalendarYear}`;
+            }
+
+            const firstDayIndex = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay(); // 0 = Dom, 1 = Lun, etc.
+            const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(currentCalendarYear, currentCalendarMonth, 0).getDate();
+
+            let html = '';
+
+            // Celdas del mes anterior (offset)
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const prevDayNum = prevMonthDays - i;
+                html += `
+                    <div class="h-24 sm:h-28 p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40">
+                        ${prevDayNum}
+                    </div>
+                `;
+            }
+
+            // Días del mes actual
+            const todayObj = new Date();
+            const todayYear = todayObj.getFullYear();
+            const todayMonth = todayObj.getMonth();
+            const todayDate = todayObj.getDate();
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const monthPadded = (currentCalendarMonth + 1) < 10 ? `0${currentCalendarMonth + 1}` : `${currentCalendarMonth + 1}`;
+                const dayPadded = d < 10 ? `0${d}` : `${d}`;
+                const dateStr = `${currentCalendarYear}-${monthPadded}-${dayPadded}`;
+
+                const isToday = (currentCalendarYear === 2026 && currentCalendarMonth === 7 && d === 3) || (todayYear === currentCalendarYear && todayMonth === currentCalendarMonth && todayDate === d);
+                const isSelected = selectedCalendarDay === dateStr;
+
+                const dayEvents = brokerEventsMock.filter(e => {
+                    const matchDate = e.visit_date === dateStr;
+                    const matchType = selectedCalendarTypeFilter === 'todos' || e.type === selectedCalendarTypeFilter;
+                    return matchDate && matchType;
+                });
+
+                html += `
+                    <div onclick="selectCalendarDay('${dateStr}')" class="h-24 sm:h-28 p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                        isSelected 
+                            ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm' 
+                            : (isToday 
+                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs' 
+                                : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
+                    }">
+                        <div class="flex items-center justify-between">
+                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
+                                ${d}
+                            </span>
+                            ${isToday ? '<span class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>' : ''}
+                        </div>
+
+                        <div class="space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
+                            ${dayEvents.map(ev => {
+                                const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                                    : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                    : (ev.type === 'tasacion' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                                    : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'));
+
+                                const icon = ev.type === 'visita' ? 'meeting_room' : (ev.type === 'firma' ? 'edit_note' : (ev.type === 'tasacion' ? 'analytics' : 'key'));
+
+                                return `
+                                    <div class="p-1 rounded-lg border text-[9px] font-headline font-bold truncate flex items-center gap-1 ${badgeColor}" title="${ev.typeLabel}: ${ev.property_title}">
+                                        <span class="material-symbols-outlined text-[11px] shrink-0">${icon}</span>
+                                        <span class="truncate">${ev.visit_time} ${ev.property_title.split(',')[0]}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="text-[9px] font-bold text-zinc-400 text-right">
+                            ${dayEvents.length > 0 ? `<span class="text-primary font-black">${dayEvents.length} cita${dayEvents.length > 1 ? 's' : ''}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Render Visitas & Agenda en Línea de Tiempo
         function renderBrokerVisits() {
             const container = document.getElementById('broker-list-visits');
             if (!container) return;
 
-            container.innerHTML = brokerVisitsMock.map(v => `
-                <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">${v.status}</span>
-                            <span class="text-xs font-bold text-zinc-400">${v.property_title}</span>
+            const monthPadded = (currentCalendarMonth + 1) < 10 ? `0${currentCalendarMonth + 1}` : `${currentCalendarMonth + 1}`;
+            const filteredEvents = brokerEventsMock.filter(e => {
+                const matchMonth = !selectedCalendarDay ? e.visit_date.startsWith(`${currentCalendarYear}-${monthPadded}`) : true;
+                const matchDate = !selectedCalendarDay || e.visit_date === selectedCalendarDay;
+                const matchType = selectedCalendarTypeFilter === 'todos' || e.type === selectedCalendarTypeFilter;
+                return matchMonth && matchDate && matchType;
+            });
+
+            if (filteredEvents.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl p-8 text-center text-zinc-400 text-xs font-body">
+                        No hay citas ni eventos agendados para los filtros seleccionados.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredEvents.map(v => {
+                const cleanPhone = (v.visitor_phone || '').replace(/[^0-9]/g, '');
+                const waUrl = `https://wa.me/${cleanPhone}`;
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.property_title)}`;
+
+                const typeBadgeColor = v.type === 'visita' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                    : (v.type === 'firma' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                    : (v.type === 'tasacion' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border-amber-500/20'));
+
+                const parts = v.visit_date.split('-');
+                const formattedDateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+                return `
+                    <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3 font-body">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full border ${typeBadgeColor}">${v.typeLabel}</span>
+                                    <span class="px-2 py-0.5 text-[10px] font-headline font-bold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">${v.status}</span>
+                                    <span class="text-xs font-headline font-bold text-primary dark:text-red-400">${v.property_title}</span>
+                                </div>
+                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${v.visitor_name}</h3>
+                                <p class="text-xs text-zinc-500 font-medium">${v.visitor_email} • Tel: <b>${v.visitor_phone}</b></p>
+                            </div>
+
+                            <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
+                                <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Fecha & Hora</span>
+                                <span class="text-sm font-headline font-black text-primary dark:text-red-400 flex items-center gap-1 justify-end">
+                                    <span class="material-symbols-outlined text-base">schedule</span> ${formattedDateStr} a las ${v.visit_time} hs
+                                </span>
+                            </div>
                         </div>
-                        <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${v.visitor_name}</h3>
-                        <p class="text-xs text-zinc-500">${v.visitor_email} • Tel: ${v.visitor_phone}</p>
+
+                        ${v.notes ? `
+                            <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-400">
+                                <strong>Detalles / Notas:</strong> ${v.notes}
+                            </div>
+                        ` : ''}
+
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2 flex-wrap">
+                            <span class="text-[10px] text-zinc-400">Recordatorio automático de cita sincronizado en agenda</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <a href="${mapsUrl}" target="_blank" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">location_on</span> Mapa
+                                </a>
+                                <a href="${waUrl}" target="_blank" class="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">chat</span> WhatsApp
+                                </a>
+                                <button type="button" onclick="completeBrokerEvent('${v.id}')" class="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                    Completada
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function completeBrokerEvent(eventId) {
+            const ev = brokerEventsMock.find(e => e.id === eventId);
+            if (ev) {
+                ev.status = 'Finalizada / Realizada';
+                renderBrokerCalendarGrid();
+                renderBrokerVisits();
+            }
+        }
+
+        // Modal Agendar Cita o Visita
+        function openCreateVisitModal() {
+            let modal = document.getElementById('broker-create-visit-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'broker-create-visit-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-lg font-extrabold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">event</span>
+                            Agendar Cita o Evento Inmobiliario
+                        </h3>
+                        <button type="button" onclick="document.getElementById('broker-create-visit-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
                     </div>
 
-                    <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
-                        <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cita Programada</span>
-                        <span class="text-sm font-black text-primary dark:text-red-400">${v.visit_date} a las ${v.visit_time} hs</span>
-                    </div>
+                    <form onsubmit="submitNewBrokerVisit(event)" class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Tipo de Evento</label>
+                                <select id="new-visit-type" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold">
+                                    <option value="visita">Visita / Muestra Presencial</option>
+                                    <option value="firma">Firma de Contrato</option>
+                                    <option value="tasacion">Tasación In Situ</option>
+                                    <option value="entrega">Entrega de Llaves & Acta</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Propiedad Relacionada</label>
+                                <select id="new-visit-prop" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold">
+                                    <option value="Av. Santa Fe 3420 4B, Palermo">Av. Santa Fe 3420 4B, Palermo</option>
+                                    <option value="Humboldt 1940 2A, Palermo Hollywood">Humboldt 1940 2A, Palermo Hollywood</option>
+                                    <option value="Gorriti 4820 5C, Palermo Hollywood">Gorriti 4820 5C, Palermo Hollywood</option>
+                                    <option value="Libertador 2450 12A, Belgrano">Libertador 2450 12A, Belgrano</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Nombre y Apellido del Cliente / Interesado</label>
+                            <input type="text" id="new-visit-name" required placeholder="Ej: Martin Soria" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Teléfono WhatsApp</label>
+                                <input type="text" id="new-visit-phone" required placeholder="+54 11 4455-8899" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Email</label>
+                                <input type="email" id="new-visit-email" required placeholder="martin@gmail.com" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Fecha Cita</label>
+                                <input type="date" id="new-visit-date" required value="2026-08-03" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Horario</label>
+                                <input type="time" id="new-visit-time" required value="16:00" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Observaciones / Notas</label>
+                            <input type="text" id="new-visit-notes" placeholder="Ej: Trae comprobantes de ingresos y garante de CABA" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 outline-none">
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" onclick="document.getElementById('broker-create-visit-modal').style.display='none'" class="flex-1 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold cursor-pointer">Cancelar</button>
+                            <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold shadow cursor-pointer">Confirmar Evento</button>
+                        </div>
+                    </form>
                 </div>
-            `).join('');
+            `;
+        }
+
+        function submitNewBrokerVisit(e) {
+            e.preventDefault();
+            const dateInput = document.getElementById('new-visit-date').value || '2026-08-03';
+            const type = document.getElementById('new-visit-type').value;
+
+            const labels = {
+                visita: 'Visita Presencial',
+                firma: 'Firma de Contrato',
+                tasacion: 'Tasación In Situ',
+                entrega: 'Entrega de Llaves & Acta'
+            };
+
+            const newEvent = {
+                id: `EVT-10${brokerEventsMock.length + 1}`,
+                type: type,
+                typeLabel: labels[type] || 'Evento Cita',
+                property_title: document.getElementById('new-visit-prop').value,
+                visitor_name: document.getElementById('new-visit-name').value,
+                visitor_phone: document.getElementById('new-visit-phone').value,
+                visitor_email: document.getElementById('new-visit-email').value,
+                visit_date: dateInput,
+                visit_time: document.getElementById('new-visit-time').value,
+                status: 'Confirmada',
+                notes: document.getElementById('new-visit-notes').value || 'Cita agendada'
+            };
+
+            brokerEventsMock.unshift(newEvent);
+            renderBrokerCalendarGrid();
+            renderBrokerVisits();
+
+            const modal = document.getElementById('broker-create-visit-modal');
+            if (modal) modal.style.display = 'none';
         }
 
         // Render Propietarios (Clientes Captados & Mandatos)
@@ -1442,30 +1925,104 @@
             }
         }
 
-        // Render Alquiler Activo & Cobros
+        // Render Alquiler Activo & Cobros (Lista de Alquileres + Vista Detallada)
+        function selectBrokerRental(rentalId) {
+            selectedBrokerRentalId = rentalId;
+            renderBrokerActiveRental();
+        }
+
         function renderBrokerActiveRental() {
             const container = document.getElementById('broker-container-active-rental');
             if (!container) return;
 
+            // VISTA 1: Lista / Grid de Todos los Alquileres Activos
+            if (!selectedBrokerRentalId) {
+                container.innerHTML = `
+                    <div class="space-y-4 font-body">
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
+                            <div>
+                                <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white">Cartera de Alquileres Activos (${brokerActiveRentalsMock.length})</h2>
+                                <p class="text-xs text-zinc-500">Seleccioná un contrato de alquiler para administrar cobranzas, recibos, punitorios e inventario.</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-headline font-black bg-primary/10 text-primary dark:text-red-400 border border-primary/20 shrink-0">
+                                🟢 Todos los contratos al día
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${brokerActiveRentalsMock.map(r => {
+                                const isPaid = r.paymentStatus === 'PAGADO';
+                                return `
+                                    <div onclick="selectBrokerRental('${r.id}')" class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer space-y-4 group">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full ${isPaid ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'}">
+                                                ${isPaid ? 'PAGADO' : 'PENDIENTE'}
+                                            </span>
+                                            <span class="text-[11px] text-zinc-400 font-medium">${r.adjustmentType}</span>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white group-hover:text-primary transition-colors leading-snug">${r.propertyTitle}</h3>
+                                            <p class="text-xs text-zinc-500 font-medium mt-1 truncate">Inquilino: <b>${r.tenantName}</b></p>
+                                            <p class="text-xs text-zinc-400 font-medium truncate">Propietario: ${r.ownerName}</p>
+                                        </div>
+
+                                        <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-100 dark:border-zinc-700/60 flex items-center justify-between">
+                                            <div>
+                                                <span class="text-[10px] font-bold uppercase text-zinc-400 block">Canon Mensual</span>
+                                                <span class="font-headline font-black text-lg text-primary dark:text-red-400">$ ${Number(r.monthlyRent).toLocaleString('es-AR')}</span>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-[10px] font-bold uppercase text-zinc-400 block">Vencimiento</span>
+                                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Día ${r.dueDay}</span>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="w-full py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 group-hover:bg-primary group-hover:text-white text-zinc-700 dark:text-zinc-300 font-headline font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <span class="material-symbols-outlined text-base">visibility</span>
+                                            <span>Ver Detalle del Alquiler & Cobros</span>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // VISTA 2: Vista Detallada del Alquiler Seleccionado
+            const rental = brokerActiveRentalsMock.find(r => r.id === selectedBrokerRentalId) || brokerActiveRentalsMock[0];
+            const isPaid = rental.paymentStatus === 'PAGADO';
+
             container.innerHTML = `
-                <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6 font-body">
+                    <!-- Botón Volver -->
+                    <div class="p-4 bg-zinc-100/80 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                        <button type="button" onclick="selectBrokerRental(null)" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-headline font-extrabold text-xs shadow-xs hover:bg-zinc-50 flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="material-symbols-outlined text-base">arrow_back</span>
+                            <span>← Volver a la Lista de Alquileres</span>
+                        </button>
+                        <span class="text-xs font-mono font-bold text-zinc-400">${rental.id}</span>
+                    </div>
+
                     <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800">
                         <div class="space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-3 py-0.5 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+                                <span class="px-3 py-0.5 text-xs font-headline font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
                                     Contrato de Alquiler Activo
                                 </span>
-                                <span class="text-xs font-bold text-zinc-400">Reajuste IPC Trimestral</span>
+                                <span class="text-xs font-bold text-zinc-400">${rental.adjustmentType}</span>
                             </div>
                             <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">
-                                Humboldt 1940, Palermo Hollywood 2A
+                                ${rental.propertyTitle}
                             </h2>
-                            <p class="text-xs text-zinc-500">Inquilino: <b>Mariana Rossi</b> (mariana.r@gmail.com)</p>
+                            <p class="text-xs text-zinc-500">Inquilino: <b>${rental.tenantName}</b> (${rental.tenantEmail}) • Propietario: <b>${rental.ownerName}</b></p>
                         </div>
 
                         <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-right shadow-sm shrink-0">
                             <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Canon Mensual</span>
-                            <span class="text-2xl font-black text-primary dark:text-red-400">$ 380.000</span>
+                            <span class="text-2xl font-headline font-black text-primary dark:text-red-400">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
                         </div>
                     </div>
 
@@ -1475,28 +2032,28 @@
                                 <h3 class="font-headline text-base font-bold text-zinc-900 dark:text-white">
                                     Control de Cobranza del Mes - Agosto 2026
                                 </h3>
-                                <p class="text-xs text-zinc-500">Vencimiento oficial: Día 10 de cada mes</p>
+                                <p class="text-xs text-zinc-500">Vencimiento oficial: Día ${rental.dueDay} de cada mes • CBU Alias: <code class="bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-zinc-800 dark:text-zinc-200">${rental.cbuAlias}</code></p>
                             </div>
-                            <span class="shrink-0 w-fit whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-base">check_circle</span> PAGADO (Transferencia)
+                            <span class="shrink-0 w-fit whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-headline font-black ${isPaid ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'} flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">${isPaid ? 'check_circle' : 'schedule'}</span> ${isPaid ? `PAGADO (${rental.paymentMethod})` : 'PENDIENTE DE PAGO'}
                             </span>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
                                 <span class="block font-bold uppercase text-zinc-400 text-[10px]">Alquiler Base</span>
-                                <span class="text-lg font-extrabold text-zinc-900 dark:text-white mt-1 block">$ 380.000</span>
+                                <span class="text-lg font-headline font-extrabold text-zinc-900 dark:text-white mt-1 block">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
                             </div>
 
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
                                 <span class="block font-bold uppercase text-zinc-400 text-[10px]">Intereses Punitorios Mora</span>
-                                <span class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">$ 0</span>
-                                <span class="block text-[11px] text-emerald-600 font-medium">Pago recibido a término</span>
+                                <span class="text-lg font-headline font-extrabold ${rental.punitives > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'} mt-1 block">$ ${Number(rental.punitives).toLocaleString('es-AR')}</span>
+                                <span class="block text-[11px] ${rental.punitives > 0 ? 'text-rose-500' : 'text-emerald-600'} font-medium">${rental.punitives > 0 ? 'Mora registrada' : 'Pago a término sin recargos'}</span>
                             </div>
 
                             <div class="bg-primary-light p-4 rounded-xl border border-primary/20">
                                 <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Honorario Inmobiliaria (5%)</span>
-                                <span class="text-xl font-black text-primary dark:text-red-400 mt-1 block">$ 19.000</span>
+                                <span class="text-xl font-headline font-black text-primary dark:text-red-400 mt-1 block">$ ${Number(rental.feeAmount).toLocaleString('es-AR')}</span>
                             </div>
                         </div>
 
@@ -1509,14 +2066,14 @@
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h4 class="font-headline text-sm font-extrabold text-zinc-900 dark:text-white">Inventario Digital Opcional del Inmueble</h4>
-                                        <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded bg-purple-500/20 text-purple-700 dark:text-purple-300">Activo / Opcional</span>
+                                        <span class="px-2 py-0.5 text-[9px] font-headline font-black uppercase rounded bg-purple-500/20 text-purple-700 dark:text-purple-300">Activo / Opcional</span>
                                     </div>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">4 Elementos auditados con soporte fotográfico 4K • Acta firmada digitalmente al entregar llaves.</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">${rental.inventoryItemsCount} Elementos auditados con soporte fotográfico 4K • Acta firmada digitalmente al entregar llaves.</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="openDigitalInventoryModal('PROP-2026-082')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                            <button type="button" onclick="openDigitalInventoryModal('${rental.inventoryId}')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
                                 <span class="material-symbols-outlined text-base">fact_check</span>
-                                Ver / Editar Inventario Digital
+                                <span>Ver / Editar Inventario Digital</span>
                             </button>
                         </div>
                     </div>
@@ -1524,25 +2081,303 @@
             `;
         }
 
-        // Render Tickets
+        // Render Tickets (Estilo Propietarios & Inquilinos + Descuento de Alquiler)
         function renderBrokerTickets() {
             const container = document.getElementById('broker-list-tickets');
             if (!container) return;
 
-            container.innerHTML = brokerTicketsMock.map(t => `
-                <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase ${t.status === 'En Proceso' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-zinc-500/10 text-zinc-500'}">${t.status}</span>
-                            <span class="text-xs font-mono font-bold text-zinc-400">${t.id}</span>
-                            <span class="text-xs font-bold text-primary">${t.prop}</span>
-                        </div>
-                        <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${t.title}</h3>
-                        <p class="text-xs text-zinc-500">Inquilino: <b>${t.tenant}</b> • Fecha: ${t.date}</p>
+            if (!brokerTicketsMock || brokerTicketsMock.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl p-8 text-center text-zinc-400 text-xs font-body">
+                        No hay tickets de mantenimiento registrados.
                     </div>
-                    <button type="button" onclick="alert('Gestionando ticket de reparación ${t.id}')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow cursor-pointer">Gestionar Ticket</button>
+                `;
+                return;
+            }
+
+            container.innerHTML = brokerTicketsMock.map(t => {
+                const isProcess = t.status === 'En Proceso';
+                const isResolved = t.status === 'Resuelto';
+                const statusBadge = isResolved
+                    ? '<span class="px-3 py-1 text-xs font-headline font-black rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Resuelto</span>'
+                    : isProcess
+                    ? '<span class="px-3 py-1 text-xs font-headline font-black rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-500/20">En Proceso</span>'
+                    : '<span class="px-3 py-1 text-xs font-headline font-black rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-500/20">Pendiente</span>';
+
+                return `
+                    <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3 font-body">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2.5 py-0.5 text-xs font-headline font-bold rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">${t.category}</span>
+                                <span class="text-xs font-mono font-bold text-zinc-400">${t.id}</span>
+                                <span class="text-xs font-headline font-bold text-primary dark:text-red-400">${t.prop}</span>
+                                <span class="text-xs font-headline font-bold text-rose-600 dark:text-rose-400">• Prioridad ${t.priority}</span>
+                                ${t.deductedAmount ? `<span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1"><span class="material-symbols-outlined text-xs">savings</span> Descontado: $ ${t.deductedAmount}</span>` : ''}
+                            </div>
+                            ${statusBadge}
+                        </div>
+
+                        <div>
+                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${t.title}</h3>
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">${t.description}</p>
+                        </div>
+
+                        ${t.response ? `
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-xs space-y-1">
+                                <span class="font-headline font-extrabold text-primary dark:text-red-400">Seguimiento / Respuesta:</span>
+                                <p class="text-zinc-700 dark:text-zinc-300 font-medium">${t.response}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3 flex-wrap">
+                            <span class="text-[10px] text-zinc-400">Inquilino: <strong class="text-zinc-700 dark:text-zinc-300">${t.tenant}</strong> • ${t.date}</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button type="button" onclick="openDeductFromRentModal('${t.id}')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5" title="Descontar del próximo alquiler el gasto pagado por el inquilino">
+                                    <span class="material-symbols-outlined text-sm">payments</span>
+                                    <span>Descontar del Alquiler</span>
+                                </button>
+                                <button type="button" onclick="openManageTicketModal('${t.id}')" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">build</span>
+                                    <span>Gestionar Ticket</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Modal Descontar del Alquiler
+        function openDeductFromRentModal(ticketId) {
+            const ticket = brokerTicketsMock.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            let modal = document.getElementById('broker-ticket-deduct-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'broker-ticket-deduct-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-lg font-extrabold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600">payments</span>
+                            Descontar Reparación del Alquiler
+                        </h3>
+                        <button type="button" onclick="document.getElementById('broker-ticket-deduct-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <form onsubmit="submitDeductFromRent(event, '${ticket.id}')" class="space-y-4 text-xs">
+                        <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1">
+                            <p class="font-bold text-emerald-700 dark:text-emerald-300">Ticket: ${ticket.title}</p>
+                            <p class="text-zinc-500">Inquilino: ${ticket.tenant} (${ticket.prop})</p>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Monto Abonado por el Inquilino ($ ARS)</label>
+                            <input type="number" id="deduct-amount-input" required min="1" placeholder="Ej: 45000" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-sm outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Detalle o Concepto del Descuento</label>
+                            <input type="text" id="deduct-note-input" placeholder="Ej: Compra de repuesto de grifería abonado por inquilino" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-medium outline-none">
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" onclick="document.getElementById('broker-ticket-deduct-modal').style.display='none'" class="flex-1 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold cursor-pointer">Cancelar</button>
+                            <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold shadow cursor-pointer">Aplicar Descuento</button>
+                        </div>
+                    </form>
                 </div>
-            `).join('');
+            `;
+        }
+
+        function submitDeductFromRent(e, ticketId) {
+            e.preventDefault();
+            const ticket = brokerTicketsMock.find(t => t.id === ticketId);
+            if (ticket) {
+                const amount = document.getElementById('deduct-amount-input').value;
+                const note = document.getElementById('deduct-note-input').value || 'Reparación abonada por inquilino';
+                ticket.deductedAmount = Number(amount).toLocaleString('es-AR');
+                ticket.status = 'Resuelto';
+                ticket.response = `[DESCUENTO APLICADO: $ ${ticket.deductedAmount} descontados del próximo alquiler] - ${note}`;
+                renderBrokerTickets();
+            }
+            const modal = document.getElementById('broker-ticket-deduct-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Modal Gestionar Ticket
+        function openManageTicketModal(ticketId) {
+            const ticket = brokerTicketsMock.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            let modal = document.getElementById('broker-ticket-manage-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'broker-ticket-manage-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                        <div>
+                            <span class="text-[10px] font-mono font-bold text-zinc-400">${ticket.id}</span>
+                            <h3 class="font-headline text-lg font-extrabold">${ticket.title}</h3>
+                        </div>
+                        <button type="button" onclick="document.getElementById('broker-ticket-manage-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl space-y-1">
+                            <p class="font-bold text-zinc-700 dark:text-zinc-300">Propiedad: ${ticket.prop}</p>
+                            <p class="text-zinc-500">Inquilino: ${ticket.tenant} | Categoría: ${ticket.category}</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 mt-2">${ticket.description}</p>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">Estado del Ticket</label>
+                            <select id="manage-ticket-status" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-headline font-bold text-xs">
+                                <option value="Pendiente" ${ticket.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="En Proceso" ${ticket.status === 'En Proceso' ? 'selected' : ''}>En Proceso (Técnico Asignado)</option>
+                                <option value="Resuelto" ${ticket.status === 'Resuelto' ? 'selected' : ''}>Resuelto & Finalizado</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">Respuesta / Plan de Acción</label>
+                            <textarea id="manage-ticket-response" rows="3" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-body text-xs outline-none" placeholder="Escriba la actualización para el inquilino y propietario...">${ticket.response || ''}</textarea>
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" onclick="document.getElementById('broker-ticket-manage-modal').style.display='none'" class="flex-1 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold cursor-pointer">Cancelar</button>
+                            <button type="button" onclick="saveTicketManagement('${ticket.id}')" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold shadow cursor-pointer">Guardar Respuesta</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveTicketManagement(ticketId) {
+            const ticket = brokerTicketsMock.find(t => t.id === ticketId);
+            if (ticket) {
+                ticket.status = document.getElementById('manage-ticket-status').value;
+                ticket.response = document.getElementById('manage-ticket-response').value;
+                renderBrokerTickets();
+            }
+            const modal = document.getElementById('broker-ticket-manage-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function openCreateBrokerTicketModal() {
+            let modal = document.getElementById('broker-create-ticket-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'broker-create-ticket-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-lg font-extrabold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">build</span>
+                            Crear Ticket de Mantenimiento
+                        </h3>
+                        <button type="button" onclick="document.getElementById('broker-create-ticket-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <form onsubmit="submitNewBrokerTicket(event)" class="space-y-4 text-xs">
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Propiedad Asociada</label>
+                            <select id="new-tck-prop" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold">
+                                <option value="Av. Santa Fe 3420 4B">Av. Santa Fe 3420 4B (Inquilino: Gonzalo Fernández)</option>
+                                <option value="Humboldt 1940 2A">Humboldt 1940 2A (Inquilina: Mariana Rossi)</option>
+                                <option value="Gorriti 4820 5C">Gorriti 4820 5C (Inquilino: Santiago Ruiz)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Categoría</label>
+                                <select id="new-tck-cat" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold">
+                                    <option value="Plomería">Plomería</option>
+                                    <option value="Electricidad / Portero">Electricidad / Portero</option>
+                                    <option value="Cerrajería / Carpintería">Cerrajería / Carpintería</option>
+                                    <option value="Gas / Calefacción">Gas / Calefacción</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-headline font-bold mb-1">Prioridad</label>
+                                <select id="new-tck-prio" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Título del Reclamo</label>
+                            <input type="text" id="new-tck-title" required placeholder="Ej: Pérdida de agua en cocina" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1">Descripción Detallada</label>
+                            <textarea id="new-tck-desc" rows="3" required placeholder="Detalle la falla reportada..." class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 outline-none"></textarea>
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" onclick="document.getElementById('broker-create-ticket-modal').style.display='none'" class="flex-1 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold cursor-pointer">Cancelar</button>
+                            <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold shadow cursor-pointer">Crear Ticket</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function submitNewBrokerTicket(e) {
+            e.preventDefault();
+            const propSelect = document.getElementById('new-tck-prop');
+            const propText = propSelect.value;
+            const tenantMatch = propSelect.options[propSelect.selectedIndex].text.match(/Inquilino: (.*?)\)/) || ['', 'Inquilino'];
+
+            const newTck = {
+                id: `TCK-00${brokerTicketsMock.length + 1}`,
+                prop: propText,
+                tenant: tenantMatch[1],
+                title: document.getElementById('new-tck-title').value,
+                category: document.getElementById('new-tck-cat').value,
+                priority: document.getElementById('new-tck-prio').value,
+                status: 'Pendiente',
+                date: new Date().toLocaleDateString('es-AR'),
+                description: document.getElementById('new-tck-desc').value,
+                response: null
+            };
+
+            brokerTicketsMock.unshift(newTck);
+            renderBrokerTickets();
+
+            const modal = document.getElementById('broker-create-ticket-modal');
+            if (modal) modal.style.display = 'none';
         }
 
         // Render Tasaciones
@@ -1569,19 +2404,151 @@
             `).join('');
         }
 
-        // Filtering Properties with Agent filter support
+        // Estado de Filtros Avanzados de Cartera
+        let brokerAdvancedFilters = {
+            operacion: 'todos',
+            estado: 'todos',
+            portal: 'todos',
+            priceMin: '',
+            priceMax: ''
+        };
+
+        // Modal de Pop-up de Filtros Avanzados
+        function openBrokerFilterModal() {
+            let modal = document.getElementById('broker-advanced-filter-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'broker-advanced-filter-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800 mb-4">
+                        <h3 class="font-headline text-lg font-extrabold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">tune</span>
+                            Filtros Avanzados de Cartera
+                        </h3>
+                        <button type="button" onclick="document.getElementById('broker-advanced-filter-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-headline font-bold mb-1 text-zinc-700 dark:text-zinc-300">Tipo de Operación</label>
+                                <select id="popup-filter-operacion" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-xs outline-none">
+                                    <option value="todos" ${brokerAdvancedFilters.operacion === 'todos' ? 'selected' : ''}>Todas las Operaciones</option>
+                                    <option value="alquiler" ${brokerAdvancedFilters.operacion === 'alquiler' ? 'selected' : ''}>Alquiler Tradicional</option>
+                                    <option value="temporal" ${brokerAdvancedFilters.operacion === 'temporal' ? 'selected' : ''}>Alquiler Temporal</option>
+                                    <option value="venta" ${brokerAdvancedFilters.operacion === 'venta' ? 'selected' : ''}>Venta</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-headline font-bold mb-1 text-zinc-700 dark:text-zinc-300">Estado de Publicación</label>
+                                <select id="popup-filter-estado" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-xs outline-none">
+                                    <option value="todos" ${brokerAdvancedFilters.estado === 'todos' ? 'selected' : ''}>Todos los Estados</option>
+                                    <option value="publicada" ${brokerAdvancedFilters.estado === 'publicada' ? 'selected' : ''}>Publicada</option>
+                                    <option value="alquilada" ${brokerAdvancedFilters.estado === 'alquilada' ? 'selected' : ''}>Alquilada</option>
+                                    <option value="reservada" ${brokerAdvancedFilters.estado === 'reservada' ? 'selected' : ''}>Reservada</option>
+                                    <option value="pausada" ${brokerAdvancedFilters.estado === 'pausada' ? 'selected' : ''}>Pausada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1 text-zinc-700 dark:text-zinc-300">Portal de Difusión / Canal</label>
+                            <select id="popup-filter-portal" class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-xs outline-none">
+                                <option value="todos" ${brokerAdvancedFilters.portal === 'todos' ? 'selected' : ''}>Todos los Portales</option>
+                                <option value="Zonaprop" ${brokerAdvancedFilters.portal === 'Zonaprop' ? 'selected' : ''}>Zonaprop</option>
+                                <option value="Argenprop" ${brokerAdvancedFilters.portal === 'Argenprop' ? 'selected' : ''}>Argenprop</option>
+                                <option value="Hábitat" ${brokerAdvancedFilters.portal === 'Hábitat' ? 'selected' : ''}>Hábitat Directo</option>
+                                <option value="Red MLS" ${brokerAdvancedFilters.portal === 'Red MLS' ? 'selected' : ''}>Red MLS</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-headline font-bold mb-1 text-zinc-700 dark:text-zinc-300">Rango de Precio ($ ARS / USD)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="number" id="popup-filter-price-min" value="${brokerAdvancedFilters.priceMin}" placeholder="Precio Mínimo" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                                <input type="number" id="popup-filter-price-max" value="${brokerAdvancedFilters.priceMax}" placeholder="Precio Máximo" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+                            <button type="button" onclick="clearBrokerFilters()" class="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer transition-all">
+                                Limpiar Filtros
+                            </button>
+                            <button type="button" onclick="applyBrokerFiltersFromModal()" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold shadow cursor-pointer transition-all">
+                                Aplicar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearBrokerFilters() {
+            brokerAdvancedFilters = {
+                operacion: 'todos',
+                estado: 'todos',
+                portal: 'todos',
+                priceMin: '',
+                priceMax: ''
+            };
+            const modal = document.getElementById('broker-advanced-filter-modal');
+            if (modal) modal.style.display = 'none';
+            filterBrokerProperties();
+        }
+
+        function applyBrokerFiltersFromModal() {
+            brokerAdvancedFilters.operacion = document.getElementById('popup-filter-operacion').value;
+            brokerAdvancedFilters.estado = document.getElementById('popup-filter-estado').value;
+            brokerAdvancedFilters.portal = document.getElementById('popup-filter-portal').value;
+            brokerAdvancedFilters.priceMin = document.getElementById('popup-filter-price-min').value;
+            brokerAdvancedFilters.priceMax = document.getElementById('popup-filter-price-max').value;
+
+            const modal = document.getElementById('broker-advanced-filter-modal');
+            if (modal) modal.style.display = 'none';
+            filterBrokerProperties();
+        }
+
+        // Filtering Properties (sin filtro de agentes)
         function filterBrokerProperties() {
             const searchTerm = (document.getElementById('broker-search-input')?.value || '').toLowerCase();
-            const opFilter = document.getElementById('filter-operacion-select')?.value || 'todos';
-            const statusFilter = document.getElementById('filter-estado-select')?.value || 'todos';
-            const agentFilter = document.getElementById('filter-agente-select')?.value || 'todos';
+            const { operacion, estado, portal, priceMin, priceMax } = brokerAdvancedFilters;
+
+            let activeCount = 0;
+            if (operacion !== 'todos') activeCount++;
+            if (estado !== 'todos') activeCount++;
+            if (portal !== 'todos') activeCount++;
+            if (priceMin) activeCount++;
+            if (priceMax) activeCount++;
+
+            const badge = document.getElementById('active-filter-badge');
+            if (badge) {
+                if (activeCount > 0) {
+                    badge.textContent = activeCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
 
             currentBrokerProperties = brokerPropertiesMock.filter(p => {
                 const matchSearch = [p.id, p.title, p.address, p.owner].join(' ').toLowerCase().includes(searchTerm);
-                const matchOp = opFilter === 'todos' || p.operation === opFilter;
-                const matchStatus = statusFilter === 'todos' || p.status === statusFilter;
-                const matchAgent = agentFilter === 'todos' || p.owner === agentFilter;
-                return matchSearch && matchOp && matchStatus && matchAgent;
+                const matchOp = operacion === 'todos' || p.operation === operacion;
+                const matchStatus = estado === 'todos' || p.status === estado;
+                const matchPortal = portal === 'todos' || (p.portals && p.portals.includes(portal));
+                const matchMinPrice = !priceMin || p.price >= Number(priceMin);
+                const matchMaxPrice = !priceMax || p.price <= Number(priceMax);
+
+                return matchSearch && matchOp && matchStatus && matchPortal && matchMinPrice && matchMaxPrice;
             });
 
             renderBrokerPropertiesRows();
@@ -1596,8 +2563,11 @@
             document.querySelectorAll('.prop-row-checkbox').forEach(cb => cb.checked = master.checked);
         }
 
-        // Render Kanban Board
+        // Render Kanban Board (Guard Check)
         function renderKanbanBoard() {
+            const colNuevas = document.getElementById('kanban-col-nuevas');
+            if (!colNuevas) return;
+
             const makeCard = (item) => `
                 <div class="glass-card p-3.5 rounded-xl shadow-sm space-y-2 border border-zinc-200/70 dark:border-zinc-700/70 kanban-card">
                     <div class="flex justify-between items-start">
@@ -1617,11 +2587,16 @@
                 </div>
             `;
 
-            document.getElementById('kanban-col-nuevas').innerHTML = kanbanLeadsMock.nuevas.map(makeCard).join('');
-            document.getElementById('kanban-col-contacto').innerHTML = kanbanLeadsMock.contacto.map(makeCard).join('');
-            document.getElementById('kanban-col-visita').innerHTML = kanbanLeadsMock.visita.map(makeCard).join('');
-            document.getElementById('kanban-col-reserva').innerHTML = kanbanLeadsMock.reserva.map(makeCard).join('');
-            document.getElementById('kanban-col-firmado').innerHTML = kanbanLeadsMock.firmado.map(makeCard).join('');
+            colNuevas.innerHTML = kanbanLeadsMock.nuevas.map(makeCard).join('');
+            const colContacto = document.getElementById('kanban-col-contacto');
+            const colVisita = document.getElementById('kanban-col-visita');
+            const colReserva = document.getElementById('kanban-col-reserva');
+            const colFirmado = document.getElementById('kanban-col-firmado');
+
+            if (colContacto) colContacto.innerHTML = kanbanLeadsMock.contacto.map(makeCard).join('');
+            if (colVisita) colVisita.innerHTML = kanbanLeadsMock.visita.map(makeCard).join('');
+            if (colReserva) colReserva.innerHTML = kanbanLeadsMock.reserva.map(makeCard).join('');
+            if (colFirmado) colFirmado.innerHTML = kanbanLeadsMock.firmado.map(makeCard).join('');
         }
 
         // Render Red MLS Shared Listings
@@ -1972,9 +2947,69 @@
             alert(`¡Acta Oficial de Inventario Digital generada para ${currentInvPropertyId}! Se ha descargado el informe en formato PDF con firma biométrica.`);
         }
 
-        function openBlindCardModal() {
-            document.getElementById('modal-blind-card')?.classList.remove('hidden');
+        function openBlindCardModal(propertyId) {
+            const modal = document.getElementById('modal-blind-card');
+            if (!modal) return;
+
+            const select = document.getElementById('blind-card-prop-select');
+            if (select && brokerPropertiesMock) {
+                select.innerHTML = brokerPropertiesMock.map(p => `
+                    <option value="${p.id}" ${propertyId === p.id ? 'selected' : ''}>${p.title} - $ ${Number(p.price).toLocaleString('es-AR')} (${p.operation === 'alquiler' ? 'Alquiler' : (p.operation === 'temporal' ? 'Temporal' : 'Venta')})</option>
+                `).join('');
+            }
+
+            updateBlindCardPreview();
+            modal.classList.remove('hidden');
         }
+
+        function updateBlindCardPreview() {
+            const select = document.getElementById('blind-card-prop-select');
+            const previewContainer = document.getElementById('blind-card-preview');
+            if (!select || !previewContainer) return;
+
+            const propId = select.value;
+            const prop = brokerPropertiesMock.find(p => p.id === propId) || brokerPropertiesMock[0];
+
+            previewContainer.innerHTML = `
+                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-primary text-white font-black flex items-center justify-center text-xs">MI</div>
+                        <div>
+                            <h4 class="font-headline text-xs font-bold text-zinc-900 dark:text-white">Mi Inmobiliaria SRL</h4>
+                            <span class="text-[10px] text-zinc-400">Corredor Responsable: Matrícula CUCICBA #4892</span>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 text-[10px] font-headline font-black uppercase bg-blue-600 text-white rounded-full">Ficha Ciega Red MLS</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <img src="${prop.image}" alt="${prop.title}" class="w-full sm:w-28 h-24 rounded-xl object-cover border shrink-0">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-headline font-black uppercase rounded bg-primary/10 text-primary dark:text-red-400 border border-primary/20">${prop.operation === 'alquiler' ? 'Alquiler Tradicional' : (prop.operation === 'temporal' ? 'Alquiler Temporal' : 'Venta')}</span>
+                            <span class="text-[10px] text-zinc-400 font-mono font-bold">${prop.id}</span>
+                        </div>
+                        <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white leading-snug">${prop.title}</h4>
+                        <p class="text-xs text-zinc-500 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm text-primary">location_on</span> ${prop.address.split(',')[1] || prop.address} (Sin dirección exacta)
+                        </p>
+                        <p class="text-xl font-headline font-black text-primary dark:text-red-400 pt-1">$ ${Number(prop.price).toLocaleString('es-AR')} <span class="text-xs font-normal text-zinc-400">/ mes</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-[11px] text-center font-headline font-bold">
+                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>3</b> Ambientes</div>
+                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>78 m²</b> Totales</div>
+                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>2</b> Baños</div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 font-headline font-bold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base text-blue-600">handshake</span>
+                    <span>Compartí con colegas sin datos del propietario.</span>
+                </div>
+            `;
+        }
+
         function closeBlindCardModal() {
             document.getElementById('modal-blind-card')?.classList.add('hidden');
         }

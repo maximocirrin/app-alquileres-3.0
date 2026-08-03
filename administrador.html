@@ -265,16 +265,81 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 3: VISITAS -->
+            <!-- PESTAÑA 3: VISITAS PROGRAMADAS CON CALENDARIO MATRIZ MENSUAL -->
             <div id="panel-content-visitas" class="tab-content space-y-6">
-                <div class="glass-card p-5 rounded-2xl shadow-sm">
-                    <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Visitas Programadas</h2>
-                    <p class="text-xs text-zinc-500">Citas agendadas por interesados para conocer la propiedad.</p>
+                <!-- Header del Calendario de Visitas -->
+                <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
+                    <div>
+                        <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+                            Calendario de Visitas & Citas
+                        </h2>
+                        <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato y entregas de llaves.</p>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-wrap shrink-0">
+                        <div class="relative">
+                            <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                <button type="button" onclick="navigateOwnerCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                    <span class="material-symbols-outlined text-base">chevron_left</span>
+                                </button>
+                                <button type="button" onclick="toggleOwnerMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
+                                    <span id="owner-calendar-month-title">Agosto 2026</span>
+                                    <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
+                                </button>
+                                <button type="button" onclick="navigateOwnerCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                    <span class="material-symbols-outlined text-base">chevron_right</span>
+                                </button>
+                            </div>
+
+                            <!-- Popover Selector Rápido de Meses -->
+                            <div id="owner-calendar-month-picker-popover" class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                    <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
+                                    <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                        <button type="button" onclick="changeOwnerPickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
+                                        <span id="owner-picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-400 px-1">2026</span>
+                                        <button type="button" onclick="changeOwnerPickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
+                                    </div>
+                                </div>
+
+                                <div id="owner-picker-month-grid" class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="owner-list-visits" class="space-y-4">
-                    <div class="p-8 text-center text-zinc-400">Cargando visitas...</div>
+                <!-- Filtros Rápidos por Tipo de Evento (Visitas y Entregas de Llaves) -->
+                <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
+                    <button type="button" onclick="filterOwnerCalendarEventType('todos')" id="owner-cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all">
+                        Todos los Eventos
+                    </button>
+                    <button type="button" onclick="filterOwnerCalendarEventType('visita')" id="owner-cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> Visitas / Muestras
+                    </button>
+                    <button type="button" onclick="filterOwnerCalendarEventType('entrega')" id="owner-cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Entregas de Llaves
+                    </button>
                 </div>
+
+                <!-- Matriz de Grilla del Mes -->
+                <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
+                    <div class="grid grid-cols-7 gap-1 text-center font-headline text-[11px] font-extrabold uppercase text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                        <div>Dom</div>
+                        <div>Lun</div>
+                        <div>Mar</div>
+                        <div>Mié</div>
+                        <div>Jue</div>
+                        <div>Vie</div>
+                        <div>Sáb</div>
+                    </div>
+
+                    <!-- Celdas de Días -->
+                    <div id="owner-calendar-grid-cells" class="grid grid-cols-7 gap-1.5"></div>
+                </div>
+
+                <!-- Listado Detallado de Citas -->
+                <div id="owner-list-visits" class="space-y-4"></div>
             </div>
 
             <!-- PESTAÑA 4: ALQUILER ACTIVO -->
@@ -629,37 +694,358 @@
             }
         }
 
-        async function loadOwnerVisits() {
-            const list = document.getElementById('owner-list-visits');
-            if (!list || !window.DataManager) return;
+        let ownerCurrentCalendarYear = 2026;
+        let ownerCurrentCalendarMonth = 7; // Agosto
+        let ownerSelectedCalendarDay = null;
+        let ownerSelectedCalendarTypeFilter = 'todos';
+        let ownerPickerSelectedYear = 2026;
 
-            try {
-                const visits = await window.DataManager.getVisits();
-                if (!visits || visits.length === 0) {
-                    list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay visitas agendadas.</div>';
-                    return;
+        const ownerMonthNamesEs = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        const ownerEventsMock = [
+            {
+                id: 'EVT-101',
+                type: 'visita',
+                typeLabel: 'Visita Presencial',
+                property_title: 'Humboldt 1940 2A',
+                visitor_name: 'Gonzalo Pérez',
+                visitor_phone: '+54 11 4829-1029',
+                visitor_email: 'gonzalo.perez@gmail.com',
+                visit_date: '2026-08-03',
+                visit_time: '15:30',
+                status: 'Confirmada',
+                notes: 'Interesado en conocer el departamento de 3 ambientes.'
+            },
+            {
+                id: 'EVT-102',
+                type: 'visita',
+                typeLabel: 'Visita Presencial',
+                property_title: 'Av. Santa Fe 3420 4B',
+                visitor_name: 'Camila Benítez',
+                visitor_phone: '+54 11 5920-8811',
+                visitor_email: 'camila.benitez@gmail.com',
+                visit_date: '2026-08-03',
+                visit_time: '17:00',
+                status: 'Confirmada',
+                notes: 'Coordinado con el inquilino saliente.'
+            },
+            {
+                id: 'EVT-103',
+                type: 'firma',
+                typeLabel: 'Firma de Contrato',
+                property_title: 'Gorriti 4820 5C',
+                visitor_name: 'Martín Soria',
+                visitor_phone: '+54 11 8899-7766',
+                visitor_email: 'msoria@empresa.com',
+                visit_date: '2026-08-05',
+                visit_time: '11:00',
+                status: 'Confirmada',
+                notes: 'Firma digital de contrato y certificación.'
+            },
+            {
+                id: 'EVT-104',
+                type: 'tasacion',
+                typeLabel: 'Tasación In Situ',
+                property_title: 'Av. Libertador 2450 12A',
+                visitor_name: 'Ignacio Peralta',
+                visitor_phone: '+54 11 2233-4455',
+                visitor_email: 'iperalta@abogados.com.ar',
+                visit_date: '2026-08-06',
+                visit_time: '14:30',
+                status: 'Confirmada',
+                notes: 'Valuación comercial para nueva captación.'
+            },
+            {
+                id: 'EVT-105',
+                type: 'entrega',
+                typeLabel: 'Entrega de Llaves',
+                property_title: 'Humboldt 1940 2A',
+                visitor_name: 'Federico López',
+                visitor_phone: '+54 11 3344-9900',
+                visitor_email: 'federico.lopez@yahoo.com',
+                visit_date: '2026-08-07',
+                visit_time: '16:00',
+                status: 'Confirmada',
+                notes: 'Firma de acta de entrega de llaves.'
+            }
+        ];
+
+        function filterOwnerCalendarEventType(type) {
+            ownerSelectedCalendarTypeFilter = type;
+            ['todos', 'visita', 'entrega'].forEach(t => {
+                const btn = document.getElementById(`owner-cal-filter-${t}`);
+                if (btn) {
+                    if (t === type) {
+                        btn.className = 'px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all';
+                    } else {
+                        btn.className = 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all';
+                    }
                 }
+            });
+            renderOwnerCalendarGrid();
+            loadOwnerVisits();
+        }
 
-                list.innerHTML = visits.map(v => `
-                    <div class="glass-card rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">${v.status}</span>
-                                <span class="text-xs font-bold text-zinc-400">${v.property_title}</span>
-                            </div>
-                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${v.visitor_name}</h3>
-                            <p class="text-xs text-zinc-500">${v.visitor_email} • Tel: ${v.visitor_phone}</p>
+        function selectOwnerCalendarDay(dayStr) {
+            ownerSelectedCalendarDay = dayStr;
+            renderOwnerCalendarGrid();
+            loadOwnerVisits();
+        }
+
+        function toggleOwnerMonthPickerPopover(e) {
+            if (e) e.stopPropagation();
+            const popover = document.getElementById('owner-calendar-month-picker-popover');
+            if (!popover) return;
+
+            const isHidden = popover.classList.contains('hidden');
+            if (isHidden) {
+                ownerPickerSelectedYear = ownerCurrentCalendarYear;
+                renderOwnerMonthPickerPopover();
+                popover.classList.remove('hidden');
+            } else {
+                popover.classList.add('hidden');
+            }
+        }
+
+        function changeOwnerPickerYear(dir) {
+            ownerPickerSelectedYear += dir;
+            renderOwnerMonthPickerPopover();
+        }
+
+        function selectOwnerQuickMonth(monthIndex) {
+            ownerCurrentCalendarMonth = monthIndex;
+            ownerCurrentCalendarYear = ownerPickerSelectedYear;
+            ownerSelectedCalendarDay = null;
+
+            const popover = document.getElementById('owner-calendar-month-picker-popover');
+            if (popover) popover.classList.add('hidden');
+
+            renderOwnerCalendarGrid();
+            loadOwnerVisits();
+        }
+
+        function renderOwnerMonthPickerPopover() {
+            const yearTitle = document.getElementById('owner-picker-year-title');
+            const grid = document.getElementById('owner-picker-month-grid');
+            if (yearTitle) yearTitle.textContent = ownerPickerSelectedYear;
+            if (!grid) return;
+
+            const monthShortNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+            grid.innerHTML = monthShortNames.map((m, idx) => {
+                const isSelected = (ownerPickerSelectedYear === ownerCurrentCalendarYear && idx === ownerCurrentCalendarMonth);
+                return `
+                    <button type="button" onclick="selectOwnerQuickMonth(${idx})" class="py-2 px-1 rounded-xl transition-all cursor-pointer ${
+                        isSelected 
+                            ? 'bg-primary text-white shadow-xs font-black' 
+                            : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold'
+                    }">
+                        ${m}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function navigateOwnerCalendarMonth(dir) {
+            ownerCurrentCalendarMonth += dir;
+            if (ownerCurrentCalendarMonth > 11) {
+                ownerCurrentCalendarMonth = 0;
+                ownerCurrentCalendarYear++;
+            } else if (ownerCurrentCalendarMonth < 0) {
+                ownerCurrentCalendarMonth = 11;
+                ownerCurrentCalendarYear--;
+            }
+            ownerSelectedCalendarDay = null;
+            renderOwnerCalendarGrid();
+            loadOwnerVisits();
+        }
+
+        function renderOwnerCalendarGrid() {
+            const container = document.getElementById('owner-calendar-grid-cells');
+            const titleEl = document.getElementById('owner-calendar-month-title');
+            if (!container) return;
+
+            if (titleEl) {
+                titleEl.textContent = `${ownerMonthNamesEs[ownerCurrentCalendarMonth]} ${ownerCurrentCalendarYear}`;
+            }
+
+            const firstDayIndex = new Date(ownerCurrentCalendarYear, ownerCurrentCalendarMonth, 1).getDay();
+            const daysInMonth = new Date(ownerCurrentCalendarYear, ownerCurrentCalendarMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(ownerCurrentCalendarYear, ownerCurrentCalendarMonth, 0).getDate();
+
+            let html = '';
+
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const prevDayNum = prevMonthDays - i;
+                html += `
+                    <div class="h-24 sm:h-28 p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40">
+                        ${prevDayNum}
+                    </div>
+                `;
+            }
+
+            const todayObj = new Date();
+            const todayYear = todayObj.getFullYear();
+            const todayMonth = todayObj.getMonth();
+            const todayDate = todayObj.getDate();
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const monthPadded = (ownerCurrentCalendarMonth + 1) < 10 ? `0${ownerCurrentCalendarMonth + 1}` : `${ownerCurrentCalendarMonth + 1}`;
+                const dayPadded = d < 10 ? `0${d}` : `${d}`;
+                const dateStr = `${ownerCurrentCalendarYear}-${monthPadded}-${dayPadded}`;
+
+                const isToday = (ownerCurrentCalendarYear === 2026 && ownerCurrentCalendarMonth === 7 && d === 3) || (todayYear === ownerCurrentCalendarYear && todayMonth === ownerCurrentCalendarMonth && todayDate === d);
+                const isSelected = ownerSelectedCalendarDay === dateStr;
+
+                const dayEvents = ownerEventsMock.filter(e => {
+                    const matchDate = e.visit_date === dateStr;
+                    const matchType = ownerSelectedCalendarTypeFilter === 'todos' || e.type === ownerSelectedCalendarTypeFilter;
+                    return matchDate && matchType;
+                });
+
+                html += `
+                    <div onclick="selectOwnerCalendarDay('${dateStr}')" class="h-24 sm:h-28 p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                        isSelected 
+                            ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm' 
+                            : (isToday 
+                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs' 
+                                : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
+                    }">
+                        <div class="flex items-center justify-between">
+                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
+                                ${d}
+                            </span>
+                            ${isToday ? '<span class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>' : ''}
                         </div>
 
-                        <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
-                            <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cita Programada</span>
-                            <span class="text-sm font-black text-primary dark:text-red-400">${v.visit_date} a las ${v.visit_time} hs</span>
+                        <div class="space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
+                            ${dayEvents.map(ev => {
+                                const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                                    : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                    : (ev.type === 'tasacion' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                                    : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'));
+
+                                const icon = ev.type === 'visita' ? 'meeting_room' : (ev.type === 'firma' ? 'edit_note' : (ev.type === 'tasacion' ? 'analytics' : 'key'));
+
+                                return `
+                                    <div class="p-1 rounded-lg border text-[9px] font-headline font-bold truncate flex items-center gap-1 ${badgeColor}" title="${ev.typeLabel}: ${ev.property_title}">
+                                        <span class="material-symbols-outlined text-[11px] shrink-0">${icon}</span>
+                                        <span class="truncate">${ev.visit_time} ${ev.property_title.split(',')[0]}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="text-[9px] font-bold text-zinc-400 text-right">
+                            ${dayEvents.length > 0 ? `<span class="text-primary font-black">${dayEvents.length} cita${dayEvents.length > 1 ? 's' : ''}</span>` : ''}
                         </div>
                     </div>
-                `).join('');
-            } catch (err) {
-                console.error("Error al cargar visitas:", err);
+                `;
             }
+
+            container.innerHTML = html;
+        }
+
+        async function loadOwnerVisits() {
+            renderOwnerCalendarGrid();
+            const list = document.getElementById('owner-list-visits');
+            if (!list) return;
+
+            const monthPadded = (ownerCurrentCalendarMonth + 1) < 10 ? `0${ownerCurrentCalendarMonth + 1}` : `${ownerCurrentCalendarMonth + 1}`;
+            
+            let visitsList = ownerEventsMock;
+            if (window.DataManager) {
+                try {
+                    const dbVisits = await window.DataManager.getVisits();
+                    if (dbVisits && dbVisits.length > 0) {
+                        visitsList = dbVisits.map((v, i) => ({
+                            id: `DB-EVT-${i}`,
+                            type: 'visita',
+                            typeLabel: 'Visita Presencial',
+                            property_title: v.property_title || 'Propiedad en Cartera',
+                            visitor_name: v.visitor_name || 'Interesado',
+                            visitor_phone: v.visitor_phone || '+54 11 4455-8899',
+                            visitor_email: v.visitor_email || 'contacto@gmail.com',
+                            visit_date: v.visit_date || '2026-08-03',
+                            visit_time: v.visit_time || '16:00',
+                            status: v.status || 'Confirmada',
+                            notes: 'Visita coordinada desde el Portal Hábitat.'
+                        }));
+                    }
+                } catch(e) {}
+            }
+
+            const filteredEvents = visitsList.filter(e => {
+                const matchMonth = !ownerSelectedCalendarDay ? e.visit_date.startsWith(`${ownerCurrentCalendarYear}-${monthPadded}`) : true;
+                const matchDate = !ownerSelectedCalendarDay || e.visit_date === ownerSelectedCalendarDay;
+                const matchType = ownerSelectedCalendarTypeFilter === 'todos' || e.type === ownerSelectedCalendarTypeFilter;
+                return matchMonth && matchDate && matchType;
+            });
+
+            if (filteredEvents.length === 0) {
+                list.innerHTML = `
+                    <div class="glass-card rounded-2xl p-8 text-center text-zinc-400 text-xs font-body">
+                        No hay citas ni visitas programadas para los filtros seleccionados.
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filteredEvents.map(v => {
+                const cleanPhone = (v.visitor_phone || '').replace(/[^0-9]/g, '');
+                const waUrl = `https://wa.me/${cleanPhone}`;
+                const mapUrl = `https://maps.google.com/?q=${encodeURIComponent(v.property_title + ', Buenos Aires')}`;
+
+                const badgeColor = v.type === 'visita' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                    : (v.type === 'firma' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : (v.type === 'tasacion' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'));
+
+                return `
+                    <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4 font-body border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-3.5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 font-extrabold flex items-center justify-center text-base shrink-0">
+                                    <span class="material-symbols-outlined text-xl">${v.type === 'visita' ? 'meeting_room' : (v.type === 'firma' ? 'edit_note' : (v.type === 'tasacion' ? 'analytics' : 'key'))}</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full border ${badgeColor}">
+                                            ${v.typeLabel || 'Cita'}
+                                        </span>
+                                        <span class="text-xs font-headline font-bold text-primary dark:text-red-400">${v.property_title}</span>
+                                    </div>
+                                    <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white mt-0.5">${v.visitor_name}</h3>
+                                    <p class="text-xs text-zinc-500">${v.visitor_email} • Tel: ${v.visitor_phone}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
+                                <span class="block text-[10px] font-headline font-bold text-zinc-400 uppercase tracking-wider">Fecha & Hora</span>
+                                <span class="text-sm font-headline font-black text-primary dark:text-red-400">${v.visit_date} a las ${v.visit_time} hs</span>
+                            </div>
+                        </div>
+
+                        ${v.notes ? `
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 italic bg-zinc-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-zinc-200/40 dark:border-zinc-700/40">
+                                "${v.notes}"
+                            </p>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between gap-3 pt-1">
+                            <a href="${waUrl}" target="_blank" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">chat</span> WhatsApp
+                            </a>
+                            <a href="${mapUrl}" target="_blank" class="px-3.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-base text-rose-500">location_on</span> Ver Mapa
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         async function loadOwnerActiveRental() {
