@@ -976,8 +976,8 @@ var DataManager = {
         const { data: contract, error: cErr } = await window.supabaseClient
             .from('Contrato')
             .insert([{
-                id_perfil_oferente: profileId,
-                id_perfil_cliente: solPerfilId,
+                id_perfil_propietario: profileId,
+                id_perfil_inquilino: solPerfilId,
                 id_propiedad: solPropId,
                 id_tipo_garantia: 1,
                 "id_Indice": 1,
@@ -1173,7 +1173,7 @@ var DataManager = {
                 .select(`
                     *,
                     Propiedad (*),
-                    Perfil!id_perfil_cliente (*)
+                    Perfil!id_perfil_inquilino (*)
                 `);
 
             if (error) return [];
@@ -1207,7 +1207,7 @@ var DataManager = {
                 .select(`
                     *,
                     Propiedad (*),
-                    Perfil!id_perfil_cliente (*)
+                    Perfil!id_perfil_inquilino (*)
                 `)
                 .limit(1)
                 .maybeSingle();

@@ -1,9 +1,7 @@
-/**
- * Vercel Serverless Function: /api/webhook
- * 
- * Recibe las notificaciones HTTP POST enviadas por Didit al completar,
- * aprobar, rechazar o actualizar una verificación de identidad (KYC).
- */
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 export default async function handler(req, res) {
   // Configuración de cabeceras CORS
@@ -15,7 +13,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Validar método HTTP (Únicamente acepta POST)
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: 'Method Not Allowed',
@@ -24,10 +21,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. Extraer datos del evento enviado por Didit
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     
-    // Didit suele enviar event / type, status / decision, session_id, vendor_data (userId)
     const {
       event,
       type,
@@ -44,33 +39,90 @@ export default async function handler(req, res) {
     const userId = vendor_data;
 
     console.log(`[Didit Webhook] Evento: ${eventType} | Usuario: ${userId} | Sesión: ${session_id} | Estado: ${currentStatus}`);
-    console.log('[Didit Webhook Payload Completo]:', JSON.stringify(body, null, 2));
 
-
-    // 3. Lógica según el estado del KYC (Approved, Declined, In Review, etc.)
-    switch (currentStatus.toLowerCase()) {
-      case 'approved':
-        console.log(`✅ KYC Aprobado para el usuario: ${userId}`);
-        // TODO: Aquí puedes actualizar la base de datos (Ej: Supabase) indicando verificado = true
-        break;
-
-      case 'declined':
-      case 'rejected':
-        console.log(`❌ KYC Rechazado para el usuario: ${userId}`);
-        // TODO: Actualizar estado de verificación como rechazado
-        break;
-
-      case 'in_review':
-      case 'pending':
-        console.log(`⏳ KYC En Revisión para el usuario: ${userId}`);
-        break;
-
-      default:
-        console.log(`ℹ️ Estado no mapeado (${currentStatus}) para usuario: ${userId}`);
-        break;
+    // Inicializar Supabase Client si las credenciales están presentes
+    let supabase = null;
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     }
 
-    // 4. Responder con HTTP 200 OK para confirmar la recepción exitosa a Didit
+    if (supabase && userId) {
+      // 1. Obtener el Perfil del usuario
+      const { data: perfil } = await supabase
+        .from('Perfil')
+        .select('id_perfil')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (perfil) {
+        // 2. Obtener el último Pasaporte_habitat
+        const { data: pasaporte } = await supabase
+          .from('Pasaporte_habitat')
+          .select('id_pasaporte')
+          .eq('id_perfil', perfil.id_perfil)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pasaporte) {
+          // 3. Registrar el intento en Verificacion_kyc
+          await supabase
+            .from('Verificacion_kyc')
+            .insert([{
+              id_pasaporte: pasaporte.id_pasaporte,
+              proveedor: 'didit',
+              session_id: session_id || 'sess_' + Date.now(),
+              status: currentStatus,
+              payload_raw: body
+            }]);
+
+          let nuevoEstadoPasaporte = null;
+          let observacionHistorial = '';
+
+          switch (currentStatus.toLowerCase()) {
+            case 'approved':
+              nuevoEstadoPasaporte = 3; // Activo
+              observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
+              // Marcar cuenta como verificada en Perfil
+              await supabase
+                .from('Perfil')
+                .update({ cuenta_verificada: true, fecha_verificacion: new Date().toISOString() })
+                .eq('id_perfil', perfil.id_perfil);
+              break;
+
+            case 'declined':
+            case 'rejected':
+              nuevoEstadoPasaporte = 5; // Rechazado
+              observacionHistorial = 'Verificación biométrica Didit KYC Rechazada.';
+              break;
+
+            case 'in_review':
+            case 'pending':
+              nuevoEstadoPasaporte = 2; // En Revisión KYC
+              observacionHistorial = 'Verificación biométrica Didit KYC en proceso de revisión.';
+              break;
+          }
+
+          if (nuevoEstadoPasaporte) {
+            // Actualizar estado en Pasaporte_habitat
+            await supabase
+              .from('Pasaporte_habitat')
+              .update({ id_estado_pasaporte: nuevoEstadoPasaporte, updated_at: new Date().toISOString() })
+              .eq('id_pasaporte', pasaporte.id_pasaporte);
+
+            // Registrar en Historial_estado_pasaporte
+            await supabase
+              .from('Historial_estado_pasaporte')
+              .insert([{
+                id_pasaporte: pasaporte.id_pasaporte,
+                id_estado_pasaporte: nuevoEstadoPasaporte,
+                observacion: observacionHistorial
+              }]);
+          }
+        }
+      }
+    }
+
     return res.status(200).json({
       received: true,
       sessionId: session_id,
@@ -81,7 +133,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[Serverless Exception] /api/webhook:', error);
-    // En webhooks, responder con 200 o 500 según corresponda. Retornamos 500 si hubo error al procesar.
     return res.status(500).json({
       error: 'Webhook Handler Error',
       message: error.message || 'Error al procesar el webhook de Didit.'

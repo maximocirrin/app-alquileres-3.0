@@ -100,19 +100,62 @@
         },
 
         /**
-         * Stub Handler: Agregar/Invitar nuevo garante
+         * Handler: Agregar/Invitar nuevo garante (Supabase + LocalStorage Fallback)
          */
         onInviteGarante: async function (data) {
-            console.log('[API Stub] onInviteGarante called with:', data);
-            await new Promise(r => setTimeout(r, 400)); // Simulate API delay
-
+            console.log('[GarantesManager] onInviteGarante called with:', data);
+            
             const garantes = loadState();
-            const newToken = 'token-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now().toString(36);
+            const newToken = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            let idGaranteBd = null;
+
+            if (window.supabaseClient) {
+                try {
+                    let pasaporteId = window.currentPasaporteId || null;
+                    if (!pasaporteId) {
+                        const { data: pasaportes } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('id_pasaporte')
+                            .order('created_at', { ascending: false })
+                            .limit(1);
+                        if (pasaportes && pasaportes.length > 0) {
+                            pasaporteId = pasaportes[0].id_pasaporte;
+                        }
+                    }
+
+                    if (pasaporteId) {
+                        const { data: inserted, error } = await window.supabaseClient
+                            .from('Garante')
+                            .insert([{
+                                id_pasaporte: pasaporteId,
+                                id_estado_garante: 1, // 1: Invitado
+                                nombre_completo: data.nombre.trim(),
+                                email: data.email.trim(),
+                                telefono: data.telefono ? data.telefono.trim() : null,
+                                relacion_inquilino: data.relacion ? data.relacion.trim() : 'Familiar',
+                                token_invitacion: newToken,
+                                estado: 'invitado'
+                            }])
+                            .select()
+                            .single();
+
+                        if (!error && inserted) {
+                            idGaranteBd = inserted.id_garante;
+                        } else if (error) {
+                            console.warn("Error al insertar garante en Supabase:", error);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Excepción al guardar garante en Supabase:", e);
+                }
+            }
+
             const newGarante = {
-                id: 'gar_' + Date.now(),
+                id: idGaranteBd ? idGaranteBd.toString() : 'gar_' + Date.now(),
                 nombre: data.nombre.trim(),
                 email: data.email.trim(),
                 telefono: data.telefono ? data.telefono.trim() : '',
+                relacion: data.relacion ? data.relacion.trim() : 'Familiar',
                 token: newToken,
                 estado: 'invitado',
                 recibos: [],
@@ -126,10 +169,22 @@
         },
 
         /**
-         * Stub Handler: Eliminar garante
+         * Handler: Eliminar garante
          */
         onDeleteGarante: async function (id) {
-            console.log('[API Stub] onDeleteGarante called for ID:', id);
+            console.log('[GarantesManager] onDeleteGarante called for ID:', id);
+            
+            if (window.supabaseClient && !id.startsWith('gar_')) {
+                try {
+                    await window.supabaseClient
+                        .from('Garante')
+                        .delete()
+                        .eq('id_garante', parseInt(id, 10));
+                } catch (e) {
+                    console.warn("Error al eliminar garante en Supabase:", e);
+                }
+            }
+
             let garantes = loadState();
             garantes = garantes.filter(g => g.id !== id);
             saveState(garantes);
@@ -137,10 +192,10 @@
         },
 
         /**
-         * Stub Handler: Subir recibos de sueldo
+         * Handler: Subir recibos de sueldo
          */
         onUploadRecibos: async function (token, files, consentAccepted) {
-            console.log('[API Stub] onUploadRecibos called with:', { token, filesCount: files.length, consentAccepted });
+            console.log('[GarantesManager] onUploadRecibos called with:', { token, filesCount: files.length, consentAccepted });
             if (!consentAccepted) {
                 throw new Error('Debes aceptar los términos y el consentimiento.');
             }
@@ -151,7 +206,44 @@
                 throw new Error('Máximo 3 archivos permitidos.');
             }
 
-            await new Promise(r => setTimeout(r, 1200)); // Simulate upload delay
+            let garanteBdId = null;
+            if (window.supabaseClient) {
+                try {
+                    const { data: garante } = await window.supabaseClient
+                        .from('Garante')
+                        .select('id_garante')
+                        .eq('token_invitacion', token)
+                        .maybeSingle();
+
+                    if (garante) {
+                        garanteBdId = garante.id_garante;
+                        await window.supabaseClient
+                            .from('Garante')
+                            .update({
+                                id_estado_garante: 3, // 3: Cargado
+                                estado: 'cargado',
+                                acepto_consentimiento: true,
+                                fecha_consentimiento: new Date().toISOString()
+                            })
+                            .eq('id_garante', garanteBdId);
+
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            await window.supabaseClient
+                                .from('Documento_garante')
+                                .insert([{
+                                    id_garante: garanteBdId,
+                                    tipo_documento: 'recibo_sueldo',
+                                    archivo_url: 'https://storage.habitat.com.ar/recibos/' + encodeURIComponent(file.name),
+                                    nombre_archivo: file.name,
+                                    tamano_bytes: file.size
+                                }]);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Error guardando recibos en Supabase:", e);
+                }
+            }
 
             const garantes = loadState();
             const garante = garantes.find(g => g.token === token);
@@ -260,6 +352,9 @@
                                             <div class="flex items-center gap-2.5 flex-wrap">
                                                 <h4 class="font-headline font-black text-zinc-900 dark:text-white text-base">${g.nombre}</h4>
                                                 ${stateBadge}
+                                                <span class="inline-flex items-center gap-1 bg-primary/10 text-primary dark:text-red-400 border border-primary/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                                                    ${g.relacion || 'Familiar'}
+                                                </span>
                                             </div>
                                             <p class="font-body text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-3 flex-wrap">
                                                 <span>${g.email}</span>
@@ -321,6 +416,18 @@
                                 </div>
 
                                 <div>
+                                    <label class="block text-xs font-headline font-extrabold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Relación / Parentesco *</label>
+                                    <select id="select-garante-relacion" required class="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-2xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                        <option value="Padre / Madre">Padre / Madre</option>
+                                        <option value="Hermano / Hermana">Hermano / Hermana</option>
+                                        <option value="Familiar directo" selected>Familiar directo</option>
+                                        <option value="Amigo / Conocido">Amigo / Conocido</option>
+                                        <option value="Compañero de Trabajo">Compañero de Trabajo</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label class="block text-xs font-headline font-extrabold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Teléfono / WhatsApp (Opcional)</label>
                                     <input type="tel" id="input-garante-telefono" placeholder="+54 9 261 123-4567" class="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-2xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
                                 </div>
@@ -366,10 +473,11 @@
 
             const nombre = document.getElementById('input-garante-nombre').value;
             const email = document.getElementById('input-garante-email').value;
+            const relacion = document.getElementById('select-garante-relacion').value;
             const telefono = document.getElementById('input-garante-telefono').value;
 
             try {
-                const newGarante = await this.onInviteGarante({ nombre, email, telefono });
+                const newGarante = await this.onInviteGarante({ nombre, email, relacion, telefono });
                 this.closeAddModal();
                 this.openInviteSuccessModal(newGarante);
             } catch (err) {
