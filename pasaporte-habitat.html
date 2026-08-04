@@ -717,13 +717,25 @@
                             fecha_vencimiento: fechaVencimiento.toISOString(),
                             condicion_fiscal: 'Monotributo H',
                             situacion_crediticia: 'Situación 1 (Normal)',
-                            antecedentes_legales: true
+                            antecedentes_legales: true,
+                            antecedentes_legales_status: 'Sin Registros'
                         }])
                         .select()
                         .single();
 
                     if (!errP && pasaporte) {
                         window.currentPasaporteId = pasaporte.id_pasaporte;
+
+                        // Record initial legal background query report
+                        await window.supabaseClient
+                            .from('Reporte_antecedentes_legales')
+                            .insert([{
+                                id_pasaporte: pasaporte.id_pasaporte,
+                                fuente_consultada: 'boletin_oficial_nacion',
+                                resultado_estado: 'sin_novedades',
+                                cantidad_hallazgos: 0,
+                                detalle_hallazgos: { consulta: 'Sin edictos ni antecedentes judiciales hallados' }
+                            }]);
 
                         // Add Entry in Historial_estado_pasaporte
                         await window.supabaseClient
