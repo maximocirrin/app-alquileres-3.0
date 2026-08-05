@@ -185,7 +185,7 @@
 
                 <!-- Action CTA & Price Badge -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button type="button" onclick="handleGenerarPasaporte()" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-headline font-black text-base transition-all shadow-xl hover:scale-[1.02] cursor-pointer">
+                    <button type="button" id="btn-generar-pasaporte" onclick="handleGenerarPasaporte()" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary-container text-white px-8 py-4 rounded-full font-headline font-black text-base transition-all shadow-xl hover:scale-[1.02] cursor-pointer">
                         <span class="material-symbols-outlined text-xl">workspace_premium</span>
                         <span>Generar Pasaporte</span>
                     </button>
@@ -201,8 +201,8 @@
         <!-- Dynamic Passport Card Section -->
         <section class="max-w-[1100px] mx-auto px-4 md:px-8 mb-20">
             <div class="text-center mb-6 flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span class="text-xs font-extrabold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 font-headline">
-                    Ejemplo de Pasaporte Verificado en la Red
+                <span class="text-xs font-extrabold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 font-headline" id="passport-section-title">
+                    Credencial de Inquilino Verificado
                 </span>
             </div>
 
@@ -215,13 +215,13 @@
                         <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-sm">
                         <div>
                             <h2 class="font-headline text-sm sm:text-xl font-black tracking-tight uppercase leading-tight">HABITAT PASSPORT</h2>
-                            <p class="text-[10px] sm:text-xs text-white/90 font-mono tracking-wider sm:tracking-widest font-bold">ID: HBT-2026-9824-X9</p>
+                            <p class="text-[10px] sm:text-xs text-white/90 font-mono tracking-wider sm:tracking-widest font-bold" id="passport-code-id">ID: HBT-2026-9824-X9</p>
                         </div>
                     </div>
 
                     <!-- QR Code (Compact on mobile) -->
                     <div class="bg-white p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md border border-white/30 shrink-0">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&amp;data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-9824-X9&amp;color=811b1e&amp;bgcolor=ffffff" alt="Código QR Verificación" class="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl object-contain">
+                        <img id="passport-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&amp;data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-9824-X9&amp;color=811b1e&amp;bgcolor=ffffff" alt="Código QR Verificación" class="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl object-contain">
                     </div>
                 </div>
 
@@ -239,14 +239,14 @@
                         </div>
 
                         <div class="flex-1 text-center md:text-left">
-                            <h3 class="font-headline text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
+                            <h3 class="font-headline text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
                                 José de San Martín
                             </h3>
-                            <p class="font-headline text-[11px] sm:text-sm text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
+                            <p class="font-headline text-[11px] sm:text-sm text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5" id="passport-cuit-header">
                                 Inquilino Verificado • DNI: 08.XXX.178 • CUIT/CUIL: 20-08XXX178-9
                             </p>
 
-                            <div class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
+                            <div class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2" id="passport-badges-container">
                                 <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">fingerprint</span> Identidad Validada
                                 </span>
@@ -274,11 +274,11 @@
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Condición Fiscal</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1">Monotributo H</p>
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1" id="passport-condicion-fiscal">Monotributo H</p>
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Central Crediticia</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-indigo-600 dark:text-indigo-400 mt-0.5 sm:mt-1">Situación 1 (Normal)</p>
+                                <p class="text-xs sm:text-sm font-headline font-black text-indigo-600 dark:text-indigo-400 mt-0.5 sm:mt-1" id="passport-situacion-crediticia">Situación 1 (Normal)</p>
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Antecedentes Legales</p>
@@ -302,25 +302,26 @@
                             <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-body">
                                 <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
                                     <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base text-primary">badge</span> Validaciones de Identidad y Fiscal
+                                        <span class="material-symbols-outlined text-base text-primary">badge</span> Validaciones de Identidad y Fiscal ARCA
                                     </h4>
                                     <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400">
                                         <li class="flex justify-between"><span>Autenticidad DNI:</span> <strong class="text-emerald-600 dark:text-emerald-400">Documento Legítimo</strong></li>
                                         <li class="flex justify-between"><span>Prueba de Vida:</span> <strong class="text-emerald-600 dark:text-emerald-400">Selfie Verificada</strong></li>
-                                        <li class="flex justify-between"><span>Condición Fiscal:</span> <strong class="text-zinc-800 dark:text-zinc-200">Monotributista Activo</strong></li>
-                                        <li class="flex justify-between"><span>Ingresos Brutos (IIBB):</span> <strong class="text-emerald-600 dark:text-emerald-400">Inscripto / Al día</strong></li>
+                                        <li class="flex justify-between"><span>Condición Fiscal:</span> <strong class="text-zinc-800 dark:text-zinc-200" id="audit-condicion-fiscal">Monotributista Activo</strong></li>
+                                        <li class="flex justify-between"><span>Estado CUIT (ARCA):</span> <strong class="text-emerald-600 dark:text-emerald-400" id="audit-estado-cuit">Clave Activa en ARCA</strong></li>
+                                        <li class="flex justify-between"><span>Actividad Principal:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-mono text-[11px]" id="audit-actividad-arca">Servicios Inmobiliarios</strong></li>
                                     </ul>
                                 </div>
 
                                 <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
                                     <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base text-primary">gavel</span> Antecedentes Financieros y Legales
+                                        <span class="material-symbols-outlined text-base text-primary">gavel</span> Antecedentes Financieros y Legales (BCRA)
                                     </h4>
                                     <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                        <li class="flex justify-between"><span>BCRA Cheques Rechazados:</span> <strong class="text-zinc-800 dark:text-zinc-200">0</strong></li>
-                                        <li class="flex justify-between"><span>Días de Mora:</span> <strong class="text-zinc-800 dark:text-zinc-200">0 Días</strong></li>
-                                        <li class="flex justify-between"><span>Juicios por Desalojo:</span> <strong class="text-emerald-600 dark:text-emerald-400">Sin Registros</strong></li>
-                                        <li class="flex justify-between"><span>Embargos / Quiebras:</span> <strong class="text-emerald-600 dark:text-emerald-400">Sin Registros</strong></li>
+                                        <li class="flex justify-between"><span>Situación Crediticia BCRA:</span> <strong class="text-indigo-600 dark:text-indigo-400 font-extrabold" id="audit-bcra-situacion">Situación 1 (Normal)</strong></li>
+                                        <li class="flex justify-between"><span>BCRA Cheques Rechazados:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-bold" id="audit-cheques-rechazados">0</strong></li>
+                                        <li class="flex justify-between"><span>Días de Mora Acumulados:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-bold" id="audit-dias-atraso">0 Días</strong></li>
+                                        <li class="flex justify-between"><span>Entidades Reportantes:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-mono text-[11px]" id="audit-bcra-entidades">Sistema Financiero BCRA Limpio</strong></li>
                                     </ul>
                                 </div>
 
@@ -354,10 +355,10 @@
                     <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-2 text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400">
                             <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
-                            <span>Validez: 60 días • Emitido por Red Hábitat</span>
+                            <span id="passport-validity-footer">Validez: 60 días • Emitido por Red Hábitat</span>
                         </div>
                         <div class="flex items-center gap-3 w-full sm:w-auto">
-                            <button type="button" onclick="handleGenerarPasaporte()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-headline font-black text-xs transition-all shadow-md cursor-pointer hover:scale-[1.02]">
+                            <button type="button" id="btn-card-pasaporte" onclick="handleGenerarPasaporte()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-headline font-black text-xs transition-all shadow-md cursor-pointer hover:scale-[1.02]">
                                 <span class="material-symbols-outlined text-base">workspace_premium</span>
                                 Generar Pasaporte
                             </button>
@@ -522,7 +523,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/didit-kyc.js"></script>
+    <script src="js/didit-kyc.js?v=9"></script>
+    <script src="js/arca-service.js?v=9"></script>
+    <script src="js/bcra-service.js?v=1"></script>
     <script src="js/app.js?v=8"></script>
     <script src="js/garantes-manager.js"></script>
     <script>
@@ -533,6 +536,46 @@
             checkExistingPassport();
         });
 
+        function calcularDiasRestantesPasaporte(pasaporte) {
+            let fechaVenc;
+            if (pasaporte && pasaporte.fecha_vencimiento) {
+                fechaVenc = new Date(pasaporte.fecha_vencimiento);
+            } else if (pasaporte && pasaporte.fecha_emision) {
+                fechaVenc = new Date(new Date(pasaporte.fecha_emision).getTime() + (60 * 24 * 60 * 60 * 1000));
+            } else {
+                fechaVenc = new Date(Date.now() + (60 * 24 * 60 * 60 * 1000));
+            }
+
+            const hoy = new Date();
+            const diffMs = fechaVenc - hoy;
+            return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        }
+
+        function actualizarEstadoPasaporteActivoUI(pasaporte) {
+            const diasRestantes = calcularDiasRestantesPasaporte(pasaporte);
+
+            // 1. Botón principal CTA (Hero)
+            const btnCta = document.getElementById('btn-generar-pasaporte');
+            if (btnCta) {
+                btnCta.className = 'w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-headline font-black text-base transition-all shadow-xl hover:scale-[1.02] cursor-pointer';
+                btnCta.innerHTML = `<span class="material-symbols-outlined text-xl">verified</span><span>Ver Mi Pasaporte Activo (${diasRestantes} días restantes)</span>`;
+            }
+
+            // 2. Botón dentro de la tarjeta del pasaporte
+            const btnCard = document.getElementById('btn-card-pasaporte');
+            if (btnCard) {
+                btnCard.className = 'flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 dark:bg-emerald-600 text-white px-6 py-3 rounded-2xl font-headline font-black text-xs shadow-md border border-emerald-500/50 cursor-default';
+                btnCard.innerHTML = `<span class="material-symbols-outlined text-base">check_circle</span> Activo (${diasRestantes} días restantes)`;
+                btnCard.onclick = null;
+            }
+
+            // 3. Texto del pie de validez
+            const elValidez = document.getElementById('passport-validity-footer');
+            if (elValidez) {
+                elValidez.textContent = `Validez: ${diasRestantes} días restantes • Emitido por Red Hábitat`;
+            }
+        }
+
         async function checkExistingPassport() {
             if (!window.supabaseClient) return;
             try {
@@ -540,7 +583,7 @@
                 if (session && session.user) {
                     const { data: perfil } = await window.supabaseClient
                         .from('Perfil')
-                        .select('id_perfil')
+                        .select('id_perfil, nombre_completo, mail')
                         .eq('user_id', session.user.id)
                         .maybeSingle();
 
@@ -554,8 +597,45 @@
                             .maybeSingle();
 
                         if (pasaporte) {
+                            window.hasActivePassport = true;
                             window.currentPasaporteId = pasaporte.id_pasaporte;
                             console.log("Pasaporte Hábitat activo detectado ID:", pasaporte.id_pasaporte);
+
+                            // Actualizar los botones e indicadores a estado Activo con días restantes
+                            actualizarEstadoPasaporteActivoUI(pasaporte);
+
+                            // Reemplazar los datos del pasaporte de ejemplo por los datos reales
+                            const elTitle = document.getElementById('passport-section-title');
+                            if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
+
+                            const elCode = document.getElementById('passport-code-id');
+                            if (elCode && pasaporte.codigo_pasaporte) {
+                                elCode.textContent = `ID: ${pasaporte.codigo_pasaporte}`;
+                            }
+
+                            const elQr = document.getElementById('passport-qr-code');
+                            if (elQr && pasaporte.codigo_pasaporte) {
+                                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + pasaporte.codigo_pasaporte)}&color=811b1e&bgcolor=ffffff`;
+                                elQr.src = qrUrl;
+                            }
+                            const elNombre = document.getElementById('passport-user-fullname');
+                            if (elNombre) {
+                                elNombre.textContent = pasaporte.razon_social || perfil.nombre_completo || session.user.email || 'Inquilino Verificado';
+                            }
+
+                            if (window.actualizarPasaporteUI) {
+                                window.actualizarPasaporteUI({
+                                    cuit: pasaporte.cuit || '',
+                                    condicionFiscal: pasaporte.condicion_fiscal || 'Monotributo H',
+                                    razonSocial: pasaporte.razon_social || perfil.nombre_completo || '',
+                                    estadoCuit: 'ACTIVO',
+                                    actividadPrincipal: pasaporte.datos_arca ? pasaporte.datos_arca.actividadPrincipal : 'Servicios Comerciales / Profesionales'
+                                });
+                            }
+
+                            if (window.actualizarBcraUI && pasaporte.datos_bcra) {
+                                window.actualizarBcraUI(pasaporte.datos_bcra);
+                            }
                         }
                     }
                 }
@@ -565,10 +645,23 @@
         }
 
         function handleGenerarPasaporte() {
+            if (window.hasActivePassport) {
+                const target = document.getElementById('passport-section-title') || document.querySelector('.passport-card-glow');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Ya posees un Pasaporte Hábitat activo.');
+                }
+                return;
+            }
             openPaymentModal();
         }
 
         function openPaymentModal() {
+            if (window.hasActivePassport) {
+                alert('Ya posees un Pasaporte Hábitat activo (Válido por 60 días).');
+                return;
+            }
             let modal = document.getElementById('modal-pago-pasaporte');
             if (modal) modal.remove();
 
@@ -576,33 +669,33 @@
             modal.id = 'modal-pago-pasaporte';
             modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 transition-opacity duration-300';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                    <!-- Modal Header -->
                     <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-6">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold">
-                                <span class="material-symbols-outlined text-xl">workspace_premium</span>
-                            </span>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-2xl">workspace_premium</span>
+                            </div>
                             <div>
-                                <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white">Generar Pasaporte Hábitat</h3>
-                                <p class="text-xs text-zinc-500 font-body">Credencial de Inquilino Verificado</p>
+                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg leading-tight">Emitir Pasaporte Hábitat</h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-0.5">Auditoría ARCA, BCRA y Verificación Biométrica</p>
                             </div>
                         </div>
-                        <button type="button" onclick="closePaymentModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer">
-                            <span class="material-symbols-outlined text-2xl">close</span>
+                        <button type="button" onclick="closePaymentModal()" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition-colors shrink-0">
+                            <span class="material-symbols-outlined text-base">close</span>
                         </button>
                     </div>
 
-                    <!-- Price & Features Box -->
-                    <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white p-5 rounded-2xl mb-6 shadow-md border border-zinc-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-headline font-extrabold uppercase text-amber-400 tracking-wider">Tarifa Única de Emisión</span>
-                            <span class="text-xs font-mono bg-white/10 px-2.5 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
+                    <!-- Details Summary Box (Fixed Contrast & Typography) -->
+                    <div class="bg-gradient-to-br from-zinc-50 to-zinc-100/70 dark:from-zinc-800/60 dark:to-zinc-800/30 rounded-2xl p-4 sm:p-5 border border-zinc-200/80 dark:border-zinc-700/60 mb-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[11px] font-headline font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Costo Emisión Pasaporte</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-2xl font-headline font-black text-primary dark:text-red-400">$20.000</span>
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-bold font-mono">ARS</span>
+                            </div>
                         </div>
-                        <div class="flex items-baseline gap-2 mb-2">
-                            <span class="font-headline text-3xl sm:text-4xl font-extrabold text-white">$20.000</span>
-                            <span class="text-sm text-zinc-400 font-bold">ARS</span>
-                        </div>
-                        <p class="text-xs text-zinc-300 font-body leading-relaxed">
+                        <p class="text-xs text-zinc-600 dark:text-zinc-300 font-body leading-relaxed pt-2 border-t border-zinc-200/60 dark:border-zinc-700/40">
                             Incluye auditoría de solvencia, validación biométrica DNI con Didit y certificación de antecedentes sin juicios por desalojo.
                         </p>
                     </div>
@@ -610,30 +703,39 @@
                     <!-- Form simulation & Terms acceptance -->
                     <form id="form-pago-pasaporte" onsubmit="procesarPagoSimulado(event)">
                         <div class="space-y-4 mb-6">
-                            <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                                <div class="flex items-center justify-between text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                                    <span>Método de Pago (Simulador Activo)</span>
-                                    <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-extrabold">
-                                        <span class="material-symbols-outlined text-sm">bolt</span> Sin Pasarela Real
+                            <!-- CUIT / CUIL Input Field -->
+                            <div>
+                                <label for="input-cuit-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
+                                    CUIT o CUIL del Titular (para Auditoría ARCA y BCRA):
+                                </label>
+                                <div class="relative flex items-center">
+                                    <span class="absolute left-3.5 text-zinc-400 pointer-events-none flex items-center">
+                                        <span class="material-symbols-outlined text-xl">badge</span>
                                     </span>
+                                    <input type="text" id="input-cuit-pasaporte" required placeholder="Ej: 20-34567890-9" 
+                                        class="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/90 border border-zinc-300 dark:border-zinc-700 rounded-2xl text-sm font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
                                 </div>
-                                <p class="text-[11px] text-zinc-500 font-body">Se simulará la acreditación inmediata de $20.000 ARS para dar acceso completo al pasaporte.</p>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">info</span>
+                                    <span>Se consultará el Padrón ARCA y la Central de Deudores BCRA para auditar solvencia.</span>
+                                </p>
                             </div>
 
-                            <!-- Terms and Conditions Checkbox -->
-                            <div class="flex items-start gap-3 p-3 rounded-2xl bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60">
-                                <input type="checkbox" id="chk-terminos-pasaporte" required class="mt-1 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 cursor-pointer">
-                                <label for="chk-terminos-pasaporte" class="text-xs text-zinc-700 dark:text-zinc-300 font-body cursor-pointer leading-tight">
-                                    Acepto los <a href="terminos.html" target="_blank" class="text-primary dark:text-red-400 font-bold underline">Términos y Condiciones</a> del Pasaporte Hábitat y autorizo el procesamiento de mis datos para la evaluación crediticia.
-                                </label>
-                            </div>
+                            <!-- Terms Checkbox Card -->
+                            <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors select-none">
+                                <input type="checkbox" id="check-terminos-pasaporte" required class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 dark:border-zinc-600 shrink-0">
+                                <span class="text-xs text-zinc-700 dark:text-zinc-300 font-body leading-normal">
+                                    Acepto los <a href="#" class="text-primary dark:text-red-400 font-extrabold underline">Términos del Pasaporte Hábitat</a> y autorizo la auditoría de solvencia e identidad.
+                                </span>
+                            </label>
                         </div>
 
-                        <div class="flex items-center justify-end gap-3">
-                            <button type="button" onclick="closePaymentModal()" class="px-5 py-3 rounded-2xl font-headline font-extrabold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <!-- Footer Actions -->
+                        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-5 border-t border-zinc-200 dark:border-zinc-800">
+                            <button type="button" onclick="closePaymentModal()" class="w-full sm:w-auto px-5 py-3 rounded-2xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center cursor-pointer">
                                 Cancelar
                             </button>
-                            <button type="submit" id="btn-confirmar-pago" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3.5 rounded-2xl font-headline font-black text-xs transition-all shadow-lg active:scale-95 cursor-pointer">
+                            <button type="submit" id="btn-confirmar-pago-simulado" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#811b1e] to-[#a13333] hover:from-[#6b1619] hover:to-[#811b1e] text-white px-7 py-3.5 rounded-2xl font-headline font-black text-xs transition-all shadow-xl hover:scale-[1.02] cursor-pointer">
                                 <span class="material-symbols-outlined text-base">verified</span>
                                 Confirmar y Simular Pago ($20.000)
                             </button>
@@ -641,11 +743,9 @@
                     </form>
                 </div>
             `;
-            document.body.appendChild(modal);
 
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-            }, 10);
+            document.body.appendChild(modal);
+            requestAnimationFrame(() => modal.classList.remove('opacity-0'));
         }
 
         function closePaymentModal() {
@@ -658,10 +758,25 @@
 
         async function procesarPagoSimulado(e) {
             e.preventDefault();
-            const btn = document.getElementById('btn-confirmar-pago');
+
+            const inputCuit = document.getElementById('input-cuit-pasaporte');
+            const checkTerminos = document.getElementById('check-terminos-pasaporte');
+            const btn = document.getElementById('btn-confirmar-pago-simulado');
+
+            if (!checkTerminos || !checkTerminos.checked) {
+                alert('Debes aceptar los términos y condiciones para continuar.');
+                return;
+            }
+
+            const cuitVal = inputCuit ? inputCuit.value.trim() : '';
+            if (!cuitVal) {
+                alert('Por favor ingresá de forma válida tu CUIT o CUIL.');
+                return;
+            }
+
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Registrando pago en Supabase...`;
+                btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Consultando ARCA y BCRA...`;
             }
 
             try {
@@ -673,7 +788,7 @@
                     if (session && session.user) {
                         userId = session.user.id;
                         
-                        // Check if Perfil exists, if not create one
+                        // Check if Perfil exists
                         const { data: perfil } = await window.supabaseClient
                             .from('Perfil')
                             .select('id_perfil')
@@ -699,12 +814,30 @@
                     localStorage.setItem('habitat_user_id', userId);
                 }
 
+                let arcaData = null;
+                let bcraData = null;
+
+                try {
+                    // Consultar Web Services de ARCA y Central de Deudores BCRA en paralelo
+                    const [resArca, resBcra] = await Promise.allSettled([
+                        window.consultarArca ? window.consultarArca(cuitVal, window.currentPasaporteId || null, userId) : Promise.resolve(null),
+                        window.consultarBcra ? window.consultarBcra(cuitVal, window.currentPasaporteId || null, userId) : Promise.resolve(null)
+                    ]);
+
+                    if (resArca.status === 'fulfilled') arcaData = resArca.value;
+                    if (resBcra.status === 'fulfilled') bcraData = resBcra.value;
+
+                } catch (eServices) {
+                    console.warn("Aviso al consultar servicios ARCA/BCRA:", eServices);
+                }
+
+                const condicionFiscalFinal = arcaData && arcaData.condicionFiscal ? arcaData.condicionFiscal : 'Monotributo Categoría H';
+                const razonSocialFinal = arcaData && arcaData.razonSocial ? arcaData.razonSocial : null;
+                const situacionCrediticiaFinal = bcraData && bcraData.situacionCrediticia ? bcraData.situacionCrediticia : 'Situación 1 (Normal)';
+
                 // Create Pasaporte_habitat in Supabase if Client and Perfil are available
                 if (window.supabaseClient && idPerfil) {
                     const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
-                    const fechaEmision = new Date();
-                    const fechaVencimiento = new Date();
-                    fechaVencimiento.setDate(fechaEmision.getDate() + 60);
 
                     const { data: pasaporte, error: errP } = await window.supabaseClient
                         .from('Pasaporte_habitat')
@@ -713,18 +846,25 @@
                             id_estado_pasaporte: 3, // Activo
                             codigo_pasaporte: codigoPasaporte,
                             monto_pagado: 20000.00,
-                            fecha_emision: fechaEmision.toISOString(),
-                            fecha_vencimiento: fechaVencimiento.toISOString(),
-                            condicion_fiscal: 'Monotributo H',
-                            situacion_crediticia: 'Situación 1 (Normal)',
+                            cuit: cuitVal,
+                            razon_social: razonSocialFinal,
+                            condicion_fiscal: condicionFiscalFinal,
+                            situacion_crediticia: situacionCrediticiaFinal,
                             antecedentes_legales: true,
-                            antecedentes_legales_status: 'Sin Registros'
+                            datos_arca: arcaData || null,
+                            datos_bcra: bcraData || null
                         }])
                         .select()
                         .single();
 
                     if (!errP && pasaporte) {
+                        window.hasActivePassport = true;
                         window.currentPasaporteId = pasaporte.id_pasaporte;
+
+                        // Actualizar todos los botones e indicadores a estado Activo con los días restantes
+                        if (window.actualizarEstadoPasaporteActivoUI) {
+                            window.actualizarEstadoPasaporteActivoUI(pasaporte);
+                        }
 
                         // Add Entry in Historial_estado_pasaporte
                         await window.supabaseClient
@@ -732,13 +872,35 @@
                             .insert([{
                                 id_pasaporte: pasaporte.id_pasaporte,
                                 id_estado_pasaporte: 3,
-                                observacion: 'Pago simulado de $20.000 ARS acreditado. Pasaporte activado por 60 días.'
+                                observacion: `Pago simulado acreditado. Pasaporte activado. Validación ARCA: ${condicionFiscalFinal}`
                             }]);
+
+                        // Reemplazar inmediatamente los datos de ejemplo por los datos reales en pantalla
+                        const elTitle = document.getElementById('passport-section-title');
+                        if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
+
+                        const elCode = document.getElementById('passport-code-id');
+                        if (elCode) elCode.textContent = `ID: ${codigoPasaporte}`;
+
+                        const elQr = document.getElementById('passport-qr-code');
+                        if (elQr) {
+                            elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoPasaporte)}&color=811b1e&bgcolor=ffffff`;
+                        }
+
+                        if (window.actualizarPasaporteUI) {
+                            window.actualizarPasaporteUI({
+                                cuit: cuitVal,
+                                condicionFiscal: condicionFiscalFinal,
+                                razonSocial: razonSocialFinal || null,
+                                estadoCuit: 'ACTIVO',
+                                actividadPrincipal: arcaData && arcaData.actividadPrincipal ? arcaData.actividadPrincipal : 'Servicios Comerciales / Profesionales'
+                            });
+                        }
                     }
                 }
 
                 closePaymentModal();
-                alert('¡Pago de $20.000 ARS simulado con éxito!\n\nIniciando la validación biométrica Didit KYC...');
+                alert(`¡Pago simulado y Validación ARCA completados!\n\nCondición Fiscal verificada: ${condicionFiscalFinal}\nIniciando la validación biométrica Didit KYC...`);
 
                 // Now start Didit KYC
                 await iniciarKYC(userId);

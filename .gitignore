@@ -4,6 +4,8 @@ node_modules/
 # Environment variables and secrets
 db_config.js
 .env
+*.key
+*.csr
 
 # Uploaded files
 uploads/

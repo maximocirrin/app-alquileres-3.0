@@ -42,6 +42,51 @@ app.get('/api/supabase-config', (req, res) => {
     res.json({ url: supabaseUrl, key: supabaseAnonKey });
 });
 
+// API Endpoint - ARCA WX Padrón Integration
+app.post('/api/arca-padron', async (req, res) => {
+    try {
+        const arcaHandler = (await import('./api/arca-padron.js')).default;
+        await arcaHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/arca-padron:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// API Endpoint - Didit KYC Create Session Integration
+app.post('/api/create-session', async (req, res) => {
+    try {
+        const createSessionHandler = (await import('./api/create-session.js')).default;
+        await createSessionHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/create-session:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// API Endpoint - Didit KYC Webhook Integration
+app.post('/api/webhook', async (req, res) => {
+    try {
+        const webhookHandler = (await import('./api/webhook.js')).default;
+        await webhookHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/webhook:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// API Endpoint - BCRA Central de Deudores Integration
+app.post('/api/bcra-deudores', async (req, res) => {
+    try {
+        const bcraHandler = (await import('./api/bcra-deudores.js')).default;
+        await bcraHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/bcra-deudores:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+
 
 
 
