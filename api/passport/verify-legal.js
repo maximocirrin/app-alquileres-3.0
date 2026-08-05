@@ -45,9 +45,9 @@ export default async function handler(req, res) {
     let summaryData = {};
     let isPendingReview = false;
 
-    // Timeout de 15 segundos para dar margen al arranque de Render (free tier cold starts)
+    // Timeout de 45 segundos para soportar el cold start del free tier de Render
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch(scraperUrl, {
@@ -59,6 +59,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           cuit_cuil: cuit_cuil || '',
           full_name: full_name || '',
+          nombre_completo: full_name || '',
           participant_id: participant_id,
         }),
         signal: controller.signal,
