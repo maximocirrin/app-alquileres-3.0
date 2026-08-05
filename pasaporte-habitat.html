@@ -669,35 +669,47 @@
             modal.id = 'modal-pago-pasaporte';
             modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 transition-opacity duration-300';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-5">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-2xl">workspace_premium</span>
-                            </div>
+                            <span class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center font-bold shrink-0">
+                                <span class="material-symbols-outlined text-xl">workspace_premium</span>
+                            </span>
                             <div>
-                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg leading-tight">Emitir Pasaporte Hábitat</h3>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-0.5">Auditoría ARCA, BCRA y Verificación Biométrica</p>
+                                <h3 class="font-headline font-bold text-zinc-900 dark:text-white text-lg leading-tight">Generar Pasaporte Hábitat</h3>
+                                <p class="text-xs text-zinc-500 font-body">Credencial de Inquilino Verificado</p>
                             </div>
                         </div>
-                        <button type="button" onclick="closePaymentModal()" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition-colors shrink-0">
-                            <span class="material-symbols-outlined text-base">close</span>
+                        <button type="button" onclick="closePaymentModal()" class="w-8 h-8 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center justify-center transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-xl">close</span>
                         </button>
                     </div>
 
-                    <!-- Details Summary Box (Fixed Contrast & Typography) -->
-                    <div class="bg-gradient-to-br from-zinc-50 to-zinc-100/70 dark:from-zinc-800/60 dark:to-zinc-800/30 rounded-2xl p-4 sm:p-5 border border-zinc-200/80 dark:border-zinc-700/60 mb-6 shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[11px] font-headline font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Costo Emisión Pasaporte</span>
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-2xl font-headline font-black text-primary dark:text-red-400">$20.000</span>
-                                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-bold font-mono">ARS</span>
-                            </div>
+                    <!-- Tariff Card (Dark Container) -->
+                    <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white p-5 rounded-2xl mb-4 shadow-md border border-zinc-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[11px] font-headline font-extrabold uppercase text-amber-400 tracking-wider">Tarifa Única de Emisión</span>
+                            <span class="text-xs font-mono bg-white/10 px-3 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
                         </div>
-                        <p class="text-xs text-zinc-600 dark:text-zinc-300 font-body leading-relaxed pt-2 border-t border-zinc-200/60 dark:border-zinc-700/40">
+                        <div class="flex items-baseline gap-2 mb-2">
+                            <span class="font-headline text-3xl sm:text-4xl font-extrabold text-white">$20.000</span>
+                            <span class="text-xs font-bold text-zinc-400 font-mono">ARS</span>
+                        </div>
+                        <p class="text-xs text-zinc-300 font-body leading-relaxed">
                             Incluye auditoría de solvencia, validación biométrica DNI con Didit y certificación de antecedentes sin juicios por desalojo.
                         </p>
+                    </div>
+
+                    <!-- Payment Method Container -->
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-4">
+                        <div class="flex items-center justify-between text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                            <span>Método de Pago (Simulador Activo)</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-extrabold">
+                                <span class="material-symbols-outlined text-sm">bolt</span> Sin Pasarela Real
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-body">Se simulará la acreditación inmediata de $20.000 ARS para dar acceso completo al pasaporte.</p>
                     </div>
 
                     <!-- Form simulation & Terms acceptance -->
@@ -713,29 +725,26 @@
                                         <span class="material-symbols-outlined text-xl">badge</span>
                                     </span>
                                     <input type="text" id="input-cuit-pasaporte" required placeholder="Ej: 20-34567890-9" 
-                                        class="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/90 border border-zinc-300 dark:border-zinc-700 rounded-2xl text-sm font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm">
+                                        class="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
                                 </div>
-                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-xs">info</span>
-                                    <span>Se consultará el Padrón ARCA y la Central de Deudores BCRA para auditar solvencia.</span>
-                                </p>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se consultará el Padrón ARCA y la Central de Deudores BCRA para auditar solvencia.</p>
                             </div>
 
-                            <!-- Terms Checkbox Card -->
-                            <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors select-none">
-                                <input type="checkbox" id="check-terminos-pasaporte" required class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 dark:border-zinc-600 shrink-0">
-                                <span class="text-xs text-zinc-700 dark:text-zinc-300 font-body leading-normal">
-                                    Acepto los <a href="#" class="text-primary dark:text-red-400 font-extrabold underline">Términos del Pasaporte Hábitat</a> y autorizo la auditoría de solvencia e identidad.
-                                </span>
-                            </label>
+                            <!-- Terms and Conditions Checkbox -->
+                            <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                                <input type="checkbox" id="check-terminos-pasaporte" required class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 dark:border-zinc-600 shrink-0 cursor-pointer">
+                                <label for="check-terminos-pasaporte" class="text-xs text-zinc-700 dark:text-zinc-300 font-body leading-normal cursor-pointer select-none">
+                                    Acepto los <a href="#" class="text-primary dark:text-red-400 font-bold underline">Términos y Condiciones</a> del Pasaporte Hábitat y autorizo el procesamiento de mis datos para la evaluación crediticia.
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Footer Actions -->
-                        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-5 border-t border-zinc-200 dark:border-zinc-800">
-                            <button type="button" onclick="closePaymentModal()" class="w-full sm:w-auto px-5 py-3 rounded-2xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-center cursor-pointer">
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                            <button type="button" onclick="closePaymentModal()" class="px-5 py-3 rounded-2xl font-headline font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
                                 Cancelar
                             </button>
-                            <button type="submit" id="btn-confirmar-pago-simulado" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#811b1e] to-[#a13333] hover:from-[#6b1619] hover:to-[#811b1e] text-white px-7 py-3.5 rounded-2xl font-headline font-black text-xs transition-all shadow-xl hover:scale-[1.02] cursor-pointer">
+                            <button type="submit" id="btn-confirmar-pago-simulado" class="inline-flex items-center justify-center gap-2 bg-[#811b1e] hover:bg-[#6b1619] text-white px-6 py-3 rounded-2xl font-headline font-extrabold text-xs transition-all shadow-lg active:scale-95 cursor-pointer">
                                 <span class="material-symbols-outlined text-base">verified</span>
                                 Confirmar y Simular Pago ($20.000)
                             </button>
