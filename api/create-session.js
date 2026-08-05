@@ -68,6 +68,7 @@ export default async function handler(req, res) {
 
     if (defaultCallbackUrl && defaultCallbackUrl.startsWith('http')) {
       payload.callback_url = defaultCallbackUrl;
+      payload.redirect_url = defaultCallbackUrl;
     }
 
     console.log('[Didit API Request Payload]:', JSON.stringify(payload));

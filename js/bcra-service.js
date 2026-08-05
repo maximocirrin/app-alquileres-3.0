@@ -87,8 +87,10 @@ function actualizarBcraUI(data) {
         elSit.textContent = situacion;
         if (data.peorSituacion > 2) {
             elSit.className = 'text-xs sm:text-sm font-headline font-black text-red-600 dark:text-red-400 mt-0.5 sm:mt-1';
+        } else if (data.peorSituacion === 2) {
+            elSit.className = 'text-xs sm:text-sm font-headline font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1';
         } else {
-            elSit.className = 'text-xs sm:text-sm font-headline font-black text-indigo-600 dark:text-indigo-400 mt-0.5 sm:mt-1';
+            elSit.className = 'text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1';
         }
     }
 
@@ -130,7 +132,7 @@ function actualizarBcraUI(data) {
         if (!badgeBcra) {
             badgeBcra = document.createElement('span');
             badgeBcra.id = 'badge-bcra-verified';
-            badgeBcra.className = 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1';
+            badgeBcra.className = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1';
             badgeBcra.innerHTML = `<span class="material-symbols-outlined text-sm sm:text-base">account_balance</span> Central de Deudores BCRA OK`;
             containerBadges.appendChild(badgeBcra);
         }

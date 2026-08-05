@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Manrope:wght@600;700;800;900&amp;display=swap"
         rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -48,15 +48,24 @@
                         full: "9999px"
                     },
                     fontFamily: {
-                        headline: ["Manrope"],
-                        body: ["Inter"],
-                        label: ["Inter"]
+                        headline: ["Manrope", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Inter", "sans-serif"],
+                        mono: ["Inter", "sans-serif"]
                     }
                 }
             }
         }
     </script>
     <style>
+        body, input, button, select, textarea {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-headline {
+            font-family: 'Manrope', sans-serif;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
@@ -215,7 +224,7 @@
                         <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-sm">
                         <div>
                             <h2 class="font-headline text-sm sm:text-xl font-black tracking-tight uppercase leading-tight">HABITAT PASSPORT</h2>
-                            <p class="text-[10px] sm:text-xs text-white/90 font-mono tracking-wider sm:tracking-widest font-bold" id="passport-code-id">ID: HBT-2026-9824-X9</p>
+                            <p class="text-[10px] sm:text-xs text-white/90 font-headline tracking-wider sm:tracking-widest font-extrabold" id="passport-code-id">ID: HBT-2026-9824-X9</p>
                         </div>
                     </div>
 
@@ -250,13 +259,13 @@
                                 <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">fingerprint</span> Identidad Validada
                                 </span>
-                                <span class="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
+                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">account_balance</span> Perfil Fiscal Regular
                                 </span>
-                                <span class="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
+                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">gavel</span> Sin Historial Judicial
                                 </span>
-                                <span class="bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
+                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">shield_person</span> 2 Garantes Verificados
                                 </span>
                             </div>
@@ -268,7 +277,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Prueba Biométrica</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1 flex items-center gap-1">
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1 flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">check_circle</span> Verificado
                                 </p>
                             </div>
@@ -278,15 +287,15 @@
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Central Crediticia</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-indigo-600 dark:text-indigo-400 mt-0.5 sm:mt-1" id="passport-situacion-crediticia">Situación 1 (Normal)</p>
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1" id="passport-situacion-crediticia">Situación 1 (Normal)</p>
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Antecedentes Legales</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-purple-600 dark:text-purple-400 mt-0.5 sm:mt-1">Sin Registros</p>
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1">Sin Registros</p>
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 col-span-2 sm:col-span-1">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Garantías / Garantes</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1 flex items-center gap-1">
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1 flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm sm:text-base">shield_person</span> 2 Presentados
                                 </p>
                             </div>
@@ -300,50 +309,80 @@
                             </summary>
 
                             <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-body">
-                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
-                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base text-primary">badge</span> Validaciones de Identidad y Fiscal ARCA
+                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-3.5 sm:p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
+                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-3 flex items-center gap-2 text-xs sm:text-sm">
+                                        <span class="material-symbols-outlined text-base sm:text-lg text-primary shrink-0">badge</span>
+                                        <span>Validaciones de Identidad y Fiscal ARCA</span>
                                     </h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                        <li class="flex justify-between"><span>Autenticidad DNI:</span> <strong class="text-emerald-600 dark:text-emerald-400">Documento Legítimo</strong></li>
-                                        <li class="flex justify-between"><span>Prueba de Vida:</span> <strong class="text-emerald-600 dark:text-emerald-400">Selfie Verificada</strong></li>
-                                        <li class="flex justify-between"><span>Condición Fiscal:</span> <strong class="text-zinc-800 dark:text-zinc-200" id="audit-condicion-fiscal">Monotributista Activo</strong></li>
-                                        <li class="flex justify-between"><span>Estado CUIT (ARCA):</span> <strong class="text-emerald-600 dark:text-emerald-400" id="audit-estado-cuit">Clave Activa en ARCA</strong></li>
-                                        <li class="flex justify-between"><span>Actividad Principal:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-mono text-[11px]" id="audit-actividad-arca">Servicios Inmobiliarios</strong></li>
+                                    <ul class="space-y-2 text-zinc-600 dark:text-zinc-400">
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Autenticidad DNI:</span>
+                                            <strong class="text-emerald-600 dark:text-emerald-400 font-extrabold text-left sm:text-right break-words">Documento Legítimo</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Prueba de Vida:</span>
+                                            <strong class="text-emerald-600 dark:text-emerald-400 font-extrabold text-left sm:text-right break-words">Selfie Verificada</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Condición Fiscal:</span>
+                                            <strong class="text-zinc-800 dark:text-zinc-200 font-extrabold text-left sm:text-right break-words" id="audit-condicion-fiscal">Monotributista Activo</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Estado CUIT (ARCA):</span>
+                                            <strong class="text-emerald-600 dark:text-emerald-400 font-extrabold text-left sm:text-right break-words" id="audit-estado-cuit">Clave Activa en ARCA</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-1 py-1">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Actividad Principal:</span>
+                                            <strong class="text-zinc-800 dark:text-zinc-200 font-body text-xs font-extrabold text-left sm:text-right break-words" id="audit-actividad-arca">Servicios Inmobiliarios</strong>
+                                        </li>
                                     </ul>
                                 </div>
 
-                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
-                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base text-primary">gavel</span> Antecedentes Financieros y Legales (BCRA)
+                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-3.5 sm:p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
+                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-3 flex items-center gap-2 text-xs sm:text-sm">
+                                        <span class="material-symbols-outlined text-base sm:text-lg text-primary shrink-0">gavel</span>
+                                        <span>Antecedentes Financieros y Legales (BCRA)</span>
                                     </h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                        <li class="flex justify-between"><span>Situación Crediticia BCRA:</span> <strong class="text-indigo-600 dark:text-indigo-400 font-extrabold" id="audit-bcra-situacion">Situación 1 (Normal)</strong></li>
-                                        <li class="flex justify-between"><span>BCRA Cheques Rechazados:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-bold" id="audit-cheques-rechazados">0</strong></li>
-                                        <li class="flex justify-between"><span>Días de Mora Acumulados:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-bold" id="audit-dias-atraso">0 Días</strong></li>
-                                        <li class="flex justify-between"><span>Entidades Reportantes:</span> <strong class="text-zinc-800 dark:text-zinc-200 font-mono text-[11px]" id="audit-bcra-entidades">Sistema Financiero BCRA Limpio</strong></li>
+                                    <ul class="space-y-2 text-zinc-600 dark:text-zinc-400">
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Situación Crediticia BCRA:</span>
+                                            <strong class="text-emerald-600 dark:text-emerald-400 font-extrabold text-left sm:text-right break-words" id="audit-bcra-situacion">Situación 1 (Normal)</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">BCRA Cheques Rechazados:</span>
+                                            <strong class="text-zinc-800 dark:text-zinc-200 font-extrabold text-left sm:text-right break-words" id="audit-cheques-rechazados">0</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-1 border-b border-zinc-200/40 dark:border-zinc-800/40">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Días de Mora Acumulados:</span>
+                                            <strong class="text-zinc-800 dark:text-zinc-200 font-extrabold text-left sm:text-right break-words" id="audit-dias-atraso">0 Días</strong>
+                                        </li>
+                                        <li class="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-1 py-1">
+                                            <span class="text-zinc-500 dark:text-zinc-400 shrink-0">Entidades Reportantes:</span>
+                                            <strong class="text-zinc-800 dark:text-zinc-200 font-body text-xs font-extrabold text-left sm:text-right break-words" id="audit-bcra-entidades">Sistema Financiero BCRA Limpio</strong>
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <!-- Garantes Attached Card Breakdown -->
-                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 md:col-span-2">
-                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-2.5 flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base text-primary">shield_person</span> Garantes Presentados & Respaldo Crediticio
+                                <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-3.5 sm:p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 md:col-span-2">
+                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-3 flex items-center gap-2 text-xs sm:text-sm">
+                                        <span class="material-symbols-outlined text-base sm:text-lg text-primary shrink-0">shield_person</span>
+                                        <span>Garantes Presentados & Respaldo Crediticio</span>
                                     </h4>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                        <div class="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
                                             <div>
                                                 <p class="font-headline font-extrabold text-zinc-900 dark:text-white">Carlos E. San Martín</p>
-                                                <p class="text-[11px] text-zinc-500 font-mono mt-0.5">Recibo de Sueldo • 3 Recibos Aprobados</p>
+                                                <p class="text-[11px] text-zinc-500 font-body mt-0.5">Recibo de Sueldo • 3 Recibos Aprobados</p>
                                             </div>
-                                            <span class="text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">Verificado</span>
+                                            <span class="self-start sm:self-center text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 shrink-0">Verificado</span>
                                         </div>
-                                        <div class="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
                                             <div>
                                                 <p class="font-headline font-extrabold text-zinc-900 dark:text-white">María L. Olazábal</p>
-                                                <p class="text-[11px] text-zinc-500 font-mono mt-0.5">Garantía Propietaria • Dominio Ok</p>
+                                                <p class="text-[11px] text-zinc-500 font-body mt-0.5">Garantía Propietaria • Dominio Ok</p>
                                             </div>
-                                            <span class="text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">Verificado</span>
+                                            <span class="self-start sm:self-center text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 shrink-0">Verificado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -373,6 +412,9 @@
                 </div>
             </div>
         </section>
+
+        <!-- Pasaporte Hábitat - Tarjetas de Verificación (Legal, ATM, Empleo) -->
+        <section class="max-w-[1100px] mx-auto px-4 md:px-8 mb-12" id="passport-cards-container"></section>
 
         <!-- Garantes y Garantías Section (Vista del Inquilino) -->
         <section class="max-w-[1100px] mx-auto px-4 md:px-8 mb-16" id="garantes-tenant-container"></section>
@@ -415,7 +457,7 @@
                 </article>
 
                 <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6">
                         <span class="material-symbols-outlined text-3xl">balance</span>
                     </div>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
@@ -528,6 +570,7 @@
     <script src="js/bcra-service.js?v=1"></script>
     <script src="js/app.js?v=8"></script>
     <script src="js/garantes-manager.js"></script>
+    <script src="js/passport-cards.js?v=1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (window.App && window.App.setupTheme) {
@@ -636,6 +679,14 @@
                             if (window.actualizarBcraUI && pasaporte.datos_bcra) {
                                 window.actualizarBcraUI(pasaporte.datos_bcra);
                             }
+
+                            if (window.PassportCards) {
+                                window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                            }
+                        } else {
+                            if (window.PassportCards) {
+                                window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                            }
                         }
                     }
                 }
@@ -690,11 +741,11 @@
                     <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white p-5 rounded-2xl mb-4 shadow-md border border-zinc-800">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-[11px] font-headline font-extrabold uppercase text-amber-400 tracking-wider">Tarifa Única de Emisión</span>
-                            <span class="text-xs font-mono bg-white/10 px-3 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
+                            <span class="text-xs font-headline font-bold bg-white/10 px-3 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
                         </div>
                         <div class="flex items-baseline gap-2 mb-2">
                             <span class="font-headline text-3xl sm:text-4xl font-extrabold text-white">$20.000</span>
-                            <span class="text-xs font-bold text-zinc-400 font-mono">ARS</span>
+                            <span class="text-xs font-headline font-extrabold text-zinc-400">ARS</span>
                         </div>
                         <p class="text-xs text-zinc-300 font-body leading-relaxed">
                             Incluye auditoría de solvencia, validación biométrica DNI con Didit y certificación de antecedentes sin juicios por desalojo.
@@ -725,7 +776,7 @@
                                         <span class="material-symbols-outlined text-xl">badge</span>
                                     </span>
                                     <input type="text" id="input-cuit-pasaporte" required placeholder="Ej: 20-34567890-9" 
-                                        class="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-mono text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                                        class="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-body text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
                                 </div>
                                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se consultará el Padrón ARCA y la Central de Deudores BCRA para auditar solvencia.</p>
                             </div>
@@ -911,8 +962,9 @@
                 closePaymentModal();
                 alert(`¡Pago simulado y Validación ARCA completados!\n\nCondición Fiscal verificada: ${condicionFiscalFinal}\nIniciando la validación biométrica Didit KYC...`);
 
-                // Now start Didit KYC
-                await iniciarKYC(userId);
+                // Iniciar Didit KYC pasando el callbackUrl explícito a pasaporte-habitat.html
+                const returnUrl = window.location.origin + window.location.pathname;
+                await iniciarKYC(userId, { callbackUrl: returnUrl });
 
             } catch (err) {
                 console.error("Error al procesar pago simulado:", err);

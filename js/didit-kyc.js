@@ -22,11 +22,11 @@ async function iniciarKYC(userId, options = {}) {
     throw new Error(errorMsg);
   }
 
+  const actualCallbackUrl = callbackUrl || (typeof window !== 'undefined' ? window.location.href.split('#')[0] : null);
+
   try {
-    // 1. Mostrar estado de carga si existe botón o feedback visual
     console.log(`[KYC Frontend] Solicitando sesión Didit KYC para usuario: ${userId}...`);
 
-    // 2. Realizar la petición POST a la Serverless Function de Vercel
     let data = null;
     try {
       const response = await fetch('/api/create-session', {
@@ -36,7 +36,7 @@ async function iniciarKYC(userId, options = {}) {
         },
         body: JSON.stringify({
           userId: userId,
-          callbackUrl: callbackUrl
+          callbackUrl: actualCallbackUrl
         })
       });
 

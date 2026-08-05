@@ -131,7 +131,7 @@ function actualizarPasaporteUI(data) {
         if (!badgeArca) {
             badgeArca = document.createElement('span');
             badgeArca.id = 'badge-arca-verified';
-            badgeArca.className = 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1';
+            badgeArca.className = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1';
             badgeArca.innerHTML = `<span class="material-symbols-outlined text-sm sm:text-base">verified_user</span> Padrón ARCA Verificado`;
             containerBadges.appendChild(badgeArca);
         }
