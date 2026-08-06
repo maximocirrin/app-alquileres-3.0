@@ -16,7 +16,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const scraperUrl = process.env.MENDOZA_SCRAPER_URL || 'https://habitat-ws.onrender.com/scrape-mendoza';
+    let scraperUrl = (process.env.MENDOZA_SCRAPER_URL || 'https://habitat-ws.onrender.com/scrape-mendoza').trim();
+    if (!scraperUrl.endsWith('/scrape-mendoza')) {
+      scraperUrl = scraperUrl.replace(/\/+$/, '') + '/scrape-mendoza';
+    }
     const scraperApiKey = process.env.SCRAPER_SECRET_KEY || 'e9c1f8a4b3d7e2c0f6a5b9d1e3c7f0a4b8c2d6e0f3a5b9c1d7e4f8a0b2c6d9e1';
 
     // Inicializar cliente de Supabase
@@ -27,9 +30,9 @@ export async function POST(req: Request) {
     let summaryData: Record<string, any> = {};
     let isPendingReview = false;
 
-    // Timeout de 15 segundos para dar margen al arranque de Render (free tier cold starts)
+    // Timeout de 45 segundos para dar margen al arranque de Render (free tier cold starts)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch(scraperUrl, {
@@ -41,6 +44,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           cuit_cuil: cuit_cuil || '',
           full_name: full_name || '',
+          nombre_completo: full_name || '',
           participant_id: participant_id,
         }),
         signal: controller.signal,
