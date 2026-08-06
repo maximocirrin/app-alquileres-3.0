@@ -16,7 +16,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const scraperUrl = process.env.MENDOZA_SCRAPER_URL || 'https://habitat-ws.onrender.com/scrape-mendoza';
+    let scraperUrl = (process.env.MENDOZA_SCRAPER_URL || 'https://habitat-ws.onrender.com/scrape-mendoza').trim();
+    if (!scraperUrl.endsWith('/scrape-mendoza')) {
+      scraperUrl = scraperUrl.replace(/\/+$/, '') + '/scrape-mendoza';
+    }
     const scraperApiKey = process.env.SCRAPER_SECRET_KEY || 'e9c1f8a4b3d7e2c0f6a5b9d1e3c7f0a4b8c2d6e0f3a5b9c1d7e4f8a0b2c6d9e1';
 
     // Inicializar cliente de Supabase
