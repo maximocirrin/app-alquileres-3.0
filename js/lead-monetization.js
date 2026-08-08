@@ -133,8 +133,25 @@ window.HabitatLeadStore = {
 
   listeners: [],
 
-  initStore() {
+  async initStore() {
     this.loadFromLocalStorage();
+    if (window.DataManager) {
+      try {
+        const [dbLeads, dbZones] = await Promise.all([
+          window.DataManager.getLeads(),
+          window.DataManager.getLeadZones()
+        ]);
+        if (dbLeads && dbLeads.length > 0) {
+          this.state.leads = dbLeads;
+        }
+        if (dbZones && dbZones.length > 0) {
+          this.state.zones = dbZones;
+        }
+        this.notify();
+      } catch (e) {
+        console.warn('Could not load leads from DB:', e);
+      }
+    }
   },
 
   subscribe(fn) {
@@ -177,9 +194,13 @@ window.HabitatLeadStore = {
     this.state.agent.credits = Math.max(0, this.state.agent.credits - 1);
     this.notify();
     HabitatLeadModule.checkLowBalanceWarning();
+
+    if (window.DataManager) {
+      window.DataManager.createLead(lead).catch(err => console.warn('Error saving lead to DB:', err));
+    }
   },
 
-  addManualLead(leadData) {
+  async addManualLead(leadData) {
     const newLead = {
       id: 'lead-' + Date.now(),
       clientName: leadData.clientName,
@@ -199,11 +220,24 @@ window.HabitatLeadStore = {
       notes: leadData.note ? [{ text: leadData.note, date: 'Hoy ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }] : [],
       disputeStatus: 'none'
     };
+
+    if (window.DataManager) {
+      try {
+        const created = await window.DataManager.createLead(newLead);
+        if (created) {
+          newLead.raw_id = created.id_lead;
+          newLead.id = `lead-${created.id_lead}`;
+        }
+      } catch (err) {
+        console.warn('Error creating manual lead in DB:', err);
+      }
+    }
+
     this.state.leads.unshift(newLead);
     this.notify();
   },
 
-  changeLeadStatus(leadId, newStatus) {
+  async changeLeadStatus(leadId, newStatus) {
     const lead = this.state.leads.find(l => l.id === leadId);
     if (lead) {
       const oldStatus = lead.status;
@@ -222,6 +256,14 @@ window.HabitatLeadStore = {
         date: 'Hoy ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
       this.notify();
+
+      if (window.DataManager && lead.raw_id) {
+        try {
+          await window.DataManager.updateLeadStatus(lead.raw_id, newStatus, lead.notes);
+        } catch (err) {
+          console.warn('Error updating lead status in DB:', err);
+        }
+      }
     }
   },
 
@@ -234,10 +276,14 @@ window.HabitatLeadStore = {
         date: 'Hoy ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
       this.notify();
+
+      if (window.DataManager && lead.raw_id) {
+        window.DataManager.updateLeadStatus(lead.raw_id, lead.status, lead.notes).catch(err => console.warn(err));
+      }
     }
   },
 
-  disputeLead(leadId, reason, comments) {
+  async disputeLead(leadId, reason, comments) {
     const lead = this.state.leads.find(l => l.id === leadId);
     if (lead) {
       lead.status = 'disputed';
@@ -250,6 +296,14 @@ window.HabitatLeadStore = {
         date: 'Hoy ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
       this.notify();
+
+      if (window.DataManager && lead.raw_id) {
+        try {
+          await window.DataManager.disputeLeadInDb(lead.raw_id, reason, comments);
+        } catch (err) {
+          console.warn('Error disputing lead in DB:', err);
+        }
+      }
     }
   },
 

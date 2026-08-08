@@ -422,7 +422,12 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: MIS AVISOS EN FILAS / TABLA -->
+            <!-- PESTAÑA 2: MONETIZACIÓN & LEADS (TIENDA DE LEADS & CRM INBOX) -->
+            <div id="panel-content-leads" class="tab-content space-y-6">
+                <!-- Dynamic Content injected by HabitatLeadModule (js/lead-monetization.js) -->
+            </div>
+
+            <!-- PESTAÑA 3: MIS AVISOS EN FILAS / TABLA -->
             <div id="panel-content-avisos" class="tab-content space-y-4">
                 <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
                     <div class="flex items-center gap-3 flex-1">
@@ -921,6 +926,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
+    <script src="js/lead-monetization.js"></script>
     <script src="js/app.js?v=12"></script>
 
     <!-- Interactive Script for Broker CRM State & Mock Data -->
@@ -1104,7 +1110,7 @@
 
         let currentBrokerProperties = [...brokerPropertiesMock];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.App) {
                 App.setupTheme();
             }
@@ -1123,12 +1129,109 @@
             initBrokerCharts();
             calculateEntryCosts();
 
+            // Sincronizar datos reales desde Supabase si está disponible
+            await syncBrokerDataFromSupabase();
+
             // Detect URL hash or default to 'general'
             const initialTab = mapTabName((window.location.hash || '#general').replace('#', ''));
             switchBrokerTab(initialTab);
 
             setupDockSlidingIndicator();
         });
+
+        async function syncBrokerDataFromSupabase() {
+            if (!window.DataManager) return;
+            try {
+                // 1. Sincronizar Propiedades / Publicaciones reales
+                const dbProps = await window.DataManager.getProperties();
+                if (dbProps && dbProps.length > 0) {
+                    brokerPropertiesMock.length = 0;
+                    dbProps.forEach(p => {
+                        brokerPropertiesMock.push({
+                            id: `PROP-${p.id}`,
+                            raw_id: p.id,
+                            title: p.title || 'Propiedad en Cartera',
+                            address: p.address || 'Buenos Aires',
+                            operation: (p.operation || 'alquiler').toLowerCase(),
+                            price: p.price || 380000,
+                            feePercent: 4.15,
+                            portals: ['Hábitat Directo', 'Zonaprop'],
+                            status: (p.status || 'publicada').toLowerCase(),
+                            owner: p.owner || 'Propietario Hábitat',
+                            leadsCount: p.leadsCount || Math.floor(Math.random() * 15 + 3),
+                            viewsCount: p.viewsCount || Math.floor(Math.random() * 200 + 80),
+                            image: p.image || (p.images && p.images[0]) || 'img/hero-marketplace.jpg'
+                        });
+                    });
+                    currentBrokerProperties = [...brokerPropertiesMock];
+                    renderBrokerPropertiesRows();
+                    renderBrokerPropertiesGrid();
+                }
+
+                // 2. Sincronizar Postulaciones
+                const dbApps = await window.DataManager.getApplications();
+                if (dbApps && dbApps.length > 0) {
+                    brokerApplicationsMock.length = 0;
+                    dbApps.forEach(a => {
+                        brokerApplicationsMock.push({
+                            id: `APP-${a.id}`,
+                            raw_id: a.id,
+                            property_title: a.property_title,
+                            tenant_name: a.tenant_name,
+                            tenant_email: a.tenant_email,
+                            tenant_phone: a.tenant_phone,
+                            monthly_income: a.monthly_income,
+                            status: a.status,
+                            income_proof_url: a.income_proof_url || '#',
+                            message: a.message
+                        });
+                    });
+                    renderBrokerApplications();
+                }
+
+                // 3. Sincronizar Tickets de Mantenimiento
+                const dbTickets = await window.DataManager.getMaintenanceTickets();
+                if (dbTickets && dbTickets.length > 0) {
+                    brokerTicketsMock.length = 0;
+                    dbTickets.forEach(t => {
+                        brokerTicketsMock.push({
+                            id: `TCK-00${t.id}`,
+                            raw_id: t.id,
+                            prop: t.property_address,
+                            tenant: t.tenant_name,
+                            title: t.title,
+                            category: t.category,
+                            priority: t.priority,
+                            status: t.status_label || (t.status === 'resuelto' ? 'Resuelto' : (t.status === 'en_proceso' ? 'En Proceso' : 'Pendiente')),
+                            date: t.created_at ? new Date(t.created_at).toLocaleDateString('es-AR') : 'Reciente',
+                            description: t.description,
+                            response: t.landlord_response,
+                            deductedAmount: t.monto_descuento_alquiler ? Number(t.monto_descuento_alquiler).toLocaleString('es-AR') : null
+                        });
+                    });
+                    renderBrokerTickets();
+                }
+
+                // 4. Sincronizar Eventos y Agenda
+                const dbEvents = await window.DataManager.getEvents();
+                if (dbEvents && dbEvents.length > 0) {
+                    brokerEventsMock.length = 0;
+                    dbEvents.forEach(e => brokerEventsMock.push(e));
+                    renderBrokerCalendarGrid();
+                    renderBrokerVisits();
+                }
+
+                // 5. Sincronizar Tasaciones
+                const dbVals = await window.DataManager.getValuations();
+                if (dbVals && dbVals.length > 0) {
+                    brokerValuationsMock.length = 0;
+                    dbVals.forEach(v => brokerValuationsMock.push(v));
+                    renderBrokerValuations();
+                }
+            } catch (err) {
+                console.warn("Could not sync broker data from Supabase:", err);
+            }
+        }
 
         function mapTabName(tab) {
             if (['general', 'leads', 'avisos', 'contactos', 'alquileres', 'operaciones'].includes(tab)) return tab;
@@ -1956,30 +2059,63 @@
             `;
         }
 
-        function submitNewBrokerVisit(e) {
+        async function submitNewBrokerVisit(e) {
             e.preventDefault();
             const dateInput = document.getElementById('new-visit-date').value || '2026-08-03';
             const type = document.getElementById('new-visit-type').value;
+
+            const typeIdMap = {
+                visita: 1,
+                firma: 2,
+                entrega: 3,
+                inspeccion: 4,
+                tasacion: 5
+            };
 
             const labels = {
                 visita: 'Visita Presencial',
                 firma: 'Firma de Contrato',
                 tasacion: 'Tasación In Situ',
-                entrega: 'Entrega de Llaves & Acta'
+                entrega: 'Entrega de Llaves & Acta',
+                inspeccion: 'Inspección Técnica'
             };
+
+            const visitorName = document.getElementById('new-visit-name').value;
+            const visitorPhone = document.getElementById('new-visit-phone').value;
+            const visitorEmail = document.getElementById('new-visit-email').value;
+            const visitTime = document.getElementById('new-visit-time').value;
+            const notes = document.getElementById('new-visit-notes').value || 'Cita agendada';
+            const propTitle = document.getElementById('new-visit-prop').value;
+
+            if (window.DataManager) {
+                try {
+                    await window.DataManager.createEvent({
+                        id_tipo_evento: typeIdMap[type] || 1,
+                        date: dateInput,
+                        time: visitTime,
+                        visitorName: visitorName,
+                        visitorPhone: visitorPhone,
+                        visitorEmail: visitorEmail,
+                        notes: notes
+                    });
+                    await syncBrokerDataFromSupabase();
+                } catch (err) {
+                    console.warn("Error creating event in DB:", err);
+                }
+            }
 
             const newEvent = {
                 id: `EVT-10${brokerEventsMock.length + 1}`,
                 type: type,
                 typeLabel: labels[type] || 'Evento Cita',
-                property_title: document.getElementById('new-visit-prop').value,
-                visitor_name: document.getElementById('new-visit-name').value,
-                visitor_phone: document.getElementById('new-visit-phone').value,
-                visitor_email: document.getElementById('new-visit-email').value,
+                property_title: propTitle,
+                visitor_name: visitorName,
+                visitor_phone: visitorPhone,
+                visitor_email: visitorEmail,
                 visit_date: dateInput,
-                visit_time: document.getElementById('new-visit-time').value,
+                visit_time: visitTime,
                 status: 'Confirmada',
-                notes: document.getElementById('new-visit-notes').value || 'Cita agendada'
+                notes: notes
             };
 
             brokerEventsMock.unshift(newEvent);
@@ -2482,7 +2618,7 @@
             `;
         }
 
-        function submitDeductFromRent(e, ticketId) {
+        async function submitDeductFromRent(e, ticketId) {
             e.preventDefault();
             const ticket = brokerTicketsMock.find(t => t.id === ticketId);
             if (ticket) {
@@ -2491,6 +2627,16 @@
                 ticket.deductedAmount = Number(amount).toLocaleString('es-AR');
                 ticket.status = 'Resuelto';
                 ticket.response = `[DESCUENTO APLICADO: $ ${ticket.deductedAmount} descontados del próximo alquiler] - ${note}`;
+
+                if (window.DataManager && ticket.raw_id) {
+                    try {
+                        await window.DataManager.deductTicketFromRent(ticket.raw_id, amount, note);
+                        await syncBrokerDataFromSupabase();
+                    } catch (err) {
+                        console.warn("Error persisting rent deduction:", err);
+                    }
+                }
+
                 renderBrokerTickets();
                 renderBrokerActiveRental();
             }
@@ -2556,11 +2702,24 @@
             `;
         }
 
-        function saveTicketManagement(ticketId) {
+        async function saveTicketManagement(ticketId) {
             const ticket = brokerTicketsMock.find(t => t.id === ticketId);
             if (ticket) {
-                ticket.status = document.getElementById('manage-ticket-status').value;
-                ticket.response = document.getElementById('manage-ticket-response').value;
+                const newStatus = document.getElementById('manage-ticket-status').value;
+                const responseText = document.getElementById('manage-ticket-response').value;
+                ticket.status = newStatus;
+                ticket.response = responseText;
+
+                if (window.DataManager && ticket.raw_id) {
+                    try {
+                        const statusKey = newStatus.toLowerCase().replace(/\s+/g, '_');
+                        await window.DataManager.updateTicketStatus(ticket.raw_id, statusKey, responseText);
+                        await syncBrokerDataFromSupabase();
+                    } catch (err) {
+                        console.warn("Error updating ticket in DB:", err);
+                    }
+                }
+
                 renderBrokerTickets();
                 renderBrokerActiveRental();
             }
