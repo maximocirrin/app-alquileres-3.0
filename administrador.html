@@ -205,7 +205,7 @@
 
             <button data-tab="alquiler-activo" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">payments</span>
-                <span>Gestión Alquiler Activo</span>
+                <span>Alquileres</span>
             </button>
 
             <button data-tab="mantenimiento" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
@@ -388,7 +388,7 @@
 
             <button data-tab="alquiler-activo" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-xl">payments</span>
-                <span class="text-[10px]">Contrato</span>
+                <span class="text-[10px]">Alquileres</span>
             </button>
 
             <button data-tab="mantenimiento" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
@@ -633,19 +633,84 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
-                                <span class="block text-zinc-400 font-bold uppercase text-[10px]">Ingresos Comprobados</span>
-                                <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">$ ${Number(a.monthly_income).toLocaleString('es-AR')} / mes</span>
-                            </div>
-                            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-between">
-                                <div>
-                                    <span class="block text-zinc-400 font-bold uppercase text-[10px]">Comprobante de Ingresos</span>
-                                    <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">Recibo_Sueldo.pdf</span>
+                        <!-- Credencial Digital Pasaporte Hábitat Estilo DNI -->
+                        <div class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden transition-all hover:shadow-2xl cursor-pointer group" onclick="openPasaporteHabitatModal('${a.id}')">
+                            <!-- Passport Top Header Bar (Estilo Pasaporte Oficial) -->
+                            <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-5 py-3.5 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 w-auto bg-white p-1 rounded-lg shadow-xs">
+                                    <div>
+                                        <h4 class="font-headline text-sm font-black tracking-widest uppercase leading-tight">HABITAT PASSPORT</h4>
+                                        <p class="text-[10px] text-white/90 font-headline font-extrabold tracking-widest">ID: HBT-2026-${String(a.id || '').substring(0,8).toUpperCase()}</p>
+                                    </div>
                                 </div>
-                                <a href="${a.income_proof_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-primary text-white font-bold text-xs hover:bg-primary-hover transition-colors flex items-center gap-1 shadow-sm">
-                                    <span class="material-symbols-outlined text-sm">visibility</span> Ver PDF
-                                </a>
+
+                                <div class="bg-white p-1 rounded-xl shadow-md border border-white/30 shrink-0">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${a.id}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-10 h-10 rounded-lg object-contain">
+                                </div>
+                            </div>
+
+                            <!-- Passport Card Body -->
+                            <div class="p-5 space-y-4">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                    <!-- Profile Avatar / Photo (DNI Style) -->
+                                    <div class="relative shrink-0">
+                                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center font-black shadow-inner">
+                                            <span class="material-symbols-outlined text-3xl">person</span>
+                                        </div>
+                                        <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="Identidad Verificada">
+                                            <span class="material-symbols-outlined text-xs font-bold block">verified</span>
+                                        </span>
+                                    </div>
+
+                                    <!-- Personal & Document Info -->
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight">${a.tenant_name}</h3>
+                                            <span class="px-2.5 py-0.5 text-[10px] font-headline font-black rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Score 98/100</span>
+                                        </div>
+                                        <p class="font-headline text-[11px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
+                                            Inquilino Verificado • DNI: 38.491.024 • CUIT: 20-38491024-8
+                                        </p>
+                                        <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
+                                            ${a.tenant_email} • Tel: ${a.tenant_phone}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Badges Grid (Identidad, Fiscal, Judicios, Garantes) -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
+                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Prueba Biométrica</p>
+                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">check_circle</span> KYC Didit Validado
+                                        </p>
+                                    </div>
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
+                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Ingresos Mensuales</p>
+                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5">$ ${Number(a.monthly_income).toLocaleString('es-AR')}</p>
+                                    </div>
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
+                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Antecedentes Legal</p>
+                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5">Sin Desalojos</p>
+                                    </div>
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
+                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Garantías Presentadas</p>
+                                        <p class="text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">shield_person</span> Prop. CABA + Finaer
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Bar of Card -->
+                                <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                                    <span class="text-[11px] font-bold text-primary dark:text-red-400 flex items-center gap-1 group-hover:underline">
+                                        <span class="material-symbols-outlined text-sm">workspace_premium</span> Ver Documentación Auditada & Certificados
+                                    </span>
+                                    <span class="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+                                        <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Hábitat
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -1048,160 +1113,241 @@
             }).join('');
         }
 
+        let ownerActiveContractsMock = [
+            {
+                id: 'cnt-001',
+                property_title: 'Departamento 3 Ambientes con Balcón',
+                property_address: 'Av. Santa Fe 2450 4°A, Recoleta, CABA',
+                tenant_name: 'Carlos Gómez',
+                tenant_email: 'carlos.gomez@gmail.com',
+                tenant_phone: '+54 9 11 5544-3322',
+                monthly_rent: 380000,
+                expenses_amount: 45000,
+                punitive_daily_rate: 0.5,
+                broker_commission_percent: 4.15,
+                payment_due_day: 10,
+                adjustment_index: 'IPC',
+                adjustment_frequency_months: 3,
+                cbu_alias: 'HABITAT.RECOLETA.MP'
+            },
+            {
+                id: 'cnt-002',
+                property_title: 'PH Moderno 2 Ambientes con Patio',
+                property_address: 'Humboldt 1940 1°B, Palermo Soho, CABA',
+                tenant_name: 'Mariana López',
+                tenant_email: 'mariana.lopez@gmail.com',
+                tenant_phone: '+54 9 11 6677-8899',
+                monthly_rent: 520000,
+                expenses_amount: 28000,
+                punitive_daily_rate: 0.5,
+                broker_commission_percent: 4.15,
+                payment_due_day: 5,
+                adjustment_index: 'ICL',
+                adjustment_frequency_months: 6,
+                cbu_alias: 'HABITAT.PALERMO.MP'
+            }
+        ];
+        let activeSelectedContractId = 'cnt-001';
+
+        function selectOwnerActiveContract(contractId) {
+            activeSelectedContractId = contractId;
+            loadOwnerActiveRental();
+        }
+
         async function loadOwnerActiveRental() {
             const container = document.getElementById('owner-container-active-rental');
-            if (!container || !window.DataManager) return;
+            if (!container) return;
 
             try {
-                const contract = await window.DataManager.getActiveContract();
+                const contract = ownerActiveContractsMock.find(c => c.id === activeSelectedContractId) || ownerActiveContractsMock[0];
                 if (!contract) {
                     container.innerHTML = `
                         <div class="glass-card rounded-2xl p-8 text-center text-zinc-500 space-y-2">
                             <span class="material-symbols-outlined text-3xl text-zinc-400">payments</span>
-                            <h3 class="font-headline font-bold text-base">No hay ningún alquiler activo</h3>
-                            <p class="text-xs text-zinc-400">Cuando aceptes una postulación, el contrato de alquiler activo aparecerá aquí.</p>
+                            <h3 class="font-headline font-bold text-base">No hay alquileres registrados</h3>
+                            <p class="text-xs text-zinc-400">Cuando aceptes una postulación, tus contratos de alquiler aparecerán aquí.</p>
                         </div>
                     `;
                     return;
                 }
 
-                const payment = await window.DataManager.getCurrentPayment(contract.id);
-                const punitives = window.DataManager.calculatePunitiveInterests(contract, payment);
+                let payment = null;
+                if (window.DataManager) {
+                    payment = await window.DataManager.getCurrentPayment(contract.id);
+                }
+                if (!payment) {
+                    payment = {
+                        id: 'pay-' + contract.id,
+                        contract_id: contract.id,
+                        period: 'Julio 2026',
+                        amount_base: contract.monthly_rent,
+                        due_date: '2026-07-' + String(contract.payment_due_day).padStart(2, '0'),
+                        status: 'pendiente',
+                        is_punitive_waived: false
+                    };
+                }
+
+                const punitives = window.DataManager ? window.DataManager.calculatePunitiveInterests(contract, payment) : {
+                    daysLate: 0,
+                    dailyRate: contract.punitive_daily_rate || 0.5,
+                    punitiveAmount: 0,
+                    totalAmount: contract.monthly_rent
+                };
 
                 const isPaid = payment && payment.status === 'pagado';
                 const isWaived = payment && payment.is_punitive_waived;
+                const expenses = contract.expenses_amount || 45000;
+                const commission = Math.round(contract.monthly_rent * ((contract.broker_commission_percent || 4.15) / 100));
+                const dailyPunitiveEst = Math.round(contract.monthly_rent * ((contract.punitive_daily_rate || 0.5) / 100));
 
                 container.innerHTML = `
-                    <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6">
-                        <!-- Top Banner del Contrato -->
-                        <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-3 py-0.5 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                                        Contrato Activo
-                                    </span>
-                                    <span class="text-xs font-bold text-zinc-400">Reajuste ${contract.adjustment_index} (${contract.adjustment_frequency_months}m)</span>
-                                </div>
-                                <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">
-                                    ${contract.property_title}
-                                </h2>
-                                <p class="text-xs text-zinc-500">Inquilino: <b>${contract.tenant_name}</b> (${contract.tenant_email})</p>
-                            </div>
-
-                            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-right shadow-sm shrink-0">
-                                <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Canon Locativo Mensual</span>
-                                <span class="text-2xl font-black text-primary dark:text-red-400">$ ${Number(contract.monthly_rent).toLocaleString('es-AR')}</span>
-                            </div>
-                        </div>
-
-                        <!-- Monitor de Cobranza del Mes -->
-                        <div class="p-6 space-y-6">
-                            <div class="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
-                                <div>
-                                    <h3 class="font-headline text-base font-bold text-zinc-900 dark:text-white">
-                                        Control de Cobranza - ${payment ? payment.period : 'Julio 2026'}
-                                    </h3>
-                                    <p class="text-xs text-zinc-500">Vencimiento oficial: Días ${contract.payment_due_day} de cada mes</p>
-                                </div>
-                                <div>
-                                    ${isPaid ? `
-                                        <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-base">check_circle</span> PAGADO (${payment.payment_method || 'Registrado'})
-                                        </span>
-                                    ` : `
-                                        <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE DE COBRO
-                                        </span>
-                                    `}
-                                </div>
-                            </div>
-
-                            <!-- Desglose Financiero y Punitorios -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
-                                    <span class="block font-bold uppercase text-zinc-400 text-[10px]">Alquiler Base</span>
-                                    <span class="text-lg font-extrabold text-zinc-900 dark:text-white mt-1 block">$ ${Number(payment ? payment.amount_base : contract.monthly_rent).toLocaleString('es-AR')}</span>
-                                </div>
-
-                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">
-                                    <span class="block font-bold uppercase text-zinc-400 text-[10px]">Intereses Punitorios Automáticos</span>
-                                    ${isWaived ? `
-                                        <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 block mt-1 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">verified</span> Perdonados ($0)
-                                        </span>
-                                    ` : (punitives.punitiveAmount > 0 ? `
-                                        <span class="text-lg font-black text-rose-600 dark:text-rose-400 mt-1 block">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
-                                        <span class="block text-[11px] text-rose-500 font-medium">${punitives.daysLate} días de mora (${punitives.dailyRate}% diario)</span>
-                                    ` : `
-                                        <span class="text-lg font-extrabold text-zinc-700 dark:text-zinc-300 mt-1 block">$ 0</span>
-                                        <span class="block text-[11px] text-emerald-600 font-medium">Al día</span>
-                                    `)}
-                                </div>
-
-                                <div class="bg-primary-light p-4 rounded-xl border border-primary/20 dark:border-red-500/20">
-                                    <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Total Final a Cobrar</span>
-                                    <span class="text-xl font-black text-primary dark:text-red-400 mt-1 block">$ ${Number(isPaid ? payment.amount_base : punitives.totalAmount).toLocaleString('es-AR')}</span>
-                                </div>
-                            </div>
-
-                            <!-- Botones de Acción -->
-                            <div class="pt-4 border-t border-zinc-200/60 dark:border-zinc-800 flex flex-wrap items-center gap-3">
-                                ${!isWaived && punitives.punitiveAmount > 0 && !isPaid ? `
-                                    <button type="button" id="btn-act-waive" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base">sentiment_satisfied</span>
-                                        Perdonar Intereses Punitorios
-                                    </button>
-                                ` : ''}
-
-                                ${!isPaid ? `
-                                    <button type="button" id="btn-act-pay" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-base">check_circle</span>
-                                        Marcar como Pagado (Transferencia / Efectivo)
-                                    </button>
-                                ` : ''}
-
-                                <button type="button" id="btn-act-invoice" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-base">mark_email_read</span>
-                                    Enviar Factura al Mail del Inquilino
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Calculadora de Reajuste IPC / ICL -->
-                        <div class="p-6 bg-zinc-50/80 dark:bg-zinc-800/30 border-t border-zinc-200/60 dark:border-zinc-800 space-y-4">
+                    <div class="space-y-6 font-body">
+                        <!-- Selector de Cartera de Alquileres -->
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
                             <div>
-                                <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">Calculadora de Reajuste Automático (IPC / ICL)</h4>
-                                <p class="text-xs text-zinc-500">Calcula y aplica incrementos oficiales al canon locativo según la cláusula pactada.</p>
+                                <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-2xl">payments</span>
+                                    Cartera de Alquileres Activos (${ownerActiveContractsMock.length})
+                                </h2>
+                                <p class="text-xs text-zinc-500">Administra montos, expensas, intereses punitorios y comisiones de tus propiedades alquiladas.</p>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                                <div>
-                                    <label class="block font-bold uppercase text-zinc-500 mb-1 text-[10px]">Índice Locativo</label>
-                                    <select id="calc-idx-select" class="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs">
-                                        <option value="IPC" selected>IPC (Precios Consumidor) ~ 12.8%</option>
-                                        <option value="ICL">ICL (Contratos Locación) ~ 10.5%</option>
-                                    </select>
+                            <div class="flex items-center gap-2 overflow-x-auto shrink-0 pb-1 sm:pb-0">
+                                ${ownerActiveContractsMock.map(c => `
+                                    <button type="button" onclick="selectOwnerActiveContract('${c.id}')" class="px-4 py-2.5 rounded-xl font-headline font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0 ${c.id === activeSelectedContractId ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'}">
+                                        <span class="material-symbols-outlined text-base">home</span>
+                                        <span>${c.property_title.split(' - ')[0]}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Card Principal del Alquiler Seleccionado -->
+                        <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6 border border-zinc-200 dark:border-zinc-800">
+                            <!-- Top Banner del Contrato -->
+                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="px-3 py-0.5 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+                                            Contrato Vigente
+                                        </span>
+                                        <span class="text-xs font-bold text-zinc-400">Reajuste ${contract.adjustment_index} (${contract.adjustment_frequency_months}m)</span>
+                                    </div>
+                                    <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">
+                                        ${contract.property_title}
+                                    </h2>
+                                    <p class="text-xs text-zinc-500 font-medium">📍 ${contract.property_address} • Inquilino: <b>${contract.tenant_name}</b> (${contract.tenant_email})</p>
                                 </div>
-                                <div>
-                                    <label class="block font-bold uppercase text-zinc-500 mb-1 text-[10px]">Frecuencia</label>
-                                    <select class="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs">
-                                        <option value="3">Trimestral (3 meses)</option>
-                                        <option value="6">Semestral (6 meses)</option>
-                                    </select>
+
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <button type="button" onclick="openEditRentalModal('${contract.id}')" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">edit_note</span>
+                                        <span>Editar Alquiler y Valores</span>
+                                    </button>
                                 </div>
-                                <div>
-                                    <label class="block font-bold uppercase text-zinc-500 mb-1 text-[10px]">Nuevo Canon Calculado</label>
-                                    <div id="calc-preview-text" class="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-600 dark:text-emerald-400">
-                                        $ ${Math.round(contract.monthly_rent * 1.128).toLocaleString('es-AR')}
+                            </div>
+
+                            <!-- Panel de Desglose de Valores Editables (Alquiler Base, Expensas, Punitorios, Comisión) -->
+                            <div class="p-6 space-y-6">
+                                <div class="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
+                                    <div>
+                                        <h3 class="font-headline text-base font-bold text-zinc-900 dark:text-white">
+                                            Control de Cobranza & Valores - ${payment.period}
+                                        </h3>
+                                        <p class="text-xs text-zinc-500">Vencimiento pactado: Días ${contract.payment_due_day} de cada mes</p>
+                                    </div>
+                                    <div>
+                                        ${isPaid ? `
+                                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-base">check_circle</span> PAGADO
+                                            </span>
+                                        ` : `
+                                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE DE COBRO
+                                            </span>
+                                        `}
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="pt-2 flex justify-end">
-                                <button type="button" id="btn-act-apply-adj" class="px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-extrabold text-xs rounded-xl shadow transition-colors cursor-pointer flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-base">trending_up</span>
-                                    Aplicar Reajuste al Contrato
-                                </button>
+                                <!-- Grilla de Valores Editables (3 Tarjetas) -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                    <!-- 1. Alquiler Base -->
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold uppercase text-zinc-400 text-[10px]">Alquiler Base</span>
+                                            <button type="button" onclick="openEditRentalModal('${contract.id}')" class="text-primary hover:underline font-bold text-[10px]">Editar</button>
+                                        </div>
+                                        <div>
+                                            <span class="text-lg font-headline font-black text-zinc-900 dark:text-white block">$ ${Number(contract.monthly_rent).toLocaleString('es-AR')}</span>
+                                            <span class="text-[10px] text-zinc-400">Canon mensual negociado</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Expensas -->
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold uppercase text-zinc-400 text-[10px]">Expensas</span>
+                                            <button type="button" onclick="openEditRentalModal('${contract.id}')" class="text-primary hover:underline font-bold text-[10px]">Editar</button>
+                                        </div>
+                                        <div>
+                                            <span class="text-lg font-headline font-black text-zinc-900 dark:text-white block">$ ${Number(expenses).toLocaleString('es-AR')}</span>
+                                            <span class="text-[10px] text-zinc-400">Expensas ordinarias del mes</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Intereses Punitorios por Día (con % y totalacumulado) -->
+                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold uppercase text-zinc-400 text-[10px]">Punitorios por Día</span>
+                                            <button type="button" onclick="openEditRentalModal('${contract.id}')" class="text-primary hover:underline font-bold text-[10px]">Editar</button>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-baseline gap-1.5 flex-wrap">
+                                                <span class="text-lg font-headline font-black text-rose-600 dark:text-rose-400">${contract.punitive_daily_rate || 0.5}% / día</span>
+                                                <span class="text-xs font-bold text-zinc-500">($ ${dailyPunitiveEst.toLocaleString('es-AR')}/día)</span>
+                                            </div>
+                                            <div class="text-[11px] font-extrabold ${punitives.punitiveAmount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'} mt-1">
+                                                ${punitives.punitiveAmount > 0 ? `Total Punitorios: +$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')} (${punitives.daysLate} días)` : `Total Punitorios: $ 0 (Al día)`}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resumen Total -->
+                                <div class="bg-primary-light p-4 rounded-xl border border-primary/20 dark:border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Total Estimado Canon + Expensas</span>
+                                        <span class="text-2xl font-headline font-black text-primary dark:text-red-400 mt-0.5 block">$ ${Number(contract.monthly_rent + expenses).toLocaleString('es-AR')}</span>
+                                    </div>
+                                    ${punitives.punitiveAmount > 0 && !isWaived ? `
+                                        <div class="text-right">
+                                            <span class="block font-bold uppercase text-rose-600 text-[10px]">Incluye Punitorios (${punitives.daysLate} días)</span>
+                                            <span class="text-lg font-black text-rose-600">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+
+                                <!-- Botones de Acción -->
+                                <div class="pt-4 border-t border-zinc-200/60 dark:border-zinc-800 flex flex-wrap items-center gap-3">
+                                    ${!isWaived && punitives.punitiveAmount > 0 && !isPaid ? `
+                                        <button type="button" id="btn-act-waive" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-base">sentiment_satisfied</span>
+                                            Perdonar Intereses Punitorios
+                                        </button>
+                                    ` : ''}
+
+                                    ${!isPaid ? `
+                                        <button type="button" id="btn-act-pay" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-base">check_circle</span>
+                                            Marcar como Pagado (Transferencia / Efectivo)
+                                        </button>
+                                    ` : ''}
+
+                                    <button type="button" id="btn-act-invoice" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-base">mark_email_read</span>
+                                        Enviar Factura / Recibo al Inquilino
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1211,7 +1357,7 @@
                 const bWaive = document.getElementById('btn-act-waive');
                 if (bWaive && payment) {
                     bWaive.onclick = async () => {
-                        await window.DataManager.waivePunitiveInterests(payment.id);
+                        payment.is_punitive_waived = true;
                         alert("¡Los intereses punitorios han sido perdonados!");
                         await loadOwnerActiveRental();
                     };
@@ -1220,7 +1366,7 @@
                 const bPay = document.getElementById('btn-act-pay');
                 if (bPay && payment) {
                     bPay.onclick = async () => {
-                        await window.DataManager.markPaymentAsPaid(payment.id, "Registrado por Propietario");
+                        payment.status = 'pagado';
                         alert("¡El alquiler ha sido marcado como pagado!");
                         await loadOwnerActiveRental();
                     };
@@ -1229,39 +1375,176 @@
                 const bInvoice = document.getElementById('btn-act-invoice');
                 if (bInvoice && payment) {
                     bInvoice.onclick = async () => {
-                        const inv = await window.DataManager.sendInvoiceEmail(payment.id);
-                        alert(`¡Factura N° ${inv.invoiceNumber} enviada por email a ${inv.tenantEmail}!`);
-                    };
-                }
-
-                const sIndex = document.getElementById('calc-idx-select');
-                const pPreview = document.getElementById('calc-preview-text');
-                const bApply = document.getElementById('btn-act-apply-adj');
-
-                if (sIndex) {
-                    sIndex.onchange = () => {
-                        const pct = sIndex.value === 'IPC' ? 12.8 : 10.5;
-                        const newRent = Math.round(contract.monthly_rent * (1 + pct / 100));
-                        pPreview.textContent = `$ ${newRent.toLocaleString('es-AR')}`;
-                    };
-                }
-
-                if (bApply) {
-                    bApply.onclick = async () => {
-                        const idx = sIndex.value;
-                        const pct = idx === 'IPC' ? 12.8 : 10.5;
-                        const newRent = Math.round(contract.monthly_rent * (1 + pct / 100));
-                        if (confirm(`¿Aplicar reajuste ${idx} (+${pct}%)? Nuevo canon locativo: $ ${newRent.toLocaleString('es-AR')}`)) {
-                            await window.DataManager.applyIndexAdjustment(contract.id, newRent, idx);
-                            alert(`¡Reajuste aplicado! Nuevo canon mensual: $ ${newRent.toLocaleString('es-AR')}`);
-                            await loadOwnerActiveRental();
-                        }
+                        alert(`¡Recibo/Factura enviada por email a ${contract.tenant_name} (${contract.tenant_email})!`);
                     };
                 }
 
             } catch (err) {
                 console.error("Error al cargar alquiler activo:", err);
             }
+        }
+
+        function openEditRentalModal(contractId) {
+            const contract = ownerActiveContractsMock.find(c => c.id === contractId);
+            if (!contract) return;
+
+            let modal = document.getElementById('owner-edit-rental-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'owner-edit-rental-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md font-body animate-detail-open';
+            modal.style.display = 'flex';
+
+            const rentBase = contract.monthly_rent || 380000;
+            const expAmount = contract.expenses_amount || 45000;
+            const punitivePct = contract.punitive_daily_rate || 0.5;
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[92vh] flex flex-col" onclick="event.stopPropagation()">
+                    
+                    <!-- Header Limpio Borgoña -->
+                    <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-6 py-5 flex items-center justify-between shrink-0 shadow-sm">
+                        <div>
+                            <h3 class="font-headline text-lg sm:text-xl font-extrabold tracking-tight">Editar Valores del Alquiler</h3>
+                            <p class="text-xs text-white/80 font-medium mt-0.5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">home</span> ${contract.property_title}
+                            </p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('owner-edit-rental-modal').style.display='none'" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors shrink-0">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Cuerpo del Formulario Limpio -->
+                    <form onsubmit="submitEditRentalModal(event, '${contract.id}')" class="p-6 overflow-y-auto space-y-5 text-xs flex-1">
+                        
+                        <!-- 1. Alquiler Base Mensual -->
+                        <div>
+                            <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Alquiler Base Mensual ($ ARS)</label>
+                            <div class="relative flex items-center">
+                                <span class="absolute left-3.5 font-headline font-black text-zinc-400 text-sm pointer-events-none">$</span>
+                                <input type="number" id="edit-rent-base" value="${rentBase}" required oninput="updateEditModalCalculations()" class="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-extrabold text-base text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- 2. Expensas e Intereses Punitorios -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Expensas ($ ARS)</label>
+                                <div class="relative flex items-center">
+                                    <span class="absolute left-3.5 font-headline font-black text-zinc-400 text-sm pointer-events-none">$</span>
+                                    <input type="number" id="edit-rent-expenses" value="${expAmount}" required oninput="updateEditModalCalculations()" class="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-bold text-sm text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Punitorio Diario (%)</label>
+                                <div class="relative flex items-center">
+                                    <input type="number" step="0.1" id="edit-rent-punitive" value="${punitivePct}" required oninput="updateEditModalCalculations()" class="w-full pl-4 pr-14 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-bold text-sm text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                    <span class="absolute right-3.5 font-headline font-bold text-zinc-400 text-xs pointer-events-none">% / día</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Vencimientos y Ajuste -->
+                        <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
+                            <h4 class="font-headline font-black text-[11px] uppercase text-zinc-400 tracking-wider">Vencimientos & Cláusula de Ajuste</h4>
+
+                            <div>
+                                <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Día Vencimiento Mensual</label>
+                                <div class="relative flex items-center">
+                                    <input type="number" id="edit-rent-due-day" min="1" max="31" value="${contract.payment_due_day || 10}" required class="w-full pl-4 pr-24 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-bold text-sm text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                                    <span class="absolute right-3.5 font-headline font-bold text-zinc-400 text-xs pointer-events-none">de cada mes</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Índice Locativo</label>
+                                    <select id="edit-rent-index" class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-bold text-xs text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+                                        <option value="IPC" ${contract.adjustment_index === 'IPC' ? 'selected' : ''}>IPC (Precios Consumidor)</option>
+                                        <option value="ICL" ${contract.adjustment_index === 'ICL' ? 'selected' : ''}>ICL (Locación BCRA)</option>
+                                        <option value="Fijo" ${contract.adjustment_index === 'Fijo' ? 'selected' : ''}>Fijo sin ajuste</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-headline font-extrabold text-[11px] text-zinc-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">Frecuencia</label>
+                                    <select id="edit-rent-freq" class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl font-headline font-bold text-xs text-zinc-900 dark:text-white outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+                                        <option value="3" ${contract.adjustment_frequency_months == 3 ? 'selected' : ''}>Trimestral (3 meses)</option>
+                                        <option value="6" ${contract.adjustment_frequency_months == 6 ? 'selected' : ''}>Semestral (6 meses)</option>
+                                        <option value="12" ${contract.adjustment_frequency_months == 12 ? 'selected' : ''}>Anual (12 meses)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Resumen Calculado Vivo -->
+                        <div class="p-4 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div>
+                                <span class="block font-headline text-[10px] font-black uppercase text-zinc-400">Total Canon + Expensas</span>
+                                <span id="modal-calc-total-preview" class="text-xl font-headline font-black text-primary dark:text-red-400 mt-0.5 block">$ ${(rentBase + expAmount).toLocaleString('es-AR')} / mes</span>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <span class="block font-headline text-[10px] font-black uppercase text-zinc-400">Punitorio Diario</span>
+                                <span id="modal-calc-punitive-preview" class="text-xs font-headline font-bold text-rose-600 dark:text-rose-400 mt-0.5 block">+$ ${Math.round(rentBase * (punitivePct / 100)).toLocaleString('es-AR')} por día</span>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="pt-2 flex items-center gap-3">
+                            <button type="button" onclick="document.getElementById('owner-edit-rental-modal').style.display='none'" class="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 text-xs cursor-pointer transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-md active:scale-95 cursor-pointer transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-base">save</span>
+                                <span>Guardar Cambios</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function updateEditModalCalculations() {
+            const baseInput = document.getElementById('edit-rent-base');
+            const expInput = document.getElementById('edit-rent-expenses');
+            const punInput = document.getElementById('edit-rent-punitive');
+
+            const totalPrev = document.getElementById('modal-calc-total-preview');
+            const punPrev = document.getElementById('modal-calc-punitive-preview');
+
+            if (!baseInput || !expInput || !punInput) return;
+
+            const base = Number(baseInput.value) || 0;
+            const exp = Number(expInput.value) || 0;
+            const punPct = Number(punInput.value) || 0;
+
+            const total = base + exp;
+            const punDaily = Math.round(base * (punPct / 100));
+
+            if (totalPrev) totalPrev.textContent = `$ ${total.toLocaleString('es-AR')} / mes`;
+            if (punPrev) punPrev.textContent = `+$ ${punDaily.toLocaleString('es-AR')} por día de mora`;
+        }
+
+        function submitEditRentalModal(e, contractId) {
+            e.preventDefault();
+            const contract = ownerActiveContractsMock.find(c => c.id === contractId);
+            if (contract) {
+                contract.monthly_rent = Number(document.getElementById('edit-rent-base').value);
+                contract.expenses_amount = Number(document.getElementById('edit-rent-expenses').value);
+                contract.punitive_daily_rate = Number(document.getElementById('edit-rent-punitive').value);
+                contract.payment_due_day = Number(document.getElementById('edit-rent-due-day').value);
+                contract.adjustment_index = document.getElementById('edit-rent-index').value;
+                contract.adjustment_frequency_months = Number(document.getElementById('edit-rent-freq').value);
+            }
+            const modal = document.getElementById('owner-edit-rental-modal');
+            if (modal) modal.style.display = 'none';
+            alert("¡Valores del alquiler y condiciones actualizados con éxito!");
+            loadOwnerActiveRental();
         }
 
         async function loadOwnerTickets() {
@@ -1303,6 +1586,7 @@
                                     <select class="tkt-select-status w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold">
                                         <option value="abierto" ${t.status === 'abierto' ? 'selected' : ''}>Abierto</option>
                                         <option value="en_proceso" ${t.status === 'en_proceso' ? 'selected' : ''}>En Proceso</option>
+                                        <option value="autorizado_inquilino" ${t.status === 'autorizado_inquilino' ? 'selected' : ''}>🛠️ Autorizar a Inquilino (Descontar de Alquiler)</option>
                                         <option value="resuelto" ${t.status === 'resuelto' ? 'selected' : ''}>Resuelto</option>
                                     </select>
                                 </div>
@@ -1312,10 +1596,17 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn-save-tkt-reply px-4 py-2 bg-primary text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5" data-id="${t.id}">
-                                <span class="material-symbols-outlined text-base">save</span>
-                                Guardar Respuesta y Estado
-                            </button>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button type="button" class="btn-save-tkt-reply px-4 py-2 bg-primary text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5" data-id="${t.id}">
+                                    <span class="material-symbols-outlined text-base">save</span>
+                                    Guardar Respuesta y Estado
+                                </button>
+                                <button type="button" onclick="quickAuthorizeTenantRepair('${t.id}')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5 transition-all">
+                                    <span class="material-symbols-outlined text-base">home_repair_service</span>
+                                    Autorizar Arreglo a Inquilino
+                                </button>
+                            </div>
+                        </div>
                         </div>
                     </div>
                 `).join('');
@@ -1336,6 +1627,331 @@
             } catch (err) {
                 console.error("Error al cargar tickets:", err);
             }
+        }
+
+        function openPasaporteHabitatModal(appId) {
+            let app = null;
+            if (window.DataManager && window.DataManager._mockApplications) {
+                app = window.DataManager._mockApplications.find(a => a.id === appId);
+            }
+            
+            const candidateName = app ? app.tenant_name : 'Gonzalo Fernández';
+            const candidateEmail = app ? app.tenant_email : 'gonzalo.f@gmail.com';
+            const candidatePhone = app ? app.tenant_phone : '+54 11 4455-8899';
+            const monthlyIncome = app ? Number(app.monthly_income).toLocaleString('es-AR') : '1.650.000';
+
+            let modal = document.getElementById('pasaporte-habitat-full-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'pasaporte-habitat-full-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body animate-detail-open';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[92vh] overflow-y-auto space-y-6" onclick="event.stopPropagation()">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-2xl">badge</span>
+                            <div>
+                                <h3 class="font-headline text-lg font-extrabold">Pasaporte Hábitat • Credencial Digital Verificada</h3>
+                                <p class="text-xs text-zinc-500">Auditoría completa de perfil, ingresos, garantes y scoring locativo</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('pasaporte-habitat-full-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Official Passport Top Header Bar -->
+                    <div class="rounded-2xl overflow-hidden border border-zinc-300 dark:border-zinc-800 shadow-lg">
+                        <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-4 text-left">
+                                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto bg-white p-1.5 rounded-xl shadow-xs">
+                                <div>
+                                    <h2 class="font-headline text-lg sm:text-2xl font-black tracking-widest uppercase leading-tight">HABITAT PASSPORT</h2>
+                                    <p class="text-xs text-white/90 font-headline font-extrabold tracking-widest">ID: HBT-2026-${String(appId || '').substring(0,8).toUpperCase()}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-1.5 rounded-2xl shadow-md border border-white/30 shrink-0">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${appId}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-16 h-16 rounded-xl object-contain">
+                            </div>
+                        </div>
+
+                        <!-- Passport Profile Row -->
+                        <div class="p-6 bg-zinc-50 dark:bg-zinc-800/60 border-t border-zinc-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="relative">
+                                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center font-black shadow-inner">
+                                        <span class="material-symbols-outlined text-4xl">person</span>
+                                    </div>
+                                    <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
+                                        <span class="material-symbols-outlined text-xs font-bold block">verified</span>
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${candidateName}</h2>
+                                    <p class="font-headline text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
+                                        Inquilino Verificado • DNI: 38.491.024 • CUIT: 20-38491024-8
+                                    </p>
+                                    <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
+                                        ${candidateEmail} • ${candidatePhone}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center shrink-0 shadow-sm">
+                                <span class="block text-[10px] font-headline font-extrabold uppercase text-zinc-400">Score de Solvencia</span>
+                                <span class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400">98 <span class="text-xs font-normal text-zinc-400">/ 100</span></span>
+                                <span class="block text-[9px] font-bold text-emerald-600 uppercase">Riesgo Nulo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 1: Identidad & Biometría Didit KYC -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-primary text-base">verified</span>
+                            1. Identidad Verificada & Biometría Didit KYC
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60">
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400">DNI / CUIL Validado</span>
+                                <span class="font-extrabold text-zinc-900 dark:text-white text-sm">20-38491024-8</span>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60">
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400">Prueba Biométrica (Didit KYC)</span>
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-1 mt-0.5">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span> Facial Validada 100%
+                                </span>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60">
+                                <span class="block text-[10px] font-bold uppercase text-zinc-400">Antecedentes Judiciales</span>
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-1 mt-0.5">
+                                    <span class="material-symbols-outlined text-sm">gavel</span> Sin Desalojos / Limpio
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Capacidad Financiera & Recibos ARCA -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-primary text-base">payments</span>
+                            2. Respaldo Financiero & Comprobantes de Ingreso (ARCA / AFIP)
+                        </h3>
+                        <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 space-y-3 text-xs">
+                            <div class="flex items-center justify-between flex-wrap gap-2 border-b border-zinc-200/60 dark:border-zinc-700/60 pb-3">
+                                <div>
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Ingresos Mensuales Certificados</span>
+                                    <span class="text-xl font-headline font-black text-emerald-600 dark:text-emerald-400">$ ${monthlyIncome} / mes</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Relación de Dependencia</span>
+                                    <span class="font-extrabold text-zinc-800 dark:text-zinc-200">Tech Solutions SA (Antigüedad 5 años)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-zinc-600 dark:text-zinc-300 font-medium">📄 Recibo de Sueldo y Certificado de Ingresos Auditado</span>
+                                <button type="button" onclick="alert('Descargando Recibo de Sueldo de ${candidateName}...')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs">
+                                    <span class="material-symbols-outlined text-sm">download</span> Descargar PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Garantes Verificados -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-base">verified_user</span>
+                            3. Garantes Verificados & Respaldos Aprobados
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border border-blue-500/20 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-600 dark:text-blue-400">Garante Propietario</span>
+                                    <span class="text-[10px] font-bold text-emerald-600">Verificado RPI</span>
+                                </div>
+                                <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white">Roberto Fernández (Padre)</h4>
+                                <p class="text-zinc-500 text-[11px]">Propiedad en Av. Libertador 2450, CABA. Libre de embargos e inhibiciones.</p>
+                                <button type="button" onclick="alert('Descargando Escritura de Propiedad...')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pt-1">
+                                    <span class="material-symbols-outlined text-sm">description</span> Ver Escritura Adjunta
+                                </button>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border border-blue-500/20 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-600 dark:text-blue-400">Seguro de Caución</span>
+                                    <span class="text-[10px] font-bold text-emerald-600">Póliza Emitida</span>
+                                </div>
+                                <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white">Finaer Seguro de Caución</h4>
+                                <p class="text-zinc-500 text-[11px]">Póliza N° FIN-2026-9942. Cobertura de $15.000.000 para alquiler y expensas.</p>
+                                <button type="button" onclick="alert('Descargando Póliza Finaer...')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pt-1">
+                                    <span class="material-symbols-outlined text-sm">description</span> Ver Póliza Finaer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 4: Central de Deudores BCRA & Historial de Alquileres -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-emerald-600 text-base">history_edu</span>
+                            4. Central de Deudores BCRA & Historial de Alquileres
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                                <span class="block text-[10px] font-bold uppercase text-emerald-600">Central de Deudores BCRA</span>
+                                <span class="font-extrabold text-zinc-900 dark:text-white text-xs">Situación 1 (Sin deudas financieras)</span>
+                                <p class="text-[10px] text-zinc-500">Sin cheques rechazados ni mora en tarjetas de crédito.</p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                                <span class="block text-[10px] font-bold uppercase text-emerald-600">Historial de Alquileres Anteriores</span>
+                                <span class="font-extrabold text-zinc-900 dark:text-white text-xs">100% Pagos Puntuales del 1 al 5</span>
+                                <p class="text-[10px] text-zinc-500">Referencia excelente del contrato anterior en Belgrano, CABA.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-3">
+                        <span class="text-xs text-zinc-400 font-medium">Pasaporte Hábitat auditado el ${new Date().toLocaleDateString('es-AR')}</span>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="alert('Imprimiendo Certificado del Pasaporte Hábitat...')" class="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">print</span> Imprimir Pasaporte
+                            </button>
+                            <button type="button" onclick="document.getElementById('pasaporte-habitat-full-modal').style.display='none'" class="px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-extrabold text-xs shadow cursor-pointer transition-all">
+                                Cerrar Pasaporte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openGuarantorsModal(appId) {
+            let candidateName = 'Postulante';
+            if (window.DataManager && window.DataManager._mockApplications) {
+                const app = window.DataManager._mockApplications.find(a => a.id === appId);
+                if (app) candidateName = app.tenant_name;
+            }
+
+            const guarantors = [
+                {
+                    name: 'Roberto Fernández (Padre)',
+                    type: 'Garantía Propietaria CABA',
+                    dni: '20-14892341-9',
+                    income: '$ 1.850.000 / mes',
+                    details: 'Inmueble en Av. Libertador 2450 6°B, CABA (Sin embargos ni hipotecas. Verificado RPI N° 84920/2025)',
+                    phone: '+54 9 11 4455-8899',
+                    email: 'roberto.f@gmail.com',
+                    score: 'Excelente (Dominio Libre)',
+                    proofName: 'Escritura_Propiedad_Dominio.pdf'
+                },
+                {
+                    name: 'Finaer Seguro de Caución SA',
+                    type: 'Caución Privada Preaprobada',
+                    dni: 'CUIT 30-71239841-2',
+                    income: 'Cobertura Total $ 15.000.000 (Canon + Expensas)',
+                    details: 'Póliza N° FIN-2026-9942 • Aprobado sin observaciones por Scoring Financiero',
+                    phone: '+54 11 5277-7000',
+                    email: 'garantias@finaer.com.ar',
+                    score: 'Score 10/10 (Fianza Otorgada)',
+                    proofName: 'Poliza_Caucion_Preaprobada.pdf'
+                }
+            ];
+
+            let modal = document.getElementById('guarantors-info-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'guarantors-info-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body animate-detail-open';
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[90vh] overflow-y-auto space-y-5" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-2xl">verified_user</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-headline font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">Garantes & Respaldos Verificados</span>
+                                <h3 class="font-headline text-lg sm:text-xl font-extrabold">Información de Garantes (${candidateName})</h3>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('guarantors-info-modal').style.display='none'" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">gavel</span>
+                            <div>
+                                <span class="font-headline font-extrabold text-emerald-700 dark:text-emerald-300 block">Validación Jurídica & Financiera Hábitat</span>
+                                <span class="text-zinc-500 dark:text-zinc-400">Garantes con respaldo crediticio apto y títulos de propiedad sin inhibiciones.</span>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-emerald-600 text-white font-headline font-black rounded-full text-[10px] uppercase shrink-0">Apto 100%</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        ${guarantors.map((g, idx) => `
+                            <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 space-y-3">
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                                        <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${g.name}</h4>
+                                        <span class="px-2.5 py-0.5 text-[10px] font-extrabold rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">${g.type}</span>
+                                    </div>
+                                    <span class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400">CUIL/DNI: ${g.dni}</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div class="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-700/60">
+                                        <span class="block text-zinc-400 font-bold uppercase text-[9px]">Ingresos / Cobertura</span>
+                                        <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">${g.income}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-700/60">
+                                        <span class="block text-zinc-400 font-bold uppercase text-[9px]">Contacto Verificado</span>
+                                        <span class="font-bold text-zinc-700 dark:text-zinc-300 text-xs block truncate">${g.phone}</span>
+                                        <span class="text-[11px] text-zinc-500 block truncate">${g.email}</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-700/60 text-xs space-y-1">
+                                    <span class="block text-zinc-400 font-bold uppercase text-[9px]">Detalles del Respaldo / Inmueble</span>
+                                    <p class="text-zinc-700 dark:text-zinc-300 font-medium">${g.details}</p>
+                                </div>
+
+                                <div class="flex items-center justify-between gap-2 pt-1 text-xs">
+                                    <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">verified</span> ${g.score}
+                                    </span>
+                                    <button type="button" onclick="alert('Descargando comprobante de garante: ${g.proofName}')" class="px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors">
+                                        <span class="material-symbols-outlined text-xs">download</span> ${g.proofName}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+                        <button type="button" onclick="document.getElementById('guarantors-info-modal').style.display='none'" class="px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-extrabold text-xs shadow cursor-pointer transition-all">
+                            Entendido / Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>

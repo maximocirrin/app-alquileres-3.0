@@ -7568,12 +7568,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span>Cómo funciona</span>
                             </a>
                             <a href="pasaporte-habitat.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-primary text-xl">badge</span>
-                                <span class="font-bold text-primary dark:text-red-400">Pasaporte Hábitat</span>
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
+                                <span class="font-bold">Pasaporte Hábitat</span>
                             </a>
                             <a href="agentes.html" class="menu-item-clean flex items-center gap-2">
                                 <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">handshake</span>
-                                <span class="font-bold text-blue-900 dark:text-blue-400">Solicitar Agente / Corredor</span>
+                                <span class="font-bold">Solicitar Agente / Corredor</span>
                             </a>
                             <a href="buscar.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
