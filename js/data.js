@@ -1384,7 +1384,7 @@ var DataManager = {
         }
     },
 
-    createProfessionalConnection: async function (clientId, professionalId) {
+    createProfessionalConnection: async function (clientId, professionalId, mandateType = 'administracion_alquiler', commissionRate = 4.15) {
         if (!window.supabaseClient) return null;
         try {
             const { data: conn, error } = await window.supabaseClient
@@ -1392,21 +1392,170 @@ var DataManager = {
                 .insert([{
                     id_profesional: professionalId,
                     id_cliente: clientId,
+                    tipo_mandato: mandateType,
+                    porcentaje_comision_pactado: commissionRate,
+                    estado: 'activa',
                     fecha_conexion: new Date().toISOString()
                 }])
                 .select()
                 .single();
 
-            if (conn) {
-                await window.supabaseClient.from('Historial_estado_conexion_profesional').insert([{
-                    id_conexion: conn.id_conexion,
-                    id_estado_conexion: 1, // Activa
-                    fecha_inicio: new Date().toISOString()
-                }]);
-            }
+            if (error) throw error;
             return conn;
         } catch (e) {
             console.error("Error creating professional connection:", e);
+            return null;
+        }
+    },
+
+    // Módulo de Leads y Monetización
+    getLeads: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Lead_inmobiliario')
+                .select('*, Zona_lead(*)')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return (data || []).map(l => ({
+                id: `lead-${l.id_lead}`,
+                raw_id: l.id_lead,
+                clientName: l.nombre_cliente,
+                phone: l.telefono,
+                email: l.email || '',
+                propertyName: l.nombre_propiedad || 'Consulta Inmueble',
+                propertyAddress: l.direccion_propiedad || '',
+                propertyPrice: l.precio_propiedad || '',
+                intentScore: l.puntaje_intencion || 'high',
+                timeline: l.tiempo_mudanza || 'Inmediata',
+                hasCredit: l.tiene_garantia_o_credito,
+                creditType: l.tipo_garantia || 'Directo',
+                hasPropertyToSell: l.tiene_propiedad_para_vender,
+                source: l.origen || 'Hábitat',
+                status: l.estado || 'new',
+                createdAt: l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR') : 'Reciente',
+                notes: Array.isArray(l.notas) ? l.notas : [],
+                disputeStatus: l.dispute_status || 'none',
+                disputeReason: l.dispute_reason,
+                disputeComments: l.dispute_comments
+            }));
+        } catch (e) {
+            console.warn("Error in getLeads:", e);
+            return [];
+        }
+    },
+
+    getLeadZones: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Zona_lead')
+                .select('*')
+                .eq('activa', true)
+                .order('precio_por_lead', { ascending: false });
+
+            if (error) throw error;
+            return (data || []).map(z => ({
+                id: z.id_zona,
+                name: z.nombre,
+                postalCode: z.codigo_postal,
+                availableQuota: z.cupo_disponible,
+                maxQuota: z.cupo_maximo,
+                pricePerLeadARS: Number(z.precio_por_lead),
+                demandLevel: z.nivel_demanda
+            }));
+        } catch (e) {
+            console.warn("Error in getLeadZones:", e);
+            return [];
+        }
+    },
+
+    createLead: async function (leadData) {
+        if (!window.supabaseClient) return null;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Lead_inmobiliario')
+                .insert([{
+                    nombre_cliente: leadData.clientName,
+                    telefono: leadData.phone,
+                    email: leadData.email,
+                    nombre_propiedad: leadData.propertyName,
+                    direccion_propiedad: leadData.propertyAddress,
+                    precio_propiedad: leadData.propertyPrice,
+                    id_zona: leadData.zoneId || 'palermo-soho',
+                    puntaje_intencion: leadData.intentScore || 'high',
+                    tiempo_mudanza: leadData.timeline || 'Mudanza Inmediata',
+                    tiene_garantia_o_credito: leadData.hasCredit !== false,
+                    tipo_garantia: leadData.creditType || 'Efectivo',
+                    origen: leadData.source || 'Manual',
+                    estado: leadData.status || 'new',
+                    notas: leadData.notes || []
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error creating Lead in DB:", e);
+            return null;
+        }
+    },
+
+    updateLeadStatus: async function (leadRawId, newStatus, notesArray) {
+        if (!window.supabaseClient || !leadRawId) return null;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Lead_inmobiliario')
+                .update({
+                    estado: newStatus,
+                    notas: notesArray || []
+                })
+                .eq('id_lead', leadRawId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error updating Lead in DB:", e);
+            return null;
+        }
+    },
+
+    disputeLeadInDb: async function (leadRawId, reason, comments, profileId) {
+        if (!window.supabaseClient || !leadRawId) return null;
+        try {
+            // Update Lead
+            await window.supabaseClient
+                .from('Lead_inmobiliario')
+                .update({
+                    estado: 'disputed',
+                    dispute_status: 'pending',
+                    dispute_reason: reason,
+                    dispute_comments: comments
+                })
+                .eq('id_lead', leadRawId);
+
+            // Record Disputa
+            const pId = profileId || await DataManager._getOrCreateProfile();
+            const { data, error } = await window.supabaseClient
+                .from('Disputa_lead')
+                .insert([{
+                    id_lead: leadRawId,
+                    id_perfil_corredor: pId,
+                    motivo: reason,
+                    comentarios: comments,
+                    estado: 'pendiente'
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error disputing Lead in DB:", e);
             return null;
         }
     },
@@ -1587,6 +1736,173 @@ var DataManager = {
             status: data.estado,
             landlord_response: data.respuesta_propietario
         };
+    },
+
+    deductTicketFromRent: async function (ticketId, amount, note) {
+        if (!window.supabaseClient || !ticketId) return null;
+        try {
+            const numAmount = parseFloat(amount) || 0;
+            const updatePayload = {
+                monto_descuento_alquiler: numAmount,
+                id_estado_ticket: 3, // Resuelto
+                estado: 'resuelto',
+                respuesta_propietario: `[DESCUENTO APLICADO: $ ${numAmount.toLocaleString('es-AR')} descontados del alquiler] - ${note || 'Reparación abonada por inquilino'}`
+            };
+
+            const { data, error } = await window.supabaseClient
+                .from('Ticket_mantenimiento')
+                .update(updatePayload)
+                .eq('id_ticket', ticketId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error deducting ticket from rent:", e);
+            return null;
+        }
+    },
+
+    // Eventos y Calendario Inmobiliario
+    getEvents: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Evento')
+                .select(`
+                    *,
+                    Tipo_evento (*),
+                    Estado_evento (*),
+                    Propiedad (*)
+                `)
+                .order('fecha_evento', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching Eventos:", error);
+                return [];
+            }
+
+            return (data || []).map(ev => {
+                const tipoObj = ev.Tipo_evento || {};
+                const estadoObj = ev.Estado_evento || {};
+                const prop = ev.Propiedad || {};
+                const propTitle = prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : 'Inmueble Hábitat';
+
+                return {
+                    id: `EVT-${ev.id_evento}`,
+                    raw_id: ev.id_evento,
+                    id_tipo_evento: ev.id_tipo_evento,
+                    type: tipoObj.nombre?.toLowerCase().includes('firma') ? 'firma' : (tipoObj.nombre?.toLowerCase().includes('entrega') ? 'entrega' : (tipoObj.nombre?.toLowerCase().includes('tasacion') ? 'tasacion' : 'visita')),
+                    typeLabel: tipoObj.nombre || 'Visita Presencial',
+                    property_title: propTitle,
+                    visitor_name: ev.nombre_visitante || 'Cliente Interesado',
+                    visitor_email: ev.email_visitante || '',
+                    visitor_phone: ev.telefono_visitante || '',
+                    visit_date: ev.fecha_evento ? new Date(ev.fecha_evento).toISOString().split('T')[0] : '',
+                    visit_time: ev.hora_evento || '15:00',
+                    status: estadoObj.nombre || 'Confirmada',
+                    notes: ev.notas || ''
+                };
+            });
+        } catch (e) {
+            console.error("Error in getEvents:", e);
+            return [];
+        }
+    },
+
+    createEvent: async function (eventData) {
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
+
+        const { data, error } = await window.supabaseClient
+            .from('Evento')
+            .insert([{
+                id_propiedad: eventData.propertyId || null,
+                id_perfil: profileId,
+                id_tipo_evento: eventData.id_tipo_evento || 1,
+                id_estado_evento: eventData.id_estado_evento || 2, // Confirmada
+                fecha_evento: eventData.date || new Date().toISOString(),
+                hora_evento: eventData.time || '15:00',
+                nombre_visitante: eventData.visitorName || '',
+                email_visitante: eventData.visitorEmail || '',
+                telefono_visitante: eventData.visitorPhone || '',
+                notas: eventData.notes || ''
+            }])
+            .select('*, Tipo_evento(*), Estado_evento(*)')
+            .single();
+
+        if (error) {
+            console.error("Error creating Evento:", error);
+            throw error;
+        }
+
+        try {
+            await window.supabaseClient.from('Historial_estado_evento').insert([{
+                id_evento: data.id_evento,
+                id_estado_evento: data.id_estado_evento || 2,
+                fecha_inicio: new Date().toISOString()
+            }]);
+        } catch (e) { }
+
+        return data;
+    },
+
+    // Solicitudes de Tasación Comercial
+    getValuations: async function () {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Tasacion')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching Tasaciones:", error);
+                return [];
+            }
+
+            return (data || []).map(v => ({
+                id: `TAS-00${v.id_tasacion}`,
+                raw_id: v.id_tasacion,
+                address: v.direccion,
+                type: `${v.tipo_inmueble || 'Departamento'} • ${v.ambientes || 3} Amb • ${v.superficie_m2 || 70} m²`,
+                owner: v.nombre_solicitante || 'Propietario Solicitante',
+                phone: v.telefono_solicitante || '+54 11 0000-0000',
+                estimated: v.valor_estimado ? `$ ${v.valor_estimado}` : 'Pendiente de cotización',
+                status: v.estado || 'Pendiente'
+            }));
+        } catch (e) {
+            console.error("Error in getValuations:", e);
+            return [];
+        }
+    },
+
+    createValuation: async function (valData) {
+        if (!window.supabaseClient) throw new Error("Supabase client not available");
+        const profileId = await DataManager._getOrCreateProfile();
+
+        const { data, error } = await window.supabaseClient
+            .from('Tasacion')
+            .insert([{
+                id_perfil_solicitante: profileId,
+                direccion: valData.address,
+                tipo_inmueble: valData.propertyType || 'Departamento',
+                ambientes: parseInt(valData.rooms) || 3,
+                superficie_m2: parseFloat(valData.surface) || 65,
+                nombre_solicitante: valData.ownerName || '',
+                telefono_solicitante: valData.ownerPhone || '',
+                email_solicitante: valData.ownerEmail || '',
+                estado: 'pendiente'
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating Tasacion:", error);
+            throw error;
+        }
+        return data;
     },
 
     // Inventario Digital (N:M con Item, Lectura_Medidor_Inventario 1:N)
