@@ -3032,28 +3032,57 @@
             `;
         }
 
-        function submitNewBrokerTicket(e) {
+        async function submitNewBrokerTicket(e) {
             e.preventDefault();
-            const rentalId = document.getElementById('new-tck-rental-id').value;
-            const rental = brokerActiveRentalsMock.find(r => r.id === rentalId);
+            const rentalSelect = document.getElementById('new-tck-rental-id') || document.getElementById('new-tck-prop');
+            const rentalId = rentalSelect ? rentalSelect.value : '';
+            const rental = (window.brokerActiveRentalsMock || []).find(r => r.id === rentalId);
+
+            const propText = rental ? rental.propertyTitle : (rentalSelect ? rentalSelect.value : 'Inmueble');
+            const tenantText = rental ? rental.tenantName : 'Inquilino';
+            const title = document.getElementById('new-tck-title')?.value || '';
+            const category = document.getElementById('new-tck-cat')?.value || 'Plomería';
+            const priority = document.getElementById('new-tck-prio')?.value || 'Alta';
+            const description = document.getElementById('new-tck-desc')?.value || '';
+
+            if (window.DataManager && typeof window.DataManager.createMaintenanceTicket === 'function') {
+                try {
+                    await window.DataManager.createMaintenanceTicket({
+                        rentalId: rentalId,
+                        propertyAddress: propText,
+                        tenantName: tenantText,
+                        title: title,
+                        category: category,
+                        priority: priority,
+                        description: description
+                    });
+                    if (typeof syncBrokerDataFromSupabase === 'function') {
+                        await syncBrokerDataFromSupabase();
+                    }
+                } catch (err) {
+                    console.warn("Error al crear ticket en la base de datos:", err);
+                }
+            }
 
             const newTck = {
-                id: `TCK-00${brokerTicketsMock.length + 1}`,
+                id: `TCK-00${(window.brokerTicketsMock || []).length + 1}`,
                 rentalId: rentalId,
-                prop: rental ? rental.propertyTitle : 'Inmueble',
-                tenant: rental ? rental.tenantName : 'Inquilino',
-                title: document.getElementById('new-tck-title').value,
-                category: document.getElementById('new-tck-cat').value,
-                priority: document.getElementById('new-tck-prio').value,
+                prop: propText,
+                tenant: tenantText,
+                title: title,
+                category: category,
+                priority: priority,
                 status: 'Pendiente',
                 date: new Date().toLocaleDateString('es-AR'),
-                description: document.getElementById('new-tck-desc').value,
+                description: description,
                 response: null
             };
 
-            brokerTicketsMock.unshift(newTck);
-            renderBrokerTickets();
-            renderBrokerActiveRental();
+            if (window.brokerTicketsMock) {
+                brokerTicketsMock.unshift(newTck);
+            }
+            if (typeof renderBrokerTickets === 'function') renderBrokerTickets();
+            if (typeof renderBrokerActiveRental === 'function') renderBrokerActiveRental();
 
             const modal = document.getElementById('broker-create-ticket-modal');
             if (modal) modal.style.display = 'none';
