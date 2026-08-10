@@ -344,9 +344,24 @@
 
     <main class="owner-auth-main">
         <section class="owner-auth-card" aria-labelledby="owner-auth-title">
-            <h1 id="owner-auth-title" class="owner-auth-title">Crea tu cuenta de propietario</h1>
-            <p id="owner-auth-subtitle" class="owner-auth-subtitle">Publica tu propiedad gratis, solo te llevar&aacute;
-                5 minutos.</p>
+            <!-- Selector de Tipo de Usuario / Rol -->
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl mb-6 border border-zinc-200/80 dark:border-zinc-700/80 font-body">
+                <button type="button" id="role-btn-inquilino" class="role-select-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-xs cursor-pointer" data-role="inquilino" data-role-id="1">
+                    <span class="material-symbols-outlined text-base sm:text-lg">person</span>
+                    <span>Inquilino</span>
+                </button>
+                <button type="button" id="role-btn-propietario" class="role-select-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer" data-role="propietario" data-role-id="2">
+                    <span class="material-symbols-outlined text-base sm:text-lg">home</span>
+                    <span>Propietario</span>
+                </button>
+                <button type="button" id="role-btn-profesional" class="role-select-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer" data-role="profesional" data-role-id="3">
+                    <span class="material-symbols-outlined text-base sm:text-lg">real_estate_agent</span>
+                    <span>Corredor</span>
+                </button>
+            </div>
+
+            <h1 id="owner-auth-title" class="owner-auth-title">Crea tu cuenta de inquilino</h1>
+            <p id="owner-auth-subtitle" class="owner-auth-subtitle">Alquila sin garantías tradicionales y gestiona tus contratos.</p>
 
             <button id="owner-google-btn" class="owner-auth-google" type="button">
                 <span class="google-mark">G</span>
