@@ -598,23 +598,32 @@ const App = {
         const context = App.getPageContext();
         const marketplace = document.getElementById('landing-marketplace-view');
         const propietarios = document.getElementById('landing-propietarios-view');
+        const misAvisos = document.getElementById('mis-avisos-view');
         const app = document.getElementById('app');
 
         if (context === 'propietarios') {
             marketplace?.classList.add('hidden');
-            propietarios?.classList.remove('hidden');
+            if (window._wasInMisAvisosView) {
+                propietarios?.classList.add('hidden');
+                misAvisos?.classList.remove('hidden');
+            } else {
+                propietarios?.classList.remove('hidden');
+                misAvisos?.classList.add('hidden');
+            }
             app?.classList.add('hidden');
         }
 
         if (context === 'inquilinos') {
             marketplace?.classList.remove('hidden');
             propietarios?.classList.add('hidden');
+            misAvisos?.classList.add('hidden');
             app?.classList.add('hidden');
         }
 
         if (context === 'admin') {
             marketplace?.classList.add('hidden');
             propietarios?.classList.add('hidden');
+            misAvisos?.classList.add('hidden');
             app?.classList.remove('hidden');
         }
     },
@@ -5449,8 +5458,12 @@ const App = {
             App.setupEventListeners();
         }
 
-        // Hide all main page content containers
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
+        // Save which view was active before opening the wizard
+        const misAvisosEl = document.getElementById('mis-avisos-view');
+        window._wasInMisAvisosView = misAvisosEl && !misAvisosEl.classList.contains('hidden');
+
+        // Hide all main page content containers including owner and broker docks
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
             if (el && el !== publishElem && !publishElem.contains(el)) {
                 el.classList.add('hidden');
             }
@@ -5478,12 +5491,21 @@ const App = {
             publishElem.classList.add('hidden');
         }
 
-        // Unhide page main content sections
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
+        // Unhide page main content sections except mis-avisos-view
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
             if (el && el !== publishElem) {
                 el.classList.remove('hidden');
             }
         });
+
+        const misAvisosEl = document.getElementById('mis-avisos-view');
+        if (misAvisosEl) {
+            if (window._wasInMisAvisosView) {
+                misAvisosEl.classList.remove('hidden');
+            } else {
+                misAvisosEl.classList.add('hidden');
+            }
+        }
 
         const stepOperacion = document.getElementById('step-operacion');
         const stepUbicacion = document.getElementById('step-ubicacion');
@@ -7551,6 +7573,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> General
                         </h4>
                         <div class="flex flex-col gap-1">
+                            <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-clean w-full text-left cursor-pointer font-bold text-primary dark:text-red-400">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">add_home</span>
+                                <span>Publicar propiedad</span>
+                            </button>
                             <a href="index.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary text-xl">home</span>
                                 <span>Inicio</span>
@@ -7632,6 +7658,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-card bg-primary text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
+                                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
+                                        <span class="material-symbols-outlined text-xl">add_home</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-white">Publicar propiedad gratis</span>
+                                        <span class="block text-[11px] text-white/80">Crea tu aviso en simples pasos</span>
+                                    </div>
+                                </button>
                                 <a href="administrador.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
                                     <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">manage_accounts</span>
