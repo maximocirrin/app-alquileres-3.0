@@ -26,7 +26,6 @@
 
     <!-- Chart.js para Gráficos Estadísticos del CRM -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/lead-monetization.js"></script>
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -2107,31 +2106,47 @@
                         visitorName: visitorName,
                         visitorPhone: visitorPhone,
                         visitorEmail: visitorEmail,
+                        propertyTitle: propTitle,
                         notes: notes
                     });
                     await syncBrokerDataFromSupabase();
                 } catch (err) {
                     console.warn("Error creating event in DB:", err);
+                    const newEvent = {
+                        id: `EVT-10${brokerEventsMock.length + 1}`,
+                        type: type,
+                        typeLabel: labels[type] || 'Evento Cita',
+                        property_title: propTitle,
+                        visitor_name: visitorName,
+                        visitor_phone: visitorPhone,
+                        visitor_email: visitorEmail,
+                        visit_date: dateInput,
+                        visit_time: visitTime,
+                        status: 'Confirmada',
+                        notes: notes
+                    };
+                    brokerEventsMock.unshift(newEvent);
+                    renderBrokerCalendarGrid();
+                    renderBrokerVisits();
                 }
+            } else {
+                const newEvent = {
+                    id: `EVT-10${brokerEventsMock.length + 1}`,
+                    type: type,
+                    typeLabel: labels[type] || 'Evento Cita',
+                    property_title: propTitle,
+                    visitor_name: visitorName,
+                    visitor_phone: visitorPhone,
+                    visitor_email: visitorEmail,
+                    visit_date: dateInput,
+                    visit_time: visitTime,
+                    status: 'Confirmada',
+                    notes: notes
+                };
+                brokerEventsMock.unshift(newEvent);
+                renderBrokerCalendarGrid();
+                renderBrokerVisits();
             }
-
-            const newEvent = {
-                id: `EVT-10${brokerEventsMock.length + 1}`,
-                type: type,
-                typeLabel: labels[type] || 'Evento Cita',
-                property_title: propTitle,
-                visitor_name: visitorName,
-                visitor_phone: visitorPhone,
-                visitor_email: visitorEmail,
-                visit_date: dateInput,
-                visit_time: visitTime,
-                status: 'Confirmada',
-                notes: notes
-            };
-
-            brokerEventsMock.unshift(newEvent);
-            renderBrokerCalendarGrid();
-            renderBrokerVisits();
 
             const modal = document.getElementById('broker-create-visit-modal');
             if (modal) modal.style.display = 'none';

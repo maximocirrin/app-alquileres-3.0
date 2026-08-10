@@ -1764,6 +1764,54 @@ var DataManager = {
         }
     },
 
+    // Helper para obtener o resolver el id_perfil del usuario actual o fallback
+    _getOrCreateProfile: async function () {
+        if (!window.supabaseClient) return null;
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session && session.user) {
+                const { data: profile } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .or(`user_id.eq.${session.user.id},mail.eq.${session.user.email}`)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (profile && profile.id_perfil) {
+                    return profile.id_perfil;
+                }
+
+                // Si no existe, insertar perfil
+                const { data: newProf } = await window.supabaseClient
+                    .from('Perfil')
+                    .insert([{
+                        user_id: session.user.id,
+                        mail: session.user.email,
+                        nombre_completo: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                        id_tipo_perfil: session.user.user_metadata?.id_tipo_perfil || 3,
+                        cuenta_verificada: true,
+                        acepto_terminos: true
+                    }])
+                    .select('id_perfil')
+                    .single();
+
+                if (newProf && newProf.id_perfil) return newProf.id_perfil;
+            }
+
+            const { data: firstProf } = await window.supabaseClient
+                .from('Perfil')
+                .select('id_perfil')
+                .order('id_perfil', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            return firstProf ? firstProf.id_perfil : null;
+        } catch (err) {
+            console.warn("Error getting profile ID:", err);
+            return null;
+        }
+    },
+
     // Eventos y Calendario Inmobiliario
     getEvents: async function () {
         if (!window.supabaseClient) return [];
@@ -1776,7 +1824,7 @@ var DataManager = {
                     Estado_evento (*),
                     Propiedad (*)
                 `)
-                .order('fecha_evento', { ascending: true });
+                .order('fecha_evento', { ascending: false });
 
             if (error) {
                 console.error("Error fetching Eventos:", error);
@@ -1787,7 +1835,16 @@ var DataManager = {
                 const tipoObj = ev.Tipo_evento || {};
                 const estadoObj = ev.Estado_evento || {};
                 const prop = ev.Propiedad || {};
-                const propTitle = prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : 'Inmueble Hábitat';
+                const propTitle = prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : (ev.notas?.includes('Inmueble: ') ? ev.notas.split('Inmueble: ')[1].split(' | ')[0] : 'Inmueble en Cartera');
+
+                let formattedDate = '';
+                if (ev.fecha_evento) {
+                    try {
+                        formattedDate = new Date(ev.fecha_evento).toISOString().split('T')[0];
+                    } catch (e) {
+                        formattedDate = String(ev.fecha_evento).split('T')[0];
+                    }
+                }
 
                 return {
                     id: `EVT-${ev.id_evento}`,
@@ -1799,7 +1856,7 @@ var DataManager = {
                     visitor_name: ev.nombre_visitante || 'Cliente Interesado',
                     visitor_email: ev.email_visitante || '',
                     visitor_phone: ev.telefono_visitante || '',
-                    visit_date: ev.fecha_evento ? new Date(ev.fecha_evento).toISOString().split('T')[0] : '',
+                    visit_date: formattedDate || '2026-08-03',
                     visit_time: ev.hora_evento || '15:00',
                     status: estadoObj.nombre || 'Confirmada',
                     notes: ev.notas || ''
@@ -1813,7 +1870,12 @@ var DataManager = {
 
     createEvent: async function (eventData) {
         if (!window.supabaseClient) throw new Error("Supabase client not available");
-        const profileId = await DataManager._getOrCreateProfile();
+        const profileId = await this._getOrCreateProfile();
+
+        let isoDate = eventData.date;
+        if (!isoDate || isoDate.length <= 10) {
+            isoDate = `${isoDate || new Date().toISOString().split('T')[0]}T${eventData.time || '15:00'}:00.000Z`;
+        }
 
         const { data, error } = await window.supabaseClient
             .from('Evento')
@@ -1822,12 +1884,12 @@ var DataManager = {
                 id_perfil: profileId,
                 id_tipo_evento: eventData.id_tipo_evento || 1,
                 id_estado_evento: eventData.id_estado_evento || 2, // Confirmada
-                fecha_evento: eventData.date || new Date().toISOString(),
+                fecha_evento: isoDate,
                 hora_evento: eventData.time || '15:00',
                 nombre_visitante: eventData.visitorName || '',
                 email_visitante: eventData.visitorEmail || '',
                 telefono_visitante: eventData.visitorPhone || '',
-                notas: eventData.notes || ''
+                notas: eventData.notes ? `${eventData.notes}${eventData.propertyTitle ? ' | Inmueble: ' + eventData.propertyTitle : ''}` : (eventData.propertyTitle ? 'Inmueble: ' + eventData.propertyTitle : '')
             }])
             .select('*, Tipo_evento(*), Estado_evento(*)')
             .single();
