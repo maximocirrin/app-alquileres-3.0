@@ -3356,4 +3356,60 @@ html.dark .landing-menu__divider {
     border-radius: 6px;
 }
 
+/* Custom animated SVG checkbox & radio buttons for Wizard & Forms */
+.checkbox-wrapper input[type="checkbox"],
+.checkbox-wrapper input[type="radio"] {
+    display: none !important;
+}
+
+.checkbox-wrapper .terms-label {
+    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center !important;
+    user-select: none;
+}
+
+.checkbox-wrapper .checkbox-svg {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    flex-shrink: 0 !important;
+}
+
+.checkbox-wrapper .checkbox-box {
+    fill: #ebebeb;
+    stroke: #A13333;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    transition: stroke-dashoffset 0.6s ease-in;
+    rx: 30px;
+}
+
+html.dark .checkbox-wrapper .checkbox-box,
+.dark .checkbox-wrapper .checkbox-box {
+    fill: #282828;
+    stroke: #ef4444;
+}
+
+.checkbox-wrapper .checkbox-tick {
+    stroke: #A13333;
+    stroke-dasharray: 172;
+    stroke-dashoffset: 172;
+    transition: stroke-dashoffset 0.6s ease-in;
+}
+
+html.dark .checkbox-wrapper .checkbox-tick,
+.dark .checkbox-wrapper .checkbox-tick {
+    stroke: #ef4444;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-box,
+.checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-tick,
+.checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-box,
+.checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-tick {
+    stroke-dashoffset: 0 !important;
+}
+
+
 

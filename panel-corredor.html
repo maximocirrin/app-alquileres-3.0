@@ -444,6 +444,10 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="openNewPropertyModal()" class="px-3.5 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-base">add_home</span>
+                            <span>Nueva Captación</span>
+                        </button>
                         <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
                             <span class="material-symbols-outlined text-base">download</span>
                             <span>Exportar Excel</span>
@@ -927,7 +931,14 @@
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
     <script src="js/lead-monetization.js"></script>
+    <script src="js/publish-property.js"></script>
+    <script src="js/google-maps-loader.js"></script>
     <script src="js/app.js?v=12"></script>
+    <script>
+        if (typeof window.loadGoogleMaps === 'function') {
+            window.loadGoogleMaps('initGoogleMap', 'places');
+        }
+    </script>
 
     <!-- Interactive Script for Broker CRM State & Mock Data -->
     <script>
@@ -2794,6 +2805,8 @@
 
             renderBrokerActiveRental();
             renderBrokerTickets();
+            closeAuthorizeTenantRepairModal();
+        }
 
         function openPasaporteHabitatModal(appId) {
             let app = brokerApplicationsMock.find(a => a.id === appId);
@@ -3881,8 +3894,37 @@
             document.getElementById('modal-blind-card')?.classList.add('hidden');
         }
         function openNewPropertyModal() {
-            alert('Abriendo asistente de nueva captación...');
+            if (window.App && typeof window.App.showPublishWizard === 'function') {
+                window.App.showPublishWizard();
+            } else {
+                console.error("App.showPublishWizard no disponible");
+            }
         }
+
+        window.addNewBrokerPropertyFromWizard = function(data) {
+            if (!data) return;
+            const newProp = {
+                id: 'PROP-2026-' + Math.floor(100 + Math.random() * 900),
+                title: data.tituloAviso || `${data.tipoPropiedad ? data.tipoPropiedad.charAt(0).toUpperCase() + data.tipoPropiedad.slice(1) : 'Propiedad'} en ${data.barrio || data.ciudad || 'Mendoza'}`,
+                address: `${data.calleAltura || 'Dirección no especificada'}${data.barrio ? ', ' + data.barrio : ''}`,
+                operation: data.operacion || 'alquiler',
+                price: parseFloat(data.precio) || 0,
+                feePercent: 4.15,
+                portals: ['Zonaprop', 'Argenprop', 'Hábitat'],
+                status: 'publicada',
+                owner: data.contactNombre ? `${data.contactNombre} ${data.contactApellido || ''}`.trim() : 'Propietario',
+                leadsCount: 0,
+                viewsCount: 1,
+                image: (data.photos && data.photos.length > 0) ? (typeof data.photos[0] === 'string' ? data.photos[0] : (data.photos[0].url || 'img/hero-marketplace.jpg')) : 'img/hero-marketplace.jpg'
+            };
+
+            if (typeof brokerPropertiesMock !== 'undefined' && Array.isArray(brokerPropertiesMock)) {
+                brokerPropertiesMock.unshift(newProp);
+                currentBrokerProperties = [...brokerPropertiesMock];
+                if (typeof renderBrokerPropertiesRows === 'function') renderBrokerPropertiesRows();
+                if (typeof renderBrokerPropertiesGrid === 'function') renderBrokerPropertiesGrid();
+            }
+        };
 
         // FUNCIONES DE EDICIÓN Y PERDÓN DE VALORES FINANCIEROS (ALQUILER, EXPENSAS, MORA, HONORARIOS)
         function editBrokerRentalField(rentalId, type) {

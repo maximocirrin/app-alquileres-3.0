@@ -2,6 +2,54 @@
     var div = document.createElement('div');
     div.innerHTML = `<section id="publish-property-view"
         class="bg-background dark:bg-[#0c0c0e] font-body w-full min-h-screen z-[100] transition-opacity duration-300 hidden">
+        <style>
+            .checkbox-wrapper input[type="checkbox"],
+            .checkbox-wrapper input[type="radio"] {
+                display: none !important;
+            }
+            .checkbox-wrapper .terms-label {
+                cursor: pointer;
+                display: inline-flex !important;
+                align-items: center !important;
+                user-select: none;
+            }
+            .checkbox-wrapper .checkbox-svg {
+                width: 22px !important;
+                height: 22px !important;
+                min-width: 22px !important;
+                min-height: 22px !important;
+                flex-shrink: 0 !important;
+            }
+            .checkbox-wrapper .checkbox-box {
+                fill: #ebebeb;
+                stroke: #A13333;
+                stroke-dasharray: 800;
+                stroke-dashoffset: 800;
+                transition: stroke-dashoffset 0.6s ease-in;
+                rx: 30px;
+            }
+            html.dark .checkbox-wrapper .checkbox-box,
+            .dark .checkbox-wrapper .checkbox-box {
+                fill: #282828;
+                stroke: #ef4444;
+            }
+            .checkbox-wrapper .checkbox-tick {
+                stroke: #A13333;
+                stroke-dasharray: 172;
+                stroke-dashoffset: 172;
+                transition: stroke-dashoffset 0.6s ease-in;
+            }
+            html.dark .checkbox-wrapper .checkbox-tick,
+            .dark .checkbox-wrapper .checkbox-tick {
+                stroke: #ef4444;
+            }
+            .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-box,
+            .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-tick,
+            .checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-box,
+            .checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-tick {
+                stroke-dashoffset: 0 !important;
+            }
+        </style>
         <!-- TopAppBar -->
         <header
             class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-white/5">
@@ -48,7 +96,7 @@
                             <div class="flex items-start justify-between gap-1.5 md:gap-3 overflow-x-auto pb-2 no-scrollbar w-full max-sm:hidden"
                                 id="publish-progress-indicator">
                                 <div class="flex flex-col items-center gap-1.5 shrink-0" id="progress-step-1">
-                                    <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">1</div>
+                                    <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">1</div>
                                     <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">Principales</span>
                                 </div>
                                 <div id="progress-line-1" class="flex-1 min-w-[15px] max-w-[60px] border-t-2 border-primary dark:border-[#A13333] transition-colors duration-300 mt-4"></div>
@@ -1712,7 +1760,7 @@
                                                     $ 39.777,00</p>
                                             </div>
                                             <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                                                 Comprar
                                             </button>
                                         </div>
@@ -1760,7 +1808,7 @@
                                                     $ 24.860,00</p>
                                             </div>
                                             <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                                                 Comprar
                                             </button>
                                         </div>
@@ -1811,7 +1859,7 @@
                                                     $ 11.471,00</p>
                                             </div>
                                             <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-on-primary dark:text-[#ffffff] bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
+                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
                                                 Comprar
                                             </button>
                                         </div>
@@ -1822,48 +1870,35 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons (Desktop/Tablet Only) -->
-                    <div id="desktop-action-buttons"
-                        class="flex-row justify-between items-center gap-4 mt-12 pt-8 border-t border-outline-variant/30 dark:border-white/5">
-                        <button type="button" id="btn-back-desktop"
-                            class="px-6 py-4 rounded-xl font-headline font-bold text-secondary dark:text-[#c7c6c6] bg-transparent hover:bg-surface-container transition-colors flex items-center gap-2"
-                            onclick="handleWizardBack()">
-                            <span class="material-symbols-outlined" id="btn-back-desktop-icon">arrow_back</span>
-                            <span id="btn-back-desktop-text">Atrás</span>
-                        </button>
-                        <div class="flex flex-row gap-4">
-                            <button type="button"
-                                class="px-8 py-4 rounded-xl font-headline font-bold text-primary dark:text-red-500 bg-transparent border border-outline-variant/30 dark:border-white/5 hover:bg-surface-container transition-colors">
-                                Guardar y salir
-                            </button>
-                            <button type="submit" form="form-principales"
-                                class="px-8 py-4 rounded-[1.5rem] font-headline font-bold text-on-primary dark:text-[#ffffff] hover:opacity-90 transition-opacity shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] bg-primary dark:bg-[#A13333]">
-                                Continuar
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Action Buttons (Hidden inline container to prevent duplicate bar) -->
+                    <div id="desktop-action-buttons" class="hidden"></div>
                 </div>
         </div>
         </main>
         </div>
-        <!-- BottomNavBar (Mobile Only) -->
+        <!-- Unified Bottom Action Bar (Fixed at bottom on all screens) -->
         <nav
-            class="md:hidden fixed bottom-0 left-0 w-full flex justify-between items-center h-20 px-4 pb-safe bg-surface/90 dark:bg-zinc-950/90 backdrop-blur-md z-50 border-t border-outline-variant/30 dark:border-white/5 shadow-none pb-[env(safe-area-inset-bottom)]">
-            <button id="btn-back-mobile"
-                class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[4rem]">
-                <span class="material-symbols-outlined text-[22px]">arrow_back</span>
-                <span class="font-inter text-[10px] font-medium mt-1">Atrás</span>
-            </button>
-            <button
-                class="flex flex-col items-center justify-center text-secondary dark:text-[#c7c6c6] active:text-on-background dark:active:text-white transition-colors active:scale-90 shrink-0 min-w-[5rem]">
-                <span class="material-symbols-outlined text-[22px]">save</span>
-                <span class="font-inter text-[10px] font-medium mt-1 leading-tight text-center">Guardar<br>y
-                    salir</span>
-            </button>
-            <button type="submit" form="form-principales"
-                class="flex items-center justify-center bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] rounded-xl px-10 py-3.5 active:scale-95 transition-all shadow-lg font-headline font-bold text-sm flex-1 max-w-[12rem] ml-2">
-                Continuar
-            </button>
+            class="fixed bottom-0 left-0 w-full flex justify-between items-center h-20 px-6 sm:px-12 pb-safe bg-surface/95 dark:bg-zinc-950/95 backdrop-blur-xl z-[150] border-t border-outline-variant/30 dark:border-white/10 shadow-2xl">
+            <div class="max-w-4xl mx-auto w-full flex items-center justify-between gap-4">
+                <button id="btn-back-mobile" type="button" onclick="handleWizardBack()"
+                    class="flex items-center gap-2 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-white transition-colors active:scale-95 shrink-0 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
+                    <span class="material-symbols-outlined text-xl">arrow_back</span>
+                    <span class="font-headline text-xs sm:text-sm font-bold">Atrás</span>
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="App.closePublishWizard()"
+                        class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-headline font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                        <span class="material-symbols-outlined text-lg">save</span>
+                        <span>Guardar y salir</span>
+                    </button>
+
+                    <button type="submit" form="form-principales"
+                        class="flex items-center justify-center bg-primary dark:bg-[#A13333] !text-white rounded-xl px-8 sm:px-10 py-3 active:scale-95 transition-all shadow-lg font-headline font-bold text-xs sm:text-sm cursor-pointer hover:opacity-95">
+                        Continuar
+                    </button>
+                </div>
+            </div>
         </nav>
 
 

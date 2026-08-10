@@ -822,7 +822,7 @@ const App = {
                 if (pStep3) {
                     pStep3.classList.remove('opacity-50');
                     pStep3.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">3</div>
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">3</div>
                         <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Condiciones</span>
                     `;
                 }
@@ -862,7 +862,7 @@ const App = {
                 if (pStep2) {
                     pStep2.classList.remove('opacity-50');
                     pStep2.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">2</div>
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 border border-primary/20 dark:border-[#A13333]/20">2</div>
                         <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base hidden sm:block">Multimedia</span>
                     `;
                 }
@@ -900,7 +900,7 @@ const App = {
                 const pLine1 = document.getElementById('progress-line-1');
                 if (pStep1) {
                     pStep1.innerHTML = `
-                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
+                        <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">1</div>
                         <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-[11px] md:text-base">Principales</span>
                     `;
                 }
@@ -1101,11 +1101,14 @@ const App = {
                             tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                         }
 
+                        if (typeof window.loadGoogleMaps === 'function' && (typeof google === 'undefined' || !window.propertyMap)) {
+                            window.loadGoogleMaps('initGoogleMap', 'places');
+                        }
                         if (typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
                             setTimeout(() => {
                                 google.maps.event.trigger(propertyMap, 'resize');
                                 propertyMap.setCenter({ lat: -32.898684, lng: -68.847522 });
-                            }, 50);
+                            }, 100);
                         }
 
                         if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
@@ -1418,17 +1421,10 @@ const App = {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
                             // Change action buttons text/behavior if needed
-                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                            if (continueBtnDesk) {
-                                continueBtnDesk.textContent = 'Continuar';
-                                continueBtnDesk.setAttribute('form', 'form-multimedia');
-                            }
-                            if (continueBtnMob) {
-                                continueBtnMob.textContent = 'Continuar';
-                                continueBtnMob.setAttribute('form', 'form-multimedia');
-                            }
+                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                                btn.textContent = 'Continuar';
+                                btn.setAttribute('form', 'form-multimedia');
+                            });
 
                             // Set global state
                             window.currentWizardStep = 2;
@@ -1765,7 +1761,7 @@ const App = {
                     } else if (i === activeStep) {
                         pStep.classList.remove('opacity-50');
                         pStep.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-on-primary dark:text-[#ffffff] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
+                            <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
                             <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
                         `;
                     } else {
@@ -1858,17 +1854,10 @@ const App = {
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                            if (continueBtnDesk) {
-                                continueBtnDesk.textContent = 'Continuar';
-                                continueBtnDesk.setAttribute('form', 'form-extras');
-                            }
-                            if (continueBtnMob) {
-                                continueBtnMob.textContent = 'Continuar';
-                                continueBtnMob.setAttribute('form', 'form-extras');
-                            }
+                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                                btn.textContent = 'Continuar';
+                                btn.setAttribute('form', 'form-extras');
+                            });
 
                             window.currentWizardStep = 3;
                         }
@@ -1924,17 +1913,10 @@ const App = {
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                            if (continueBtnDesk) {
-                                continueBtnDesk.textContent = 'Continuar';
-                                continueBtnDesk.setAttribute('form', 'form-preferencias');
-                            }
-                            if (continueBtnMob) {
-                                continueBtnMob.textContent = 'Continuar';
-                                continueBtnMob.setAttribute('form', 'form-preferencias');
-                            }
+                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                                btn.textContent = 'Continuar';
+                                btn.setAttribute('form', 'form-preferencias');
+                            });
 
                             window.currentWizardStep = 4;
                         }
@@ -1990,17 +1972,10 @@ const App = {
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                            const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                            const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                            if (continueBtnDesk) {
-                                continueBtnDesk.textContent = 'Continuar';
-                                continueBtnDesk.setAttribute('form', 'form-visitas');
-                            }
-                            if (continueBtnMob) {
-                                continueBtnMob.textContent = 'Continuar';
-                                continueBtnMob.setAttribute('form', 'form-visitas');
-                            }
+                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                                btn.textContent = 'Continuar';
+                                btn.setAttribute('form', 'form-visitas');
+                            });
 
                             window.currentWizardStep = 5;
                         }
@@ -2053,17 +2028,10 @@ const App = {
 
                         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                        const continueBtnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                        const continueBtnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-
-                        if (continueBtnDesk) {
-                            continueBtnDesk.textContent = 'Publicar Aviso';
-                            continueBtnDesk.setAttribute('form', 'form-planes');
-                        }
-                        if (continueBtnMob) {
-                            continueBtnMob.textContent = 'Publicar Aviso';
-                            continueBtnMob.setAttribute('form', 'form-planes');
-                        }
+                        document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                            btn.textContent = 'Publicar Aviso';
+                            btn.setAttribute('form', 'form-planes');
+                        });
 
                         window.currentWizardStep = 6;
                     }
@@ -2089,10 +2057,10 @@ const App = {
             const subtitle = document.getElementById('paso-subtitle');
 
             const setSubmitButton = (formId, text) => {
-                const btnDesk = document.querySelector('#desktop-action-buttons button[type="submit"]');
-                const btnMob = document.querySelector('nav.md\\:hidden button[type="submit"]');
-                if (btnDesk) { btnDesk.setAttribute('form', formId); btnDesk.textContent = text; }
-                if (btnMob) { btnMob.setAttribute('form', formId); btnMob.textContent = text; }
+                document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                    btn.setAttribute('form', formId);
+                    btn.textContent = text;
+                });
             };
 
             // Case 0: Step 6 -> Step 5
@@ -2263,7 +2231,7 @@ const App = {
                 }
             }
 
-            const btn = e.target.closest('#desktop-action-buttons button[type="submit"]') || e.target.closest('nav.md\\:hidden button[type="submit"]');
+            const btn = e.target.closest('#publish-property-view button[type="submit"]');
             if (btn) {
                 const formId = btn.getAttribute('form');
                 if (formId) {
@@ -2288,8 +2256,8 @@ const App = {
                 console.log('¡Iniciando publicación en Supabase!');
 
                 // Mostrar estado de carga (opcional, podrías añadir un spinner)
-                const submitBtnDesk = document.querySelector('#desktop-action-buttons button[form="form-planes"]');
-                const submitBtnMob = document.querySelector('nav.md\\:hidden button[form="form-planes"]');
+                const submitBtnDesk = document.querySelector('#publish-property-view button[form="form-planes"], #publish-property-view nav button[type="submit"]');
+                const submitBtnMob = null;
                 const originalTextDesk = submitBtnDesk ? submitBtnDesk.textContent : '';
 
                 if (submitBtnDesk) submitBtnDesk.textContent = 'Publicando...';
@@ -2570,6 +2538,14 @@ const App = {
                     if (window.location.pathname.includes('administrador.html')) {
                         await App.openAdminDashboard();
                         App.navigateTo('properties-view');
+                    } else if (window.location.pathname.includes('panel-corredor.html')) {
+                        App.closePublishWizard();
+                        if (typeof window.addNewBrokerPropertyFromWizard === 'function') {
+                            window.addNewBrokerPropertyFromWizard(propertyData);
+                        }
+                        if (typeof switchBrokerTab === 'function') {
+                            switchBrokerTab('avisos');
+                        }
                     } else {
                         window.location.href = 'administrador.html?view=properties';
                     }
@@ -5467,8 +5443,14 @@ const App = {
             return;
         }
 
+        // Ensure event listeners for all wizard forms and controls are registered
+        if (typeof App.setupEventListeners === 'function' && !window._wizardListenersSetup) {
+            window._wizardListenersSetup = true;
+            App.setupEventListeners();
+        }
+
         // Hide all main page content containers
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view)').forEach(el => {
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
             if (el && el !== publishElem && !publishElem.contains(el)) {
                 el.classList.add('hidden');
             }
@@ -5481,7 +5463,9 @@ const App = {
             window.setupInputValidations();
         }
 
-        if (typeof window.initGoogleMap === 'function') {
+        if (typeof window.loadGoogleMaps === 'function') {
+            window.loadGoogleMaps('initGoogleMap', 'places');
+        } else if (typeof window.initGoogleMap === 'function') {
             setTimeout(() => { window.initGoogleMap(); }, 250);
         }
     },
@@ -5495,7 +5479,7 @@ const App = {
         }
 
         // Unhide page main content sections
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, main, body > section:not(#publish-property-view)').forEach(el => {
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
             if (el && el !== publishElem) {
                 el.classList.remove('hidden');
             }
@@ -7054,20 +7038,25 @@ function createMarketplaceCard(prop, index) {
 }
 // Real Interactive Map using Google Maps JS API
 window.initGoogleMap = async function () {
+    if (typeof google === 'undefined' || !google || !google.maps) {
+        console.warn('Google Maps API no disponible o cargando...');
+        return;
+    }
     const mapContainer = document.getElementById('real-map-container');
     if (!mapContainer) return;
 
-    // Mendoza coordinates
-    const initialPos = { lat: -32.898684, lng: -68.847522 };
+    try {
+        // Mendoza coordinates
+        const initialPos = { lat: -32.898684, lng: -68.847522 };
 
-    window.propertyMap = new google.maps.Map(mapContainer, {
-        zoom: 15,
-        center: initialPos,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        mapId: 'property_wizard_map',
-    });
+        window.propertyMap = new google.maps.Map(mapContainer, {
+            zoom: 15,
+            center: initialPos,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            mapId: 'property_wizard_map',
+        });
 
     // Use AdvancedMarkerElement (modern API)
     const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
@@ -7222,6 +7211,9 @@ window.initGoogleMap = async function () {
                 if (errCalle) errCalle.classList.add('hidden');
             }
         });
+    }
+    } catch (err) {
+        console.warn('Error inicializando Google Maps:', err);
     }
 };
 
