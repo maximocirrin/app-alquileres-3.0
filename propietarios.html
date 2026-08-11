@@ -1539,7 +1539,7 @@
                     </a>
                     <!-- Sub-navigation tabs -->
                     <div class="hidden md:flex items-center gap-1 lg:gap-6 text-sm">
-                        <a class="avisos-tab active text-red-900 dark:text-red-400 font-bold border-b-2 border-red-900 dark:border-red-400 pb-1 cursor-pointer px-1"
+                        <a class="avisos-tab active text-red-900 dark:text-red-900 font-bold border-b-2 border-red-900 dark:border-red-900 pb-1 cursor-pointer px-1"
                             data-tab="avisos">Mis avisos</a>
                         <a class="avisos-tab text-zinc-500 dark:text-zinc-400 hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer px-1"
                             data-tab="interesados">Interesados</a>
@@ -1570,7 +1570,7 @@
             <!-- Mobile sub-navigation -->
             <div
                 class="flex md:hidden items-center gap-0 border-t border-zinc-200/60 dark:border-zinc-800 overflow-x-auto scrollbar-hide">
-                <a class="avisos-tab active whitespace-nowrap text-xs font-bold text-red-900 dark:text-red-400 border-b-2 border-red-900 dark:border-red-400 px-4 py-2.5 cursor-pointer"
+                <a class="avisos-tab active whitespace-nowrap text-xs font-bold text-red-900 dark:text-red-900 border-b-2 border-red-900 dark:border-red-900 px-4 py-2.5 cursor-pointer"
                     data-tab="avisos">Mis avisos</a>
                 <a class="avisos-tab whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400 px-4 py-2.5 cursor-pointer"
                     data-tab="interesados">Interesados</a>
@@ -1788,8 +1788,10 @@
             </button>
         </div>
     </section>
-    </div>
-
+    </div>    <!-- Botón Flotante Volver Arriba -->
+    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary dark:from-red-900 dark:via-red-950 dark:to-zinc-900 text-white shadow-xl shadow-primary/30 dark:shadow-black/60 border border-white/20 dark:border-red-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
+        <span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
+    </button>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1899,9 +1901,9 @@
             </div>
 
             <!-- Toggle option -->
-            <div class="p-4 bg-primary/5 dark:bg-red-950/20 rounded-2xl border border-primary/20 dark:border-red-500/20 flex items-center justify-between gap-3">
+            <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-3">
                 <div>
-                    <h4 class="font-headline text-xs font-extrabold text-primary dark:text-red-400">¿Desea requerir Inventario Digital Opcional a sus inquilinos?</h4>
+                    <h4 class="font-headline text-xs font-extrabold text-zinc-900 dark:text-white">¿Desea requerir Inventario Digital Opcional a sus inquilinos?</h4>
                     <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Al activar esta casilla, el acta digital con fotos se adjuntará automáticamente al contrato.</p>
                 </div>
                 <input type="checkbox" checked id="owner-toggle-inv-opt" class="rounded border-zinc-300 text-primary focus:ring-primary w-5 h-5 cursor-pointer">

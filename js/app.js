@@ -443,6 +443,7 @@ const App = {
             await App.checkAuth();
             App.setupTheme();
             App.setupEventListeners();
+            App.initScrollToTop();
             App.applyPageContext();
             if (typeof window.setupInputValidations === 'function') window.setupInputValidations();
             if (window.FavoritesManager && typeof window.FavoritesManager.init === 'function') {
@@ -626,6 +627,41 @@ const App = {
             misAvisos?.classList.add('hidden');
             app?.classList.remove('hidden');
         }
+    },
+
+    initScrollToTop: () => {
+        let btn = document.getElementById('btn-scroll-top');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'btn-scroll-top';
+            btn.type = 'button';
+            btn.setAttribute('aria-label', 'Volver arriba');
+            btn.className = 'fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary dark:from-red-900 dark:via-red-950 dark:to-zinc-900 text-white shadow-xl shadow-primary/30 dark:shadow-black/60 border border-white/20 dark:border-red-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group';
+            btn.innerHTML = `<span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>`;
+            document.body.appendChild(btn);
+        }
+
+        btn.onclick = (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const toggleVisibility = () => {
+            if (window.scrollY > 300) {
+                btn.classList.remove('opacity-0', 'translate-y-6', 'pointer-events-none');
+                btn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+            } else {
+                btn.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                btn.classList.add('opacity-0', 'translate-y-6', 'pointer-events-none');
+            }
+        };
+
+        if (btn._scrollHandler) {
+            window.removeEventListener('scroll', btn._scrollHandler);
+        }
+        btn._scrollHandler = toggleVisibility;
+        window.addEventListener('scroll', toggleVisibility, { passive: true });
+        toggleVisibility();
     },
 
     setupEventListeners: () => {
@@ -7614,17 +7650,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
-                                <a href="tu-alquiler.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                <a href="tu-alquiler.html" class="menu-item-card bg-emerald-600 text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
+                                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
                                         <span class="material-symbols-outlined text-xl">key</span>
                                     </div>
                                     <div>
-                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Mi Alquiler Activo</span>
-                                        <span class="block text-[11px] text-zinc-500">Pagar alquiler, informar pago y tickets</span>
+                                        <span class="block text-sm font-extrabold text-white">Mi Alquiler Activo</span>
+                                        <span class="block text-[11px] text-white/80">Pagar alquiler, informar pago y tickets</span>
                                     </div>
                                 </a>
-                                <a href="pasaporte-habitat.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                    <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                <a href="pasaporte-habitat.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">badge</span>
                                     </div>
                                     <div>
@@ -7633,15 +7669,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                 </a>
                                 <a href="postulaciones.html" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">how_to_reg</span>
                                     <span>Mis Postulaciones</span>
                                 </a>
                                 <a href="visitas.html" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 text-xl">calendar_month</span>
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">calendar_month</span>
                                     <span>Mis Visitas Agendadas</span>
                                 </a>
                                 <a href="buscar.html" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">search</span>
                                     <span>Buscar Alquileres</span>
                                 </a>
                             </div>
@@ -7658,42 +7694,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
-                                <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-card bg-primary text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
+                                <a href="administrador.html" class="menu-item-card bg-primary text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
                                     <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
-                                        <span class="material-symbols-outlined text-xl">add_home</span>
-                                    </div>
-                                    <div>
-                                        <span class="block text-sm font-extrabold text-white">Publicar propiedad gratis</span>
-                                        <span class="block text-[11px] text-white/80">Crea tu aviso en simples pasos</span>
-                                    </div>
-                                </button>
-                                <a href="administrador.html" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                    <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">manage_accounts</span>
                                     </div>
                                     <div>
-                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Panel del Propietario</span>
-                                        <span class="block text-[11px] text-zinc-500">Gestión de alquileres, cobros e IPC</span>
+                                        <span class="block text-sm font-extrabold text-white">Panel del Propietario</span>
+                                        <span class="block text-[11px] text-white/80">Gestión de alquileres, cobros e IPC</span>
                                     </div>
                                 </a>
+                                <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-card bg-primary/5 dark:bg-red-950/20 border border-primary/20 hover:border-primary/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer">
+                                    <div class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">add_home</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Publicar propiedad gratis</span>
+                                        <span class="block text-[11px] text-zinc-500">Crea tu aviso en simples pasos</span>
+                                    </div>
+                                </button>
                                 <a href="administrador.html#avisos" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-primary text-xl">home_work</span>
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">home_work</span>
                                     <span>Mis Propiedades & Avisos</span>
                                 </a>
                                 <a href="administrador.html#postulaciones" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-amber-500 text-xl">how_to_reg</span>
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">how_to_reg</span>
                                     <span>Postulaciones & Selección</span>
                                 </a>
                                 <a href="administrador.html#visitas" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-blue-500 text-xl">calendar_month</span>
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">calendar_month</span>
                                     <span>Agenda de Visitas</span>
                                 </a>
                                 <a href="administrador.html#alquiler-activo" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 text-xl">payments</span>
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">payments</span>
                                     <span>Alquiler Activo & Cobros</span>
                                 </a>
                                 <a href="administrador.html#mantenimiento" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-zinc-500 text-xl">build</span>
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">build</span>
                                     <span>Tickets de Mantenimiento</span>
                                 </a>
                             </div>
@@ -7710,13 +7746,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
-                                <a href="panel-corredor.html" class="menu-item-card bg-blue-900/5 dark:bg-blue-950/20 border border-blue-900/20 hover:border-blue-900/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                    <div class="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                <a href="panel-corredor.html" class="menu-item-card bg-blue-900 text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
+                                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
                                         <span class="material-symbols-outlined text-xl">dashboard_customize</span>
                                     </div>
                                     <div>
-                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Panel CRM del Corredor</span>
-                                        <span class="block text-[11px] text-zinc-500">Gestión en filas, Kanban, MLS & Tasaciones</span>
+                                        <span class="block text-sm font-extrabold text-white">CRM</span>
+                                        <span class="block text-[11px] text-white/80">Gestión en filas, Kanban, MLS & Tasaciones</span>
+                                    </div>
+                                </a>
+                                <a href="panel-corredor.html#leads" class="menu-item-card bg-blue-900/5 dark:bg-blue-950/20 border border-blue-900/20 hover:border-blue-900/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">group</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Leads</span>
+                                        <span class="block text-[11px] text-zinc-500">Contactos e interesados calificados</span>
                                     </div>
                                 </a>
                                 <a href="panel-corredor.html#avisos" class="menu-item-clean">
@@ -7724,15 +7769,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span>Cartera de Propiedades en Filas</span>
                                 </a>
                                 <a href="panel-corredor.html#contactos" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-amber-500 text-xl">groups</span>
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">groups</span>
                                     <span>Contactos & Clientes (Inquilinos/Prop.)</span>
                                 </a>
                                 <a href="panel-corredor.html#alquileres" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 text-xl">payments</span>
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">payments</span>
                                     <span>Alquileres Activos & Cobros</span>
                                 </a>
                                 <a href="panel-corredor.html#operaciones" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-purple-600 text-xl">handshake</span>
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">handshake</span>
                                     <span>Embudo Kanban, MLS & Tasaciones</span>
                                 </a>
                                 <a href="corredores.html" class="menu-item-clean">
@@ -8315,10 +8360,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', (e) => {
             const targetTab = tab.getAttribute('data-tab');
             document.querySelectorAll('.avisos-tab').forEach(t => {
-                t.classList.remove('active', 'text-red-900', 'dark:text-red-400', 'font-bold', 'border-b-2', 'border-red-900', 'dark:border-red-400');
+                t.classList.remove('active', 'text-red-900', 'dark:text-red-900', 'font-bold', 'border-b-2', 'border-red-900', 'dark:border-red-900');
                 t.classList.add('text-zinc-500', 'dark:text-zinc-400');
             });
-            tab.classList.add('active', 'text-red-900', 'dark:text-red-400', 'font-bold', 'border-b-2', 'border-red-900', 'dark:border-red-400');
+            tab.classList.add('active', 'text-red-900', 'dark:text-red-900', 'font-bold', 'border-b-2', 'border-red-900', 'dark:border-red-900');
             tab.classList.remove('text-zinc-500', 'dark:text-zinc-400');
 
             const views = {
@@ -8859,7 +8904,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2 mb-1">
-                        <span class="text-xs font-bold text-primary dark:text-red-400 uppercase tracking-wider">${tipo}</span>
+                        <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">${tipo}</span>
                         <div class="flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full ${st.dot} inline-block"></span>
                             <span class="text-xs font-semibold ${st.text}">${st.label}</span>
@@ -8884,13 +8929,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="hidden lg:flex items-center gap-6 flex-shrink-0">
                     <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Exposición</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">-</p></div>
                     <div class="text-center min-w-[80px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Visualizaciones</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300">${aviso.cantidad_visualizaciones_total ?? aviso.views_count ?? aviso.views ?? 0}</p></div>
-                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-primary dark:text-red-400">Ver consultas</p></div>
+                    <div class="text-center min-w-[70px]"><p class="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Interesados</p><p class="text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:underline">Ver consultas</p></div>
                 </div>
             </div>
             <!-- Footer -->
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex items-center gap-3 md:gap-5 text-[11px] text-zinc-400 dark:text-zinc-500">
-                    <span>ID <b class="text-primary dark:text-red-400">${shortId}</b></span>
+                    <span>ID <b class="text-zinc-700 dark:text-zinc-300">${shortId}</b></span>
                     <span>Creado ${date}</span>
                     <span class="hidden sm:inline">${dormitorios ? dormitorios + ' dorm.' : ''} ${banos ? banos + ' baños' : ''} ${supCubierta ? supCubierta + 'm²' : ''}</span>
                 </div>
@@ -8938,3 +8983,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.App = App;
+
+// Auto-initialize Scroll to top button across pages
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.App && typeof window.App.initScrollToTop === 'function') {
+            window.App.initScrollToTop();
+        }
+    });
+} else {
+    if (window.App && typeof window.App.initScrollToTop === 'function') {
+        window.App.initScrollToTop();
+    }
+}

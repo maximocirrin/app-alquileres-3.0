@@ -2926,6 +2926,8 @@ html.dark .menu-item-clean:hover {
 .landing-menu.is-open .landing-menu__section:nth-child(1) { transition-delay: 100ms; }
 .landing-menu.is-open .landing-menu__section:nth-child(2) { transition-delay: 180ms; }
 .landing-menu.is-open .landing-menu__section:nth-child(3) { transition-delay: 260ms; }
+.landing-menu.is-open .landing-menu__section:nth-child(4) { transition-delay: 340ms; }
+.landing-menu.is-open .landing-menu__section:nth-child(5) { transition-delay: 420ms; }
 
 .landing-menu__divider {
     width: 100%;
