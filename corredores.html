@@ -539,7 +539,11 @@
                 });
             }
         });
-    </script>
+    <!-- Botón Flotante Volver Arriba -->
+    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-900 via-blue-800 to-blue-950 text-white shadow-xl shadow-blue-950/40 border border-white/20 dark:border-blue-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
+        <span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>

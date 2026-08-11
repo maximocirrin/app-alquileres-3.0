@@ -281,7 +281,7 @@
                                     <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
                                     <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
                                         <button type="button" onclick="changeOwnerPickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
-                                        <span id="owner-picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-400 px-1">2026</span>
+                                        <span id="owner-picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-900 px-1">2026</span>
                                         <button type="button" onclick="changeOwnerPickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
                                     </div>
                                 </div>
@@ -544,13 +544,13 @@
                         </div>
                         <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
                             <div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-red-400">Departamento / Alquiler</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">${(p.tipo_propiedad || p.type || 'Departamento').toUpperCase()} / ${(p.operacion || p.operation || 'Alquiler').toUpperCase()}</span>
                                 <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white line-clamp-1 mt-0.5">${p.title}</h3>
                                 <p class="text-xs text-zinc-500 flex items-center gap-1 mt-1 line-clamp-1">
-                                    <span class="material-symbols-outlined text-sm text-primary">location_on</span> ${p.address}
+                                    <span class="material-symbols-outlined text-sm text-zinc-400 dark:text-zinc-500">location_on</span> ${p.address}
                                 </p>
                                 <div class="mt-3 flex items-baseline gap-1">
-                                    <span class="text-2xl font-black text-primary dark:text-red-400">$ ${Number(p.price).toLocaleString('es-AR')}</span>
+                                    <span class="text-2xl font-black text-zinc-900 dark:text-white">$ ${Number(p.price).toLocaleString('es-AR')}</span>
                                     <span class="text-xs text-zinc-400">/ mes</span>
                                 </div>
                             </div>
@@ -558,7 +558,7 @@
                                 <span class="text-zinc-500 font-medium flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm text-zinc-400">visibility</span> ${p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0} vistas
                                 </span>
-                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')}, { isOwner: true })" class="font-bold text-primary dark:text-red-400 hover:underline flex items-center gap-1">
+                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')}, { isOwner: true })" class="font-bold text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white flex items-center gap-1 hover:underline">
                                     Ver Ficha <span class="material-symbols-outlined text-sm">arrow_forward</span>
                                 </button>
                             </div>
@@ -602,11 +602,11 @@
                     <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
                             <div class="flex items-center gap-3.5">
-                                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 font-extrabold flex items-center justify-center text-base">
+                                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary dark:bg-red-900/20 dark:text-red-900 font-extrabold flex items-center justify-center text-base">
                                     ${a.tenant_name ? a.tenant_name.charAt(0) : 'I'}
                                 </div>
                                 <div>
-                                    <span class="text-[11px] font-bold text-primary dark:text-red-400 uppercase tracking-wider">${a.property_title}</span>
+                                    <span class="text-[11px] font-bold text-primary dark:text-red-900 uppercase tracking-wider">${a.property_title}</span>
                                     <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${a.tenant_name}</h3>
                                     <p class="text-xs text-zinc-500">${a.tenant_email} • Tel: ${a.tenant_phone}</p>
                                 </div>
@@ -640,7 +640,7 @@
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                     <!-- Profile Avatar / Photo (DNI Style) -->
                                     <div class="relative shrink-0">
-                                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center font-black shadow-inner">
+                                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-900 flex items-center justify-center font-black shadow-inner">
                                             <span class="material-symbols-outlined text-3xl">person</span>
                                         </div>
                                         <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="Identidad Verificada">
@@ -689,7 +689,7 @@
 
                                 <!-- Footer Bar of Card -->
                                 <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                                    <span class="text-[11px] font-bold text-primary dark:text-red-400 flex items-center gap-1 group-hover:underline">
+                                    <span class="text-[11px] font-bold text-primary dark:text-red-900 flex items-center gap-1 group-hover:underline">
                                         <span class="material-symbols-outlined text-sm">workspace_premium</span> Ver Documentación Auditada & Certificados
                                     </span>
                                     <span class="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5 shrink-0">
@@ -701,7 +701,7 @@
 
                         ${a.message ? `
                             <div class="bg-primary-light p-3.5 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 space-y-1">
-                                <span class="font-extrabold text-primary dark:text-red-400">Mensaje del Candidato:</span>
+                                <span class="font-extrabold text-primary dark:text-red-900">Mensaje del Candidato:</span>
                                 <p class="italic">"${a.message}"</p>
                             </div>
                         ` : ''}
@@ -965,7 +965,7 @@
                                 : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
                     }">
                         <div class="flex items-center justify-between">
-                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
+                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-900' : 'text-zinc-800 dark:text-zinc-200'}">
                                 ${d}
                             </span>
                             ${isToday ? '<span class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>' : ''}
@@ -1058,7 +1058,7 @@
                     <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4 font-body border border-zinc-200 dark:border-zinc-800">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-3.5">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 font-extrabold flex items-center justify-center text-base shrink-0">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-900/20 dark:text-red-900 font-extrabold flex items-center justify-center text-base shrink-0">
                                     <span class="material-symbols-outlined text-xl">${v.type === 'visita' ? 'meeting_room' : (v.type === 'firma' ? 'edit_note' : (v.type === 'tasacion' ? 'analytics' : 'key'))}</span>
                                 </div>
                                 <div>
@@ -1066,7 +1066,7 @@
                                         <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full border ${badgeColor}">
                                             ${v.typeLabel || 'Cita'}
                                         </span>
-                                        <span class="text-xs font-headline font-bold text-primary dark:text-red-400">${v.property_title}</span>
+                                        <span class="text-xs font-headline font-bold text-primary dark:text-red-900">${v.property_title}</span>
                                     </div>
                                     <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white mt-0.5">${v.visitor_name}</h3>
                                     <p class="text-xs text-zinc-500">${v.visitor_email} • Tel: ${v.visitor_phone}</p>
@@ -1075,7 +1075,7 @@
 
                             <div class="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 text-right shrink-0">
                                 <span class="block text-[10px] font-headline font-bold text-zinc-400 uppercase tracking-wider">Fecha & Hora</span>
-                                <span class="text-sm font-headline font-black text-primary dark:text-red-400">${v.visit_date} a las ${v.visit_time} hs</span>
+                                <span class="text-sm font-headline font-black text-primary dark:text-red-900">${v.visit_date} a las ${v.visit_time} hs</span>
                             </div>
                         </div>
 
@@ -1299,15 +1299,15 @@
                                 </div>
 
                                 <!-- Resumen Total -->
-                                <div class="bg-primary-light p-4 rounded-xl border border-primary/20 dark:border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="bg-primary/5 dark:bg-zinc-800/80 p-4 rounded-xl border border-primary/20 dark:border-zinc-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div>
-                                        <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Total Estimado Canon + Expensas</span>
-                                        <span class="text-2xl font-headline font-black text-primary dark:text-red-400 mt-0.5 block">$ ${Number(contract.monthly_rent + expenses).toLocaleString('es-AR')}</span>
+                                        <span class="block font-bold uppercase text-zinc-500 dark:text-zinc-400 text-[10px]">Total Estimado Canon + Expensas</span>
+                                        <span class="text-2xl font-headline font-black text-zinc-900 dark:text-white mt-0.5 block">$ ${Number(contract.monthly_rent + expenses).toLocaleString('es-AR')}</span>
                                     </div>
                                     ${punitives.punitiveAmount > 0 && !isWaived ? `
                                         <div class="text-right">
-                                            <span class="block font-bold uppercase text-rose-600 text-[10px]">Incluye Punitorios (${punitives.daysLate} días)</span>
-                                            <span class="text-lg font-black text-rose-600">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
+                                            <span class="block font-bold uppercase text-rose-600 dark:text-rose-400 text-[10px]">Incluye Punitorios (${punitives.daysLate} días)</span>
+                                            <span class="text-lg font-black text-rose-600 dark:text-rose-400">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -1471,7 +1471,7 @@
                         <div class="p-4 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                             <div>
                                 <span class="block font-headline text-[10px] font-black uppercase text-zinc-400">Total Canon + Expensas</span>
-                                <span id="modal-calc-total-preview" class="text-xl font-headline font-black text-primary dark:text-red-400 mt-0.5 block">$ ${(rentBase + expAmount).toLocaleString('es-AR')} / mes</span>
+                                <span id="modal-calc-total-preview" class="text-xl font-headline font-black text-primary dark:text-red-900 mt-0.5 block">$ ${(rentBase + expAmount).toLocaleString('es-AR')} / mes</span>
                             </div>
                             <div class="text-left sm:text-right">
                                 <span class="block font-headline text-[10px] font-black uppercase text-zinc-400">Punitorio Diario</span>
@@ -1671,7 +1671,7 @@
                         <div class="p-6 bg-zinc-50 dark:bg-zinc-800/60 border-t border-zinc-200 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="relative">
-                                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center font-black shadow-inner">
+                                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-900 flex items-center justify-center font-black shadow-inner">
                                         <span class="material-symbols-outlined text-4xl">person</span>
                                     </div>
                                     <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
