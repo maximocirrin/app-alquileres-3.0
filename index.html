@@ -901,10 +901,10 @@
         <main class="pt-16 md:pt-20">
             <!-- Hero Section -->
             <section
-                class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-24 sm:pt-0 sm:pb-20">
-                <div class="absolute inset-0 z-0"
+                class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-24 sm:pt-0 sm:pb-20 bg-zinc-950">
+                <div class="absolute -inset-1 z-0 bg-zinc-950"
                     style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
-                    <img alt="Luxury Estate" class="w-full h-full object-cover brightness-75"
+                    <img alt="Luxury Estate" class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75"
                         src="img/hero-marketplace.jpg" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
                 </div>
@@ -938,20 +938,37 @@
                         alquiler directamente desde el celular, sin costos ocultos.
                     </div>
                     <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
-                        <form action="buscar.html" method="GET" class="w-full m-0">
+                        <form action="buscar.html" method="GET" class="w-full m-0" id="hero-search-form">
                             <div
-                                class="bg-surface-container-lowest p-2 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md bg-opacity-95">
-                                <div class="flex-1 flex items-center px-4 sm:px-6 gap-3 min-w-0">
-                                    <span class="material-symbols-outlined text-primary">search</span>
+                                class="bg-surface-container-lowest dark:bg-zinc-900/95 p-1.5 sm:p-2 pl-3.5 sm:pl-5 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md border border-white/20 dark:border-zinc-800 gap-1 sm:gap-2">
+                                <div class="flex-1 flex items-center gap-2 min-w-0">
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl sm:text-2xl shrink-0">search</span>
                                     <input id="index-location-search" name="location"
-                                        class="w-full bg-transparent border-none focus:ring-0 text-on-surface py-3 font-body outline-none"
-                                        placeholder="¿Dónde quieres vivir?" type="text" />
+                                        class="w-full bg-transparent text-on-surface dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
+                                        style="border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none;"
+                                        placeholder="¿Dónde quieres vivir?" type="text" autocomplete="off" />
                                 </div>
+
+                                <input type="hidden" id="hero-filter-input" name="filter" value="all" />
+                                <input type="hidden" id="hero-operation-input" name="operation" value="all" />
+                                <input type="hidden" id="hero-rooms-input" name="rooms" value="all" />
+                                <input type="hidden" id="hero-minprice-input" name="minPrice" value="" />
+                                <input type="hidden" id="hero-maxprice-input" name="maxPrice" value="" />
+                                <input type="hidden" id="hero-amenities-input" name="amenities" value="" />
+
+                                <button type="button" id="open-hero-filter-btn" onclick="openFilterModal()"
+                                    class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all shrink-0 cursor-pointer active:scale-95 border-0 bg-transparent p-0 outline-none"
+                                    aria-label="Filtros" title="Filtros">
+                                    <span class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
+                                    <span id="hero-filter-indicator" class="hidden absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
+                                </button>
+
+                                <button type="submit"
+                                    class="bg-primary hover:bg-primary-container text-on-primary w-9 h-9 sm:w-auto sm:h-auto sm:px-6 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm md:text-base transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 border-none outline-none">
+                                    <span class="material-symbols-outlined text-lg sm:text-xl">search</span>
+                                    <span class="hidden sm:inline">Buscar</span>
+                                </button>
                             </div>
-                            <button type="submit"
-                                class="mt-4 w-full bg-primary text-on-primary px-6 sm:px-8 py-3.5 rounded-full font-bold hover:bg-primary-container transition-all border-none outline-none shadow-2xl inline-flex items-center justify-center cursor-pointer">
-                                Buscar
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -978,21 +995,11 @@
             <!-- Marketplace Featured Properties Section -->
             <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 pb-6 animate-on-scroll"
                 id="landing-featured-properties-section">
-                <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-                    <div>
-                        <h2
-                            class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
-                            Propiedades destacadas
-                        </h2>
-                        <p class="font-body text-zinc-600 dark:text-zinc-400 text-base sm:text-lg mt-2">
-                            Explorá viviendas verificadas listas para postularte online.
-                        </p>
-                    </div>
-                    <a href="buscar.html"
-                        class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-5 py-3 rounded-full font-body font-bold text-sm transition-all shadow-sm shrink-0 active:scale-[0.98]">
-                        <span>Ver todas en el Marketplace</span>
-                        <span class="material-symbols-outlined text-base">arrow_forward</span>
-                    </a>
+                <div class="mb-8">
+                    <h2
+                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
+                        Destacadas
+                    </h2>
                 </div>
 
                 <!-- Horizontal scrolling row of property cards -->
@@ -1014,6 +1021,15 @@
                         class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth">
                         <!-- Populated dynamically -->
                     </div>
+                </div>
+
+                <!-- Bottom Action Button -->
+                <div class="flex justify-center mt-8">
+                    <a href="buscar.html"
+                        class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-6 py-3.5 rounded-full font-body font-bold text-sm sm:text-base transition-all shadow-md active:scale-[0.98]">
+                        <span>Ver más propiedades</span>
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </a>
                 </div>
             </section>
 
@@ -1042,7 +1058,8 @@
                     }
 
                     displayProperties.slice(0, 8).forEach(prop => {
-                        const priceFormatted = `$${Math.round(prop.price / 1000)}k / mes`;
+                        const pVal = prop.price ? Number(prop.price) : 0;
+                        const priceFormatted = pVal ? `$${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
                         const card = document.createElement('article');
                         card.className = 'snap-start shrink-0 w-[280px] sm:w-[320px] md:w-[340px] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer';
 
@@ -1056,7 +1073,8 @@
 
                         const photosCount = prop.images ? prop.images.length : 1;
                         const isIncluidas = prop.expensasIncluidas;
-                        const expensasVal = prop.expensas ? (prop.expensas >= 1000 ? `$${Math.round(prop.expensas / 1000)}k` : `$${prop.expensas}`) : '';
+                        const expensasNum = prop.expensas ? Number(prop.expensas) : 0;
+                        const expensasVal = expensasNum ? `$${expensasNum.toLocaleString('es-AR')}` : '';
                         const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
 
                         card.innerHTML = `
@@ -1605,14 +1623,13 @@
                     </div>
 
                     <div class="owner-faq-list">
-                        <!-- Q1 -->
+                        <!-- Q0: Pasaporte Hábitat -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué
-                                    es el Pasaporte Habitat y por qué tiene un costo?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué es el Pasaporte Hábitat, cuánto dura y cómo lo obtengo?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1620,10 +1637,26 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        El Pasaporte es un Service Fee tecnológico que pagás por única vez para validar
-                                        tu identidad (biometría) y capacidad de pago. Este pago centraliza tu perfil y
-                                        elimina la necesidad de pagar costosos gastos de escribanía, certificaciones de
-                                        firmas e informes de dominio cada vez que te postulás a una propiedad.
+                                        El Pasaporte Hábitat es tu perfil verificado de inquilino. Confirma tu identidad y respaldo de pago para que te postules de forma directa a cualquier propiedad sin tener que presentar fotocopias ni papeles cada vez. Se genera automáticamente y tiene una vigencia de 60 días para postularte a todas las viviendas que te interesen.
+                                    </p>
+                                </div>
+                            </div>
+                        </article>
+                        <!-- Q1 -->
+                        <article class="owner-faq-item">
+                            <button
+                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
+                                type="button" aria-expanded="false">
+                                <span
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo me postulo o reservo una propiedad desde la app?</span>
+                                <span
+                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
+                            </button>
+                            <div class="owner-faq-answer">
+                                <div class="owner-faq-answer-inner">
+                                    <p
+                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
+                                        Podés explorar las propiedades disponibles en nuestro Marketplace, aplicar filtros por precio, tipo o ubicación y tocar en "Ver detalles". Desde allí podés agendar una visita presencial o enviar tu postulación de forma directa en pocos clics.
                                     </p>
                                 </div>
                             </div>
@@ -1635,8 +1668,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué
-                                    pasa si ningún propietario acepta mi postulación?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Tiene algún costo buscar o consultar propiedades en Hábitat?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1644,9 +1676,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No perdés tu dinero. Tu Pasaporte tiene una vigencia de 60 días corridos.
-                                        Durante ese tiempo, podés postularte a todas las propiedades que quieras dentro
-                                        de la red de Habitat sin volver a pagar el costo de validación.
+                                        No. Buscar propiedades, solicitar visitas y realizar consultas a propietarios o corredores a través de la plataforma es 100% gratuito para los inquilinos.
                                     </p>
                                 </div>
                             </div>
@@ -1658,8 +1688,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Es
-                                    legal firmar el contrato de alquiler sin ir a una escribanía?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona la firma digital del contrato de alquiler?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1667,10 +1696,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Sí, totalmente. La legislación argentina avala la firma electrónica para
-                                        instrumentos privados como los contratos de locación. Habitat certifica tu firma
-                                        capturando tu IP, geolocalización y aplicando un sello de tiempo (Timestamp),
-                                        dándole plena validez legal y probatoria sin necesidad de escribanos.
+                                        Una vez aprobada la postulación, el contrato de locación digital se genera en la app. Podés revisarlo detenidamente y firmarlo de forma legal y segura desde tu teléfono o computadora sin necesidad de trasladarte a una escribanía.
                                     </p>
                                 </div>
                             </div>
@@ -1682,8 +1708,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿El
-                                    pago del Pasaporte garantiza que voy a alquilar la propiedad?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo registro el pago de mis alquileres y comprobantes?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1691,10 +1716,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No. Habitat certifica tu identidad y arma tu perfil validado para darte una
-                                        ventaja frente a otros candidatos, pero la decisión final de aceptación siempre
-                                        depende de los requisitos específicos del propietario o del corredor
-                                        inmobiliario a cargo del inmueble.
+                                        Coordinás el pago directamente con el propietario o administrador según lo pactado. Desde tu panel podés cargar tus recibos de pago y comprobantes para mantener un historial ordenado y transparente de cada mensualidad.
                                     </p>
                                 </div>
                             </div>
@@ -1706,8 +1728,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Mis
-                                    datos personales, fotos y recibos de sueldo están seguros?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Están seguros mis datos personales y documentación?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1715,10 +1736,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Absolutamente. Operamos con encriptación avanzada y en estricto cumplimiento de
-                                        la Ley de Protección de Datos Personales (Ley 25.326). Los propietarios solo
-                                        visualizan un "certificado de perfil validado", sin tener acceso jamás a tus
-                                        documentos en crudo (como la foto de tu DNI o tus recibos de sueldo).
+                                        Absolutamente. Operamos con encriptación de nivel bancario en cumplimiento con la Ley de Protección de Datos Personales (Ley 25.326). Tu documentación personal está resguardada y solo se comparte la información estrictamente necesaria para tu perfil de alquiler.
                                     </p>
                                 </div>
                             </div>
@@ -1730,8 +1748,7 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
-                                    funciona el Inventario Digital Inmutable?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona el Inventario Digital al ingresar a la propiedad?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1739,10 +1756,7 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Al momento de ingresar a la propiedad, la app te permite subir fotos y videos
-                                        del estado del inmueble. Estos archivos se guardan con marcas de tiempo y no
-                                        pueden ser modificados, sirviendo como prueba indiscutible para evitar cualquier
-                                        conflicto al finalizar tu contrato y devolver las llaves.
+                                        Al momento de recibir las llaves, la app te permite capturar fotos y notas del estado real del inmueble. El registro se guarda con marcas de tiempo para certificar las condiciones del espacio y evitar cualquier controversia al devolver la propiedad.
                                     </p>
                                 </div>
                             </div>
@@ -2044,7 +2058,7 @@
     </section>
 
     <!-- Botón Flotante Volver Arriba -->
-    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary dark:from-red-900 dark:via-red-950 dark:to-zinc-900 text-white shadow-xl shadow-primary/30 dark:shadow-black/60 border border-white/20 dark:border-red-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
+    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary text-white shadow-[0_-5px_15px_rgba(129,27,30,0.35)] border border-white/20 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
         <span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
     </button>
 
@@ -2053,7 +2067,8 @@
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
     <script src="js/lead-monetization.js"></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/publish-property.js"></script>
+    <script src="js/app.js?v=101"></script>
     <!-- Google Maps -->
     <script src="js/google-maps-loader.js"></script>
     <script>
@@ -2145,6 +2160,413 @@
 
 
     <script src="js/lead-monetization.js"></script>
+
+    <!-- Hero Filter Modal -->
+    <div id="hero-filter-modal" class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div id="hero-filter-modal-card" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
+                        <span class="material-symbols-outlined text-xl">tune</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">Filtros de búsqueda</h3>
+                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de propiedades</p>
+                    </div>
+                </div>
+                <button type="button" id="close-hero-filter-btn" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" aria-label="Cerrar">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6 font-body text-sm custom-scrollbar flex-1">
+                <!-- Operación -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Operación</label>
+                    <div class="grid grid-cols-3 gap-2" id="hero-filter-operation-group">
+                        <button type="button" data-op="all" class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
+                        <button type="button" data-op="alquiler" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
+                        <button type="button" data-op="venta" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
+                    </div>
+                </div>
+
+                <!-- Tipo de propiedad -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Propiedad</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="hero-filter-type-group">
+                        <button type="button" data-type="all" class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <span class="material-symbols-outlined text-base">view_cozy</span>
+                            <span>Todas</span>
+                        </button>
+                        <button type="button" data-type="apartment" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">apartment</span>
+                            <span>Departamento</span>
+                        </button>
+                        <button type="button" data-type="house" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">home</span>
+                            <span>Casa</span>
+                        </button>
+                        <button type="button" data-type="ph" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">holiday_village</span>
+                            <span>PH</span>
+                        </button>
+                        <button type="button" data-type="monoambiente" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">chair</span>
+                            <span>Monoambiente</span>
+                        </button>
+                        <button type="button" data-type="commercial" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">storefront</span>
+                            <span>Local Comercial</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rango de Precio -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango de Precio ($ ARS / mes)</label>
+
+                    <!-- Visual Quick Presets -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" data-min="" data-max="300000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta $300.000</button>
+                        <button type="button" data-min="300000" data-max="600000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000 - $600.000</button>
+                        <button type="button" data-min="600000" data-max="1000000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000 - $1.000.000</button>
+                        <button type="button" data-min="1000000" data-max="" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
+                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
+                                <input type="number" id="hero-modal-minprice" placeholder="0" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
+                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
+                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dormitorios / Ambientes -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios / Ambientes</label>
+                    <div class="flex flex-wrap gap-2" id="hero-filter-rooms-group">
+                        <button type="button" data-rooms="all" class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
+                        <button type="button" data-rooms="1" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1 Dorm / Amb</button>
+                        <button type="button" data-rooms="2" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2 Dorms</button>
+                        <button type="button" data-rooms="3" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3 Dorms</button>
+                        <button type="button" data-rooms="4" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+ Dorms</button>
+                    </div>
+                </div>
+
+                <!-- Requisitos y Amenities -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos & Amenities</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-2" id="hero-filter-amenities-group">
+                        <button type="button" data-amenity="pet" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-amber-500">pets</span>
+                            <span class="truncate">Apto mascotas</span>
+                        </button>
+                        <button type="button" data-amenity="verified" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
+                            <span class="truncate">Verificado</span>
+                        </button>
+                        <button type="button" data-amenity="expensas" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-blue-500">receipt_long</span>
+                            <span class="truncate">Expensas incluidas</span>
+                        </button>
+                        <button type="button" data-amenity="cochera" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-rose-500">directions_car</span>
+                            <span class="truncate">Cochera</span>
+                        </button>
+                        <button type="button" data-amenity="balcon" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-teal-500">deck</span>
+                            <span class="truncate">Balcón / Terraza</span>
+                        </button>
+                        <button type="button" data-amenity="amoblado" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-purple-500">chair</span>
+                            <span class="truncate">Amoblado</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <button type="button" id="reset-hero-filter-btn" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
+                    <span class="material-symbols-outlined text-base">restart_alt</span>
+                    <span>Limpiar filtros</span>
+                </button>
+                <button type="button" id="apply-hero-filter-btn" class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    <span>Aplicar y buscar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openBtn = document.getElementById('open-hero-filter-btn');
+            const closeBtn = document.getElementById('close-hero-filter-btn');
+            const modal = document.getElementById('hero-filter-modal');
+            const modalCard = document.getElementById('hero-filter-modal-card');
+            const resetBtn = document.getElementById('reset-hero-filter-btn');
+            const applyBtn = document.getElementById('apply-hero-filter-btn');
+
+            const filterInput = document.getElementById('hero-filter-input');
+            const operationInput = document.getElementById('hero-operation-input');
+            const roomsInput = document.getElementById('hero-rooms-input');
+            const minPriceInput = document.getElementById('hero-minprice-input');
+            const maxPriceInput = document.getElementById('hero-maxprice-input');
+            const amenitiesInput = document.getElementById('hero-amenities-input');
+            const filterIndicator = document.getElementById('hero-filter-indicator');
+            const searchForm = document.getElementById('hero-search-form');
+
+            const minPriceEl = document.getElementById('hero-modal-minprice');
+            const maxPriceEl = document.getElementById('hero-modal-maxprice');
+            const priceDisplayEl = document.getElementById('hero-price-display');
+
+            let selectedOperation = 'all';
+            let selectedType = 'all';
+            let selectedRooms = 'all';
+            let selectedAmenities = new Set();
+
+            function openFilterModal() {
+                const modalEl = document.getElementById('hero-filter-modal');
+                const cardEl = document.getElementById('hero-filter-modal-card');
+                if (modalEl) {
+                    modalEl.classList.remove('opacity-0', 'pointer-events-none');
+                    modalEl.classList.add('opacity-100', 'pointer-events-auto');
+                    if (cardEl) {
+                        cardEl.classList.remove('scale-95');
+                        cardEl.classList.add('scale-100');
+                    }
+                }
+            }
+            window.openFilterModal = openFilterModal;
+
+            document.addEventListener('click', (e) => {
+                const openTrigger = e.target.closest('#open-hero-filter-btn');
+                if (openTrigger) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFilterModal();
+                }
+            });
+
+            if (openBtn) {
+                openBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFilterModal();
+                });
+            }
+
+            const closeModal = () => {
+                if (!modal) return;
+                modal.classList.remove('opacity-100', 'pointer-events-auto');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                if (modalCard) {
+                    modalCard.classList.remove('scale-100');
+                    modalCard.classList.add('scale-95');
+                }
+            };
+
+            if (closeBtn) closeBtn.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal();
+                });
+            }
+
+            // Operation Buttons
+            const opButtons = document.querySelectorAll('.hero-op-btn');
+            opButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    opButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                    selectedOperation = btn.dataset.op || 'all';
+                });
+            });
+
+            // Type Buttons
+            const typeButtons = document.querySelectorAll('.hero-type-btn');
+            typeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    typeButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                    selectedType = btn.dataset.type || 'all';
+                });
+            });
+
+            // Price Presets
+            const pricePresets = document.querySelectorAll('.hero-price-preset');
+            pricePresets.forEach(preset => {
+                preset.addEventListener('click', () => {
+                    if (minPriceEl) minPriceEl.value = preset.dataset.min || '';
+                    if (maxPriceEl) maxPriceEl.value = preset.dataset.max || '';
+                    updatePriceDisplay();
+                    pricePresets.forEach(p => p.classList.remove('bg-primary', 'text-white', 'border-primary'));
+                    preset.classList.add('bg-primary', 'text-white', 'border-primary');
+                });
+            });
+
+            const formatPesosStr = (val) => {
+                if (!val) return '';
+                const num = parseFloat(String(val).replace(/\./g, '').replace(/,/g, ''));
+                if (isNaN(num)) return '';
+                return `$${num.toLocaleString('es-AR')}`;
+            };
+
+            const updatePriceDisplay = () => {
+                if (!priceDisplayEl) return;
+                const min = minPriceEl ? minPriceEl.value : '';
+                const max = maxPriceEl ? maxPriceEl.value : '';
+                const minF = formatPesosStr(min);
+                const maxF = formatPesosStr(max);
+                if (!minF && !maxF) {
+                    priceDisplayEl.textContent = 'Cualquier precio';
+                } else if (minF && !maxF) {
+                    priceDisplayEl.textContent = `Desde ${minF}`;
+                } else if (!minF && maxF) {
+                    priceDisplayEl.textContent = `Hasta ${maxF}`;
+                } else {
+                    priceDisplayEl.textContent = `${minF} - ${maxF}`;
+                }
+            };
+
+            if (minPriceEl) minPriceEl.addEventListener('input', updatePriceDisplay);
+            if (maxPriceEl) maxPriceEl.addEventListener('input', updatePriceDisplay);
+
+            // Rooms Buttons
+            const roomsButtons = document.querySelectorAll('.hero-rooms-btn');
+            roomsButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    roomsButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active');
+                    selectedRooms = btn.dataset.rooms || 'all';
+                });
+            });
+
+            // Amenity Multi-select Buttons
+            const amenityButtons = document.querySelectorAll('.hero-amenity-btn');
+            amenityButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = btn.dataset.amenity;
+                    if (selectedAmenities.has(item)) {
+                        selectedAmenities.delete(item);
+                        btn.classList.remove('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                        btn.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    } else {
+                        selectedAmenities.add(item);
+                        btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                        btn.classList.add('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                    }
+                });
+            });
+
+            // Reset
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    selectedOperation = 'all';
+                    selectedType = 'all';
+                    selectedRooms = 'all';
+                    selectedAmenities.clear();
+
+                    if (minPriceEl) minPriceEl.value = '';
+                    if (maxPriceEl) maxPriceEl.value = '';
+                    updatePriceDisplay();
+
+                    opButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    typeButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    roomsButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    amenityButtons.forEach(b => {
+                        b.classList.remove('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+
+                    pricePresets.forEach(p => p.classList.remove('bg-primary', 'text-white', 'border-primary'));
+
+                    if (filterInput) filterInput.value = 'all';
+                    if (operationInput) operationInput.value = 'all';
+                    if (roomsInput) roomsInput.value = 'all';
+                    if (minPriceInput) minPriceInput.value = '';
+                    if (maxPriceInput) maxPriceInput.value = '';
+                    if (amenitiesInput) amenitiesInput.value = '';
+                    if (filterIndicator) filterIndicator.classList.add('hidden');
+                });
+            }
+
+            // Apply
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    const minVal = minPriceEl ? minPriceEl.value : '';
+                    const maxVal = maxPriceEl ? maxPriceEl.value : '';
+
+                    if (filterInput) filterInput.value = selectedType;
+                    if (operationInput) operationInput.value = selectedOperation;
+                    if (roomsInput) roomsInput.value = selectedRooms;
+                    if (minPriceInput) minPriceInput.value = minVal;
+                    if (maxPriceInput) maxPriceInput.value = maxVal;
+                    if (amenitiesInput) amenitiesInput.value = Array.from(selectedAmenities).join(',');
+
+                    const isFiltered = selectedType !== 'all' || selectedOperation !== 'all' || selectedRooms !== 'all' || minVal !== '' || maxVal !== '' || selectedAmenities.size > 0;
+                    if (filterIndicator) {
+                        filterIndicator.classList.toggle('hidden', !isFiltered);
+                    }
+
+                    closeModal();
+                    if (searchForm) {
+                        searchForm.submit();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

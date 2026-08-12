@@ -3413,5 +3413,40 @@ html.dark .checkbox-wrapper .checkbox-tick,
     stroke-dashoffset: 0 !important;
 }
 
+/* Modern Validation Error Highlight & Smooth Attention Shake Animation */
+@keyframes modernErrorPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    }
+    20% {
+        transform: scale(1.03) translateX(-5px);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.4);
+    }
+    40% {
+        transform: scale(1.02) translateX(5px);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.25);
+    }
+    60% {
+        transform: scale(1.01) translateX(-3px);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15);
+    }
+    80% {
+        transform: scale(1.005) translateX(3px);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+    100% {
+        transform: scale(1) translateX(0);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.field-invalid-shake {
+    animation: modernErrorPulse 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
+    outline: 2px solid #ef4444 !important;
+    outline-offset: 2px !important;
+    border-color: #ef4444 !important;
+}
+
 
 

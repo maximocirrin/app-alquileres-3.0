@@ -141,64 +141,30 @@
         .search-card {
             background: var(--search-shell);
             border: 1px solid var(--border);
-            border-radius: 1.25rem;
-            padding: 1.1rem;
+            border-radius: 1.5rem;
+            padding: 0.85rem;
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
             backdrop-filter: blur(16px);
+            max-width: 100%;
+            overflow: hidden;
         }
 
-        .search-form {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 0.65rem;
+        @media (min-width: 640px) {
+            .search-card {
+                padding: 1.1rem;
+            }
         }
 
-        .search-input {
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-            padding: 0 1.1rem;
-            min-height: 3.1rem;
-            border: 1.5px solid var(--input);
-            border-radius: 9999px;
-            background: var(--background);
-            color: var(--foreground);
-            transition: all 0.2s ease;
-        }
-
-        .search-input:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
-        }
-
-        .search-input input,
         .sort-select {
             width: 100%;
-            border: 0;
-            outline: 0;
+            border: 0 !important;
+            border-style: none !important;
+            outline: 0 !important;
+            box-shadow: none !important;
             background: transparent;
             color: inherit;
             font: inherit;
-        }
-
-        .primary-action {
-            min-height: 3.1rem;
-            border: 0;
-            border-radius: 9999px;
-            padding: 0 1.4rem;
-            background: var(--primary);
-            color: var(--primary-foreground);
-            font-weight: 800;
-            font-size: 0.92rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45rem;
-            white-space: nowrap;
-            box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
-            transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            -webkit-appearance: none;
         }
 
         .primary-action:hover {
@@ -896,15 +862,33 @@
                 </div>
 
                 <div class="search-card">
-                    <form class="search-form" id="search-form">
-                        <label class="search-input" for="location-search">
-                            <span class="material-symbols-rounded" aria-hidden="true">search</span>
-                            <input id="location-search" type="search" autocomplete="off"
+                    <form action="buscar.html" method="GET" class="w-full m-0 p-1 sm:p-1.5 pl-3.5 sm:pl-5 rounded-full bg-white dark:bg-zinc-800/90 border border-zinc-200/90 dark:border-zinc-700/80 shadow-md flex items-center gap-1.5 sm:gap-2 transition-all focus-within:border-primary/50" id="search-form">
+                        <div class="flex-1 flex items-center gap-2 min-w-0">
+                            <span class="material-symbols-rounded text-primary dark:text-red-400 text-lg sm:text-2xl shrink-0" aria-hidden="true">search</span>
+                            <input id="location-search" name="location" type="search" autocomplete="off"
+                                class="w-full bg-transparent text-on-surface dark:text-white font-body text-xs sm:text-sm md:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate p-0"
+                                style="border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none;"
                                 placeholder="Ciudad, barrio o dirección">
-                        </label>
-                        <button class="primary-action" type="submit">
-                            <span class="material-symbols-rounded" aria-hidden="true">manage_search</span>
-                            Buscar
+                        </div>
+
+                        <input type="hidden" id="hero-filter-input" name="filter" value="all" />
+                        <input type="hidden" id="hero-operation-input" name="operation" value="all" />
+                        <input type="hidden" id="hero-rooms-input" name="rooms" value="all" />
+                        <input type="hidden" id="hero-minprice-input" name="minPrice" value="" />
+                        <input type="hidden" id="hero-maxprice-input" name="maxPrice" value="" />
+                        <input type="hidden" id="hero-amenities-input" name="amenities" value="" />
+
+                        <button type="button" id="open-hero-filter-btn" onclick="openFilterModal()"
+                            class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all shrink-0 cursor-pointer active:scale-95 border-0 bg-transparent p-0 outline-none"
+                            aria-label="Filtros" title="Filtros">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
+                            <span id="hero-filter-indicator" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-primary border border-white dark:border-zinc-900 pointer-events-none"></span>
+                        </button>
+
+                        <button type="submit"
+                            class="bg-primary hover:bg-primary-container text-white w-9 h-9 sm:w-auto sm:h-auto px-0 sm:px-5 py-0 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 border-0 outline-none">
+                            <span class="material-symbols-rounded text-base sm:text-lg" aria-hidden="true">search</span>
+                            <span class="hidden sm:inline">Buscar</span>
                         </button>
                     </form>
                     <div class="filter-row" aria-label="Filtros rápidos">
@@ -1007,28 +991,89 @@
                             let googleMarkers = [];
                             let markerCluster = null;
 
-                            const moneyLabel = (value) => `$${Math.round(value / 1000)}k`;
+                            function parsePrice(val) {
+                                if (val === null || val === undefined || val === '') return null;
+                                if (typeof val === 'number') {
+                                    return isNaN(val) ? null : val;
+                                }
+                                let str = String(val).trim().toLowerCase();
+                                if (str.endsWith('k')) {
+                                    const num = parseFloat(str.replace('k', ''));
+                                    return isNaN(num) ? null : num * 1000;
+                                }
+                                str = str.replace(/\./g, '').replace(/,/g, '').replace(/[^0-9.]/g, '');
+                                const parsed = parseFloat(str);
+                                return isNaN(parsed) ? null : parsed;
+                            }
+
+                            const moneyLabel = (value) => {
+                                const p = parsePrice(value);
+                                if (!p) return '$0';
+                                return `$${p.toLocaleString('es-AR')}`;
+                            };
                             const normalize = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                             const getProvinceName = (feature) => feature.getProperty('nombre') || feature.getProperty('name') || 'Provincia';
                             const hasRental = (name) => properties.some((rental) => rental.province === name);
 
                             function matchesRental(rental) {
-                                const searchable = normalize(`${rental.title} ${rental.address} ${rental.province} ${rental.tags.join(' ')}`);
-                                let cleanedTerm = normalize(currentTerm).replace(/argentina/g, '').replace(/provincia de/g, '').trim();
-                                const termWords = cleanedTerm.split(/[\s,]+/).filter(w => w.length > 2);
-                                const matchesText = cleanedTerm === '' || searchable.includes(cleanedTerm) || (termWords.length > 0 && termWords.every(w => searchable.includes(w)));
-                                
-                                const matchesFilter =
-                                    currentFilter === 'all' ||
-                                    rental.type === currentFilter ||
-                                    (currentFilter === 'pet' && rental.pet) ||
-                                    (currentFilter === 'verified' && rental.verified);
-                                return matchesText && matchesFilter;
-                            }
+                                 const searchable = normalize(`${rental.title || ''} ${rental.address || ''} ${rental.province || ''} ${(rental.tags || []).join(' ')} ${rental.type || ''} ${rental.operation || ''}`);
+                                 let cleanedTerm = normalize(currentTerm).replace(/argentina/g, '').replace(/provincia de/g, '').trim();
+                                 const termWords = cleanedTerm.split(/[\s,]+/).filter(w => w.length > 2);
+                                 const matchesText = cleanedTerm === '' || searchable.includes(cleanedTerm) || (termWords.length > 0 && termWords.every(w => searchable.includes(w)));
+                                 
+                                 const matchesFilter =
+                                     currentFilter === 'all' ||
+                                     rental.type === currentFilter ||
+                                     (currentFilter === 'apartment' && (rental.type === 'apartment' || searchable.includes('depto') || searchable.includes('departamento'))) ||
+                                     (currentFilter === 'house' && (rental.type === 'house' || searchable.includes('casa'))) ||
+                                     (currentFilter === 'ph' && (rental.type === 'ph' || searchable.includes('ph'))) ||
+                                     (currentFilter === 'monoambiente' && (rental.type === 'monoambiente' || rental.type === 'studio' || searchable.includes('monoambiente') || searchable.includes('studio') || searchable.includes('estudio'))) ||
+                                     (currentFilter === 'commercial' && (rental.type === 'commercial' || searchable.includes('local') || searchable.includes('comercial'))) ||
+                                     (currentFilter === 'pet' && (rental.pet || searchable.includes('mascota'))) ||
+                                     (currentFilter === 'verified' && (rental.verified || searchable.includes('verificad')));
+
+                                 const rentalPrice = parsePrice(rental.price);
+                                 const minP = parsePrice(window.minPriceFilter);
+                                 const maxP = parsePrice(window.maxPriceFilter);
+                                 const matchesMin = !minP || (rentalPrice !== null && rentalPrice >= minP);
+                                 const matchesMax = !maxP || (rentalPrice !== null && rentalPrice <= maxP);
+
+                                 const opFilter = window.operationFilter || 'all';
+                                 const matchesOp = opFilter === 'all' || !rental.operation || (rental.operation && normalize(rental.operation).includes(opFilter)) || searchable.includes(opFilter);
+
+                                 const roomsF = window.roomsFilter || 'all';
+                                 let matchesRooms = true;
+                                 if (roomsF !== 'all') {
+                                     const roomNum = parseInt(roomsF, 10);
+                                     if (rental.rooms || rental.bedrooms || rental.ambientes) {
+                                         const val = Number(rental.rooms || rental.bedrooms || rental.ambientes);
+                                         matchesRooms = roomNum >= 4 ? val >= 4 : val === roomNum;
+                                     } else {
+                                         if (roomsF === '1') matchesRooms = searchable.includes('1 dorm') || searchable.includes('1 amb') || searchable.includes('monoambiente') || searchable.includes('studio');
+                                         else if (roomsF === '2') matchesRooms = searchable.includes('2 dorm') || searchable.includes('2 amb');
+                                         else if (roomsF === '3') matchesRooms = searchable.includes('3 dorm') || searchable.includes('3 amb');
+                                         else if (roomsF === '4') matchesRooms = searchable.includes('4 dorm') || searchable.includes('4 amb');
+                                     }
+                                 }
+
+                                 const amenitiesF = window.amenitiesFilter ? window.amenitiesFilter.split(',').filter(Boolean) : [];
+                                 const matchesAmenities = amenitiesF.length === 0 || amenitiesF.every(am => {
+                                     const normAm = normalize(am);
+                                     if (normAm === 'pet') return rental.pet || searchable.includes('mascota');
+                                     if (normAm === 'verified') return rental.verified || searchable.includes('verificad');
+                                     if (normAm === 'expensas') return rental.expensasIncluidas || searchable.includes('expensas');
+                                     if (normAm === 'cochera') return rental.cochera || searchable.includes('cochera');
+                                     if (normAm === 'balcon') return rental.balcon || searchable.includes('balcon') || searchable.includes('terraza');
+                                     if (normAm === 'amoblado') return rental.amoblado || searchable.includes('amoblado');
+                                     return searchable.includes(normAm);
+                                 });
+
+                                 return matchesText && matchesFilter && matchesMin && matchesMax && matchesOp && matchesRooms && matchesAmenities;
+                             }
                             function getVisibleRentals() {
                                 const visible = properties.filter(matchesRental);
-                                if (sortEl.value === 'price-asc') visible.sort((a, b) => a.price - b.price);
-                                if (sortEl.value === 'price-desc') visible.sort((a, b) => b.price - a.price);
+                                if (sortEl.value === 'price-asc') visible.sort((a, b) => (parsePrice(a.price) || 0) - (parsePrice(b.price) || 0));
+                                if (sortEl.value === 'price-desc') visible.sort((a, b) => (parsePrice(b.price) || 0) - (parsePrice(a.price) || 0));
                                 return visible;
                             }
 
@@ -1059,7 +1104,7 @@
 
                                     const photosCount = (rental.images && rental.images.length > 0) ? rental.images.length : (rental.propiedad_imagenes ? rental.propiedad_imagenes.length : 1);
                                     const isIncluidas = rental.expensasIncluidas;
-                                    const expensasVal = rental.expensas ? (rental.expensas >= 1000 ? `$${Math.round(rental.expensas / 1000)}k` : `$${rental.expensas}`) : '';
+                                    const expensasVal = rental.expensas ? moneyLabel(rental.expensas) : '';
                                     const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
 
                                     card.innerHTML = `
@@ -1279,7 +1324,7 @@
                                         });
 
                                         marker.addListener('click', () => {
-                                            const mapExpensasVal = rental.expensas ? (rental.expensas >= 1000 ? `$${Math.round(rental.expensas / 1000)}k` : `$${rental.expensas}`) : '';
+                                            const mapExpensasVal = rental.expensas ? moneyLabel(rental.expensas) : '';
                                             const mapExpensasText = rental.expensasIncluidas ? 'Incluye expensas' : (mapExpensasVal ? `+ ${mapExpensasVal} expensas` : '+ expensas');
                                             const content = `
                                                 <div style="font-family: Inter, sans-serif; padding: 6px; max-width: 230px; color:#1a1a1a;">
@@ -1466,6 +1511,18 @@
                                 inputEl.value = locationParam;
                                 currentTerm = locationParam.trim();
                             }
+                            const filterParam = urlParams.get('filter');
+                            if (filterParam && filterParam !== 'all') {
+                                currentFilter = filterParam;
+                                document.querySelectorAll('.filter-chip').forEach((item) => {
+                                    item.classList.toggle('is-active', item.dataset.filter === filterParam);
+                                });
+                            }
+                            if (urlParams.get('operation')) window.operationFilter = urlParams.get('operation');
+                            if (urlParams.get('rooms')) window.roomsFilter = urlParams.get('rooms');
+                            if (urlParams.get('minPrice')) window.minPriceFilter = urlParams.get('minPrice');
+                            if (urlParams.get('maxPrice')) window.maxPriceFilter = urlParams.get('maxPrice');
+                            if (urlParams.get('amenities')) window.amenitiesFilter = urlParams.get('amenities');
                             syncDbPropertiesForSearch();
                             renderNewListings();
 
@@ -1481,6 +1538,7 @@
                             }
                         });
                     </script>
+                    <script src="js/publish-property.js"></script>
                     <script src="js/app.js?v=4"></script>
                     <script>
                         window.addEventListener('load', () => {
@@ -1489,6 +1547,500 @@
                             }
                         });
                     </script>
+                </div>
+            </aside>
+        </main>
+    </div>
+    <!-- Hero Filter Modal -->
+    <div id="hero-filter-modal" class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div id="hero-filter-modal-card" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
+                        <span class="material-symbols-outlined text-xl">tune</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">Filtros de búsqueda</h3>
+                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de propiedades</p>
+                    </div>
+                </div>
+                <button type="button" id="close-hero-filter-btn" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" aria-label="Cerrar">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6 font-body text-sm custom-scrollbar flex-1">
+                <!-- Operación -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Operación</label>
+                    <div class="grid grid-cols-3 gap-2" id="hero-filter-operation-group">
+                        <button type="button" data-op="all" class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
+                        <button type="button" data-op="alquiler" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
+                        <button type="button" data-op="venta" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
+                    </div>
+                </div>
+
+                <!-- Tipo de propiedad -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Propiedad</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="hero-filter-type-group">
+                        <button type="button" data-type="all" class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <span class="material-symbols-outlined text-base">view_cozy</span>
+                            <span>Todas</span>
+                        </button>
+                        <button type="button" data-type="apartment" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">apartment</span>
+                            <span>Departamento</span>
+                        </button>
+                        <button type="button" data-type="house" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">home</span>
+                            <span>Casa</span>
+                        </button>
+                        <button type="button" data-type="ph" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">holiday_village</span>
+                            <span>PH</span>
+                        </button>
+                        <button type="button" data-type="monoambiente" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">chair</span>
+                            <span>Monoambiente</span>
+                        </button>
+                        <button type="button" data-type="commercial" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base">storefront</span>
+                            <span>Local Comercial</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rango de Precio -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango de Precio ($ ARS / mes)</label>
+
+                    <!-- Visual Quick Presets -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" data-min="" data-max="300000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta $300.000</button>
+                        <button type="button" data-min="300000" data-max="600000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000 - $600.000</button>
+                        <button type="button" data-min="600000" data-max="1000000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000 - $1.000.000</button>
+                        <button type="button" data-min="1000000" data-max="" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
+                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
+                                <input type="number" id="hero-modal-minprice" placeholder="0" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
+                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
+                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dormitorios / Ambientes -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios / Ambientes</label>
+                    <div class="flex flex-wrap gap-2" id="hero-filter-rooms-group">
+                        <button type="button" data-rooms="all" class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
+                        <button type="button" data-rooms="1" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1 Dorm / Amb</button>
+                        <button type="button" data-rooms="2" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2 Dorms</button>
+                        <button type="button" data-rooms="3" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3 Dorms</button>
+                        <button type="button" data-rooms="4" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+ Dorms</button>
+                    </div>
+                </div>
+
+                <!-- Requisitos y Amenities -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos & Amenities</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-2" id="hero-filter-amenities-group">
+                        <button type="button" data-amenity="pet" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-amber-500">pets</span>
+                            <span class="truncate">Apto mascotas</span>
+                        </button>
+                        <button type="button" data-amenity="verified" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
+                            <span class="truncate">Verificado</span>
+                        </button>
+                        <button type="button" data-amenity="expensas" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-blue-500">receipt_long</span>
+                            <span class="truncate">Expensas incluidas</span>
+                        </button>
+                        <button type="button" data-amenity="cochera" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-rose-500">directions_car</span>
+                            <span class="truncate">Cochera</span>
+                        </button>
+                        <button type="button" data-amenity="balcon" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-teal-500">deck</span>
+                            <span class="truncate">Balcón / Terraza</span>
+                        </button>
+                        <button type="button" data-amenity="amoblado" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                            <span class="material-symbols-outlined text-base text-purple-500">chair</span>
+                            <span class="truncate">Amoblado</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <button type="button" id="reset-hero-filter-btn" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
+                    <span class="material-symbols-outlined text-base">restart_alt</span>
+                    <span>Limpiar filtros</span>
+                </button>
+                <button type="button" id="apply-hero-filter-btn" class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">search</span>
+                    <span>Aplicar y buscar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openBtn = document.getElementById('open-hero-filter-btn');
+            const closeBtn = document.getElementById('close-hero-filter-btn');
+            const modal = document.getElementById('hero-filter-modal');
+            const modalCard = document.getElementById('hero-filter-modal-card');
+            const resetBtn = document.getElementById('reset-hero-filter-btn');
+            const applyBtn = document.getElementById('apply-hero-filter-btn');
+
+            const minPriceEl = document.getElementById('hero-modal-minprice');
+            const maxPriceEl = document.getElementById('hero-modal-maxprice');
+            const filterIndicator = document.getElementById('hero-filter-indicator');
+
+            let selectedOperation = 'all';
+            let selectedType = 'all';
+            let selectedRooms = 'all';
+            let selectedAmenities = new Set();
+
+            function syncModalUIFromParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+
+                const opParam = urlParams.get('operation') || window.operationFilter || 'all';
+                const typeParam = urlParams.get('filter') || (typeof currentFilter !== 'undefined' ? currentFilter : 'all');
+                const roomsParam = urlParams.get('rooms') || window.roomsFilter || 'all';
+                const minPriceParam = urlParams.get('minPrice') || window.minPriceFilter || '';
+                const maxPriceParam = urlParams.get('maxPrice') || window.maxPriceFilter || '';
+                const amenitiesParam = urlParams.get('amenities') || window.amenitiesFilter || '';
+
+                selectedOperation = opParam;
+                selectedType = typeParam;
+                selectedRooms = roomsParam;
+                selectedAmenities = new Set(amenitiesParam ? amenitiesParam.split(',').filter(Boolean) : []);
+
+                if (minPriceEl) minPriceEl.value = minPriceParam;
+                if (maxPriceEl) maxPriceEl.value = maxPriceParam;
+
+                // Sync Operation buttons UI
+                const opButtons = document.querySelectorAll('.hero-op-btn');
+                opButtons.forEach(b => {
+                    const isSelected = (b.dataset.op || 'all') === selectedOperation;
+                    b.classList.toggle('active', isSelected);
+                    b.classList.toggle('bg-primary', isSelected);
+                    b.classList.toggle('text-white', isSelected);
+                    b.classList.toggle('border-primary', isSelected);
+                    b.classList.toggle('bg-zinc-100', !isSelected);
+                    b.classList.toggle('dark:bg-zinc-800/80', !isSelected);
+                    b.classList.toggle('border-zinc-200', !isSelected);
+                    b.classList.toggle('dark:border-zinc-700', !isSelected);
+                    b.classList.toggle('text-zinc-700', !isSelected);
+                    b.classList.toggle('dark:text-zinc-300', !isSelected);
+                });
+
+                // Sync Type buttons UI
+                const typeButtons = document.querySelectorAll('.hero-type-btn');
+                typeButtons.forEach(b => {
+                    const isSelected = (b.dataset.type || 'all') === selectedType;
+                    b.classList.toggle('active', isSelected);
+                    b.classList.toggle('bg-primary', isSelected);
+                    b.classList.toggle('text-white', isSelected);
+                    b.classList.toggle('border-primary', isSelected);
+                    b.classList.toggle('bg-zinc-100', !isSelected);
+                    b.classList.toggle('dark:bg-zinc-800/80', !isSelected);
+                    b.classList.toggle('border-zinc-200', !isSelected);
+                    b.classList.toggle('dark:border-zinc-700', !isSelected);
+                    b.classList.toggle('text-zinc-700', !isSelected);
+                    b.classList.toggle('dark:text-zinc-300', !isSelected);
+                });
+
+                // Sync Rooms buttons UI
+                const roomsButtons = document.querySelectorAll('.hero-rooms-btn');
+                roomsButtons.forEach(b => {
+                    const isSelected = (b.dataset.rooms || 'all') === selectedRooms;
+                    b.classList.toggle('active', isSelected);
+                    b.classList.toggle('bg-primary', isSelected);
+                    b.classList.toggle('text-white', isSelected);
+                    b.classList.toggle('border-primary', isSelected);
+                    b.classList.toggle('bg-zinc-100', !isSelected);
+                    b.classList.toggle('dark:bg-zinc-800/80', !isSelected);
+                    b.classList.toggle('border-zinc-200', !isSelected);
+                    b.classList.toggle('dark:border-zinc-700', !isSelected);
+                    b.classList.toggle('text-zinc-700', !isSelected);
+                    b.classList.toggle('dark:text-zinc-300', !isSelected);
+                });
+
+                // Sync Amenities buttons UI
+                const amenityButtons = document.querySelectorAll('.hero-amenity-btn');
+                amenityButtons.forEach(b => {
+                    const isSelected = selectedAmenities.has(b.dataset.amenity);
+                    if (isSelected) {
+                        b.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                        b.classList.add('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                    } else {
+                        b.classList.remove('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    }
+                });
+
+                // Sync Price Presets UI
+                const pricePresets = document.querySelectorAll('.hero-price-preset');
+                pricePresets.forEach(p => {
+                    const pMin = p.dataset.min || '';
+                    const pMax = p.dataset.max || '';
+                    const isSelected = pMin === minPriceParam && pMax === maxPriceParam && minPriceParam !== '';
+                    p.classList.toggle('bg-primary', isSelected);
+                    p.classList.toggle('text-white', isSelected);
+                    p.classList.toggle('border-primary', isSelected);
+                });
+
+                // Indicator
+                const hasActiveFilters = selectedType !== 'all' || selectedOperation !== 'all' || selectedRooms !== 'all' || minPriceParam !== '' || maxPriceParam !== '' || selectedAmenities.size > 0;
+                if (filterIndicator) {
+                    filterIndicator.classList.toggle('hidden', !hasActiveFilters);
+                }
+            }
+
+            function openFilterModal() {
+                syncModalUIFromParams();
+                const modal = document.getElementById('hero-filter-modal');
+                const modalCard = document.getElementById('hero-filter-modal-card');
+                if (modal) {
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.classList.add('opacity-100', 'pointer-events-auto');
+                    if (modalCard) {
+                        modalCard.classList.remove('scale-95');
+                        modalCard.classList.add('scale-100');
+                    }
+                }
+            }
+            window.openFilterModal = openFilterModal;
+            window.syncModalUIFromParams = syncModalUIFromParams;
+
+            syncModalUIFromParams();
+
+            document.addEventListener('click', (e) => {
+                const openTrigger = e.target.closest('#open-hero-filter-btn');
+                if (openTrigger) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFilterModal();
+                }
+            });
+
+            if (openBtn) {
+                openBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFilterModal();
+                });
+            }
+
+            const closeModal = () => {
+                if (!modal) return;
+                modal.classList.remove('opacity-100', 'pointer-events-auto');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                if (modalCard) {
+                    modalCard.classList.remove('scale-100');
+                    modalCard.classList.add('scale-95');
+                }
+            };
+
+            if (closeBtn) closeBtn.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal();
+                });
+            }
+
+            // Operation Buttons
+            const opButtons = document.querySelectorAll('.hero-op-btn');
+            opButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    opButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                    selectedOperation = btn.dataset.op || 'all';
+                });
+            });
+
+            // Type Buttons
+            const typeButtons = document.querySelectorAll('.hero-type-btn');
+            typeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    typeButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active', 'shadow-sm');
+                    selectedType = btn.dataset.type || 'all';
+                });
+            });
+
+            // Price Presets
+            const pricePresets = document.querySelectorAll('.hero-price-preset');
+            pricePresets.forEach(preset => {
+                preset.addEventListener('click', () => {
+                    if (minPriceEl) minPriceEl.value = preset.dataset.min || '';
+                    if (maxPriceEl) maxPriceEl.value = preset.dataset.max || '';
+                    pricePresets.forEach(p => p.classList.remove('bg-primary', 'text-white', 'border-primary'));
+                    preset.classList.add('bg-primary', 'text-white', 'border-primary');
+                });
+            });
+
+            // Rooms Buttons
+            const roomsButtons = document.querySelectorAll('.hero-rooms-btn');
+            roomsButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    roomsButtons.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white', 'border-primary', 'active');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+                    btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    btn.classList.add('bg-primary', 'text-white', 'border-primary', 'active');
+                    selectedRooms = btn.dataset.rooms || 'all';
+                });
+            });
+
+            // Amenity Multi-select Buttons
+            const amenityButtons = document.querySelectorAll('.hero-amenity-btn');
+            amenityButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = btn.dataset.amenity;
+                    if (selectedAmenities.has(item)) {
+                        selectedAmenities.delete(item);
+                        btn.classList.remove('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                        btn.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    } else {
+                        selectedAmenities.add(item);
+                        btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                        btn.classList.add('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                    }
+                });
+            });
+
+            // Reset
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    selectedOperation = 'all';
+                    selectedType = 'all';
+                    selectedRooms = 'all';
+                    selectedAmenities.clear();
+
+                    if (minPriceEl) minPriceEl.value = '';
+                    if (maxPriceEl) maxPriceEl.value = '';
+
+                    window.operationFilter = 'all';
+                    window.roomsFilter = 'all';
+                    window.minPriceFilter = '';
+                    window.maxPriceFilter = '';
+                    window.amenitiesFilter = '';
+                    if (typeof currentFilter !== 'undefined') currentFilter = 'all';
+
+                    opButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    typeButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    roomsButtons.forEach((b, idx) => {
+                        b.classList.toggle('active', idx === 0);
+                        b.classList.toggle('bg-primary', idx === 0);
+                        b.classList.toggle('text-white', idx === 0);
+                        b.classList.toggle('border-primary', idx === 0);
+                        b.classList.toggle('bg-zinc-100', idx !== 0);
+                        b.classList.toggle('dark:bg-zinc-800/80', idx !== 0);
+                    });
+
+                    amenityButtons.forEach(b => {
+                        b.classList.remove('bg-primary/10', 'border-primary', 'text-primary', 'dark:text-red-400');
+                        b.classList.add('bg-zinc-100', 'dark:bg-zinc-800/80', 'border-zinc-200', 'dark:border-zinc-700', 'text-zinc-700', 'dark:text-zinc-300');
+                    });
+
+                    pricePresets.forEach(p => p.classList.remove('bg-primary', 'text-white', 'border-primary'));
+
+                    if (filterIndicator) filterIndicator.classList.add('hidden');
+
+                    if (typeof renderNewListings === 'function') {
+                        renderNewListings();
+                    }
+                });
+            }
+
+            // Apply
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    const minVal = minPriceEl ? minPriceEl.value : '';
+                    const maxVal = maxPriceEl ? maxPriceEl.value : '';
+
+                    window.operationFilter = selectedOperation;
+                    window.roomsFilter = selectedRooms;
+                    window.minPriceFilter = minVal;
+                    window.maxPriceFilter = maxVal;
+                    window.amenitiesFilter = Array.from(selectedAmenities).join(',');
+
+                    if (typeof currentFilter !== 'undefined') {
+                        currentFilter = selectedType;
+                        document.querySelectorAll('.filter-chip').forEach((item) => {
+                            item.classList.toggle('is-active', item.dataset.filter === selectedType);
+                        });
+                    }
+
+                    const isFiltered = selectedType !== 'all' || selectedOperation !== 'all' || selectedRooms !== 'all' || minVal !== '' || maxVal !== '' || selectedAmenities.size > 0;
+                    if (filterIndicator) {
+                        filterIndicator.classList.toggle('hidden', !isFiltered);
+                    }
+
+                    const url = new URL(window.location.href);
+                    if (selectedType && selectedType !== 'all') url.searchParams.set('filter', selectedType); else url.searchParams.delete('filter');
+                    if (selectedOperation && selectedOperation !== 'all') url.searchParams.set('operation', selectedOperation); else url.searchParams.delete('operation');
+                    if (selectedRooms && selectedRooms !== 'all') url.searchParams.set('rooms', selectedRooms); else url.searchParams.delete('rooms');
+                    if (minVal) url.searchParams.set('minPrice', minVal); else url.searchParams.delete('minPrice');
+                    if (maxVal) url.searchParams.set('maxPrice', maxVal); else url.searchParams.delete('maxPrice');
+                    if (selectedAmenities.size > 0) url.searchParams.set('amenities', Array.from(selectedAmenities).join(',')); else url.searchParams.delete('amenities');
+                    window.history.replaceState({}, '', url.toString());
+
+                    closeModal();
+
+                    if (typeof renderNewListings === 'function') {
+                        renderNewListings();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

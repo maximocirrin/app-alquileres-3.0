@@ -221,13 +221,19 @@ window.FavoritesManager = {
             try {
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
                 if (session && session.user) {
-                    const { data: favs } = await window.supabaseClient
-                        .from('Favorito')
-                        .select('id_publicacion')
-                        .eq('user_id', session.user.id);
+                    const profileId = (window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function')
+                        ? await window.DataManager._getOrCreateProfile()
+                        : null;
 
-                    if (favs && favs.length > 0) {
-                        favs.forEach(f => window.FavoritesManager.favoritesSet.add(Number(f.id_publicacion)));
+                    if (profileId) {
+                        const { data: favs } = await window.supabaseClient
+                            .from('Favorito')
+                            .select('id_publicacion')
+                            .eq('id_perfil', profileId);
+
+                        if (favs && favs.length > 0) {
+                            favs.forEach(f => window.FavoritesManager.favoritesSet.add(Number(f.id_publicacion)));
+                        }
                     }
                 }
             } catch (err) {
@@ -290,23 +296,21 @@ window.FavoritesManager = {
                         ? await window.DataManager._getOrCreateProfile()
                         : null;
 
-                    if (isFav) {
-                        let query = window.supabaseClient.from('Favorito').delete().eq('id_publicacion', pubId);
-                        if (profileId) {
-                            query = query.eq('id_perfil', profileId);
+                    if (profileId) {
+                        if (isFav) {
+                            await window.supabaseClient
+                                .from('Favorito')
+                                .delete()
+                                .eq('id_publicacion', pubId)
+                                .eq('id_perfil', profileId);
                         } else {
-                            query = query.eq('user_id', session.user.id);
+                            await window.supabaseClient
+                                .from('Favorito')
+                                .insert([{
+                                    id_perfil: profileId,
+                                    id_publicacion: pubId
+                                }]);
                         }
-                        await query;
-                    } else {
-                        const profileIdToUse = profileId || 1;
-                        await window.supabaseClient
-                            .from('Favorito')
-                            .insert([{
-                                user_id: session.user.id,
-                                id_perfil: profileIdToUse,
-                                id_publicacion: pubId
-                            }]);
                     }
                 }
             } catch (err) {
@@ -631,14 +635,47 @@ const App = {
 
     initScrollToTop: () => {
         let btn = document.getElementById('btn-scroll-top');
+        
+        // Page restriction: button only allowed on specific pages
+        const path = window.location.pathname.toLowerCase();
+        let filename = path.split('/').pop() || 'index.html';
+        if (filename.includes('?')) filename = filename.split('?')[0];
+        if (filename.includes('#')) filename = filename.split('#')[0];
+        
+        const allowedPages = [
+            'index.html', 'index',
+            'propietarios.html', 'propietarios',
+            'corredores.html', 'corredores',
+            'como-funciona.html', 'como-funciona',
+            'detalles-garantia.html', 'detalles-garantia'
+        ];
+
+        const isAllowed = allowedPages.includes(filename) || path === '/' || path.endsWith('/');
+
+        if (!isAllowed) {
+            if (btn) {
+                btn.remove();
+            }
+            return;
+        }
+
+        const buttonClasses = 'fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary text-white shadow-[0_-5px_15px_rgba(129,27,30,0.35)] border border-white/20 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group';
+
         if (!btn) {
             btn = document.createElement('button');
             btn.id = 'btn-scroll-top';
             btn.type = 'button';
             btn.setAttribute('aria-label', 'Volver arriba');
-            btn.className = 'fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary dark:from-red-900 dark:via-red-950 dark:to-zinc-900 text-white shadow-xl shadow-primary/30 dark:shadow-black/60 border border-white/20 dark:border-red-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group';
+            btn.className = buttonClasses;
             btn.innerHTML = `<span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>`;
             document.body.appendChild(btn);
+        } else {
+            const isVisible = btn.classList.contains('opacity-100');
+            btn.className = buttonClasses;
+            if (isVisible) {
+                btn.classList.remove('opacity-0', 'translate-y-6', 'pointer-events-none');
+                btn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+            }
         }
 
         btn.onclick = (e) => {
@@ -647,7 +684,24 @@ const App = {
         };
 
         const toggleVisibility = () => {
-            if (window.scrollY > 300) {
+            const publishView = document.getElementById('publish-property-view');
+            const isWizardActive = publishView && !publishView.classList.contains('hidden');
+
+            if (isWizardActive) {
+                btn.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                btn.classList.add('opacity-0', 'translate-y-6', 'pointer-events-none');
+                return;
+            }
+
+            const totalHeight = Math.max(
+                document.documentElement.scrollHeight || 0,
+                document.body.scrollHeight || 0
+            );
+            const viewportHeight = window.innerHeight || 0;
+            const scrollableDistance = totalHeight - viewportHeight;
+            const threshold = scrollableDistance > 0 ? (scrollableDistance * 0.35) : 350;
+
+            if (window.scrollY >= threshold) {
                 btn.classList.remove('opacity-0', 'translate-y-6', 'pointer-events-none');
                 btn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
             } else {
@@ -995,18 +1049,48 @@ const App = {
         };
 
         if (btnBackFromPublish) {
-            btnBackFromPublish.addEventListener('click', handleBackFromPublish);
+            btnBackFromPublish.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof window.handleWizardBack === 'function') {
+                    window.handleWizardBack();
+                }
+            });
         }
         if (btnBackMobile) {
-            btnBackMobile.addEventListener('click', handleBackStepMobile);
+            btnBackMobile.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof window.handleWizardBack === 'function') {
+                    window.handleWizardBack();
+                }
+            });
         }
 
         // Helper functions for Form Validation Feedback
         function highlightInvalidInput(el) {
             if (!el) return;
+
+            // Scroll field smoothly to center of screen
+            try {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (err) {}
+
+            // Apply red border classes
             el.classList.add('!border-2', '!border-red-500', 'dark:!border-[#A13333]', '!ring-2', '!ring-red-500/40', 'dark:!ring-[#A13333]/40');
+
+            // Trigger modern pulse shake animation
+            el.classList.remove('field-invalid-shake');
+            void el.offsetWidth; // Force reflow
+            el.classList.add('field-invalid-shake');
+
+            // Focus field after smooth scroll start
+            setTimeout(() => {
+                try {
+                    if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+                } catch (err) {}
+            }, 250);
+
             const onInputOrChange = () => {
-                el.classList.remove('!border-2', '!border-red-500', 'dark:!border-[#A13333]', '!ring-2', '!ring-red-500/40', 'dark:!ring-[#A13333]/40');
+                el.classList.remove('!border-2', '!border-red-500', 'dark:!border-[#A13333]', '!ring-2', '!ring-red-500/40', 'dark:!ring-[#A13333]/40', 'field-invalid-shake');
                 el.removeEventListener('input', onInputOrChange);
                 el.removeEventListener('change', onInputOrChange);
             };
@@ -1014,16 +1098,22 @@ const App = {
             el.addEventListener('change', onInputOrChange);
         }
 
-        function showValidationToast(message = 'Por favor, completá los campos obligatorios marcados en rojo antes de continuar.') {
+        function showValidationToast(message = 'Por favor, completá los campos obligatorios marcados en rojo antes de continuar.', type = 'error') {
             let existingToast = document.getElementById('validation-toast-notification');
             if (existingToast) existingToast.remove();
 
+            const isSuccess = type === 'success';
+            const bgClass = isSuccess 
+                ? 'bg-emerald-600 dark:bg-emerald-700 shadow-[0_10px_30px_rgba(16,185,129,0.4)]' 
+                : 'bg-red-600 dark:bg-red-700 shadow-[0_10px_30px_rgba(220,38,38,0.4)]';
+            const iconName = isSuccess ? 'check_circle' : 'error';
+
             const toast = document.createElement('div');
             toast.id = 'validation-toast-notification';
-            toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[200] max-w-md w-[92%] bg-red-600 dark:bg-red-700 text-white font-headline font-bold text-sm sm:text-base px-5 py-4 rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] flex items-center justify-between gap-3 transition-all duration-300 transform -translate-y-4 opacity-0 border border-white/20';
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-[200] max-w-md w-[92%] ${bgClass} text-white font-headline font-bold text-sm sm:text-base px-5 py-4 rounded-2xl flex items-center justify-between gap-3 transition-all duration-300 transform -translate-y-4 opacity-0 border border-white/20`;
             toast.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-2xl shrink-0">error</span>
+                    <span class="material-symbols-outlined text-2xl shrink-0">${iconName}</span>
                     <span class="leading-snug">${message}</span>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()" class="text-white/80 hover:text-white shrink-0 p-1">
@@ -1044,7 +1134,7 @@ const App = {
                     toast.classList.add('-translate-y-4', 'opacity-0');
                     setTimeout(() => toast.remove(), 300);
                 }
-            }, 5000);
+            }, 4500);
         }
         window.showValidationToast = showValidationToast;
         window.highlightInvalidInput = highlightInvalidInput;
@@ -1127,59 +1217,8 @@ const App = {
                     showValidationToast('Por favor, completá los campos obligatorios marcados en rojo antes de continuar.');
                 } else {
                     console.log('¡Datos Principales completos y validados (Custom)! Avanzando al subpaso de Ubicación...');
-
-                    // Manejar DOM para mostrar Ubicación
-                    const tabOperacion = document.getElementById('tab-operacion');
-                    const tabUbicacion = document.getElementById('tab-ubicacion');
-                    const stepOperacion = document.getElementById('step-operacion');
-                    const stepUbicacion = document.getElementById('step-ubicacion');
-                    const pasoSubtitle = document.getElementById('paso-subtitle');
-
-                    if (tabOperacion && tabUbicacion && stepOperacion && stepUbicacion) {
-                        tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-
-                        stepOperacion.classList.add('hidden');
-                        stepUbicacion.classList.remove('hidden');
-
-                        if (window.innerWidth < 768) {
-                            tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                        }
-
-                        if (typeof window.loadGoogleMaps === 'function' && (typeof google === 'undefined' || !window.propertyMap)) {
-                            window.loadGoogleMaps('initGoogleMap', 'places');
-                        }
-                        if (typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
-                            setTimeout(() => {
-                                google.maps.event.trigger(propertyMap, 'resize');
-                                propertyMap.setCenter({ lat: -32.898684, lng: -68.847522 });
-                            }, 100);
-                        }
-
-                        if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
-
-                        // Mover los botones "Continuar" para que apunten al nuevo formulario
-                        document.querySelectorAll('button[form="form-principales"]').forEach(btn => {
-                            btn.setAttribute('form', 'form-ubicacion');
-                        });
-
-                        // Hacer que "Operación" sea clickeable para volver
-                        tabOperacion.onclick = (event) => {
-                            event.preventDefault();
-                            tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-                            stepUbicacion.classList.add('hidden');
-                            stepOperacion.classList.remove('hidden');
-
-                            if (window.innerWidth < 768) {
-                                tabOperacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                            }
-
-                            if (pasoSubtitle) pasoSubtitle.textContent = '¿Qué querés publicar?';
-                            document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
-                                btn.setAttribute('form', 'form-principales');
-                            });
-                        }
+                    if (typeof window.goToSubStep === 'function') {
+                        window.goToSubStep(2);
                     }
                 }
             });
@@ -1330,49 +1369,8 @@ const App = {
 
                 if (isValid) {
                     console.log('¡Datos Ubicación completos y validados! Transicionando a Características...');
-
-                    const tabUbicacion = document.getElementById('tab-ubicacion');
-                    const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-                    const stepUbicacion = document.getElementById('step-ubicacion');
-                    const stepCaracteristicas = document.getElementById('step-caracteristicas');
-                    const pasoSubtitle = document.getElementById('paso-subtitle');
-
-                    if (tabUbicacion && tabCaracteristicas && stepUbicacion && stepCaracteristicas) {
-                        tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                        tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-
-                        stepUbicacion.classList.add('hidden');
-                        stepCaracteristicas.classList.remove('hidden');
-
-                        if (window.innerWidth < 768) {
-                            tabCaracteristicas.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                        }
-
-                        if (pasoSubtitle) pasoSubtitle.textContent = 'Detalles de tu propiedad';
-
-                        document.querySelectorAll('button[form="form-ubicacion"]').forEach(btn => {
-                            btn.setAttribute('form', 'form-caracteristicas');
-                        });
-
-                        // Hacer que "Ubicación" sea clickeable para volver
-                        tabUbicacion.onclick = (event) => {
-                            event.preventDefault();
-                            tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                            tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-                            stepCaracteristicas.classList.add('hidden');
-                            stepUbicacion.classList.remove('hidden');
-
-                            if (window.innerWidth < 768) {
-                                tabUbicacion.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                            }
-
-                            if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
-                            document.querySelectorAll('button[form="form-caracteristicas"]').forEach(btn => {
-                                btn.setAttribute('form', 'form-ubicacion');
-                            });
-
-
-                        }
+                    if (typeof window.goToSubStep === 'function') {
+                        window.goToSubStep(3);
                     }
                 }
             });
@@ -1492,14 +1490,14 @@ const App = {
             if (!fotosPreviewContainer) return;
 
             fotosPreviewContainer.innerHTML = '';
-            if (window.selectedPropertyPhotos.length > 0) {
+            if (window.selectedPropertyPhotos && window.selectedPropertyPhotos.length > 0) {
                 fotosPreviewContainer.classList.remove('hidden');
             } else {
                 fotosPreviewContainer.classList.add('hidden');
             }
 
             window.selectedPropertyPhotos.forEach((blob, index) => {
-                const url = URL.createObjectURL(blob);
+                const url = (blob instanceof Blob || blob instanceof File) ? URL.createObjectURL(blob) : blob;
                 const div = document.createElement('div');
                 div.className = 'relative aspect-square rounded-xl overflow-hidden group border border-outline-variant/30 dark:border-white/10 shadow-sm cursor-grab active:cursor-grabbing transition-all select-none touch-none';
                 div.setAttribute('draggable', 'true');
@@ -1666,6 +1664,7 @@ const App = {
                 fotosPreviewContainer.appendChild(div);
             });
         }
+        window.renderPhotoPreviews = renderPhotoPreviews;
 
         async function processAndAddPhotos(files) {
             if (!files || files.length === 0) return;
@@ -1780,13 +1779,25 @@ const App = {
             return names[step] || '';
         };
 
-        const updateHeaderProgress = (activeStep) => {
+        const updateHeaderProgress = (activeStep, subStep = 1) => {
             const mobBadge = document.getElementById('mobile-step-badge');
             const mobPercent = document.getElementById('mobile-step-percent');
             const mobBar = document.getElementById('mobile-progress-bar');
 
-            const percent = Math.round((activeStep / 6) * 100);
-            if (mobBadge) mobBadge.innerHTML = `Paso ${activeStep} de 6 &bull; ${getStepName(activeStep)}`;
+            let stepLabel = getStepName(activeStep);
+            let stepNumText = `Paso ${activeStep} de 6`;
+            let calcStep = activeStep;
+
+            if (activeStep === 1) {
+                calcStep = 0.5 + (subStep * 0.5);
+                stepNumText = `Paso 1.${subStep} de 6`;
+                if (subStep === 1) stepLabel = 'Operación y tipo';
+                else if (subStep === 2) stepLabel = 'Ubicación';
+                else if (subStep === 3) stepLabel = 'Características';
+            }
+
+            const percent = Math.min(100, Math.round((calcStep / 6) * 100));
+            if (mobBadge) mobBadge.innerHTML = `${stepNumText} &bull; ${stepLabel}`;
             if (mobPercent) mobPercent.textContent = `${percent}%`;
             if (mobBar) mobBar.style.width = `${percent}%`;
 
@@ -1805,9 +1816,10 @@ const App = {
                         `;
                     } else if (i === activeStep) {
                         pStep.classList.remove('opacity-50');
+                        const labelText = activeStep === 1 ? `Principales (${subStep}/3)` : getStepName(i);
                         pStep.innerHTML = `
                             <div class="w-8 h-8 rounded-full bg-primary dark:bg-[#A13333] text-white flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8 shadow-[0_0_15px_rgba(161,51,51,0.4)]">${i}</div>
-                            <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">${getStepName(i)}</span>
+                            <span class="font-headline font-bold text-primary dark:text-[#A13333] whitespace-nowrap text-xs sm:text-sm text-center">${labelText}</span>
                         `;
                     } else {
                         pStep.classList.add('opacity-50');
@@ -1830,6 +1842,98 @@ const App = {
             }
         };
         window.updateHeaderProgress = updateHeaderProgress;
+
+        window.goToSubStep = function (subStepNum) {
+            const tabOperacion = document.getElementById('tab-operacion');
+            const tabUbicacion = document.getElementById('tab-ubicacion');
+            const tabCaracteristicas = document.getElementById('tab-caracteristicas');
+            const stepOperacion = document.getElementById('step-operacion');
+            const stepUbicacion = document.getElementById('step-ubicacion');
+            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+            const pasoSubtitle = document.getElementById('paso-subtitle');
+            const publishMainTitle = document.getElementById('publish-main-title');
+
+            if (!stepOperacion || !stepUbicacion || !stepCaracteristicas) return;
+
+            stepOperacion.classList.add('hidden');
+            stepOperacion.classList.remove('block');
+            stepUbicacion.classList.add('hidden');
+            stepUbicacion.classList.remove('block');
+            stepCaracteristicas.classList.add('hidden');
+            stepCaracteristicas.classList.remove('block');
+
+            const inactiveClass = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30 pointer-events-auto';
+            const activeClass = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none';
+
+            if (tabOperacion) tabOperacion.className = inactiveClass;
+            if (tabUbicacion) tabUbicacion.className = inactiveClass;
+            if (tabCaracteristicas) tabCaracteristicas.className = inactiveClass;
+
+            if (subStepNum === 1) {
+                stepOperacion.classList.remove('hidden');
+                stepOperacion.classList.add('block');
+                if (tabOperacion) tabOperacion.className = activeClass;
+                if (publishMainTitle) {
+                    publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
+                    publishMainTitle.style.opacity = '1';
+                }
+                if (pasoSubtitle) {
+                    pasoSubtitle.textContent = '¿Qué querés publicar?';
+                    pasoSubtitle.style.opacity = '1';
+                }
+                updateHeaderProgress(1, 1);
+                window.currentSubStep = 1;
+                setTimeout(() => {
+                    document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                        btn.setAttribute('form', 'form-principales');
+                        btn.textContent = 'Continuar';
+                    });
+                }, 50);
+            } else if (subStepNum === 2) {
+                stepUbicacion.classList.remove('hidden');
+                stepUbicacion.classList.add('block');
+                if (tabUbicacion) tabUbicacion.className = activeClass;
+                if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
+                updateHeaderProgress(1, 2);
+                window.currentSubStep = 2;
+                setTimeout(() => {
+                    document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                        btn.setAttribute('form', 'form-ubicacion');
+                        btn.textContent = 'Continuar';
+                    });
+                }, 50);
+
+                if (typeof window.loadGoogleMaps === 'function' && (typeof google === 'undefined' || !window.propertyMap)) {
+                    window.loadGoogleMaps('initGoogleMap', 'places');
+                }
+                if (typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
+                    setTimeout(() => {
+                        google.maps.event.trigger(propertyMap, 'resize');
+                        propertyMap.setCenter({ lat: -32.898684, lng: -68.847522 });
+                    }, 100);
+                }
+            } else if (subStepNum === 3) {
+                stepCaracteristicas.classList.remove('hidden');
+                stepCaracteristicas.classList.add('block');
+                if (tabCaracteristicas) tabCaracteristicas.className = activeClass;
+                if (pasoSubtitle) pasoSubtitle.textContent = 'Detalles de tu propiedad';
+                updateHeaderProgress(1, 3);
+                window.currentSubStep = 3;
+                setTimeout(() => {
+                    document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                        btn.setAttribute('form', 'form-caracteristicas');
+                        btn.textContent = 'Continuar';
+                    });
+                }, 50);
+            }
+
+            const targetTab = subStepNum === 1 ? tabOperacion : (subStepNum === 2 ? tabUbicacion : tabCaracteristicas);
+            if (targetTab) {
+                setTimeout(() => {
+                    targetTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }, 60);
+            }
+        };
 
         // Form 'Multimedia' & 'Extras' Delegated Submit Interceptors
         document.addEventListener('submit', (e) => {
@@ -2086,7 +2190,12 @@ const App = {
         });
 
         // Global Wizard Back Navigation Handler
+        let isNavigatingBack = false;
         window.handleWizardBack = function () {
+            if (isNavigatingBack) return;
+            isNavigatingBack = true;
+            setTimeout(() => { isNavigatingBack = false; }, 350);
+
             const stepOperacion = document.getElementById('step-operacion');
             const stepUbicacion = document.getElementById('step-ubicacion');
             const stepCaracteristicas = document.getElementById('step-caracteristicas');
@@ -2184,7 +2293,7 @@ const App = {
                 return;
             }
 
-            // Case 4: Step 2 -> Step 1 (Características)
+            // Case 4: Step 2 -> Step 1 (Sub-step 1.3 Características)
             if (step2Container && !step2Container.classList.contains('hidden')) {
                 step2Container.classList.add('hidden');
                 step2Container.style.height = '0';
@@ -2194,75 +2303,163 @@ const App = {
                     step1Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
                     step1Container.style.height = '';
                 }
-                if (stepOperacion) stepOperacion.classList.add('hidden');
-                if (stepUbicacion) stepUbicacion.classList.add('hidden');
-                if (stepCaracteristicas) stepCaracteristicas.classList.remove('hidden');
-
-                const tabUbicacion = document.getElementById('tab-ubicacion');
-                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-                if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-
                 if (title) title.textContent = '¡Empecemos a crear tu aviso!';
-                if (subtitle) subtitle.textContent = 'Detalles de tu propiedad';
-                updateHeaderProgress(1);
-                setSubmitButton('form-caracteristicas', 'Continuar');
                 window.currentWizardStep = 1;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-
-            // Case 5: Step 1.3 (Características) -> Step 1.2 (Ubicación)
-            if (stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden')) {
-                stepCaracteristicas.classList.add('hidden');
-                if (stepUbicacion) stepUbicacion.classList.remove('hidden');
-
-                const tabOperacion = document.getElementById('tab-operacion');
-                const tabUbicacion = document.getElementById('tab-ubicacion');
-                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-                if (tabOperacion) tabOperacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30';
-                if (tabUbicacion) tabUbicacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-
-                if (subtitle) subtitle.textContent = '¿Dónde está ubicada tu propiedad?';
-                setSubmitButton('form-ubicacion', 'Continuar');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-
-            // Case 6: Step 1.2 (Ubicación) -> Step 1.1 (Operación)
-            if (stepUbicacion && !stepUbicacion.classList.contains('hidden')) {
-                stepUbicacion.classList.add('hidden');
-                if (stepOperacion) stepOperacion.classList.remove('hidden');
-
-                const tabOperacion = document.getElementById('tab-operacion');
-                const tabUbicacion = document.getElementById('tab-ubicacion');
-                const tabCaracteristicas = document.getElementById('tab-caracteristicas');
-                if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
-                if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-                if (tabCaracteristicas) tabCaracteristicas.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
-
-                if (subtitle) subtitle.textContent = '¿Qué querés publicar?';
-                setSubmitButton('form-principales', 'Continuar');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-
-            // Case 7: Step 1.1 (Operación) -> Cancel/Close wizard
-            if (window.App && typeof window.App.closePublishWizard === 'function') {
-                window.App.closePublishWizard();
-            } else {
-                const publishView = document.getElementById('publish-property-view');
-                if (publishView) publishView.classList.add('hidden');
-                if (window.App && typeof window.App.applyPageContext === 'function') {
-                    window.App.applyPageContext();
+                if (typeof window.goToSubStep === 'function') {
+                    window.goToSubStep(3);
                 }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
             }
+
+            // Navigation through Sub-steps inside Step 1
+            const isSub3Visible = stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden');
+            const isSub2Visible = stepUbicacion && !stepUbicacion.classList.contains('hidden');
+
+            if (isSub3Visible || window.currentSubStep === 3) {
+                if (typeof window.goToSubStep === 'function') window.goToSubStep(2);
+                return;
+            }
+            if (isSub2Visible || window.currentSubStep === 2) {
+                if (typeof window.goToSubStep === 'function') window.goToSubStep(1);
+                return;
+            }
+
+            // Sub-step 1.1 (Operación) -> Stay on Step 1.1
+            window.currentWizardStep = 1;
+            if (typeof window.goToSubStep === 'function') window.goToSubStep(1);
         };
+
+        window.goToWizardStep = function (stepNum, subStepNum = 1) {
+            const targetStep = Math.min(Math.max(1, parseInt(stepNum) || 1), 6);
+            const targetSubStep = Math.min(Math.max(1, parseInt(subStepNum) || 1), 3);
+            window.currentWizardStep = targetStep;
+            window.currentSubStep = targetSubStep;
+
+            const stepContainers = [
+                document.getElementById('wizard-step-1-container'),
+                document.getElementById('wizard-step-2-container'),
+                document.getElementById('wizard-step-3-container'),
+                document.getElementById('wizard-step-4-container'),
+                document.getElementById('wizard-step-5-container'),
+                document.getElementById('wizard-step-6-container')
+            ];
+
+            const title = document.getElementById('publish-main-title');
+            const subtitle = document.getElementById('paso-subtitle');
+
+            const stepConfigs = {
+                1: {
+                    title: '¡Empecemos a crear tu aviso!',
+                    subtitle: targetSubStep === 2 ? '¿Dónde está ubicada tu propiedad?' : (targetSubStep === 3 ? 'Detalles de tu propiedad' : '¿Qué querés publicar?'),
+                    formId: targetSubStep === 2 ? 'form-ubicacion' : (targetSubStep === 3 ? 'form-caracteristicas' : 'form-principales'),
+                    btnText: 'Continuar'
+                },
+                2: {
+                    title: 'Agregá fotos y videos',
+                    subtitle: 'Mostrá lo mejor de tu propiedad',
+                    formId: 'form-multimedia',
+                    btnText: 'Continuar'
+                },
+                3: {
+                    title: '¡Agregá los amenities de tu propiedad!',
+                    subtitle: 'Estos campos opcionales mejoran el posicionamiento de tu aviso.',
+                    formId: 'form-extras',
+                    btnText: 'Continuar'
+                },
+                4: {
+                    title: 'Preferencias de alquiler',
+                    subtitle: 'Configurá las condiciones para tus futuros inquilinos',
+                    formId: 'form-preferencias',
+                    btnText: 'Continuar'
+                },
+                5: {
+                    title: 'Agenda de Visitas y Tours Presenciales',
+                    subtitle: 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad',
+                    formId: 'form-visitas',
+                    btnText: 'Continuar'
+                },
+                6: {
+                    title: 'Elegí la exposición de tu aviso',
+                    subtitle: 'Los avisos con mayor exposición reciben hasta 5 veces más consultas',
+                    formId: 'form-planes',
+                    btnText: 'Publicar Aviso'
+                }
+            };
+
+            stepContainers.forEach((container, idx) => {
+                if (!container) return;
+                const currentIdx = idx + 1;
+                if (currentIdx === targetStep) {
+                    container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0');
+                    container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    container.style.height = '';
+                    container.style.opacity = '1';
+                    container.style.display = 'block';
+                } else {
+                    container.classList.add('hidden', 'opacity-0', 'scale-95');
+                    container.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    container.style.height = '0';
+                    container.style.display = 'none';
+                }
+            });
+
+            const cfg = stepConfigs[targetStep];
+            if (cfg) {
+                if (title) {
+                    title.textContent = cfg.title;
+                    title.style.opacity = '1';
+                }
+                if (subtitle) {
+                    subtitle.textContent = cfg.subtitle;
+                    subtitle.style.opacity = '1';
+                }
+                document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
+                    btn.setAttribute('form', cfg.formId);
+                    btn.textContent = cfg.btnText;
+                });
+            }
+
+            if (typeof window.updateHeaderProgress === 'function') {
+                window.updateHeaderProgress(targetStep, targetStep === 1 ? targetSubStep : 1);
+            }
+
+            if (targetStep === 1) {
+                if (typeof window.goToSubStep === 'function') {
+                    window.goToSubStep(targetSubStep);
+                }
+            } else if (targetStep === 2) {
+                if (typeof window.renderPhotoPreviews === 'function') {
+                    window.renderPhotoPreviews();
+                }
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        if (typeof App !== 'undefined') {
+            App.goToWizardStep = window.goToWizardStep;
+        }
 
         // Delegated listener for Continue buttons & Day Selection Pill buttons
         document.addEventListener('click', (e) => {
+            const tabOp = e.target.closest('#tab-operacion');
+            if (tabOp) {
+                e.preventDefault();
+                if (typeof window.goToSubStep === 'function') window.goToSubStep(1);
+                return;
+            }
+            const tabUb = e.target.closest('#tab-ubicacion');
+            if (tabUb) {
+                e.preventDefault();
+                if (typeof window.goToSubStep === 'function') window.goToSubStep(2);
+                return;
+            }
+            const tabCar = e.target.closest('#tab-caracteristicas');
+            if (tabCar) {
+                e.preventDefault();
+                if (typeof window.goToSubStep === 'function') window.goToSubStep(3);
+                return;
+            }
+
             const diaBtn = e.target.closest('.dia-visita-btn');
             if (diaBtn) {
                 e.preventDefault();
@@ -2578,6 +2775,7 @@ const App = {
 
                     // Remove overlay and redirect to administrator properties view
                     overlay.remove();
+                    App.clearPublishDraft();
                     document.getElementById('btn-back-from-publish')?.click();
 
                     if (window.location.pathname.includes('administrador.html')) {
@@ -5441,6 +5639,10 @@ const App = {
         await App.render();
     },
 
+    openPublishWizard: async (editingProp = null) => {
+        return await App.showPublishWizard(editingProp);
+    },
+
     showPublishWizard: async (editingProp = null) => {
         window.currentWizardStep = 1;
 
@@ -5472,8 +5674,12 @@ const App = {
                     const html = await resp.text();
                     const wrapper = document.createElement('div');
                     wrapper.innerHTML = html;
-                    publishElem = wrapper.firstElementChild;
-                    document.body.appendChild(publishElem);
+                    while (wrapper.firstChild) {
+                        if (wrapper.firstChild.nodeType === 1 && !publishElem) {
+                            publishElem = wrapper.firstChild;
+                        }
+                        document.body.appendChild(wrapper.firstChild);
+                    }
                     if (typeof window.initPublishWizardEvents === 'function') {
                         window.initPublishWizardEvents();
                     }
@@ -5499,7 +5705,7 @@ const App = {
         window._wasInMisAvisosView = misAvisosEl && !misAvisosEl.classList.contains('hidden');
 
         // Hide all main page content containers including owner and broker docks
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
             if (el && el !== publishElem && !publishElem.contains(el)) {
                 el.classList.add('hidden');
             }
@@ -5507,6 +5713,45 @@ const App = {
 
         publishElem.classList.remove('hidden');
         window.scrollTo(0, 0);
+
+        // Reset step containers to Step 1
+        const step1Container = document.getElementById('wizard-step-1-container');
+        const step2Container = document.getElementById('wizard-step-2-container');
+        const step3Container = document.getElementById('wizard-step-3-container');
+        const step4Container = document.getElementById('wizard-step-4-container');
+        const step5Container = document.getElementById('wizard-step-5-container');
+        const step6Container = document.getElementById('wizard-step-6-container');
+
+        if (step1Container) {
+            step1Container.classList.remove('hidden', 'opacity-0', 'scale-95');
+            step1Container.classList.add('opacity-100', 'scale-100');
+            step1Container.style.height = 'auto';
+            step1Container.style.opacity = '1';
+        }
+        [step2Container, step3Container, step4Container, step5Container, step6Container].forEach(c => {
+            if (c) {
+                c.classList.add('hidden', 'opacity-0', 'scale-95');
+                c.classList.remove('opacity-100', 'scale-100');
+                c.style.height = '0';
+            }
+        });
+
+        const publishMainTitle = document.getElementById('publish-main-title');
+        const pasoSubtitle = document.getElementById('paso-subtitle');
+        if (publishMainTitle) {
+            publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
+            publishMainTitle.style.opacity = '1';
+        }
+        if (pasoSubtitle) {
+            pasoSubtitle.textContent = '¿Qué querés publicar?';
+            pasoSubtitle.style.opacity = '1';
+        }
+
+        if (typeof window.goToSubStep === 'function') {
+            window.goToSubStep(1);
+        } else if (typeof window.updateHeaderProgress === 'function') {
+            window.updateHeaderProgress(1, 1);
+        }
 
         if (typeof window.setupInputValidations === 'function') {
             window.setupInputValidations();
@@ -5516,6 +5761,273 @@ const App = {
             window.loadGoogleMaps('initGoogleMap', 'places');
         } else if (typeof window.initGoogleMap === 'function') {
             setTimeout(() => { window.initGoogleMap(); }, 250);
+        }
+
+        if (!editingProp) {
+            const restored = App.restorePublishDraft();
+            if (!restored) {
+                if (typeof window.goToWizardStep === 'function') {
+                    window.goToWizardStep(1, 1);
+                } else if (typeof window.goToSubStep === 'function') {
+                    window.goToSubStep(1);
+                } else if (typeof window.updateHeaderProgress === 'function') {
+                    window.updateHeaderProgress(1, 1);
+                }
+            }
+        } else {
+            if (typeof window.goToWizardStep === 'function') {
+                window.goToWizardStep(1, 1);
+            } else if (typeof window.goToSubStep === 'function') {
+                window.goToSubStep(1);
+            } else if (typeof window.updateHeaderProgress === 'function') {
+                window.updateHeaderProgress(1, 1);
+            }
+        }
+    },
+
+    savePublishDraft: async () => {
+        try {
+            const publishElem = document.getElementById('publish-property-view');
+            if (!publishElem) return false;
+
+            const fileToBase64 = (file) => {
+                return new Promise((resolve) => {
+                    if (typeof file === 'string') return resolve(file);
+                    if (!(file instanceof Blob)) return resolve(null);
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const serializedPhotos = [];
+            if (Array.isArray(window.selectedPropertyPhotos) && window.selectedPropertyPhotos.length > 0) {
+                for (const photo of window.selectedPropertyPhotos) {
+                    const b64 = await fileToBase64(photo);
+                    if (b64) serializedPhotos.push(b64);
+                }
+            }
+
+            // 1. Detect active step accurately from DOM containers
+            let activeStep = window.currentWizardStep || 1;
+            for (let i = 1; i <= 6; i++) {
+                const container = document.getElementById(`wizard-step-${i}-container`);
+                if (container && !container.classList.contains('hidden') && container.style.display !== 'none' && container.style.height !== '0px') {
+                    activeStep = i;
+                    break;
+                }
+            }
+
+            // 2. Detect active substep inside Step 1
+            let activeSubStep = window.currentSubStep || 1;
+            const stepOperacion = document.getElementById('step-operacion');
+            const stepUbicacion = document.getElementById('step-ubicacion');
+            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+            if (stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden') && stepCaracteristicas.style.display !== 'none') {
+                activeSubStep = 3;
+            } else if (stepUbicacion && !stepUbicacion.classList.contains('hidden') && stepUbicacion.style.display !== 'none') {
+                activeSubStep = 2;
+            } else if (stepOperacion && !stepOperacion.classList.contains('hidden') && stepOperacion.style.display !== 'none') {
+                activeSubStep = 1;
+            }
+
+            const draft = {
+                version: 1,
+                savedAt: new Date().toISOString(),
+                currentWizardStep: activeStep,
+                currentSubStep: activeSubStep,
+                inputs: {},
+                radios: {},
+                checkboxes: {},
+                selects: {},
+                textareas: {},
+                selectedPropertyPhotos: serializedPhotos,
+                activeDays: [],
+                selectedPlan: null
+            };
+
+            // Collect text, number, email, tel, date, hidden inputs
+            publishElem.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="submit"]):not([type="button"])').forEach(input => {
+                const key = input.id || input.name;
+                if (key) {
+                    draft.inputs[key] = input.value;
+                }
+            });
+
+            // Collect selects
+            publishElem.querySelectorAll('select').forEach(sel => {
+                const key = sel.id || sel.name;
+                if (key) {
+                    draft.selects[key] = sel.value;
+                }
+            });
+
+            // Collect textareas
+            publishElem.querySelectorAll('textarea').forEach(ta => {
+                const key = ta.id || ta.name;
+                if (key) {
+                    draft.textareas[key] = ta.value;
+                }
+            });
+
+            // Collect radio buttons
+            const radioNames = new Set();
+            publishElem.querySelectorAll('input[type="radio"]').forEach(r => {
+                if (r.name) radioNames.add(r.name);
+            });
+            radioNames.forEach(name => {
+                const checked = publishElem.querySelector(`input[type="radio"][name="${name}"]:checked`);
+                if (checked) {
+                    draft.radios[name] = checked.value;
+                }
+            });
+
+            // Collect checkboxes
+            publishElem.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                const key = cb.id || cb.name || cb.value;
+                if (key) {
+                    draft.checkboxes[key] = cb.checked;
+                }
+            });
+
+            // Collect active visit days in Step 5
+            publishElem.querySelectorAll('.dia-visita-btn.active-dia').forEach(btn => {
+                const day = btn.getAttribute('data-dia') || btn.textContent.trim();
+                if (day) draft.activeDays.push(day);
+            });
+
+            // Collect selected plan in Step 6
+            const selectedPlan = publishElem.querySelector('.plan-card.active, .plan-card[data-selected="true"], input[name="plan_publicacion"]:checked');
+            if (selectedPlan) {
+                draft.selectedPlan = selectedPlan.getAttribute('data-plan') || selectedPlan.value;
+            }
+
+            localStorage.setItem('habitat_wizard_draft', JSON.stringify(draft));
+            return true;
+        } catch (err) {
+            console.error("Error guardando borrador del wizard:", err);
+            return false;
+        }
+    },
+
+    saveAndExitPublishWizard: async () => {
+        const saved = await App.savePublishDraft();
+        if (saved) {
+            if (typeof window.showValidationToast === 'function') {
+                window.showValidationToast('Tu borrador fue guardado exitosamente. Podrás continuar cuando quieras.', 'success');
+            }
+        }
+        App.closePublishWizard();
+    },
+
+    restorePublishDraft: () => {
+        try {
+            const raw = localStorage.getItem('habitat_wizard_draft');
+            if (!raw) return false;
+            const draft = JSON.parse(raw);
+            if (!draft || !draft.inputs) return false;
+
+            const publishElem = document.getElementById('publish-property-view');
+            if (!publishElem) return false;
+
+            // Restore text, number, etc. inputs
+            Object.entries(draft.inputs || {}).forEach(([key, val]) => {
+                const el = document.getElementById(key) || publishElem.querySelector(`input[name="${key}"]`);
+                if (el && val !== undefined && val !== null) {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            // Restore selects
+            Object.entries(draft.selects || {}).forEach(([key, val]) => {
+                const el = document.getElementById(key) || publishElem.querySelector(`select[name="${key}"]`);
+                if (el && val !== undefined && val !== null) {
+                    el.value = val;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            // Restore textareas
+            Object.entries(draft.textareas || {}).forEach(([key, val]) => {
+                const el = document.getElementById(key) || publishElem.querySelector(`textarea[name="${key}"]`);
+                if (el && val !== undefined && val !== null) {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            // Restore radios
+            Object.entries(draft.radios || {}).forEach(([name, val]) => {
+                const radio = publishElem.querySelector(`input[type="radio"][name="${name}"][value="${val}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                    const label = radio.closest('label');
+                    if (label) {
+                        label.click();
+                    }
+                }
+            });
+
+            // Restore checkboxes
+            Object.entries(draft.checkboxes || {}).forEach(([key, checked]) => {
+                const cb = document.getElementById(key) || publishElem.querySelector(`input[type="checkbox"][name="${key}"]`) || publishElem.querySelector(`input[type="checkbox"][value="${key}"]`);
+                if (cb) {
+                    cb.checked = Boolean(checked);
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            // Restore photos
+            if (Array.isArray(draft.selectedPropertyPhotos) && draft.selectedPropertyPhotos.length > 0) {
+                window.selectedPropertyPhotos = draft.selectedPropertyPhotos;
+                if (typeof window.renderPhotoPreviews === 'function') {
+                    window.renderPhotoPreviews();
+                }
+            }
+
+            // Restore active days
+            if (Array.isArray(draft.activeDays) && draft.activeDays.length > 0) {
+                publishElem.querySelectorAll('.dia-visita-btn').forEach(btn => {
+                    const day = btn.getAttribute('data-dia') || btn.textContent.trim();
+                    if (draft.activeDays.includes(day)) {
+                        btn.classList.add('active-dia');
+                    } else {
+                        btn.classList.remove('active-dia');
+                    }
+                });
+            }
+
+            // Restore step and substep immediately
+            const stepToRestore = draft.currentWizardStep || 1;
+            const subStepToRestore = draft.currentSubStep || 1;
+
+            if (typeof window.goToWizardStep === 'function') {
+                window.goToWizardStep(stepToRestore, subStepToRestore);
+            } else if (stepToRestore === 1 && typeof window.goToSubStep === 'function') {
+                window.goToSubStep(subStepToRestore);
+            }
+
+            if (typeof window.showValidationToast === 'function') {
+                window.showValidationToast('Continuando desde tu borrador guardado.', 'success');
+            }
+
+            return true;
+        } catch (err) {
+            console.error("Error restaurando borrador del wizard:", err);
+            return false;
+        }
+    },
+
+    clearPublishDraft: () => {
+        try {
+            localStorage.removeItem('habitat_wizard_draft');
+        } catch (e) {
+            console.warn("Could not clear draft from localStorage:", e);
         }
     },
 
@@ -5528,7 +6040,7 @@ const App = {
         }
 
         // Unhide page main content sections except mis-avisos-view
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav.menu-navigation').forEach(el => {
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
             if (el && el !== publishElem) {
                 el.classList.remove('hidden');
             }
@@ -5565,6 +6077,10 @@ const App = {
 
         App.applyPageContext();
         window.scrollTo(0, 0);
+    },
+
+    openPublishWizard: async (editingProp) => {
+        return App.showPublishWizard(editingProp);
     },
 
     setupMarketPlaceListeners: () => {
@@ -6156,6 +6672,33 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const petFriendly = extraInfo.mascotas || prop.pet || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('mascota')));
     const verified = prop.verified || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')));
 
+    // Extract Furnishing / Amoblado state
+    let amobladoVal = prop.amoblado !== undefined ? prop.amoblado : extraInfo.amoblado;
+    if (amobladoVal === undefined || amobladoVal === null || amobladoVal === '') {
+        if (prop.tags && Array.isArray(prop.tags)) {
+            if (prop.tags.some(t => t.toLowerCase().includes('semiamoblado') || t.toLowerCase().includes('semi-amoblado'))) amobladoVal = 'semiamoblado';
+            else if (prop.tags.some(t => t.toLowerCase().includes('totalmente amoblado') || t.toLowerCase().includes('amoblado'))) amobladoVal = 'totalmente-amoblado';
+            else if (prop.tags.some(t => t.toLowerCase().includes('sin amoblar') || t.toLowerCase().includes('sin amueblar'))) amobladoVal = 'sin-amoblar';
+        }
+        if (extraInfo.caracteristicas && Array.isArray(extraInfo.caracteristicas)) {
+            if (extraInfo.caracteristicas.some(t => t.toLowerCase().includes('semiamoblado') || t.toLowerCase().includes('semi-amoblado'))) amobladoVal = 'semiamoblado';
+            else if (extraInfo.caracteristicas.some(t => t.toLowerCase().includes('totalmente amoblado') || t.toLowerCase().includes('amoblado'))) amobladoVal = 'totalmente-amoblado';
+        }
+    }
+
+    let amobladoText = 'Sin amoblar';
+    let amobladoBadgeClass = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400';
+    if (amobladoVal === true || amobladoVal === 'totalmente-amoblado' || amobladoVal === 'amoblado' || amobladoVal === 'si' || amobladoVal === 'amueblado') {
+        amobladoText = 'Amoblado';
+        amobladoBadgeClass = 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300';
+    } else if (amobladoVal === 'semiamoblado' || amobladoVal === 'semi-amoblado' || amobladoVal === 'semiamueblado') {
+        amobladoText = 'Semiamoblado';
+        amobladoBadgeClass = 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300';
+    } else {
+        amobladoText = 'Sin amoblar';
+        amobladoBadgeClass = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400';
+    }
+
     // Extract tags list
     let tagsList = prop.caracteristicas || prop.tags || [];
     if (extraInfo.caracteristicas && Array.isArray(extraInfo.caracteristicas)) {
@@ -6275,103 +6818,113 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 </div>
 
                 <!-- Features & Spec Cards Grid (Wizard Steps 2 & 3 Data) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    ${dormitorios ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">bed</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Dormitorios</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${dormitorios}</span>
-                            </div>
+                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-3.5 md:gap-4">
+                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">bed</span>
                         </div>
-                    ` : ''}
-                    ${banos ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">bathtub</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Baños</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${banos}${toilettes ? ` (+${toilettes} toil)` : ''}</span>
-                            </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Dormitorios</span>
+                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${dormitorios || 1}</span>
                         </div>
-                    ` : ''}
-                    ${ambientes ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">home</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Ambientes</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${ambientes}</span>
-                            </div>
+                    </div>
+
+                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">bathtub</span>
                         </div>
-                    ` : ''}
-                    ${cocheras !== null && cocheras !== undefined ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">directions_car</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Cocheras</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${cocheras}</span>
-                            </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Baños</span>
+                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${banos || 1}${toilettes ? ` (+${toilettes} toil)` : ''}</span>
                         </div>
-                    ` : ''}
+                    </div>
+
+                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">home</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Ambientes</span>
+                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${ambientes || dormitorios || 1}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">directions_car</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Cocheras</span>
+                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${cocheras !== null && cocheras !== undefined ? cocheras : 0}</span>
+                        </div>
+                    </div>
+
                     ${supCubierta ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">square_foot</span>
+                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">square_foot</span>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Sup. Cubierta</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${supCubierta} m²</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Sup. Cubierta</span>
+                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${supCubierta} m²</span>
                             </div>
                         </div>
                     ` : ''}
+
                     ${supTotal ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">straighten</span>
+                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">straighten</span>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Sup. Total</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${supTotal} m²</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Sup. Total</span>
+                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${supTotal} m²</span>
                             </div>
                         </div>
                     ` : ''}
+
+                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">chair</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Amoblado</span>
+                            <span class="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight block">${amobladoText}</span>
+                        </div>
+                    </div>
+
                     ${pisoDpto ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">apartment</span>
+                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">apartment</span>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Piso / Dpto</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${pisoDpto}</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Piso / Dpto</span>
+                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${pisoDpto}</span>
                             </div>
                         </div>
                     ` : ''}
+
                     ${numeroLocal ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">store</span>
+                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">store</span>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">N° Local</span>
-                                <span class="font-extrabold text-sm sm:text-base text-on-background dark:text-white">${numeroLocal}</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">N° Local</span>
+                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${numeroLocal}</span>
                             </div>
                         </div>
                     ` : ''}
+
                     ${antiguedad || disposicion || orientacion ? `
-                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/50 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl">info</span>
+                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">info</span>
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">Disposición</span>
-                                <span class="font-extrabold text-xs sm:text-sm text-on-background dark:text-white">${[disposicion, antiguedad ? `${antiguedad} a.` : null].filter(Boolean).join(' • ') || 'Estándar'}</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Disposición</span>
+                                <span class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white leading-tight block">${[disposicion, antiguedad ? `${antiguedad} a.` : null].filter(Boolean).join(' • ') || 'Estándar'}</span>
                             </div>
                         </div>
                     ` : ''}
@@ -7041,6 +7594,18 @@ function createMarketplaceCard(prop, index) {
     const banos = extraInfo.banos || 0;
     const supCubierta = extraInfo.sup_cubierta;
 
+    // Amoblado indicator
+    let amobladoVal = prop.amoblado !== undefined ? prop.amoblado : extraInfo.amoblado;
+    if (amobladoVal === undefined || amobladoVal === null || amobladoVal === '') {
+        if (prop.tags && Array.isArray(prop.tags)) {
+            if (prop.tags.some(t => t.toLowerCase().includes('semiamoblado'))) amobladoVal = 'semiamoblado';
+            else if (prop.tags.some(t => t.toLowerCase().includes('amoblado'))) amobladoVal = 'totalmente-amoblado';
+        }
+    }
+    const isAmoblado = amobladoVal === true || amobladoVal === 'totalmente-amoblado' || amobladoVal === 'amoblado' || amobladoVal === 'si';
+    const isSemiamoblado = amobladoVal === 'semiamoblado' || amobladoVal === 'semi-amoblado';
+    const amobladoLabel = isAmoblado ? 'Amoblado' : (isSemiamoblado ? 'Semiamoblado' : null);
+
     const card = document.createElement('div');
     card.className = `group cursor-pointer animate-on-scroll ${delay}`;
     card.onclick = () => {
@@ -7055,8 +7620,9 @@ function createMarketplaceCard(prop, index) {
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 src="${imgSrc}"
                 onerror="this.src='img/hero-marketplace.jpg'">
-            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded shadow-sm border-none">
-                <span class="text-[10px] font-bold tracking-widest text-primary uppercase">${operacionLabel}</span>
+            <div class="absolute top-4 right-4 flex flex-col items-end gap-1.5">
+                <span class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur px-3 py-1 rounded shadow-sm text-[10px] font-bold tracking-widest text-primary uppercase">${operacionLabel}</span>
+                ${amobladoLabel ? `<span class="bg-purple-100/95 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 backdrop-blur px-2.5 py-0.5 rounded shadow-sm text-[10px] font-extrabold flex items-center gap-1"><span class="material-symbols-outlined text-xs">chair</span>${amobladoLabel}</span>` : ''}
             </div>
         </div>
         <div class="space-y-3">
@@ -7069,10 +7635,11 @@ function createMarketplaceCard(prop, index) {
                 ${ubicacion || 'Ubicación no especificada'}
             </p>
             <div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/20">
-                <div class="flex items-center gap-6 text-secondary">
-                    ${dormitorios > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bed</span><span class="text-sm font-semibold">${dormitorios} Dorm.</span></div>` : ''}
-                    ${banos > 0 ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">bathtub</span><span class="text-sm font-semibold">${banos} Baños</span></div>` : ''}
-                    ${supCubierta ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} m²</span></div>` : ''}
+                <div class="flex items-center gap-4 sm:gap-6 text-secondary flex-wrap">
+                    ${dormitorios > 0 ? `<div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">bed</span><span class="text-sm font-semibold">${dormitorios} Dorm.</span></div>` : ''}
+                    ${banos > 0 ? `<div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">bathtub</span><span class="text-sm font-semibold">${banos} Baños</span></div>` : ''}
+                    ${supCubierta ? `<div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">square_foot</span><span class="text-sm font-semibold">${supCubierta} m²</span></div>` : ''}
+                    ${amobladoLabel ? `<div class="flex items-center gap-1.5 text-purple-700 dark:text-purple-400 font-semibold"><span class="material-symbols-outlined text-lg">chair</span><span class="text-sm">${amobladoLabel}</span></div>` : ''}
                 </div>
                 <button class="w-full bg-surface-container hover:bg-primary text-on-surface hover:text-on-primary font-bold py-3 rounded-lg transition-all duration-300 border border-outline-variant/20 flex items-center justify-center gap-2 group/btn">
                     Ver más y fotos
@@ -8983,6 +9550,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.App = App;
+window.openPublishWizard = function(editingProp) {
+    if (window.App && typeof window.App.showPublishWizard === 'function') {
+        window.App.showPublishWizard(editingProp);
+    } else {
+        window.location.href = 'index.html?publish=1';
+    }
+};
+window.saveAndExitPublishWizard = function() {
+    if (window.App && typeof window.App.saveAndExitPublishWizard === 'function') {
+        return window.App.saveAndExitPublishWizard();
+    }
+};
+window.savePublishDraft = function() {
+    if (window.App && typeof window.App.savePublishDraft === 'function') {
+        return window.App.savePublishDraft();
+    }
+};
+window.restorePublishDraft = function() {
+    if (window.App && typeof window.App.restorePublishDraft === 'function') {
+        return window.App.restorePublishDraft();
+    }
+};
+window.clearPublishDraft = function() {
+    if (window.App && typeof window.App.clearPublishDraft === 'function') {
+        return window.App.clearPublishDraft();
+    }
+};
 
 // Auto-initialize Scroll to top button across pages
 if (document.readyState === 'loading') {
