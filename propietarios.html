@@ -175,18 +175,19 @@
         .owner-steps-tabs {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto 40px;
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto 24px;
         }
 
         .owner-step-tab {
-            min-height: 56px;
+            min-height: 40px;
             border: 1px solid rgba(26, 28, 28, 0.18);
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.88);
             color: #050505;
             font-weight: 800;
+            font-size: 14px;
             transition: transform 240ms ease, background-color 240ms ease, color 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
         }
 
@@ -205,21 +206,21 @@
         .owner-steps-track-wrap {
             margin-inline: calc(50% - 50vw);
             overflow: hidden;
-            padding: 0 0 32px;
+            padding: 0 0 20px;
         }
 
         .owner-steps-track {
             display: flex;
-            gap: 28px;
+            gap: 20px;
             transition: transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
             will-change: transform;
         }
 
         .owner-step-slide {
             position: relative;
-            flex: 0 0 min(63vw, 1200px);
-            min-height: 670px;
-            border-radius: 24px;
+            flex: 0 0 min(38vw, 560px);
+            min-height: 320px;
+            border-radius: 16px;
             overflow: hidden;
             opacity: 0.36;
             transform: scale(0.96);
@@ -236,20 +237,20 @@
         .owner-step-image {
             width: 100%;
             height: 100%;
-            min-height: 670px;
+            min-height: 320px;
             object-fit: cover;
             display: block;
         }
 
         .owner-step-panel {
             position: absolute;
-            left: 50px;
-            bottom: 50px;
-            width: min(548px, calc(100% - 100px));
+            left: 20px;
+            bottom: 20px;
+            width: min(340px, calc(100% - 40px));
             background: #ffffff;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.16);
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);
             transform: translateY(10px);
             opacity: 0.72;
             transition: opacity 360ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -261,17 +262,17 @@
         }
 
         .owner-step-number {
-            width: 60px;
-            height: 60px;
+            width: 34px;
+            height: 34px;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: var(--owner-step-accent);
             color: #ffffff;
-            font-size: 22px;
+            font-size: 14px;
             font-weight: 800;
-            margin-bottom: 22px;
+            margin-bottom: 8px;
         }
 
         .owner-step-slide:not(.is-active) .owner-step-number {
@@ -1051,11 +1052,11 @@
                 </div>
             </section>
 
-            <section class="owner-steps-carousel py-16 md:py-24 animate-on-scroll" aria-labelledby="owner-steps-title">
+            <section class="owner-steps-carousel py-6 md:py-10 animate-on-scroll" aria-labelledby="owner-steps-title">
                 <div class="owner-steps-carousel-inner">
                     <div class="max-w-[1280px] mx-auto px-0 md:px-8">
                         <h2 id="owner-steps-title"
-                            class="font-headline text-[42px] leading-[1.08] md:text-6xl md:leading-tight font-light md:text-center text-on-background dark:text-white mb-12 md:mb-14">
+                            class="font-headline text-2xl sm:text-3xl lg:text-4xl font-light md:text-center text-on-background dark:text-white mb-6 md:mb-8">
                             3 pasos hasta tu primer inquilino</h2>
                         <div class="owner-steps-tabs" role="tablist" aria-label="Pasos para publicar una propiedad">
                             <button class="owner-step-tab is-active" type="button" role="tab" aria-selected="true"
@@ -1079,10 +1080,10 @@
                                 <div class="owner-step-panel">
                                     <span class="owner-step-number">1</span>
                                     <h3
-                                        class="font-headline text-2xl md:text-3xl font-extrabold text-on-background dark:text-white mb-3">
+                                        class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-1.5">
                                         Publica y sube fotos</h3>
                                     <p
-                                        class="font-body text-lg md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                        class="font-body text-xs md:text-sm text-zinc-600 dark:text-zinc-300 leading-snug">
                                         Crea tu anuncio con fotos y detalles. En menos de 10 minutos.</p>
                                 </div>
                             </article>
@@ -1094,10 +1095,10 @@
                                 <div class="owner-step-panel">
                                     <span class="owner-step-number">2</span>
                                     <h3
-                                        class="font-headline text-2xl md:text-3xl font-extrabold text-on-background dark:text-white mb-3">
+                                        class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-1.5">
                                         Revisa y acepta</h3>
                                     <p
-                                        class="font-body text-lg md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                        class="font-body text-xs md:text-sm text-zinc-600 dark:text-zinc-300 leading-snug">
                                         Recibe solicitudes de inquilinos verificados. Chatea, revisa perfiles y elige al
                                         que quieras.</p>
                                 </div>
@@ -1110,10 +1111,10 @@
                                 <div class="owner-step-panel">
                                     <span class="owner-step-number">3</span>
                                     <h3
-                                        class="font-headline text-2xl md:text-3xl font-extrabold text-on-background dark:text-white mb-3">
+                                        class="font-headline text-lg md:text-xl font-extrabold text-on-background dark:text-white mb-1.5">
                                         Confirma y alquila</h3>
                                     <p
-                                        class="font-body text-lg md:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                        class="font-body text-xs md:text-sm text-zinc-600 dark:text-zinc-300 leading-snug">
                                         Confirma la reserva, firma digitalmente y coordina el ingreso de tu inquilino.
                                     </p>
                                 </div>
@@ -1208,13 +1209,13 @@
                     </div>
 
                     <div class="owner-faq-list">
+                        <!-- Q1 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    tipo de alquiler ofrece H&aacute;bitat?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona la verificación de inquilinos con el Pasaporte Hábitat?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1222,43 +1223,19 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        H&aacute;bitat conecta propietarios e inquilinos para alquileres de media y
-                                        larga duraci&oacute;n, con estancias desde 30 d&iacute;as hasta 1 a&ntilde;o. No
-                                        es alquiler vacacional ni por d&iacute;as. Puedes publicar habitaciones,
-                                        estudios o pisos completos y recibir inquilinos como estudiantes, profesionales
-                                        o n&oacute;madas digitales.</p>
-                                </div>
-                            </div>
-                        </article>
-
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Cu&aacute;l
-                                    es la duraci&oacute;n media de las estancias en H&aacute;bitat?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <p
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        La duraci&oacute;n media de las estancias en H&aacute;bitat es de 5 meses. Aun
-                                        as&iacute;, puedes recibir inquilinos desde 30 d&iacute;as hasta 1 a&ntilde;o.
+                                        Cuando un candidato se postula a tu propiedad, la app valida automáticamente su identidad, antecedentes legales y solvencia financiera sin que tengas que pedirle carpetas de papel. Vos recibís un perfil verificado con su respaldo y capacidad de pago confirmados, dándote la tranquilidad de elegir inquilinos confiables.
                                     </p>
                                 </div>
                             </div>
                         </article>
 
+                        <!-- Q2 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;C&oacute;mo
-                                    recibo a mi inquilino?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cuánto cuesta publicar en Hábitat?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1266,19 +1243,19 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Una vez confirmada la reserva y firmado el contrato digital, coordinas directamente
-                                        el ingreso y la entrega de llaves con tu inquilino.</p>
+                                        Podés publicar de forma gratuita con nuestro plan básico. Si deseás mayor visibilidad y posicionamiento prioritario en el Marketplace, contamos con planes Destacado y Premium con beneficios adicionales.
+                                    </p>
                                 </div>
                             </div>
                         </article>
 
+                        <!-- Q3 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qui&eacute;n
-                                    paga el dep&oacute;sito o fianza al propietario?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo gestiono las postulaciones y las visitas?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1286,19 +1263,19 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        El inquilino lo abona directamente al propietario el d&iacute;a de la entrada.
-                                        H&aacute;bitat no gestiona dep&oacute;sitos.</p>
+                                        Desde tu panel de propietario o sección "Mis Avisos", recibís solicitudes en tiempo real. Podés evaluar los perfiles postulados, coordinar las visitas presenciales en los días que prefieras y aceptar o rechazar candidatos.
+                                    </p>
                                 </div>
                             </div>
                         </article>
 
+                        <!-- Q4 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;H&aacute;bitat
-                                    me paga el alquiler si el inquilino no paga?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo confecciono y firmo el contrato de alquiler?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1306,22 +1283,19 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No, H&aacute;bitat no adelanta el pago del alquiler, pero se encarga de que
-                                        cobrarlo sea mucho m&aacute;s simple y efectivo. Si el inquilino se atrasa,
-                                        nuestra plataforma calcula autom&aacute;ticamente los intereses por cada
-                                        d&iacute;a de mora y env&iacute;a alertas inmediatas tanto al inquilino como a
-                                        sus garantes para que regularicen la situaci&oacute;n cuanto antes.</p>
+                                        La app te proporciona modelos de contratos adaptados a la ley de locaciones vigente. Podés personalizar tus cláusulas, enviar el borrador al inquilino y gestionar la firma digital segura de ambas partes sin salir de la plataforma.
+                                    </p>
                                 </div>
                             </div>
                         </article>
 
+                        <!-- Q5 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    tipos de da&ntilde;os cubre H&aacute;bitat?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo controlo los cobros mensuales y expensas?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1329,24 +1303,19 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        H&aacute;bitat act&uacute;a como un filtro de seguridad y un registro fiel del
-                                        estado de tu propiedad. Si bien no somos una p&oacute;liza de seguro, protegemos
-                                        tu patrimonio mediante el inventario digital realizado por nuestro Homechecker.
-                                        Si al finalizar el contrato se detectan da&ntilde;os que no estaban en el
-                                        registro inicial, la plataforma te facilita la documentaci&oacute;n
-                                        t&eacute;cnica y legal para ejecutar el reclamo contra el dep&oacute;sito de
-                                        garant&iacute;a o contra el patrimonio del garante verificado.</p>
+                                        En tu panel de control podés registrar cada cobro, adjuntar comprobantes de depósito o expensas y visualizar el estado de cuenta de todas tus propiedades de forma clara y centralizada.
+                                    </p>
                                 </div>
                             </div>
                         </article>
 
+                        <!-- Q6 -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    pasa si el inquilino se va antes de tiempo?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Puedo pausar o editar mi aviso en cualquier momento?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1354,35 +1323,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Si el inquilino decide rescindir el contrato antes del plazo pactado, el
-                                        contrato generado por Habitat ya contempla las cl&aacute;usulas de
-                                        resoluci&oacute;n anticipada vigentes en el C&oacute;digo Civil y Comercial de
-                                        la Naci&oacute;n. La plataforma facilita la gesti&oacute;n del preaviso de forma
-                                        transparente y coordina la visita del Homechecker para certificar el estado de
-                                        la propiedad mediante el inventario digital. De esta manera, el propietario
-                                        dispone de toda la documentaci&oacute;n t&eacute;cnica y legal necesaria para
-                                        respaldar cualquier reclamo por los conceptos establecidos en el acuerdo.</p>
-                                </div>
-                            </div>
-                        </article>
-
-                        <article class="owner-faq-item">
-                            <button
-                                class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
-                                type="button" aria-expanded="false">
-                                <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">&iquest;Qu&eacute;
-                                    pasa si el inquilino cancela o no se presenta?</span>
-                                <span
-                                    class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
-                            </button>
-                            <div class="owner-faq-answer">
-                                <div class="owner-faq-answer-inner">
-                                    <p
-                                        class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Si el inquilino no se presenta ni responde a las comunicaciones, la reserva se
-                                        cancela y las fechas reservadas vuelven a estar disponibles de inmediato para
-                                        recibir nuevas solicitudes.</p>
+                                        Sí. Podés modificar los valores, actualizar fotos o características, pausar la publicación si estás en negociación o marcarla como "Alquilada" desde tu panel con un solo clic.
+                                    </p>
                                 </div>
                             </div>
                         </article>
@@ -1789,7 +1731,7 @@
         </div>
     </section>
     </div>    <!-- Botón Flotante Volver Arriba -->
-    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary dark:from-red-900 dark:via-red-950 dark:to-zinc-900 text-white shadow-xl shadow-primary/30 dark:shadow-black/60 border border-white/20 dark:border-red-900/50 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
+    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary text-white shadow-[0_-5px_15px_rgba(129,27,30,0.35)] border border-white/20 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
         <span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
     </button>
 
@@ -1797,7 +1739,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/app.js?v=12"></script>
+    <script src="js/app.js?v=101"></script>
     <!-- Google Maps -->
     <script src="js/google-maps-loader.js"></script>
     <script>

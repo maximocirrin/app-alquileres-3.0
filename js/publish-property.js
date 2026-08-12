@@ -50,27 +50,15 @@
                 stroke-dashoffset: 0 !important;
             }
         </style>
-        <!-- TopAppBar -->
-        <header
-            class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl shadow-[0_12px_40px_0_rgba(0,0,0,0.4)] no-border tonal-transition border-b border-outline-variant/30 dark:border-white/5">
-            <div class="flex justify-between items-center px-6 h-16 w-full">
-                <div class="flex items-center gap-4">
-                    <button id="btn-back-from-publish" onclick="App.closePublishWizard()"
-                        class="flex items-center gap-1 text-primary dark:text-[#A13333] hover:opacity-80 transition-opacity scale-95 transition-transform duration-200">
-                        <span class="material-symbols-outlined" id="btn-back-icon">close</span>
-                        <span id="btn-back-text" class="font-body font-bold text-sm">Cancelar</span>
-                    </button>
-                </div>
-
-                <div class="flex items-center">
-                    <div
-                        class="w-10 h-10 rounded-full bg-surface-container-high dark:bg-[#282828] flex items-center justify-center overflow-hidden">
-                        <span class="material-symbols-outlined text-on-surface dark:text-[#f1f1f1]">person</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-        <div class="flex flex-1 pt-16">
+        <!-- Floating Cancel Button -->
+        <div class="fixed top-4 left-6 z-50">
+            <button id="btn-back-from-publish" type="button" onclick="App.closePublishWizard()"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-white shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined text-lg" id="btn-back-icon">close</span>
+                <span id="btn-back-text" class="font-headline font-bold text-xs sm:text-sm">Cancelar</span>
+            </button>
+        </div>
+        <div class="flex flex-1 pt-12 sm:pt-14">
             <!-- Main Content Area -->
             <main class="flex-1 w-full p-6 md:p-12 pb-32">
                 <div class="max-w-4xl mx-auto">
@@ -144,10 +132,9 @@
                         <div
                             class="bg-surface-container-lowest dark:bg-[#0c0c0e] p-8 rounded-xl border border-outline-variant/30 dark:border-white/5 mb-8 relative">
                             <!-- Sub-navigation tabs -->
-                            <div class="flex gap-8 mb-10 overflow-x-auto pb-2">
+                            <div class="flex gap-4 sm:gap-8 mb-10 overflow-x-auto pb-2 scrollbar-none">
                                 <button id="tab-operacion"
-                                    class="font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación
-                                    y tipo de propiedad</button>
+                                    class="font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none">Operación y tipo</button>
                                 <button id="tab-ubicacion"
                                     class="font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none">Ubicación</button>
                                 <button id="tab-caracteristicas"
@@ -1873,21 +1860,21 @@
                     <!-- Action Buttons (Hidden inline container to prevent duplicate bar) -->
                     <div id="desktop-action-buttons" class="hidden"></div>
                 </div>
+            </main>
         </div>
-        </main>
-        </div>
+
         <!-- Unified Bottom Action Bar (Fixed at bottom on all screens) -->
         <nav
-            class="fixed bottom-0 left-0 w-full flex justify-between items-center h-20 px-6 sm:px-12 pb-safe bg-surface/95 dark:bg-zinc-950/95 backdrop-blur-xl z-[150] border-t border-outline-variant/30 dark:border-white/10 shadow-2xl">
+            class="fixed bottom-0 left-0 w-full flex justify-between items-center h-20 px-6 sm:px-12 pb-safe bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl z-[150] border-t border-zinc-200 dark:border-zinc-800 shadow-2xl">
             <div class="max-w-4xl mx-auto w-full flex items-center justify-between gap-4">
-                <button id="btn-back-mobile" type="button" onclick="handleWizardBack()"
+                <button id="btn-back-mobile" type="button"
                     class="flex items-center gap-2 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-white transition-colors active:scale-95 shrink-0 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">
                     <span class="material-symbols-outlined text-xl">arrow_back</span>
                     <span class="font-headline text-xs sm:text-sm font-bold">Atrás</span>
                 </button>
 
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="App.closePublishWizard()"
+                    <button type="button" onclick="App.saveAndExitPublishWizard()"
                         class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-headline font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                         <span class="material-symbols-outlined text-lg">save</span>
                         <span>Guardar y salir</span>
@@ -1900,10 +1887,6 @@
                 </div>
             </div>
         </nav>
-
-
-        </div>
-        </div>
     </section>`;
     while(div.firstChild) {
         document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript);
