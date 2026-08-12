@@ -8,24 +8,14 @@
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=8">
-    <!-- Icons -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=13">
 
     <!-- Supabase & Data Manager -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
 
-
-    <!-- Tailwind & Stitch Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
     <script>
         const originalWarn = console.warn;
         console.warn = function () {
@@ -95,16 +85,47 @@
                         "full": "9999px"
                     },
                     "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
                     }
                 },
             },
         }
     </script>
     <style>
-        .material-symbols-outlined {
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        input, button, select, textarea {
+            font-family: inherit;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-headline {
+            font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .font-body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+
+        .material-symbols-outlined,
+        .material-symbols-rounded,
+        .material-icons,
+        [class*="material-symbols"] {
+            font-family: 'Material Symbols Outlined' !important;
+            font-weight: normal !important;
+            font-style: normal !important;
+            line-height: 1;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
@@ -901,13 +922,16 @@
         <main class="pt-16 md:pt-20">
             <!-- Hero Section -->
             <section
-                class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-24 sm:pt-0 sm:pb-20 bg-zinc-950">
-                <div class="absolute -inset-1 z-0 bg-zinc-950"
-                    style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
-                    <img alt="Luxury Estate" class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75"
+                class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-28 sm:pt-0 sm:pb-24 bg-transparent dark:bg-black">
+                <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none"
+                    style="mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%);">
+                    <img alt="Luxury Estate" class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75 dark:brightness-[0.65]"
                         src="img/hero-marketplace.jpg" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent"></div>
                 </div>
+
+                <!-- Bottom diffuse blend layer into page background (pure black in dark mode) -->
+                <div class="absolute inset-x-0 bottom-0 h-44 sm:h-64 bg-gradient-to-b from-transparent via-background/60 to-background dark:from-transparent dark:via-black/80 dark:to-black pointer-events-none z-[5]"></div>
 
                 <!-- Persona Selector -->
                 <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 sm:mt-10 bg-transparent">
@@ -941,11 +965,11 @@
                         <form action="buscar.html" method="GET" class="w-full m-0" id="hero-search-form">
                             <div
                                 class="bg-surface-container-lowest dark:bg-zinc-900/95 p-1.5 sm:p-2 pl-3.5 sm:pl-5 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md border border-white/20 dark:border-zinc-800 gap-1 sm:gap-2">
-                                <div class="flex-1 flex items-center gap-2 min-w-0">
-                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl sm:text-2xl shrink-0">search</span>
+                                <div class="flex-1 flex items-center gap-2 min-w-0 bg-transparent">
+                                    <span class="material-symbols-outlined text-[#7f1d1d] text-xl sm:text-2xl shrink-0" style="color: rgb(127 29 29 / var(--tw-bg-opacity, 1)) !important;">search</span>
                                     <input id="index-location-search" name="location"
-                                        class="w-full bg-transparent text-on-surface dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
-                                        style="border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none;"
+                                        class="w-full !bg-transparent text-on-surface dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
+                                        style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
                                         placeholder="¿Dónde quieres vivir?" type="text" autocomplete="off" />
                                 </div>
 

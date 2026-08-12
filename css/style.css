@@ -212,17 +212,58 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Outfit', sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-color: var(--bg-color);
     background-image: none;
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+}
+
+h1, h2, h3, h4, h5, h6, .font-headline {
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.font-body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Protected Material Symbols & Icons */
+.material-symbols-outlined,
+.material-symbols-rounded,
+.material-icons,
+[class*="material-symbols"] {
+    font-family: 'Material Symbols Outlined', 'Material Symbols Rounded', 'Material Icons' !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+
+.material-symbols-rounded {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined' !important;
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined', 'Material Symbols Rounded' !important;
 }
 
 /* Glassmorphism Utilities */
@@ -569,7 +610,7 @@ select option {
     background-color: #ffffff;
     color: #1a1c1c;
     padding: 12px 16px;
-    font-family: 'Outfit', 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 15px;
 }
 
@@ -810,6 +851,71 @@ input:focus, select:focus {
 .nav-item .label {
     font-size: 0.7rem;
     font-weight: 500;
+}
+
+/* ==========================================================================
+   Floating Dock Bottom Navigation (Inquilinos, Propietarios, Corredores)
+   ========================================================================== */
+#tenant-floating-dock-container,
+#owner-floating-dock-container,
+#broker-floating-dock-container {
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-transition: -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
+
+#tenant-floating-dock-container.is-hidden,
+#owner-floating-dock-container.is-hidden,
+#broker-floating-dock-container.is-hidden {
+    -webkit-transform: translateY(140%);
+    transform: translateY(140%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.floating-dock {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+html.dark .floating-dock,
+[data-theme="dark"] .floating-dock {
+    background: rgba(18, 18, 20, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(63, 63, 70, 0.7);
+    box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+#dock-active-indicator {
+    will-change: left, width;
+    -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
+    box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+}
+
+.tenant-dock-btn,
+.owner-dock-btn,
+.broker-dock-btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 0.25s ease;
+}
+
+.tenant-dock-btn.active,
+.tenant-dock-btn.text-white,
+.tenant-dock-btn.text-white *,
+.owner-dock-btn.text-white,
+.owner-dock-btn.text-white *,
+.broker-dock-btn.text-white,
+.broker-dock-btn.text-white * {
+    color: #ffffff !important;
 }
 
 /* Desktop Header (Hidden on Mobile) */
