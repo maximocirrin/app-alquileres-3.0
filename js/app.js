@@ -5704,8 +5704,8 @@ const App = {
         const misAvisosEl = document.getElementById('mis-avisos-view');
         window._wasInMisAvisosView = misAvisosEl && !misAvisosEl.classList.contains('hidden');
 
-        // Hide all main page content containers including owner and broker docks
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
+        // Hide all main page content containers including owner, broker, and tenant docks
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #mis-avisos-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, #tenant-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
             if (el && el !== publishElem && !publishElem.contains(el)) {
                 el.classList.add('hidden');
             }
@@ -6040,7 +6040,7 @@ const App = {
         }
 
         // Unhide page main content sections except mis-avisos-view
-        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
+        document.querySelectorAll('#landing-marketplace-view, #landing-propietarios-view, #app, #main-layout, #login-view, main, body > section:not(#publish-property-view), #broker-floating-dock-container, #owner-floating-dock-container, #tenant-floating-dock-container, footer, nav:not(#publish-property-view nav)').forEach(el => {
             if (el && el !== publishElem) {
                 el.classList.remove('hidden');
             }
@@ -7443,7 +7443,7 @@ window.openPostulacionModal = function(prop) {
         closeFn();
 
         if (confirm("¡Tu postulación ha sido enviada con éxito al propietario!\n\n¿Deseas ir a la sección 'Tus Postulaciones' para hacerle seguimiento?")) {
-            window.location.href = 'postulaciones.html';
+            window.location.href = 'tu-alquiler.html#postulaciones';
         }
     };
 };
@@ -7544,7 +7544,7 @@ window.openAgendarVisitaModal = function(prop) {
         closeFn();
 
         if (confirm("¡Tu visita ha sido agendada con éxito!\n\n¿Deseas ir al 'Itinerario de Visitas' para consultar tus turnos agendados?")) {
-            window.location.href = 'visitas.html';
+            window.location.href = 'tu-alquiler.html#visitas';
         }
     };
 };
@@ -8184,10 +8184,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="material-symbols-outlined text-primary text-xl">home</span>
                                 <span>Inicio</span>
                             </a>
-                            <a href="como-funciona.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
-                                <span>Cómo funciona</span>
-                            </a>
                             <a href="pasaporte-habitat.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
                                 <span class="font-bold">Pasaporte Hábitat</span>
@@ -8199,6 +8195,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="buscar.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
                                 <span>Buscar Alquileres</span>
+                            </a>
+                            <a href="como-funciona.html" class="menu-item-clean">
+                                <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
+                                <span>Cómo funciona</span>
                             </a>
                             <button type="button" class="menu-item-clean w-full text-left cursor-pointer" data-menu-action="favorites">
                                 <span class="material-symbols-outlined text-rose-500 text-xl">favorite</span>
@@ -8226,20 +8226,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <span class="block text-[11px] text-white/80">Pagar alquiler, informar pago y tickets</span>
                                     </div>
                                 </a>
-                                <a href="pasaporte-habitat.html" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                <a href="tu-alquiler.html#pasaporte" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
                                     <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">badge</span>
                                     </div>
                                     <div>
-                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Pasaporte Hábitat</span>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Tu pasaporte</span>
                                         <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
                                     </div>
                                 </a>
-                                <a href="postulaciones.html" class="menu-item-clean">
+                                <a href="tu-alquiler.html#postulaciones" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">how_to_reg</span>
                                     <span>Mis Postulaciones</span>
                                 </a>
-                                <a href="visitas.html" class="menu-item-clean">
+                                <a href="tu-alquiler.html#visitas" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">calendar_month</span>
                                     <span>Mis Visitas Agendadas</span>
                                 </a>
@@ -8502,6 +8502,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 220);
     };
 
+    // Exponer globalmente para permitir cierre programático
+    window.closeLandingMenu = closeMenu;
+    if (window.App) window.App.closeLandingMenu = closeMenu;
+
     const scrollToTarget = (target) => {
         closeMenu();
         window.setTimeout(() => {
@@ -8527,6 +8531,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeTrigger = event.target.closest('[data-menu-close]');
         if (closeTrigger) {
             closeMenu();
+            return;
+        }
+
+        const link = event.target.closest('a');
+        if (link) {
+            const href = link.getAttribute('href');
+            closeMenu();
+            if (href && href.includes('#')) {
+                const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+                const [targetFile, targetHash] = href.split('#');
+                if (!targetFile || targetFile === currentFile || currentFile.includes(targetFile) || (targetFile.includes('tu-alquiler') && currentFile.includes('tu-alquiler'))) {
+                    event.preventDefault();
+                    window.location.hash = '#' + targetHash;
+                    if (window.switchTenantTab) {
+                        window.switchTenantTab(targetHash);
+                    }
+                }
+            }
             return;
         }
 
