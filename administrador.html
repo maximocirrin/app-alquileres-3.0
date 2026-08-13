@@ -323,16 +323,32 @@
                     </div>
                 </div>
 
-                <!-- Filtros Rápidos por Tipo de Evento (Visitas y Entregas de Llaves) -->
+                <!-- Filtros Rápidos por Tipo de Evento (Leyenda y Filtro de Colores) -->
                 <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
-                    <button type="button" onclick="filterOwnerCalendarEventType('todos')" id="owner-cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all">
-                        Todos los Eventos
+                    <button type="button" onclick="filterOwnerCalendarEventType('todos')" id="owner-cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all">
+                        <span class="flex items-center gap-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        </span>
+                        <span>Todos los Eventos</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('visita')" id="owner-cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
-                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> Visitas / Muestras
+                    <button type="button" onclick="filterOwnerCalendarEventType('visita')" id="owner-cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                        <span>Visitas / Muestras</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('entrega')" id="owner-cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Entregas de Llaves
+                    <button type="button" onclick="filterOwnerCalendarEventType('firma')" id="owner-cal-filter-firma" class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                        <span>Firmas</span>
+                    </button>
+                    <button type="button" onclick="filterOwnerCalendarEventType('tasacion')" id="owner-cal-filter-tasacion" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                        <span>Tasaciones</span>
+                    </button>
+                    <button type="button" onclick="filterOwnerCalendarEventType('entrega')" id="owner-cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                        <span>Entregas de Llaves</span>
                     </button>
                 </div>
 
@@ -854,16 +870,35 @@
             }
         ];
 
+        const ownerCalFilterStyles = {
+            todos: {
+                active: 'px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            visita: {
+                active: 'px-3.5 py-2 rounded-xl bg-rose-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            firma: {
+                active: 'px-3.5 py-2 rounded-xl bg-emerald-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            tasacion: {
+                active: 'px-3.5 py-2 rounded-xl bg-blue-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            entrega: {
+                active: 'px-3.5 py-2 rounded-xl bg-amber-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            }
+        };
+
         function filterOwnerCalendarEventType(type) {
             ownerSelectedCalendarTypeFilter = type;
-            ['todos', 'visita', 'entrega'].forEach(t => {
+            Object.keys(ownerCalFilterStyles).forEach(t => {
                 const btn = document.getElementById(`owner-cal-filter-${t}`);
                 if (btn) {
-                    if (t === type) {
-                        btn.className = 'px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all';
-                    } else {
-                        btn.className = 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all';
-                    }
+                    btn.className = t === type ? ownerCalFilterStyles[t].active : ownerCalFilterStyles[t].inactive;
                 }
             });
             renderOwnerCalendarGrid();
@@ -959,15 +994,17 @@
 
             let html = '';
 
+            // Celdas del mes anterior (offset)
             for (let i = firstDayIndex - 1; i >= 0; i--) {
                 const prevDayNum = prevMonthDays - i;
                 html += `
-                    <div class="h-24 sm:h-28 p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40">
+                    <div class="min-h-[52px] sm:h-28 p-1 sm:p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40 flex items-start justify-center sm:justify-start">
                         ${prevDayNum}
                     </div>
                 `;
             }
 
+            // Días del mes actual
             const todayObj = new Date();
             const todayYear = todayObj.getFullYear();
             const todayMonth = todayObj.getMonth();
@@ -978,7 +1015,7 @@
                 const dayPadded = d < 10 ? `0${d}` : `${d}`;
                 const dateStr = `${ownerCurrentCalendarYear}-${monthPadded}-${dayPadded}`;
 
-                const isToday = (ownerCurrentCalendarYear === 2026 && ownerCurrentCalendarMonth === 7 && d === 3) || (todayYear === ownerCurrentCalendarYear && todayMonth === ownerCurrentCalendarMonth && todayDate === d);
+                const isToday = todayYear === ownerCurrentCalendarYear && todayMonth === ownerCurrentCalendarMonth && todayDate === d;
                 const isSelected = ownerSelectedCalendarDay === dateStr;
 
                 const dayEvents = ownerEventsMock.filter(e => {
@@ -988,21 +1025,43 @@
                 });
 
                 html += `
-                    <div onclick="selectOwnerCalendarDay('${dateStr}')" class="h-24 sm:h-28 p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                    <div onclick="selectOwnerCalendarDay('${dateStr}')" class="min-h-[52px] sm:h-28 p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
                         isSelected 
                             ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm' 
                             : (isToday 
-                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs' 
+                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs ring-1 ring-primary/20' 
                                 : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
                     }">
-                        <div class="flex items-center justify-between">
-                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-900' : 'text-zinc-800 dark:text-zinc-200'}">
-                                ${d}
-                            </span>
-                            ${isToday ? '<span class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>' : ''}
+                        <!-- Encabezado del Día -->
+                        <div class="flex items-center justify-between w-full">
+                            ${isToday ? `
+                                <div class="flex items-center justify-center sm:justify-start gap-1 w-full sm:w-auto">
+                                    <span class="w-5 h-5 sm:w-auto sm:h-auto rounded-full sm:rounded-none bg-primary sm:bg-transparent text-white sm:text-primary dark:sm:text-red-400 flex items-center justify-center font-headline font-black text-[11px] sm:text-xs">
+                                        ${d}
+                                    </span>
+                                    <span class="hidden sm:inline-block px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>
+                                </div>
+                            ` : `
+                                <span class="font-headline font-bold text-[11px] sm:text-xs w-full text-center sm:text-left ${isSelected ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
+                                    ${d}
+                                </span>
+                            `}
                         </div>
 
-                        <div class="space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
+                        <!-- Eventos en Mobile (Indicadores de puntos elegantes) -->
+                        <div class="sm:hidden flex items-center justify-center gap-1 my-0.5 flex-wrap">
+                            ${dayEvents.slice(0, 3).map(ev => {
+                                const dotColor = ev.type === 'visita' ? 'bg-rose-500'
+                                    : (ev.type === 'firma' ? 'bg-emerald-500'
+                                    : (ev.type === 'tasacion' ? 'bg-blue-500'
+                                    : 'bg-amber-500'));
+                                return `<span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>`;
+                            }).join('')}
+                            ${dayEvents.length > 3 ? `<span class="text-[7px] font-black text-primary leading-none">+${dayEvents.length - 3}</span>` : ''}
+                        </div>
+
+                        <!-- Eventos en Desktop (Tarjetas detalladas) -->
+                        <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
                             ${dayEvents.map(ev => {
                                 const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
                                     : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
@@ -1020,9 +1079,20 @@
                             }).join('')}
                         </div>
 
-                        <div class="text-[9px] font-bold text-zinc-400 text-right">
+                        <div class="hidden sm:block text-[9px] font-bold text-zinc-400 text-right">
                             ${dayEvents.length > 0 ? `<span class="text-primary font-black">${dayEvents.length} cita${dayEvents.length > 1 ? 's' : ''}</span>` : ''}
                         </div>
+                    </div>
+                `;
+            }
+
+            // Días del próximo mes para completar la grilla
+            const totalCellsRendered = firstDayIndex + daysInMonth;
+            const nextDaysNeeded = (7 - (totalCellsRendered % 7)) % 7;
+            for (let n = 1; n <= nextDaysNeeded; n++) {
+                html += `
+                    <div class="min-h-[52px] sm:h-28 p-1 sm:p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40 flex items-start justify-center sm:justify-start">
+                        ${n}
                     </div>
                 `;
             }
@@ -1216,8 +1286,61 @@
                 const commission = Math.round(contract.monthly_rent * ((contract.broker_commission_percent || 4.15) / 100));
                 const dailyPunitiveEst = Math.round(contract.monthly_rent * ((contract.punitive_daily_rate || 0.5) / 100));
 
+                const freqMonths = Number(contract.adjustment_frequency_months || contract.periodo_aumento_meses || 3);
+                const nextAdj = window.DataManager?.calculateNextRentAdjustment
+                    ? window.DataManager.calculateNextRentAdjustment(contract.start_date || '2025-08-01', freqMonths)
+                    : { nextDate: '01/11/2026', daysRemaining: 79 };
+
+                let indicesData = {
+                    ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                    icl: { valor: 35.25, tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+                };
+                if (window.DataManager && window.DataManager.getLatestIndices) {
+                    try {
+                        indicesData = await window.DataManager.getLatestIndices();
+                    } catch (e) {}
+                }
+
+                const isIpc = !contract.adjustment_index || contract.adjustment_index.includes('IPC');
+                const defaultRate = isIpc
+                    ? (freqMonths >= 6 ? indicesData.ipc.tasaSugeridaSemestral : indicesData.ipc.tasaSugeridaTrimestral)
+                    : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
+                const estimatedNewRent = Math.round(contract.monthly_rent * (1 + defaultRate / 100));
+
                 container.innerHTML = `
                     <div class="space-y-6 font-body">
+                        <!-- BANNER DESTACADO DE PRÓXIMA ACTUALIZACIÓN PARA EL PROPIETARIO -->
+                        <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-blue-500/30">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-inner">
+                                    <span class="material-symbols-outlined text-3xl text-white">event_repeat</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-blue-200 block">Cronograma Oficial de Reajustes</span>
+                                        <span class="px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-100 text-[10px] font-bold">Faltan ${nextAdj.daysRemaining} días</span>
+                                    </div>
+                                    <h3 class="font-headline text-xl sm:text-2xl font-black text-white mt-0.5">
+                                        Próxima Actualización de Alquiler: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
+                                    </h3>
+                                    <p class="text-xs text-blue-100 mt-1">
+                                        Ajuste automático según <b>${contract.adjustment_index || 'IPC'} oficial del BCRA</b> cada <b>${freqMonths} meses</b>.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                                <div class="bg-white/15 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/25 text-left sm:text-right">
+                                    <span class="block text-[10px] font-bold text-blue-200 uppercase">Tasa Oficial Estimada</span>
+                                    <span class="text-xl font-black text-emerald-300 font-headline font-mono">+${Number(defaultRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% (${isIpc ? 'IPC' : 'ICL'})</span>
+                                    <span class="block text-[10px] text-blue-200">Nuevo canon: $ ${estimatedNewRent.toLocaleString('es-AR')}</span>
+                                </div>
+                                <button type="button" onclick="openBcraIndicesTableModal('${isIpc ? 'IPC' : 'ICL'}')" class="px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-base text-blue-600">table_chart</span>
+                                    <span>Ver Tabla de Índices BCRA</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Selector de Cartera de Alquileres -->
                         <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
                             <div>

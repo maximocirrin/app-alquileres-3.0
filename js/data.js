@@ -1247,19 +1247,34 @@ var DataManager = {
     },
 
     getCurrentPayment: async function (contractId) {
+        // Si no hay cliente o el ID es un mock string como 'cnt-001' (la columna id_contrato en Postgres es numérica), retornar mock
+        const isNumeric = contractId !== null && contractId !== undefined && (typeof contractId === 'number' || (typeof contractId === 'string' && /^\d+$/.test(contractId.trim())));
+        
+        if (!isNumeric) {
+            return {
+                id: 'pay-' + (contractId || 'current'),
+                contract_id: contractId,
+                period: 'Julio 2026',
+                amount_base: 380000,
+                due_date: '2026-07-10',
+                status: 'pendiente',
+                is_punitive_waived: false
+            };
+        }
+
         if (!window.supabaseClient) return null;
         try {
             const { data, error } = await window.supabaseClient
                 .from('Pago')
                 .select('*')
-                .eq('id_contrato', contractId)
+                .eq('id_contrato', Number(contractId))
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
             if (error || !data) {
                 return {
-                    id: 'pay-current',
+                    id: 'pay-' + contractId,
                     contract_id: contractId,
                     period: 'Julio 2026',
                     amount_base: 380000,
@@ -1568,19 +1583,180 @@ var DataManager = {
         };
     },
 
-    applyIndexAdjustment: async function (contractId, indexType, frequencyMonths) {
-        const rates = { IPC: 12.8, ICL: 10.5 };
-        const pct = rates[indexType] || 12.0;
+    // Índices de Actualización BCRA (IPC & ICL)
+    getLatestIndices: async function () {
+        const defaults = {
+            ipc: { valor: 2.1, fecha: '2026-07-31', tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+            icl: { valor: 35.25, fecha: '2026-08-16', tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+        };
 
-        if (window.supabaseClient && typeof contractId === 'number') {
-            const { data: contract } = await window.supabaseClient.from('Contrato').select('monto_cierre').eq('id_contrato', contractId).single();
-            if (contract) {
-                const newRent = Math.round(contract.monto_cierre * (1 + pct / 100));
-                await window.supabaseClient.from('Contrato').update({ monto_cierre: newRent, indice_ajuste: indexType, periodo_ajuste_meses: frequencyMonths }).eq('id_contrato', contractId);
-                return { oldRent: contract.monto_cierre, newRent, pct, indexType };
+        if (!window.supabaseClient) return defaults;
+
+        try {
+            // 1. Obtener los últimos 6 meses de IPC (id_indice = 1)
+            const { data: ipcRows } = await window.supabaseClient
+                .from('Valor_Indice_Mensual')
+                .select('*')
+                .eq('id_indice', 1)
+                .order('fecha_publicacion', { ascending: false })
+                .limit(6);
+
+            // 2. Obtener los últimos valores de ICL (id_indice = 2)
+            const { data: iclRows } = await window.supabaseClient
+                .from('Valor_Indice_Mensual')
+                .select('*')
+                .eq('id_indice', 2)
+                .order('fecha_publicacion', { ascending: false })
+                .limit(180);
+
+            let ipcResult = defaults.ipc;
+            if (ipcRows && ipcRows.length > 0) {
+                const latestIpc = ipcRows[0];
+                // Calcular acumulado trimestral compuesto (últimos 3 meses)
+                let trimestral = 1;
+                ipcRows.slice(0, 3).forEach(r => {
+                    trimestral *= (1 + Number(r.valor_oficial) / 100);
+                });
+                const pctTrimestral = Number(((trimestral - 1) * 100).toFixed(1));
+
+                // Calcular acumulado semestral compuesto (últimos 6 meses)
+                let semestral = 1;
+                ipcRows.slice(0, 6).forEach(r => {
+                    semestral *= (1 + Number(r.valor_oficial) / 100);
+                });
+                const pctSemestral = Number(((semestral - 1) * 100).toFixed(1));
+
+                ipcResult = {
+                    valor: Number(latestIpc.valor_oficial),
+                    fecha: latestIpc.fecha_publicacion,
+                    tasaSugeridaTrimestral: pctTrimestral || 7.2,
+                    tasaSugeridaSemestral: pctSemestral || 14.8
+                };
+            }
+
+            let iclResult = defaults.icl;
+            if (iclRows && iclRows.length > 0) {
+                const latestIcl = iclRows[0];
+                // Calcular variación respecto a hace 90 días (trimestral)
+                const row90Days = iclRows[Math.min(90, iclRows.length - 1)];
+                const pctIclTrimestral = row90Days && Number(row90Days.valor_oficial) > 0
+                    ? Number((((Number(latestIcl.valor_oficial) / Number(row90Days.valor_oficial)) - 1) * 100).toFixed(1))
+                    : 6.8;
+
+                const row180Days = iclRows[Math.min(180, iclRows.length - 1)];
+                const pctIclSemestral = row180Days && Number(row180Days.valor_oficial) > 0
+                    ? Number((((Number(latestIcl.valor_oficial) / Number(row180Days.valor_oficial)) - 1) * 100).toFixed(1))
+                    : 13.9;
+
+                iclResult = {
+                    valor: Number(latestIcl.valor_oficial),
+                    fecha: latestIcl.fecha_publicacion,
+                    tasaSugeridaTrimestral: pctIclTrimestral,
+                    tasaSugeridaSemestral: pctIclSemestral
+                };
+            }
+
+            return { ipc: ipcResult, icl: iclResult };
+        } catch (err) {
+            console.warn('[DataManager] Error obteniendo índices de Supabase, usando defaults:', err);
+            return defaults;
+        }
+    },
+
+    getAllIndicesHistory: async function (indexType = 'all', limit = 200) {
+        if (!window.supabaseClient) {
+            return [
+                { id_indice: 1, indice_nombre: 'IPC', fecha_publicacion: '2026-07-31', valor_oficial: 2.1 },
+                { id_indice: 1, indice_nombre: 'IPC', fecha_publicacion: '2026-06-30', valor_oficial: 2.3 },
+                { id_indice: 1, indice_nombre: 'IPC', fecha_publicacion: '2026-05-31', valor_oficial: 2.6 },
+                { id_indice: 2, indice_nombre: 'ICL', fecha_publicacion: '2026-08-16', valor_oficial: 35.32 },
+                { id_indice: 2, indice_nombre: 'ICL', fecha_publicacion: '2026-08-15', valor_oficial: 35.29 },
+                { id_indice: 2, indice_nombre: 'ICL', fecha_publicacion: '2026-08-14', valor_oficial: 35.25 }
+            ];
+        }
+
+        try {
+            let query = window.supabaseClient
+                .from('Valor_Indice_Mensual')
+                .select('*')
+                .order('fecha_publicacion', { ascending: false })
+                .limit(limit);
+
+            if (indexType === 'IPC' || indexType === 1) {
+                query = query.eq('id_indice', 1);
+            } else if (indexType === 'ICL' || indexType === 2) {
+                query = query.eq('id_indice', 2);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+            return (data || []).map(d => ({
+                ...d,
+                indice_nombre: d.id_indice === 1 ? 'IPC (Inflación Mensual)' : 'ICL (Índice Locaciones)'
+            }));
+        } catch (e) {
+            console.warn('[DataManager] Error obteniendo historial de índices:', e);
+            return [];
+        }
+    },
+
+    calculateNextRentAdjustment: function (startDateStr, freqMonths = 3) {
+        if (!startDateStr) {
+            return {
+                nextDate: '01/11/2026',
+                daysRemaining: 79,
+                isDue: false,
+                label: 'Próxima actualización en 79 días'
+            };
+        }
+
+        const start = new Date(startDateStr);
+        const today = new Date();
+        const freq = Number(freqMonths) || 3;
+
+        let nextAdj = new Date(start);
+        while (nextAdj <= today) {
+            nextAdj.setMonth(nextAdj.getMonth() + freq);
+        }
+
+        const diffTime = nextAdj.getTime() - today.getTime();
+        const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        const nextDateFormatted = nextAdj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        return {
+            nextDate: nextDateFormatted,
+            daysRemaining: daysRemaining,
+            isDue: daysRemaining <= 7,
+            label: daysRemaining === 0 ? '¡Actualización requerida hoy!' : `Próxima actualización en ${daysRemaining} días (${nextDateFormatted})`
+        };
+    },
+
+    applyIndexAdjustment: async function (contractId, newRent, indexType, customRate = null) {
+        const finalRent = Number(newRent) || 380000;
+
+        if (window.supabaseClient && (typeof contractId === 'number' || (typeof contractId === 'string' && !isNaN(Number(contractId))))) {
+            try {
+                const numericContractId = Number(contractId);
+                const { data: contract } = await window.supabaseClient
+                    .from('Contrato')
+                    .select('monto_cierre')
+                    .eq('id_contrato', numericContractId)
+                    .single();
+
+                if (contract) {
+                    const oldRent = contract.monto_cierre;
+                    await window.supabaseClient
+                        .from('Contrato')
+                        .update({ monto_cierre: finalRent })
+                        .eq('id_contrato', numericContractId);
+
+                    return { oldRent, newRent: finalRent, pct: customRate, indexType };
+                }
+            } catch (err) {
+                console.warn('[DataManager] Error aplicando ajuste en DB:', err);
             }
         }
-        return { oldRent: 380000, newRent: 428640, pct, indexType };
+        return { oldRent: 380000, newRent: finalRent, pct: customRate, indexType };
     },
 
     // Tickets de Mantenimiento
@@ -1820,9 +1996,9 @@ var DataManager = {
                 .from('Evento')
                 .select(`
                     *,
-                    Tipo_evento (*),
-                    Estado_evento (*),
-                    Propiedad (*)
+                    Tipo_evento!fk_evento_tipo (*),
+                    Estado_evento!fk_evento_estado (*),
+                    Propiedad!fk_evento_propiedad (*)
                 `)
                 .order('fecha_evento', { ascending: false });
 
@@ -1866,6 +2042,10 @@ var DataManager = {
             console.error("Error in getEvents:", e);
             return [];
         }
+    },
+
+    getVisits: async function () {
+        return this.getEvents();
     },
 
     createEvent: async function (eventData) {
@@ -2300,3 +2480,347 @@ var DataManager = {
 };
 
 window.DataManager = DataManager;
+
+// Modal Global de Consulta de Tabla de Índices BCRA (IPC & ICL)
+window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
+    let modal = document.getElementById('bcra-indices-table-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'bcra-indices-table-modal';
+        document.body.appendChild(modal);
+    }
+
+    modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md font-body';
+    modal.style.display = 'flex';
+
+    modal.innerHTML = `
+        <div class="relative w-full max-w-4xl max-h-[94vh] sm:max-h-[90vh] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col text-zinc-900 dark:text-white overflow-hidden" onclick="event.stopPropagation()">
+            <!-- Header Modal -->
+            <div class="p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold shrink-0 border border-primary/20">
+                        <span class="material-symbols-outlined text-xl sm:text-2xl">table_chart</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline text-base sm:text-xl font-extrabold text-zinc-900 dark:text-white leading-tight">
+                            Tabla Oficial de Índices BCRA
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Valores oficiales del Banco Central de la República Argentina con 2 decimales.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('bcra-indices-table-modal').style.display='none'" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-200/70 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors cursor-pointer shrink-0">
+                    <span class="material-symbols-outlined text-base sm:text-lg">close</span>
+                </button>
+            </div>
+
+            <!-- Tabs Switcher + Filter -->
+            <div class="px-4 sm:px-6 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-zinc-900">
+                <div class="grid grid-cols-2 gap-1 w-full sm:w-72 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700/60 shrink-0">
+                    <button type="button" id="tab-btn-ipc" onclick="renderIndicesTableContent('IPC')" class="w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-extrabold bg-primary text-white shadow-sm transition-all cursor-pointer">
+                        IPC (Inflación)
+                    </button>
+                    <button type="button" id="tab-btn-icl" onclick="renderIndicesTableContent('ICL')" class="w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50 transition-all cursor-pointer">
+                        ICL (Locación)
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs w-full sm:w-64">
+                    <span class="material-symbols-outlined text-base text-zinc-400">search</span>
+                    <input type="text" id="indices-search-input" oninput="filterIndicesTableRows()" placeholder="Buscar por año o mes..." class="bg-transparent outline-none w-full !p-0 !border-none !ring-0 text-xs font-medium placeholder:text-zinc-400">
+                </div>
+            </div>
+
+            <!-- KPI Cards Summary (Siempre 3 columnas compactas sin espacio vacío) -->
+            <div id="indices-kpi-summary" class="px-4 sm:px-6 py-3 border-b border-zinc-200/80 dark:border-zinc-800 grid grid-cols-3 gap-2 sm:gap-3 bg-zinc-50/70 dark:bg-zinc-900/60 shrink-0">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <!-- Table Content Area (Scrollable con margin-top y padding para no chocar) -->
+            <div class="flex-grow overflow-y-auto p-4 sm:p-6 mt-1" id="indices-table-container">
+                <div class="p-8 text-center text-zinc-400">Cargando registros oficiales...</div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800/40">
+                <span class="flex items-center gap-1.5 text-center sm:text-left text-[11px] sm:text-xs">
+                    <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
+                    <span>Fuente Oficial: API Monetaria v4.0 BCRA • Sincronización Automática</span>
+                </span>
+                <button type="button" onclick="document.getElementById('bcra-indices-table-modal').style.display='none'" class="w-full sm:w-auto px-5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-headline font-bold text-xs shadow transition-colors cursor-pointer">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    `;
+
+    let activeTab = initialTab;
+    let cachedRows = [];
+
+    const formatBcraDate = (dateStr) => {
+        if (!dateStr) return '-';
+        const parts = String(dateStr).split('T')[0].split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    const formatBcraMonth = (dateStr) => {
+        if (!dateStr) return '-';
+        const parts = String(dateStr).split('T')[0].split('-');
+        if (parts.length === 3) {
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const m = parseInt(parts[1], 10) - 1;
+            return `${months[m] || parts[1]} ${parts[0]}`;
+        }
+        return dateStr;
+    };
+
+    window.renderIndicesTableContent = async function(tab) {
+        activeTab = tab;
+        const btnIpc = document.getElementById('tab-btn-ipc');
+        const btnIcl = document.getElementById('tab-btn-icl');
+        const container = document.getElementById('indices-table-container');
+        const kpiContainer = document.getElementById('indices-kpi-summary');
+
+        if (btnIpc && btnIcl) {
+            if (tab === 'IPC') {
+                btnIpc.className = 'w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-extrabold bg-primary text-white shadow-sm transition-all cursor-pointer';
+                btnIcl.className = 'w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50 transition-all cursor-pointer';
+            } else {
+                btnIcl.className = 'w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-extrabold bg-primary text-white shadow-sm transition-all cursor-pointer';
+                btnIpc.className = 'w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-700/50 transition-all cursor-pointer';
+            }
+        }
+
+        if (container) container.innerHTML = '<div class="p-8 text-center text-zinc-400 font-medium">Cargando registros oficiales del BCRA...</div>';
+
+        cachedRows = await window.DataManager.getAllIndicesHistory(tab, 300);
+
+        // Render KPI cards (3 columnas proporcionales y compactas en mobile y desktop)
+        if (kpiContainer && cachedRows.length > 0) {
+            const latest = cachedRows[0];
+            if (tab === 'IPC') {
+                let compTrim = 1;
+                cachedRows.slice(0, 3).forEach(r => compTrim *= (1 + Number(r.valor_oficial) / 100));
+                const pctTrim = ((compTrim - 1) * 100).toFixed(2);
+
+                let compSem = 1;
+                cachedRows.slice(0, 6).forEach(r => compSem *= (1 + Number(r.valor_oficial) / 100));
+                const pctSem = ((compSem - 1) * 100).toFixed(2);
+
+                kpiContainer.innerHTML = `
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Último IPC</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-primary dark:text-red-400 mt-0.5 truncate">+${Number(latest.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Trimestral (3m)</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">+${Number(pctTrim).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Semestral (6m)</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-blue-600 dark:text-blue-400 mt-0.5 truncate">+${Number(pctSem).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                    </div>
+                `;
+            } else {
+                const row90 = cachedRows[Math.min(90, cachedRows.length - 1)];
+                const pctTrim = row90 && Number(row90.valor_oficial) > 0
+                    ? (((Number(latest.valor_oficial) / Number(row90.valor_oficial)) - 1) * 100).toFixed(2)
+                    : '6.80';
+
+                const row180 = cachedRows[Math.min(180, cachedRows.length - 1)];
+                const pctSem = row180 && Number(row180.valor_oficial) > 0
+                    ? (((Number(latest.valor_oficial) / Number(row180.valor_oficial)) - 1) * 100).toFixed(2)
+                    : '13.90';
+
+                kpiContainer.innerHTML = `
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Último ICL</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-primary dark:text-red-400 mt-0.5 truncate">${Number(latest.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Trimestral (3m)</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">+${Number(pctTrim).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Semestral (6m)</span>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-blue-600 dark:text-blue-400 mt-0.5 truncate">+${Number(pctSem).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                    </div>
+                `;
+            }
+        }
+
+        window.filterIndicesTableRows();
+    };
+
+    window.filterIndicesTableRows = function() {
+        const container = document.getElementById('indices-table-container');
+        const searchVal = (document.getElementById('indices-search-input')?.value || '').toLowerCase().trim();
+        if (!container) return;
+
+        const filtered = cachedRows.filter(r => {
+            if (!searchVal) return true;
+            const dateStr = String(r.fecha_publicacion || '');
+            const monthStr = formatBcraMonth(r.fecha_publicacion).toLowerCase();
+            return dateStr.includes(searchVal) || monthStr.includes(searchVal);
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="p-8 text-center text-zinc-400 space-y-2">
+                    <span class="material-symbols-outlined text-3xl text-zinc-300 dark:text-zinc-600">search_off</span>
+                    <p class="text-xs">No se encontraron registros para "${searchVal}".</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (activeTab === 'IPC') {
+            container.innerHTML = `
+                <!-- Contenedor Responsivo: Tabla en Desktop y Lista de Tarjetas en Mobile -->
+                <div>
+                    <!-- Desktop Table (>= 640px) -->
+                    <div class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="p-3.5 sm:p-4">Período / Mes</th>
+                                    <th class="p-3.5 sm:p-4 text-right">Variación Mensual</th>
+                                    <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                                ${filtered.map(r => `
+                                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                                        <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
+                                            <div class="flex items-center gap-2.5">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                                <div>
+                                                    <span class="block">${formatBcraMonth(r.fecha_publicacion)}</span>
+                                                    <span class="block text-[11px] font-mono font-medium text-zinc-400 dark:text-zinc-500">${formatBcraDate(r.fecha_publicacion)}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                            +${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                                        </td>
+                                        <td class="p-3.5 sm:p-4 text-center">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                                                Oficial BCRA
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Cards (< 640px) -->
+                    <div class="sm:hidden space-y-2">
+                        ${filtered.map(r => `
+                            <div class="p-3.5 bg-white dark:bg-zinc-800/90 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <div class="min-w-0">
+                                        <span class="block font-headline font-extrabold text-xs text-zinc-900 dark:text-white truncate">
+                                            ${formatBcraMonth(r.fecha_publicacion)}
+                                        </span>
+                                        <span class="block text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+                                            Pub: ${formatBcraDate(r.fecha_publicacion)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0 flex flex-col items-end gap-1">
+                                    <span class="font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                        +${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                                        Oficial BCRA
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <!-- Contenedor Responsivo: Tabla en Desktop y Lista de Tarjetas en Mobile -->
+                <div>
+                    <!-- Desktop Table (>= 640px) -->
+                    <div class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="p-3.5 sm:p-4">Fecha</th>
+                                    <th class="p-3.5 sm:p-4 text-right">Valor Diario Oficial</th>
+                                    <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
+                                ${filtered.map(r => {
+                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    const isFuture = String(r.fecha_publicacion) > todayStr;
+                                    return `
+                                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                                        <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
+                                            <div class="flex items-center gap-2.5">
+                                                <span class="w-2.5 h-2.5 rounded-full ${isFuture ? 'bg-amber-500' : 'bg-emerald-500'} shrink-0"></span>
+                                                <div>
+                                                    <span class="block font-mono font-bold">${formatBcraDate(r.fecha_publicacion)}</span>
+                                                    <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">${isFuture ? 'Anticipo Diario Proyectado' : 'Publicación Oficial Diaria'}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                            ${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td class="p-3.5 sm:p-4 text-center">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isFuture ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/40' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'}">
+                                                ${isFuture ? 'Proyección BCRA' : 'Oficial BCRA'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile Cards (< 640px) -->
+                    <div class="sm:hidden space-y-2">
+                        ${filtered.map(r => {
+                            const todayStr = new Date().toISOString().split('T')[0];
+                            const isFuture = String(r.fecha_publicacion) > todayStr;
+                            return `
+                            <div class="p-3.5 bg-white dark:bg-zinc-800/90 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full ${isFuture ? 'bg-amber-500' : 'bg-emerald-500'} shrink-0"></span>
+                                    <div class="min-w-0">
+                                        <span class="block font-headline font-bold font-mono text-xs text-zinc-900 dark:text-white truncate">
+                                            ${formatBcraDate(r.fecha_publicacion)}
+                                        </span>
+                                        <span class="block text-[10px] text-zinc-400 dark:text-zinc-500">
+                                            ${isFuture ? 'Proyección anticipada' : 'Publicación oficial'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0 flex flex-col items-end gap-1">
+                                    <span class="font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                        ${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${isFuture ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/40' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'}">
+                                        ${isFuture ? 'Proyección BCRA' : 'Oficial BCRA'}
+                                    </span>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    window.renderIndicesTableContent(initialTab);
+};
