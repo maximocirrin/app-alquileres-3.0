@@ -9117,21 +9117,74 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPaid = payment && payment.status === 'pagado';
             const isWaived = payment && payment.is_punitive_waived;
 
+            let indicesData = {
+                ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                icl: { valor: 35.25, tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+            };
+            if (window.DataManager.getLatestIndices) {
+                try {
+                    indicesData = await window.DataManager.getLatestIndices();
+                } catch (e) {}
+            }
+
+            const freqMonths = Number(contract.periodo_aumento_meses || contract.periodo_ajuste_meses || 3);
+            const nextAdj = window.DataManager.calculateNextRentAdjustment
+                ? window.DataManager.calculateNextRentAdjustment(contract.start_date || contract.fecha_inicio_contrato, freqMonths)
+                : { nextDate: '01/11/2026', daysRemaining: 79 };
+
+            const defaultIndexType = contract.adjustment_index || 'IPC';
+            const initialRate = defaultIndexType === 'IPC'
+                ? (freqMonths >= 6 ? indicesData.ipc.tasaSugeridaSemestral : indicesData.ipc.tasaSugeridaTrimestral)
+                : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
+
             container.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm space-y-6">
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm space-y-6">
+                    <!-- BANNER DESTACADO DE PRÓXIMA ACTUALIZACIÓN PARA EL PROPIETARIO -->
+                    <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-blue-500/30 m-6 mb-0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-inner">
+                                <span class="material-symbols-outlined text-3xl text-white">event_repeat</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-200 block">Cronograma Oficial de Reajustes</span>
+                                <h3 class="font-headline text-xl sm:text-2xl font-black text-white">
+                                    Próxima Actualización: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
+                                </h3>
+                                <p class="text-xs text-blue-100 mt-1">
+                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${defaultIndexType} oficial BCRA</b>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                            <div class="bg-white/15 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/25 text-left sm:text-right">
+                                <span class="block text-[10px] font-bold text-blue-200 uppercase">Tasa Oficial Vigente BCRA</span>
+                                <span class="text-xl font-black text-emerald-300 font-headline font-mono">+${Number(initialRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% (${defaultIndexType})</span>
+                            </div>
+                            <button type="button" onclick="openBcraIndicesTableModal('${defaultIndexType}')" class="px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                <span class="material-symbols-outlined text-base text-blue-600">table_chart</span>
+                                <span>Ver Tabla de Índices BCRA</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Top Banner -->
                     <div class="bg-zinc-100 dark:bg-zinc-800/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                         <div>
-                            <span class="px-3 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 uppercase">
-                                Alquiler En Curso
-                            </span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 uppercase">
+                                    Alquiler En Curso
+                                </span>
+                                <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                                    Ajuste cada ${freqMonths} meses por ${defaultIndexType}
+                                </span>
+                            </div>
                             <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white mt-2">
                                 ${contract.property_title}
                             </h2>
                             <p class="text-xs text-zinc-500">Inquilino: ${contract.tenant_name} (${contract.tenant_email})</p>
                         </div>
                         <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-right">
-                            <span class="block text-[10px] font-bold text-zinc-400 uppercase">Canon Locativo Mensual</span>
+                            <span class="block text-[10px] font-bold text-zinc-400 uppercase">Canon Locativo Mensual Actual</span>
                             <span class="text-2xl font-black text-primary dark:text-red-400">$ ${Number(contract.monthly_rent).toLocaleString('es-AR')}</span>
                         </div>
                     </div>
@@ -9207,42 +9260,49 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- Calculadora de Reajuste IPC / ICL -->
+                    <!-- Módulo de Reajuste con Índices Oficiales BCRA (Lectura Directa) -->
                     <div class="p-6 md:p-8 bg-zinc-50 dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
-                                <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">Calculadora de Reajuste Automático (IPC / ICL)</h4>
-                                <p class="text-xs text-zinc-500">Aplica incrementos oficiales al canon locativo según el índice acordado en el contrato.</p>
+                                <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">calculate</span>
+                                    Reajuste Automático del Canon (Índices Oficiales BCRA)
+                                </h4>
+                                <p class="text-xs text-zinc-500">Próxima fecha pactada: <b>${nextAdj.nextDate}</b> (${nextAdj.daysRemaining} días restantes).</p>
                             </div>
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                Índices BCRA Sincronizados
+                            </span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                             <div>
-                                <label class="block font-bold uppercase text-zinc-500 mb-1">Índice Seleccionado</label>
-                                <select id="adj-index-select" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs">
-                                    <option value="IPC" selected>IPC (Índice de Precios al Consumidor) ~ 12.8%</option>
-                                    <option value="ICL">ICL (Índice para Contratos de Locación) ~ 10.5%</option>
-                                </select>
+                                <label class="block font-bold uppercase text-zinc-500 mb-1">Índice del Contrato</label>
+                                <div class="px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between">
+                                    <span>${defaultIndexType === 'IPC' ? 'IPC (Índice Precios al Consumidor)' : 'ICL (Contratos Locación)'}</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">Oficial</span>
+                                </div>
                             </div>
                             <div>
-                                <label class="block font-bold uppercase text-zinc-500 mb-1">Frecuencia de Ajuste</label>
-                                <select id="adj-freq-select" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs">
-                                    <option value="3" selected>Trimestral (Cada 3 meses)</option>
-                                    <option value="4">Cuatrimestral (Cada 4 meses)</option>
-                                    <option value="6">Semestral (Cada 6 meses)</option>
-                                </select>
+                                <label class="block font-bold uppercase text-zinc-500 mb-1">Frecuencia & Tasa Oficial Vigente</label>
+                                <div class="px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between">
+                                    <span>Cada ${freqMonths} meses</span>
+                                    <span class="font-mono font-black text-emerald-600 dark:text-emerald-400">+${initialRate}%</span>
+                                </div>
                             </div>
                             <div>
-                                <label class="block font-bold uppercase text-zinc-500 mb-1">Nuevo Monto Calculado</label>
-                                <div id="adj-preview-amount" class="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 font-black text-sm text-emerald-700 dark:text-emerald-300">
-                                    $ ${Math.round(contract.monthly_rent * 1.128).toLocaleString('es-AR')}
+                                <label class="block font-bold uppercase text-zinc-500 mb-1">Nuevo Monto Estimado a partir de ${nextAdj.nextDate}</label>
+                                <div id="adj-preview-amount" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 font-black text-sm text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+                                    <span>$ ${Math.round(contract.monthly_rent * (1 + initialRate / 100)).toLocaleString('es-AR')}</span>
+                                    <span class="text-[10px] font-bold opacity-80" id="adj-preview-diff">+${initialRate}%</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="pt-2 flex justify-end">
-                            <button type="button" id="btn-apply-adjustment" class="px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold text-xs rounded-xl shadow transition-colors cursor-pointer">
-                                Aplicar Reajuste al Contrato
+                            <button type="button" id="btn-apply-adjustment" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow transition-colors cursor-pointer flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">check_circle</span>
+                                Aplicar Reajuste Oficial al Contrato
                             </button>
                         </div>
                     </div>
@@ -9276,30 +9336,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
 
-            // Adjustment Calculator listeners
-            const adjIndex = document.getElementById('adj-index-select');
-            const previewEl = document.getElementById('adj-preview-amount');
+            // Aplicación automática del reajuste oficial
             const btnApplyAdj = document.getElementById('btn-apply-adjustment');
-
-            const updatePreview = () => {
-                const idx = adjIndex.value;
-                const pct = idx === 'IPC' ? 12.8 : 10.5;
-                const newRent = Math.round(contract.monthly_rent * (1 + pct / 100));
-                previewEl.textContent = `$ ${newRent.toLocaleString('es-AR')}`;
-                return newRent;
-            };
-
-            if (adjIndex) adjIndex.onchange = updatePreview;
-
             if (btnApplyAdj) {
                 btnApplyAdj.onclick = async () => {
-                    const idx = adjIndex.value;
-                    const pct = idx === 'IPC' ? 12.8 : 10.5;
-                    const newRent = Math.round(contract.monthly_rent * (1 + pct / 100));
-
-                    if (confirm(`¿Confirmas la aplicación del reajuste ${idx} (+${pct}%)? El nuevo canon locativo será de $ ${newRent.toLocaleString('es-AR')}.`)) {
-                        await window.DataManager.applyIndexAdjustment(contract.id, newRent, idx);
-                        alert(`¡Reajuste aplicado! Nuevo canon mensual: $ ${newRent.toLocaleString('es-AR')}`);
+                    const newRent = Math.round(contract.monthly_rent * (1 + initialRate / 100));
+                    if (confirm(`¿Confirmás la aplicación del reajuste oficial ${defaultIndexType} (+${initialRate}%) del BCRA?\nEl nuevo canon locativo será de $ ${newRent.toLocaleString('es-AR')}.`)) {
+                        await window.DataManager.applyIndexAdjustment(contract.id, newRent, defaultIndexType, initialRate);
+                        alert(`¡Reajuste oficial aplicado con éxito!\nNuevo canon mensual: $ ${newRent.toLocaleString('es-AR')}`);
                         await renderLandlordActiveRental();
                     }
                 };

@@ -219,6 +219,47 @@
             animation: staggerFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.24s backwards;
         }
 
+        /* Animaciones Modernas para Navegación Focalizada */
+        @keyframes highlightPulseGlow {
+            0% {
+                transform: scale(0.985);
+                box-shadow: 0 0 0 0 rgba(129, 27, 30, 0.7), 0 0 20px rgba(129, 27, 30, 0.4);
+            }
+            50% {
+                transform: scale(1.015);
+                box-shadow: 0 0 0 16px rgba(129, 27, 30, 0), 0 0 35px rgba(129, 27, 30, 0.6);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(129, 27, 30, 0), 0 0 0 rgba(129, 27, 30, 0);
+            }
+        }
+
+        @keyframes highlightTicketGlow {
+            0% {
+                transform: scale(0.985);
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7), 0 0 20px rgba(245, 158, 11, 0.4);
+            }
+            50% {
+                transform: scale(1.018);
+                box-shadow: 0 0 0 16px rgba(245, 158, 11, 0), 0 0 35px rgba(245, 158, 11, 0.6);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
+        .animate-highlight-calculator {
+            animation: highlightPulseGlow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            border-color: #811b1e !important;
+        }
+
+        .animate-highlight-ticket {
+            animation: highlightTicketGlow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            border-color: #f59e0b !important;
+        }
+
         /* Ocultar flechas de incremento/decremento en inputs numéricos */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
@@ -310,15 +351,15 @@
                     <span class="material-symbols-outlined text-purple-600 text-base sm:text-lg">inventory_2</span>
                     Inventario Digital
                 </button>
-                <button type="button" onclick="switchBrokerTab('operaciones'); setTimeout(() => document.getElementById('section-calculadora')?.scrollIntoView({ behavior: 'smooth' }), 100);" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                <button type="button" onclick="goToCalculatorWithAnimation()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
                     <span class="material-symbols-outlined text-emerald-600 text-base sm:text-lg">calculate</span>
                     Calculadora Ingreso
                 </button>
-                <button type="button" onclick="openBlindCardModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                <button type="button" onclick="openBlindCardModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
                     <span class="material-symbols-outlined text-blue-600 text-base sm:text-lg">visibility_off</span>
                     Ficha Ciega
                 </button>
-                <button type="button" onclick="switchBrokerTab('alquileres'); setTimeout(() => document.getElementById('section-tickets')?.scrollIntoView({ behavior: 'smooth' }), 100);" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
+                <button type="button" onclick="openTicketsSummaryModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
                     <span class="material-symbols-outlined text-amber-500 text-base sm:text-lg">build</span>
                     Tickets Mantenimiento
                 </button>
@@ -422,32 +463,151 @@
 
                 <!-- PANEL DE GRÁFICOS CRM (Chart.js) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="glass-card p-5 rounded-2xl shadow-sm lg:col-span-2 space-y-4">
-                        <div class="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                    <!-- Gráfico 1: Evolución Financiera Dual -->
+                    <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm lg:col-span-2 space-y-4 border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800/80 pb-4">
                             <div>
-                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-xl">show_chart</span>
-                                    Evolución de Volumen de Alquileres y Comisiones Cobradas
-                                </h3>
-                                <p class="text-xs text-zinc-500">Histórico de cánones cobrados e ingresos por honorarios de corretaje (Últimos 6 meses).</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                                    <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white">
+                                        Evolución de Volumen y Comisiones
+                                    </h3>
+                                </div>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Histórico comparativo de cánones mensuales gestionados y comisiones netas de corretaje.</p>
                             </div>
-                            <span class="text-xs font-bold px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-600 dark:text-zinc-300">2026</span>
+                            <div class="flex items-center gap-3 text-xs font-bold text-zinc-500 dark:text-zinc-400 self-start sm:self-auto bg-zinc-50 dark:bg-zinc-800/60 px-3 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60">
+                                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-primary/85 inline-block"></span> Volumen ($)</span>
+                                <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 rounded-full bg-emerald-500 inline-block"></span> Honorarios ($)</span>
+                            </div>
                         </div>
-                        <div class="h-64 w-full relative">
+                        <div class="h-72 w-full relative">
                             <canvas id="chart-financial-evolution"></canvas>
+                        </div>
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                            <span class="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                                <span class="material-symbols-outlined text-base">trending_up</span>
+                                Crecimiento promedio mensual: +4.8%
+                            </span>
+                            <span class="font-mono text-[11px] font-bold">Última actualización: Hoy</span>
                         </div>
                     </div>
 
-                    <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
-                        <div class="border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
-                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <!-- Gráfico 2: Estado de Cartera / Ocupación Donut -->
+                    <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm space-y-4 border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="border-b border-zinc-200/60 dark:border-zinc-800/80 pb-4">
+                            <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-blue-600 text-xl">pie_chart</span>
-                                Estado de Cartera
-                            </h3>
-                            <p class="text-xs text-zinc-500">Alquiladas vs. Disponibles y Pausadas.</p>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white">
+                                    Estado de Cartera
+                                </h3>
+                            </div>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Ocupación y disponibilidad de los 52 inmuebles en gestión.</p>
                         </div>
-                        <div class="h-64 w-full relative flex items-center justify-center">
+                        <div class="h-56 w-full relative flex items-center justify-center">
                             <canvas id="chart-portfolio-status"></canvas>
+                            <!-- Badge central con contador -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span class="text-2xl sm:text-3xl font-black font-headline font-mono text-zinc-900 dark:text-white">52</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Inmuebles</span>
+                                <span class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full mt-0.5">65.4% Ocupado</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 text-xs">
+                            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                <div class="min-w-0">
+                                    <span class="block font-bold text-zinc-900 dark:text-white truncate">Alquiladas</span>
+                                    <span class="text-[10px] text-zinc-400">34 props (65.4%)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                                <div class="min-w-0">
+                                    <span class="block font-bold text-zinc-900 dark:text-white truncate">Disponibles</span>
+                                    <span class="text-[10px] text-zinc-400">13 props (25.0%)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                <div class="min-w-0">
+                                    <span class="block font-bold text-zinc-900 dark:text-white truncate">En Reserva</span>
+                                    <span class="text-[10px] text-zinc-400">3 props (5.8%)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                                <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 shrink-0"></span>
+                                <div class="min-w-0">
+                                    <span class="block font-bold text-zinc-900 dark:text-white truncate">Pausadas</span>
+                                    <span class="text-[10px] text-zinc-400">2 props (3.8%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segunda Fila de Gráficos: Embudo Operativo y Actividad Comercial -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Embudo Comercial / Conversión -->
+                    <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm lg:col-span-2 space-y-4 border border-zinc-200/80 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800/80 pb-4">
+                            <div>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-purple-600 text-xl">filter_alt</span>
+                                    Embudo de Conversión & Actividad Comercial
+                                </h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Relación entre Consultas Web ➔ Visitas Coordinadas ➔ Contratos / Reservas Concretadas.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold text-xs rounded-xl border border-purple-200 dark:border-purple-900/40 self-start sm:self-auto">
+                                Tasa de Cierre: 21.4%
+                            </span>
+                        </div>
+                        <div class="h-64 w-full relative">
+                            <canvas id="chart-conversion-funnel"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Métricas de Velocidad Comercial -->
+                    <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm space-y-4 border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
+                        <div class="border-b border-zinc-200/60 dark:border-zinc-800/80 pb-4">
+                            <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500 text-xl">speed</span>
+                                Indicadores de Velocidad
+                            </h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Tiempos promedio de colocación y respuesta.</p>
+                        </div>
+                        <div class="space-y-3.5">
+                            <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60">
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300">Tiempo Promedio de Alquiler</span>
+                                    <span class="font-headline font-black text-sm text-primary dark:text-red-400 font-mono">14 días</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full" style="width: 35%"></div>
+                                </div>
+                                <span class="text-[10px] text-zinc-400 mt-1 block">Mercado CABA prom: 28 días (50% más rápido)</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60">
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300">Tiempo de Respuesta a Leads</span>
+                                    <span class="font-headline font-black text-sm text-emerald-600 dark:text-emerald-400 font-mono">18 min</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: 85%"></div>
+                                </div>
+                                <span class="text-[10px] text-zinc-400 mt-1 block">Objetivo de equipo: &lt; 30 min (Excelente)</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700/60">
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300">Tasa de Cobrabilidad a Término</span>
+                                    <span class="font-headline font-black text-sm text-blue-600 dark:text-blue-400 font-mono">98.2%</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 98%"></div>
+                                </div>
+                                <span class="text-[10px] text-zinc-400 mt-1 block">0 moras judiciales activas este mes</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -650,16 +810,32 @@
                         </div>
                     </div>
 
-                    <!-- Filtros Rápidos por Tipo de Evento (Visitas y Entregas de Llaves) -->
+                    <!-- Filtros Rápidos por Tipo de Evento (Leyenda y Filtro de Colores) -->
                     <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
-                        <button type="button" onclick="filterCalendarEventType('todos')" id="cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all">
-                            Todos los Eventos
+                        <button type="button" onclick="filterCalendarEventType('todos')" id="cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="flex items-center gap-0.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            </span>
+                            <span>Todos los Eventos</span>
                         </button>
-                        <button type="button" onclick="filterCalendarEventType('visita')" id="cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
-                            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Visitas / Muestras
+                        <button type="button" onclick="filterCalendarEventType('visita')" id="cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                            <span>Visitas / Muestras</span>
                         </button>
-                        <button type="button" onclick="filterCalendarEventType('entrega')" id="cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 border border-zinc-200 dark:border-zinc-700 cursor-pointer flex items-center gap-1 transition-all">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Entregas de Llaves
+                        <button type="button" onclick="filterCalendarEventType('firma')" id="cal-filter-firma" class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span>Firmas</span>
+                        </button>
+                        <button type="button" onclick="filterCalendarEventType('tasacion')" id="cal-filter-tasacion" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                            <span>Tasaciones</span>
+                        </button>
+                        <button type="button" onclick="filterCalendarEventType('entrega')" id="cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                            <span>Entregas de Llaves</span>
                         </button>
                     </div>
 
@@ -686,8 +862,8 @@
 
 
                 <!-- 4. Calculadora de Ingreso -->
-                <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="glass-card p-6 rounded-2xl shadow-sm max-w-4xl mx-auto space-y-6">
+                <div id="section-calculadora" class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 scroll-mt-24">
+                    <div class="glass-card p-6 rounded-3xl shadow-sm max-w-4xl mx-auto space-y-6 border border-zinc-200 dark:border-zinc-800 transition-all duration-300">
                         <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
                             <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
                                 <span class="material-symbols-outlined text-emerald-600 text-2xl">calculate</span>
@@ -807,67 +983,82 @@
         </nav>
     </div>
 
-    <!-- MODAL: FICHA CIEGA INTERACTIVA CON SELECCIÓN DE PROPIEDAD -->
-    <div id="modal-blind-card" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 relative animate-on-scroll font-body">
-            <button type="button" onclick="closeBlindCardModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer">
-                <span class="material-symbols-outlined text-2xl">close</span>
+    <!-- MODAL 1: FICHA CIEGA INTERACTIVA CON SELECCIÓN DE PROPIEDAD (MODERNA & RESPONSIVE) -->
+    <div id="modal-blind-card" class="fixed inset-0 z-[150] bg-black/70 backdrop-blur-md hidden flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4 sm:space-y-5 relative my-auto sm:my-8 animate-on-scroll font-body">
+            <button type="button" onclick="closeBlindCardModal()" class="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center transition-all z-10">
+                <span class="material-symbols-outlined text-xl">close</span>
             </button>
 
-            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Generador de Ficha Ciega Red MLS</span>
-                <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mt-1">Ficha Comercial Sin Datos de Origen</h3>
-                <p class="text-xs text-zinc-500">Visualice y comparta la propiedad con su propia marca e inmobiliaria, ocultando los datos del propietario o agencia captadora.</p>
+            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3 space-y-1.5 pr-8">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span class="px-2.5 py-0.5 text-[9px] sm:text-[10px] font-headline font-black uppercase rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">visibility_off</span> Red MLS Colegas
+                    </span>
+                    <span class="px-2.5 py-0.5 text-[9px] sm:text-[10px] font-headline font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Marca Blanca Inmobiliaria
+                    </span>
+                </div>
+                <h3 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white">Ficha Comercial sin Datos de Origen</h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Comparta la propiedad con sus clientes o colegas protegiendo la identidad del propietario o agencia captadora.</p>
             </div>
 
             <!-- Selector de Propiedad -->
             <div>
-                <label class="block font-headline font-bold text-xs mb-1.5 text-zinc-700 dark:text-zinc-300">Seleccionar Propiedad o Publicación en Cartera:</label>
-                <select id="blind-card-prop-select" onchange="updateBlindCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-headline font-bold text-xs outline-none">
+                <label class="block font-headline font-bold text-xs mb-1.5 text-zinc-700 dark:text-zinc-300">Seleccionar Inmueble en Cartera:</label>
+                <select id="blind-card-prop-select" onchange="updateBlindCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-headline font-bold text-xs text-zinc-900 dark:text-white outline-none cursor-pointer">
                 </select>
             </div>
 
             <!-- Vista Previa Dinámica de la Ficha Ciega -->
-            <div id="blind-card-preview" class="border border-zinc-200 dark:border-zinc-700 rounded-2xl p-5 space-y-4 bg-zinc-50 dark:bg-zinc-800/40">
+            <div id="blind-card-preview" class="border border-zinc-200 dark:border-zinc-700 rounded-2xl p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 bg-zinc-50/70 dark:bg-zinc-800/40">
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-                <button type="button" onclick="closeBlindCardModal()" class="px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl cursor-pointer">Cerrar</button>
-                <button type="button" onclick="alert('¡Ficha Ciega en PDF generada y descargada exitosamente!')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-extrabold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span class="material-symbols-outlined text-base">download</span> Descargar Ficha Ciega (PDF)
+            <!-- Acciones de Compartir y Descarga -->
+            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <button type="button" onclick="copyBlindCardWhatsApp()" class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-base">chat</span>
+                    <span>Copiar Texto para WhatsApp</span>
                 </button>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="closeBlindCardModal()" class="flex-1 sm:flex-none px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl cursor-pointer transition-all">Cerrar</button>
+                    <button type="button" onclick="downloadBlindCardPdf()" class="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                        <span class="material-symbols-outlined text-base">download</span>
+                        <span>Descargar PDF</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: INVENTARIO DIGITAL OPCIONAL -->
-    <div id="modal-digital-inventory" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 relative my-8 animate-on-scroll">
-            <button type="button" onclick="closeDigitalInventoryModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer">
-                <span class="material-symbols-outlined text-2xl">close</span>
+    <!-- MODAL 2: INVENTARIO DIGITAL OPCIONAL (MODERNO & RESPONSIVE) -->
+    <div id="modal-digital-inventory" class="fixed inset-0 z-[150] bg-black/70 backdrop-blur-md hidden flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4 sm:space-y-5 relative my-auto sm:my-8 animate-on-scroll">
+            <button type="button" onclick="closeDigitalInventoryModal()" class="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center transition-all z-10">
+                <span class="material-symbols-outlined text-xl">close</span>
             </button>
 
             <!-- Modal Header -->
-            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4 space-y-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                        Módulo Opcional • Acta Digital de Entrega
+            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3 sm:pb-4 space-y-1.5 pr-8">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span class="px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">inventory_2</span> Módulo Opcional
                     </span>
-                    <span class="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        Fotos Verificadas 4K
+                    <span class="px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">verified</span> Acta Digital con Fotos 4K
                     </span>
                 </div>
-                <h3 class="font-headline text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-purple-600 text-2xl">inventory_2</span>
-                    Inventario Digital de Inmueble (Opcional)
+                <h3 class="font-headline text-lg sm:text-2xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-purple-600 text-xl sm:text-2xl">fact_check</span>
+                    Inventario Digital del Inmueble
                 </h3>
-                <p class="text-xs text-zinc-500">Documente el estado de conservación, artefactos, llaves y accesorios de la propiedad antes o al inicio del contrato.</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Audite el estado de conservación de ambientes, electrodomésticos, llaves y artefactos al inicio o egreso del contrato.</p>
             </div>
 
             <!-- Modal Controls Bar -->
-            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div class="flex-1 w-full md:w-auto">
-                    <label class="block text-[10px] font-extrabold uppercase text-zinc-400 mb-1">Propiedad Seleccionada</label>
+            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-3 sm:p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+                <div class="flex-1 w-full">
+                    <label class="block text-[10px] font-extrabold uppercase text-zinc-400 mb-1">Inmueble Seleccionado</label>
                     <select id="inventory-property-select" onchange="loadInventoryForProperty(this.value)" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer">
                         <option value="PROP-2026-081">PROP-2026-081 • Av. Santa Fe 3420, Palermo 3 Amb ($520.000)</option>
                         <option value="PROP-2026-082" selected>PROP-2026-082 • Humboldt 1940, Palermo Hollywood 2A ($380.000)</option>
@@ -876,67 +1067,132 @@
                     </select>
                 </div>
 
-                <div class="flex items-center gap-3 shrink-0 bg-white dark:bg-zinc-900 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                    <input type="checkbox" id="toggle-inventory-optional" checked onchange="toggleInventoryOptional(this.checked)" class="rounded border-zinc-300 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
-                    <label for="toggle-inventory-optional" class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200 cursor-pointer">
-                        Activar Inventario Digital Opcional en el Contrato
+                <div class="flex items-center justify-between sm:justify-start gap-3 shrink-0 bg-white dark:bg-zinc-900 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                    <label for="toggle-inventory-optional" class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                        Activar en Contrato
                     </label>
+                    <input type="checkbox" id="toggle-inventory-optional" checked onchange="toggleInventoryOptional(this.checked)" class="rounded border-zinc-300 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
                 </div>
             </div>
 
-            <!-- Categories Filter -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-zinc-100 dark:border-zinc-800 text-xs">
-                <button type="button" onclick="filterInventoryCategory('todos')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-extrabold bg-purple-600 text-white cursor-pointer" data-cat="todos">Todos</button>
-                <button type="button" onclick="filterInventoryCategory('living')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="living">Living / Comedor</button>
-                <button type="button" onclick="filterInventoryCategory('cocina')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="cocina">Cocina & Electro</button>
-                <button type="button" onclick="filterInventoryCategory('dormitorio')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="dormitorio">Dormitorios</button>
-                <button type="button" onclick="filterInventoryCategory('bano')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="bano">Baños</button>
-                <button type="button" onclick="filterInventoryCategory('llaves')" class="inv-cat-btn px-3 py-1.5 rounded-lg font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" data-cat="llaves">Llaves & Control</button>
+            <!-- Categories Filter (Scrollable Touch Bar) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-zinc-100 dark:border-zinc-800 text-xs no-scrollbar -mx-1 px-1">
+                <button type="button" onclick="filterInventoryCategory('todos')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-extrabold bg-purple-600 text-white cursor-pointer transition-all text-xs" data-cat="todos">Todos</button>
+                <button type="button" onclick="filterInventoryCategory('living')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-all text-xs" data-cat="living">Living / Comedor</button>
+                <button type="button" onclick="filterInventoryCategory('cocina')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-all text-xs" data-cat="cocina">Cocina & Electro</button>
+                <button type="button" onclick="filterInventoryCategory('dormitorio')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-all text-xs" data-cat="dormitorio">Dormitorios</button>
+                <button type="button" onclick="filterInventoryCategory('bano')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-all text-xs" data-cat="bano">Baños</button>
+                <button type="button" onclick="filterInventoryCategory('llaves')" class="inv-cat-btn shrink-0 px-3 py-1.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-all text-xs" data-cat="llaves">Llaves & Control</button>
             </div>
 
             <!-- Dynamic Items Container -->
-            <div id="inventory-items-container" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+            <div id="inventory-items-container" class="space-y-2.5 max-h-[300px] sm:max-h-[320px] overflow-y-auto pr-1">
                 <!-- Dynamically populated via JS -->
             </div>
 
             <!-- Form: Agregar Nuevo Elemento -->
-            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-3">
+            <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3 sm:p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-2.5">
                 <span class="block text-xs font-black uppercase text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-purple-600 text-base">add_circle</span>
                     Agregar Nuevo Elemento al Inventario
                 </span>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input type="text" id="new-inv-title" placeholder="Ej: Aire Split BGH 3000 FC" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none">
-                    <select id="new-inv-cat" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none cursor-pointer">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <input type="text" id="new-inv-title" placeholder="Ej: Aire Split BGH 3000 FC" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none">
+                    <select id="new-inv-cat" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none cursor-pointer">
                         <option value="living">Living / Comedor</option>
                         <option value="cocina">Cocina & Electro</option>
                         <option value="dormitorio">Dormitorios</option>
                         <option value="bano">Baños</option>
                         <option value="llaves">Llaves & Control</option>
                     </select>
-                    <select id="new-inv-state" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none cursor-pointer">
+                    <select id="new-inv-state" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none cursor-pointer">
                         <option value="Excelente">Excelente (Nuevo)</option>
                         <option value="Bueno" selected>Bueno (Normal)</option>
                         <option value="Regular">Regular (Uso visible)</option>
                         <option value="Deteriorado">Deteriorado / Falla</option>
                     </select>
-                    <button type="button" onclick="addNewInventoryItem()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 px-4 rounded-xl shadow transition-all flex items-center justify-center gap-1 cursor-pointer">
+                    <button type="button" onclick="addNewInventoryItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 px-4 rounded-xl shadow transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95">
                         <span class="material-symbols-outlined text-base">add</span> Añadir Item
                     </button>
                 </div>
             </div>
 
             <!-- Footer Bar -->
-            <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div class="text-zinc-500 font-bold flex items-center gap-2">
+            <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+                <div class="text-zinc-500 font-bold flex items-center justify-center sm:justify-start gap-2">
                     <span id="inv-summary-count" class="text-purple-600 font-black">4 Elementos</span>
                     <span>•</span>
                     <span class="text-emerald-600 font-extrabold flex items-center gap-0.5"><span class="material-symbols-outlined text-sm">verified</span> Firmado Digitalmente</span>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button type="button" onclick="closeDigitalInventoryModal()" class="flex-1 sm:flex-none px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-xl cursor-pointer">Cerrar</button>
-                    <button type="button" onclick="downloadInventoryPdf()" class="flex-1 sm:flex-none px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                    <button type="button" onclick="closeDigitalInventoryModal()" class="flex-1 sm:flex-none px-4 py-2.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-xl cursor-pointer">Cerrar</button>
+                    <button type="button" onclick="downloadInventoryPdf()" class="flex-1 sm:flex-none px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
                         <span class="material-symbols-outlined text-base">picture_as_pdf</span> Descargar Acta PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: RESUMEN RÁPIDO DE TICKETS DE MANTENIMIENTO (NUEVO) -->
+    <div id="modal-tickets-summary" class="fixed inset-0 z-[150] bg-black/70 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 relative my-8 animate-on-scroll font-body">
+            <button type="button" onclick="closeTicketsSummaryModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white cursor-pointer w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center transition-all">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+
+            <!-- Header -->
+            <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3 space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">build</span> Centro de Reclamos
+                    </span>
+                    <span class="px-2.5 py-0.5 text-[10px] font-headline font-black uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Compensaciones Activas
+                    </span>
+                </div>
+                <h3 class="font-headline text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-500 text-2xl">engineering</span>
+                    Resumen de Tickets de Mantenimiento
+                </h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Estado de reparaciones, autorizaciones a inquilinos y compensaciones en alquileres activos.</p>
+            </div>
+
+            <!-- KPIs Rápidos de Tickets -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60">
+                    <span class="text-[10px] font-extrabold uppercase text-zinc-400 block">Total Tickets</span>
+                    <span class="text-xl font-headline font-black text-zinc-900 dark:text-white" id="modal-tickets-count-total">3</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40">
+                    <span class="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 block">En Proceso</span>
+                    <span class="text-xl font-headline font-black text-amber-600 dark:text-amber-400" id="modal-tickets-count-process">2</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-900/40">
+                    <span class="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 block">Prioridad Alta</span>
+                    <span class="text-xl font-headline font-black text-rose-600 dark:text-rose-400" id="modal-tickets-count-high">1</span>
+                </div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40">
+                    <span class="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 block">Descontados</span>
+                    <span class="text-xl font-headline font-black text-emerald-600 dark:text-emerald-400" id="modal-tickets-count-deducted">$ 45.000</span>
+                </div>
+            </div>
+
+            <!-- Listado Interactivo de Tickets -->
+            <div id="tickets-summary-modal-list" class="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
+                <!-- Rendered dynamically by JS -->
+            </div>
+
+            <!-- Footer y Acceso Directo -->
+            <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <span class="text-zinc-500 font-medium text-[11px] text-center sm:text-left">
+                    Haga click en <strong>"Ir al Ticket"</strong> para abrir y destacar el reclamo en el alquiler correspondiente.
+                </span>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="button" onclick="closeTicketsSummaryModal()" class="flex-1 sm:flex-none px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-xl cursor-pointer">Cerrar</button>
+                    <button type="button" onclick="goToTicketWithAnimation()" class="flex-1 sm:flex-none px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95">
+                        <span class="material-symbols-outlined text-base">payments</span>
+                        <span>Ver Todos en Alquileres</span>
                     </button>
                 </div>
             </div>
@@ -1341,6 +1597,10 @@
                 }
             });
 
+            if (normalizedTab === 'general') {
+                setTimeout(initBrokerCharts, 50);
+            }
+
             window.location.hash = normalizedTab;
         }
 
@@ -1735,16 +1995,35 @@
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
         ];
 
+        const brokerCalFilterStyles = {
+            todos: {
+                active: 'px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            visita: {
+                active: 'px-3.5 py-2 rounded-xl bg-rose-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            firma: {
+                active: 'px-3.5 py-2 rounded-xl bg-emerald-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            tasacion: {
+                active: 'px-3.5 py-2 rounded-xl bg-blue-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            },
+            entrega: {
+                active: 'px-3.5 py-2 rounded-xl bg-amber-600 text-white shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all',
+                inactive: 'px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all'
+            }
+        };
+
         function filterCalendarEventType(type) {
             selectedCalendarTypeFilter = type;
-            ['todos', 'visita', 'entrega'].forEach(t => {
+            Object.keys(brokerCalFilterStyles).forEach(t => {
                 const btn = document.getElementById(`cal-filter-${t}`);
                 if (btn) {
-                    if (t === type) {
-                        btn.className = 'px-3.5 py-2 rounded-xl bg-primary text-white shadow-xs cursor-pointer transition-all';
-                    } else {
-                        btn.className = 'px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 cursor-pointer transition-all';
-                    }
+                    btn.className = t === type ? brokerCalFilterStyles[t].active : brokerCalFilterStyles[t].inactive;
                 }
             });
             renderBrokerCalendarGrid();
@@ -1854,7 +2133,7 @@
             for (let i = firstDayIndex - 1; i >= 0; i--) {
                 const prevDayNum = prevMonthDays - i;
                 html += `
-                    <div class="h-24 sm:h-28 p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40">
+                    <div class="min-h-[52px] sm:h-28 p-1 sm:p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40 flex items-start justify-center sm:justify-start">
                         ${prevDayNum}
                     </div>
                 `;
@@ -1871,7 +2150,7 @@
                 const dayPadded = d < 10 ? `0${d}` : `${d}`;
                 const dateStr = `${currentCalendarYear}-${monthPadded}-${dayPadded}`;
 
-                const isToday = (currentCalendarYear === 2026 && currentCalendarMonth === 7 && d === 3) || (todayYear === currentCalendarYear && todayMonth === currentCalendarMonth && todayDate === d);
+                const isToday = todayYear === currentCalendarYear && todayMonth === currentCalendarMonth && todayDate === d;
                 const isSelected = selectedCalendarDay === dateStr;
 
                 const dayEvents = brokerEventsMock.filter(e => {
@@ -1881,21 +2160,43 @@
                 });
 
                 html += `
-                    <div onclick="selectCalendarDay('${dateStr}')" class="h-24 sm:h-28 p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                    <div onclick="selectCalendarDay('${dateStr}')" class="min-h-[52px] sm:h-28 p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
                         isSelected 
                             ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm' 
                             : (isToday 
-                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs' 
+                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs ring-1 ring-primary/20' 
                                 : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
                     }">
-                        <div class="flex items-center justify-between">
-                            <span class="font-headline font-black text-xs ${isToday ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
-                                ${d}
-                            </span>
-                            ${isToday ? '<span class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>' : ''}
+                        <!-- Encabezado del Día -->
+                        <div class="flex items-center justify-between w-full">
+                            ${isToday ? `
+                                <div class="flex items-center justify-center sm:justify-start gap-1 w-full sm:w-auto">
+                                    <span class="w-5 h-5 sm:w-auto sm:h-auto rounded-full sm:rounded-none bg-primary sm:bg-transparent text-white sm:text-primary dark:sm:text-red-400 flex items-center justify-center font-headline font-black text-[11px] sm:text-xs">
+                                        ${d}
+                                    </span>
+                                    <span class="hidden sm:inline-block px-1.5 py-0.2 text-[8px] font-black uppercase rounded-full bg-primary text-white">HOY</span>
+                                </div>
+                            ` : `
+                                <span class="font-headline font-bold text-[11px] sm:text-xs w-full text-center sm:text-left ${isSelected ? 'text-primary dark:text-red-400' : 'text-zinc-800 dark:text-zinc-200'}">
+                                    ${d}
+                                </span>
+                            `}
                         </div>
 
-                        <div class="space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
+                        <!-- Eventos en Mobile (Indicadores de puntos elegantes) -->
+                        <div class="sm:hidden flex items-center justify-center gap-1 my-0.5 flex-wrap">
+                            ${dayEvents.slice(0, 3).map(ev => {
+                                const dotColor = ev.type === 'visita' ? 'bg-rose-500'
+                                    : (ev.type === 'firma' ? 'bg-emerald-500'
+                                    : (ev.type === 'tasacion' ? 'bg-blue-500'
+                                    : 'bg-amber-500'));
+                                return `<span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>`;
+                            }).join('')}
+                            ${dayEvents.length > 3 ? `<span class="text-[7px] font-black text-primary leading-none">+${dayEvents.length - 3}</span>` : ''}
+                        </div>
+
+                        <!-- Eventos en Desktop (Tarjetas detalladas) -->
+                        <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
                             ${dayEvents.map(ev => {
                                 const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
                                     : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
@@ -1913,9 +2214,20 @@
                             }).join('')}
                         </div>
 
-                        <div class="text-[9px] font-bold text-zinc-400 text-right">
+                        <div class="hidden sm:block text-[9px] font-bold text-zinc-400 text-right">
                             ${dayEvents.length > 0 ? `<span class="text-primary font-black">${dayEvents.length} cita${dayEvents.length > 1 ? 's' : ''}</span>` : ''}
                         </div>
+                    </div>
+                `;
+            }
+
+            // Días del próximo mes para completar la grilla
+            const totalCellsRendered = firstDayIndex + daysInMonth;
+            const nextDaysNeeded = (7 - (totalCellsRendered % 7)) % 7;
+            for (let n = 1; n <= nextDaysNeeded; n++) {
+                html += `
+                    <div class="min-h-[52px] sm:h-28 p-1 sm:p-1.5 bg-zinc-50/40 dark:bg-zinc-900/40 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800/40 text-zinc-300 dark:text-zinc-700 text-[10px] font-bold opacity-40 flex items-start justify-center sm:justify-start">
+                        ${n}
                     </div>
                 `;
             }
@@ -2247,9 +2559,19 @@
             select.innerHTML = options;
         }
 
-        function renderBrokerActiveRental() {
+        async function renderBrokerActiveRental() {
             const container = document.getElementById('broker-container-active-rental');
             if (!container) return;
+
+            let indicesData = {
+                ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                icl: { valor: 35.25, tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+            };
+            if (window.DataManager && window.DataManager.getLatestIndices) {
+                try {
+                    indicesData = await window.DataManager.getLatestIndices();
+                } catch (e) {}
+            }
 
             // VISTA 1: Lista / Grid de Todos los Alquileres Activos
             if (!selectedBrokerRentalId) {
@@ -2259,6 +2581,11 @@
                             ${brokerActiveRentalsMock.map(r => {
                                 const isPaid = r.paymentStatus === 'PAGADO';
                                 const rTickets = brokerTicketsMock.filter(t => t.rentalId === r.id);
+                                const freqMonths = r.adjustmentType?.includes('Cuatrimestral') ? 4 : (r.adjustmentType?.includes('Semestral') ? 6 : 3);
+                                const nextAdj = window.DataManager?.calculateNextRentAdjustment
+                                    ? window.DataManager.calculateNextRentAdjustment(r.startDate, freqMonths)
+                                    : { nextDate: '01/11/2026', daysRemaining: 79 };
+
                                 return `
                                     <div onclick="selectBrokerRental('${r.id}')" class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer space-y-4 group">
                                         <div class="flex items-center justify-between gap-2">
@@ -2282,6 +2609,21 @@
                                             <div class="text-right">
                                                 <span class="text-[10px] font-bold uppercase text-zinc-400 block">Vencimiento</span>
                                                 <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Día ${r.dueDay}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Badge de Próxima Actualización de Alquiler -->
+                                        <div class="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100 space-y-1">
+                                            <div class="flex items-center justify-between text-xs font-black text-blue-700 dark:text-blue-300">
+                                                <span class="flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-base text-blue-600 dark:text-blue-400">calendar_month</span>
+                                                    Próxima Actualización
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-headline text-[10px] font-black">Faltan ${nextAdj.daysRemaining} días</span>
+                                            </div>
+                                            <div class="mt-1.5 flex items-baseline justify-between">
+                                                <span class="font-headline font-black text-base text-zinc-900 dark:text-white">${nextAdj.nextDate}</span>
+                                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">${r.adjustmentType || 'IPC oficial BCRA'}</span>
                                             </div>
                                         </div>
 
@@ -2311,6 +2653,15 @@
             const rental = brokerActiveRentalsMock.find(r => r.id === selectedBrokerRentalId) || brokerActiveRentalsMock[0];
             const isPaid = rental.paymentStatus === 'PAGADO';
             const rentalTickets = brokerTicketsMock.filter(t => t.rentalId === rental.id);
+            const freqMonths = rental.adjustmentType?.includes('Cuatrimestral') ? 4 : (rental.adjustmentType?.includes('Semestral') ? 6 : 3);
+            const nextAdj = window.DataManager?.calculateNextRentAdjustment
+                ? window.DataManager.calculateNextRentAdjustment(rental.startDate, freqMonths)
+                : { nextDate: '01/11/2026', daysRemaining: 79 };
+
+            const isIpc = !rental.adjustmentType || rental.adjustmentType.includes('IPC');
+            const defaultRate = isIpc
+                ? (freqMonths === 6 ? indicesData.ipc.tasaSugeridaSemestral : indicesData.ipc.tasaSugeridaTrimestral)
+                : (freqMonths === 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
 
             container.innerHTML = `
                 <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6 font-body animate-detail-open">
@@ -2321,6 +2672,34 @@
                             <span>← Volver a la Lista de Alquileres</span>
                         </button>
                         <span class="text-xs font-mono font-bold text-zinc-400">${rental.id}</span>
+                    </div>
+
+                    <!-- BANNER DESTACADO DE PRÓXIMA ACTUALIZACIÓN DE ALQUILER -->
+                    <div class="mx-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-blue-500/30">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30 shadow-inner">
+                                <span class="material-symbols-outlined text-3xl text-white">event_repeat</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-200 block">Cronograma Oficial de Reajustes</span>
+                                <h3 class="font-headline text-xl sm:text-2xl font-black text-white">
+                                    Próxima Actualización: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
+                                </h3>
+                                <p class="text-xs text-blue-100 mt-1">
+                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${rental.adjustmentType || 'IPC oficial BCRA'}</b>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                            <div class="bg-white/15 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/25 text-left sm:text-right">
+                                <span class="block text-[10px] font-bold text-blue-200 uppercase">Tasa Oficial Vigente BCRA</span>
+                                <span class="text-xl font-black text-emerald-300 font-headline font-mono">+${Number(defaultRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% (${isIpc ? 'IPC' : 'ICL'})</span>
+                            </div>
+                            <button type="button" onclick="openBcraIndicesTableModal('${isIpc ? 'IPC' : 'ICL'}')" class="px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                <span class="material-symbols-outlined text-base text-blue-600">table_chart</span>
+                                <span>Ver Tabla de Índices BCRA</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800 animate-stagger-1">
@@ -2336,22 +2715,22 @@
                             </h2>
                             <p class="text-xs text-zinc-500">Inquilino: <b>${rental.tenantName}</b> (${rental.tenantEmail}) • Propietario: <b>${rental.ownerName}</b></p>
                             
-                            <!-- Badges de Vencimiento de Pago y Vencimiento del Contrato -->
+                            <!-- Badges de Vencimiento de Pago y Fin de Contrato -->
                             <div class="flex flex-wrap items-center gap-2.5 pt-2 text-xs">
                                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold shadow-2xs">
                                     <span class="material-symbols-outlined text-amber-500 text-base">event_repeat</span>
-                                    <span>Pago Mensual: <b>Vence el Día ${rental.dueDay} de cada mes</b></span>
+                                    <span>Pago Mensual: <b>Día ${rental.dueDay} de cada mes</b></span>
                                 </div>
                                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold shadow-2xs">
                                     <span class="material-symbols-outlined text-rose-500 text-base">calendar_clock</span>
-                                    <span>Fin de Contrato: <b>${rental.endDate || '31/07/2027'}</b> <span class="text-zinc-400 font-medium">(Inicio: ${rental.startDate || '01/08/2025'})</span></span>
+                                    <span>Fin de Contrato: <b>${rental.endDate || '31/07/2027'}</b></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 text-right shadow-sm shrink-0">
                             <span class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Canon Mensual</span>
-                            <span class="text-2xl font-headline font-black text-primary dark:text-red-400">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
+                            <span class="text-2xl font-headline font-black text-primary dark:text-red-400" id="broker-rental-detail-rent-display">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
                         </div>
                     </div>
 
@@ -2373,7 +2752,7 @@
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-3">
                                 <div>
                                     <span class="block font-bold uppercase text-zinc-400 text-[10px]">Alquiler Base</span>
-                                    <span class="text-lg font-headline font-extrabold text-zinc-900 dark:text-white mt-1 block">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
+                                    <span class="text-lg font-headline font-extrabold text-zinc-900 dark:text-white mt-1 block" id="card-base-rent-display">$ ${Number(rental.monthlyRent).toLocaleString('es-AR')}</span>
                                 </div>
                                 <button type="button" onclick="editBrokerRentalField('${rental.id}', 'rent')" class="w-full py-1.5 px-2 bg-white dark:bg-zinc-700/60 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-zinc-700 dark:text-zinc-200 font-extrabold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer">
                                     <span class="material-symbols-outlined text-sm">edit</span> Editar Precio
@@ -2384,7 +2763,7 @@
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-3">
                                 <div>
                                     <span class="block font-bold uppercase text-zinc-400 text-[10px]">Expensas Mensuales</span>
-                                    <span class="text-lg font-headline font-extrabold text-zinc-900 dark:text-white mt-1 block">$ ${Number(rental.expensesAmount || 0).toLocaleString('es-AR')}</span>
+                                    <span class="text-lg font-headline font-extrabold text-zinc-900 dark:text-white mt-1 block" id="card-expenses-display">$ ${Number(rental.expensesAmount || 0).toLocaleString('es-AR')}</span>
                                     <span class="block text-[10px] text-zinc-400 font-medium">Ordinarias / Administración</span>
                                 </div>
                                 <button type="button" onclick="editBrokerRentalField('${rental.id}', 'expenses')" class="w-full py-1.5 px-2 bg-white dark:bg-zinc-700/60 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg text-zinc-700 dark:text-zinc-200 font-extrabold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer">
@@ -2396,7 +2775,7 @@
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50 flex flex-col justify-between space-y-3">
                                 <div>
                                     <span class="block font-bold uppercase text-zinc-400 text-[10px]">Intereses Punitorios</span>
-                                    <span class="text-lg font-headline font-extrabold ${rental.punitives > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'} mt-1 block">$ ${Number(rental.punitives).toLocaleString('es-AR')}</span>
+                                    <span class="text-lg font-headline font-extrabold ${rental.punitives > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'} mt-1 block" id="card-punitives-display">$ ${Number(rental.punitives).toLocaleString('es-AR')}</span>
                                     <span class="block text-[10px] ${rental.punitives > 0 ? 'text-rose-500 font-bold' : 'text-emerald-600 font-medium'}">${rental.punitives > 0 ? 'Mora registrada' : 'Sin recargos (Al día)'}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5">
@@ -2415,8 +2794,8 @@
                             <div class="bg-primary-light p-4 rounded-xl border border-primary/20 flex flex-col justify-between space-y-3">
                                 <div>
                                     <span class="block font-bold uppercase text-primary dark:text-red-400 text-[10px]">Honorario Inmobiliaria</span>
-                                    <span class="text-xl font-headline font-black text-primary dark:text-red-400 mt-1 block">$ ${Number(rental.feeAmount).toLocaleString('es-AR')}</span>
-                                    <span class="block text-[10px] text-primary/80 dark:text-red-300 font-medium">${((rental.feeAmount / rental.monthlyRent) * 100).toFixed(1)}% del alquiler</span>
+                                    <span class="text-xl font-headline font-black text-primary dark:text-red-400 mt-1 block" id="card-fee-display">$ ${Number(rental.feeAmount).toLocaleString('es-AR')}</span>
+                                    <span class="block text-[10px] text-primary/80 dark:text-red-300 font-medium" id="card-fee-pct-display">${((rental.feeAmount / rental.monthlyRent) * 100).toFixed(1)}% del alquiler</span>
                                 </div>
                                 <button type="button" onclick="editBrokerRentalField('${rental.id}', 'fee')" class="w-full py-1.5 px-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-headline font-extrabold text-[11px] flex items-center justify-center gap-1 transition-all shadow-xs cursor-pointer">
                                     <span class="material-symbols-outlined text-sm">percent</span> Editar Honorarios
@@ -2432,17 +2811,70 @@
                                 </div>
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase text-zinc-400 block tracking-wider">Total a Cobrar este Mes (Alquiler + Expensas + Mora)</span>
-                                    <span class="text-xs text-zinc-600 dark:text-zinc-300 font-medium">Honorarios retenidos por inmobiliaria: <b class="text-primary dark:text-red-400">$ ${Number(rental.feeAmount).toLocaleString('es-AR')}</b></span>
+                                    <span class="text-xs text-zinc-600 dark:text-zinc-300 font-medium">Honorarios retenidos por inmobiliaria: <b class="text-primary dark:text-red-400" id="broker-total-fee-display">$ ${Number(rental.feeAmount).toLocaleString('es-AR')}</b></span>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="text-xs text-zinc-400 block uppercase font-bold">Total Liquidación</span>
-                                <span class="text-xl sm:text-2xl font-headline font-black text-zinc-900 dark:text-white">$ ${(Number(rental.monthlyRent) + Number(rental.expensesAmount || 0) + Number(rental.punitives)).toLocaleString('es-AR')}</span>
+                                <span class="text-xl sm:text-2xl font-headline font-black text-zinc-900 dark:text-white" id="broker-total-settlement-display">$ ${(Number(rental.monthlyRent) + Number(rental.expensesAmount || 0) + Number(rental.punitives)).toLocaleString('es-AR')}</span>
+                            </div>
+                        </div>
+
+                        <!-- MÓDULO DE REAJUSTE AUTOMÁTICO CON ÍNDICES OFICIALES BCRA (SIN EDICIÓN MANUAL) -->
+                        <div class="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/80 dark:border-zinc-700 space-y-4 animate-stagger-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/60 dark:border-zinc-700/60 pb-3">
+                                <div>
+                                    <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary text-xl">calculate</span>
+                                        Reajuste Automático de Canon Locativo (Índices Oficiales BCRA)
+                                    </h4>
+                                    <p class="text-xs text-zinc-500">Próxima fecha estipulada en contrato: <b class="text-blue-600 dark:text-blue-400">${nextAdj.nextDate}</b> (${nextAdj.daysRemaining} días restantes).</p>
+                                </div>
+                                <span class="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 shrink-0">
+                                    <span class="material-symbols-outlined text-sm">hub</span> Sincronizado con BCRA
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                                <div>
+                                    <label class="block font-bold uppercase text-zinc-500 mb-1">Índice del Contrato</label>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between">
+                                        <span>${isIpc ? 'IPC (Índice Precios al Consumidor)' : 'ICL (Contratos Locación)'}</span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">Oficial</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold uppercase text-zinc-500 mb-1">Frecuencia & Tasa Oficial Vigente</label>
+                                    <div class="px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 font-bold text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between">
+                                        <span>Cada ${freqMonths} meses</span>
+                                        <span class="font-mono font-black text-emerald-600 dark:text-emerald-400">+${defaultRate}%</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold uppercase text-zinc-500 mb-1">Nuevo Canon Estimado a partir de ${nextAdj.nextDate}</label>
+                                    <div id="broker-adj-preview-amount" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 font-black text-sm text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+                                        <span>$ ${Math.round(rental.monthlyRent * (1 + defaultRate / 100)).toLocaleString('es-AR')}</span>
+                                        <span class="text-[10px] font-bold opacity-80" id="broker-adj-diff-badge">+${defaultRate}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+                                <p class="text-[11px] text-zinc-500">
+                                    <span class="material-symbols-outlined text-xs align-middle text-emerald-600">verified</span>
+                                    El valor del índice se calcula automáticamente desde la base de datos oficial del BCRA sin modificaciones manuales.
+                                </p>
+                                <button type="button" onclick="applyBrokerRentalAdjustment('${rental.id}')" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                    <span>Aplicar Reajuste Oficial al Contrato</span>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Sección de Tickets de Mantenimiento de la Propiedad -->
-                        <div class="pt-4 border-t border-zinc-200/60 dark:border-zinc-800 space-y-4 animate-stagger-3">
+                        <div id="section-tickets" class="pt-4 border-t border-zinc-200/60 dark:border-zinc-800 space-y-4 animate-stagger-3 scroll-mt-24">
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-2.5">
                                     <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
@@ -2464,7 +2896,7 @@
                                     🟢 No hay tickets de mantenimiento activos registrados para este inmueble.
                                 </div>
                             ` : rentalTickets.map(t => `
-                                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 space-y-3">
+                                <div id="ticket-card-${t.id}" class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 space-y-3 transition-all duration-300">
                                     <div class="flex items-center justify-between gap-2 flex-wrap">
                                         <div class="flex items-center gap-2 flex-wrap">
                                             <span class="px-2.5 py-0.5 text-[10px] font-headline font-bold rounded-md bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">${t.category}</span>
@@ -2822,21 +3254,149 @@
             `;
         }
 
-        function submitAuthorizeTenantRepair(e, ticketId) {
-            e.preventDefault();
-            let ticket = brokerTicketsMock.find(t => t.id === ticketId);
-            const amount = document.getElementById('auth-repair-amount').value;
-            const notes = document.getElementById('auth-repair-notes').value || 'Presentar factura/comprobante para el reintegro.';
-            
-            if (ticket) {
-                ticket.status = 'Autorizado a Inquilino';
-                ticket.tenantAuthorized = true;
-                ticket.response = `[AUTORIZACIÓN EMITIDA]: El inquilino está autorizado a realizar la reparación por su cuenta. ${amount ? `Monto máx: $${Number(amount).toLocaleString('es-AR')}. ` : ''}${notes}`;
+        function closeAuthorizeTenantRepairModal() {
+            const modal = document.getElementById('broker-authorize-repair-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Funciones de Reajuste de Alquiler con Índices BCRA (IPC / ICL)
+        async function updateBrokerAdjCalculation(rentalId, isCustomInput = false) {
+            const rental = brokerActiveRentalsMock.find(r => r.id === rentalId) || brokerActiveRentalsMock[0];
+            const indexSelect = document.getElementById('broker-adj-index-select');
+            const freqSelect = document.getElementById('broker-adj-freq-select');
+            const rateInput = document.getElementById('broker-adj-rate-input');
+            const previewEl = document.getElementById('broker-adj-preview-amount');
+            const badgeDiff = document.getElementById('broker-adj-diff-badge');
+            const badgeOfficial = document.getElementById('broker-official-rate-badge');
+
+            if (!rental || !indexSelect || !freqSelect || !rateInput) return;
+
+            const indexType = indexSelect.value; // IPC o ICL
+            const freq = Number(freqSelect.value) || 3;
+
+            if (!isCustomInput) {
+                // Obtener datos más recientes de Supabase o defaults
+                let indices = {
+                    ipc: { tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                    icl: { tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+                };
+                if (window.DataManager && window.DataManager.getLatestIndices) {
+                    try {
+                        indices = await window.DataManager.getLatestIndices();
+                    } catch (e) {}
+                }
+
+                let suggestedRate = 7.2;
+                if (indexType === 'IPC') {
+                    suggestedRate = freq >= 6 ? indices.ipc.tasaSugeridaSemestral : indices.ipc.tasaSugeridaTrimestral;
+                } else {
+                    suggestedRate = freq >= 6 ? indices.icl.tasaSugeridaSemestral : indices.icl.tasaSugeridaTrimestral;
+                }
+                rateInput.value = suggestedRate;
+                if (badgeOfficial) badgeOfficial.textContent = `Oficial BCRA (${suggestedRate}%)`;
+            } else {
+                if (badgeOfficial) badgeOfficial.textContent = `Manual / Personalizado`;
             }
 
-            renderBrokerActiveRental();
-            renderBrokerTickets();
-            closeAuthorizeTenantRepairModal();
+            const currentRate = Number(rateInput.value) || 0;
+            const newRent = Math.round(rental.monthlyRent * (1 + currentRate / 100));
+
+            if (previewEl) {
+                previewEl.querySelector('span:first-child').textContent = `$ ${newRent.toLocaleString('es-AR')}`;
+            }
+            if (badgeDiff) {
+                badgeDiff.textContent = `${currentRate >= 0 ? '+' : ''}${currentRate}%`;
+            }
+
+            return newRent;
+        }
+
+        async function applyBrokerRentalAdjustment(rentalId) {
+            const rental = brokerActiveRentalsMock.find(r => r.id === rentalId) || brokerActiveRentalsMock[0];
+            const isIpc = !rental.adjustmentType || rental.adjustmentType.includes('IPC');
+            const freqMonths = rental.adjustmentType?.includes('Cuatrimestral') ? 4 : (rental.adjustmentType?.includes('Semestral') ? 6 : 3);
+
+            let indices = {
+                ipc: { tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                icl: { tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+            };
+            if (window.DataManager && window.DataManager.getLatestIndices) {
+                try {
+                    indices = await window.DataManager.getLatestIndices();
+                } catch (e) {}
+            }
+
+            const indexType = isIpc ? 'IPC' : 'ICL';
+            const pct = isIpc
+                ? (freqMonths >= 6 ? indices.ipc.tasaSugeridaSemestral : indices.ipc.tasaSugeridaTrimestral)
+                : (freqMonths >= 6 ? indices.icl.tasaSugeridaSemestral : indices.icl.tasaSugeridaTrimestral);
+
+            const newRent = Math.round(rental.monthlyRent * (1 + pct / 100));
+            const freqName = freqMonths === 3 ? 'Trimestral' : (freqMonths === 4 ? 'Cuatrimestral' : (freqMonths === 6 ? 'Semestral' : 'Anual'));
+
+            if (confirm(`¿Confirmás la aplicación del reajuste oficial ${indexType} ${freqName} (+${pct}%) del BCRA?\n\n• Alquiler Actual: $ ${Number(rental.monthlyRent).toLocaleString('es-AR')}\n• Nuevo Alquiler Actualizado: $ ${newRent.toLocaleString('es-AR')}`)) {
+                rental.monthlyRent = newRent;
+                rental.adjustmentType = `Reajuste ${indexType} ${freqName}`;
+                rental.feeAmount = Math.round(newRent * 0.05);
+
+                if (window.DataManager && window.DataManager.applyIndexAdjustment) {
+                    try {
+                        await window.DataManager.applyIndexAdjustment(rental.id, newRent, indexType, pct);
+                    } catch (e) {
+                        console.warn("Aviso al guardar en DB:", e);
+                    }
+                }
+
+                alert(`¡Reajuste oficial aplicado con éxito!\nNuevo canon locativo mensual: $ ${newRent.toLocaleString('es-AR')}`);
+                renderBrokerActiveRental();
+            }
+        }
+
+        function editBrokerRentalField(rentalId, field) {
+            const rental = brokerActiveRentalsMock.find(r => r.id === rentalId);
+            if (!rental) return;
+
+            let promptTitle = '';
+            let currentVal = 0;
+
+            if (field === 'rent') {
+                promptTitle = 'Ingrese el nuevo valor del Alquiler Base ($ ARS):';
+                currentVal = rental.monthlyRent;
+            } else if (field === 'expenses') {
+                promptTitle = 'Ingrese el nuevo valor de las Expensas Ordinarias ($ ARS):';
+                currentVal = rental.expensesAmount || 0;
+            } else if (field === 'punitives') {
+                promptTitle = 'Ingrese el monto de Intereses Punitorios ($ ARS):';
+                currentVal = rental.punitives || 0;
+            } else if (field === 'fee') {
+                promptTitle = 'Ingrese el monto de Honorarios de Inmobiliaria ($ ARS):';
+                currentVal = rental.feeAmount;
+            }
+
+            const input = prompt(promptTitle, currentVal);
+            if (input !== null && !isNaN(Number(input))) {
+                const val = Math.max(0, Number(input));
+                if (field === 'rent') {
+                    rental.monthlyRent = val;
+                    rental.feeAmount = Math.round(val * 0.05);
+                } else if (field === 'expenses') {
+                    rental.expensesAmount = val;
+                } else if (field === 'punitives') {
+                    rental.punitives = val;
+                } else if (field === 'fee') {
+                    rental.feeAmount = val;
+                }
+                renderBrokerActiveRental();
+            }
+        }
+
+        function forgiveBrokerRentalPunitives(rentalId) {
+            const rental = brokerActiveRentalsMock.find(r => r.id === rentalId);
+            if (!rental) return;
+            if (confirm("¿Confirmas perdonar la mora e intereses punitorios fijando el recargo en $0?")) {
+                rental.punitives = 0;
+                renderBrokerActiveRental();
+            }
         }
 
         function openPasaporteHabitatModal(appId) {
@@ -3540,17 +4100,50 @@
             `).join('');
         }
 
-        // Initialize Chart.js Graphs with Dark Mode Adapters
+        // Chart instances registry for clean lifecycle management
+        window.brokerCharts = window.brokerCharts || {};
+
+        // Initialize Chart.js Graphs with Premium Gradients, Dual Axes & Dark Mode
         function initBrokerCharts() {
             const ctxFin = document.getElementById('chart-financial-evolution')?.getContext('2d');
             const ctxPort = document.getElementById('chart-portfolio-status')?.getContext('2d');
+            const ctxFunnel = document.getElementById('chart-conversion-funnel')?.getContext('2d');
 
             const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#f1f1f1' : '#1a1c1c';
-            const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+            const textColor = isDark ? '#e4e4e7' : '#27272a';
+            const subTextColor = isDark ? '#a1a1aa' : '#71717a';
+            const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
+            // Formateador Universal Inteligente de Moneda para Ejes (Soporta Miles, Millones y Miles de Millones)
+            const formatShortCurrency = (val) => {
+                if (val === 0) return '$ 0';
+                const abs = Math.abs(val);
+                if (abs >= 1000000000) {
+                    return `$ ${(val / 1000000000).toLocaleString('es-AR', { maximumFractionDigits: 1 })}B`;
+                }
+                if (abs >= 1000000) {
+                    const formatted = (val / 1000000).toLocaleString('es-AR', { maximumFractionDigits: 1 });
+                    return `$ ${formatted}M`;
+                }
+                if (abs >= 1000) {
+                    return `$ ${(val / 1000).toLocaleString('es-AR', { maximumFractionDigits: 0 })}k`;
+                }
+                return `$ ${Number(val).toLocaleString('es-AR')}`;
+            };
+
+            // 1. Gráfico Financiero Dual Dinámico (Volumen + Honorarios con Margen Superior de Respiración)
             if (ctxFin) {
-                new Chart(ctxFin, {
+                if (window.brokerCharts.financial) window.brokerCharts.financial.destroy();
+
+                const gradientVol = ctxFin.createLinearGradient(0, 0, 0, 300);
+                gradientVol.addColorStop(0, 'rgba(129, 27, 30, 0.95)');
+                gradientVol.addColorStop(1, 'rgba(129, 27, 30, 0.30)');
+
+                const gradientComm = ctxFin.createLinearGradient(0, 0, 0, 300);
+                gradientComm.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
+                gradientComm.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+                window.brokerCharts.financial = new Chart(ctxFin, {
                     type: 'bar',
                     data: {
                         labels: ['Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'],
@@ -3558,48 +4151,260 @@
                             {
                                 label: 'Volumen Alquileres ($)',
                                 data: [18000000, 19500000, 21000000, 22400000, 23800000, 24850000],
-                                backgroundColor: 'rgba(129, 27, 30, 0.75)',
-                                borderRadius: 8
+                                backgroundColor: gradientVol,
+                                hoverBackgroundColor: '#811b1e',
+                                borderRadius: { topLeft: 8, topRight: 8 },
+                                borderSkipped: false,
+                                yAxisID: 'y',
+                                order: 2,
+                                barPercentage: 0.48,
+                                categoryPercentage: 0.7,
+                                maxBarThickness: 32
                             },
                             {
                                 label: 'Comisiones Cobradas ($)',
                                 data: [3600000, 3900000, 4200000, 4480000, 4760000, 4970000],
                                 type: 'line',
                                 borderColor: '#10b981',
-                                borderWidth: 3,
-                                fill: false
+                                borderWidth: 3.5,
+                                backgroundColor: gradientComm,
+                                fill: true,
+                                tension: 0.38,
+                                pointBackgroundColor: '#10b981',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 8,
+                                yAxisID: 'y1',
+                                order: 1
                             }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
                         plugins: {
-                            legend: { labels: { color: textColor, font: { family: 'Inter', weight: 'bold' } } }
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: isDark ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                                titleColor: isDark ? '#ffffff' : '#09090b',
+                                bodyColor: isDark ? '#e4e4e7' : '#27272a',
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                boxPadding: 6,
+                                usePointStyle: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed.y !== null) {
+                                            label += '$ ' + Number(context.parsed.y).toLocaleString('es-AR');
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
                         },
                         scales: {
-                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                            x: {
+                                ticks: {
+                                    color: subTextColor,
+                                    font: { family: 'Inter', weight: '600', size: 11 }
+                                },
+                                grid: { color: gridColor }
+                            },
+                            y: {
+                                position: 'left',
+                                beginAtZero: true,
+                                grace: '22%', // Margen de respiración del 22% para que las barras no toquen el techo
+                                ticks: {
+                                    color: subTextColor,
+                                    font: { family: 'Inter', size: 10 },
+                                    callback: (val) => formatShortCurrency(val)
+                                },
+                                grid: { color: gridColor },
+                                title: {
+                                    display: true,
+                                    text: 'Volumen ($)',
+                                    color: subTextColor,
+                                    font: { size: 10, weight: 'bold' }
+                                }
+                            },
+                            y1: {
+                                position: 'right',
+                                beginAtZero: true,
+                                grace: '22%', // Mismo margen armónico para la escala de comisiones
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    color: '#10b981',
+                                    font: { family: 'Inter', size: 10, weight: 'bold' },
+                                    callback: (val) => formatShortCurrency(val)
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Comisiones ($)',
+                                    color: '#10b981',
+                                    font: { size: 10, weight: 'bold' }
+                                }
+                            }
                         }
                     }
                 });
             }
 
+            // 2. Gráfico Donut de Estado de Cartera
             if (ctxPort) {
-                new Chart(ctxPort, {
+                if (window.brokerCharts.portfolio) window.brokerCharts.portfolio.destroy();
+
+                window.brokerCharts.portfolio = new Chart(ctxPort, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Alquiladas (65%)', 'Disponibles (25%)', 'En Reserva (7%)', 'Pausadas (3%)'],
+                        labels: ['Alquiladas', 'Disponibles', 'En Reserva', 'Pausadas'],
                         datasets: [{
                             data: [34, 13, 3, 2],
-                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6b7280']
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#71717a'],
+                            borderWidth: isDark ? 2 : 2,
+                            borderColor: isDark ? '#18181b' : '#ffffff',
+                            hoverOffset: 6,
+                            borderRadius: 6,
+                            spacing: 3
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '74%',
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { family: 'Inter', weight: 'bold' } } }
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: isDark ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                                titleColor: isDark ? '#ffffff' : '#09090b',
+                                bodyColor: isDark ? '#e4e4e7' : '#27272a',
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        const val = context.parsed;
+                                        const total = 52;
+                                        const pct = ((val / total) * 100).toFixed(1);
+                                        return ` ${context.label}: ${val} inmuebles (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 3. Gráfico de Embudo y Actividad Comercial
+            if (ctxFunnel) {
+                if (window.brokerCharts.funnel) window.brokerCharts.funnel.destroy();
+
+                window.brokerCharts.funnel = new Chart(ctxFunnel, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto'],
+                        datasets: [
+                            {
+                                label: 'Consultas / Leads',
+                                data: [65, 72, 80, 88, 92, 96],
+                                backgroundColor: 'rgba(168, 85, 247, 0.85)',
+                                borderRadius: { topLeft: 6, topRight: 6 },
+                                barPercentage: 0.7,
+                                categoryPercentage: 0.7
+                            },
+                            {
+                                label: 'Visitas Muestras',
+                                data: [28, 32, 35, 38, 42, 45],
+                                backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                                borderRadius: { topLeft: 6, topRight: 6 },
+                                barPercentage: 0.7,
+                                categoryPercentage: 0.7
+                            },
+                            {
+                                label: 'Contratos Concretados',
+                                data: [6, 7, 8, 9, 10, 11],
+                                backgroundColor: 'rgba(16, 185, 129, 0.95)',
+                                borderRadius: { topLeft: 6, topRight: 6 },
+                                barPercentage: 0.7,
+                                categoryPercentage: 0.7
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    color: textColor,
+                                    font: { family: 'Inter', weight: 'bold', size: 11 },
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    useBorderRadius: true,
+                                    borderRadius: 3
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: isDark ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                                titleColor: isDark ? '#ffffff' : '#09090b',
+                                bodyColor: isDark ? '#e4e4e7' : '#27272a',
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                callbacks: {
+                                    footer: function(tooltipItems) {
+                                        let leads = 0;
+                                        let closed = 0;
+                                        tooltipItems.forEach(i => {
+                                            if (i.datasetIndex === 0) leads = i.parsed.y;
+                                            if (i.datasetIndex === 2) closed = i.parsed.y;
+                                        });
+                                        if (leads > 0) {
+                                            return `Eficiencia de Cierre: ${((closed / leads) * 100).toFixed(1)}%`;
+                                        }
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: subTextColor,
+                                    font: { family: 'Inter', weight: '600', size: 11 }
+                                },
+                                grid: { color: gridColor }
+                            },
+                            y: {
+                                ticks: {
+                                    color: subTextColor,
+                                    font: { family: 'Inter', size: 10 }
+                                },
+                                grid: { color: gridColor },
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad Mensual',
+                                    color: subTextColor,
+                                    font: { size: 10, weight: 'bold' }
+                                }
+                            }
                         }
                     }
                 });
@@ -3755,27 +4560,28 @@
             };
 
             container.innerHTML = filtered.map(item => `
-                <div class="bg-white dark:bg-zinc-800 p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-700/70 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <img src="${item.photo}" alt="${item.title}" class="w-14 h-12 rounded-xl object-cover border shrink-0">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-headline text-xs font-black text-zinc-900 dark:text-white">${item.title}</h4>
-                                <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase border ${stateBadges[item.state] || 'bg-zinc-100 text-zinc-600'}">
+                <div class="bg-white dark:bg-zinc-800 p-3 sm:p-3.5 rounded-2xl border border-zinc-200/70 dark:border-zinc-700/70 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all hover:border-zinc-300 dark:hover:border-zinc-600">
+                    <div class="flex items-start sm:items-center gap-3 min-w-0 flex-1 w-full">
+                        <img src="${item.photo}" alt="${item.title}" class="w-16 h-16 sm:w-14 sm:h-12 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700 shrink-0">
+                        <div class="min-w-0 flex-1 space-y-0.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-headline text-xs font-extrabold text-zinc-900 dark:text-white leading-tight">${item.title}</h4>
+                                <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase border shrink-0 ${stateBadges[item.state] || 'bg-zinc-100 text-zinc-600'}">
                                     ${item.state}
                                 </span>
                             </div>
-                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mt-0.5">${categoryLabels[item.category] || item.categoryLabel || item.category}</span>
-                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 italic">"${item.notes}"</p>
+                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block">${categoryLabels[item.category] || item.categoryLabel || item.category}</span>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 italic">"${item.notes}"</p>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-                        <button type="button" onclick="alert('Visualizando foto original de ${item.title}')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[10px] font-bold flex items-center gap-1">
-                            <span class="material-symbols-outlined text-xs">photo_camera</span> Foto 4K
+                    <div class="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800/60 w-full sm:w-auto shrink-0">
+                        <button type="button" onclick="alert('Visualizando foto original de ${item.title}')" class="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-all active:scale-95">
+                            <span class="material-symbols-outlined text-sm text-purple-600">photo_camera</span>
+                            <span>Foto 4K</span>
                         </button>
-                        <button type="button" onclick="removeInventoryItem(${item.id})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer" title="Eliminar item">
-                            <span class="material-symbols-outlined text-base">delete</span>
+                        <button type="button" onclick="removeInventoryItem(${item.id})" class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-all flex items-center justify-center" title="Eliminar item">
+                            <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
                     </div>
                 </div>
@@ -3858,12 +4664,153 @@
             alert(`¡Acta Oficial de Inventario Digital generada para ${currentInvPropertyId}! Se ha descargado el informe en formato PDF con firma biométrica.`);
         }
 
+        // Export to window for global access
+        window.openDigitalInventoryModal = openDigitalInventoryModal;
+        window.closeDigitalInventoryModal = closeDigitalInventoryModal;
+        window.loadInventoryForProperty = loadInventoryForProperty;
+        window.filterInventoryCategory = filterInventoryCategory;
+        window.addNewInventoryItem = addNewInventoryItem;
+        window.removeInventoryItem = removeInventoryItem;
+        window.toggleInventoryOptional = toggleInventoryOptional;
+        window.downloadInventoryPdf = downloadInventoryPdf;
+
+        // Acceso Directo Focalizado a Calculadora de Ingreso con Animación
+        function goToCalculatorWithAnimation() {
+            switchBrokerTab('operaciones');
+            setTimeout(() => {
+                const section = document.getElementById('section-calculadora');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const card = section.querySelector('.glass-card');
+                    if (card) {
+                        card.classList.remove('animate-highlight-calculator');
+                        void card.offsetWidth; // Reflow
+                        card.classList.add('animate-highlight-calculator');
+                        setTimeout(() => card.classList.remove('animate-highlight-calculator'), 1400);
+                    }
+                    const input = document.getElementById('calc-rent-price');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+            }, 120);
+        }
+
+        // Modal de Resumen Rápido de Tickets de Mantenimiento
+        function openTicketsSummaryModal() {
+            const modal = document.getElementById('modal-tickets-summary');
+            if (!modal) return;
+            renderTicketsSummaryModalList();
+            modal.classList.remove('hidden');
+        }
+
+        function closeTicketsSummaryModal() {
+            document.getElementById('modal-tickets-summary')?.classList.add('hidden');
+        }
+
+        function renderTicketsSummaryModalList() {
+            const container = document.getElementById('tickets-summary-modal-list');
+            if (!container) return;
+
+            const tickets = brokerTicketsMock || [];
+            const totalCount = tickets.length;
+            const processCount = tickets.filter(t => t.status === 'En Proceso').length;
+            const highCount = tickets.filter(t => t.priority === 'Alta').length;
+            const totalDeducted = tickets.reduce((acc, t) => acc + (parseFloat(String(t.deductedAmount || '0').replace(/\./g, '')) || 0), 0);
+
+            if (document.getElementById('modal-tickets-count-total')) document.getElementById('modal-tickets-count-total').textContent = totalCount;
+            if (document.getElementById('modal-tickets-count-process')) document.getElementById('modal-tickets-count-process').textContent = processCount;
+            if (document.getElementById('modal-tickets-count-high')) document.getElementById('modal-tickets-count-high').textContent = highCount;
+            if (document.getElementById('modal-tickets-count-deducted')) document.getElementById('modal-tickets-count-deducted').textContent = `$ ${totalDeducted.toLocaleString('es-AR')}`;
+
+            if (tickets.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-zinc-400 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700">
+                        <span class="material-symbols-outlined text-3xl block mb-1 text-emerald-500">verified</span>
+                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">¡Al día! No hay tickets de mantenimiento activos.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tickets.map(t => {
+                const isHigh = t.priority === 'Alta';
+                const isProcess = t.status === 'En Proceso';
+                const isResolved = t.status === 'Resuelto';
+
+                return `
+                    <div class="p-3.5 rounded-2xl bg-white dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all">
+                        <div class="space-y-1 min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 text-[9px] font-headline font-black uppercase rounded ${isHigh ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}">
+                                    Prioridad ${t.priority}
+                                </span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono">
+                                    ${t.id}
+                                </span>
+                                <span class="text-[10px] text-zinc-400 font-bold">• ${t.prop || 'Inmueble'}</span>
+                            </div>
+                            <h4 class="font-headline text-xs font-extrabold text-zinc-900 dark:text-white truncate">${t.title}</h4>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">${t.description}</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                            <span class="px-2.5 py-1 text-[10px] font-black rounded-full ${isResolved ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : isProcess ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'}">
+                                ${t.status}
+                            </span>
+                            <button type="button" onclick="goToTicketWithAnimation('${t.id}')" class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white font-headline font-bold text-[11px] rounded-xl shadow-xs flex items-center gap-1 cursor-pointer transition-all active:scale-95">
+                                <span>Ir al Ticket</span>
+                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function goToTicketWithAnimation(ticketId) {
+            closeTicketsSummaryModal();
+            switchBrokerTab('alquileres');
+
+            setTimeout(() => {
+                let targetEl = null;
+                if (ticketId) {
+                    const ticket = (brokerTicketsMock || []).find(t => t.id === ticketId);
+                    if (ticket && ticket.rentalId) {
+                        selectedBrokerRentalId = ticket.rentalId;
+                        renderBrokerActiveRental();
+                    }
+                    targetEl = document.getElementById(`ticket-card-${ticketId}`);
+                }
+
+                if (!targetEl) {
+                    targetEl = document.getElementById('section-tickets');
+                }
+
+                if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetEl.classList.remove('animate-highlight-ticket');
+                    void targetEl.offsetWidth; // force reflow
+                    targetEl.classList.add('animate-highlight-ticket');
+                    setTimeout(() => targetEl.classList.remove('animate-highlight-ticket'), 1500);
+                }
+            }, 140);
+        }
+
+        // Export ticket and calculator navigation to window for global access
+        window.goToCalculatorWithAnimation = goToCalculatorWithAnimation;
+        window.openTicketsSummaryModal = openTicketsSummaryModal;
+        window.closeTicketsSummaryModal = closeTicketsSummaryModal;
+        window.goToTicketWithAnimation = goToTicketWithAnimation;
+
+        // --- FUNCIONES DE FICHA CIEGA RED MLS ---
         function openBlindCardModal(propertyId) {
             const modal = document.getElementById('modal-blind-card');
             if (!modal) return;
 
             const select = document.getElementById('blind-card-prop-select');
-            if (select && brokerPropertiesMock) {
+            if (select && typeof brokerPropertiesMock !== 'undefined' && brokerPropertiesMock.length > 0) {
                 select.innerHTML = brokerPropertiesMock.map(p => `
                     <option value="${p.id}" ${propertyId === p.id ? 'selected' : ''}>${p.title} - $ ${Number(p.price).toLocaleString('es-AR')} (${p.operation === 'alquiler' ? 'Alquiler' : (p.operation === 'temporal' ? 'Temporal' : 'Venta')})</option>
                 `).join('');
@@ -3876,54 +4823,123 @@
         function updateBlindCardPreview() {
             const select = document.getElementById('blind-card-prop-select');
             const previewContainer = document.getElementById('blind-card-preview');
-            if (!select || !previewContainer) return;
+            if (!previewContainer) return;
 
-            const propId = select.value;
-            const prop = brokerPropertiesMock.find(p => p.id === propId) || brokerPropertiesMock[0];
+            const propId = select?.value;
+            const prop = (typeof brokerPropertiesMock !== 'undefined' ? brokerPropertiesMock.find(p => p.id === propId) : null) || (typeof brokerPropertiesMock !== 'undefined' && brokerPropertiesMock[0]) || {
+                id: 'PROP-2026-081',
+                title: 'Departamento 3 Ambientes con Balcón',
+                address: 'Av. Santa Fe 3420, Palermo',
+                price: 520000,
+                operation: 'alquiler',
+                image: 'img/hero-marketplace.jpg'
+            };
 
             previewContainer.innerHTML = `
-                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-primary text-white font-black flex items-center justify-center text-xs">MI</div>
-                        <div>
-                            <h4 class="font-headline text-xs font-bold text-zinc-900 dark:text-white">Mi Inmobiliaria SRL</h4>
-                            <span class="text-[10px] text-zinc-400">Corredor Responsable: Matrícula CUCICBA #4892</span>
+                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700/80 pb-3 gap-2 flex-wrap sm:flex-nowrap">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-primary text-white font-black flex items-center justify-center text-xs shadow-sm shrink-0">
+                            HAB
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-headline text-xs font-extrabold text-zinc-900 dark:text-white truncate">Hábitat Red de Corretaje</h4>
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Matrícula CUCICBA #4892 • Ficha Colegas MLS</span>
                         </div>
                     </div>
-                    <span class="px-2.5 py-1 text-[10px] font-headline font-black uppercase bg-blue-600 text-white rounded-full">Ficha Ciega Red MLS</span>
+                    <span class="px-2.5 py-1 text-[9px] sm:text-[10px] font-headline font-black uppercase bg-blue-600/10 text-blue-600 dark:text-blue-400 border border-blue-600/20 rounded-full flex items-center gap-1 shrink-0">
+                        <span class="material-symbols-outlined text-xs">verified_user</span> Red Protegida
+                    </span>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <img src="${prop.image}" alt="${prop.title}" class="w-full sm:w-28 h-24 rounded-xl object-cover border shrink-0">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-[9px] font-headline font-black uppercase rounded bg-primary/10 text-primary dark:text-red-400 border border-primary/20">${prop.operation === 'alquiler' ? 'Alquiler Tradicional' : (prop.operation === 'temporal' ? 'Alquiler Temporal' : 'Venta')}</span>
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center bg-white dark:bg-zinc-800 p-3 sm:p-3.5 rounded-2xl border border-zinc-200/80 dark:border-zinc-700 shadow-xs">
+                    <div class="relative w-full sm:w-36 h-40 sm:h-28 shrink-0 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
+                        <img src="${prop.image}" alt="${prop.title}" class="w-full h-full object-cover">
+                        <span class="absolute bottom-1 right-1 bg-black/75 text-white text-[9px] font-black px-1.5 py-0.5 rounded backdrop-blur-xs">
+                            MLS EXCLUSIVE
+                        </span>
+                    </div>
+                    <div class="space-y-1.5 flex-1 min-w-0 w-full">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2 py-0.5 text-[9px] font-headline font-black uppercase rounded bg-primary/10 text-primary dark:text-red-400 border border-primary/20">
+                                ${prop.operation === 'alquiler' ? 'Alquiler Tradicional' : (prop.operation === 'temporal' ? 'Alquiler Temporal' : 'Venta')}
+                            </span>
                             <span class="text-[10px] text-zinc-400 font-mono font-bold">${prop.id}</span>
                         </div>
-                        <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white leading-snug">${prop.title}</h4>
-                        <p class="text-xs text-zinc-500 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm text-primary">location_on</span> ${prop.address.split(',')[1] || prop.address} (Sin dirección exacta)
+                        <h4 class="font-headline text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white leading-snug">${prop.title}</h4>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm text-primary shrink-0">location_on</span>
+                            <span class="truncate">Zona ${prop.address.split(',')[1] || prop.address} (Dirección exacta reservada a colegas)</span>
                         </p>
-                        <p class="text-xl font-headline font-black text-primary dark:text-red-400 pt-1">$ ${Number(prop.price).toLocaleString('es-AR')} <span class="text-xs font-normal text-zinc-400">/ mes</span></p>
+                        <p class="text-xl sm:text-2xl font-headline font-black text-primary dark:text-red-400 pt-0.5">
+                            $ ${Number(prop.price).toLocaleString('es-AR')} 
+                            <span class="text-xs font-normal text-zinc-400 font-body">${prop.operation === 'venta' ? 'USD Total' : '/ mes'}</span>
+                        </p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2 text-[11px] text-center font-headline font-bold">
-                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>3</b> Ambientes</div>
-                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>78 m²</b> Totales</div>
-                    <div class="bg-white dark:bg-zinc-800 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700"><b>2</b> Baños</div>
+                <div class="grid grid-cols-3 gap-2 text-xs text-center font-headline font-bold">
+                    <div class="bg-white dark:bg-zinc-800 p-2 sm:p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+                        <span class="text-[9px] sm:text-[10px] text-zinc-400 block font-normal">Ambientes</span>
+                        <b class="text-xs sm:text-sm text-zinc-900 dark:text-white">3 Amb</b>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800 p-2 sm:p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+                        <span class="text-[9px] sm:text-[10px] text-zinc-400 block font-normal">Superficie</span>
+                        <b class="text-xs sm:text-sm text-zinc-900 dark:text-white">78 m²</b>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800 p-2 sm:p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+                        <span class="text-[9px] sm:text-[10px] text-zinc-400 block font-normal">Baños</span>
+                        <b class="text-xs sm:text-sm text-zinc-900 dark:text-white">2 Baños</b>
+                    </div>
                 </div>
 
-                <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 font-headline font-bold flex items-center gap-2">
-                    <span class="material-symbols-outlined text-base text-blue-600">handshake</span>
-                    <span>Compartí con colegas sin datos del propietario.</span>
+                <div class="p-2.5 sm:p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] sm:text-xs text-blue-700 dark:text-blue-300 font-headline font-bold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base text-blue-600 shrink-0">handshake</span>
+                    <span class="leading-tight">Los datos del propietario y la numeración catastral están protegidos para permitir la compartición comercial entre inmobiliarias.</span>
                 </div>
             `;
+        }
+
+        function copyBlindCardWhatsApp() {
+            const select = document.getElementById('blind-card-prop-select');
+            const propId = select?.value || 'PROP-2026-081';
+            const prop = (typeof brokerPropertiesMock !== 'undefined' ? brokerPropertiesMock.find(p => p.id === propId) : null) || (typeof brokerPropertiesMock !== 'undefined' && brokerPropertiesMock[0]) || {
+                title: 'Departamento 3 Ambientes',
+                address: 'Palermo',
+                price: 520000,
+                operation: 'alquiler'
+            };
+
+            const zone = prop.address.split(',')[1] || prop.address;
+            const priceStr = `$ ${Number(prop.price).toLocaleString('es-AR')}`;
+            const text = `*FICHA COMERCIAL RED MLS (COLEGAS)*\n\n` +
+                         `🏠 *Propiedad:* ${prop.title}\n` +
+                         `📍 *Zona:* ${zone} (Dirección exacta reservada)\n` +
+                         `💰 *Precio:* ${priceStr} ${prop.operation === 'venta' ? 'USD' : '/mes'}\n` +
+                         `📐 *Características:* 3 Ambientes • 78 m² • Balcón Corrido • Excelente Estado\n` +
+                         `📑 *Operación:* ${prop.operation.toUpperCase()}\n\n` +
+                         `_Gestión Matriculada CUCICBA #4892. Coordiná una muestra respondiendo este mensaje._`;
+
+            navigator.clipboard.writeText(text);
+            alert('¡Ficha Ciega copiada al portapapeles! Lista para pegar en WhatsApp.');
+        }
+
+        function downloadBlindCardPdf() {
+            const select = document.getElementById('blind-card-prop-select');
+            const propId = select?.value || 'PROP-2026-081';
+            alert(`¡Ficha Ciega en PDF para ${propId} generada exitosamente con membrete de red MLS y sin datos del propietario!`);
         }
 
         function closeBlindCardModal() {
             document.getElementById('modal-blind-card')?.classList.add('hidden');
         }
+
+        // Export to window for global access
+        window.openBlindCardModal = openBlindCardModal;
+        window.closeBlindCardModal = closeBlindCardModal;
+        window.updateBlindCardPreview = updateBlindCardPreview;
+        window.copyBlindCardWhatsApp = copyBlindCardWhatsApp;
+        window.downloadBlindCardPdf = downloadBlindCardPdf;
+
         function openNewPropertyModal() {
             if (window.App && typeof window.App.showPublishWizard === 'function') {
                 window.App.showPublishWizard();
