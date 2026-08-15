@@ -1,19 +1,37 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
-export async function POST(req: Request) {
+/**
+ * Serverless Handler para Integración con Scraper Judicial (Render Microservice)
+ * Endpoint: /api/passport/verify-legal
+ */
+export default async function verifyLegalHandler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({
+      error: 'Method Not Allowed',
+      message: 'Este endpoint solo acepta peticiones HTTP POST.'
+    });
+  }
+
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { participant_id, cuit_cuil, full_name } = body;
 
     if (!participant_id) {
-      return NextResponse.json(
-        { success: false, error: 'Bad Request', message: 'El campo "participant_id" es requerido.' },
-        { status: 400 }
-      );
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'El parámetro "participant_id" es requerido.'
+      });
     }
 
     let scraperUrl = (process.env.MENDOZA_SCRAPER_URL || 'https://habitat-ws.onrender.com/scrape-mendoza').trim();
@@ -22,15 +40,15 @@ export async function POST(req: Request) {
     }
     const scraperApiKey = process.env.SCRAPER_SECRET_KEY || 'e9c1f8a4b3d7e2c0f6a5b9d1e3c7f0a4b8c2d6e0f3a5b9c1d7e4f8a0b2c6d9e1';
 
-    // Inicializar cliente de Supabase
+    // Inicializar cliente Supabase
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     let hasLegalIssues = false;
     let hasEvictionHistory = false;
-    let summaryData: Record<string, any> = {};
+    let summaryData = {};
     let isPendingReview = false;
 
-    // Timeout de 45 segundos para dar margen al arranque de Render (free tier cold starts)
+    // Timeout de 45 segundos para soportar el cold start del free tier de Render
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
@@ -73,7 +91,7 @@ export async function POST(req: Request) {
           scraped_at: new Date().toISOString(),
         };
       }
-    } catch (fetchErr: any) {
+    } catch (fetchErr) {
       clearTimeout(timeoutId);
       console.warn(`[Mendoza Scraper Exception]: ${fetchErr?.message || fetchErr}`);
       isPendingReview = true;
@@ -128,7 +146,7 @@ export async function POST(req: Request) {
       console.error('[Supabase legal_records save error]:', saveError);
     }
 
-    return NextResponse.json({
+    return res.status(200).json({
       success: true,
       status: isPendingReview ? 'pending_manual_review' : 'completed',
       data: savedRecord || {
@@ -142,17 +160,13 @@ export async function POST(req: Request) {
         ? 'El análisis de antecedentes judiciales está en revisión manual pendiente.'
         : 'Verificación de antecedentes judiciales procesada con éxito.',
     });
-  } catch (err: any) {
-    console.error('[API Handler Error /verify-legal]:', err);
-    // En caso de fallo o timeout, responder sin romper la respuesta del usuario (pending_manual_review)
-    return NextResponse.json(
-      {
-        success: true,
-        status: 'pending_manual_review',
-        message: 'No se pudo completar el escaneo inmediato. Registrado para revisión manual.',
-        error: err?.message || 'Internal error',
-      },
-      { status: 200 }
-    );
+  } catch (err) {
+    console.error('[API Handler Error in services/passport/verify-legal]:', err);
+    return res.status(200).json({
+      success: true,
+      status: 'pending_manual_review',
+      message: 'No se pudo completar el escaneo inmediato. Registrado para revisión manual.',
+      error: err?.message || 'Internal error',
+    });
   }
 }

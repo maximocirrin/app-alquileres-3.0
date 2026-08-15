@@ -6,18 +6,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.s
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
- * Vercel Serverless Function: /api/firmas/sellar
- * 
  * FASE 3: Generación del Audit Trail y Sellado Criptográfico (Timestamping RFC 3161)
- * 
- * Responsabilidades:
- * 1. Generar el PDF oficial del Certificado de Evidencia (Audit Trail) de Hábitat.
- * 2. Calcular los hashes criptográficos SHA-256 (del Contrato y del Audit Trail).
- * 3. Ejecutar el sellado de tiempo (TSA / Lakaut / RFC 3161) con fecha y hora oficial de Argentina.
- * 4. Almacenar el Audit Trail en el bucket seguro 'contratos_firmados'.
- * 5. Actualizar Firma_contrato con los hashes, token TSP y estado 'sellada'.
  */
-export default async function handler(req, res) {
+export default async function sellarHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -83,7 +74,6 @@ export default async function handler(req, res) {
     const firmaId = firma.id_firma;
 
     // 2. Calcular Hash SHA-256 del Contrato
-    // Si ya existe un hash previo se reutiliza; si no, se calcula sobre el contenido inmutable del contrato
     const contractCanonicalString = JSON.stringify({
       id_contrato: contrato.id_contrato,
       monto_cierre: contrato.monto_cierre,
@@ -118,11 +108,10 @@ export default async function handler(req, res) {
       timeStyle: 'long'
     });
 
-    const primaryColor = rgb(0.79, 0.12, 0.15); // Hábitat Crimson / #C91F26
+    const primaryColor = rgb(0.79, 0.12, 0.15); // Hábitat Crimson
     const darkColor = rgb(0.09, 0.09, 0.11);
     const grayColor = rgb(0.40, 0.40, 0.45);
     const lightBg = rgb(0.96, 0.96, 0.98);
-    const greenColor = rgb(0.05, 0.60, 0.35);
 
     // Encabezado
     page.drawRectangle({
@@ -342,7 +331,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[Server Error in /api/firmas/sellar]:', error);
+    console.error('[Server Error in services/firmas/sellar]:', error);
     return res.status(500).json({
       ok: false,
       error: 'Internal Server Error',

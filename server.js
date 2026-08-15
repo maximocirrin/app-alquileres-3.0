@@ -91,6 +91,28 @@ app.post('/api/bcra-deudores', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
+
+// API Endpoint - Passport Judicial Scraper Integration
+app.all(['/api/passport', '/api/passport/*'], async (req, res) => {
+    try {
+        const passportHandler = (await import('./api/passport.js')).default;
+        await passportHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/passport:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// API Endpoint - Firmas Electrónicas Integration
+app.all(['/api/firmas', '/api/firmas/*'], async (req, res) => {
+    try {
+        const firmasHandler = (await import('./api/firmas.js')).default;
+        await firmasHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/firmas:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
 // Contracts In-Memory Cache / Mock Store (Syncs with Supabase if available)
 const mockContracts = [
     {

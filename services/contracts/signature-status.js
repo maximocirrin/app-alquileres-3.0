@@ -1,7 +1,7 @@
 /**
- * Vercel Serverless Function: /api/contracts/signature-status
+ * Contract Signature Status Service
  */
-export default async function handler(req, res) {
+export default async function signatureStatusHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { contractId = 'CTR-2026-0891', role = 'TENANT' } = req.query;
+  const { contractId = req.query?.id || 'CTR-2026-0891', role = 'TENANT' } = req.query || {};
 
   return res.status(200).json({
     success: true,

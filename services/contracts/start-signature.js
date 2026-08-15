@@ -1,7 +1,7 @@
 /**
- * Vercel Serverless Function: /api/contracts/start-signature
+ * Contract Signature Initiation Service
  */
-export default async function handler(req, res) {
+export default async function startSignatureHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -16,7 +16,8 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { contractId = 'CTR-2026-0891', role = 'TENANT', signerName = 'Inquilino', signerCuil = '', consentGiven = false, deviceMetadata = {} } = body;
+    const contractId = req.query?.contractId || req.query?.id || body.contractId || 'CTR-2026-0891';
+    const { role = 'TENANT', signerName = 'Inquilino', signerCuil = '', consentGiven = false, deviceMetadata = {} } = body;
 
     if (!consentGiven) {
       return res.status(400).json({ error: 'Consentimiento legal obligatorio no otorgado.' });
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
       capturedMetadata: {
         timestamp: new Date().toISOString(),
         userAgent: deviceMetadata.userAgent || req.headers['user-agent'],
-        ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1'
+        ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1'
       }
     });
   } catch (error) {
