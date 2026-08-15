@@ -235,14 +235,25 @@
                             <span class="material-symbols-outlined text-[26px]">history_edu</span>
                         </div>
                         <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-2">
-                            Contrato de Alquiler Firmado
+                            Contrato de Alquiler y Firma Digital
                         </h3>
                         <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
-                            Acceso digital permanente a las cláusulas legales, inventario firmado e índice de ajuste pactado.
+                            Acceso digital permanente con validación biométrica Didit, sellado TSA y Certificado de Evidencia (Audit Trail).
                         </p>
-                        <button type="button" onclick="alert('Descargando copia legal del contrato digital...')" class="text-left text-xs font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer">
-                            <span class="material-symbols-outlined text-base">download</span> Descargar Contrato PDF
-                        </button>
+                        <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <a href="contratos.html?contract=CTR-2026-0891&sign=1&role=TENANT" class="w-full py-2 px-3 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                <span class="material-symbols-outlined text-sm">draw</span>
+                                <span>Revisar y Firmar Contrato (Liveness Didit)</span>
+                            </a>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="ContractsManager.downloadSignedContract('CTR-2026-0891')" class="flex-1 py-1.5 px-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-xs">download</span> PDF
+                                </button>
+                                <button type="button" onclick="ContractsManager.downloadAuditTrail('CTR-2026-0891')" class="flex-1 py-1.5 px-2 bg-zinc-900 text-white dark:bg-zinc-800 hover:bg-black text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-xs text-emerald-400">verified</span> Evidencia
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tarjeta 2: Informe de estado -->
@@ -989,7 +1000,10 @@
                         <!-- Top Banner: Propiedad Alquilada -->
                         <div class="bg-zinc-100 dark:bg-zinc-800/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div class="space-y-2">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                        Contrato Digital Activo
+                                    </span>
                                     <span class="text-xs font-bold text-zinc-500">
                                         Ajuste ${contract.adjustment_index || 'IPC'} (${freqMonths} meses)
                                     </span>
@@ -997,6 +1011,18 @@
                                 <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
                                     ${contract.property_title}
                                 </h2>
+                                <div class="flex flex-wrap items-center gap-2 pt-1">
+                                    <a href="contratos.html?contract=${contract.id || 'CTR-2026-0891'}&sign=1&role=TENANT" class="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">draw</span>
+                                        <span>Firma Digital & Biometría Didit</span>
+                                    </a>
+                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || 'CTR-2026-0891'}')" class="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-all flex items-center gap-1 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">download</span> PDF
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || 'CTR-2026-0891'}')" class="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-800 text-xs font-bold rounded-xl hover:bg-black transition-all flex items-center gap-1 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm text-emerald-400">verified_user</span> Audit Trail
+                                    </button>
+                                </div>
                             </div>
                             <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-right shrink-0 shadow-2xs">
                                 <span class="block text-[10px] uppercase font-bold text-zinc-400">Canon Locativo Mensual Actual</span>
@@ -1734,10 +1760,10 @@
                                                 </button>
 
                                                 ${app.status === 'aceptada' ? `
-                                                    <button type="button" onclick="window.location.hash='#alquiler'" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.02]">
-                                                        <span class="material-symbols-outlined text-base">key</span>
-                                                        <span>Firmar Contrato / Iniciar Alquiler</span>
-                                                    </button>
+                                                    <a href="contratos.html?contract=CTR-2026-0891&sign=1&role=TENANT" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.02]">
+                                                        <span class="material-symbols-outlined text-base">draw</span>
+                                                        <span>Ir a Firmar Contrato (Didit Liveness)</span>
+                                                    </a>
                                                 ` : ''}
                                             </div>
                                         </div>
@@ -2257,6 +2283,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Contracts Electronic Signature Module Engine -->
+    <script src="js/contracts-manager.js"></script>
 </body>
 
 </html>

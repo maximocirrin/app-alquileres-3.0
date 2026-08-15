@@ -14,7 +14,7 @@
  * @returns {Promise<string>} Promesa que resuelve con la URL de verificación de Didit.
  */
 async function iniciarKYC(userId, options = {}) {
-  const { mode = 'redirect', callbackUrl = null } = options;
+  const { mode = 'redirect', callbackUrl = null, workflowId = null, isLivenessOnly = false } = options;
 
   if (!userId) {
     const errorMsg = 'No se especificó un ID de usuario válido para iniciar el KYC.';
@@ -25,7 +25,7 @@ async function iniciarKYC(userId, options = {}) {
   const actualCallbackUrl = callbackUrl || (typeof window !== 'undefined' ? window.location.href.split('#')[0] : null);
 
   try {
-    console.log(`[KYC Frontend] Solicitando sesión Didit KYC para usuario: ${userId}...`);
+    console.log(`[KYC Frontend] Solicitando sesión Didit KYC (${isLivenessOnly ? 'Liveness Firma' : 'Passport'}) para usuario: ${userId}...`);
 
     let data = null;
     try {
@@ -36,7 +36,9 @@ async function iniciarKYC(userId, options = {}) {
         },
         body: JSON.stringify({
           userId: userId,
-          callbackUrl: actualCallbackUrl
+          callbackUrl: actualCallbackUrl,
+          workflowId: workflowId,
+          isLivenessOnly: isLivenessOnly
         })
       });
 

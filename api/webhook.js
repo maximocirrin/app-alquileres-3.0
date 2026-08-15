@@ -47,77 +47,97 @@ export default async function handler(req, res) {
     }
 
     if (supabase && userId) {
-      // 1. Obtener el Perfil del usuario
-      const { data: perfil } = await supabase
-        .from('Perfil')
-        .select('id_perfil')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (perfil) {
-        // 2. Obtener el último Pasaporte_habitat
-        const { data: pasaporte } = await supabase
-          .from('Pasaporte_habitat')
-          .select('id_pasaporte')
-          .eq('id_perfil', perfil.id_perfil)
-          .order('created_at', { ascending: false })
-          .limit(1)
+      // Caso A: Evento de Firma de Contrato
+      if (String(userId).startsWith('ctr_') || String(userId).startsWith('contract_') || (workflow_id && workflow_id === process.env.DIDIT_WORKFLOW_ID_SIGNATURE)) {
+        console.log(`[Didit Webhook] Procesando firma de contrato para: ${userId}`);
+        // Registrar auditoría de firma si aplica en Supabase
+        try {
+          await supabase.from('Auditoria_firma_didit').insert([{
+            identificador: userId,
+            session_id: session_id,
+            status: currentStatus,
+            workflow_id: workflow_id,
+            payload: body,
+            created_at: new Date().toISOString()
+          }]);
+        } catch (auditErr) {
+          console.warn('[Didit Webhook] Tabla Auditoria_firma_didit opcional:', auditErr.message);
+        }
+      } 
+      // Caso B: Evento de Pasaporte Hábitat KYC
+      else {
+        // 1. Obtener el Perfil del usuario
+        const { data: perfil } = await supabase
+          .from('Perfil')
+          .select('id_perfil')
+          .eq('user_id', userId)
           .maybeSingle();
 
-        if (pasaporte) {
-          // 3. Registrar el intento en Verificacion_kyc
-          await supabase
-            .from('Verificacion_kyc')
-            .insert([{
-              id_pasaporte: pasaporte.id_pasaporte,
-              proveedor: 'didit',
-              session_id: session_id || 'sess_' + Date.now(),
-              status: currentStatus,
-              payload_raw: body
-            }]);
+        if (perfil) {
+          // 2. Obtener el último Pasaporte_habitat
+          const { data: pasaporte } = await supabase
+            .from('Pasaporte_habitat')
+            .select('id_pasaporte')
+            .eq('id_perfil', perfil.id_perfil)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-          let nuevoEstadoPasaporte = null;
-          let observacionHistorial = '';
-
-          switch (currentStatus.toLowerCase()) {
-            case 'approved':
-              nuevoEstadoPasaporte = 3; // Activo
-              observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
-              // Marcar cuenta como verificada en Perfil
-              await supabase
-                .from('Perfil')
-                .update({ cuenta_verificada: true, fecha_verificacion: new Date().toISOString() })
-                .eq('id_perfil', perfil.id_perfil);
-              break;
-
-            case 'declined':
-            case 'rejected':
-              nuevoEstadoPasaporte = 5; // Rechazado
-              observacionHistorial = 'Verificación biométrica Didit KYC Rechazada.';
-              break;
-
-            case 'in_review':
-            case 'pending':
-              nuevoEstadoPasaporte = 2; // En Revisión KYC
-              observacionHistorial = 'Verificación biométrica Didit KYC en proceso de revisión.';
-              break;
-          }
-
-          if (nuevoEstadoPasaporte) {
-            // Actualizar estado en Pasaporte_habitat
+          if (pasaporte) {
+            // 3. Registrar el intento en Verificacion_kyc
             await supabase
-              .from('Pasaporte_habitat')
-              .update({ id_estado_pasaporte: nuevoEstadoPasaporte, updated_at: new Date().toISOString() })
-              .eq('id_pasaporte', pasaporte.id_pasaporte);
-
-            // Registrar en Historial_estado_pasaporte
-            await supabase
-              .from('Historial_estado_pasaporte')
+              .from('Verificacion_kyc')
               .insert([{
                 id_pasaporte: pasaporte.id_pasaporte,
-                id_estado_pasaporte: nuevoEstadoPasaporte,
-                observacion: observacionHistorial
+                proveedor: 'didit',
+                session_id: session_id || 'sess_' + Date.now(),
+                status: currentStatus,
+                payload_raw: body
               }]);
+
+            let nuevoEstadoPasaporte = null;
+            let observacionHistorial = '';
+
+            switch (currentStatus.toLowerCase()) {
+              case 'approved':
+                nuevoEstadoPasaporte = 3; // Activo
+                observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
+                // Marcar cuenta como verificada en Perfil
+                await supabase
+                  .from('Perfil')
+                  .update({ cuenta_verificada: true, fecha_verificacion: new Date().toISOString() })
+                  .eq('id_perfil', perfil.id_perfil);
+                break;
+
+              case 'declined':
+              case 'rejected':
+                nuevoEstadoPasaporte = 5; // Rechazado
+                observacionHistorial = 'Verificación biométrica Didit KYC Rechazada.';
+                break;
+
+              case 'in_review':
+              case 'pending':
+                nuevoEstadoPasaporte = 2; // En Revisión KYC
+                observacionHistorial = 'Verificación biométrica Didit KYC en proceso de revisión.';
+                break;
+            }
+
+            if (nuevoEstadoPasaporte) {
+              // Actualizar estado en Pasaporte_habitat
+              await supabase
+                .from('Pasaporte_habitat')
+                .update({ id_estado_pasaporte: nuevoEstadoPasaporte, updated_at: new Date().toISOString() })
+                .eq('id_pasaporte', pasaporte.id_pasaporte);
+
+              // Registrar en Historial_estado_pasaporte
+              await supabase
+                .from('Historial_estado_pasaporte')
+                .insert([{
+                  id_pasaporte: pasaporte.id_pasaporte,
+                  id_estado_pasaporte: nuevoEstadoPasaporte,
+                  observacion: observacionHistorial
+                }]);
+            }
           }
         }
       }

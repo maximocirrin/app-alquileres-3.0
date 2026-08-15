@@ -204,7 +204,11 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+                <a href="contratos.html" class="inline-flex items-center gap-2 bg-zinc-900 hover:bg-black text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer border border-zinc-700/60">
+                    <span class="material-symbols-outlined text-emerald-400 text-base sm:text-lg">draw</span>
+                    Firma & Contratos
+                </a>
                 <a href="agentes.html" class="inline-flex items-center gap-2 bg-blue-900 hover:bg-blue-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">handshake</span>
                     Solicitar Agente
@@ -238,6 +242,12 @@
                 <span class="material-symbols-outlined text-lg">payments</span>
                 <span>Alquileres</span>
             </button>
+
+            <a href="contratos.html" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">draw</span>
+                <span>Firma & Contratos</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">NUEVO</span>
+            </a>
 
             <button data-tab="mantenimiento" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">build</span>
@@ -755,11 +765,11 @@
 
                         ${a.status === 'pendiente' ? `
                             <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                                <button type="button" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
+                                <button type="button" onclick="event.stopPropagation(); window.location.href='contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
                                     <span class="material-symbols-outlined text-base">check_circle</span>
                                     Aceptar Postulación y Firmar Contrato
                                 </button>
-                                <button type="button" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
+                                <button type="button" onclick="event.stopPropagation();" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
                                     Rechazar
                                 </button>
                             </div>
@@ -770,11 +780,15 @@
                 list.querySelectorAll('.btn-owner-accept').forEach(b => {
                     b.onclick = async () => {
                         const appId = b.getAttribute('data-id');
-                        if (confirm("¿Confirmas la aceptación de este postulante? Se generará automáticamente el contrato de alquiler activo.")) {
-                            await window.DataManager.acceptApplication(appId);
-                            alert("¡Postulación aceptada! El contrato de alquiler ha sido activado exitosamente.");
-                            await loadOwnerApplications();
+                        try {
+                            if (window.DataManager && window.DataManager.acceptApplication) {
+                                await window.DataManager.acceptApplication(appId);
+                            }
+                        } catch (e) {
+                            console.warn("Aviso local postulación:", e);
                         }
+                        // Redirect directly to contratos.html for Liveness Check and digital signing
+                        window.location.href = 'contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';
                     };
                 });
 
@@ -1378,10 +1392,22 @@
                                     <p class="text-xs text-zinc-500 font-medium">📍 ${contract.property_address} • Inquilino: <b>${contract.tenant_name}</b> (${contract.tenant_email})</p>
                                 </div>
 
-                                <div class="flex items-center gap-3 shrink-0">
+                                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                    <a href="contratos.html?contract=${contract.id || 'CTR-2026-0742'}&sign=1&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">draw</span>
+                                        <span>Firmar Contrato (Didit Liveness)</span>
+                                    </a>
+                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || 'CTR-2026-0742'}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">download</span>
+                                        <span>PDF</span>
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || 'CTR-2026-0742'}')" class="px-3 py-2.5 bg-zinc-900 text-white dark:bg-zinc-800 font-headline font-bold text-xs rounded-xl hover:bg-black flex items-center gap-1 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
+                                        <span>Audit Trail</span>
+                                    </button>
                                     <button type="button" onclick="openEditRentalModal('${contract.id}')" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">edit_note</span>
-                                        <span>Editar Alquiler y Valores</span>
+                                        <span>Editar Valores</span>
                                     </button>
                                 </div>
                             </div>
@@ -2093,6 +2119,9 @@
             `;
         }
     </script>
+
+    <!-- Contracts Electronic Signature Module Engine -->
+    <script src="js/contracts-manager.js"></script>
 </body>
 
 </html>

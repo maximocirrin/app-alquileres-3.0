@@ -882,7 +882,7 @@ var DataManager = {
                 return [];
             }
 
-            return (data || []).map(s => {
+            const dbApps = (data || []).map(s => {
                 const prop = s.Propiedad || {};
                 const perf = s.Perfil || {};
                 return {
@@ -902,6 +902,92 @@ var DataManager = {
                     created_at: s.fecha_solicitud
                 };
             });
+
+            if (dbApps.length > 0) return dbApps;
+
+            // Rich Mock Applications for testing Didit Liveness & Signature Flow
+            return [
+                {
+                    id: 'app-001',
+                    property_id: 1,
+                    property_title: 'Departamento 3 Ambientes con Balcón Aterrazado',
+                    property_address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
+                    tenant_id: 'usr_carlos_gomez',
+                    tenant_name: 'Carlos Gómez',
+                    tenant_email: 'carlos.gomez@gmail.com',
+                    tenant_phone: '+54 9 11 4892-1049',
+                    monthly_income: 1850000,
+                    income_proof: 'Recibo de Sueldo (Senior Software Engineer)',
+                    income_proof_url: '#',
+                    message: 'Hola, tengo el Pasaporte Hábitat 100% verificado con Didit KYC, ingresos demostrables y garantía lista para firmar de inmediato.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 3600000 * 2).toISOString()
+                },
+                {
+                    id: 'app-002',
+                    property_id: 2,
+                    property_title: 'Semipiso 4 Ambientes en Torre con Amenities',
+                    property_address: 'Av. del Libertador 4820, Belgrano, CABA',
+                    tenant_id: 'usr_lucia_fernandez',
+                    tenant_name: 'Lucía Fernández',
+                    tenant_email: 'lucia.fernandez@tech.io',
+                    tenant_phone: '+54 9 11 5521-9988',
+                    monthly_income: 2400000,
+                    income_proof: 'Certificado de Ingresos Contable + Recibo',
+                    income_proof_url: '#',
+                    message: 'Familia de 3 personas, buscamos contrato de 2 años. Contamos con garantía propietaria directa en CABA y scoring crediticio óptimo.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 3600000 * 8).toISOString()
+                },
+                {
+                    id: 'app-003',
+                    property_id: 3,
+                    property_title: 'Loft de Diseño en Palermo Hollywood',
+                    property_address: 'Humboldt 1940, Piso 3, Palermo, CABA',
+                    tenant_id: 'usr_valentina_silveira',
+                    tenant_name: 'Valentina Silveira',
+                    tenant_email: 'valen.silveira@design.com',
+                    tenant_phone: '+54 9 11 6720-3311',
+                    monthly_income: 1600000,
+                    income_proof: 'Facturación Monotributo Cat. H + Contratos',
+                    income_proof_url: '#',
+                    message: 'Diseñadora UX/UI remota. Pasaporte Hábitat validado con Didit y caución Finaer aprobada.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 3600000 * 24).toISOString()
+                },
+                {
+                    id: 'app-004',
+                    property_id: 1,
+                    property_title: 'Departamento 3 Ambientes con Balcón Aterrazado',
+                    property_address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
+                    tenant_id: 'usr_lucas_bertone',
+                    tenant_name: 'Lucas Bertone',
+                    tenant_email: 'lucas.bertone@fintech.ar',
+                    tenant_phone: '+54 9 11 3410-8877',
+                    monthly_income: 1950000,
+                    income_proof: 'Recibo de Haberes Empresa Multinacional',
+                    income_proof_url: '#',
+                    message: 'Excelente perfil crediticio en Central de Deudores BCRA (Situación 1), sin antecedentes judiciales.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 3600000 * 36).toISOString()
+                },
+                {
+                    id: 'app-005',
+                    property_id: 2,
+                    property_title: 'Semipiso 4 Ambientes en Torre con Amenities',
+                    property_address: 'Av. del Libertador 4820, Belgrano, CABA',
+                    tenant_id: 'usr_mariano_castelli',
+                    tenant_name: 'Mariano Castelli',
+                    tenant_email: 'mcastelli@abogados.com.ar',
+                    tenant_phone: '+54 9 11 7711-2299',
+                    monthly_income: 2100000,
+                    income_proof: 'Declaración Jurada Ganancias AFIP',
+                    income_proof_url: '#',
+                    message: 'Abogado corporativo. Disponibilidad para mudanza inmediata y firma con biometría Didit.',
+                    status: 'pendiente',
+                    created_at: new Date(Date.now() - 3600000 * 48).toISOString()
+                }
+            ];
         } catch (e) {
             console.error("Error in getApplications:", e);
             return [];

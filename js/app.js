@@ -9040,11 +9040,15 @@ document.addEventListener('DOMContentLoaded', () => {
             container.querySelectorAll('.btn-accept-app').forEach(b => {
                 b.onclick = async () => {
                     const appId = b.getAttribute('data-id');
-                    if (confirm("¿Confirmas la aceptación de este postulante? Esto generará automáticamente el contrato de alquiler activo y notificará a las partes.")) {
-                        await window.DataManager.acceptApplication(appId);
-                        alert("¡Postulación aceptada exitosamente! El contrato de alquiler ha sido activado.");
-                        await renderLandlordApplications();
+                    try {
+                        if (window.DataManager && window.DataManager.acceptApplication) {
+                            await window.DataManager.acceptApplication(appId);
+                        }
+                    } catch (e) {
+                        console.warn("Aviso local postulación:", e);
                     }
+                    // Redirect directly to contratos.html for Liveness Check and digital signing
+                    window.location.href = 'contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';
                 };
             });
 

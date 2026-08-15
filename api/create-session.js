@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
     // 3. Obtener credenciales de variables de entorno
     const apiKey = (process.env.DIDIT_API_KEY || '').trim();
-    const activeWorkflowId = (workflowId || process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const activeWorkflowId = (workflowId || (body.isLivenessOnly ? process.env.DIDIT_WORKFLOW_ID_SIGNATURE : null) || process.env.DIDIT_WORKFLOW_ID || '').trim();
     const defaultCallbackUrl = (callbackUrl || process.env.DIDIT_CALLBACK_URL || '').trim();
 
     if (!apiKey) {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       console.error('[Didit API Error] DIDIT_WORKFLOW_ID no configurado o tiene valor por defecto.');
       return res.status(400).json({
         error: 'Configuration Error',
-        message: 'Debes reemplazar "TU_WORKFLOW_ID_DE_DIDIT" por tu Workflow ID real obtenido del Dashboard de Didit en las variables de entorno de Vercel.'
+        message: 'Debes configurar tu Workflow ID obtenido del Dashboard de Didit en las variables de entorno de Vercel.'
       });
     }
 
