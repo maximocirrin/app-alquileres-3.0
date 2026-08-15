@@ -4,18 +4,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.s
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
- * Vercel Serverless Function: /api/firmas/iniciar
- * 
  * FASE 1: Inicio y Preparación de Transacción de Firma Electrónica
- * 
- * Responsabilidades:
- * 1. Validar existencia del contrato y pertenencia del firmante (inquilino / propietario).
- * 2. Capturar metadatos técnicos (IP, User-Agent, Geolocalización).
- * 3. Crear sesión biométrica en Didit (si hay API Key configurada) o modo sandbox.
- * 4. Registrar la transacción en la tabla Firma_contrato con estado 'iniciada'.
- * 5. Retornar id_firma, sesión y URL de Didit al frontend.
  */
-export default async function handler(req, res) {
+export default async function iniciarHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -71,7 +62,6 @@ export default async function handler(req, res) {
     let rolFirmante = rol;
 
     if (!perfilFirmanteId) {
-      // Si no se envía id_perfil explícito, usar inquilino por defecto o propietario
       if (rol === 'propietario') {
         perfilFirmanteId = contrato.id_perfil_propietario;
         rolFirmante = 'propietario';
@@ -221,7 +211,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[Server Error in /api/firmas/iniciar]:', error);
+    console.error('[Server Error in services/firmas/iniciar]:', error);
     return res.status(500).json({
       ok: false,
       error: 'Internal Server Error',

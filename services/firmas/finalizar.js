@@ -4,18 +4,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.s
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
- * Vercel Serverless Function: /api/firmas/finalizar
- * 
  * FASE 4: Cierre, Verificación Bilateral, Activación del Contrato y Disponibilidad
- * 
- * Responsabilidades:
- * 1. Verificar si ambas partes (Inquilino y Propietario) completaron y sellaron su firma.
- * 2. Si ambas partes firmaron, activar el Contrato ('activo') y estampar fecha_firma_contrato.
- * 3. Marcar las firmas como 'completada'.
- * 4. Generar URLs firmadas seguras (con vigencia de 7 días) para descargar el Contrato y los Audit Trails.
- * 5. Devolver al frontend el estado consolidado de la operación.
  */
-export default async function handler(req, res) {
+export default async function finalizarHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -87,20 +78,17 @@ export default async function handler(req, res) {
 
     // 3. Si ambas partes firmaron, activar el Contrato
     if (ambasPartesFirmaron) {
-      // Marcar firmas como 'completada'
       await supabase
         .from('Firma_contrato')
         .update({ estado_firma: 'completada' })
         .eq('id_contrato', Number(idContrato))
         .in('estado_firma', ['sellada', 'biometria_aprobada']);
 
-      // Actualizar fecha_firma_contrato en Contrato
       await supabase
         .from('Contrato')
         .update({ fecha_firma_contrato: fechaHoyArgentina })
         .eq('id_contrato', Number(idContrato));
 
-      // Registrar estado 'activo' en Historial_Estado_Contrato si aún no está activo
       try {
         const { data: ultimoHistorial } = await supabase
           .from('Historial_Estado_Contrato')
@@ -111,7 +99,6 @@ export default async function handler(req, res) {
           .maybeSingle();
 
         if (!ultimoHistorial || ultimoHistorial.id_estado_contrato !== 1) { // 1 = activo
-          // Cerrar fecha_fin del estado anterior
           if (ultimoHistorial) {
             await supabase
               .from('Historial_Estado_Contrato')
@@ -119,7 +106,6 @@ export default async function handler(req, res) {
               .eq('id_historial_contrato', ultimoHistorial.id_historial_contrato);
           }
 
-          // Insertar nuevo estado activo
           await supabase
             .from('Historial_Estado_Contrato')
             .insert([{
@@ -136,13 +122,12 @@ export default async function handler(req, res) {
     // 4. Generar URLs firmadas de descarga para los documentos
     const documentosDescarga = {};
 
-    // Helper para generar URL firmada de Supabase Storage con validez de 7 días
     async function obtenerUrlFirmada(bucket, ruta) {
       if (!ruta) return null;
       try {
         const { data, error } = await supabase.storage
           .from(bucket)
-          .createSignedUrl(ruta, 60 * 60 * 24 * 7); // 7 días en segundos
+          .createSignedUrl(ruta, 60 * 60 * 24 * 7); // 7 días
         return error ? null : data.signedUrl;
       } catch (e) {
         return null;
@@ -157,7 +142,6 @@ export default async function handler(req, res) {
       documentosDescarga.audit_trail_propietario = await obtenerUrlFirmada('contratos_firmados', firmaPropietario.url_audit_trail_pdf);
     }
 
-    // Contrato PDF (si existe en almacenamiento)
     const rutaContratoPdf = `contrato_${idContrato}/contrato_definitivo.pdf`;
     documentosDescarga.contrato_pdf = await obtenerUrlFirmada('contratos_firmados', rutaContratoPdf);
 
@@ -191,7 +175,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[Server Error in /api/firmas/finalizar]:', error);
+    console.error('[Server Error in services/firmas/finalizar]:', error);
     return res.status(500).json({
       ok: false,
       error: 'Internal Server Error',

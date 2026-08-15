@@ -4,17 +4,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.s
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
- * Vercel Serverless Function: /api/firmas/webhook-didit
- * 
  * FASE 2: Validación Biométrica y Bóveda Segura de Evidencias
- * 
- * Responsabilidades:
- * 1. Recibir la notificación Server-to-Server de Didit al finalizar la prueba biométrica.
- * 2. Extraer scores de Face Match, Liveness y OCR de DNI.
- * 3. Descargar y almacenar de forma segura las fotos en el bucket privado 'boveda_biometrica'.
- * 4. Actualizar la tabla Firma_contrato con el estado 'biometria_aprobada' o 'biometria_rechazada'.
  */
-export default async function handler(req, res) {
+export default async function webhookDiditHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Didit-Signature, Authorization');
@@ -56,7 +48,6 @@ export default async function handler(req, res) {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Parsear vendor_data para obtener contrato y perfil si aplica
     let parsedVendorData = {};
     if (vendor_data) {
       try {
@@ -66,7 +57,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // 2. Buscar la transacción en Firma_contrato
     let query = supabase.from('Firma_contrato').select('*');
     if (currentSessionId) {
       query = query.eq('didit_session_id', currentSessionId);
@@ -81,7 +71,6 @@ export default async function handler(req, res) {
 
     if (errFirma || !firmas || firmas.length === 0) {
       console.warn('[Didit Webhook] No se encontró Firma_contrato para sesión:', currentSessionId);
-      // Responder 200 a Didit para evitar reintentos innecesarios si no es de firma
       return res.status(200).json({
         ok: true,
         message: 'Evento recibido pero no vinculado a una firma de contrato activa.'
@@ -92,7 +81,6 @@ export default async function handler(req, res) {
     const contractId = firma.id_contrato;
     const firmaId = firma.id_firma;
 
-    // 3. Extraer Scores y detalles de verificación
     const diditScores = {
       raw_status: rawStatus,
       event_type: eventType,
@@ -106,14 +94,12 @@ export default async function handler(req, res) {
       processed_at: new Date().toISOString()
     };
 
-    // 4. Procesamiento de Fotos en la Bóveda Privada (boveda_biometrica)
     let urlDniFrente = firma.url_dni_frente_privado;
     let urlDniDorso = firma.url_dni_dorso_privado;
     let urlSelfie = firma.url_selfie_privado;
 
     const apiKey = (process.env.DIDIT_API_KEY || '').trim();
 
-    // Helper para descargar imagen externa y subirla al bucket privado de Supabase
     async function guardarEnBoveda(imageUrlOrBase64, filenameSuffix) {
       if (!imageUrlOrBase64) return null;
       try {
@@ -156,7 +142,6 @@ export default async function handler(req, res) {
       return null;
     }
 
-    // Extraer URLs de imágenes provistas por Didit en el payload o features
     const rawFrontImg = decision?.document?.front_image || features?.document?.front_image || body?.images?.front;
     const rawBackImg = decision?.document?.back_image || features?.document?.back_image || body?.images?.back;
     const rawSelfieImg = decision?.liveness?.selfie_image || features?.liveness?.selfie_image || body?.images?.selfie;
@@ -165,10 +150,8 @@ export default async function handler(req, res) {
     if (rawBackImg) urlDniDorso = await guardarEnBoveda(rawBackImg, 'dni_dorso');
     if (rawSelfieImg) urlSelfie = await guardarEnBoveda(rawSelfieImg, 'selfie');
 
-    // 5. Determinar nuevo estado de la firma
     const nuevoEstadoFirma = isApproved ? 'biometria_aprobada' : (isDeclined ? 'biometria_rechazada' : 'biometria_pendiente');
 
-    // 6. Actualizar Firma_contrato en la base de datos
     const { error: updateErr } = await supabase
       .from('Firma_contrato')
       .update({
@@ -196,7 +179,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[Server Error in /api/firmas/webhook-didit]:', error);
+    console.error('[Server Error in services/firmas/webhook-didit]:', error);
     return res.status(500).json({
       ok: false,
       error: 'Internal Server Error',

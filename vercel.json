@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/firmas/:action*",
+      "destination": "/api/firmas?action=:action*"
+    },
+    {
+      "source": "/api/contracts/:path*",
+      "destination": "/api/contracts?path=:path*"
+    },
+    {
+      "source": "/api/passport/:path*",
+      "destination": "/api/passport?path=:path*"
+    }
+  ]
+}
