@@ -338,6 +338,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+                <a href="contratos.html" class="inline-flex items-center gap-2 bg-zinc-900 hover:bg-black text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer border border-zinc-700/60">
+                    <span class="material-symbols-outlined text-emerald-400 text-base sm:text-lg">draw</span>
+                    Firma & Contratos
+                </a>
                 <button type="button" onclick="switchBrokerTab('leads'); HabitatLeadModule.switchLeadsSubtab('store');" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">storefront</span>
                     Tienda de Leads
@@ -1896,16 +1900,14 @@
                         <p class="italic">"${a.message}"</p>
                     </div>
 
-                    ${a.status === 'pendiente' ? `
                         <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                            <button type="button" onclick="alert('¡Postulación Aceptada! Se ha generado el contrato de alquiler activo.')" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-base">check_circle</span> Aceptar Postulación y Generar Contrato
-                            </button>
-                            <button type="button" onclick="alert('Postulación rechazada.')" class="py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all">
+                            <a href="contratos.html?contract=CTR-2026-0891&sign=1&role=BROKER" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">check_circle</span> Aceptar Postulación y Firmar Contrato
+                            </a>
+                            <button type="button" onclick="alert('Postulación rechazada.')" class="py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer">
                                 Rechazar
                             </button>
                         </div>
-                    ` : ''}
                 </div>
             `).join('');
         }
@@ -2651,10 +2653,20 @@
                                             ${rTickets.length > 0 ? `<span class="px-2 py-0.5 text-[10px] font-headline font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">${rTickets[0].status}</span>` : ''}
                                         </div>
 
-                                        <button type="button" class="w-full py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 group-hover:bg-primary group-hover:text-white text-zinc-700 dark:text-zinc-300 font-headline font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                                            <span class="material-symbols-outlined text-base">visibility</span>
-                                            <span>Ver Detalle del Alquiler & Cobros</span>
-                                        </button>
+                                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+                                            <div class="grid grid-cols-2 gap-2" onclick="event.stopPropagation()">
+                                                <a href="contratos.html?contract=CTR-2026-0891" class="py-1.5 px-2 bg-zinc-900 hover:bg-black text-white text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-xs text-emerald-400">draw</span> Firma & Estado
+                                                </a>
+                                                <button type="button" onclick="ContractsManager.downloadAuditTrail('CTR-2026-0891')" class="py-1.5 px-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-xs text-blue-500">verified_user</span> Audit Trail
+                                                </button>
+                                            </div>
+                                            <button type="button" class="w-full py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 group-hover:bg-primary group-hover:text-white text-zinc-700 dark:text-zinc-300 font-headline font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                                <span class="material-symbols-outlined text-base">visibility</span>
+                                                <span>Ver Detalle del Alquiler & Cobros</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
@@ -2740,6 +2752,22 @@
                                     <span class="material-symbols-outlined text-rose-500 text-base">calendar_clock</span>
                                     <span>Fin de Contrato: <b>${rental.endDate || '31/07/2027'}</b></span>
                                 </div>
+                            </div>
+
+                            <!-- Módulo de Firma Electrónica y Audit Trail -->
+                            <div class="flex flex-wrap items-center gap-2 pt-2">
+                                <button type="button" onclick="ContractsManager.openContractViewer('CTR-2026-0518', 'BROKER')" class="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm text-emerald-400">verified</span>
+                                    <span>Supervisar Firma y Evidencia Legal (Audit Trail)</span>
+                                </button>
+                                <button type="button" onclick="ContractsManager.downloadSignedContract('CTR-2026-0518')" class="px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">download</span>
+                                    <span>Contrato Firmado (PDF)</span>
+                                </button>
+                                <a href="contratos.html" class="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">open_in_new</span>
+                                    <span>Ver Todos los Contratos</span>
+                                </a>
                             </div>
                         </div>
 
@@ -5134,6 +5162,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Contracts Electronic Signature Module Engine -->
+    <script src="js/contracts-manager.js"></script>
 </body>
 
 </html>
