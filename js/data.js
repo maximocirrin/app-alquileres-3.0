@@ -2562,6 +2562,138 @@ var DataManager = {
             pendingCount: pendingCount,
             totalTransactions: payments.length
         };
+    },
+
+    // ==========================================
+    // MÓDULO: FIRMA ELECTRÓNICA DE CONTRATOS (FASE 1)
+    // ==========================================
+    
+    /**
+     * Inicia la transacción de firma para un contrato (Fase 1)
+     * @param {number|string} idContrato - ID del contrato a firmar
+     * @param {Object} metadata - Metadatos opcionales de contexto (geolocalización, etc.)
+     * @param {string} callbackUrl - URL a la que volver tras completar Didit
+     * @returns {Promise<Object>} Resultado con id_firma, estado y didit_session_url
+     */
+    iniciarFirmaContrato: async function (idContrato, metadata = {}, callbackUrl = '') {
+        const profileId = await this._getOrCreateProfile();
+        
+        const payload = {
+            id_contrato: Number(idContrato),
+            id_perfil: profileId,
+            metadata: {
+                userAgent: navigator.userAgent,
+                geolocation: metadata.geolocation || null,
+                screenResolution: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                ...metadata
+            },
+            callbackUrl: callbackUrl || window.location.href
+        };
+
+        try {
+            const response = await fetch('/api/firmas/iniciar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+                throw new Error(result.message || 'Error al iniciar la transacción de firma.');
+            }
+            return result.data;
+        } catch (err) {
+            console.error("Error en iniciarFirmaContrato:", err);
+            throw err;
+        }
+    },
+
+    /**
+     * Obtiene el estado actual de las firmas registradas para un contrato
+     * @param {number|string} idContrato 
+     * @returns {Promise<Array>} Lista de firmas con perfiles y estados
+     */
+    getFirmasContrato: async function (idContrato) {
+        if (!window.supabaseClient || !idContrato) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Firma_contrato')
+                .select('*, Perfil(*)')
+                .eq('id_contrato', Number(idContrato))
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error("Error al consultar firmas de contrato:", err);
+            return [];
+        }
+    },
+
+    /**
+     * Consulta el estado en tiempo real de una firma específica
+     * @param {number|string} idFirma 
+     * @returns {Promise<Object|null>} Datos de la firma y scores biométricos
+     */
+    consultarEstadoFirma: async function (idFirma) {
+        if (!window.supabaseClient || !idFirma) return null;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('Firma_contrato')
+                .select('*')
+                .eq('id_firma', Number(idFirma))
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("Error al consultar estado de firma individual:", err);
+            return null;
+        }
+    },
+
+    /**
+     * Ejecuta el sellado de tiempo y generación de Audit Trail oficial (Fase 3)
+     * @param {number|string} idFirma 
+     * @returns {Promise<Object>} Resultado del sellado, hashes y URL del PDF
+     */
+    sellarFirmaContrato: async function (idFirma) {
+        try {
+            const response = await fetch('/api/firmas/sellar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_firma: Number(idFirma) })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+                throw new Error(result.message || 'Error al sellar la firma del contrato.');
+            }
+            return result.data;
+        } catch (err) {
+            console.error("Error en sellarFirmaContrato:", err);
+            throw err;
+        }
+    },
+
+    /**
+     * Consulta el estado de cierre del contrato y obtiene los links de descarga de los certificados (Fase 4)
+     * @param {number|string} idContrato 
+     * @returns {Promise<Object>} Resumen consolidado, estado activo y URLs firmadas de descarga
+     */
+    finalizarYObtenerDocumentosContrato: async function (idContrato) {
+        try {
+            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`);
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+                throw new Error(result.message || 'Error al consultar documentos del contrato.');
+            }
+            return result.data;
+        } catch (err) {
+            console.error("Error en finalizarYObtenerDocumentosContrato:", err);
+            throw err;
+        }
     }
 };
 
