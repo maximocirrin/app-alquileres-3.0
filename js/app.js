@@ -7392,9 +7392,33 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 // Global Modals: Postulación & Agendar Visita
 // ============================================================
 window.openPostulacionModal = function(prop) {
-    const propTitle = prop?.title || prop?.titleAviso || 'Departamento 2 Ambientes en Belgrano';
-    const propAddress = prop?.address || prop?.ubicacion || 'Av. Cabildo 1845, CABA';
-    const propId = prop?.id || 'prop-101';
+    const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
+    const pubId = prop?.id_publicacion || prop?.idPublicacion || prop?.id;
+    const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
+    const propAddress = prop?.address || prop?.ubicacion || `${prop?.calle || ''} ${prop?.numero || ''}`.trim() || 'Buenos Aires';
+    const propPrice = prop?.price || prop?.precio || 450000;
+    const propExpenses = prop?.expensas || prop?.expensas_mensuales || 45000;
+
+    let photosList = [];
+    if (Array.isArray(prop?.photos) && prop.photos.length > 0) photosList = prop.photos;
+    else if (Array.isArray(prop?.images) && prop.images.length > 0) photosList = prop.images;
+    else if (Array.isArray(prop?.propiedad_imagenes) && prop.propiedad_imagenes.length > 0) photosList = prop.propiedad_imagenes.map(i => i.url || i);
+    else if (prop?.image) photosList = [prop.image];
+    else if (prop?.photoUrl) photosList = [prop.photoUrl];
+
+    const mainPhoto = photosList[0] || 'img/hero-marketplace.jpg';
+
+    // Obtener datos reales del usuario desde Didit o sesión
+    let defaultName = '';
+    let defaultEmail = '';
+    let defaultPhone = '';
+    try {
+        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        defaultName = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || user.nombre_completo || user.name || '';
+        defaultEmail = user.email || user.mail || '';
+        defaultPhone = user.telefono || user.phone || '';
+    } catch (e) {}
 
     let modal = document.getElementById('habitat-postulacion-modal');
     if (!modal) {
@@ -7413,7 +7437,7 @@ window.openPostulacionModal = function(prop) {
                     <span class="text-xs font-bold text-primary dark:text-red-400 uppercase tracking-wider">Postulación a Alquiler</span>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">${propTitle}</h3>
                 </div>
-                <button type="button" id="close-postulacion-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center justify-center">
+                <button type="button" id="close-postulacion-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center justify-center cursor-pointer">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
@@ -7421,31 +7445,31 @@ window.openPostulacionModal = function(prop) {
             <form id="form-postulacion-modal" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Nombre completo</label>
-                    <input type="text" id="postula-nombre" required value="Carlos Gómez" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
+                    <input type="text" id="postula-nombre" required value="${defaultName}" placeholder="Tu nombre y apellido" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Correo Electrónico</label>
-                        <input type="email" id="postula-email" required value="carlos.gomez@gmail.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
+                        <input type="email" id="postula-email" required value="${defaultEmail}" placeholder="correo@ejemplo.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Teléfono WhatsApp</label>
-                        <input type="tel" id="postula-telefono" required value="+54 9 11 4567-8901" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
+                        <input type="tel" id="postula-telefono" required value="${defaultPhone || '+54 9 11 '}" placeholder="+54 9 11 ..." class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Demostración de Ingresos / Garantía</label>
-                    <input type="text" id="postula-ingresos" required value="Recibo de Sueldo ($950.000) + Garantía Finaer" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
+                    <input type="text" id="postula-ingresos" required value="Pasaporte Hábitat Verificado (Didit KYC + ARCA)" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Mensaje para el propietario (opcional)</label>
-                    <textarea id="postula-mensaje" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-medium focus:ring-2 focus:ring-primary" placeholder="Cuéntale un poco sobre ti y tu disponibilidad para ingresar...">¡Hola! Me interesa mucho la propiedad. Cuento con toda la documentación lista para la firma del contrato.</textarea>
+                    <textarea id="postula-mensaje" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-medium focus:ring-2 focus:ring-primary" placeholder="Cuéntale un poco sobre ti y tu disponibilidad para ingresar...">¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.</textarea>
                 </div>
                 <div class="pt-2 flex gap-3">
-                    <button type="button" id="btn-cancel-postulacion" class="flex-1 py-3 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    <button type="button" id="btn-cancel-postulacion" class="flex-1 py-3 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined text-base">send</span>
                         Enviar Postulación
                     </button>
@@ -7462,8 +7486,17 @@ window.openPostulacionModal = function(prop) {
         e.preventDefault();
         const appData = {
             propertyId: propId,
+            publicationId: pubId,
             propertyTitle: propTitle,
             propertyAddress: propAddress,
+            propertyPrice: propPrice,
+            propertyExpenses: propExpenses,
+            propertyImage: mainPhoto,
+            propertyPhotos: photosList.length > 0 ? photosList : [mainPhoto],
+            propertyM2: prop?.sup_total || prop?.sup_cubierta || prop?.m2 || prop?.area || 65,
+            propertyRooms: prop?.ambientes || prop?.rooms || 2,
+            propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
+            propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
             tenantName: document.getElementById('postula-nombre').value,
             tenantEmail: document.getElementById('postula-email').value,
             tenantPhone: document.getElementById('postula-telefono').value,
@@ -7483,9 +7516,20 @@ window.openPostulacionModal = function(prop) {
 };
 
 window.openAgendarVisitaModal = function(prop) {
-    const propTitle = prop?.title || prop?.titleAviso || 'Departamento 2 Ambientes en Belgrano';
-    const propAddress = prop?.address || prop?.ubicacion || 'Av. Cabildo 1845, CABA';
-    const propId = prop?.id || 'prop-101';
+    const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
+    const propAddress = prop?.address || prop?.ubicacion || `${prop?.calle || ''} ${prop?.numero || ''}`.trim() || 'Buenos Aires';
+    const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
+
+    let defaultName = '';
+    let defaultEmail = '';
+    let defaultPhone = '';
+    try {
+        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        defaultName = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || user.nombre_completo || user.name || '';
+        defaultEmail = user.email || user.mail || '';
+        defaultPhone = user.telefono || user.phone || '';
+    } catch (e) {}
 
     let modal = document.getElementById('habitat-visita-modal');
     if (!modal) {
@@ -7506,7 +7550,7 @@ window.openAgendarVisitaModal = function(prop) {
                     <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Agendar Visita</span>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">${propTitle}</h3>
                 </div>
-                <button type="button" id="close-visita-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center justify-center">
+                <button type="button" id="close-visita-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center justify-center cursor-pointer">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
@@ -7514,16 +7558,16 @@ window.openAgendarVisitaModal = function(prop) {
             <form id="form-visita-modal" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Nombre y Apellido</label>
-                    <input type="text" id="visita-nombre" required value="Carlos Gómez" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" id="visita-nombre" required value="${defaultName}" placeholder="Tu nombre y apellido" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Teléfono de contacto</label>
-                        <input type="tel" id="visita-telefono" required value="+54 9 11 4567-8901" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
+                        <input type="tel" id="visita-telefono" required value="${defaultPhone || '+54 9 11 '}" placeholder="+54 9 11 ..." class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Correo Electrónico</label>
-                        <input type="email" id="visita-email" required value="carlos.gomez@gmail.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
+                        <input type="email" id="visita-email" required value="${defaultEmail}" placeholder="correo@ejemplo.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -7543,12 +7587,12 @@ window.openAgendarVisitaModal = function(prop) {
                     </div>
                 </div>
                 <div class="pt-2 flex gap-3">
-                    <button type="button" id="btn-cancel-visita" class="flex-1 py-3 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    <button type="button" id="btn-cancel-visita" class="flex-1 py-3 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-base">calendar_month</span>
-                        Confirmar Visita
+                    <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">event_available</span>
+                        Solicitar Visita
                     </button>
                 </div>
             </form>

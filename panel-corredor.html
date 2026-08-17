@@ -1243,11 +1243,7 @@
         ];
 
         // MOCK DATA POSTULACIONES
-        const brokerApplicationsMock = [
-            { id: 'APP-101', property_title: 'Av. Santa Fe 3420, Palermo 3 Amb', tenant_name: 'Gonzalo Fernández', tenant_email: 'gonzalo.f@gmail.com', tenant_phone: '+54 11 4455-8899', monthly_income: 1650000, status: 'pendiente', income_proof_url: '#', message: 'Hola! Tengo recibo de sueldo de empresa multinacional y garantía propietaria de CABA.' },
-            { id: 'APP-102', property_title: 'Humboldt 1940, Palermo Hollywood', tenant_name: 'Camila Benítez', tenant_email: 'cami.b@hotmail.com', tenant_phone: '+54 11 6622-1144', monthly_income: 1200000, status: 'aceptada', income_proof_url: '#', message: 'Busco ingresar antes del 15 de este mes.' },
-            { id: 'APP-103', property_title: 'Av. Corrientes 1540, Centro (Local)', tenant_name: 'Comercial SA', tenant_email: 'contacto@comercial.com', tenant_phone: '+54 11 3344-7788', monthly_income: 2800000, status: 'pendiente', income_proof_url: '#', message: 'Presentamos balance firmado por contador y seguro de fianza.' }
-        ];
+        const brokerApplicationsMock = [];
 
         // MOCK DATA ALQUILERES ACTIVOS
         let selectedBrokerRentalId = null;
@@ -1471,8 +1467,8 @@
 
                 // 2. Sincronizar Postulaciones
                 const dbApps = await window.DataManager.getApplications();
+                brokerApplicationsMock.length = 0;
                 if (dbApps && dbApps.length > 0) {
-                    brokerApplicationsMock.length = 0;
                     dbApps.forEach(a => {
                         brokerApplicationsMock.push({
                             id: `APP-${a.id}`,
@@ -1487,8 +1483,8 @@
                             message: a.message
                         });
                     });
-                    renderBrokerApplications();
                 }
+                renderBrokerApplications();
 
                 // 3. Sincronizar Tickets de Mantenimiento
                 const dbTickets = await window.DataManager.getMaintenanceTickets();
