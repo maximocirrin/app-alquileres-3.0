@@ -889,15 +889,6 @@
 
             document.body.insertAdjacentHTML('beforeend', cryptoModalHtml);
 
-            setTimeout(() => {
-                const pBar = document.getElementById('crypto-progress-bar');
-                const pText = document.getElementById('crypto-progress-text');
-                const msg = document.getElementById('crypto-status-msg');
-                const row2 = document.getElementById('step-row-2');
-                const tag2 = document.getElementById('step-tag-2');
-                const row3 = document.getElementById('step-row-3');
-                const tag3 = document.getElementById('step-tag-3');
-
             // 1. Llamar al backend para sellar criptográficamente e insertar en Supabase
             const apiBase = (typeof window !== 'undefined' && (window.location.port === '5500' || window.location.port === '5501' || window.location.port === '5502')) ? 'http://localhost:3000' : '';
             const emailInput = document.getElementById('signer-didit-email');

@@ -947,10 +947,10 @@ const App = {
                 setTimeout(() => {
                     step3Container.classList.add('hidden');
                     step3Container.style.height = '0';
-                    step2Container.classList.remove('hidden');
+                    step2Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
                     step2Container.style.height = 'auto';
+                    step2Container.style.display = 'block';
                     setTimeout(() => {
-                        step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95');
                         step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
                     }, 50);
                 }, 300);
@@ -1456,9 +1456,11 @@ const App = {
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
-                            step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                            step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step2Container.style.height = ''; // Limpiar inline style
+                            step2Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                            step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                            step2Container.style.height = 'auto';
+                            step2Container.style.opacity = '1';
+                            step2Container.style.display = 'block';
 
                             // Scroll up if necessary
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1997,9 +1999,11 @@ const App = {
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
-                            step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                            step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step3Container.style.height = '';
+                            step3Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                            step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                            step3Container.style.height = 'auto';
+                            step3Container.style.opacity = '1';
+                            step3Container.style.display = 'block';
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2056,9 +2060,11 @@ const App = {
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
-                            step4Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                            step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step4Container.style.height = '';
+                            step4Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                            step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                            step4Container.style.height = 'auto';
+                            step4Container.style.opacity = '1';
+                            step4Container.style.display = 'block';
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2115,9 +2121,11 @@ const App = {
                             if (title) title.style.opacity = '1';
                             if (subtitle) subtitle.style.opacity = '1';
 
-                            step5Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                            step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                            step5Container.style.height = '';
+                            step5Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                            step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                            step5Container.style.height = 'auto';
+                            step5Container.style.opacity = '1';
+                            step5Container.style.display = 'block';
 
                             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2171,9 +2179,11 @@ const App = {
                         if (title) title.style.opacity = '1';
                         if (subtitle) subtitle.style.opacity = '1';
 
-                        step6Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                        step6Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                        step6Container.style.height = '';
+                        step6Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                        step6Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                        step6Container.style.height = 'auto';
+                        step6Container.style.opacity = '1';
+                        step6Container.style.display = 'block';
 
                         window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2222,10 +2232,11 @@ const App = {
                 step6Container.classList.add('hidden');
                 step6Container.style.height = '0';
                 if (step5Container) {
-                    step5Container.classList.remove('hidden');
-                    step5Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    step5Container.style.height = '';
+                    step5Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                    step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    step5Container.style.height = 'auto';
+                    step5Container.style.opacity = '1';
+                    step5Container.style.display = 'block';
                 }
                 if (title) title.textContent = 'Agenda de Visitas y Tours Presenciales';
                 if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad';
@@ -2241,10 +2252,11 @@ const App = {
                 step5Container.classList.add('hidden');
                 step5Container.style.height = '0';
                 if (step4Container) {
-                    step4Container.classList.remove('hidden');
-                    step4Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    step4Container.style.height = '';
+                    step4Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                    step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    step4Container.style.height = 'auto';
+                    step4Container.style.opacity = '1';
+                    step4Container.style.display = 'block';
                 }
                 if (title) title.textContent = 'Preferencias de alquiler';
                 if (subtitle) subtitle.textContent = 'Configurá las condiciones para tus futuros inquilinos';
@@ -2260,10 +2272,11 @@ const App = {
                 step4Container.classList.add('hidden');
                 step4Container.style.height = '0';
                 if (step3Container) {
-                    step3Container.classList.remove('hidden');
-                    step3Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    step3Container.style.height = '';
+                    step3Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                    step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    step3Container.style.height = 'auto';
+                    step3Container.style.opacity = '1';
+                    step3Container.style.display = 'block';
                 }
                 if (title) title.textContent = '¡Agregá los amenities de tu propiedad!';
                 if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
@@ -2279,10 +2292,11 @@ const App = {
                 step3Container.classList.add('hidden');
                 step3Container.style.height = '0';
                 if (step2Container) {
-                    step2Container.classList.remove('hidden');
-                    step2Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    step2Container.style.height = '';
+                    step2Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                    step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    step2Container.style.height = 'auto';
+                    step2Container.style.opacity = '1';
+                    step2Container.style.display = 'block';
                 }
                 if (title) title.textContent = 'Agregá fotos y videos';
                 if (subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
@@ -2298,10 +2312,11 @@ const App = {
                 step2Container.classList.add('hidden');
                 step2Container.style.height = '0';
                 if (step1Container) {
-                    step1Container.classList.remove('hidden');
-                    step1Container.classList.remove('opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    step1Container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    step1Container.style.height = '';
+                    step1Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
+                    step1Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                    step1Container.style.height = 'auto';
+                    step1Container.style.opacity = '1';
+                    step1Container.style.display = 'block';
                 }
                 if (title) title.textContent = '¡Empecemos a crear tu aviso!';
                 window.currentWizardStep = 1;

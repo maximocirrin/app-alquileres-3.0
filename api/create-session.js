@@ -60,7 +60,14 @@ export default async function handler(req, res) {
     const defaultPassportWf = (process.env.DIDIT_WORKFLOW_ID || '').trim();
 
     // Seleccionar workflow apropiado según si es firma biométrica o pasaporte completo
-    let activeWorkflowId = (workflowId || (isSignatureFlow ? (signatureWf || defaultPassportWf) : defaultPassportWf) || signatureWf || '').trim();
+    const validSignatureWf = isConfiguredWorkflowId(signatureWf) ? signatureWf : null;
+    const validPassportWf = isConfiguredWorkflowId(defaultPassportWf) ? defaultPassportWf : null;
+    
+    let activeWorkflowId = (isConfiguredWorkflowId(workflowId) ? workflowId : null) ||
+      (isSignatureFlow ? (validSignatureWf || validPassportWf) : (validPassportWf || validSignatureWf)) ||
+      validSignatureWf ||
+      validPassportWf ||
+      '';
     const defaultCallbackUrl = (callbackUrl || process.env.DIDIT_CALLBACK_URL || '').trim();
 
     const isApiKeyConfigured = Boolean(apiKey && !apiKey.startsWith('TU_API_KEY') && apiKey.length > 10);
@@ -70,7 +77,7 @@ export default async function handler(req, res) {
       console.warn(`[Didit Create-Session] Configuración incompleta. ApiKey: ${isApiKeyConfigured}, WorkflowId: "${activeWorkflowId}"`);
       return res.status(400).json({
         error: 'Didit Configuration Incomplete',
-        message: `No se encontró un Workflow ID válido configurado en DIDIT_WORKFLOW_ID_SIGNATURE (${activeWorkflowId || 'Vacío'}).`
+        message: `No se encontró un Workflow ID válido configurado en DIDIT_WORKFLOW_ID_SIGNATURE o DIDIT_WORKFLOW_ID (${activeWorkflowId || 'Vacío'}).`
       });
     }
 
@@ -82,7 +89,8 @@ export default async function handler(req, res) {
     };
 
     if (body.portraitImage || body.portrait_image) {
-      payload.portrait_image = body.portraitImage || body.portrait_image;
+      const raw = body.portraitImage || body.portrait_image;
+      payload.portrait_image = typeof raw === 'string' ? raw.replace(/^data:image\/[a-z0-9.+]+;base64,/i, '').trim() : raw;
     }
 
     // Solo incluir callback si es una URL válida y no es placeholder
@@ -154,6 +162,8 @@ export default async function handler(req, res) {
       });
       data = await response.json().catch(() => ({}));
     }
+
+    if (!response.ok) {
       const detailStr = typeof data === 'object' 
         ? (data.message || data.detail || data.error || JSON.stringify(data)) 
         : String(data);
