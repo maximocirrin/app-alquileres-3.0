@@ -59,17 +59,6 @@ app.post('/api/arca-padron', async (req, res) => {
     }
 });
 
-// API Endpoint - Didit KYC Create Session Integration
-app.post('/api/create-session', async (req, res) => {
-    try {
-        const createSessionHandler = (await import('./api/create-session.js')).default;
-        await createSessionHandler(req, res);
-    } catch (err) {
-        console.error('Error en /api/create-session:', err);
-        res.status(500).json({ error: 'Internal Server Error', message: err.message });
-    }
-});
-
 // API Endpoint - Didit KYC Webhook Integration
 app.post('/api/webhook', async (req, res) => {
     try {
@@ -77,39 +66,6 @@ app.post('/api/webhook', async (req, res) => {
         await webhookHandler(req, res);
     } catch (err) {
         console.error('Error en /api/webhook:', err);
-        res.status(500).json({ error: 'Internal Server Error', message: err.message });
-    }
-});
-
-// API Endpoint - BCRA Central de Deudores Integration
-app.post('/api/bcra-deudores', async (req, res) => {
-    try {
-        const bcraHandler = (await import('./api/bcra-deudores.js')).default;
-        await bcraHandler(req, res);
-    } catch (err) {
-        console.error('Error en /api/bcra-deudores:', err);
-        res.status(500).json({ error: 'Internal Server Error', message: err.message });
-    }
-});
-
-// API Endpoint - Passport Judicial Scraper Integration
-app.all(['/api/passport', '/api/passport/*'], async (req, res) => {
-    try {
-        const passportHandler = (await import('./api/passport.js')).default;
-        await passportHandler(req, res);
-    } catch (err) {
-        console.error('Error en /api/passport:', err);
-        res.status(500).json({ error: 'Internal Server Error', message: err.message });
-    }
-});
-
-// API Endpoint - Firmas Electrónicas Integration
-app.all(['/api/firmas', '/api/firmas/*'], async (req, res) => {
-    try {
-        const firmasHandler = (await import('./api/firmas.js')).default;
-        await firmasHandler(req, res);
-    } catch (err) {
-        console.error('Error en /api/firmas:', err);
         res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
