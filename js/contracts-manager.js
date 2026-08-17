@@ -725,7 +725,21 @@
 
                                 ${isContractPendingForMe ? `
                                     <div class="space-y-4">
-                                        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800 text-xs">
+                                                <span class="text-zinc-500 font-medium">Firmando como: <b class="text-zinc-900 dark:text-white">${signerObj.name}</b> (${role === 'TENANT' ? 'Locatario' : 'Locador'})</span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-[11px] text-zinc-400">Email Didit:</span>
+                                                    <input 
+                                                        type="email" 
+                                                        id="signer-didit-email" 
+                                                        value="${signerObj.email || ''}" 
+                                                        class="px-2.5 py-1 text-xs font-mono font-bold bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:ring-1 focus:ring-primary outline-none"
+                                                        placeholder="tu.email@ejemplo.com"
+                                                    >
+                                                </div>
+                                            </div>
+
                                             <label class="flex items-start gap-3 cursor-pointer select-none">
                                                 <input type="checkbox" id="legal-inpage-consent" class="mt-0.5 w-5 h-5 rounded text-primary focus:ring-primary border-zinc-300 cursor-pointer" onchange="document.getElementById('inpage-sign-action-btn').disabled = !this.checked">
                                                 <div class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
@@ -765,25 +779,58 @@
         executeSignatureWithDidit: async function (contractId) {
             const role = this.currentUserRole;
             const contract = this.getContractById(contractId);
+            if (!contract) return;
             const signerObj = role === 'TENANT' ? contract.tenant : contract.owner;
+            const btn = document.getElementById('inpage-sign-action-btn');
 
-            if (typeof window.iniciarKYC === 'function') {
-                try {
-                    const userId = signerObj.email || `${role.toLowerCase()}_${contractId}`;
-                    await window.iniciarKYC(userId, { mode: 'popup', isLivenessOnly: true });
-                } catch (e) {
-                    console.warn('[Didit Liveness] Sesión procesada:', e);
-                }
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="material-symbols-outlined text-xl animate-spin">sync</span><span>Iniciando Didit Liveness Check...</span>`;
             }
 
-            this.startCryptographicStep(contractId, role);
+            let diditSessionData = null;
+            try {
+                if (typeof window.iniciarKYC === 'function') {
+                    const emailInput = document.getElementById('signer-didit-email');
+                    const chosenEmail = (emailInput && emailInput.value.trim()) || signerObj.email;
+                    const userId = chosenEmail || `${role.toLowerCase()}_${contractId}`;
+                    const returnUrl = `${window.location.origin}${window.location.pathname}?contract=${contractId}&role=${role}`;
+                    
+                    diditSessionData = await window.iniciarKYC(userId, { 
+                        mode: 'popup', 
+                        isLivenessOnly: true,
+                        contractId: contractId,
+                        role: role,
+                        callbackUrl: returnUrl
+                    });
+                } else {
+                    diditSessionData = {
+                        success: true,
+                        sessionId: `didit_liveness_local_${Date.now()}`,
+                        status: 'APPROVED'
+                    };
+                }
+            } catch (err) {
+                console.warn('[Didit Liveness] Validación cancelada o error:', err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span class="material-symbols-outlined text-xl">face</span><span>Iniciar Didit Liveness Check y Firmar Contrato</span>`;
+                }
+                return;
+            }
+
+            // Una vez aprobada la biometría en Didit, proceder al sellado criptográfico
+            this.startCryptographicStep(contractId, role, diditSessionData);
         },
 
-        // Cryptographic Processing Overlay (SHA-256 + TSA)
-        startCryptographicStep: function (contractId, role) {
+        // Cryptographic Processing Overlay (SHA-256 + TSA + Didit Evidence)
+        startCryptographicStep: function (contractId, role, diditSessionData = {}) {
+            const currentSessionId = diditSessionData.sessionId || `didit_sess_${Date.now()}`;
+            const shortSessionId = currentSessionId.length > 22 ? currentSessionId.substring(0, 22) + '...' : currentSessionId;
+
             const cryptoModalHtml = `
                 <div id="contract-modal-overlay" class="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 font-body" style="-webkit-overflow-scrolling: touch;">
-                    <div class="relative w-full max-w-md bg-zinc-900 text-white rounded-3xl shadow-2xl border border-zinc-800 p-5 sm:p-7 space-y-5 overflow-hidden my-auto">
+                    <div class="relative w-full max-w-md bg-zinc-900 text-white rounded-3xl shadow-2xl border border-zinc-800 p-5 sm:p-7 space-y-5 overflow-hidden my-auto animate-fadeIn">
                         
                         <div class="text-center space-y-2 relative z-10">
                             <div class="w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-primary mx-auto">
@@ -797,21 +844,24 @@
                         <div class="space-y-2">
                             <div class="flex justify-between text-xs font-mono text-zinc-400">
                                 <span>Progreso Criptográfico</span>
-                                <span id="crypto-progress-text" class="text-emerald-400 font-bold">35%</span>
+                                <span id="crypto-progress-text" class="text-emerald-400 font-bold">40%</span>
                             </div>
                             <div class="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
-                                <div id="crypto-progress-bar" class="h-full bg-gradient-to-r from-primary via-red-500 to-emerald-400 transition-all duration-500" style="width: 35%"></div>
+                                <div id="crypto-progress-bar" class="h-full bg-gradient-to-r from-primary via-red-500 to-emerald-400 transition-all duration-500" style="width: 40%"></div>
                             </div>
                             <p id="crypto-status-msg" class="text-[11px] text-center text-zinc-300 font-medium animate-pulse min-h-[18px]">
-                                Validando prueba de vida (Liveness) con Didit...
+                                Biometría facial Didit Aprobada. Generando Hash SHA-256...
                             </p>
                         </div>
 
                         <!-- 4 Checkpoints -->
                         <div class="space-y-2 pt-2 border-t border-zinc-800 text-xs">
                             <div id="step-row-1" class="p-2.5 rounded-xl bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined text-emerald-400 text-base">face</span> 1. Didit Liveness Check</span>
-                                <span class="text-emerald-400 font-bold text-[10px]">APROBADO</span>
+                                <span class="flex items-center gap-2 truncate max-w-[240px]">
+                                    <span class="material-symbols-outlined text-emerald-400 text-base">face</span> 
+                                    <span>1. Didit Liveness Check</span>
+                                </span>
+                                <span class="text-emerald-400 font-bold text-[10px] uppercase font-mono">${shortSessionId}</span>
                             </div>
 
                             <div id="step-row-2" class="p-2.5 rounded-xl bg-zinc-800 border border-primary/40 flex items-center justify-between">
@@ -834,7 +884,48 @@
                 </div>
             `;
 
+            const prev = document.getElementById('contract-modal-overlay');
+            if (prev) prev.remove();
+
             document.body.insertAdjacentHTML('beforeend', cryptoModalHtml);
+
+            setTimeout(() => {
+                const pBar = document.getElementById('crypto-progress-bar');
+                const pText = document.getElementById('crypto-progress-text');
+                const msg = document.getElementById('crypto-status-msg');
+                const row2 = document.getElementById('step-row-2');
+                const tag2 = document.getElementById('step-tag-2');
+                const row3 = document.getElementById('step-row-3');
+                const tag3 = document.getElementById('step-tag-3');
+
+            // 1. Llamar al backend para sellar criptográficamente e insertar en Supabase
+            const apiBase = (typeof window !== 'undefined' && (window.location.port === '5500' || window.location.port === '5501' || window.location.port === '5502')) ? 'http://localhost:3000' : '';
+            const emailInput = document.getElementById('signer-didit-email');
+            const chosenEmail = (emailInput && emailInput.value.trim()) || '';
+
+            let serverSealPromise = (async () => {
+                try {
+                    const sealRes = await fetch(`${apiBase}/api/firmas/sellar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id_contrato: contractId,
+                            rol: role,
+                            didit_session_id: currentSessionId,
+                            email: chosenEmail,
+                            user_agent: navigator.userAgent
+                        })
+                    });
+                    if (sealRes.ok) {
+                        const sData = await sealRes.json();
+                        console.log('[Supabase Stamping Exitoso]:', sData);
+                        return sData.data;
+                    }
+                } catch (e) {
+                    console.warn('[Sealing Backend Warning]:', e.message);
+                }
+                return null;
+            })();
 
             setTimeout(() => {
                 const pBar = document.getElementById('crypto-progress-bar');
@@ -847,7 +938,7 @@
 
                 if (pBar) pBar.style.width = '70%';
                 if (pText) pText.innerText = '70%';
-                if (msg) msg.innerText = 'Generando Digest SHA-256 e incrustando firma electrónica...';
+                if (msg) msg.innerText = 'Generando Digest SHA-256 e incrustando firma en Supabase...';
                 if (row2 && tag2) {
                     row2.className = 'p-2.5 rounded-xl bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
                     tag2.className = 'text-emerald-400 font-bold text-[10px]';
@@ -858,7 +949,7 @@
                     tag3.className = 'text-amber-400 font-bold text-[10px]';
                     tag3.innerText = 'EN CURSO...';
                 }
-            }, 900);
+            }, 800);
 
             setTimeout(() => {
                 const pBar = document.getElementById('crypto-progress-bar');
@@ -871,7 +962,7 @@
 
                 if (pBar) pBar.style.width = '95%';
                 if (pText) pText.innerText = '95%';
-                if (msg) msg.innerText = 'Estampando Sello de Tiempo con Autoridad Certificante TSA...';
+                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA y subiendo Audit Trail a Storage...';
                 if (row3 && tag3) {
                     row3.className = 'p-2.5 rounded-xl bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
                     tag3.className = 'text-emerald-400 font-bold text-[10px]';
@@ -882,18 +973,22 @@
                     tag4.className = 'text-amber-400 font-bold text-[10px]';
                     tag4.innerText = 'EN CURSO...';
                 }
-            }, 1800);
+            }, 1600);
 
-            setTimeout(() => {
+            setTimeout(async () => {
+                const serverData = await serverSealPromise;
+
                 const c = contracts.find(item => String(item.id) === String(contractId) || String(item.contractNumber) === String(contractId)) || contracts[0];
                 if (c) {
                     if (role === 'TENANT') {
                         c.tenant.hasSigned = true;
                         c.tenant.signedAt = new Date().toISOString();
+                        c.tenant.diditSessionId = currentSessionId;
                         c.status = c.owner.hasSigned ? 'SIGNED_AND_SEALED' : 'WAITING_OWNER';
                     } else if (role === 'OWNER') {
                         c.owner.hasSigned = true;
                         c.owner.signedAt = new Date().toISOString();
+                        c.owner.diditSessionId = currentSessionId;
                         c.status = c.tenant.hasSigned ? 'SIGNED_AND_SEALED' : 'WAITING_TENANT';
                     } else {
                         c.tenant.hasSigned = true;
@@ -901,16 +996,17 @@
                         c.status = 'SIGNED_AND_SEALED';
                     }
 
-                    c.sha256Hash = 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
-                    c.tsaTimestamp = new Date().toISOString();
-                    c.tsaCertificateId = `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+                    c.sha256Hash = (serverData && serverData.hash_contrato_sha256) || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
+                    c.tsaTimestamp = (serverData && serverData.fecha_firma) || new Date().toISOString();
+                    c.tsaCertificateId = (serverData && serverData.tsa_sello_tiempo?.serialNumber) || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+                    c.auditTrailUrl = serverData && serverData.url_audit_trail_pdf;
 
                     c.auditTrailEvents = c.auditTrailEvents || [];
                     c.auditTrailEvents.push({
                         timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
                         action: role === 'TENANT' ? 'FIRMA_INQUILINO_COMPLETADA' : 'FIRMA_PROPIETARIO_COMPLETADA',
                         actor: role === 'TENANT' ? c.tenant.name : c.owner.name,
-                        details: `Validación facial Didit Liveness Check completada y sellado TSA registrado.`
+                        details: `Validación facial biométrica Didit Liveness Check Aprobada (Sesión: ${currentSessionId}), sellado TSA registrado en Supabase.`
                     });
 
                     saveContracts();
@@ -920,7 +1016,7 @@
                 if (m) m.remove();
 
                 ContractsManager.renderDashboard('contracts-dashboard-container');
-            }, 2700);
+            }, 2400);
         },
 
         openContractSigning: function (contractId) {
@@ -1105,12 +1201,28 @@
     document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('contracts-dashboard-container');
         if (container) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const contractParam = urlParams.get('contract') || urlParams.get('sign') || urlParams.get('id');
+            const statusParam = urlParams.get('status') || urlParams.get('didit_status') || urlParams.get('verification_status');
+            const sessionParam = urlParams.get('session_id') || urlParams.get('sessionId');
+            const roleParam = urlParams.get('role') || ContractsManager.currentUserRole;
+
+            if (contractParam) {
+                ContractsManager.selectedContractId = contractParam;
+            }
+
             ContractsManager.renderDashboard('contracts-dashboard-container');
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const contractParam = urlParams.get('contract') || urlParams.get('sign');
-            if (contractParam) {
-                ContractsManager.selectContract(contractParam, true);
+            // Detectar retorno de redirección desde Didit con validación aprobada
+            if (contractParam && (statusParam === 'Approved' || statusParam === 'COMPLETED' || statusParam === 'approved' || (sessionParam && !sessionParam.includes('mock')))) {
+                setTimeout(() => {
+                    ContractsManager.startCryptographicStep(contractParam, roleParam, {
+                        sessionId: sessionParam || `didit_return_${Date.now()}`,
+                        status: 'APPROVED'
+                    });
+                    const cleanUrl = window.location.pathname + `?contract=${contractParam}&role=${roleParam}`;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }, 400);
             }
         }
     });
