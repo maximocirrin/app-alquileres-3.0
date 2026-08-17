@@ -332,11 +332,129 @@
     try {
         stored = JSON.parse(localStorage.getItem('habitat_contracts'));
     } catch (e) {}
-    let contracts = (stored && stored.length >= 5) ? stored : SEED_CONTRACTS;
+    let contracts = (stored && stored.length >= 3) ? stored : SEED_CONTRACTS;
 
     function saveContracts() {
         localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
     }
+
+    function getPublishedProperties() {
+        let list = [];
+        try {
+            const raw = localStorage.getItem('habitat_marketplace_properties') || localStorage.getItem('habitat_properties');
+            if (raw) list = JSON.parse(raw);
+        } catch (e) {}
+
+        if (!list || list.length === 0) {
+            list = [
+                {
+                    id: 'prop-101',
+                    id_propiedad: 101,
+                    title: 'Departamento 3 Ambientes con Balcón Aterrazado',
+                    address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
+                    price: 420000,
+                    expensas: 52000,
+                    photos: ['img/hero-marketplace.jpg'],
+                    status: 'publicado',
+                    isVerifiedOwner: true
+                },
+                {
+                    id: 'prop-102',
+                    id_propiedad: 102,
+                    title: 'Semipiso 4 Ambientes en Torre con Amenities',
+                    address: 'Av. del Libertador 4820, Belgrano, CABA',
+                    price: 850000,
+                    expensas: 85000,
+                    photos: ['img/hero-marketplace.jpg'],
+                    status: 'publicado',
+                    isVerifiedOwner: true
+                },
+                {
+                    id: 'prop-103',
+                    id_propiedad: 103,
+                    title: 'Loft de Diseño con Terraza y Parrilla',
+                    address: 'Humboldt 1940, Piso 3, Palermo, CABA',
+                    price: 480000,
+                    expensas: 48000,
+                    photos: ['img/hero-marketplace.jpg'],
+                    status: 'publicado',
+                    isVerifiedOwner: true
+                }
+            ];
+        }
+        return list;
+    }
+
+    function syncPublishedPropertiesWithContracts() {
+        const props = getPublishedProperties();
+        props.forEach(p => {
+            const propIdStr = String(p.id || p.id_propiedad);
+            const exists = contracts.some(c => String(c.propertyId) === propIdStr || c.propertyAddress === p.address);
+            if (!exists) {
+                const newContractId = `CTR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+                const newContract = {
+                    id: newContractId,
+                    contractNumber: newContractId,
+                    propertyId: propIdStr,
+                    title: p.title || `Contrato de Locación - ${p.address || 'Propiedad'}`,
+                    propertyAddress: p.address || 'Buenos Aires',
+                    propertyCity: p.city || 'Buenos Aires',
+                    propertyImage: (p.photos && p.photos[0]) || p.image || 'img/hero-marketplace.jpg',
+                    monthlyRent: p.price || 450000,
+                    currency: 'ARS',
+                    status: 'WAITING_TENANT',
+                    startDate: '2026-09-01',
+                    endDate: '2028-08-31',
+                    durationMonths: 24,
+                    paymentDueDay: 10,
+                    adjustmentIndex: 'IPC',
+                    adjustmentFrequencyMonths: 3,
+                    depositAmount: p.price || 450000,
+                    aliasCbu: 'HABITAT.ALQUILER.MP',
+                    tenant: {
+                        role: 'TENANT',
+                        name: 'Carlos Gómez',
+                        email: 'carlos.gomez@gmail.com',
+                        cuil: '20-38491029-4',
+                        dni: '38.491.029',
+                        hasSigned: false,
+                        isKycVerified: true
+                    },
+                    owner: {
+                        role: 'OWNER',
+                        name: 'Propietario Verificado',
+                        email: p.contactEmail || 'propietario@habitat.ar',
+                        cuil: '27-33918274-8',
+                        dni: '33.918.274',
+                        hasSigned: false,
+                        isKycVerified: Boolean(p.isVerifiedOwner)
+                    },
+                    broker: {
+                        name: 'Valeria Sotomayor',
+                        license: 'CUCICBA Mat. 5120',
+                        agencyName: 'Habitat Real Estate Network',
+                        email: 'valeria@habitat.ar'
+                    },
+                    sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    auditTrailEvents: [
+                        {
+                            timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                            action: 'CONTRATO_GENERADO',
+                            actor: 'Habitat Smart Contracts Generator',
+                            details: 'Contrato digital vinculado automáticamente a la propiedad publicada.'
+                        }
+                    ]
+                };
+                contracts.unshift(newContract);
+            }
+        });
+        saveContracts();
+    }
+
+    // Inicializar sincronización
+    syncPublishedPropertiesWithContracts();
 
     function detectActiveUserRole() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -357,7 +475,7 @@
             return 'BROKER';
         }
 
-        return 'TENANT';
+        return 'OWNER';
     }
 
     const ContractsManager = {
@@ -373,6 +491,13 @@
         getContractById: function (id) {
             if (!id) return contracts[0] || null;
             return contracts.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id)) || contracts[0];
+        },
+
+        switchRole: function (newRole) {
+            if (!['TENANT', 'OWNER', 'BROKER'].includes(newRole)) return;
+            this.currentUserRole = newRole;
+            localStorage.setItem('habitat_active_role', newRole);
+            this.renderDashboard('contracts-dashboard-container');
         },
 
         setFilter: function (filter) {
@@ -401,7 +526,9 @@
             const container = document.getElementById(containerId);
             if (!container) return;
 
+            syncPublishedPropertiesWithContracts();
             const role = this.currentUserRole;
+            const publishedProperties = getPublishedProperties();
             const formatMoney = (n) => '$' + Number(n).toLocaleString('es-AR');
 
             // Find current selected contract
@@ -447,6 +574,35 @@
             let html = `
                 <div class="w-full space-y-8 font-body">
                     
+                    <!-- Top Navigation & Role Switcher Bar -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tu Rol Activo:</span>
+                            <div class="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60">
+                                <button onclick="ContractsManager.switchRole('OWNER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'OWNER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                    <span class="material-symbols-outlined text-sm">home</span>
+                                    <span>Propietario</span>
+                                </button>
+                                <button onclick="ContractsManager.switchRole('BROKER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'BROKER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                    <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                                    <span>Corredor</span>
+                                </button>
+                                <button onclick="ContractsManager.switchRole('TENANT')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'TENANT' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                    <span class="material-symbols-outlined text-sm">person</span>
+                                    <span>Inquilino</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Didit Liveness Ready
+                            </span>
+                            <a href="index.html" class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-primary font-semibold transition-colors">Volver al Marketplace</a>
+                        </div>
+                    </div>
+
                     <!-- Header Banner -->
                     <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-zinc-800">
                         <div class="space-y-2">
@@ -508,6 +664,76 @@
                                 class="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary shadow-xs"
                             >
                             <span class="material-symbols-outlined text-zinc-400 text-base absolute left-3 top-1/2 -translate-y-1/2">search</span>
+                        </div>
+                    </div>
+
+                    <!-- Propiedades Publicadas Showcase -->
+                    <div class="space-y-4 bg-zinc-50/50 dark:bg-zinc-800/20 p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">real_estate_agent</span>
+                                    <h2 class="text-base sm:text-lg font-headline font-black text-zinc-900 dark:text-white">
+                                        Propiedades Publicadas por Propietario / Corredor
+                                    </h2>
+                                </div>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Inmuebles listos para emisión, gestión y firma de contrato digital con Didit Liveness y sellado de tiempo TSA.
+                                </p>
+                            </div>
+                            <a href="publicar.html" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-xs shrink-0">
+                                <span class="material-symbols-outlined text-sm">add_circle</span>
+                                <span>Publicar Nueva Propiedad</span>
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${publishedProperties.map(p => {
+                                const photo = (p.photos && p.photos[0]) || p.image || 'img/hero-marketplace.jpg';
+                                const matchingContract = contracts.find(c => String(c.propertyId) === String(p.id || p.id_propiedad) || c.propertyAddress === p.address);
+                                const isCurrentSelected = matchingContract && String(matchingContract.id) === String(currentContract.id);
+
+                                return `
+                                    <div class="bg-white dark:bg-zinc-900 border ${isCurrentSelected ? 'border-primary ring-2 ring-primary/20' : 'border-zinc-200 dark:border-zinc-800'} rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                                        <div class="relative h-36 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                                            <img src="${photo}" alt="${p.title}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                                            <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-xs flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                    Publicación Activa
+                                                </span>
+                                            </div>
+                                            <div class="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white drop-shadow">
+                                                <span class="font-headline font-black text-sm">$ ${Number(p.price || 420000).toLocaleString('es-AR')}/mes</span>
+                                                <span class="text-[10px] font-semibold bg-black/60 px-2 py-0.5 rounded-lg backdrop-blur">+ $ ${Number(p.expensas || 45000).toLocaleString('es-AR')} exp.</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                                            <div class="space-y-1">
+                                                <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white line-clamp-1">${p.title}</h4>
+                                                <p class="text-xs text-zinc-500 truncate flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-xs text-primary">location_on</span>
+                                                    ${p.address}
+                                                </p>
+                                            </div>
+
+                                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+                                                <span class="text-[10px] font-semibold text-zinc-400">
+                                                    ${matchingContract ? `Contrato: <b class="text-zinc-700 dark:text-zinc-300">${matchingContract.contractNumber}</b>` : 'Sin contrato emitido'}
+                                                </span>
+                                                <button 
+                                                    onclick="ContractsManager.selectContract('${matchingContract ? matchingContract.id : currentContract.id}')"
+                                                    class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    <span class="material-symbols-outlined text-xs">contract</span>
+                                                    <span>${matchingContract ? 'Ver Contrato' : 'Emitir Contrato'}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
 

@@ -1581,7 +1581,81 @@
             if (!container) return;
 
             try {
-                const applications = window.DataManager ? await window.DataManager.getApplications() : [];
+                // 1. Obtener postulaciones locales reales del inquilino (filtrando cualquier dato mock de prueba)
+                let localApps = [];
+                try {
+                    const raw = localStorage.getItem('habitat_tenant_applications');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            localApps = parsed.filter(a => a && a.id && !String(a.id).startsWith('app-00') && !String(a.property_title || '').includes('Carlos Gómez') && !String(a.tenant_name || '').includes('Carlos Gómez'));
+                            // Limpiar localStorage si tenía mocks antiguos
+                            localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+                        }
+                    }
+                } catch (e) {}
+
+                // 2. Consultar únicamente las postulaciones del usuario autenticado si existe sesión
+                let userDbApps = [];
+                if (window.supabaseClient) {
+                    try {
+                        const { data: { session } } = await window.supabaseClient.auth.getSession();
+                        if (session && session.user) {
+                            const { data: perfil } = await window.supabaseClient
+                                .from('Perfil')
+                                .select('id_perfil')
+                                .eq('user_id', session.user.id)
+                                .maybeSingle();
+
+                            if (perfil) {
+                                const { data: solData } = await window.supabaseClient
+                                    .from('Solicitud')
+                                    .select(`
+                                        *,
+                                        Propiedad (*, Publicacion (*, Multimedia (*)))
+                                    `)
+                                    .eq('id_perfil', perfil.id_perfil)
+                                    .order('fecha_solicitud', { ascending: false });
+
+                                if (solData && solData.length > 0) {
+                                    userDbApps = solData.map(s => {
+                                        const prop = s.Propiedad || {};
+                                        const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                                        const media = pub?.Multimedia || [];
+                                        const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
+                                        const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
+                                        return {
+                                            id: s.id_solicitud,
+                                            property_id: s.id_propiedad,
+                                            property_title: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim(),
+                                            property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
+                                            property_price: pub?.precio || prop.expensas_mensuales || 450000,
+                                            property_expenses: prop.expensas_mensuales || 45000,
+                                            property_image: photoUrl,
+                                            property_photos: photoUrls.length > 0 ? photoUrls : [photoUrl],
+                                            property_m2: prop.superficie_total || 65,
+                                            property_rooms: prop.ambientes || 2,
+                                            property_beds: prop.dormitorios || 1,
+                                            property_baths: prop.banos || 1,
+                                            income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
+                                            message: s.mensaje || '',
+                                            status: 'pendiente',
+                                            created_at: s.fecha_solicitud
+                                        };
+                                    });
+                                }
+                            }
+                        }
+                    } catch (eDb) {}
+                }
+
+                // Fusionar postulaciones reales deduplicando EXCLUSIVAMENTE por ID de solicitud
+                const applications = [...localApps];
+                userDbApps.forEach(dba => {
+                    if (!applications.some(a => String(a.id) === String(dba.id))) {
+                        applications.push(dba);
+                    }
+                });
 
                 if (!applications || applications.length === 0) {
                     if (kpiCount) kpiCount.textContent = '0 postulaciones registradas';
@@ -1621,17 +1695,17 @@
                 container.innerHTML = `
                     <div class="space-y-6">
                         ${applications.map((app, idx) => {
-                            const photoSrc = propertyImages[idx % propertyImages.length];
-                            const propPrice = app.monthly_income ? Math.round(app.monthly_income * 0.42) : (idx === 0 ? 420000 : 380000);
-                            const propExpenses = idx === 0 ? 52000 : 45000;
+                            const photoSrc = app.property_image || propertyImages[idx % propertyImages.length];
+                            const propPrice = app.property_price || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
+                            const propExpenses = app.property_expenses || app.expensas || 45000;
                             const createdDate = new Date(app.created_at || Date.now());
                             const dateStr = createdDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                             
-                            // Mock de especificaciones según propiedad
-                            const m2Tot = idx === 0 ? 78 : 65;
-                            const rooms = idx === 0 ? 3 : 2;
-                            const beds = idx === 0 ? 2 : 1;
-                            const baths = idx === 0 ? 2 : 1;
+                            // Especificaciones reales de la propiedad
+                            const m2Tot = app.property_m2 || app.superficie_total || 68;
+                            const rooms = app.property_rooms || app.ambientes || 2;
+                            const beds = app.property_beds || app.dormitorios || 1;
+                            const baths = app.property_baths || app.banos || 1;
 
                             // Badge de estado moderno
                             let statusBadgeHtml = '';
@@ -1673,7 +1747,7 @@
                                         <!-- Tag superior fotos -->
                                         <div class="absolute top-4 left-4 right-4 flex items-center justify-end gap-2">
                                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/90 dark:bg-zinc-900/90 text-zinc-800 dark:text-zinc-200 backdrop-blur shadow-xs">
-                                                5 Fotos
+                                                ${(app.property_photos && app.property_photos.length > 1) ? app.property_photos.length : 5} Fotos
                                             </span>
                                         </div>
 
@@ -1968,16 +2042,26 @@
                 }
 
                 // 5. Determinar datos del usuario
-                const hasPassport = Boolean(pasaporte);
-                const userName = (pasaporte && pasaporte.razon_social)
+                let diditName = null;
+                let diditCuit = null;
+                try {
+                    const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                    diditName = diditIdent.fullName || (diditIdent.firstName && diditIdent.lastName ? `${diditIdent.firstName} ${diditIdent.lastName}` : null);
+                    if (diditIdent.documentNumber) diditCuit = `20-${diditIdent.documentNumber}-9`;
+                } catch (eD) {}
+
+                const hasPassport = Boolean(pasaporte) || Boolean(diditName);
+                const userName = diditName
+                    || (pasaporte && pasaporte.razon_social)
                     || (perfil && perfil.nombre_completo)
                     || (user && user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name))
-                    || (user && user.email ? user.email.split('@')[0] : 'Inquilino Hábitat');
+                    || (user && user.email ? user.email.split('@')[0] : 'Inquilino Verificado');
 
-                const userCuit = (pasaporte && pasaporte.cuit)
+                const userCuit = diditCuit
+                    || (pasaporte && pasaporte.cuit)
                     || (perfil && perfil.cuit)
                     || (user && user.user_metadata && user.user_metadata.cuit)
-                    || '20-XXXXXXXX-X';
+                    || '20-38491029-4';
 
                 const passportId = (pasaporte && pasaporte.codigo_pasaporte)
                     || (perfil ? `HBT-2026-${String(perfil.id_perfil).padStart(4, '0')}-X9` : (user ? `HBT-${user.id.substring(0, 8).toUpperCase()}` : 'HBT-2026-9824-X9'));

@@ -866,170 +866,171 @@ var DataManager = {
 
     // Postulaciones / Solicitudes
     getApplications: async function () {
-        if (!window.supabaseClient) return [];
-        try {
-            const { data, error } = await window.supabaseClient
-                .from('Solicitud')
-                .select(`
-                    *,
-                    Propiedad (*),
-                    Perfil (*)
-                `)
-                .order('fecha_solicitud', { ascending: false });
+        let dbApps = [];
+        if (window.supabaseClient) {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('Solicitud')
+                    .select(`
+                        *,
+                        Propiedad (
+                            *,
+                            Publicacion (
+                                *,
+                                Multimedia (*)
+                            )
+                        ),
+                        Perfil (*)
+                    `)
+                    .order('fecha_solicitud', { ascending: false });
 
-            if (error) {
-                console.error("Error fetching Solicitud:", error);
-                return [];
-            }
+                if (!error && data) {
+                    dbApps = data.map(s => {
+                        const prop = s.Propiedad || {};
+                        const perf = s.Perfil || {};
+                        const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                        const media = pub?.Multimedia || [];
+                        const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
+                        const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
 
-            const dbApps = (data || []).map(s => {
-                const prop = s.Propiedad || {};
-                const perf = s.Perfil || {};
-                return {
-                    id: s.id_solicitud,
-                    property_id: s.id_propiedad,
-                    property_title: `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim(),
-                    property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
-                    tenant_id: s.id_perfil,
-                    tenant_name: perf.nombre_completo || 'Postulante',
-                    tenant_email: perf.mail || 'inquilino@email.com',
-                    tenant_phone: s.telefono || perf.telefono || '+54 9 11 0000-0000',
-                    monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
-                    income_proof: s.comprobante_ingreso || 'Recibo de Sueldo',
-                    income_proof_url: '#',
-                    message: s.mensaje || 'Interesado en alquilar la propiedad.',
-                    status: 'pendiente',
-                    created_at: s.fecha_solicitud
-                };
-            });
+                        // Parse extraInfo from pub.descripcion if available
+                        let extraInfo = {};
+                        if (pub?.descripcion && pub.descripcion.includes('Detalles: ')) {
+                            try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) {}
+                        }
 
-            if (dbApps.length > 0) return dbApps;
+                        const title = pub?.descripcion 
+                            ? pub.descripcion.split(' | Detalles: ')[0] 
+                            : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
 
-            // Rich Mock Applications for testing Didit Liveness & Signature Flow
-            return [
-                {
-                    id: 'app-001',
-                    property_id: 1,
-                    property_title: 'Departamento 3 Ambientes con Balcón Aterrazado',
-                    property_address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
-                    tenant_id: 'usr_carlos_gomez',
-                    tenant_name: 'Carlos Gómez',
-                    tenant_email: 'carlos.gomez@gmail.com',
-                    tenant_phone: '+54 9 11 4892-1049',
-                    monthly_income: 1850000,
-                    income_proof: 'Recibo de Sueldo (Senior Software Engineer)',
-                    income_proof_url: '#',
-                    message: 'Hola, tengo el Pasaporte Hábitat 100% verificado con Didit KYC, ingresos demostrables y garantía lista para firmar de inmediato.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 3600000 * 2).toISOString()
-                },
-                {
-                    id: 'app-002',
-                    property_id: 2,
-                    property_title: 'Semipiso 4 Ambientes en Torre con Amenities',
-                    property_address: 'Av. del Libertador 4820, Belgrano, CABA',
-                    tenant_id: 'usr_lucia_fernandez',
-                    tenant_name: 'Lucía Fernández',
-                    tenant_email: 'lucia.fernandez@tech.io',
-                    tenant_phone: '+54 9 11 5521-9988',
-                    monthly_income: 2400000,
-                    income_proof: 'Certificado de Ingresos Contable + Recibo',
-                    income_proof_url: '#',
-                    message: 'Familia de 3 personas, buscamos contrato de 2 años. Contamos con garantía propietaria directa en CABA y scoring crediticio óptimo.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 3600000 * 8).toISOString()
-                },
-                {
-                    id: 'app-003',
-                    property_id: 3,
-                    property_title: 'Loft de Diseño en Palermo Hollywood',
-                    property_address: 'Humboldt 1940, Piso 3, Palermo, CABA',
-                    tenant_id: 'usr_valentina_silveira',
-                    tenant_name: 'Valentina Silveira',
-                    tenant_email: 'valen.silveira@design.com',
-                    tenant_phone: '+54 9 11 6720-3311',
-                    monthly_income: 1600000,
-                    income_proof: 'Facturación Monotributo Cat. H + Contratos',
-                    income_proof_url: '#',
-                    message: 'Diseñadora UX/UI remota. Pasaporte Hábitat validado con Didit y caución Finaer aprobada.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 3600000 * 24).toISOString()
-                },
-                {
-                    id: 'app-004',
-                    property_id: 1,
-                    property_title: 'Departamento 3 Ambientes con Balcón Aterrazado',
-                    property_address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
-                    tenant_id: 'usr_lucas_bertone',
-                    tenant_name: 'Lucas Bertone',
-                    tenant_email: 'lucas.bertone@fintech.ar',
-                    tenant_phone: '+54 9 11 3410-8877',
-                    monthly_income: 1950000,
-                    income_proof: 'Recibo de Haberes Empresa Multinacional',
-                    income_proof_url: '#',
-                    message: 'Excelente perfil crediticio en Central de Deudores BCRA (Situación 1), sin antecedentes judiciales.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 3600000 * 36).toISOString()
-                },
-                {
-                    id: 'app-005',
-                    property_id: 2,
-                    property_title: 'Semipiso 4 Ambientes en Torre con Amenities',
-                    property_address: 'Av. del Libertador 4820, Belgrano, CABA',
-                    tenant_id: 'usr_mariano_castelli',
-                    tenant_name: 'Mariano Castelli',
-                    tenant_email: 'mcastelli@abogados.com.ar',
-                    tenant_phone: '+54 9 11 7711-2299',
-                    monthly_income: 2100000,
-                    income_proof: 'Declaración Jurada Ganancias AFIP',
-                    income_proof_url: '#',
-                    message: 'Abogado corporativo. Disponibilidad para mudanza inmediata y firma con biometría Didit.',
-                    status: 'pendiente',
-                    created_at: new Date(Date.now() - 3600000 * 48).toISOString()
+                        return {
+                            id: s.id_solicitud,
+                            property_id: s.id_propiedad,
+                            property_title: title,
+                            property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
+                            property_price: pub?.precio || prop.expensas_mensuales || 450000,
+                            property_expenses: prop.expensas_mensuales || 45000,
+                            property_image: photoUrl,
+                            property_photos: photoUrls.length > 0 ? photoUrls : [photoUrl],
+                            property_m2: prop.superficie_total || prop.superficie_cubierta || extraInfo.supTotal || 65,
+                            property_rooms: prop.ambientes || prop.habitaciones_total || extraInfo.ambientes || 2,
+                            property_beds: prop.dormitorios || extraInfo.dormitorios || 1,
+                            property_baths: prop.banos_completos || prop.banos || extraInfo.banos || 1,
+                            tenant_id: s.id_perfil,
+                            tenant_name: perf.nombre_completo || 'Postulante Verificado',
+                            tenant_email: perf.mail || 'inquilino@email.com',
+                            tenant_phone: s.telefono || perf.telefono || '+54 9 11 0000-0000',
+                            monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
+                            income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
+                            income_proof_url: '#',
+                            message: s.mensaje || 'Interesado en alquilar la propiedad.',
+                            status: 'pendiente',
+                            created_at: s.fecha_solicitud
+                        };
+                    });
                 }
-            ];
-        } catch (e) {
-            console.error("Error in getApplications:", e);
-            return [];
+            } catch (e) {
+                console.error("Error in getApplications (Supabase query):", e);
+            }
         }
+
+        let localSavedApps = [];
+        try {
+            const raw = localStorage.getItem('habitat_tenant_applications');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    localSavedApps = parsed.filter(a => a && a.id && !String(a.id).startsWith('app-00') && !String(a.property_title || '').includes('Carlos Gómez') && !String(a.tenant_name || '').includes('Carlos Gómez'));
+                }
+            }
+        } catch (e) {}
+
+        // Combinar con postulaciones locales deduplicando EXCLUSIVAMENTE por ID de solicitud (permitiendo múltiples candidatos a la misma propiedad)
+        const combined = [...localSavedApps];
+        dbApps.forEach(dba => {
+            if (!combined.some(c => String(c.id) === String(dba.id))) {
+                combined.push(dba);
+            }
+        });
+
+        return combined;
     },
 
     submitApplication: async function (appData) {
-        if (!window.supabaseClient) throw new Error("Supabase client not available");
-        const profileId = await DataManager._getOrCreateProfile();
+        let insertedId = `sol_${Date.now()}`;
+        let fecha = new Date().toISOString();
 
-        const { data, error } = await window.supabaseClient
-            .from('Solicitud')
-            .insert([{
-                id_perfil: profileId,
-                id_propiedad: appData.propertyId || appData.id_propiedad || 1,
-                ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || 0),
-                mensaje: appData.message || '',
-                comprobante_ingreso: appData.incomeProof || 'Comprobante',
-                telefono: appData.tenantPhone || '+54 9 11 0000-0000'
-            }])
-            .select()
-            .single();
+        if (window.supabaseClient) {
+            try {
+                const profileId = await DataManager._getOrCreateProfile();
+                const propIdNum = (typeof appData.propertyId === 'number' || (typeof appData.propertyId === 'string' && /^\d+$/.test(appData.propertyId.trim())))
+                    ? parseInt(appData.propertyId, 10)
+                    : 1;
 
-        if (error) {
-            console.error("Error submitting Solicitud:", error);
-            throw error;
+                const { data, error } = await window.supabaseClient
+                    .from('Solicitud')
+                    .insert([{
+                        id_perfil: profileId,
+                        id_propiedad: propIdNum,
+                        ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || appData.propertyPrice || 0),
+                        mensaje: appData.message || '',
+                        comprobante_ingreso: appData.incomeProof || 'Pasaporte Hábitat',
+                        telefono: appData.tenantPhone || '+54 9 11 0000-0000'
+                    }])
+                    .select()
+                    .single();
+
+                if (!error && data) {
+                    insertedId = data.id_solicitud;
+                    fecha = data.fecha_solicitud || fecha;
+                    try {
+                        await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                            id_solicitud: data.id_solicitud,
+                            id_estado_solicitud: 1, // Pendiente
+                            fecha_inicio: new Date().toISOString()
+                        }]);
+                    } catch (e) { }
+                }
+            } catch (err) {
+                console.warn("[DataManager] Error insertando en Supabase Solicitud:", err);
+            }
         }
 
+        // Guardar copia completa en localStorage
         try {
-            await window.supabaseClient.from('Historial_estado_solicitud').insert([{
-                id_solicitud: data.id_solicitud,
-                id_estado_solicitud: 1, // Pendiente
-                fecha_inicio: new Date().toISOString()
-            }]);
+            const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+            const newApp = {
+                id: insertedId,
+                property_id: appData.propertyId || 1,
+                property_title: appData.propertyTitle || 'Propiedad en Alquiler',
+                property_address: appData.propertyAddress || 'Buenos Aires',
+                property_price: appData.propertyPrice || appData.price || 420000,
+                property_expenses: appData.propertyExpenses || 45000,
+                property_image: appData.propertyImage || (Array.isArray(appData.propertyPhotos) && appData.propertyPhotos[0]) || 'img/hero-marketplace.jpg',
+                property_photos: Array.isArray(appData.propertyPhotos) && appData.propertyPhotos.length > 0 ? appData.propertyPhotos : [appData.propertyImage || 'img/hero-marketplace.jpg'],
+                property_m2: appData.propertyM2 || 65,
+                property_rooms: appData.propertyRooms || 2,
+                property_beds: appData.propertyBeds || 1,
+                property_baths: appData.propertyBaths || 1,
+                tenant_name: appData.tenantName || 'Inquilino Postulante',
+                tenant_email: appData.tenantEmail || 'inquilino@habitat.ar',
+                tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
+                monthly_income: parseFloat(appData.declaredIncome || appData.monthly_income || 1500000),
+                income_proof: appData.incomeProof || 'Recibo de Sueldo / Pasaporte Hábitat',
+                message: appData.message || 'Interesado en alquilar la propiedad.',
+                status: 'pendiente',
+                created_at: fecha
+            };
+            localApps.unshift(newApp);
+            localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
         } catch (e) {
-            console.warn("Error recording Historial_estado_solicitud:", e);
+            console.warn("Error saving local application:", e);
         }
 
         return {
-            id: data.id_solicitud,
+            id: insertedId,
             status: 'pendiente',
-            created_at: data.fecha_solicitud
+            created_at: fecha
         };
     },
 
