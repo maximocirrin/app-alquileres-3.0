@@ -1,6 +1,15 @@
 /**
  * Contract Signature Initiation Service
  */
+function isConfiguredWorkflowId(wfId) {
+  if (!wfId || typeof wfId !== 'string') return false;
+  const clean = wfId.trim();
+  if (!clean || clean.startsWith('TU_WORKFLOW') || clean.includes('TU_WORKFLOW') || clean === 'YOUR_WORKFLOW_ID') {
+    return false;
+  }
+  return clean.length >= 6;
+}
+
 export default async function startSignatureHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -24,15 +33,15 @@ export default async function startSignatureHandler(req, res) {
     }
 
     const diditApiKey = (process.env.DIDIT_API_KEY || '').trim();
-    const diditWorkflowId = (process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const diditSignatureWorkflowId = (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || process.env.DIDIT_WORKFLOW_ID || '').trim();
 
-    let diditSessionUrl = `#mock-didit-session-${contractId}`;
+    let diditSessionUrl = `#mock-didit-liveness-session-${contractId}`;
     let sessionId = `sess_${contractId}_${role}_${Date.now()}`;
     let isMock = true;
 
-    if (diditApiKey && diditWorkflowId && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT') {
+    if (diditApiKey && isConfiguredWorkflowId(diditSignatureWorkflowId)) {
       try {
-        const diditRes = await fetch('https://verification.didit.me/v3/session/', {
+        let diditRes = await fetch('https://verification.didit.me/v3/session/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -40,10 +49,25 @@ export default async function startSignatureHandler(req, res) {
             'Authorization': `Bearer ${diditApiKey}`
           },
           body: JSON.stringify({
-            workflow_id: diditWorkflowId,
+            workflow_id: diditSignatureWorkflowId,
             vendor_data: `${contractId}_${role}_${signerCuil}`
           })
         });
+
+        if (diditRes.status === 404) {
+          diditRes = await fetch('https://api.didit.me/v1/session/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': diditApiKey,
+              'Authorization': `Bearer ${diditApiKey}`
+            },
+            body: JSON.stringify({
+              workflow_id: diditSignatureWorkflowId,
+              vendor_data: `${contractId}_${role}_${signerCuil}`
+            })
+          });
+        }
 
         if (diditRes.ok) {
           const diditData = await diditRes.json();
@@ -62,6 +86,7 @@ export default async function startSignatureHandler(req, res) {
       sessionId,
       verificationUrl: diditSessionUrl,
       isMock,
+      workflowType: 'liveness_biometrics',
       contractStatus: role === 'TENANT' ? 'WAITING_TENANT' : 'WAITING_OWNER',
       capturedMetadata: {
         timestamp: new Date().toISOString(),

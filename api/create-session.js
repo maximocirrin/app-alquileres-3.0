@@ -1,19 +1,32 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 /**
  * Vercel Serverless Function: /api/create-session
  * 
- * Inicia una sesión de verificación de identidad (KYC) en Didit.
+ * Inicia una sesión de verificación de identidad (KYC / Liveness Biometrics) en Didit.
  * 
  * Requisitos de entorno (Vercel / .env):
  * - DIDIT_API_KEY: Clave API de Didit
- * - DIDIT_WORKFLOW_ID: ID del flujo de trabajo configurado en el Dashboard de Didit
+ * - DIDIT_WORKFLOW_ID_SIGNATURE / DIDIT_SIGNATURE_WORKFLOW_ID: ID del flujo de Solo Biometría (Liveness Check)
+ * - DIDIT_WORKFLOW_ID: ID del flujo de Pasaporte / Onboarding (DNI + Biometría)
  * - DIDIT_CALLBACK_URL (Opcional): URL a la que Didit redirigirá al usuario tras finalizar
  */
+
+function isConfiguredWorkflowId(wfId) {
+  if (!wfId || typeof wfId !== 'string') return false;
+  const clean = wfId.trim();
+  if (!clean || clean.startsWith('TU_WORKFLOW') || clean.includes('TU_WORKFLOW') || clean === 'YOUR_WORKFLOW_ID') {
+    return false;
+  }
+  return clean.length >= 6;
+}
 
 export default async function handler(req, res) {
   // Manejar CORS y Preflight OPTIONS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Didit-Signature');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -30,52 +43,56 @@ export default async function handler(req, res) {
   try {
     // 2. Extraer parámetros del body
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { userId, callbackUrl, workflowId } = body;
+    const { userId, callbackUrl, workflowId, isLivenessOnly, flow } = body;
 
     if (!userId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'El parámetro "userId" es requerido para vincular la sesión de KYC.'
+        message: 'El parámetro "userId" es requerido para vincular la sesión de Didit.'
       });
     }
+
+    const isSignatureFlow = isLivenessOnly || flow === 'signature' || flow === 'contract_signature';
 
     // 3. Obtener credenciales de variables de entorno
     const apiKey = (process.env.DIDIT_API_KEY || '').trim();
-    const activeWorkflowId = (workflowId || (body.isLivenessOnly ? process.env.DIDIT_WORKFLOW_ID_SIGNATURE : null) || process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const signatureWf = (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || '').trim();
+    const defaultPassportWf = (process.env.DIDIT_WORKFLOW_ID || '').trim();
+
+    // Seleccionar workflow apropiado según si es firma biométrica o pasaporte completo
+    let activeWorkflowId = (workflowId || (isSignatureFlow ? (signatureWf || defaultPassportWf) : defaultPassportWf) || signatureWf || '').trim();
     const defaultCallbackUrl = (callbackUrl || process.env.DIDIT_CALLBACK_URL || '').trim();
 
-    if (!apiKey) {
-      console.error('[Didit API Error] DIDIT_API_KEY no está configurada en Vercel.');
-      return res.status(500).json({
-        error: 'Internal Server Error',
-        message: 'Falta la configuración de DIDIT_API_KEY en las variables de entorno de Vercel.'
-      });
-    }
+    const isApiKeyConfigured = Boolean(apiKey && !apiKey.startsWith('TU_API_KEY') && apiKey.length > 10);
+    const isWfConfigured = isConfiguredWorkflowId(activeWorkflowId);
 
-    if (!activeWorkflowId || activeWorkflowId === 'TU_WORKFLOW_ID_DE_DIDIT') {
-      console.error('[Didit API Error] DIDIT_WORKFLOW_ID no configurado o tiene valor por defecto.');
+    if (!isApiKeyConfigured || !isWfConfigured) {
+      console.warn(`[Didit Create-Session] Configuración incompleta. ApiKey: ${isApiKeyConfigured}, WorkflowId: "${activeWorkflowId}"`);
       return res.status(400).json({
-        error: 'Configuration Error',
-        message: 'Debes configurar tu Workflow ID obtenido del Dashboard de Didit en las variables de entorno de Vercel.'
+        error: 'Didit Configuration Incomplete',
+        message: `No se encontró un Workflow ID válido configurado en DIDIT_WORKFLOW_ID_SIGNATURE (${activeWorkflowId || 'Vacío'}).`
       });
     }
 
-    // 4. Preparar payload para Didit API
+    // 4. Preparar payload para Didit API (Estricto según Didit v3)
+    const vendorData = typeof userId === 'object' ? JSON.stringify(userId) : String(userId);
     const payload = {
       workflow_id: activeWorkflowId,
-      vendor_data: String(userId),
+      vendor_data: vendorData,
     };
 
-    if (defaultCallbackUrl && defaultCallbackUrl.startsWith('http')) {
-      payload.callback_url = defaultCallbackUrl;
-      payload.redirect_url = defaultCallbackUrl;
-      payload.return_url = defaultCallbackUrl;
+    if (body.portraitImage || body.portrait_image) {
+      payload.portrait_image = body.portraitImage || body.portrait_image;
+    }
+
+    // Solo incluir callback si es una URL válida y no es placeholder
+    if (defaultCallbackUrl && defaultCallbackUrl.startsWith('http') && !defaultCallbackUrl.includes('tu-dominio.vercel.app')) {
       payload.callback = defaultCallbackUrl;
     }
 
-    console.log('[Didit API Request Payload]:', JSON.stringify(payload));
+    console.log('[Didit API Request Payload]:', JSON.stringify({ ...payload, isSignatureFlow }));
 
-    // 5. Llamada HTTP POST a Didit API (Probando v3 primero, con fallback a v1)
+    // 5. Llamada HTTP POST a Didit API (v3)
     let response = await fetch('https://verification.didit.me/v3/session/', {
       method: 'POST',
       headers: {
@@ -86,7 +103,24 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload)
     });
 
-    // Fallback a v1 si v3 responde 404
+    // Si falló por callback o estructura en v3, reintentar con payload mínimo (workflow_id + vendor_data)
+    if (!response.ok && payload.callback) {
+      console.log('[Didit API] Reintentando sesión Didit v3 con payload mínimo...');
+      response = await fetch('https://verification.didit.me/v3/session/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          workflow_id: activeWorkflowId,
+          vendor_data: vendorData
+        })
+      });
+    }
+
+    // Fallback a v1 si responde 404
     if (response.status === 404) {
       console.log('[Didit API] Fallback a endpoint v1...');
       response = await fetch('https://api.didit.me/v1/session/', {
@@ -100,10 +134,26 @@ export default async function handler(req, res) {
       });
     }
 
-    const data = await response.json();
+    let data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      console.error('[Didit API Error Details]:', data);
+    // Si Didit indica que no hay rostro previo guardado (ej: Propietario o Corredor nuevo que nunca hizo KYC),
+    // hacer fallback automático al Workflow de Verificación Inicial (DNI + Biometría)
+    if (!response.ok && (JSON.stringify(data).includes('portrait_image') || JSON.stringify(data).includes('No stored face')) && defaultPassportWf && isConfiguredWorkflowId(defaultPassportWf) && activeWorkflowId !== defaultPassportWf) {
+      console.log(`[Didit API] Firmante sin verificación previa registrada. Redirigiendo automáticamente a Workflow de Onboarding Inicial (${defaultPassportWf})...`);
+      response = await fetch('https://verification.didit.me/v3/session/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          workflow_id: defaultPassportWf,
+          vendor_data: vendorData
+        })
+      });
+      data = await response.json().catch(() => ({}));
+    }
       const detailStr = typeof data === 'object' 
         ? (data.message || data.detail || data.error || JSON.stringify(data)) 
         : String(data);
@@ -115,7 +165,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 6. Extraer la URL de la sesión de Didit (url, session_url, etc.)
+    // 6. Extraer la URL de la sesión de Didit
     const sessionUrl = data.url || data.session_url || data.verification_url;
 
     if (!sessionUrl) {
@@ -130,10 +180,9 @@ export default async function handler(req, res) {
       success: true,
       url: sessionUrl,
       sessionId: data.session_id || data.id,
+      workflowType: isSignatureFlow ? 'liveness_biometrics' : 'passport_full',
       diditResponse: data
     });
-
-
 
   } catch (error) {
     console.error('[Serverless Exception] /api/create-session:', error);

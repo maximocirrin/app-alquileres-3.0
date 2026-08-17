@@ -12,6 +12,18 @@
     {
       "source": "/api/passport/:path*",
       "destination": "/api/passport?path=:path*"
+    },
+    {
+      "source": "/contract",
+      "destination": "/contract.html"
+    },
+    {
+      "source": "/contratos",
+      "destination": "/contratos.html"
+    },
+    {
+      "source": "/contrato",
+      "destination": "/contratos.html"
     }
   ]
 }

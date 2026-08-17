@@ -86,7 +86,8 @@ export default async function iniciarHandler(req, res) {
 
     // 4. Integración con Didit (Crear sesión de validación de identidad)
     const diditApiKey = (process.env.DIDIT_API_KEY || '').trim();
-    const diditWorkflowId = (process.env.DIDIT_SIGNATURE_WORKFLOW_ID || process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const diditWorkflowId = (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const isWfValid = diditWorkflowId && !diditWorkflowId.startsWith('TU_WORKFLOW') && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT' && diditWorkflowId.length >= 6;
 
     let diditSessionId = null;
     let diditSessionUrl = null;
@@ -99,7 +100,7 @@ export default async function iniciarHandler(req, res) {
       timestamp: Date.now()
     });
 
-    if (diditApiKey && diditWorkflowId && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT') {
+    if (diditApiKey && isWfValid) {
       try {
         const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
         const protocol = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');

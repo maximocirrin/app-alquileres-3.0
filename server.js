@@ -277,15 +277,16 @@ app.post('/api/contracts/:id/start-signature', async (req, res) => {
     }
 
     const diditApiKey = (process.env.DIDIT_API_KEY || '').trim();
-    const diditWorkflowId = (process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const diditWorkflowId = (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const isWfConfigured = diditWorkflowId && !diditWorkflowId.startsWith('TU_WORKFLOW') && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT' && diditWorkflowId.length >= 6;
 
-    let diditSessionUrl = `#mock-didit-session-${contractId}`;
+    let diditSessionUrl = `#mock-didit-liveness-session-${contractId}`;
     let sessionId = `sess_${contractId}_${role}_${Date.now()}`;
     let isMock = true;
 
-    if (diditApiKey && diditWorkflowId && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT') {
+    if (diditApiKey && isWfConfigured) {
         try {
-            const diditRes = await fetch('https://verification.didit.me/v3/session/', {
+            let diditRes = await fetch('https://verification.didit.me/v3/session/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -297,6 +298,21 @@ app.post('/api/contracts/:id/start-signature', async (req, res) => {
                     vendor_data: `${contractId}_${role}_${signerCuil || 'CUIL'}`
                 })
             });
+
+            if (diditRes.status === 404) {
+                diditRes = await fetch('https://api.didit.me/v1/session/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': diditApiKey,
+                        'Authorization': `Bearer ${diditApiKey}`
+                    },
+                    body: JSON.stringify({
+                        workflow_id: diditWorkflowId,
+                        vendor_data: `${contractId}_${role}_${signerCuil || 'CUIL'}`
+                    })
+                });
+            }
 
             if (diditRes.ok) {
                 const diditData = await diditRes.json();
@@ -315,6 +331,7 @@ app.post('/api/contracts/:id/start-signature', async (req, res) => {
         sessionId,
         verificationUrl: diditSessionUrl,
         isMock,
+        workflowType: 'liveness_biometrics',
         contractStatus: role === 'TENANT' ? 'WAITING_TENANT' : 'WAITING_OWNER',
         capturedMetadata: {
             timestamp: new Date().toISOString(),
@@ -391,6 +408,30 @@ function saveBase64(base64String, prefix) {
     fs.writeFileSync(filePath, buffer);
     return `uploads/${filename}`;
 }
+
+// API Endpoint - Didit KYC Create Session Integration
+app.post('/api/create-session', async (req, res) => {
+    try {
+        const createSessionHandler = (await import('./api/create-session.js')).default;
+        await createSessionHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/create-session:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// API Endpoint - Unified /api/firmas/* (iniciar, sellar, finalizar, webhook)
+app.all(['/api/firmas', '/api/firmas/:action'], async (req, res) => {
+    try {
+        const firmasHandler = (await import('./api/firmas.js')).default;
+        req.query = req.query || {};
+        if (req.params.action) req.query.action = req.params.action;
+        await firmasHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/firmas:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

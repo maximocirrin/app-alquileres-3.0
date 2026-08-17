@@ -2495,29 +2495,35 @@ const App = {
         if (formPlanes) {
             formPlanes.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                console.log('¡Iniciando publicación en Supabase!');
 
-                // Mostrar estado de carga (opcional, podrías añadir un spinner)
-                const submitBtnDesk = document.querySelector('#publish-property-view button[form="form-planes"], #publish-property-view nav button[type="submit"]');
-                const submitBtnMob = null;
-                const originalTextDesk = submitBtnDesk ? submitBtnDesk.textContent : '';
+                const contactEmail = (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
+                                     (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
+                                     'propietario@habitat.ar';
 
-                if (submitBtnDesk) submitBtnDesk.textContent = 'Publicando...';
-                if (submitBtnMob) submitBtnMob.textContent = 'Publicando...';
-                if (submitBtnDesk) submitBtnDesk.disabled = true;
-                if (submitBtnMob) submitBtnMob.disabled = true;
+                const executePublish = async (isVerified = false) => {
+                    console.log('¡Iniciando publicación en Supabase! Verificado:', isVerified);
 
-                // Create overlay dynamically for loader and success
-                const isDark = document.documentElement.classList.contains('dark');
-                const overlay = document.createElement('div');
-                overlay.id = 'dynamic-publish-overlay';
-                overlay.style.cssText = `
-                    position: fixed; inset: 0; z-index: 999999;
-                    display: flex; flex-direction: column; align-items: center; justify-content: center;
-                    background: ${isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)'};
-                    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-                    opacity: 0; transition: opacity 0.4s ease;
-                `;
+                    // Mostrar estado de carga
+                    const submitBtnDesk = document.querySelector('#publish-property-view button[form="form-planes"], #publish-property-view nav button[type="submit"]');
+                    const submitBtnMob = null;
+                    const originalTextDesk = submitBtnDesk ? submitBtnDesk.textContent : '';
+
+                    if (submitBtnDesk) submitBtnDesk.textContent = 'Publicando...';
+                    if (submitBtnMob) submitBtnMob.textContent = 'Publicando...';
+                    if (submitBtnDesk) submitBtnDesk.disabled = true;
+                    if (submitBtnMob) submitBtnMob.disabled = true;
+
+                    // Create overlay dynamically for loader and success
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const overlay = document.createElement('div');
+                    overlay.id = 'dynamic-publish-overlay';
+                    overlay.style.cssText = `
+                        position: fixed; inset: 0; z-index: 999999;
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        background: ${isDark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)'};
+                        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                        opacity: 0; transition: opacity 0.4s ease;
+                    `;
 
                 overlay.innerHTML = `
                     <div style="height: 60px; width: 220px; margin-bottom: 2rem; background-color: #811b1e; -webkit-mask: url('img/logo-habitat-web.svg') no-repeat center / contain; mask: url('img/logo-habitat-web.svg') no-repeat center / contain;"></div>
@@ -2713,7 +2719,8 @@ const App = {
                         planPublicacion: 'gratis', // Default plan
 
                         // Multimedia
-                        photos: window.selectedPropertyPhotos || []
+                        photos: window.selectedPropertyPhotos || [],
+                        isVerifiedOwner: Boolean(isVerified || window.HabitatOwnerVerification?.isOwnerVerified(getVal('contact-email')))
                     };
 
                     // Guardar en Supabase
@@ -2744,13 +2751,13 @@ const App = {
                             color: ${isDark ? '#f1f1f1' : '#1a1a1a'}; margin-top: 1.5rem;
                             opacity: 0; transform: translateY(10px);
                             animation: successFadeUp 0.5s ease 1s forwards;">
-                            ¡Propiedad publicada!
+                            ${isVerified ? '¡Propiedad publicada con Insignia Verificada!' : '¡Propiedad publicada!'}
                         </p>
                         <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem;
                             color: ${isDark ? '#999' : '#666'}; margin-top: 0.5rem;
                             opacity: 0; transform: translateY(10px);
                             animation: successFadeUp 0.5s ease 1.15s forwards;">
-                            Tu aviso ya está disponible en el marketplace
+                            ${isVerified ? 'Tu aviso ya luce el sello oficial de Propietario Verificado Didit en el marketplace.' : 'Tu aviso ya está disponible en el marketplace'}
                         </p>
                     `;
 
@@ -2805,8 +2812,20 @@ const App = {
                     if (submitBtnDesk) submitBtnDesk.disabled = false;
                     if (submitBtnMob) submitBtnMob.disabled = false;
                 }
-            });
-        }
+            };
+
+            if (window.HabitatOwnerVerification && typeof window.HabitatOwnerVerification.promptVerificationBeforePublish === 'function') {
+                window.HabitatOwnerVerification.promptVerificationBeforePublish({
+                    email: contactEmail,
+                    onProceed: (isVerified) => {
+                        executePublish(isVerified);
+                    }
+                });
+            } else {
+                executePublish(false);
+            }
+        });
+    }
 
         // Provincia -> Ciudad dependent dropdown
         const selectProvincia = document.getElementById('provincia');
