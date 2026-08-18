@@ -1,10 +1,32 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme');
+                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.backgroundColor = '#09090b';
+                    document.documentElement.style.colorScheme = 'dark';
+                } else {
+                    document.documentElement.style.backgroundColor = '#ffffff';
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            } catch (e) {}
+        })();
+    </script>
     <title>C&oacute;mo funciona | H&aacute;bitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -475,10 +497,10 @@
     <section id="how-it-works-view"
         class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] min-h-screen">
         <!-- TopNavBar Component -->
-        <script src="js/navbar.js"></script>
+        <script src="js/navbar.js?v=4"></script>
         <div class="scroll-progress" aria-hidden="true"><span id="how-scroll-progress"></span></div>
 
-        <main class="pt-16 md:pt-20">
+        <main class="pt-16 lg:pt-20">
             <section class="how-hero relative min-h-[560px] lg:min-h-[640px] overflow-hidden flex items-end">
                 <img src="img/pareja-viendo-celular.jpg" alt="Personas revisando una reserva de alquiler"
                     class="how-hero__image absolute inset-0 h-full w-full object-cover brightness-[0.72]">

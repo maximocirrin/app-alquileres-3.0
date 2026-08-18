@@ -1,9 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme');
+                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.backgroundColor = '#09090b';
+                    document.documentElement.style.colorScheme = 'dark';
+                } else {
+                    document.documentElement.style.backgroundColor = '#ffffff';
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            } catch (e) {}
+        })();
+    </script>
     <title>Acceso | Hábitat Alquileres</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -457,7 +479,7 @@
 
         <!-- Centro: Logo principal de Hábitat -->
         <a href="index.html" class="flex items-center gap-1.5 lg:gap-2 group">
-            <img src="img/logo-lite.png" alt="Hábitat Logo" class="h-8 sm:h-10 lg:h-11 w-auto object-contain transition-all">
+            <img src="img/logo-lite.png" alt="Hábitat Logo" class="h-12 sm:h-14 md:h-[58px] lg:h-[68px] w-auto object-contain transition-all">
         </a>
 
         <!-- Derecha: Botón Volver al inicio -->

@@ -1,7 +1,32 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const syncThemeMeta = (isDark) => {
+        document.documentElement.classList.toggle('dark', isDark);
+        if (isDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.backgroundColor = '#09090b';
+            document.documentElement.style.colorScheme = 'dark';
+            if (document.body) document.body.style.backgroundColor = '#09090b';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            document.documentElement.style.backgroundColor = '#ffffff';
+            document.documentElement.style.colorScheme = 'light';
+            if (document.body) document.body.style.backgroundColor = '#ffffff';
+        }
+        let themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+        if (themeMetas.length === 0) {
+            const m = document.createElement('meta');
+            m.name = 'theme-color';
+            m.content = isDark ? '#09090b' : '#ffffff';
+            document.head.appendChild(m);
+        } else {
+            themeMetas.forEach(m => {
+                m.content = isDark ? '#09090b' : '#ffffff';
+            });
+        }
+    };
+
     const theme = localStorage.getItem('theme') || 'light';
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    syncThemeMeta(theme === 'dark');
 
     // Theme Switcher Sync
     const themeCheckbox = document.querySelector('.theme-switch__checkbox');
@@ -9,14 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         themeCheckbox.checked = theme === 'dark';
         themeCheckbox.addEventListener('change', () => {
             const isDark = themeCheckbox.checked;
-            document.documentElement.classList.toggle('dark', isDark);
-            if (isDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
-            }
+            syncThemeMeta(isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
     }
 
