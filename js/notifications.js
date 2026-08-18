@@ -1,13 +1,14 @@
 /**
- * Habitat - Sistema Central de Notificaciones In-App
- * Gestiona alertas en tiempo real, notificaciones de aceptación de postulaciones,
- * recordatorios de firma de contratos biométricos y avisos del propietario/inquilino.
+ * Habitat - Sistema Central de Notificaciones In-App en Tiempo Real
+ * Gestiona alertas instantáneas en vivo mediante Supabase Realtime (WebSockets),
+ * BroadcastChannel (cross-tab) y sincronización reactiva de eventos de almacenamiento.
  */
 
 (function () {
     'use strict';
 
     const NOTIF_STORAGE_KEY = 'habitat_in_app_notifications';
+    const BROADCAST_CHANNEL_NAME = 'habitat_notifications_realtime_channel';
 
     const DEFAULT_NOTIFICATIONS = [
         {
@@ -23,7 +24,50 @@
         }
     ];
 
+    // BroadcastChannel cross-tab/cross-window
+    let broadcastChannel = null;
+    try {
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            broadcastChannel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+        }
+    } catch (e) {
+        console.warn('[BroadcastChannel Error]:', e);
+    }
+
+    // Reproducir un sonido de notificación sutil y moderno usando Web Audio API
+    function playNotificationChime() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+            osc.frequency.exponentialRampToValueAtTime(880.00, ctx.currentTime + 0.12); // A5
+
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start();
+            osc.stop(ctx.currentTime + 0.36);
+        } catch (e) {
+            // Audio no permitido por directiva de autoplay
+        }
+    }
+
     const NotificationManager = {
+        _realtimeInitialized: false,
+        _processedNotifIds: new Set(),
+
         getAll: function () {
             try {
                 const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
@@ -40,6 +84,7 @@
                 localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(list));
             } catch (e) { }
             this.updateBadge();
+            this.renderDropdown();
         },
 
         getByRole: function (role) {
@@ -72,7 +117,7 @@
             }
 
             const newNotif = {
-                id: 'notif_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                id: 'notif_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
                 title,
                 message,
                 type,
@@ -83,15 +128,123 @@
                 createdAt: new Date().toISOString()
             };
 
-            // Evitar duplicados idénticos recientes
+            // Evitar duplicados idénticos recientes (últimos 15 segundos)
             const existingDuplicate = list.find(n => n.title === title && (!n.read || (Date.now() - new Date(n.createdAt).getTime()) < 15000));
             if (!existingDuplicate) {
                 list.unshift(newNotif);
                 this.saveAll(list);
                 this.showToast(newNotif);
+                playNotificationChime();
+                this._processedNotifIds.add(newNotif.id);
+
+                // 1. Enviar vía BroadcastChannel para todas las pestañas abiertas localmente
+                if (broadcastChannel) {
+                    try {
+                        broadcastChannel.postMessage({
+                            type: 'HABITAT_REALTIME_NOTIF',
+                            notification: newNotif
+                        });
+                    } catch (e) { }
+                }
+
+                // 2. Transmitir vía Supabase Realtime WebSockets para clientes en otros dispositivos/sesiones
+                this.broadcastSupabaseRealtime(newNotif);
+
+                // 3. Notificar a las vistas para que refresquen listas reactivamente
+                window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newNotif }));
+                window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: newNotif }));
             }
 
             return newNotif;
+        },
+
+        receiveIncomingNotification: function (notif) {
+            if (!notif || !notif.id) return;
+            if (this._processedNotifIds.has(notif.id)) return;
+            this._processedNotifIds.add(notif.id);
+
+            const list = this.getAll();
+            const exists = list.some(n => n.id === notif.id || (n.title === notif.title && Math.abs(new Date(n.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 10000));
+
+            if (!exists) {
+                list.unshift(notif);
+                try {
+                    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(list));
+                } catch (e) { }
+            }
+
+            this.updateBadge();
+            this.renderDropdown();
+            this.showToast(notif);
+            playNotificationChime();
+
+            // Disparar eventos de actualización reactiva en vivo
+            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: notif }));
+            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: notif }));
+        },
+
+        broadcastSupabaseRealtime: function (notif) {
+            if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
+                try {
+                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    channel.send({
+                        type: 'broadcast',
+                        event: 'habitat_notification',
+                        payload: notif
+                    }).catch(() => { });
+                } catch (e) { }
+            }
+        },
+
+        initRealtimeWebSockets: function () {
+            if (this._realtimeInitialized) return;
+            this._realtimeInitialized = true;
+
+            // A. Escuchar en BroadcastChannel
+            if (broadcastChannel) {
+                broadcastChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === 'HABITAT_REALTIME_NOTIF') {
+                        this.receiveIncomingNotification(event.data.notification);
+                    }
+                };
+            }
+
+            // B. Escuchar en Storage Event (multi-tab sync garantizado)
+            window.addEventListener('storage', (e) => {
+                if (e.key === NOTIF_STORAGE_KEY) {
+                    this.updateBadge();
+                    this.renderDropdown();
+                    this.syncSystemAlerts();
+                }
+                if (e.key === 'habitat_tenant_applications' || e.key === 'habitat_contracts') {
+                    this.syncSystemAlerts();
+                    window.dispatchEvent(new CustomEvent('habitat:application_updated'));
+                    window.dispatchEvent(new CustomEvent('habitat:contract_updated'));
+                }
+            });
+
+            // C. Suscribirse al canal Supabase Realtime Broadcast
+            if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
+                try {
+                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    channel
+                        .on('broadcast', { event: 'habitat_notification' }, ({ payload }) => {
+                            if (payload) {
+                                this.receiveIncomingNotification(payload);
+                            }
+                        })
+                        .subscribe((status) => {
+                            console.log('[Supabase Realtime Notifications Status]:', status);
+                        });
+                } catch (e) {
+                    console.warn('[Supabase Realtime Sub Error]:', e);
+                }
+            }
+
+            // D. Polling reactivo cada 2.5s para atrapar cambios asíncronos instantáneamente
+            setInterval(() => {
+                this.syncSystemAlerts();
+            }, 2500);
         },
 
         markAsRead: function (notifId) {
@@ -100,7 +253,6 @@
             if (target) {
                 target.read = true;
                 this.saveAll(list);
-                this.renderDropdown();
             }
         },
 
@@ -108,7 +260,6 @@
             const list = this.getAll();
             list.forEach(n => n.read = true);
             this.saveAll(list);
-            this.renderDropdown();
         },
 
         showToast: function (notif) {
@@ -197,7 +348,7 @@
 
             const isCurrentlyHidden = panel.classList.contains('hidden');
 
-            // Close all dropdowns first
+            // Cerrar otros dropdowns
             document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => {
                 p.classList.add('hidden');
             });
@@ -362,6 +513,7 @@
 
             this.syncSystemAlerts();
             this.updateBadge();
+            this.initRealtimeWebSockets();
         }
     };
 
@@ -373,7 +525,7 @@
         NotificationManager.initUI();
     }
 
-    // Re-check badge every time window gets focus
+    // Re-check badge and sync every time window gets focus
     window.addEventListener('focus', () => {
         if (window.NotificationManager) {
             window.NotificationManager.syncSystemAlerts();

@@ -1232,7 +1232,54 @@
             if (!container) return;
 
             try {
-                const contract = ownerActiveContractsMock.find(c => c.id === activeSelectedContractId) || ownerActiveContractsMock[0];
+                // Cargar contratos reales de la base de datos o localStorage
+                let rawList = [];
+                if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
+                    rawList = await window.DataManager.getOwnerContracts();
+                } else {
+                    try {
+                        const raw = localStorage.getItem('habitat_contracts');
+                        if (raw) rawList = JSON.parse(raw);
+                    } catch(e) {}
+                }
+
+                // Normalizar contratos defensivamente
+                ownerActiveContractsMock = (Array.isArray(rawList) ? rawList : []).map((c, idx) => {
+                    if (!c) return null;
+                    const rawTitle = c.property_title || c.propertyTitle || c.property?.title || c.propertyAddress || c.property_address || `Propiedad #${idx + 1}`;
+                    const rawAddress = c.property_address || c.propertyAddress || c.property?.address || 'Mendoza, Argentina';
+                    const rawTenant = c.tenant_name || c.tenant?.name || 'Inquilino Verificado';
+                    const rawTenantEmail = c.tenant_email || c.tenant?.email || 'inquilino@habitat.ar';
+                    const rawTenantPhone = c.tenant_phone || c.tenant?.phone || '+54 9 261 412-3456';
+                    const rawRent = Number(c.monthly_rent || c.monthlyRent || c.rent || 380000);
+                    const rawExpenses = Number(c.expenses_amount || c.expenses || 48000);
+                    const rawDueDay = c.payment_due_day || c.paymentDueDay || 10;
+                    const rawAdjIndex = c.adjustment_index || c.adjustmentIndex || 'IPC';
+                    const rawAdjFreq = Number(c.adjustment_frequency_months || c.periodo_aumento_meses || 3);
+                    const rawPunitive = Number(c.punitive_daily_rate || c.punitiveDailyRate || 0.5);
+
+                    return {
+                        ...c,
+                        id: String(c.id || `CTR-2026-${String(idx + 1).padStart(4, '0')}`),
+                        property_title: String(rawTitle),
+                        property_address: String(rawAddress),
+                        tenant_name: String(rawTenant),
+                        tenant_email: String(rawTenantEmail),
+                        tenant_phone: String(rawTenantPhone),
+                        monthly_rent: rawRent,
+                        expenses_amount: rawExpenses,
+                        payment_due_day: rawDueDay,
+                        adjustment_index: rawAdjIndex,
+                        adjustment_frequency_months: rawAdjFreq,
+                        punitive_daily_rate: rawPunitive
+                    };
+                }).filter(Boolean);
+
+                if (!activeSelectedContractId && ownerActiveContractsMock.length > 0) {
+                    activeSelectedContractId = ownerActiveContractsMock[0].id;
+                }
+
+                const contract = ownerActiveContractsMock.find(c => c.id === activeSelectedContractId || String(c.dbContractId) === String(activeSelectedContractId)) || ownerActiveContractsMock[0];
                 if (!contract) {
                     container.innerHTML = `
                         <div class="glass-card rounded-3xl p-10 text-center text-zinc-500 space-y-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
@@ -1341,12 +1388,15 @@
                             </div>
 
                             <div class="flex items-center gap-2 overflow-x-auto shrink-0 pb-1 sm:pb-0">
-                                ${ownerActiveContractsMock.map(c => `
-                                    <button type="button" onclick="selectOwnerActiveContract('${c.id}')" class="px-4 py-2.5 rounded-xl font-headline font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0 ${c.id === activeSelectedContractId ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'}">
-                                        <span class="material-symbols-outlined text-base">home</span>
-                                        <span>${c.property_title.split(' - ')[0]}</span>
-                                    </button>
-                                `).join('')}
+                                ${ownerActiveContractsMock.map(c => {
+                                    const titleClean = (c.property_title || 'Propiedad').split(' - ')[0].split(' | ')[0];
+                                    return `
+                                        <button type="button" onclick="selectOwnerActiveContract('${c.id}')" class="px-4 py-2.5 rounded-xl font-headline font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0 ${c.id === activeSelectedContractId ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'}">
+                                            <span class="material-symbols-outlined text-base">home</span>
+                                            <span>${titleClean}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
 
@@ -1672,7 +1722,7 @@
 
         function submitEditRentalModal(e, contractId) {
             e.preventDefault();
-            const contract = ownerActiveContractsMock.find(c => c.id === contractId);
+            const contract = ownerActiveContractsMock.find(c => c.id === contractId || String(c.dbContractId) === String(contractId));
             if (contract) {
                 contract.monthly_rent = Number(document.getElementById('edit-rent-base').value);
                 contract.expenses_amount = Number(document.getElementById('edit-rent-expenses').value);
@@ -2093,6 +2143,21 @@
                 </div>
             `;
         }
+
+        // Sincronización reactiva en tiempo real para el panel de propietario
+        window.addEventListener('habitat:application_updated', () => {
+            if (typeof loadOwnerApplications === 'function') {
+                loadOwnerApplications();
+            }
+            if (typeof loadOwnerActiveRental === 'function') {
+                loadOwnerActiveRental();
+            }
+        });
+        window.addEventListener('habitat:contract_updated', () => {
+            if (typeof loadOwnerActiveRental === 'function') {
+                loadOwnerActiveRental();
+            }
+        });
     </script>
 
     <!-- Contracts & Verification Modules -->
