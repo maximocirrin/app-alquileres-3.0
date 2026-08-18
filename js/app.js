@@ -554,18 +554,45 @@ const App = {
     },
 
     setTheme: (theme) => {
-        if (theme === 'dark') {
+        const isDark = theme === 'dark';
+        if (isDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.documentElement.classList.add('dark');
+            document.documentElement.style.backgroundColor = '#09090b';
+            document.documentElement.style.colorScheme = 'dark';
+            if (document.body) document.body.style.backgroundColor = '#09090b';
         } else {
             document.documentElement.removeAttribute('data-theme');
             document.documentElement.classList.remove('dark');
+            document.documentElement.style.backgroundColor = '#ffffff';
+            document.documentElement.style.colorScheme = 'light';
+            if (document.body) document.body.style.backgroundColor = '#ffffff';
         }
+
+        // Dynamic update for Safari / iOS theme-color and status-bar
+        let themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+        if (themeMetas.length === 0) {
+            const m = document.createElement('meta');
+            m.name = 'theme-color';
+            m.content = isDark ? '#09090b' : '#ffffff';
+            document.head.appendChild(m);
+        } else {
+            themeMetas.forEach(m => {
+                m.content = isDark ? '#09090b' : '#ffffff';
+            });
+        }
+
+        let appleStatusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (!appleStatusBarMeta) {
+            appleStatusBarMeta = document.createElement('meta');
+            appleStatusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
+            document.head.appendChild(appleStatusBarMeta);
+        }
+        appleStatusBarMeta.content = isDark ? 'black-translucent' : 'default';
 
         localStorage.setItem('theme', theme);
 
         // Sync all checkboxes
-        const isDark = theme === 'dark';
         document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
             cb.checked = isDark;
         });

@@ -477,7 +477,9 @@
 
                 const isMobile = container.id === 'mobile-auth-container';
                 const wrapper = document.createElement('div');
-                wrapper.className = 'relative habitat-notif-btn-wrapper flex items-center mr-2';
+                wrapper.className = isMobile
+                    ? 'relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2 sm:mr-3.5'
+                    : 'relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2';
                 wrapper.innerHTML = isMobile ? `
                     <button type="button" id="habitat-notif-bell-btn-mobile" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
                         <span class="material-symbols-outlined text-base">notifications</span>

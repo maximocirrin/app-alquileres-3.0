@@ -1,9 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('theme');
+                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.backgroundColor = '#09090b';
+                    document.documentElement.style.colorScheme = 'dark';
+                } else {
+                    document.documentElement.style.backgroundColor = '#ffffff';
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            } catch (e) {}
+        })();
+    </script>
     <title>Mi alquiler | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -139,7 +161,7 @@
 
 <body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- TopNavBar Component -->
-    <script src="js/navbar.js"></script>
+    <script src="js/navbar.js?v=4"></script>
 
     <main class="flex-grow pt-24 pb-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto w-full flex flex-col space-y-6">
         
@@ -187,17 +209,20 @@
                 </div>
             </div>
             
-            <!-- Cabecera de Sub-Tabs de Mi Alquiler -->
-            <div class="flex border-b border-zinc-200 dark:border-zinc-800 gap-6 overflow-x-auto">
-                <button id="subtab-alquiler" class="py-3 text-sm md:text-base font-bold transition-colors border-b-2 border-primary text-primary dark:border-red-900 dark:text-red-900 whitespace-nowrap">
-                    Mi Alquiler Activo
+            <!-- Cabecera de Sub-Tabs de Mi Alquiler (Segmented Control Responsive sin scroll horizontal) -->
+            <div class="grid grid-cols-3 p-1 sm:p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl gap-1 sm:gap-2 border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs">
+                <button id="subtab-alquiler" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                    <span class="material-symbols-outlined text-base sm:text-lg shrink-0">key</span>
+                    <span class="truncate"><span class="hidden sm:inline">Mi </span>Alquiler<span class="hidden md:inline"> Activo</span></span>
                 </button>
-                <button id="subtab-mantenimiento" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent whitespace-nowrap flex items-center gap-2">
-                    <span>Tickets de Mantenimiento</span>
-                    <span id="tenant-ticket-count" class="px-2 py-0.5 text-xs rounded-full bg-red-100 dark:bg-red-950 text-primary dark:text-red-900 font-bold hidden">0</span>
+                <button id="subtab-mantenimiento" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                    <span class="material-symbols-outlined text-base sm:text-lg shrink-0">build</span>
+                    <span class="truncate">Tickets<span class="hidden md:inline"> Mantenimiento</span></span>
+                    <span id="tenant-ticket-count" class="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-red-100 dark:bg-red-950 text-primary dark:text-red-400 font-bold hidden">0</span>
                 </button>
-                <button id="subtab-documentos" class="py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent whitespace-nowrap">
-                    Documentos
+                <button id="subtab-documentos" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                    <span class="material-symbols-outlined text-base sm:text-lg shrink-0">description</span>
+                    <span class="truncate">Documentos</span>
                 </button>
             </div>
 
@@ -795,7 +820,7 @@
             function switchSubtab(activeBtn, activeContent) {
                 [subtabAlquiler, subtabMantenimiento, subtabDocumentos].forEach(btn => {
                     if (btn) {
-                        btn.className = 'py-3 text-sm md:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent whitespace-nowrap flex items-center gap-2 cursor-pointer';
+                        btn.className = 'px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center';
                     }
                 });
                 [subcontentAlquiler, subcontentMantenimiento, subcontentDocumentos].forEach(c => {
@@ -803,7 +828,7 @@
                 });
 
                 if (activeBtn) {
-                    activeBtn.className = 'py-3 text-sm md:text-base font-bold transition-colors border-b-2 border-primary text-primary dark:border-red-900 dark:text-red-900 whitespace-nowrap flex items-center gap-2 cursor-pointer';
+                    activeBtn.className = 'px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center';
                 }
                 if (activeContent) activeContent.classList.remove('hidden');
             }
@@ -949,7 +974,7 @@
 
                 container.innerHTML = `
                     <!-- BANNER DESTACADO DE PRÓXIMA ACTUALIZACIÓN PARA EL INQUILINO -->
-                    <div class="p-6 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-zinc-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-blue-500/30">
+                    <div class="p-6 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-zinc-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-blue-500/30 mb-6 sm:mb-8">
                         <div class="flex items-start sm:items-center gap-4">
                             <div class="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20 shadow-inner">
                                 <span class="material-symbols-outlined text-3xl text-blue-300">event_repeat</span>

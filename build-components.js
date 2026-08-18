@@ -24,19 +24,22 @@ function convertFooterToJs(htmlPath, jsPath) {
 
 function convertNavbarToJs(htmlPath, jsPath) {
     const html = fs.readFileSync(htmlPath, 'utf8');
+    const b64 = Buffer.from(html, 'utf8').toString('base64');
     const jsContent = `(function() {
-    var html = ${JSON.stringify(html)};
+    var b64 = '${b64}';
+    var decoded = decodeURIComponent(escape(window.atob(b64)));
     var div = document.createElement('div');
-    div.innerHTML = html;
+    div.innerHTML = decoded;
     while(div.firstChild) {
         document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript);
     }
-    if (!document.querySelector('script[src*="footer.js"]')) {
-        var fScript = document.createElement('script');
-        fScript.src = 'js/footer.js';
-        document.head.appendChild(fScript);
+    if (!document.querySelector('script[src*="notifications.js"]')) {
+        var nScript = document.createElement('script');
+        nScript.src = 'js/notifications.js';
+        document.head.appendChild(nScript);
     }
-})();`;
+})();
+`;
     fs.writeFileSync(jsPath, jsContent, 'utf8');
 }
 

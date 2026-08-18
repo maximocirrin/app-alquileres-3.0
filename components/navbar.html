@@ -1,13 +1,13 @@
 <nav class="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl fixed top-0 w-full z-[100] shadow-[0_12px_40px_0_rgba(26,28,28,0.04)]">
     <div class="relative flex justify-between items-center px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-12 h-16 lg:h-20 w-full max-w-[1920px] mx-auto font-['Manrope'] tracking-tight gap-1 sm:gap-2">
         <!-- Left Section (Menu, Theme, Nav Links + Publicar Button) -->
-        <div class="flex items-center gap-1 sm:gap-3 xl:gap-3 2xl:gap-5 flex-1 max-w-[calc(50%-75px)]">
+        <div class="flex items-center gap-1 sm:gap-2 xl:gap-3 2xl:gap-5 flex-1 max-w-[calc(50%-75px)]">
             <button class="menu-btn xl:hidden w-8 h-8 md:w-10 md:h-10 rounded-full flex flex-col justify-center items-center gap-[4px] hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all z-[100] relative flex-shrink-0" type="button" aria-label="Menu" aria-controls="landing-premium-menu" aria-expanded="false">
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
             </button>
-            <label class="theme-switch flex-shrink-0" style="transform: scale(0.65); margin-right: -10px; margin-left: -10px;">
+            <label class="theme-switch flex-shrink-0 ml-2 sm:ml-3.5 xl:ml-0" style="transform: scale(0.65); margin-right: -10px;">
                 <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
                 <div class="theme-switch__container">
                     <div class="theme-switch__clouds"></div>
@@ -48,7 +48,7 @@
         <!-- Center Section (Logo) -->
         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center pointer-events-none z-10">
             <a href="index.html" class="flex items-center gap-1.5 lg:gap-2 group pointer-events-auto">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 sm:h-10 lg:h-11 xl:h-12 2xl:h-14 w-auto object-contain transition-all">
+                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-12 sm:h-14 md:h-[58px] lg:h-[68px] xl:h-[72px] 2xl:h-[76px] w-auto object-contain transition-all">
             </a>
         </div>
 
@@ -196,7 +196,7 @@
             <!-- Desktop Auth Container -->
             <div id="desktop-auth-container" class="max-xl:hidden flex items-center ml-1">
                 <!-- Notifications Bell Desktop -->
-                <div class="relative habitat-notif-btn-wrapper flex items-center mr-2">
+                <div class="relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2">
                     <button type="button" id="habitat-notif-bell-btn" onclick="window.NotificationManager && window.NotificationManager.toggleDropdown(event, 'desktop')" aria-label="Notificaciones" class="relative w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
                         <span class="material-symbols-outlined text-lg xl:text-xl">notifications</span>
                         <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-black items-center justify-center shadow-xs hidden">0</span>
@@ -246,9 +246,9 @@
             </div>
 
             <!-- Mobile Auth Container -->
-            <div id="mobile-auth-container" class="xl:hidden flex items-center ml-1">
+            <div id="mobile-auth-container" class="xl:hidden flex items-center gap-1 sm:gap-2 ml-1">
                 <!-- Notifications Bell Mobile -->
-                <div class="relative habitat-notif-btn-wrapper flex items-center mr-1">
+                <div class="relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2 sm:mr-3.5">
                     <button type="button" id="habitat-notif-bell-btn-mobile" onclick="window.NotificationManager && window.NotificationManager.toggleDropdown(event, 'mobile')" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
                         <span class="material-symbols-outlined text-base">notifications</span>
                         <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-white text-[9px] font-black items-center justify-center shadow-xs hidden">0</span>
