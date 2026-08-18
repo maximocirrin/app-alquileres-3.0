@@ -27,13 +27,13 @@
    * Extrae o deriva nombre, apellido y DNI del usuario a partir de datos disponibles.
    */
   function deriveIdentityData(userId) {
-    let firstName = 'Máximo';
-    let lastName = 'Cirrincione';
-    let docNumber = '38.491.029';
+    let firstName = 'Usuario';
+    let lastName = 'Habitat';
+    let docNumber = '';
 
     try {
       const storedIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-      if (storedIdentity.firstName && storedIdentity.lastName) {
+      if (storedIdentity.firstName && storedIdentity.lastName && storedIdentity.documentNumber) {
         return storedIdentity;
       }
 
@@ -48,7 +48,7 @@
           lastName = parts[parts.length - 1];
         } else if (parts.length === 1) {
           firstName = parts[0];
-          lastName = 'Verificado';
+          lastName = '';
         }
       } else if (userId && typeof userId === 'string' && !userId.includes('@')) {
         const parts = userId.trim().split(' ').filter(Boolean);
@@ -58,10 +58,12 @@
         }
       }
 
-      if (storedUser.cuit || storedPassport.cuit) {
+      if (storedUser.dni || storedPassport.dni) {
+        docNumber = String(storedUser.dni || storedPassport.dni);
+      } else if (storedUser.cuit || storedPassport.cuit) {
         const c = String(storedUser.cuit || storedPassport.cuit).replace(/\D/g, '');
-        if (c.length >= 10) {
-          docNumber = c.substring(2, c.length - 1);
+        if (c.length === 11) {
+          docNumber = c.substring(2, 10);
         }
       }
     } catch (e) {}
@@ -69,7 +71,7 @@
     return {
       firstName,
       lastName,
-      fullName: `${firstName} ${lastName}`.trim(),
+      fullName: `${firstName} ${lastName}`.trim() || 'Usuario Verificado',
       documentNumber: docNumber,
       dni: docNumber
     };
@@ -189,14 +191,23 @@
       }, 1600);
 
       setTimeout(() => {
-        // Guardar identidad verificada en localStorage
+        // Guardar identidad verificada en localStorage y Supabase
         try {
+          let calculatedCuit = null;
+          if (identity.documentNumber && typeof window.calcularCUIL === 'function') {
+            calculatedCuit = window.calcularCUIL(identity.documentNumber);
+          } else if (identity.documentNumber) {
+            const clean = String(identity.documentNumber).replace(/\D/g, '');
+            calculatedCuit = clean.length === 8 ? `20-${clean}-7` : null;
+          }
+
           localStorage.setItem('habitat_didit_identity', JSON.stringify({
             firstName: identity.firstName,
             lastName: identity.lastName,
             fullName: identity.fullName,
             documentNumber: identity.documentNumber,
             dni: identity.documentNumber,
+            cuit: calculatedCuit,
             verifiedAt: new Date().toISOString()
           }));
 
@@ -205,11 +216,30 @@
           pData.nombre_completo = identity.fullName;
           pData.nombre = identity.firstName;
           pData.apellido = identity.lastName;
+          if (identity.documentNumber) pData.dni = identity.documentNumber;
+          if (calculatedCuit) pData.cuit = calculatedCuit;
           localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
 
           const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
           uData.nombre_completo = identity.fullName;
+          if (identity.documentNumber) uData.dni = identity.documentNumber;
+          if (calculatedCuit) uData.cuit = calculatedCuit;
           localStorage.setItem('habitat_user', JSON.stringify(uData));
+
+          // Actualizar Perfil en Supabase si está logueado
+          if (window.supabaseClient) {
+            window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+              if (session && session.user) {
+                const updateFields = {
+                  nombre_completo: identity.fullName,
+                  cuenta_verificada: true,
+                  fecha_verificacion: new Date().toISOString()
+                };
+                if (identity.documentNumber) updateFields.dni = identity.documentNumber;
+                window.supabaseClient.from('Perfil').update(updateFields).eq('user_id', session.user.id).then();
+              }
+            });
+          }
         } catch (e) {}
 
         if (modalEl) modalEl.remove();

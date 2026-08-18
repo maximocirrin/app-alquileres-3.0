@@ -574,10 +574,12 @@ const App = {
         if (themeMetas.length === 0) {
             const m = document.createElement('meta');
             m.name = 'theme-color';
+            m.id = 'meta-theme-color';
             m.content = isDark ? '#09090b' : '#ffffff';
             document.head.appendChild(m);
         } else {
             themeMetas.forEach(m => {
+                m.removeAttribute('media');
                 m.content = isDark ? '#09090b' : '#ffffff';
             });
         }

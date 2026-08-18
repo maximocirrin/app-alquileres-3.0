@@ -1,32 +1,39 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         (function () {
             try {
-                const theme = localStorage.getItem('theme');
-                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var theme = localStorage.getItem('theme');
+                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var root = document.documentElement;
                 if (isDark) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.style.backgroundColor = '#09090b';
-                    document.documentElement.style.colorScheme = 'dark';
+                    root.setAttribute('data-theme', 'dark');
+                    root.classList.add('dark');
+                    root.style.backgroundColor = '#09090b';
+                    root.style.colorScheme = 'dark';
                 } else {
-                    document.documentElement.style.backgroundColor = '#ffffff';
-                    document.documentElement.style.colorScheme = 'light';
+                    root.removeAttribute('data-theme');
+                    root.classList.remove('dark');
+                    root.style.backgroundColor = '#ffffff';
+                    root.style.colorScheme = 'light';
+                }
+                var meta = document.getElementById('meta-theme-color') || document.querySelector('meta[name="theme-color"]');
+                if (meta) {
+                    meta.removeAttribute('media');
+                    meta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
                 }
             } catch (e) {}
         })();
     </script>
-    <title>Mi alquiler | Hábitat</title>
+        <title>Mi alquiler | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2044,7 +2051,11 @@
                 try {
                     const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
                     diditName = diditIdent.fullName || (diditIdent.firstName && diditIdent.lastName ? `${diditIdent.firstName} ${diditIdent.lastName}` : null);
-                    if (diditIdent.documentNumber) diditCuit = `20-${diditIdent.documentNumber}-9`;
+                    if (diditIdent.cuit) {
+                        diditCuit = diditIdent.cuit;
+                    } else if (diditIdent.documentNumber && String(diditIdent.documentNumber).replace(/\D/g, '').length === 8) {
+                        diditCuit = `20-${String(diditIdent.documentNumber).replace(/\D/g, '')}-7`;
+                    }
                 } catch (eD) {}
 
                 const hasPassport = Boolean(pasaporte) || Boolean(diditName);
@@ -2054,11 +2065,19 @@
                     || (user && user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name))
                     || (user && user.email ? user.email.split('@')[0] : 'Inquilino Verificado');
 
-                const userCuit = diditCuit
-                    || (pasaporte && pasaporte.cuit)
+                let userCuit = (pasaporte && pasaporte.cuit)
                     || (perfil && perfil.cuit)
+                    || diditCuit
+                    || (perfil && perfil.dni ? `20-${String(perfil.dni).replace(/\D/g, '')}-7` : null)
                     || (user && user.user_metadata && user.user_metadata.cuit)
-                    || '20-38491029-4';
+                    || 'Pendiente de registrar';
+
+                if (userCuit && userCuit !== 'Pendiente de registrar') {
+                    const clean = String(userCuit).replace(/\D/g, '');
+                    if (clean.length === 11) {
+                        userCuit = clean.replace(/(\d{2})(\d{8})(\d{1})/, '$1-$2-$3');
+                    }
+                }
 
                 const passportId = (pasaporte && pasaporte.codigo_pasaporte)
                     || (perfil ? `HBT-2026-${String(perfil.id_perfil).padStart(4, '0')}-X9` : (user ? `HBT-${user.id.substring(0, 8).toUpperCase()}` : 'HBT-2026-9824-X9'));
@@ -2116,7 +2135,7 @@
                 if (elName) elName.textContent = userName;
 
                 const elCuitHeader = document.getElementById('passport-cuit-header');
-                if (elCuitHeader) elCuitHeader.textContent = `Inquilino Verificado • CUIT/CUIL: ${userCuit}`;
+                if (elCuitHeader) elCuitHeader.textContent = `CUIT/CUIL: ${userCuit}`;
 
                 const elCode = document.getElementById('passport-code-id');
                 if (elCode) elCode.textContent = `ID: ${passportId}`;

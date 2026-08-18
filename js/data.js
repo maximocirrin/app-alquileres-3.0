@@ -916,7 +916,10 @@ var DataManager = {
                                 Multimedia (*)
                             )
                         ),
-                        Perfil (*)
+                        Perfil (
+                            *,
+                            Pasaporte_habitat (*)
+                        )
                     `)
                     .order('fecha_solicitud', { ascending: false });
 
@@ -924,6 +927,7 @@ var DataManager = {
                     dbApps = data.map(s => {
                         const prop = s.Propiedad || {};
                         const perf = s.Perfil || {};
+                        const pass = (Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat[0] : perf.Pasaporte_habitat) || {};
                         const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
                         const media = pub?.Multimedia || [];
                         const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
@@ -953,6 +957,14 @@ var DataManager = {
                             }
                         }
 
+                        // Resolver DNI y CUIT reales
+                        let realDni = perf.dni || null;
+                        let realCuit = pass.cuit || null;
+                        if (!realDni && realCuit && realCuit.replace(/\D/g, '').length === 11) {
+                            const clean = realCuit.replace(/\D/g, '');
+                            realDni = clean.substring(2, clean.length - 1);
+                        }
+
                         return {
                             id: s.id_solicitud,
                             property_id: s.id_propiedad,
@@ -969,7 +981,12 @@ var DataManager = {
                             tenant_id: s.id_perfil,
                             tenant_name: perf.nombre_completo || 'Postulante Verificado',
                             tenant_email: perf.mail || 'inquilino@email.com',
-                            tenant_phone: s.telefono || perf.telefono || '+54 9 11 0000-0000',
+                            tenant_phone: s.telefono || perf.telefono || '',
+                            tenant_dni: realDni,
+                            tenant_cuit: realCuit,
+                            passport_code: pass.codigo_pasaporte || (s.id_pasaporte ? `HBT-2026-${s.id_pasaporte}` : null),
+                            condicion_fiscal: pass.condicion_fiscal || null,
+                            situacion_crediticia: pass.situacion_crediticia || null,
                             monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
                             income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
                             income_proof_url: '#',

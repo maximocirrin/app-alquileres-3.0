@@ -141,18 +141,18 @@
                                 role: 'TENANT',
                                 name: foundApp.tenant_name || 'Inquilino Postulante',
                                 email: foundApp.tenant_email || 'inquilino@habitat.ar',
-                                phone: foundApp.tenant_phone || '+54 9 11 0000-0000',
-                                cuil: '20-38491029-4',
-                                dni: '38.491.029',
+                                phone: foundApp.tenant_phone || '',
+                                cuil: foundApp.tenant_cuit || (foundApp.tenant_dni ? `20-${String(foundApp.tenant_dni).replace(/\D/g, '')}-7` : 'Pendiente de registrar'),
+                                dni: foundApp.tenant_dni || 'Pendiente de registrar',
                                 hasSigned: false,
-                                isKycVerified: true
+                                isKycVerified: Boolean(foundApp.tenant_dni || foundApp.tenant_cuit)
                             },
                             owner: {
                                 role: 'OWNER',
                                 name: 'Propietario Verificado',
                                 email: 'propietario@habitat.ar',
-                                cuil: '27-33918274-8',
-                                dni: '33.918.274',
+                                cuil: 'Pendiente de registrar',
+                                dni: 'Pendiente de registrar',
                                 hasSigned: false,
                                 isKycVerified: true
                             },

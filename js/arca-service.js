@@ -100,7 +100,7 @@ function actualizarPasaporteUI(data) {
     // 2. Elemento CUIT / Razón Social en cabecera
     const elCuitHeader = document.getElementById('passport-cuit-header');
     if (elCuitHeader) {
-        elCuitHeader.textContent = `Inquilino Verificado • CUIT/CUIL: ${cuitFormateado} (${estadoCuit})`;
+        elCuitHeader.textContent = `CUIT/CUIL: ${cuitFormateado} (${estadoCuit})`;
     }
 
     const elNombre = document.getElementById('passport-user-fullname');
@@ -147,13 +147,44 @@ function formatearCUIT(cuit) {
     return `${s.substring(0, 2)}-${s.substring(2, 10)}-${s.substring(10)}`;
 }
 
+/**
+ * Helper para calcular el CUIL oficial argentino a partir del DNI y género
+ */
+function calcularCUIL(dni, genero = 'M') {
+    if (!dni) return null;
+    const cleanDni = String(dni).replace(/\D/g, '').padStart(8, '0');
+    if (cleanDni.length !== 8) return null;
+
+    let prefijo = (genero === 'F' || genero === 'FEMALE') ? '27' : '20';
+    const factores = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+
+    function calcularDV(xy) {
+        const cadena = xy + cleanDni;
+        let suma = 0;
+        for (let i = 0; i < 10; i++) {
+            suma += parseInt(cadena[i], 10) * factores[i];
+        }
+        const resto = suma % 11;
+        if (resto === 0) return { dv: 0, prefijo: xy };
+        if (resto === 1) {
+            if (xy === '20' || xy === '27') return calcularDV('23');
+            return { dv: 9, prefijo: '23' };
+        }
+        return { dv: 11 - resto, prefijo: xy };
+    }
+
+    const res = calcularDV(prefijo);
+    return `${res.prefijo}-${cleanDni}-${res.dv}`;
+}
+
 // Exponer globalmente en window
 if (typeof window !== 'undefined') {
     window.consultarArca = consultarArca;
     window.actualizarPasaporteUI = actualizarPasaporteUI;
     window.formatearCUIT = formatearCUIT;
+    window.calcularCUIL = calcularCUIL;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { consultarArca, actualizarPasaporteUI, formatearCUIT };
+    module.exports = { consultarArca, actualizarPasaporteUI, formatearCUIT, calcularCUIL };
 }
