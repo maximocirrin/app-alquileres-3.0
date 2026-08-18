@@ -7,332 +7,21 @@
 (function () {
     'use strict';
 
-    // Seed data con contratos realistas y detallados
-    const SEED_CONTRACTS = [
-        {
-            id: 'CTR-2026-0891',
-            contractNumber: 'CTR-2026-0891',
-            title: 'Departamento 3 Ambientes con Balcón Aterrazado',
-            propertyAddress: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
-            propertyCity: 'Recoleta, Buenos Aires',
-            propertyImage: 'img/hero-marketplace.jpg',
-            monthlyRent: 420000,
-            currency: 'ARS',
-            status: 'WAITING_TENANT',
-            startDate: '2026-09-01',
-            endDate: '2028-08-31',
-            durationMonths: 24,
-            paymentDueDay: 10,
-            adjustmentIndex: 'IPC',
-            adjustmentFrequencyMonths: 3,
-            depositAmount: 420000,
-            aliasCbu: 'HABITAT.RECOLETA.MP',
-            tenant: {
-                role: 'TENANT',
-                name: 'Carlos Gómez',
-                email: 'carlos.gomez@gmail.com',
-                cuil: '20-38491029-4',
-                dni: '38.491.029',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            owner: {
-                role: 'OWNER',
-                name: 'María Florencia Rossi',
-                email: 'mflorencia.rossi@outlook.com',
-                cuil: '27-33918274-8',
-                dni: '33.918.274',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            broker: {
-                name: 'Martín Palermo',
-                license: 'CUCICBA Mat. 6842',
-                agencyName: 'Palermo & Asociados Propiedades',
-                email: 'contacto@palermoprop.com',
-                phone: '+54 11 4821-9988'
-            },
-            sha256Hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            createdAt: '2026-08-12T14:30:00Z',
-            updatedAt: '2026-08-15T10:00:00Z',
-            auditTrailEvents: [
-                {
-                    timestamp: '2026-08-12 14:30:00',
-                    action: 'CONTRATO_GENERADO',
-                    actor: 'Martín Palermo (CUCICBA 6842)',
-                    details: 'Borrador confeccionado bajo Ley 25.506 con Pasaporte verificado.'
-                },
-                {
-                    timestamp: '2026-08-12 15:00:00',
-                    action: 'SOLICITUD_FIRMA_ENVIADA',
-                    actor: 'Habitat System',
-                    details: 'Notificación despachada a carlos.gomez@gmail.com'
-                }
-            ]
-        },
-        {
-            id: 'CTR-2026-0742',
-            contractNumber: 'CTR-2026-0742',
-            title: 'Semipiso 4 Ambientes en Torre con Amenities',
-            propertyAddress: 'Av. del Libertador 4820, Piso 14, Belgrano, CABA',
-            propertyCity: 'Belgrano, Buenos Aires',
-            propertyImage: 'img/hero-marketplace.jpg',
-            monthlyRent: 850000,
-            currency: 'ARS',
-            status: 'WAITING_OWNER',
-            startDate: '2026-08-01',
-            endDate: '2028-07-31',
-            durationMonths: 24,
-            paymentDueDay: 5,
-            adjustmentIndex: 'ICL',
-            adjustmentFrequencyMonths: 6,
-            depositAmount: 850000,
-            aliasCbu: 'HABITAT.BELGRANO.MP',
-            tenant: {
-                role: 'TENANT',
-                name: 'Lucía Fernández',
-                email: 'lucia.fernandez@tech.io',
-                cuil: '27-39201948-3',
-                dni: '39.201.948',
-                hasSigned: true,
-                isKycVerified: true,
-                signedAt: '2026-08-14T18:22:10Z',
-                ipAddress: '181.44.120.55'
-            },
-            owner: {
-                role: 'OWNER',
-                name: 'Esteban Morales',
-                email: 'esteban.morales@inversiones.com.ar',
-                cuil: '20-29183746-1',
-                dni: '29.183.746',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            broker: {
-                name: 'Valeria Sotomayor',
-                license: 'CUCICBA Mat. 5120',
-                agencyName: 'Habitat Real Estate Network',
-                email: 'valeria@habitat.ar'
-            },
-            sha256Hash: '9f83c6b29f7988319f390076a91176b9dfa5fae8e60408544c4897c8d94e2402',
-            createdAt: '2026-08-10T09:15:00Z',
-            updatedAt: '2026-08-14T18:22:10Z',
-            auditTrailEvents: [
-                {
-                    timestamp: '2026-08-10 09:15:00',
-                    action: 'CONTRATO_GENERADO',
-                    actor: 'Valeria Sotomayor (CUCICBA 5120)',
-                    details: 'Documento legal confeccionado.'
-                },
-                {
-                    timestamp: '2026-08-14 18:22:10',
-                    action: 'FIRMA_INQUILINO_COMPLETADA',
-                    actor: 'Lucía Fernández (CUIL 27-39201948-3)',
-                    details: 'Liveness Check facial Didit aprobado. IP: 181.44.120.55'
-                }
-            ]
-        },
-        {
-            id: 'CTR-2026-0914',
-            contractNumber: 'CTR-2026-0914',
-            title: 'Loft de Diseño con Terraza y Parrilla',
-            propertyAddress: 'Humboldt 1940, Piso 3, Palermo, CABA',
-            propertyCity: 'Palermo, Buenos Aires',
-            propertyImage: 'img/hero-marketplace.jpg',
-            monthlyRent: 480000,
-            currency: 'ARS',
-            status: 'WAITING_TENANT',
-            startDate: '2026-09-15',
-            endDate: '2028-09-14',
-            durationMonths: 24,
-            paymentDueDay: 10,
-            adjustmentIndex: 'IPC',
-            adjustmentFrequencyMonths: 3,
-            depositAmount: 480000,
-            aliasCbu: 'HABITAT.PALERMO.MP',
-            tenant: {
-                role: 'TENANT',
-                name: 'Valentina Silveira',
-                email: 'valen.silveira@design.com',
-                cuil: '27-40192847-3',
-                dni: '40.192.847',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            owner: {
-                role: 'OWNER',
-                name: 'Ignacio Larrea',
-                email: 'ilarrea@inversiones.com.ar',
-                cuil: '20-27182940-5',
-                dni: '27.182.940',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            broker: {
-                name: 'Martín Palermo',
-                license: 'CUCICBA Mat. 6842',
-                agencyName: 'Palermo & Asociados Propiedades',
-                email: 'contacto@palermoprop.com'
-            },
-            sha256Hash: 'c819fa2e891b29a174029bc4810a91176b9dfa5fae8e60408544c4897c8d94e2',
-            createdAt: '2026-08-14T11:00:00Z',
-            updatedAt: '2026-08-15T09:00:00Z',
-            auditTrailEvents: [
-                {
-                    timestamp: '2026-08-14 11:00:00',
-                    action: 'CONTRATO_GENERADO',
-                    actor: 'Martín Palermo (CUCICBA 6842)',
-                    details: 'Borrador confeccionado bajo Ley 25.506 con Pasaporte verificado.'
-                }
-            ]
-        },
-        {
-            id: 'CTR-2026-0925',
-            contractNumber: 'CTR-2026-0925',
-            title: 'Piso Exclusivo 3 Ambientes con Cochera',
-            propertyAddress: 'Av. Coronel Díaz 2140, Barrio Norte, CABA',
-            propertyCity: 'Barrio Norte, Buenos Aires',
-            propertyImage: 'img/hero-marketplace.jpg',
-            monthlyRent: 620000,
-            currency: 'ARS',
-            status: 'WAITING_OWNER',
-            startDate: '2026-09-01',
-            endDate: '2028-08-31',
-            durationMonths: 24,
-            paymentDueDay: 5,
-            adjustmentIndex: 'ICL',
-            adjustmentFrequencyMonths: 4,
-            depositAmount: 620000,
-            aliasCbu: 'HABITAT.BARRIO.NORTE',
-            tenant: {
-                role: 'TENANT',
-                name: 'Lucas Bertone',
-                email: 'lucas.bertone@fintech.ar',
-                cuil: '20-36291048-2',
-                dni: '36.291.048',
-                hasSigned: true,
-                isKycVerified: true,
-                signedAt: '2026-08-15T14:10:00Z',
-                ipAddress: '190.19.45.112'
-            },
-            owner: {
-                role: 'OWNER',
-                name: 'Beatriz Mendez',
-                email: 'bmendez@propiedades.com.ar',
-                cuil: '27-22918475-4',
-                dni: '22.918.475',
-                hasSigned: false,
-                isKycVerified: true
-            },
-            broker: {
-                name: 'Valeria Sotomayor',
-                license: 'CUCICBA Mat. 5120',
-                agencyName: 'Habitat Real Estate Network',
-                email: 'valeria@habitat.ar'
-            },
-            sha256Hash: '5e4bc819fa2e891b29a174029bc4810a91176b9dfa5fae8e60408544c4897c8d',
-            createdAt: '2026-08-13T16:00:00Z',
-            updatedAt: '2026-08-15T14:10:00Z',
-            auditTrailEvents: [
-                {
-                    timestamp: '2026-08-13 16:00:00',
-                    action: 'CONTRATO_GENERADO',
-                    actor: 'Valeria Sotomayor (CUCICBA 5120)',
-                    details: 'Documento legal confeccionado.'
-                },
-                {
-                    timestamp: '2026-08-15 14:10:00',
-                    action: 'FIRMA_INQUILINO_COMPLETADA',
-                    actor: 'Lucas Bertone (CUIL 20-36291048-2)',
-                    details: 'Liveness Check facial Didit aprobado. IP: 190.19.45.112'
-                }
-            ]
-        },
-        {
-            id: 'CTR-2026-0518',
-            contractNumber: 'CTR-2026-0518',
-            title: 'Loft Moderno en Palermo Hollywood',
-            propertyAddress: 'Humboldt 1940, Piso 3 "A", Palermo, CABA',
-            propertyCity: 'Palermo, Buenos Aires',
-            propertyImage: 'img/hero-marketplace.jpg',
-            monthlyRent: 390000,
-            currency: 'ARS',
-            status: 'SIGNED_AND_SEALED',
-            startDate: '2026-07-01',
-            endDate: '2028-06-30',
-            durationMonths: 24,
-            paymentDueDay: 10,
-            adjustmentIndex: 'IPC',
-            adjustmentFrequencyMonths: 4,
-            depositAmount: 390000,
-            aliasCbu: 'HABITAT.PALERMO.MP',
-            tenant: {
-                role: 'TENANT',
-                name: 'Matías Rossi',
-                email: 'matias.rossi@dev.com',
-                cuil: '20-37829104-5',
-                dni: '37.829.104',
-                hasSigned: true,
-                isKycVerified: true,
-                signedAt: '2026-06-28T11:15:00Z',
-                ipAddress: '190.220.44.12'
-            },
-            owner: {
-                role: 'OWNER',
-                name: 'Gonzalo Benítez',
-                email: 'gonzalo.benitez@empresa.com',
-                cuil: '20-26491028-7',
-                dni: '26.491.028',
-                hasSigned: true,
-                isKycVerified: true,
-                signedAt: '2026-06-29T16:40:00Z',
-                ipAddress: '186.138.89.210'
-            },
-            broker: {
-                name: 'Martín Palermo',
-                license: 'CUCICBA Mat. 6842',
-                agencyName: 'Palermo & Asociados Propiedades',
-                email: 'contacto@palermoprop.com'
-            },
-            sha256Hash: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
-            tsaTimestamp: '2026-06-29T16:40:12Z',
-            tsaCertificateId: 'TSA-AR-2026-981042',
-            createdAt: '2026-06-25T10:00:00Z',
-            updatedAt: '2026-06-29T16:40:12Z',
-            auditTrailEvents: [
-                {
-                    timestamp: '2026-06-25 10:00:00',
-                    action: 'CONTRATO_GENERADO',
-                    actor: 'Martín Palermo',
-                    details: 'Documento confeccionado.'
-                },
-                {
-                    timestamp: '2026-06-28 11:15:00',
-                    action: 'FIRMA_INQUILINO_COMPLETADA',
-                    actor: 'Matías Rossi (CUIL 20-37829104-5)',
-                    details: 'Liveness Check Didit aprobado. IP: 190.220.44.12'
-                },
-                {
-                    timestamp: '2026-06-29 16:40:00',
-                    action: 'FIRMA_PROPIETARIO_COMPLETADA',
-                    actor: 'Gonzalo Benítez (CUIL 20-26491028-7)',
-                    details: 'Liveness Check Didit aprobado. IP: 186.138.89.210'
-                },
-                {
-                    timestamp: '2026-06-29 16:40:12',
-                    action: 'SELLADO_TSA_COMPLETADO',
-                    actor: 'Autoridad Certificante TSA',
-                    details: 'Estampado de tiempo legal y SHA-256 definitivo.'
-                }
-            ]
-        }
-    ];
+    // Lista de contratos activos (únicamente reales)
+    const SEED_CONTRACTS = [];
 
     let stored = null;
     try {
         stored = JSON.parse(localStorage.getItem('habitat_contracts'));
     } catch (e) {}
-    let contracts = (stored && stored.length >= 3) ? stored : SEED_CONTRACTS;
+    
+    // Filtrar y limpiar cualquier contrato mock de prueba previo
+    let contracts = (stored && Array.isArray(stored)) 
+        ? stored.filter(c => c && c.id && !['CTR-2026-0891', 'CTR-2026-0742', 'CTR-2026-0610', 'CTR-2026-0925', 'CTR-2026-0518'].includes(c.id) && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández') 
+        : [];
+    
+    // Guardar lista limpia
+    localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
 
     function saveContracts() {
         localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
@@ -342,114 +31,18 @@
         let list = [];
         try {
             const raw = localStorage.getItem('habitat_marketplace_properties') || localStorage.getItem('habitat_properties');
-            if (raw) list = JSON.parse(raw);
-        } catch (e) {}
-
-        if (!list || list.length === 0) {
-            list = [
-                {
-                    id: 'prop-101',
-                    id_propiedad: 101,
-                    title: 'Departamento 3 Ambientes con Balcón Aterrazado',
-                    address: 'Av. Santa Fe 2450, Piso 7 "B", Recoleta, CABA',
-                    price: 420000,
-                    expensas: 52000,
-                    photos: ['img/hero-marketplace.jpg'],
-                    status: 'publicado',
-                    isVerifiedOwner: true
-                },
-                {
-                    id: 'prop-102',
-                    id_propiedad: 102,
-                    title: 'Semipiso 4 Ambientes en Torre con Amenities',
-                    address: 'Av. del Libertador 4820, Belgrano, CABA',
-                    price: 850000,
-                    expensas: 85000,
-                    photos: ['img/hero-marketplace.jpg'],
-                    status: 'publicado',
-                    isVerifiedOwner: true
-                },
-                {
-                    id: 'prop-103',
-                    id_propiedad: 103,
-                    title: 'Loft de Diseño con Terraza y Parrilla',
-                    address: 'Humboldt 1940, Piso 3, Palermo, CABA',
-                    price: 480000,
-                    expensas: 48000,
-                    photos: ['img/hero-marketplace.jpg'],
-                    status: 'publicado',
-                    isVerifiedOwner: true
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    list = parsed.filter(p => p && p.id && !String(p.id).startsWith('prop-10') && p.title && !p.title.includes('Departamento 3 Ambientes con Balcón'));
                 }
-            ];
-        }
+            }
+        } catch (e) {}
         return list;
     }
 
     function syncPublishedPropertiesWithContracts() {
-        const props = getPublishedProperties();
-        props.forEach(p => {
-            const propIdStr = String(p.id || p.id_propiedad);
-            const exists = contracts.some(c => String(c.propertyId) === propIdStr || c.propertyAddress === p.address);
-            if (!exists) {
-                const newContractId = `CTR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-                const newContract = {
-                    id: newContractId,
-                    contractNumber: newContractId,
-                    propertyId: propIdStr,
-                    title: p.title || `Contrato de Locación - ${p.address || 'Propiedad'}`,
-                    propertyAddress: p.address || 'Buenos Aires',
-                    propertyCity: p.city || 'Buenos Aires',
-                    propertyImage: (p.photos && p.photos[0]) || p.image || 'img/hero-marketplace.jpg',
-                    monthlyRent: p.price || 450000,
-                    currency: 'ARS',
-                    status: 'WAITING_TENANT',
-                    startDate: '2026-09-01',
-                    endDate: '2028-08-31',
-                    durationMonths: 24,
-                    paymentDueDay: 10,
-                    adjustmentIndex: 'IPC',
-                    adjustmentFrequencyMonths: 3,
-                    depositAmount: p.price || 450000,
-                    aliasCbu: 'HABITAT.ALQUILER.MP',
-                    tenant: {
-                        role: 'TENANT',
-                        name: 'Carlos Gómez',
-                        email: 'carlos.gomez@gmail.com',
-                        cuil: '20-38491029-4',
-                        dni: '38.491.029',
-                        hasSigned: false,
-                        isKycVerified: true
-                    },
-                    owner: {
-                        role: 'OWNER',
-                        name: 'Propietario Verificado',
-                        email: p.contactEmail || 'propietario@habitat.ar',
-                        cuil: '27-33918274-8',
-                        dni: '33.918.274',
-                        hasSigned: false,
-                        isKycVerified: Boolean(p.isVerifiedOwner)
-                    },
-                    broker: {
-                        name: 'Valeria Sotomayor',
-                        license: 'CUCICBA Mat. 5120',
-                        agencyName: 'Habitat Real Estate Network',
-                        email: 'valeria@habitat.ar'
-                    },
-                    sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    auditTrailEvents: [
-                        {
-                            timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                            action: 'CONTRATO_GENERADO',
-                            actor: 'Habitat Smart Contracts Generator',
-                            details: 'Contrato digital vinculado automáticamente a la propiedad publicada.'
-                        }
-                    ]
-                };
-                contracts.unshift(newContract);
-            }
-        });
+        // No generar contratos ficticios automáticamente con nombres genéricos
         saveContracts();
     }
 
@@ -531,6 +124,55 @@
             const publishedProperties = getPublishedProperties();
             const formatMoney = (n) => '$' + Number(n).toLocaleString('es-AR');
 
+            if (!contracts || contracts.length === 0) {
+                container.innerHTML = `
+                    <div class="w-full space-y-8 font-body">
+                        <!-- Top Navigation & Role Switcher Bar -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tu Rol Activo:</span>
+                                <div class="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60">
+                                    <button onclick="ContractsManager.switchRole('OWNER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'OWNER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                        <span class="material-symbols-outlined text-sm">home</span>
+                                        <span>Propietario</span>
+                                    </button>
+                                    <button onclick="ContractsManager.switchRole('BROKER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'BROKER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                        <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                                        <span>Corredor</span>
+                                    </button>
+                                    <button onclick="ContractsManager.switchRole('TENANT')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'TENANT' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                        <span class="material-symbols-outlined text-sm">person</span>
+                                        <span>Inquilino</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-10 sm:p-16 text-center shadow-xs max-w-2xl mx-auto space-y-4">
+                            <div class="w-20 h-20 rounded-3xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center mx-auto mb-4 shadow-inner">
+                                <span class="material-symbols-outlined text-4xl">history_edu</span>
+                            </div>
+                            <h3 class="font-headline text-2xl font-black text-zinc-900 dark:text-white">
+                                No hay contratos de locación activos
+                            </h3>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                                Al aceptar una postulación o generar un contrato para una de tus propiedades publicadas, aparecerá en este panel con firma electrónica y validación biométrica Didit.
+                            </p>
+                            <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <a href="administrador.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-md">
+                                    <span class="material-symbols-outlined text-base">dashboard</span> Panel Propietario
+                                </a>
+                                <a href="index.html" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-6 py-3 rounded-2xl font-bold text-sm transition-all border border-zinc-200 dark:border-zinc-700">
+                                    <span class="material-symbols-outlined text-base">search</span> Ver Publicaciones
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
             // Find current selected contract
             let currentContract = this.getContractById(this.selectedContractId) || contracts[0];
             if (!currentContract) currentContract = contracts[0];
@@ -541,13 +183,13 @@
                     c.title.toLowerCase().includes(this.searchTerm) ||
                     c.propertyAddress.toLowerCase().includes(this.searchTerm) ||
                     c.contractNumber.toLowerCase().includes(this.searchTerm) ||
-                    c.tenant.name.toLowerCase().includes(this.searchTerm) ||
-                    c.owner.name.toLowerCase().includes(this.searchTerm);
+                    c.tenant?.name?.toLowerCase().includes(this.searchTerm) ||
+                    c.owner?.name?.toLowerCase().includes(this.searchTerm);
 
                 if (!matchText) return false;
 
-                const isMyPending = (role === 'TENANT' && !c.tenant.hasSigned && c.status === 'WAITING_TENANT') ||
-                                    (role === 'OWNER' && !c.owner.hasSigned && c.status === 'WAITING_OWNER');
+                const isMyPending = (role === 'TENANT' && !c.tenant?.hasSigned && c.status === 'WAITING_TENANT') ||
+                                    (role === 'OWNER' && !c.owner?.hasSigned && c.status === 'WAITING_OWNER');
 
                 if (this.activeFilter === 'pending') {
                     return isMyPending;
@@ -562,14 +204,14 @@
             // Counters
             const countAll = contracts.length;
             const countPending = contracts.filter(c => 
-                (role === 'TENANT' && !c.tenant.hasSigned && c.status === 'WAITING_TENANT') ||
-                (role === 'OWNER' && !c.owner.hasSigned && c.status === 'WAITING_OWNER')
+                (role === 'TENANT' && !c.tenant?.hasSigned && c.status === 'WAITING_TENANT') ||
+                (role === 'OWNER' && !c.owner?.hasSigned && c.status === 'WAITING_OWNER')
             ).length;
             const countCompleted = contracts.filter(c => c.status === 'SIGNED_AND_SEALED').length;
 
             const isSigner = role === 'TENANT' || role === 'OWNER';
             const signerObj = role === 'TENANT' ? currentContract.tenant : currentContract.owner;
-            const isContractPendingForMe = isSigner && !signerObj.hasSigned;
+            const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
 
             let html = `
                 <div class="w-full space-y-8 font-body">
