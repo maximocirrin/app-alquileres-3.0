@@ -8,7 +8,9 @@ window.STORAGE_BUCKETS = {
     PROPIEDADES_MULTIMEDIA: 'propiedades_multimedia',
     FOTOS_DE_PERFIL: 'fotos_de_perfil',
     INVENTARIO_DIGITAL: 'inventario_digital',
-    RAG_DOCUMENTS: 'rag-documents'
+    RAG_DOCUMENTS: 'rag-documents',
+    CONTRATOS_FIRMADOS: 'contratos_firmados',
+    BOVEDA_BIOMETRICA: 'boveda_biometrica'
 };
 
 function base64ToBlob(base64Data, contentType = 'image/jpeg') {
@@ -165,7 +167,8 @@ var DataManager = {
                 const media = pub?.Multimedia || [];
                 const contract = Array.isArray(p.Contrato) ? p.Contrato[0] : p.Contrato;
 
-                const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
+                const photoUrls = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                if (photoUrls.length === 0) photoUrls.push('img/hero-marketplace.jpg');
                 const title = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `${p.calle || 'Propiedad'} ${p.numero || ''}`.trim();
                 const address = `${p.calle || 'Sin calle'} ${p.numero || ''}, ${p.piso_dpto || ''}`.trim();
                 const dbCaracteristicas = (p.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
@@ -233,7 +236,8 @@ var DataManager = {
             return (publications || []).map(pub => {
                 const prop = pub.Propiedad || {};
                 const media = pub.Multimedia || [];
-                const imageUrls = media.length > 0 ? media.map(m => m.url_archivo) : ['img/hero-marketplace.jpg'];
+                const imageUrls = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                if (imageUrls.length === 0) imageUrls.push('img/hero-marketplace.jpg');
                 const firstImage = imageUrls[0];
                 const address = `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim();
 
@@ -716,10 +720,29 @@ var DataManager = {
         if (!Array.isArray(rawPhotos) || rawPhotos.length === 0) {
             rawPhotos = ['img/hero-marketplace.jpg'];
         }
-        const uploadedMediaItems = [];
 
-        for (let idx = 0; idx < rawPhotos.length; idx++) {
-            let item = rawPhotos[idx];
+        // Deduplicar array de entrada para evitar uploads o registros dobles
+        const uniqueRawPhotos = [];
+        const seenItems = new Set();
+        for (const item of rawPhotos) {
+            if (!item) continue;
+            let key = item;
+            if (item instanceof File || item instanceof Blob) {
+                key = `${item.name || item.originalName || 'blob'}-${item.size || item.originalSize || 0}-${item.type || ''}`;
+            } else if (typeof item === 'object') {
+                key = item.url || item.src || item.file?.name || JSON.stringify(item);
+            }
+            if (!seenItems.has(key)) {
+                seenItems.add(key);
+                uniqueRawPhotos.push(item);
+            }
+        }
+
+        const uploadedMediaItems = [];
+        const seenUrls = new Set();
+
+        for (let idx = 0; idx < uniqueRawPhotos.length; idx++) {
+            let item = uniqueRawPhotos[idx];
             let publicUrl = null;
 
             if (item && typeof item === 'object' && !(item instanceof File) && !(item instanceof Blob)) {
@@ -728,12 +751,12 @@ var DataManager = {
 
             try {
                 if (item instanceof File || item instanceof Blob) {
-                    const ext = item.name ? item.name.split('.').pop() : 'jpg';
+                    const ext = item.name ? item.name.split('.').pop() : 'webp';
                     const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.${ext}`;
                     const { data: uploadResult, error: uploadErr } = await window.supabaseClient
                         .storage
                         .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                        .upload(filePath, item, { contentType: item.type || 'image/jpeg', upsert: true });
+                        .upload(filePath, item, { contentType: item.type || 'image/webp', upsert: true });
 
                     if (!uploadErr) {
                         const { data: urlRes } = window.supabaseClient
@@ -747,11 +770,11 @@ var DataManager = {
                 } else if (typeof item === 'string' && item.startsWith('data:')) {
                     const blob = base64ToBlob(item);
                     if (blob) {
-                        const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.jpg`;
+                        const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.webp`;
                         const { data: uploadResult, error: uploadErr } = await window.supabaseClient
                             .storage
                             .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                            .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+                            .upload(filePath, blob, { contentType: 'image/webp', upsert: true });
 
                         if (!uploadErr) {
                             const { data: urlRes } = window.supabaseClient
@@ -773,12 +796,13 @@ var DataManager = {
                 publicUrl = item;
             }
 
-            if (publicUrl) {
+            if (publicUrl && !seenUrls.has(publicUrl)) {
+                seenUrls.add(publicUrl);
                 uploadedMediaItems.push({
                     id_publicacion: pubData.id_publicacion,
                     id_tipo_multimedia: 1,
                     url_archivo: publicUrl,
-                    orden_visualizacion: idx + 1
+                    orden_visualizacion: uploadedMediaItems.length + 1
                 });
             }
         }
@@ -789,6 +813,9 @@ var DataManager = {
                 console.error("Error inserting Multimedia rows:", mediaErr);
             }
         }
+
+        // Limpiar estado de fotos en memoria
+        window.selectedPropertyPhotos = [];
 
         return {
             id: pubData.id_publicacion,
@@ -1545,50 +1572,193 @@ var DataManager = {
         }
     },
 
-    getActiveContract: async function () {
-        if (!window.supabaseClient) return null;
+    getOwnerContracts: async function() {
+        let contractsList = [];
+        // 1. Local contracts
+        try {
+            const raw = localStorage.getItem('habitat_contracts');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    contractsList = parsed.filter(c => c && c.id && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández');
+                }
+            }
+        } catch(e) {}
+
+        if (!window.supabaseClient) {
+            return contractsList;
+        }
+
         try {
             const { data, error } = await window.supabaseClient
                 .from('Contrato')
                 .select(`
                     *,
-                    Propiedad (*),
-                    Perfil!id_perfil_inquilino (*)
+                    Propiedad (
+                        *,
+                        Publicacion (*, Multimedia (*)),
+                        Propiedad_caracteristica (
+                            Caracteristica (*)
+                        )
+                    ),
+                    Inquilino:Perfil!id_perfil_inquilino (*),
+                    Propietario:Perfil!id_perfil_propietario (*),
+                    Firma_contrato (*)
                 `)
+                .order('id_contrato', { ascending: false });
+
+            if (!error && Array.isArray(data) && data.length > 0) {
+                const dbContracts = data.map(item => {
+                    const prop = item.Propiedad || {};
+                    const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                    const media = pub?.Multimedia || [];
+                    const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                    const inq = item.Inquilino || {};
+                    const propOwner = item.Propietario || {};
+
+                    const cleanTitle = pub?.descripcion 
+                        ? pub.descripcion.split(' | Detalles: ')[0] 
+                        : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
+
+                    const cleanAddress = `${prop.calle || 'Calle'} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim();
+
+                    const inqName = inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : (inq.mail ? inq.mail.split('@')[0] : 'Inquilino Verificado'));
+
+                    return {
+                        id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
+                        dbContractId: item.id_contrato,
+                        property_id: item.id_propiedad,
+                        property_title: cleanTitle,
+                        property_address: cleanAddress,
+                        property_image: photos[0] || 'img/hero-marketplace.jpg',
+                        photos: photos,
+                        monthly_rent: Number(item.monto_cierre || pub?.precio || 380000),
+                        expenses_amount: Number(prop.expensas_mensuales || 48000),
+                        payment_due_day: item.dia_vencimiento_mensual || 10,
+                        punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
+                        adjustment_index: item.indice_ajuste || 'IPC',
+                        adjustment_frequency_months: item.periodo_aumento_meses || 3,
+                        broker_commission_percent: 4.15,
+                        start_date: item.fecha_inicio_contrato || '2026-08-01',
+                        end_date: item.fecha_fin_contrato || '2027-08-01',
+                        tenant_name: inqName,
+                        tenant_email: inq.mail || 'inquilino@habitat.ar',
+                        tenant_phone: inq.telefono || '+54 9 261 412-3456',
+                        cbu_alias: item.alias_cbu || 'HABITAT.PAGOS.ALQUILER',
+                        status: (item.Firma_contrato && item.Firma_contrato.length > 0) ? 'SIGNED_AND_SEALED' : 'ACTIVE'
+                    };
+                });
+
+                // Combinar sin duplicados
+                const combined = [...dbContracts];
+                for (const lc of contractsList) {
+                    if (!combined.some(c => c.id === lc.id || c.dbContractId === lc.dbContractId)) {
+                        combined.push(lc);
+                    }
+                }
+                return combined;
+            }
+        } catch(e) {
+            console.error("Error in getOwnerContracts:", e);
+        }
+
+        return contractsList;
+    },
+
+    getActiveContract: async function () {
+        // 1. Revisar si hay un contrato firmado en habitat_contracts de localStorage
+        let localContracts = [];
+        try {
+            localContracts = JSON.parse(localStorage.getItem('habitat_contracts') || '[]');
+        } catch (e) {}
+
+        const activeLocal = localContracts.find(c => c && (c.status === 'SIGNED_AND_SEALED' || c.status === 'WAITING_OWNER' || c.status === 'WAITING_TENANT' || c.tenant?.hasSigned));
+
+        if (!window.supabaseClient) {
+            if (activeLocal) return activeLocal;
+            return null;
+        }
+
+        try {
+            // 2. Consultar el contrato más reciente en Supabase con todas las relaciones completas
+            const { data, error } = await window.supabaseClient
+                .from('Contrato')
+                .select(`
+                    *,
+                    Propiedad (
+                        *,
+                        Publicacion (*, Multimedia (*)),
+                        Propiedad_caracteristica (
+                            Caracteristica (*)
+                        )
+                    ),
+                    Inquilino:Perfil!id_perfil_inquilino (*),
+                    Propietario:Perfil!id_perfil_propietario (*),
+                    Firma_contrato (*)
+                `)
+                .order('id_contrato', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
-            if (error || !data) {
+            if (!error && data) {
+                const prop = data.Propiedad || {};
+                const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                const media = pub?.Multimedia || [];
+                const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                const inq = data.Inquilino || {};
+                const propOwner = data.Propietario || {};
+
+                // Extraer características de la base de datos
+                const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
+
+                const cleanTitle = pub?.descripcion 
+                    ? pub.descripcion.split(' | Detalles: ')[0] 
+                    : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
+
+                const cleanAddress = `${prop.calle || 'Calle'} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim();
+
                 return {
-                    id: 1,
-                    property_title: 'Departamento 3 Ambientes',
-                    property_address: 'Av. Santa Fe 2450, Recoleta, CABA',
-                    property_image: 'img/hero-marketplace.jpg',
-                    tenant_name: 'Carlos Gómez',
-                    monthly_rent: 380000,
-                    payment_due_day: 10,
-                    punitive_daily_rate: 0.5,
-                    adjustment_index: 'IPC',
-                    cbu_alias: 'HABITAT.RECOLETA.MP'
+                    id: data.id_contrato,
+                    dbContractId: data.id_contrato,
+                    contract_number: `CTR-2026-${String(data.id_contrato).padStart(4, '0')}`,
+                    property_id: data.id_propiedad,
+                    property_title: cleanTitle,
+                    property_address: cleanAddress,
+                    property_image: photos[0] || 'img/hero-marketplace.jpg',
+                    photos: photos,
+                    monthly_rent: Number(data.monto_cierre || pub?.precio || 380000),
+                    expenses: Number(prop.expensas_mensuales || 48000),
+                    m2_cubiertos: prop.superficie_cubierta || 75,
+                    m2_totales: prop.superficie_total || 85,
+                    ambientes: prop.ambientes || 3,
+                    dormitorios: prop.dormitorios || 2,
+                    banos: prop.banos || 1,
+                    cocheras: prop.cocheras || 1,
+                    cochera: prop.cocheras ? `${prop.cocheras} Cubierta fija` : 'Sin cochera',
+                    start_date: data.fecha_inicio_contrato || '2026-08-01',
+                    end_date: data.fecha_fin_contrato || '2027-08-01',
+                    payment_due_day: data.dia_vencimiento_mensual || 10,
+                    punitive_daily_rate: Number(data.tasa_punitoria_diaria || 0.5),
+                    adjustment_index: data.indice_ajuste || 'IPC',
+                    adjustment_frequency_months: data.periodo_aumento_meses || 3,
+                    cbu_alias: data.alias_cbu || 'HABITAT.PAGOS.ALQUILER',
+                    tenant_name: inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : 'Inquilino Verificado'),
+                    tenant_email: inq.mail || 'inquilino@habitat.ar',
+                    tenant_phone: inq.telefono || '+54 9 261 412-3456',
+                    landlord_name: propOwner.nombre_completo || (propOwner.nombre && propOwner.apellido ? `${propOwner.nombre} ${propOwner.apellido}` : 'Propietario Verificado'),
+                    landlord_email: propOwner.mail || 'propietario@habitat.ar',
+                    landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
+                    description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Hábitat.',
+                    caracteristicas: dbCaracteristicas
                 };
             }
 
-            const prop = data.Propiedad || {};
-            return {
-                id: data.id_contrato,
-                property_id: data.id_propiedad,
-                property_title: `Propiedad en ${prop.calle || 'Alquiler'}`,
-                property_address: `${prop.calle || 'Av. Santa Fe'} ${prop.numero || '2450'}`,
-                property_image: 'img/hero-marketplace.jpg',
-                monthly_rent: data.monto_cierre || 380000,
-                payment_due_day: data.dia_vencimiento_mensual || 10,
-                punitive_daily_rate: data.tasa_punitoria_diaria || 0.5,
-                adjustment_index: data.indice_ajuste || 'IPC',
-                cbu_alias: data.alias_cbu || 'HABITAT.RECOLETA.MP'
-            };
+            if (activeLocal) return activeLocal;
+
+            return null;
         } catch (e) {
             console.error("Error in getActiveContract:", e);
-            return null;
+            return activeLocal || null;
         }
     },
 

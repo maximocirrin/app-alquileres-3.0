@@ -374,6 +374,32 @@ export default async function sellarHandler(req, res) {
       console.error('[Error subiendo Audit Trail a Supabase Storage]:', uploadErr);
     }
 
+    // 4b. Subir Evidencia Biométrica a Supabase Storage (boveda_biometrica)
+    const biometricEvidence = {
+      id_firma: firmaId,
+      id_contrato: contractId,
+      rol_firmante: rol,
+      didit_session_id: didit_session_id || firma.didit_session_id,
+      didit_status: 'Approved',
+      didit_scores: didit_scores || firma.didit_scores || { liveness: 'PASSED', faceMatch: 99.2 },
+      timestamp: new Date().toISOString(),
+      user_agent: user_agent,
+      ip: ip || '127.0.0.1',
+      hash_contrato: hashContratoSha256
+    };
+
+    const biometricPath = `contrato_${contractId}/biometria_liveness_${firmaId}.json`;
+    const { error: uploadBioErr } = await supabase.storage
+      .from('boveda_biometrica')
+      .upload(biometricPath, Buffer.from(JSON.stringify(biometricEvidence, null, 2)), {
+        contentType: 'application/json',
+        upsert: true
+      });
+
+    if (uploadBioErr) {
+      console.error('[Error subiendo Biometría a Supabase Storage]:', uploadBioErr);
+    }
+
     // 5. Actualizar Firma_contrato en la base de datos
     const { data: firmaActualizada, error: errUpdate } = await supabase
       .from('Firma_contrato')

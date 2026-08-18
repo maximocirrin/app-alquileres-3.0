@@ -79,7 +79,7 @@
    * Renderiza un escáner biométrico facial y de documento interactivo 100% in-page en Hábitat.
    * No abre ventanas nuevas del navegador.
    */
-  function renderBuiltInBiometricScanner(userId, role) {
+  function renderBuiltInBiometricScanner(userId, role, isLivenessOnly = false) {
     return new Promise((resolve) => {
       const modalId = 'habitat-in-app-kyc-scanner';
       const existing = document.getElementById(modalId);
@@ -98,18 +98,18 @@
             <div class="space-y-1">
               <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold border border-emerald-500/20 uppercase tracking-wide">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Didit OCR & Biometric Engine</span>
+                <span>${isLivenessOnly ? 'Didit Biometric Liveness Check' : 'Didit OCR & Biometric Engine'}</span>
               </div>
-              <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white">Validación de Identidad Didit KYC</h3>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400">Escaneando Documento Nacional de Identidad</p>
+              <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white">${isLivenessOnly ? 'Validación Facial Biométrica en Vivo' : 'Validación de Identidad Didit KYC'}</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">${isLivenessOnly ? 'Validando prueba de vida con tu Pasaporte Hábitat' : 'Escaneando Documento Nacional de Identidad'}</p>
             </div>
 
-            <!-- Visual Scanner Animation (DNI OCR + Face) -->
+            <!-- Visual Scanner Animation (Face Liveness or DNI OCR + Face) -->
             <div class="relative w-56 h-48 mx-auto rounded-3xl border-2 border-dashed border-primary/60 dark:border-primary/80 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/80 overflow-hidden shadow-inner p-3">
               <div id="kyc-doc-preview" class="w-full h-full flex flex-col items-center justify-center space-y-2 transition-all duration-500">
-                <span id="kyc-face-icon" class="material-symbols-outlined text-6xl text-primary/70 dark:text-red-400/80">badge</span>
+                <span id="kyc-face-icon" class="material-symbols-outlined text-6xl text-primary/70 dark:text-red-400/80">${isLivenessOnly ? 'face' : 'badge'}</span>
                 <div class="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 font-bold">
-                  REPÚBLICA ARGENTINA - DNI
+                  ${isLivenessOnly ? 'RECONOCIMIENTO FACIAL EN VIVO' : 'REPÚBLICA ARGENTINA - DNI'}
                 </div>
                 <div class="w-36 h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded-full animate-pulse"></div>
               </div>
@@ -120,7 +120,7 @@
               <!-- Success check overlay -->
               <div id="kyc-success-check" class="absolute inset-0 bg-emerald-600/95 flex flex-col items-center justify-center text-white opacity-0 scale-75 transition-all duration-500 p-4">
                 <span class="material-symbols-outlined text-5xl">verified</span>
-                <span class="font-headline font-black text-sm mt-1">¡Identidad Verificada!</span>
+                <span class="font-headline font-black text-sm mt-1">${isLivenessOnly ? '¡Biometría Facial Aprobada!' : '¡Identidad Verificada!'}</span>
                 <span class="text-[11px] font-bold text-emerald-100 mt-0.5">${identity.fullName}</span>
                 <span class="text-[10px] text-emerald-200">DNI: ${identity.documentNumber}</span>
               </div>
@@ -129,9 +129,9 @@
             <!-- Extracted Identity Card -->
             <div id="kyc-data-box" class="space-y-2 text-xs text-left bg-zinc-50 dark:bg-zinc-900/60 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
               <div class="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-700/50 pb-2">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Datos Extraídos del DNI</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">${isLivenessOnly ? 'Titular del Pasaporte Hábitat' : 'Datos Extraídos del DNI'}</span>
                 <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <span class="material-symbols-outlined text-xs">task_alt</span> OCR 100% Match
+                  <span class="material-symbols-outlined text-xs">task_alt</span> ${isLivenessOnly ? 'Identidad Pre-Validada' : 'OCR 100% Match'}
                 </span>
               </div>
               <div class="grid grid-cols-2 gap-2 text-zinc-700 dark:text-zinc-300 text-xs">
@@ -156,7 +156,7 @@
                 <div id="kyc-progress-bar" class="h-full bg-gradient-to-r from-primary via-rose-500 to-emerald-500 transition-all duration-700" style="width: 30%"></div>
               </div>
               <p id="kyc-status-text" class="text-xs font-semibold text-zinc-600 dark:text-zinc-300 animate-pulse">
-                Extrayendo datos y validando prueba de vida...
+                ${isLivenessOnly ? 'Validando prueba de vida facial y coincidencia biométrica...' : 'Extrayendo datos y validando prueba de vida...'}
               </p>
             </div>
 
@@ -175,12 +175,12 @@
       // Animación secuencial de escaneo OCR y biometría
       setTimeout(() => {
         if (pBar) pBar.style.width = '75%';
-        if (sText) sText.textContent = 'Verificando rasgos faciales y validez en Renaper...';
+        if (sText) sText.textContent = isLivenessOnly ? 'Verificando prueba de vida (Liveness Check) y biometría facial...' : 'Verificando rasgos faciales y validez en Renaper...';
       }, 700);
 
       setTimeout(() => {
         if (pBar) pBar.style.width = '100%';
-        if (sText) sText.textContent = '¡Verificación Didit KYC completada exitosamente!';
+        if (sText) sText.textContent = isLivenessOnly ? '¡Liveness Check facial aprobado con éxito!' : '¡Verificación Didit KYC completada exitosamente!';
         if (scanLaser) scanLaser.remove();
         if (successCheck) {
           successCheck.classList.remove('opacity-0', 'scale-75');
@@ -387,7 +387,7 @@
     }
 
     // De lo contrario, ejecutar el escáner biométrico in-page interactivo directamente
-    return renderBuiltInBiometricScanner(userId, role);
+    return renderBuiltInBiometricScanner(userId, role, isLivenessOnly);
   }
 
   // Exportar al objeto global window

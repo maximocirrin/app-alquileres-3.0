@@ -906,50 +906,45 @@
                     : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
                 const estimatedNewRent = Math.round((contract.monthly_rent || 380000) * (1 + defaultRate / 100));
 
-                // Construir datos enriquecidos de la propiedad / publicación
+                // Construir datos enriquecidos de la propiedad / publicación con datos reales
+                const propertyImages = (Array.isArray(contract.photos) && contract.photos.length > 0)
+                    ? contract.photos
+                    : (contract.property_image ? [contract.property_image] : ['img/hero-marketplace.jpg']);
+
                 const propertyDetails = {
-                    id: contract.property_id || 101,
-                    title: contract.property_title || 'Departamento 3 Ambientes con Balcón Aterrazado',
-                    address: contract.property_address || 'Av. Santa Fe 2450, Piso 6° B, Recoleta, CABA',
+                    id: contract.property_id || contract.id || 1,
+                    title: contract.property_title || `Propiedad en ${contract.property_address || 'Alquiler'}`,
+                    address: contract.property_address || 'Mendoza, Argentina',
                     price: contract.monthly_rent || 380000,
-                    expenses: 48000,
-                    m2_cubiertos: 78,
-                    m2_totales: 85,
-                    ambientes: 3,
-                    dormitorios: 2,
-                    banos: 2,
-                    cochera: '1 Cubierta fija',
-                    disposicion: 'Frente con Balcón Terraza',
-                    orientacion: 'Este (Luz natural todo el día)',
-                    piso: '6° Piso',
-                    amoblado: 'Semiamoblado con Línea Blanca',
-                    tipo: 'Departamento en Torre',
-                    antiguedad: '4 años (Excelente estado)',
-                    calefaccion: 'Losa Radiante y Aire Split Frío/Calor',
-                    images: [
-                        'img/hero-marketplace.jpg',
-                        'img/hero-banner.jpg',
-                        'img/feature-1.jpg',
-                        'img/feature-2.jpg',
-                        'img/feature-3.jpg'
-                    ],
-                    amenities: [
-                        { icon: 'pool', name: 'Piscina y Solárium' },
-                        { icon: 'fitness_center', name: 'Gimnasio Equipado' },
-                        { icon: 'outdoor_grill', name: 'SUM con Parrilla' },
-                        { icon: 'shield', name: 'Seguridad 24hs & Tótem' },
-                        { icon: 'balcony', name: 'Balcón Aterrazado' },
-                        { icon: 'local_laundry_service', name: 'Laundry en Edificio' },
-                        { icon: 'pets', name: 'Acepta Mascotas' },
-                        { icon: 'hvac', name: 'Aire Acondicionado Split' },
-                        { icon: 'elevator', name: 'Ascensores de Alta Velocidad' },
-                        { icon: 'garage', name: 'Cochera en Subsuelo' }
-                    ],
-                    description: 'Exclusivo departamento semipiso de 3 ambientes con terminaciones de primera categoría sobre Av. Santa Fe en Recoleta. Espacioso living comedor apaisado con amplios ventanales con doble vidrio hermético (DVH) y salida directa a balcón aterrazado con vista abierta. Cocina independiente con comedor diario, mobiliario completo bajo mesada y alacenas, horno empotrado en acero inoxidable y anafe vitrocerámico. Dormitorio principal en suite con vestidor, segundo dormitorio con placard de piso a techo y baño secundario completo. Cochera fija y cubierta en primer subsuelo con portón automático.',
-                    landlord_name: 'Estudio & Inmobiliaria Recoleta Premium',
-                    landlord_phone: '+54 9 11 4820-9900',
-                    landlord_email: 'contacto@recoletapremium.com.ar',
-                    landlord_role: 'Corredor Inmobiliario Matriculado CUCICBA N° 6842'
+                    expenses: contract.expenses || 48000,
+                    m2_cubiertos: contract.m2_cubiertos || 75,
+                    m2_totales: contract.m2_totales || 85,
+                    ambientes: contract.ambientes || 3,
+                    dormitorios: contract.dormitorios || 2,
+                    banos: contract.banos || 1,
+                    cochera: contract.cochera || (contract.cocheras ? `${contract.cocheras} Cochera(s)` : '1 Cubierta fija'),
+                    disposicion: 'Frente con Balcón',
+                    orientacion: 'Este (Luz natural)',
+                    piso: contract.piso || 'Piso principal',
+                    amoblado: contract.amoblado || 'Semiamoblado',
+                    tipo: contract.tipo || 'Departamento',
+                    antiguedad: contract.antiguedad || 'Excelente estado',
+                    calefaccion: 'Aire Split Frío/Calor y Calefacción Central',
+                    images: propertyImages,
+                    amenities: (contract.caracteristicas && contract.caracteristicas.length > 0)
+                        ? contract.caracteristicas.map(name => ({ icon: 'check_circle', name }))
+                        : [
+                            { icon: 'shield', name: 'Seguridad y Control de Acceso' },
+                            { icon: 'balcony', name: 'Balcón / Vista Abierta' },
+                            { icon: 'pets', name: 'Acepta Mascotas' },
+                            { icon: 'hvac', name: 'Aire Acondicionado' },
+                            { icon: 'garage', name: 'Cochera' }
+                        ],
+                    description: contract.description || 'Propiedad en alquiler administrada y verificada mediante contrato digital Hábitat con firma electrónica y sellado de tiempo TSA.',
+                    landlord_name: contract.landlord_name || 'Propietario Verificado',
+                    landlord_phone: contract.landlord_phone || '+54 9 261 598-7654',
+                    landlord_email: contract.landlord_email || 'propietario@habitat.ar',
+                    landlord_role: 'Propietario Directo / Administrador Matriculado'
                 };
 
                 container.innerHTML = `
@@ -2315,6 +2310,21 @@
         function downloadPassportPDF() {
             alert("Generando y descargando credencial oficial del Pasaporte Hábitat en PDF con firma digital inmutable...");
         }
+
+        // Sincronización reactiva en tiempo real
+        window.addEventListener('habitat:application_updated', () => {
+            if (typeof renderTenantApplications === 'function') {
+                renderTenantApplications();
+            }
+            if (typeof renderTenantDashboard === 'function') {
+                renderTenantDashboard();
+            }
+        });
+        window.addEventListener('habitat:contract_updated', () => {
+            if (typeof renderTenantDashboard === 'function') {
+                renderTenantDashboard();
+            }
+        });
     </script>
 
     <!-- Modal Moderno de Confirmación para Eliminar Garante -->

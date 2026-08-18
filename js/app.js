@@ -1670,7 +1670,12 @@ const App = {
 
         async function processAndAddPhotos(files) {
             if (!files || files.length === 0) return;
-            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+            const imageFiles = files.filter(f => f && f.type && f.type.startsWith('image/'));
+            if (imageFiles.length === 0) return;
+
+            // Reset input value to prevent double fires on subsequent interactions
+            const fotosInput = document.getElementById('fotos-input') || document.getElementById('input-fotos');
+            if (fotosInput) fotosInput.value = '';
 
             const cropAndOptimizeImage1to1 = (file) => {
                 return new Promise((resolve) => {
@@ -1691,16 +1696,37 @@ const App = {
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
 
-                            canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.8);
+                            canvas.toBlob((blob) => {
+                                if (blob) {
+                                    blob.originalName = file.name;
+                                    blob.originalSize = file.size;
+                                }
+                                resolve(blob);
+                            }, 'image/webp', 0.8);
                         };
+                        img.onerror = () => resolve(file);
                         img.src = ev.target.result;
                     };
+                    reader.onerror = () => resolve(file);
                     reader.readAsDataURL(file);
                 });
             };
 
-            const processedBlobs = await Promise.all(imageFiles.map(cropAndOptimizeImage1to1));
-            window.selectedPropertyPhotos = [...window.selectedPropertyPhotos, ...processedBlobs];
+            const processedBlobs = (await Promise.all(imageFiles.map(cropAndOptimizeImage1to1))).filter(Boolean);
+
+            window.selectedPropertyPhotos = window.selectedPropertyPhotos || [];
+            
+            // Deduplicate to avoid adding duplicate photos
+            for (const newBlob of processedBlobs) {
+                const isDuplicate = window.selectedPropertyPhotos.some(existing => {
+                    if (existing === newBlob) return true;
+                    if (existing?.originalName && newBlob?.originalName && existing.originalName === newBlob.originalName && existing.originalSize === newBlob.originalSize) return true;
+                    return false;
+                });
+                if (!isDuplicate) {
+                    window.selectedPropertyPhotos.push(newBlob);
+                }
+            }
 
             if (window.selectedPropertyPhotos.length > 50) {
                 window.selectedPropertyPhotos = window.selectedPropertyPhotos.slice(0, 50);
@@ -1724,7 +1750,9 @@ const App = {
         document.addEventListener('change', (e) => {
             if (e.target && (e.target.id === 'fotos-input' || e.target.id === 'input-fotos')) {
                 const files = Array.from(e.target.files);
-                processAndAddPhotos(files);
+                if (files.length > 0) {
+                    processAndAddPhotos(files);
+                }
             }
             if (e.target && e.target.id === 'permite-mascotas') {
                 const detallesContainer = document.getElementById('mascotas-detalles-container');
@@ -2487,29 +2515,20 @@ const App = {
                     diaBtn.classList.add('bg-surface-container-high', 'dark:bg-[#282828]', 'text-secondary', 'dark:text-[#c7c6c6]', 'border-outline-variant/30', 'dark:border-white/5');
                 }
             }
-
-            const btn = e.target.closest('#publish-property-view button[type="submit"]');
-            if (btn) {
-                const formId = btn.getAttribute('form');
-                if (formId) {
-                    const form = document.getElementById(formId);
-                    if (form) {
-                        e.preventDefault();
-                        if (typeof form.requestSubmit === 'function') {
-                            form.requestSubmit();
-                        } else {
-                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                        }
-                    }
-                }
-            }
         });
 
         // Form 'Planes' Submit Interceptor (Final Submit to Supabase)
+        let isPublishingSubmissionActive = false;
         const formPlanes = document.getElementById('form-planes');
         if (formPlanes) {
             formPlanes.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                if (isPublishingSubmissionActive) {
+                    console.warn("Publicación ya en progreso, ignorando envío duplicado.");
+                    return;
+                }
+                isPublishingSubmissionActive = true;
 
                 const contactEmail = (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
                                      (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
@@ -2822,6 +2841,7 @@ const App = {
                     console.error('Error al publicar la propiedad:', error);
                     alert('Ocurrió un error al publicar la propiedad. Por favor, intenta nuevamente.');
                 } finally {
+                    isPublishingSubmissionActive = false;
                     if (submitBtnDesk) submitBtnDesk.textContent = originalTextDesk;
                     if (submitBtnMob) submitBtnMob.textContent = 'Publicar Aviso';
                     if (submitBtnDesk) submitBtnDesk.disabled = false;
