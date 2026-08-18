@@ -1213,41 +1213,8 @@
             }).join('');
         }
 
-        let ownerActiveContractsMock = [
-            {
-                id: 'cnt-001',
-                property_title: 'Departamento 3 Ambientes con Balcón',
-                property_address: 'Av. Santa Fe 2450 4°A, Recoleta, CABA',
-                tenant_name: 'Carlos Gómez',
-                tenant_email: 'carlos.gomez@gmail.com',
-                tenant_phone: '+54 9 11 5544-3322',
-                monthly_rent: 380000,
-                expenses_amount: 45000,
-                punitive_daily_rate: 0.5,
-                broker_commission_percent: 4.15,
-                payment_due_day: 10,
-                adjustment_index: 'IPC',
-                adjustment_frequency_months: 3,
-                cbu_alias: 'HABITAT.RECOLETA.MP'
-            },
-            {
-                id: 'cnt-002',
-                property_title: 'PH Moderno 2 Ambientes con Patio',
-                property_address: 'Humboldt 1940 1°B, Palermo Soho, CABA',
-                tenant_name: 'Mariana López',
-                tenant_email: 'mariana.lopez@gmail.com',
-                tenant_phone: '+54 9 11 6677-8899',
-                monthly_rent: 520000,
-                expenses_amount: 28000,
-                punitive_daily_rate: 0.5,
-                broker_commission_percent: 4.15,
-                payment_due_day: 5,
-                adjustment_index: 'ICL',
-                adjustment_frequency_months: 6,
-                cbu_alias: 'HABITAT.PALERMO.MP'
-            }
-        ];
-        let activeSelectedContractId = 'cnt-001';
+        let ownerActiveContractsMock = [];
+        let activeSelectedContractId = null;
 
         function selectOwnerActiveContract(contractId) {
             activeSelectedContractId = contractId;
@@ -1262,10 +1229,12 @@
                 const contract = ownerActiveContractsMock.find(c => c.id === activeSelectedContractId) || ownerActiveContractsMock[0];
                 if (!contract) {
                     container.innerHTML = `
-                        <div class="glass-card rounded-2xl p-8 text-center text-zinc-500 space-y-2">
-                            <span class="material-symbols-outlined text-3xl text-zinc-400">payments</span>
-                            <h3 class="font-headline font-bold text-base">No hay alquileres registrados</h3>
-                            <p class="text-xs text-zinc-400">Cuando aceptes una postulación, tus contratos de alquiler aparecerán aquí.</p>
+                        <div class="glass-card rounded-3xl p-10 text-center text-zinc-500 space-y-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                            <div class="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">
+                                <span class="material-symbols-outlined text-3xl">payments</span>
+                            </div>
+                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">No hay contratos de alquiler activos</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">Cuando aceptes una postulación desde la sección Candidatos y se firme el contrato digital, podrás gestionar los cobros y ajustes de alquiler aquí.</p>
                         </div>
                     `;
                     return;

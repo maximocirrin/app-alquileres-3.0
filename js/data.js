@@ -873,6 +873,15 @@ var DataManager = {
                     .from('Solicitud')
                     .select(`
                         *,
+                        Historial_estado_solicitud (
+                            id_historial_estado_solicitud,
+                            id_estado_solicitud,
+                            fecha_inicio,
+                            Estado_solicitud (
+                                id_estado_solicitud,
+                                nombre
+                            )
+                        ),
                         Propiedad (
                             *,
                             Publicacion (
@@ -903,6 +912,20 @@ var DataManager = {
                             ? pub.descripcion.split(' | Detalles: ')[0] 
                             : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
 
+                        // Determinar estado real desde Historial_estado_solicitud
+                        const hist = s.Historial_estado_solicitud || [];
+                        let appStatus = 'pendiente';
+                        if (hist.length > 0) {
+                            const sortedHist = [...hist].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+                            const latest = sortedHist[0];
+                            const stName = (latest.Estado_solicitud?.nombre || '').toLowerCase();
+                            if (latest.id_estado_solicitud === 2 || stName === 'aceptada' || stName === 'aprobada') {
+                                appStatus = 'aceptada';
+                            } else if (latest.id_estado_solicitud === 3 || stName === 'rechazada') {
+                                appStatus = 'rechazada';
+                            }
+                        }
+
                         return {
                             id: s.id_solicitud,
                             property_id: s.id_propiedad,
@@ -924,7 +947,7 @@ var DataManager = {
                             income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
                             income_proof_url: '#',
                             message: s.mensaje || 'Interesado en alquilar la propiedad.',
-                            status: 'pendiente',
+                            status: appStatus,
                             created_at: s.fecha_solicitud
                         };
                     });
@@ -1035,117 +1058,132 @@ var DataManager = {
     },
 
     acceptApplication: async function (appId) {
-        if (!window.supabaseClient) return null;
-        const profileId = await DataManager._getOrCreateProfile();
-
-        const { data: sol } = await window.supabaseClient
-            .from('Solicitud')
-            .select('*')
-            .eq('id_solicitud', appId)
-            .maybeSingle();
-
-        const solPropId = sol?.id_propiedad || 1;
-        const solPerfilId = sol?.id_perfil || profileId;
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
-
-        // 1. Record Historial_estado_solicitud (Aprobada = 2)
-        try {
-            await window.supabaseClient.from('Historial_estado_solicitud').insert([{
-                id_solicitud: appId,
-                id_estado_solicitud: 2, // Aprobada
-                fecha_inicio: new Date().toISOString()
-            }]);
-        } catch (e) { }
-
-        // 2. Create Contrato
-        const { data: contract, error: cErr } = await window.supabaseClient
-            .from('Contrato')
-            .insert([{
-                id_perfil_propietario: profileId,
-                id_perfil_inquilino: solPerfilId,
-                id_propiedad: solPropId,
-                id_tipo_garantia: 1,
-                "id_Indice": 1,
-                id_moneda: 1,
-                fecha_firma_contrato: todayStr,
-                fecha_inicio_contrato: todayStr,
-                fecha_fin_contrato: nextYearStr,
-                monto_cierre: 380000,
-                periodo_aumento_meses: 3,
-                dia_vencimiento_mensual: 10,
-                alias_cbu: 'HABITAT.ALQUILER.MP'
-            }])
-            .select()
-            .single();
-
-        if (cErr) console.error("Error creating contract:", cErr);
-
-        if (contract) {
-            // Record Historial_Estado_Contrato (1 = Activo)
+        if (window.supabaseClient && appId) {
             try {
-                await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
-                    id_contrato: contract.id_contrato,
-                    id_estado_contrato: 1,
+                const profileId = await DataManager._getOrCreateProfile();
+
+                const { data: sol } = await window.supabaseClient
+                    .from('Solicitud')
+                    .select('*')
+                    .eq('id_solicitud', appId)
+                    .maybeSingle();
+
+                const solPropId = sol?.id_propiedad || 1;
+                const solPerfilId = sol?.id_perfil || profileId;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
+
+                // 1. Record Historial_estado_solicitud (Aprobada = 2)
+                await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                    id_solicitud: appId,
+                    id_estado_solicitud: 2, // Aprobada
                     fecha_inicio: new Date().toISOString()
                 }]);
-            } catch (e) { }
 
-            // Create initial Pago and record Historial_pago (1 = Pendiente)
-            const { data: pago } = await window.supabaseClient
-                .from('Pago')
-                .insert([{
-                    id_contrato: contract.id_contrato,
-                    id_metodo_pago: 1,
-                    monto: 380000,
-                    fecha_vencimiento: todayStr,
-                    periodo: 'Julio 2026'
-                }])
-                .select()
-                .maybeSingle();
+                // 2. Create Contrato
+                const { data: contract, error: cErr } = await window.supabaseClient
+                    .from('Contrato')
+                    .insert([{
+                        id_perfil_propietario: profileId,
+                        id_perfil_inquilino: solPerfilId,
+                        id_propiedad: solPropId,
+                        id_tipo_garantia: 1,
+                        "id_Indice": 1,
+                        id_moneda: 1,
+                        fecha_firma_contrato: todayStr,
+                        fecha_inicio_contrato: todayStr,
+                        fecha_fin_contrato: nextYearStr,
+                        monto_cierre: 380000,
+                        periodo_aumento_meses: 3,
+                        dia_vencimiento_mensual: 10,
+                        alias_cbu: 'HABITAT.ALQUILER.MP'
+                    }])
+                    .select()
+                    .single();
 
-            if (pago) {
+                if (cErr) console.error("Error creating contract:", cErr);
+
+                if (contract) {
+                    // Record Historial_Estado_Contrato (1 = Activo)
+                    try {
+                        await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
+                            id_contrato: contract.id_contrato,
+                            id_estado_contrato: 1,
+                            fecha_inicio: new Date().toISOString()
+                        }]);
+                    } catch (e) { }
+
+                    // Create initial Pago
+                    const { data: pago } = await window.supabaseClient
+                        .from('Pago')
+                        .insert([{
+                            id_contrato: contract.id_contrato,
+                            id_metodo_pago: 1,
+                            monto: 380000,
+                            fecha_vencimiento: todayStr,
+                            periodo: 'Julio 2026'
+                        }])
+                        .select()
+                        .maybeSingle();
+
+                    if (pago) {
+                        try {
+                            await window.supabaseClient.from('Historial_pago').insert([{
+                                id_pago: pago.id_pago,
+                                id_estado_pago: 1, // Pendiente
+                                fecha_inicio: new Date().toISOString()
+                            }]);
+                        } catch (e) { }
+                    }
+                }
+
+                // 3. Update Propiedad state to 'Alquilada' (id_estado_propiedad = 4)
                 try {
-                    await window.supabaseClient.from('Historial_pago').insert([{
-                        id_pago: pago.id_pago,
-                        id_estado_pago: 1, // Pendiente
+                    await window.supabaseClient
+                        .from('Propiedad')
+                        .update({ id_estado_propiedad: 4 })
+                        .eq('id_propiedad', solPropId);
+
+                    await window.supabaseClient.from('Historial_estado_propiedad').insert([{
+                        id_propiedad: solPropId,
+                        id_estado_propiedad: 4, // Alquilada
                         fecha_inicio: new Date().toISOString()
                     }]);
                 } catch (e) { }
+
+                // 4. Update Publicacion state
+                const { data: pubData } = await window.supabaseClient
+                    .from('Publicacion')
+                    .select('id_publicacion')
+                    .eq('id_propiedad', solPropId)
+                    .maybeSingle();
+
+                if (pubData) {
+                    await window.supabaseClient
+                        .from('Historial_Estado_Publicacion')
+                        .insert([{
+                            id_publicacion: pubData.id_publicacion,
+                            id_estado_publicacion: 2,
+                            fecha_inicio: new Date().toISOString()
+                        }]);
+                }
+            } catch (err) {
+                console.error("Error in acceptApplication:", err);
             }
         }
 
-        // 3. Update Propiedad state to 'Alquilada' (id_estado_propiedad = 4)
+        // Actualizar copia local en localStorage
         try {
-            await window.supabaseClient
-                .from('Propiedad')
-                .update({ id_estado_propiedad: 4 })
-                .eq('id_propiedad', solPropId);
-
-            await window.supabaseClient.from('Historial_estado_propiedad').insert([{
-                id_propiedad: solPropId,
-                id_estado_propiedad: 4, // Alquilada
-                fecha_inicio: new Date().toISOString()
-            }]);
-        } catch (e) { }
-
-        // 4. Update Publicacion state
-        const { data: pubData } = await window.supabaseClient
-            .from('Publicacion')
-            .select('id_publicacion')
-            .eq('id_propiedad', solPropId)
-            .maybeSingle();
-
-        if (pubData) {
-            await window.supabaseClient
-                .from('Historial_Estado_Publicacion')
-                .insert([{
-                    id_publicacion: pubData.id_publicacion,
-                    id_estado_publicacion: 2,
-                    fecha_inicio: new Date().toISOString()
-                }]);
-        }
+            const raw = localStorage.getItem('habitat_tenant_applications');
+            if (raw) {
+                const apps = JSON.parse(raw);
+                apps.forEach(a => {
+                    if (String(a.id) === String(appId)) a.status = 'aceptada';
+                });
+                localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+            }
+        } catch (e) {}
 
         return { id: appId, status: 'aceptada' };
     },
@@ -1158,8 +1196,23 @@ var DataManager = {
                     id_estado_solicitud: 3, // Rechazada
                     fecha_inicio: new Date().toISOString()
                 }]);
-            } catch (e) { }
+            } catch (e) {
+                console.error("Error in rejectApplication:", e);
+            }
         }
+
+        // Actualizar copia local en localStorage
+        try {
+            const raw = localStorage.getItem('habitat_tenant_applications');
+            if (raw) {
+                const apps = JSON.parse(raw);
+                apps.forEach(a => {
+                    if (String(a.id) === String(appId)) a.status = 'rechazada';
+                });
+                localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+            }
+        } catch (e) {}
+
         return { id: appId, status: 'rechazada' };
     },
 

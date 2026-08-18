@@ -1612,6 +1612,15 @@
                                     .from('Solicitud')
                                     .select(`
                                         *,
+                                        Historial_estado_solicitud (
+                                            id_historial_estado_solicitud,
+                                            id_estado_solicitud,
+                                            fecha_inicio,
+                                            Estado_solicitud (
+                                                id_estado_solicitud,
+                                                nombre
+                                            )
+                                        ),
                                         Propiedad (*, Publicacion (*, Multimedia (*)))
                                     `)
                                     .eq('id_perfil', perfil.id_perfil)
@@ -1624,6 +1633,20 @@
                                         const media = pub?.Multimedia || [];
                                         const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
                                         const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
+
+                                        const hist = s.Historial_estado_solicitud || [];
+                                        let appStatus = 'pendiente';
+                                        if (hist.length > 0) {
+                                            const sortedHist = [...hist].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+                                            const latest = sortedHist[0];
+                                            const stName = (latest.Estado_solicitud?.nombre || '').toLowerCase();
+                                            if (latest.id_estado_solicitud === 2 || stName === 'aceptada' || stName === 'aprobada') {
+                                                appStatus = 'aceptada';
+                                            } else if (latest.id_estado_solicitud === 3 || stName === 'rechazada') {
+                                                appStatus = 'rechazada';
+                                            }
+                                        }
+
                                         return {
                                             id: s.id_solicitud,
                                             property_id: s.id_propiedad,
@@ -1639,7 +1662,7 @@
                                             property_baths: prop.banos || 1,
                                             income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
                                             message: s.mensaje || '',
-                                            status: 'pendiente',
+                                            status: appStatus,
                                             created_at: s.fecha_solicitud
                                         };
                                     });
