@@ -53,22 +53,33 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlRole = urlParams.get('role');
         if (urlRole && ['TENANT', 'OWNER', 'BROKER'].includes(urlRole.toUpperCase())) {
-            return urlRole.toUpperCase();
+            const r = urlRole.toUpperCase();
+            localStorage.setItem('habitat_active_role', r);
+            return r;
         }
 
-        const storedRole = localStorage.getItem('habitat_active_role');
-        if (storedRole && ['TENANT', 'OWNER', 'BROKER'].includes(storedRole)) {
-            return storedRole;
+        if (document.referrer.includes('tu-alquiler') || document.referrer.includes('inquilino') || document.referrer.includes('pasaporte')) {
+            localStorage.setItem('habitat_active_role', 'TENANT');
+            return 'TENANT';
         }
-
-        if (document.referrer.includes('administrador') || document.referrer.includes('propietarios')) {
+        if (document.referrer.includes('administrador') || document.referrer.includes('propietario')) {
+            localStorage.setItem('habitat_active_role', 'OWNER');
             return 'OWNER';
         }
-        if (document.referrer.includes('panel-corredor') || document.referrer.includes('corredores')) {
+        if (document.referrer.includes('panel-corredor') || document.referrer.includes('corredor')) {
+            localStorage.setItem('habitat_active_role', 'BROKER');
             return 'BROKER';
         }
 
-        return 'OWNER';
+        const storedRole = localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || localStorage.getItem('habitat_user_type');
+        if (storedRole) {
+            const up = storedRole.toUpperCase();
+            if (up === 'INQUILINO' || up === 'TENANT') return 'TENANT';
+            if (up === 'PROPIETARIO' || up === 'OWNER') return 'OWNER';
+            if (up === 'CORREDOR' || up === 'BROKER') return 'BROKER';
+        }
+
+        return 'TENANT';
     }
 
     const ContractsManager = {
@@ -207,6 +218,7 @@
             if (!container) return;
 
             syncPublishedPropertiesWithContracts();
+            this.currentUserRole = detectActiveUserRole();
             const role = this.currentUserRole;
             const publishedProperties = getPublishedProperties();
             const formatMoney = (n) => '$' + Number(n).toLocaleString('es-AR');
@@ -214,24 +226,31 @@
             if (!contracts || contracts.length === 0) {
                 container.innerHTML = `
                     <div class="w-full space-y-8 font-body">
-                        <!-- Top Navigation & Role Switcher Bar -->
+                        <!-- Top Navigation & Role Bar -->
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tu Rol Activo:</span>
-                                <div class="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60">
-                                    <button onclick="ContractsManager.switchRole('OWNER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'OWNER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                        <span class="material-symbols-outlined text-sm">home</span>
-                                        <span>Propietario</span>
-                                    </button>
-                                    <button onclick="ContractsManager.switchRole('BROKER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'BROKER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                        <span class="material-symbols-outlined text-sm">real_estate_agent</span>
-                                        <span>Corredor</span>
-                                    </button>
-                                    <button onclick="ContractsManager.switchRole('TENANT')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'TENANT' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                ${role === 'TENANT' ? `
+                                    <span class="px-3.5 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700/60 shadow-2xs">
                                         <span class="material-symbols-outlined text-sm">person</span>
-                                        <span>Inquilino</span>
-                                    </button>
-                                </div>
+                                        <span>Panel Inquilino • Firma Electrónica</span>
+                                    </span>
+                                ` : role === 'OWNER' ? `
+                                    <span class="px-3.5 py-1.5 rounded-xl bg-red-100 dark:bg-red-950/80 text-primary dark:text-red-400 font-headline font-bold text-xs flex items-center gap-1.5 border border-red-300 dark:border-red-700/60 shadow-2xs">
+                                        <span class="material-symbols-outlined text-sm">home</span>
+                                        <span>Panel Propietario • Firma Digital</span>
+                                    </span>
+                                ` : `
+                                    <span class="px-3.5 py-1.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-blue-300 dark:border-blue-700/60 shadow-2xs">
+                                        <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                                        <span>Panel Corredor Inmobiliario</span>
+                                    </span>
+                                `}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <a href="${role === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 font-bold text-xs transition-colors flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                                    <span>Volver a mi Panel</span>
+                                </a>
                             </div>
                         </div>
 
@@ -244,11 +263,11 @@
                                 No hay contratos de locación activos
                             </h3>
                             <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                                Al aceptar una postulación o generar un contrato para una de tus propiedades publicadas, aparecerá en este panel con firma electrónica y validación biométrica Didit.
+                                Al aceptar una postulación o generar un contrato para una de tus propiedades, aparecerá en este panel con firma electrónica y validación biométrica Didit.
                             </p>
                             <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <a href="administrador.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-md">
-                                    <span class="material-symbols-outlined text-base">dashboard</span> Panel Propietario
+                                <a href="${role === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-md">
+                                    <span class="material-symbols-outlined text-base">dashboard</span> Volver a mi Panel
                                 </a>
                                 <a href="index.html" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-6 py-3 rounded-2xl font-bold text-sm transition-all border border-zinc-200 dark:border-zinc-700">
                                     <span class="material-symbols-outlined text-base">search</span> Ver Publicaciones
@@ -303,24 +322,25 @@
             let html = `
                 <div class="w-full space-y-8 font-body">
                     
-                    <!-- Top Navigation & Role Switcher Bar -->
+                    <!-- Top Navigation & Role Bar (Auto-detected) -->
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tu Rol Activo:</span>
-                            <div class="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60">
-                                <button onclick="ContractsManager.switchRole('OWNER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'OWNER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                    <span class="material-symbols-outlined text-sm">home</span>
-                                    <span>Propietario</span>
-                                </button>
-                                <button onclick="ContractsManager.switchRole('BROKER')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'BROKER' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                    <span class="material-symbols-outlined text-sm">real_estate_agent</span>
-                                    <span>Corredor</span>
-                                </button>
-                                <button onclick="ContractsManager.switchRole('TENANT')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${role === 'TENANT' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                            ${role === 'TENANT' ? `
+                                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700/60 shadow-2xs">
                                     <span class="material-symbols-outlined text-sm">person</span>
-                                    <span>Inquilino</span>
-                                </button>
-                            </div>
+                                    <span>Inquilino Postulante</span>
+                                </span>
+                            ` : role === 'OWNER' ? `
+                                <span class="px-3.5 py-1.5 rounded-xl bg-red-100 dark:bg-red-950/80 text-primary dark:text-red-400 font-headline font-bold text-xs flex items-center gap-1.5 border border-red-300 dark:border-red-700/60 shadow-2xs">
+                                    <span class="material-symbols-outlined text-sm">home</span>
+                                    <span>Propietario del Inmueble</span>
+                                </span>
+                            ` : `
+                                <span class="px-3.5 py-1.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-blue-300 dark:border-blue-700/60 shadow-2xs">
+                                    <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                                    <span>Corredor Matriculado</span>
+                                </span>
+                            `}
                         </div>
 
                         <div class="flex items-center gap-2 text-xs">
@@ -328,7 +348,10 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Didit Liveness Ready
                             </span>
-                            <a href="index.html" class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-primary font-semibold transition-colors">Volver al Marketplace</a>
+                            <a href="${role === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-primary font-semibold transition-colors flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                                <span>Volver</span>
+                            </a>
                         </div>
                     </div>
 

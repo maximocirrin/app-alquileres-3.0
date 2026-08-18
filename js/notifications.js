@@ -55,7 +55,7 @@
 
         createNotification: function ({ title, message, type = 'contract', link = '#', role = 'ALL', icon = null }) {
             const list = this.getAll();
-            
+
             let resolvedIcon = icon;
             if (!resolvedIcon) {
                 if (type === 'contract' || message.toLowerCase().includes('firm') || title.toLowerCase().includes('firm')) {
@@ -83,15 +83,13 @@
                 createdAt: new Date().toISOString()
             };
 
-            // Evitar duplicados idénticos en menos de 5 segundos
-            const recentSame = list.find(n => n.title === title && (Date.now() - new Date(n.createdAt).getTime()) < 5000);
-            if (!recentSame) {
+            // Evitar duplicados idénticos recientes
+            const existingDuplicate = list.find(n => n.title === title && (!n.read || (Date.now() - new Date(n.createdAt).getTime()) < 15000));
+            if (!existingDuplicate) {
                 list.unshift(newNotif);
                 this.saveAll(list);
+                this.showToast(newNotif);
             }
-
-            // Mostrar toast flotante interactivo
-            this.showToast(newNotif);
 
             return newNotif;
         },
@@ -132,14 +130,14 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
                         <h4 class="font-headline font-bold text-xs leading-snug text-zinc-900 dark:text-white">${notif.title}</h4>
-                        <button type="button" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs p-1 close-toast-btn">
+                        <button type="button" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs p-1 close-toast-btn cursor-pointer">
                             <span class="material-symbols-outlined text-sm">close</span>
                         </button>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">${notif.message}</p>
                     ${notif.link && notif.link !== '#' ? `
                         <div class="mt-2.5">
-                            <a href="${notif.link}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors">
+                            <a href="${notif.link}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer">
                                 <span>Ver y Firmar</span>
                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
                             </a>
@@ -150,7 +148,6 @@
 
             container.appendChild(toast);
 
-            // Animate in
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'scale-95');
                 toast.classList.add('translate-y-0', 'opacity-100', 'scale-100');
@@ -182,117 +179,188 @@
             });
         },
 
+        toggleDropdown: function (event, type = 'desktop') {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const isMobile = type === 'mobile';
+            const panel = isMobile 
+                ? document.getElementById('habitat-notif-dropdown-panel-mobile') 
+                : document.getElementById('habitat-notif-dropdown-panel');
+
+            if (!panel) {
+                console.warn("Habitat Notifications: Panel not found for type", type);
+                return;
+            }
+
+            const isCurrentlyHidden = panel.classList.contains('hidden');
+
+            // Close all dropdowns first
+            document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => {
+                p.classList.add('hidden');
+            });
+
+            if (isCurrentlyHidden) {
+                panel.classList.remove('hidden');
+                this.renderDropdown();
+            }
+        },
+
         renderDropdown: function () {
-            const container = document.getElementById('notifications-dropdown-menu');
-            if (!container) return;
+            const targets = document.querySelectorAll('#notifications-dropdown-menu, #notifications-dropdown-menu-mobile, .notifications-dropdown-menu-target');
+            if (!targets || targets.length === 0) return;
 
             const list = this.getAll();
             const unreadCount = list.filter(n => !n.read).length;
 
-            if (list.length === 0) {
+            targets.forEach(container => {
+                if (list.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center text-zinc-400 space-y-2">
+                            <span class="material-symbols-outlined text-3xl">notifications_off</span>
+                            <p class="text-xs font-semibold">No tienes notificaciones por el momento</p>
+                        </div>
+                    `;
+                    return;
+                }
+
                 container.innerHTML = `
-                    <div class="p-8 text-center text-zinc-400 space-y-2">
-                        <span class="material-symbols-outlined text-3xl">notifications_off</span>
-                        <p class="text-xs font-semibold">No tienes notificaciones por el momento</p>
+                    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-headline font-black text-sm text-zinc-900 dark:text-white">Notificaciones</h4>
+                            ${unreadCount > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/80 text-primary dark:text-red-400">${unreadCount} nuevas</span>` : ''}
+                        </div>
+                        ${unreadCount > 0 ? `
+                            <button type="button" onclick="window.NotificationManager.markAllAsRead()" class="text-[11px] font-bold text-primary dark:text-red-400 hover:underline cursor-pointer">
+                                Marcar leídas
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="max-h-[380px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                        ${list.map(n => {
+                            const dateStr = new Date(n.createdAt).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+                            return `
+                                <div onclick="window.NotificationManager.markAsRead('${n.id}'); if('${n.link}' && '${n.link}' !== '#') window.location.href='${n.link}';" class="p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-red-50/40 dark:bg-red-950/20' : ''}">
+                                    <div class="w-8 h-8 rounded-xl ${!n.read ? 'bg-primary text-white shadow-xs' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'} flex items-center justify-center shrink-0 mt-0.5">
+                                        <span class="material-symbols-outlined text-base">${n.icon || 'notifications'}</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <h5 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${!n.read ? 'font-extrabold' : ''}">${n.title}</h5>
+                                            <span class="text-[10px] text-zinc-400 shrink-0 font-medium">${dateStr}</span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2 mt-0.5 leading-relaxed">${n.message}</p>
+                                        ${n.link && n.link !== '#' ? `
+                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary dark:text-red-400 mt-1.5 hover:underline">
+                                                <span>Acceder</span>
+                                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    ${!n.read ? `<span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5"></span>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800 text-center">
+                        <a href="configuracion.html" class="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+                            Preferencias de Notificación
+                        </a>
                     </div>
                 `;
-                this.updateBadge();
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <h4 class="font-headline font-black text-sm text-zinc-900 dark:text-white">Notificaciones</h4>
-                        ${unreadCount > 0 ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/80 text-primary dark:text-red-400">${unreadCount} nuevas</span>` : ''}
-                    </div>
-                    ${unreadCount > 0 ? `
-                        <button type="button" onclick="window.NotificationManager.markAllAsRead()" class="text-[11px] font-bold text-primary dark:text-red-400 hover:underline cursor-pointer">
-                            Marcar leídas
-                        </button>
-                    ` : ''}
-                </div>
-                <div class="max-h-[380px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                    ${list.map(n => {
-                        const dateStr = new Date(n.createdAt).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-                        return `
-                            <div onclick="window.NotificationManager.markAsRead('${n.id}'); if('${n.link}' && '${n.link}' !== '#') window.location.href='${n.link}';" class="p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-red-50/40 dark:bg-red-950/20' : ''}">
-                                <div class="w-8 h-8 rounded-xl ${!n.read ? 'bg-primary text-white shadow-xs' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'} flex items-center justify-center shrink-0 mt-0.5">
-                                    <span class="material-symbols-outlined text-base">${n.icon || 'notifications'}</span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-1">
-                                        <h5 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${!n.read ? 'font-extrabold' : ''}">${n.title}</h5>
-                                        <span class="text-[10px] text-zinc-400 shrink-0 font-medium">${dateStr}</span>
-                                    </div>
-                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2 mt-0.5 leading-relaxed">${n.message}</p>
-                                    ${n.link && n.link !== '#' ? `
-                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary dark:text-red-400 mt-1.5 hover:underline">
-                                            <span>Acceder</span>
-                                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                                        </span>
-                                    ` : ''}
-                                </div>
-                                ${!n.read ? `<span class="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5"></span>` : ''}
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                    <a href="configuracion.html" class="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
-                        Preferencias de Notificación
-                    </a>
-                </div>
-            `;
+            });
 
             this.updateBadge();
         },
 
+        syncSystemAlerts: function () {
+            // Sincronizar postulaciones aceptadas pendientes de firma
+            try {
+                const rawApps = localStorage.getItem('habitat_tenant_applications');
+                if (rawApps) {
+                    const apps = JSON.parse(rawApps);
+                    apps.forEach(app => {
+                        if (['aceptada', 'aprobada'].includes(String(app.status || '').toLowerCase())) {
+                            const contractId = app.contract_id || `CTR-2026-${String(app.id).replace(/\D/g, '').slice(-4) || '1042'}`;
+                            const title = `¡Postulación Aprobada! Firma tu Contrato ✍️`;
+                            const message = `El propietario aceptó tu postulación para "${app.property_title}". Ya puedes realizar tu verificación biométrica y firmar el contrato.`;
+                            const link = `contratos.html?contract=${contractId}&sign=1&role=TENANT`;
+
+                            const list = this.getAll();
+                            if (!list.some(n => n.title === title || n.link === link)) {
+                                this.createNotification({
+                                    title,
+                                    message,
+                                    type: 'contract',
+                                    link,
+                                    role: 'TENANT',
+                                    icon: 'draw'
+                                });
+                            }
+                        }
+                    });
+                }
+            } catch (e) { }
+        },
+
         initUI: function () {
-            // Inyectar botón de notificaciones en navbars si no existe
-            const desktopContainers = document.querySelectorAll('#desktop-auth-container, #mobile-auth-container');
-            desktopContainers.forEach(container => {
+            // Vincular botones existentes
+            const desktopBell = document.getElementById('habitat-notif-bell-btn');
+            if (desktopBell && !desktopBell.__notifBound) {
+                desktopBell.__notifBound = true;
+                desktopBell.onclick = (e) => this.toggleDropdown(e, 'desktop');
+            }
+
+            const mobileBell = document.getElementById('habitat-notif-bell-btn-mobile');
+            if (mobileBell && !mobileBell.__notifBound) {
+                mobileBell.__notifBound = true;
+                mobileBell.onclick = (e) => this.toggleDropdown(e, 'mobile');
+            }
+
+            // Fallback: Si la navbar estática no tiene el botón, inyectarlo dinámicamente
+            const containers = document.querySelectorAll('#desktop-auth-container, #mobile-auth-container');
+            containers.forEach(container => {
                 if (!container || container.querySelector('.habitat-notif-btn-wrapper')) return;
 
+                const isMobile = container.id === 'mobile-auth-container';
                 const wrapper = document.createElement('div');
                 wrapper.className = 'relative habitat-notif-btn-wrapper flex items-center mr-2';
-                wrapper.innerHTML = `
-                    <button type="button" id="habitat-notif-bell-btn" aria-label="Notificaciones" class="relative w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
-                        <span class="material-symbols-outlined text-lg">notifications</span>
-                        <span class="notification-badge-counter absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black items-center justify-center shadow-xs hidden">0</span>
+                wrapper.innerHTML = isMobile ? `
+                    <button type="button" id="habitat-notif-bell-btn-mobile" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-base">notifications</span>
+                        <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-white text-[9px] font-black items-center justify-center shadow-xs hidden">0</span>
                     </button>
-
-                    <!-- Dropdown Panel -->
-                    <div id="habitat-notif-dropdown-panel" class="absolute right-0 top-11 w-80 sm:w-96 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
-                        <div id="notifications-dropdown-menu"></div>
+                    <div id="habitat-notif-dropdown-panel-mobile" class="absolute right-0 top-10 w-72 sm:w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                        <div id="notifications-dropdown-menu-mobile" class="notifications-dropdown-menu-target"></div>
+                    </div>
+                ` : `
+                    <button type="button" id="habitat-notif-bell-btn" aria-label="Notificaciones" class="relative w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-lg xl:text-xl">notifications</span>
+                        <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-black items-center justify-center shadow-xs hidden">0</span>
+                    </button>
+                    <div id="habitat-notif-dropdown-panel" class="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                        <div id="notifications-dropdown-menu" class="notifications-dropdown-menu-target"></div>
                     </div>
                 `;
 
                 container.insertBefore(wrapper, container.firstChild);
 
-                const bellBtn = wrapper.querySelector('#habitat-notif-bell-btn');
-                const panel = wrapper.querySelector('#habitat-notif-dropdown-panel');
-
-                if (bellBtn && panel) {
-                    bellBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        const isHidden = panel.classList.contains('hidden');
-                        document.querySelectorAll('#habitat-notif-dropdown-panel').forEach(p => p.classList.add('hidden'));
-                        if (isHidden) {
-                            panel.classList.remove('hidden');
-                            window.NotificationManager.renderDropdown();
-                        }
-                    };
+                const btn = wrapper.querySelector('button');
+                if (btn) {
+                    btn.onclick = (e) => this.toggleDropdown(e, isMobile ? 'mobile' : 'desktop');
                 }
             });
 
             // Cerrar al click afuera
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.habitat-notif-btn-wrapper')) {
-                    document.querySelectorAll('#habitat-notif-dropdown-panel').forEach(p => p.classList.add('hidden'));
+                    document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => p.classList.add('hidden'));
                 }
             });
 
+            this.syncSystemAlerts();
             this.updateBadge();
         }
     };
@@ -304,4 +372,12 @@
     } else {
         NotificationManager.initUI();
     }
+
+    // Re-check badge every time window gets focus
+    window.addEventListener('focus', () => {
+        if (window.NotificationManager) {
+            window.NotificationManager.syncSystemAlerts();
+            window.NotificationManager.updateBadge();
+        }
+    });
 })();
