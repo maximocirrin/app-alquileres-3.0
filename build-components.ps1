@@ -9,6 +9,11 @@ $navJs = @"
     while(div.firstChild) {
         document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript);
     }
+    if (!document.querySelector('script[src*="notifications.js"]')) {
+        var nScript = document.createElement('script');
+        nScript.src = 'js/notifications.js';
+        document.head.appendChild(nScript);
+    }
 })();
 "@
 Set-Content -Path "js\navbar.js" -Value $navJs -Encoding UTF8

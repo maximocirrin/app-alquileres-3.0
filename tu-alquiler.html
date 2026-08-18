@@ -1565,112 +1565,35 @@
         }
 
         // -------------------------------------------------------------
-        // FUNCIONALIDAD: 2. POSTULACIONES DEL INQUILINO (DISEÑO PREMIUM)
-        // -------------------------------------------------------------
-        async function loadTenantApplications() {
+           async function loadTenantApplications() {
             const container = document.getElementById('postulaciones-container');
             const kpiCount = document.getElementById('postulaciones-kpi-count');
             if (!container) return;
 
             try {
-                // 1. Obtener postulaciones locales reales del inquilino (filtrando cualquier dato mock de prueba)
-                let localApps = [];
-                try {
-                    const raw = localStorage.getItem('habitat_tenant_applications');
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) {
-                            localApps = parsed.filter(a => a && a.id && !String(a.id).startsWith('app-00') && !String(a.property_title || '').includes('Carlos Gómez') && !String(a.tenant_name || '').includes('Carlos Gómez'));
-                            // Limpiar localStorage si tenía mocks antiguos
-                            localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
-                        }
-                    }
-                } catch (e) {}
-
-                // 2. Consultar únicamente las postulaciones del usuario autenticado si existe sesión
-                let userDbApps = [];
-                if (window.supabaseClient) {
+                // 1. Obtener postulaciones sincronizadas vía DataManager (Supabase + local)
+                let applications = [];
+                if (window.DataManager && window.DataManager.getApplications) {
                     try {
-                        const { data: { session } } = await window.supabaseClient.auth.getSession();
-                        if (session && session.user) {
-                            const { data: perfil } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil')
-                                .eq('user_id', session.user.id)
-                                .maybeSingle();
-
-                            if (perfil) {
-                                const { data: solData } = await window.supabaseClient
-                                    .from('Solicitud')
-                                    .select(`
-                                        *,
-                                        Historial_estado_solicitud (
-                                            id_historial_estado_solicitud,
-                                            id_estado_solicitud,
-                                            fecha_inicio,
-                                            Estado_solicitud (
-                                                id_estado_solicitud,
-                                                nombre
-                                            )
-                                        ),
-                                        Propiedad (*, Publicacion (*, Multimedia (*)))
-                                    `)
-                                    .eq('id_perfil', perfil.id_perfil)
-                                    .order('fecha_solicitud', { ascending: false });
-
-                                if (solData && solData.length > 0) {
-                                    userDbApps = solData.map(s => {
-                                        const prop = s.Propiedad || {};
-                                        const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
-                                        const media = pub?.Multimedia || [];
-                                        const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
-                                        const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
-
-                                        const hist = s.Historial_estado_solicitud || [];
-                                        let appStatus = 'pendiente';
-                                        if (hist.length > 0) {
-                                            const sortedHist = [...hist].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
-                                            const latest = sortedHist[0];
-                                            const stName = (latest.Estado_solicitud?.nombre || '').toLowerCase();
-                                            if (latest.id_estado_solicitud === 2 || stName === 'aceptada' || stName === 'aprobada') {
-                                                appStatus = 'aceptada';
-                                            } else if (latest.id_estado_solicitud === 3 || stName === 'rechazada') {
-                                                appStatus = 'rechazada';
-                                            }
-                                        }
-
-                                        return {
-                                            id: s.id_solicitud,
-                                            property_id: s.id_propiedad,
-                                            property_title: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim(),
-                                            property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
-                                            property_price: pub?.precio || prop.expensas_mensuales || 450000,
-                                            property_expenses: prop.expensas_mensuales || 45000,
-                                            property_image: photoUrl,
-                                            property_photos: photoUrls.length > 0 ? photoUrls : [photoUrl],
-                                            property_m2: prop.superficie_total || 65,
-                                            property_rooms: prop.ambientes || 2,
-                                            property_beds: prop.dormitorios || 1,
-                                            property_baths: prop.banos || 1,
-                                            income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
-                                            message: s.mensaje || '',
-                                            status: appStatus,
-                                            created_at: s.fecha_solicitud
-                                        };
-                                    });
-                                }
-                            }
-                        }
-                    } catch (eDb) {}
+                        applications = await window.DataManager.getApplications();
+                    } catch (e) {
+                        console.warn("Fallo getApplications, recurriendo a local:", e);
+                    }
                 }
 
-                // Fusionar postulaciones reales deduplicando EXCLUSIVAMENTE por ID de solicitud
-                const applications = [...localApps];
-                userDbApps.forEach(dba => {
-                    if (!applications.some(a => String(a.id) === String(dba.id))) {
-                        applications.push(dba);
-                    }
-                });
+                // 2. Si no hay desde DataManager, leer directamente de localStorage
+                if (!applications || applications.length === 0) {
+                    try {
+                        const raw = localStorage.getItem('habitat_tenant_applications');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) applications = parsed;
+                        }
+                    } catch (e) {}
+                }
+
+                // 3. Filtrar cualquier mock antiguo y deduplicar por id
+                applications = applications.filter(a => a && a.id && !String(a.id).startsWith('app-00') && !String(a.property_title || '').includes('Carlos Gómez') && !String(a.tenant_name || '').includes('Carlos Gómez'));
 
                 if (!applications || applications.length === 0) {
                     if (kpiCount) kpiCount.textContent = '0 postulaciones registradas';
@@ -1695,8 +1618,9 @@
                 }
 
                 if (kpiCount) {
-                    const pend = applications.filter(a => a.status === 'pendiente').length;
-                    kpiCount.textContent = `${applications.length} postulaciones registradas • ${pend} en evaluación`;
+                    const pend = applications.filter(a => (a.status || 'pendiente').toLowerCase() === 'pendiente').length;
+                    const acceptedCount = applications.filter(a => ['aceptada', 'aprobada'].includes((a.status || '').toLowerCase())).length;
+                    kpiCount.textContent = `${applications.length} postulaciones • ${acceptedCount > 0 ? `${acceptedCount} aprobadas • ` : ''}${pend} en evaluación`;
                 }
 
                 const propertyImages = [
@@ -1710,7 +1634,7 @@
                 container.innerHTML = `
                     <div class="space-y-6">
                         ${applications.map((app, idx) => {
-                            const photoSrc = app.property_image || propertyImages[idx % propertyImages.length];
+                            const photoSrc = app.property_image || (app.property_photos && app.property_photos[0]) || propertyImages[idx % propertyImages.length];
                             const propPrice = app.property_price || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
                             const propExpenses = app.property_expenses || app.expensas || 45000;
                             const createdDate = new Date(app.created_at || Date.now());
@@ -1722,20 +1646,37 @@
                             const beds = app.property_beds || app.dormitorios || 1;
                             const baths = app.property_baths || app.banos || 1;
 
+                            // Comprobación de estado
+                            const stNorm = String(app.status || '').toLowerCase().trim();
+                            const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
+                            const isRejected = stNorm === 'rechazada';
+
+                            // Resolver ID de Contrato exacto
+                            let targetContractId = app.contract_id;
+                            if (!targetContractId) {
+                                try {
+                                    const rawContr = localStorage.getItem('habitat_contracts');
+                                    if (rawContr) {
+                                        const cList = JSON.parse(rawContr);
+                                        const foundC = cList.find(c => c && (String(c.propertyId) === String(app.property_id) || String(c.propertyId) === String(app.id)));
+                                        if (foundC) targetContractId = foundC.id;
+                                    }
+                                } catch (e) {}
+                            }
+                            if (!targetContractId) {
+                                targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').slice(-4) || '1042');
+                            }
+
                             // Badge de estado moderno
                             let statusBadgeHtml = '';
-                            let stepProgress = 2; // 1: Enviada, 2: En evaluacion, 3: Aprobada/Cerrada
-
-                            if (app.status === 'aceptada') {
-                                stepProgress = 3;
+                            if (isAccepted) {
                                 statusBadgeHtml = `
                                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-headline font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
                                         <span class="material-symbols-outlined text-sm">verified</span>
                                         <span>¡Postulación Aprobada!</span>
                                     </span>
                                 `;
-                            } else if (app.status === 'rechazada') {
-                                stepProgress = 3;
+                            } else if (isRejected) {
                                 statusBadgeHtml = `
                                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-headline font-black bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 shadow-xs">
                                         <span class="material-symbols-outlined text-sm">cancel</span>
@@ -1752,7 +1693,7 @@
                             }
 
                             return `
-                                <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 flex flex-col lg:flex-row group">
+                                <div class="bg-white dark:bg-zinc-900 border ${isAccepted ? 'border-emerald-500/50 shadow-emerald-500/10 dark:border-emerald-700/60' : 'border-zinc-200/90 dark:border-zinc-800'} rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 flex flex-col lg:flex-row group">
                                     
                                     <!-- Columna Visual: Foto de la Propiedad & Precio -->
                                     <div class="relative w-full lg:w-80 xl:w-96 min-h-[220px] lg:min-h-[280px] overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
@@ -1795,6 +1736,26 @@
                                                 ${statusBadgeHtml}
                                             </div>
                                         </div>
+
+                                        <!-- Banner Destacado si fue Aceptado -->
+                                        ${isAccepted ? `
+                                            <div class="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/40 dark:via-emerald-900/20 border border-emerald-500/30 dark:border-emerald-700/50 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                                        <span class="material-symbols-outlined text-xl">celebration</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="font-headline font-black text-xs sm:text-sm text-emerald-950 dark:text-emerald-200">¡El propietario aceptó tu postulación! 🎉</h4>
+                                                        <p class="font-body text-[11px] text-emerald-800 dark:text-emerald-400">Ya puedes revisar los términos y firmar el contrato digital con verificación facial Didit.</p>
+                                                    </div>
+                                                </div>
+                                                <a href="contratos.html?contract=${targetContractId}&sign=1&role=TENANT" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
+                                                    <span class="material-symbols-outlined text-base">draw</span>
+                                                    <span>Firmar Contrato</span>
+                                                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                                </a>
+                                            </div>
+                                        ` : ''}
 
                                         <!-- Fila 2: Especificaciones Técnicas (Pills) -->
                                         <div class="flex flex-wrap items-center gap-2">
@@ -1843,15 +1804,16 @@
                                             </div>
 
                                             <div class="flex items-center gap-2.5 flex-wrap">
-                                                <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx+101)}, title: '${app.property_title.replace(/'/g, "\\'")}', address: '${app.property_address.replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
+                                                <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx+101)}, title: '${(app.property_title || '').replace(/'/g, "\\'")}', address: '${(app.property_address || '').replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
                                                     <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">visibility</span>
                                                     <span>Ver Publicación</span>
                                                 </button>
 
-                                                ${app.status === 'aceptada' ? `
-                                                    <a href="contratos.html?contract=${app.contract_id || ('CTR-2026-' + (String(app.id).replace(/\D/g, '').slice(-4) || '1042'))}&sign=1&role=TENANT" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.02]">
+                                                ${isAccepted ? `
+                                                    <a href="contratos.html?contract=${targetContractId}&sign=1&role=TENANT" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
                                                         <span class="material-symbols-outlined text-base">draw</span>
                                                         <span>Ir a Firmar Contrato (Didit Liveness)</span>
+                                                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                                     </a>
                                                 ` : ''}
                                             </div>

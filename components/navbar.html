@@ -195,6 +195,18 @@
 
             <!-- Desktop Auth Container -->
             <div id="desktop-auth-container" class="max-xl:hidden flex items-center ml-1">
+                <!-- Notifications Bell Desktop -->
+                <div class="relative habitat-notif-btn-wrapper flex items-center mr-2">
+                    <button type="button" id="habitat-notif-bell-btn" onclick="window.NotificationManager && window.NotificationManager.toggleDropdown(event, 'desktop')" aria-label="Notificaciones" class="relative w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-lg xl:text-xl">notifications</span>
+                        <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-black items-center justify-center shadow-xs hidden">0</span>
+                    </button>
+                    <!-- Dropdown Panel -->
+                    <div id="habitat-notif-dropdown-panel" class="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                        <div id="notifications-dropdown-menu" class="notifications-dropdown-menu-target"></div>
+                    </div>
+                </div>
+
                 <div class="auth-ui-state logged-out flex items-center gap-1.5 xl:gap-2">
                     <a href="login.html?mode=login" class="text-xs xl:text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-900 transition-colors whitespace-nowrap">Ingresar</a>
                     <a href="login.html?mode=register" class="text-xs xl:text-sm font-bold text-white bg-primary dark:bg-red-800 px-3.5 xl:px-4 py-1.5 xl:py-2 rounded-full hover:bg-red-800 dark:hover:bg-red-700 transition-colors shadow-md whitespace-nowrap">Registrarse</a>
@@ -235,6 +247,17 @@
 
             <!-- Mobile Auth Container -->
             <div id="mobile-auth-container" class="xl:hidden flex items-center ml-1">
+                <!-- Notifications Bell Mobile -->
+                <div class="relative habitat-notif-btn-wrapper flex items-center mr-1">
+                    <button type="button" id="habitat-notif-bell-btn-mobile" onclick="window.NotificationManager && window.NotificationManager.toggleDropdown(event, 'mobile')" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-base">notifications</span>
+                        <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-white text-[9px] font-black items-center justify-center shadow-xs hidden">0</span>
+                    </button>
+                    <!-- Dropdown Panel Mobile -->
+                    <div id="habitat-notif-dropdown-panel-mobile" class="absolute right-0 top-10 w-72 sm:w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                        <div id="notifications-dropdown-menu-mobile" class="notifications-dropdown-menu-target"></div>
+                    </div>
+                </div>
                 <div class="auth-ui-state logged-out flex items-center gap-1.5">
                     <a href="login.html?mode=login" class="text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-900 transition-colors">Ingresar</a>
                     <a href="login.html?mode=register" class="text-xs font-bold text-white bg-primary dark:bg-red-800 px-3 py-1.5 rounded-full hover:bg-red-800 dark:hover:bg-red-700 transition-colors shadow-md">Registrarse</a>

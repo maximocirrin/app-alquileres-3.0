@@ -968,13 +968,28 @@ var DataManager = {
             }
         } catch (e) {}
 
-        // Combinar con postulaciones locales deduplicando EXCLUSIVAMENTE por ID de solicitud (permitiendo múltiples candidatos a la misma propiedad)
-        const combined = [...localSavedApps];
+        // Combinar con postulaciones locales sincronizando estado exacto desde Supabase
+        const appMap = new Map();
+        localSavedApps.forEach(a => appMap.set(String(a.id), a));
         dbApps.forEach(dba => {
-            if (!combined.some(c => String(c.id) === String(dba.id))) {
-                combined.push(dba);
+            if (appMap.has(String(dba.id))) {
+                const existing = appMap.get(String(dba.id));
+                const updatedStatus = (dba.status === 'aceptada' || dba.status === 'rechazada') ? dba.status : (existing.status || dba.status);
+                appMap.set(String(dba.id), {
+                    ...existing,
+                    ...dba,
+                    status: updatedStatus,
+                    contract_id: existing.contract_id || dba.contract_id || (updatedStatus === 'aceptada' ? `CTR-2026-${String(dba.id).padStart(4, '0')}` : null)
+                });
+            } else {
+                appMap.set(String(dba.id), dba);
             }
         });
+
+        const combined = Array.from(appMap.values());
+        try {
+            localStorage.setItem('habitat_tenant_applications', JSON.stringify(combined));
+        } catch (e) {}
 
         return combined;
     },
