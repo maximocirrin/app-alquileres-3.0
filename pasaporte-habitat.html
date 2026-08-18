@@ -1,32 +1,39 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         (function () {
             try {
-                const theme = localStorage.getItem('theme');
-                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var theme = localStorage.getItem('theme');
+                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var root = document.documentElement;
                 if (isDark) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.style.backgroundColor = '#09090b';
-                    document.documentElement.style.colorScheme = 'dark';
+                    root.setAttribute('data-theme', 'dark');
+                    root.classList.add('dark');
+                    root.style.backgroundColor = '#09090b';
+                    root.style.colorScheme = 'dark';
                 } else {
-                    document.documentElement.style.backgroundColor = '#ffffff';
-                    document.documentElement.style.colorScheme = 'light';
+                    root.removeAttribute('data-theme');
+                    root.classList.remove('dark');
+                    root.style.backgroundColor = '#ffffff';
+                    root.style.colorScheme = 'light';
+                }
+                var meta = document.getElementById('meta-theme-color') || document.querySelector('meta[name="theme-color"]');
+                if (meta) {
+                    meta.removeAttribute('media');
+                    meta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
                 }
             } catch (e) {}
         })();
     </script>
-    <title>Pasaporte Hábitat | Credencial Digital del Inquilino</title>
+        <title>Pasaporte Hábitat | Credencial Digital del Inquilino</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -294,10 +301,10 @@
 
                         <div class="flex-1 text-center md:text-left">
                             <h3 class="font-headline text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
-                                Inquilino Verificado
+                                Titular del Pasaporte
                             </h3>
                             <p class="font-headline text-[11px] sm:text-sm text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5" id="passport-cuit-header">
-                                Inquilino Verificado • Didit KYC Validado
+                                Identidad Digital • Didit KYC Validado
                             </p>
 
                             <div class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2" id="passport-badges-container">
@@ -684,7 +691,7 @@
 
                     const elHeader = document.getElementById('passport-cuit-header');
                     if (elHeader && diditIdent.documentNumber) {
-                        elHeader.textContent = `Inquilino Verificado • DNI: ${diditIdent.documentNumber} • Didit KYC Validado`;
+                        elHeader.textContent = `DNI: ${diditIdent.documentNumber} • Didit KYC Validado`;
                     }
                 }
             } catch (eLocal) {}
@@ -733,7 +740,7 @@
                             const elNombre = document.getElementById('passport-user-fullname');
                             if (elNombre) {
                                 const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                                elNombre.textContent = diditIdent.fullName || pasaporte.razon_social || perfil.nombre_completo || session.user.email || 'Inquilino Verificado';
+                                elNombre.textContent = diditIdent.fullName || pasaporte.razon_social || perfil.nombre_completo || (session.user.email ? session.user.email.split('@')[0] : 'Titular del Pasaporte');
                             }
 
                             if (window.actualizarPasaporteUI) {
@@ -1052,7 +1059,7 @@
 
                         const elHeader = document.getElementById('passport-cuit-header');
                         if (elHeader && (doc.documentNumber || cuitVal)) {
-                            elHeader.textContent = `Inquilino Verificado • DNI: ${doc.documentNumber || '38.491.029'} • CUIT/CUIL: ${cuitVal}`;
+                            elHeader.textContent = doc.documentNumber ? `DNI: ${doc.documentNumber} • CUIT/CUIL: ${cuitVal}` : `CUIT/CUIL: ${cuitVal}`;
                         }
 
                         try {
@@ -1061,17 +1068,35 @@
                             pData.nombre = doc.firstName;
                             pData.apellido = doc.lastName;
                             pData.cuit = cuitVal;
+                            if (doc.documentNumber) pData.dni = doc.documentNumber;
                             localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
 
                             const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
                             uData.nombre_completo = verifiedFullName;
+                            if (doc.documentNumber) uData.dni = doc.documentNumber;
+                            if (cuitVal) uData.cuit = cuitVal;
                             localStorage.setItem('habitat_user', JSON.stringify(uData));
 
-                            if (window.supabaseClient && window.currentPasaporteId) {
-                                await window.supabaseClient
-                                    .from('Pasaporte_habitat')
-                                    .update({ razon_social: verifiedFullName })
-                                    .eq('id_pasaporte', window.currentPasaporteId);
+                            if (window.supabaseClient) {
+                                if (window.currentPasaporteId) {
+                                    await window.supabaseClient
+                                        .from('Pasaporte_habitat')
+                                        .update({ 
+                                            razon_social: verifiedFullName,
+                                            cuit: cuitVal 
+                                        })
+                                        .eq('id_pasaporte', window.currentPasaporteId);
+                                }
+                                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                                if (session && session.user) {
+                                    const updateObj = {
+                                        nombre_completo: verifiedFullName,
+                                        cuenta_verificada: true,
+                                        fecha_verificacion: new Date().toISOString()
+                                    };
+                                    if (doc.documentNumber) updateObj.dni = doc.documentNumber;
+                                    await window.supabaseClient.from('Perfil').update(updateObj).eq('user_id', session.user.id);
+                                }
                             }
                         } catch (eStorage) {}
                     }

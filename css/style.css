@@ -208,15 +208,27 @@
     --body-bg-gradient: none;
 }
 
+:root {
+    color-scheme: light;
+}
+
+:root.dark,
+html.dark,
+html[data-theme="dark"] {
+    background-color: #09090b !important;
+    color-scheme: dark !important;
+}
+
 html {
     background-color: #ffffff;
     color-scheme: light;
+    min-height: 100%;
 }
 
 html.dark,
 html[data-theme="dark"] {
     background-color: #09090b !important;
-    color-scheme: dark;
+    color-scheme: dark !important;
 }
 
 * {

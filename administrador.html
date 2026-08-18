@@ -1,32 +1,39 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         (function () {
             try {
-                const theme = localStorage.getItem('theme');
-                const isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var theme = localStorage.getItem('theme');
+                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var root = document.documentElement;
                 if (isDark) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.style.backgroundColor = '#09090b';
-                    document.documentElement.style.colorScheme = 'dark';
+                    root.setAttribute('data-theme', 'dark');
+                    root.classList.add('dark');
+                    root.style.backgroundColor = '#09090b';
+                    root.style.colorScheme = 'dark';
                 } else {
-                    document.documentElement.style.backgroundColor = '#ffffff';
-                    document.documentElement.style.colorScheme = 'light';
+                    root.removeAttribute('data-theme');
+                    root.classList.remove('dark');
+                    root.style.backgroundColor = '#ffffff';
+                    root.style.colorScheme = 'light';
+                }
+                var meta = document.getElementById('meta-theme-color') || document.querySelector('meta[name="theme-color"]');
+                if (meta) {
+                    meta.removeAttribute('media');
+                    meta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
                 }
             } catch (e) {}
         })();
     </script>
-    <title>Panel del Propietario | Hábitat</title>
+        <title>Panel del Propietario | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -301,9 +308,34 @@
 
             <!-- PESTAÑA 2: POSTULACIONES -->
             <div id="panel-content-postulaciones" class="tab-content space-y-6">
-                <div class="glass-card p-5 rounded-2xl shadow-sm">
-                    <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Postulaciones y Candidatos</h2>
-                    <p class="text-xs text-zinc-500">Revisa comprobantes de sueldo, datos de contacto y selecciona quién alquilará tu propiedad.</p>
+                <!-- Header de Candidatos y Botón Modal de Filtro por Propiedad -->
+                <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">how_to_reg</span>
+                                Postulaciones y Candidatos
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Revisa credenciales de Pasaporte Hábitat, scoring crediticio y selecciona a tu próximo inquilino.</p>
+                        </div>
+
+                        <!-- Botón moderno para abrir el Pop-Up de selección de propiedad -->
+                        <button type="button" onclick="openOwnerPropertyFilterModal()" id="btn-open-property-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[230px]">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                    <span class="material-symbols-outlined text-lg">home_work</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Propiedad Filtrada</span>
+                                    <span id="owner-active-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">Todas las propiedades</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0 pl-1">
+                                <span id="owner-apps-filter-count-badge" class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">0</span>
+                                <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="owner-list-apps" class="space-y-4">
@@ -661,6 +693,112 @@
             }
         }
 
+        let ownerAppsState = [];
+        let ownerAppsPropMap = new Map();
+        let ownerRawProperties = [];
+        let ownerSelectedPropFilter = 'all';
+        let ownerSelectedPropTitle = 'Todas las propiedades';
+        let ownerShowRejected = false;
+        
+        function getApplicantPassportData(a) {
+            if (!a) return {
+                id: '1',
+                name: 'Postulante',
+                email: 'inquilino@email.com',
+                phone: '',
+                dni: 'No registrado',
+                cuit: 'No registrado',
+                income: 0,
+                incomeFormatted: '$ 0',
+                score: 95,
+                guarantees: 'Garantía Finaer / Recibo de Sueldo',
+                kycStatus: 'KYC Pendiente'
+            };
+
+            const name = a.tenant_name || a.name || 'Postulante';
+            const email = a.tenant_email || a.email || '';
+            const phone = a.tenant_phone || a.telefono || a.phone || '';
+            const income = Number(a.monthly_income || a.ingreso_mensual_declarado || 0);
+
+            // 1. Obtener DNI auténtico
+            let rawDni = a.tenant_dni || a.dni;
+            let rawCuit = a.tenant_cuit || a.cuit || a.cuil_cuit;
+
+            // Consultar datos locales si coinciden con el usuario activo
+            try {
+                const localDidit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const localPass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+
+                if (!rawDni && (localDidit.documentNumber || localDidit.dni)) {
+                    if (localUser.email === email || localUser.mail === email || localDidit.fullName === name) {
+                        rawDni = localDidit.documentNumber || localDidit.dni;
+                    }
+                }
+                if (!rawCuit && (localPass.cuit || localUser.cuit)) {
+                    if (localUser.email === email || localUser.mail === email || localPass.razon_social === name) {
+                        rawCuit = localPass.cuit || localUser.cuit;
+                    }
+                }
+            } catch (e) {}
+
+            // Si hay CUIT de 11 dígitos y falta DNI, derivarlo del CUIT
+            if (!rawDni && rawCuit) {
+                const cleanC = String(rawCuit).replace(/\D/g, '');
+                if (cleanC.length === 11) {
+                    rawDni = cleanC.substring(2, 10);
+                }
+            }
+            // Formatear DNI
+            let formattedDni = 'Pendiente';
+            if (rawDni && String(rawDni).trim()) {
+                const clean = String(rawDni).replace(/\D/g, '');
+                if (clean.length === 8) {
+                    formattedDni = clean.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+                } else if (clean.length === 7) {
+                    formattedDni = clean.replace(/(\d{1})(\d{3})(\d{3})/, '$1.$2.$3');
+                } else {
+                    formattedDni = String(rawDni);
+                }
+            }
+
+            // Formatear CUIT
+            let formattedCuit = 'Pendiente';
+            if (rawCuit && String(rawCuit).trim()) {
+                const cleanC = String(rawCuit).replace(/\D/g, '');
+                if (cleanC.length === 11) {
+                    formattedCuit = cleanC.replace(/(\d{2})(\d{8})(\d{1})/, '$1-$2-$3');
+                } else {
+                    formattedCuit = String(rawCuit);
+                }
+            } else if (rawDni && String(rawDni).replace(/\D/g, '').length === 8) {
+                const cleanD = String(rawDni).replace(/\D/g, '');
+                if (typeof window.calcularCUIL === 'function') {
+                    formattedCuit = window.calcularCUIL(cleanD, 'M') || `20-${cleanD}-7`;
+                } else {
+                    formattedCuit = `20-${cleanD}-7`;
+                }
+            }
+
+            const score = a.score || (income > 1200000 ? 98 : (income > 650000 ? 94 : 90));
+            const guarantees = a.guarantees || a.garantia || 'Garantía Finaer / Recibo';
+            const kycStatus = (rawDni && rawDni !== 'Pendiente' && rawDni !== 'Pendiente de registrar') ? 'Identidad Validada' : 'En Proceso';
+
+            return {
+                id: a.id,
+                name,
+                email,
+                phone: phone || 'No informado',
+                dni: formattedDni,
+                cuit: formattedCuit,
+                income,
+                incomeFormatted: income > 0 ? `$ ${income.toLocaleString('es-AR')}` : '$ 0',
+                score,
+                guarantees,
+                kycStatus
+            };
+        }
+
         async function loadOwnerApplications() {
             const list = document.getElementById('owner-list-apps');
             const badgeTop = document.getElementById('badge-top-apps');
@@ -668,173 +806,602 @@
             if (!list || !window.DataManager) return;
 
             try {
-                const apps = await window.DataManager.getApplications();
+                const [apps, props] = await Promise.all([
+                    window.DataManager.getApplications(),
+                    window.DataManager.getUserMarketplaceProperties ? window.DataManager.getUserMarketplaceProperties() : []
+                ]);
+
+                ownerRawProperties = Array.isArray(props) ? props : [];
+                ownerAppsPropMap = new Map();
+                if (Array.isArray(props)) {
+                    props.forEach(p => {
+                        if (p && p.id) ownerAppsPropMap.set(String(p.id), p);
+                    });
+                }
+
                 if (badgeTop) badgeTop.textContent = apps.length;
                 if (badgeDock) badgeDock.style.display = apps.length > 0 ? '' : 'none';
 
                 if (!apps || apps.length === 0) {
                     list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay postulaciones registradas en este momento.</div>';
+                    const activeCountBadge = document.getElementById('owner-apps-filter-count-badge');
+                    if (activeCountBadge) activeCountBadge.textContent = '0';
                     return;
                 }
 
-                list.innerHTML = apps.map(a => `
-                    <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-4">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary dark:bg-red-900/20 dark:text-red-900 font-extrabold flex items-center justify-center text-base">
-                                    ${a.tenant_name ? a.tenant_name.charAt(0) : 'I'}
-                                </div>
-                                <div>
-                                    <span class="text-[11px] font-bold text-primary dark:text-red-900 uppercase tracking-wider">${a.property_title}</span>
-                                    <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${a.tenant_name}</h3>
-                                    <p class="text-xs text-zinc-500">${a.tenant_email} • Tel: ${a.tenant_phone}</p>
-                                </div>
-                            </div>
-                            <div>
-                                ${a.status === 'pendiente' ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pendiente de Decisión</span>' : ''}
-                                ${a.status === 'aceptada' ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">¡Inquilino Seleccionado!</span>' : ''}
-                                ${a.status === 'rechazada' ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">No Seleccionado</span>' : ''}
-                            </div>
-                        </div>
+                // Normalizar cada postulación asociando su propiedad, título y dirección exacta
+                ownerAppsState = apps.map(a => {
+                    const matchedProp = ownerAppsPropMap.get(String(a.property_id || a.propertyId)) || {};
+                    const propTitle = a.property_title || matchedProp.title || 'Propiedad en Alquiler';
+                    const propAddress = a.property_address || matchedProp.address || (matchedProp.calle ? `${matchedProp.calle} ${matchedProp.numero || ''}`.trim() : '') || 'Dirección de la propiedad';
+                    const propId = String(a.property_id || a.propertyId || matchedProp.id || 'general');
 
-                        <!-- Credencial Digital Pasaporte Hábitat Estilo DNI -->
-                        <div class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden transition-all hover:shadow-2xl cursor-pointer group" onclick="openPasaporteHabitatModal('${a.id}')">
-                            <!-- Passport Top Header Bar (Estilo Pasaporte Oficial) -->
-                            <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-5 py-3.5 flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3">
-                                    <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 w-auto bg-white p-1 rounded-lg shadow-xs">
-                                    <div>
-                                        <h4 class="font-headline text-sm font-black tracking-widest uppercase leading-tight">HABITAT PASSPORT</h4>
-                                        <p class="text-[10px] text-white/90 font-headline font-extrabold tracking-widest">ID: HBT-2026-${String(a.id || '').substring(0,8).toUpperCase()}</p>
-                                    </div>
-                                </div>
-
-                                <div class="bg-white p-1 rounded-xl shadow-md border border-white/30 shrink-0">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${a.id}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-10 h-10 rounded-lg object-contain">
-                                </div>
-                            </div>
-
-                            <!-- Passport Card Body -->
-                            <div class="p-5 space-y-4">
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                    <!-- Profile Avatar / Photo (DNI Style) -->
-                                    <div class="relative shrink-0">
-                                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-900 flex items-center justify-center font-black shadow-inner">
-                                            <span class="material-symbols-outlined text-3xl">person</span>
-                                        </div>
-                                        <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="Identidad Verificada">
-                                            <span class="material-symbols-outlined text-xs font-bold block">verified</span>
-                                        </span>
-                                    </div>
-
-                                    <!-- Personal & Document Info -->
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight">${a.tenant_name}</h3>
-                                            <span class="px-2.5 py-0.5 text-[10px] font-headline font-black rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Score 98/100</span>
-                                        </div>
-                                        <p class="font-headline text-[11px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
-                                            Inquilino Verificado • DNI: 38.491.024 • CUIT: 20-38491024-8
-                                        </p>
-                                        <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
-                                            ${a.tenant_email} • Tel: ${a.tenant_phone}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Badges Grid (Identidad, Fiscal, Judicios, Garantes) -->
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
-                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Prueba Biométrica</p>
-                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">check_circle</span> KYC Didit Validado
-                                        </p>
-                                    </div>
-                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
-                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Ingresos Mensuales</p>
-                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5">$ ${Number(a.monthly_income).toLocaleString('es-AR')}</p>
-                                    </div>
-                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
-                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Antecedentes Legal</p>
-                                        <p class="text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5">Sin Desalojos</p>
-                                    </div>
-                                    <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80">
-                                        <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider">Garantías Presentadas</p>
-                                        <p class="text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">shield_person</span> Prop. CABA + Finaer
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Footer Bar of Card -->
-                                <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                                    <span class="text-[11px] font-bold text-primary dark:text-red-900 flex items-center gap-1 group-hover:underline">
-                                        <span class="material-symbols-outlined text-sm">workspace_premium</span> Ver Documentación Auditada & Certificados
-                                    </span>
-                                    <span class="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-sm transition-all flex items-center gap-1.5 shrink-0">
-                                        <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Hábitat
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        ${a.message ? `
-                            <div class="bg-primary-light p-3.5 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 space-y-1">
-                                <span class="font-extrabold text-primary dark:text-red-900">Mensaje del Candidato:</span>
-                                <p class="italic">"${a.message}"</p>
-                            </div>
-                        ` : ''}
-
-                        ${a.status === 'pendiente' ? `
-                            <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                                <button type="button" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
-                                    <span class="material-symbols-outlined text-base">check_circle</span>
-                                    Aceptar Postulación y Firmar Contrato
-                                </button>
-                                <button type="button" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
-                                    Rechazar
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
-
-                list.querySelectorAll('.btn-owner-accept').forEach(b => {
-                    b.onclick = async () => {
-                        const appId = b.getAttribute('data-id');
-                        b.disabled = true;
-                        b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
-                        let res = null;
-                        try {
-                            if (window.DataManager && window.DataManager.acceptApplication) {
-                                res = await window.DataManager.acceptApplication(appId);
-                            }
-                        } catch (e) {
-                            console.warn("Aviso local postulación:", e);
-                        }
-                        const targetContractId = res?.contractId || 'CTR-2026-0001';
-                        // Redirect directly to contratos.html with the EXACT generated contract
-                        window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                    return {
+                        ...a,
+                        resolved_prop_id: propId,
+                        property_title: propTitle,
+                        property_address: propAddress
                     };
                 });
 
-                list.querySelectorAll('.btn-owner-reject').forEach(b => {
-                    b.onclick = async () => {
-                        const appId = b.getAttribute('data-id');
-                        b.disabled = true;
-                        b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span>';
-                        await window.DataManager.rejectApplication(appId);
-                        await loadOwnerApplications();
-                    };
-                });
+                // Renderizar la lista de candidatos según filtro activo
+                renderFilteredOwnerApplications();
 
             } catch (err) {
                 console.error("Error al cargar postulaciones:", err);
             }
         }
 
+        window.openOwnerPropertyFilterModal = function() {
+            let modal = document.getElementById('owner-property-filter-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'owner-property-filter-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-detail-open font-body';
+            modal.style.display = 'flex';
+
+            // Conteo por propiedad
+            const counts = new Map();
+            ownerAppsState.forEach(a => {
+                const pid = a.resolved_prop_id;
+                counts.set(pid, (counts.get(pid) || 0) + 1);
+            });
+
+            const isAllSelected = ownerSelectedPropFilter === 'all';
+
+            // Tarjetas de propiedades
+            const propCardsHtml = ownerRawProperties.map(p => {
+                const pid = String(p.id);
+                const count = counts.get(pid) || 0;
+                const isSelected = ownerSelectedPropFilter === pid;
+                const imgUrl = (p.images && p.images[0]) || p.imagen || p.image || 'img/hero-marketplace.jpg';
+                const priceFmt = p.price || p.precio ? `$ ${Number(p.price || p.precio).toLocaleString('es-AR')}` : '';
+
+                return `
+                    <div onclick="selectOwnerPropertyFilter('${pid}', '${(p.title || '').replace(/'/g, "\\'")}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
+                        isSelected
+                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                            : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                    }">
+                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+                            <img src="${imgUrl}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='img/hero-marketplace.jpg'">
+                            ${priceFmt ? `<span class="absolute bottom-1 left-1 bg-black/80 text-white text-[9px] font-black px-1.5 py-0.2 rounded">${priceFmt}</span>` : ''}
+                        </div>
+                        
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-headline font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white truncate group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                ${p.title}
+                            </h4>
+                            <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5 truncate font-medium">
+                                <span class="material-symbols-outlined text-xs text-rose-500 shrink-0">location_on</span>
+                                <span class="truncate">${p.address || 'Mendoza'}</span>
+                            </p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black ${
+                                    count > 0
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                        : 'bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                                }">
+                                    ${count} candidato${count === 1 ? '' : 's'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="shrink-0">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${
+                                isSelected
+                                    ? 'bg-primary text-white'
+                                    : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                            }">
+                                <span class="material-symbols-outlined text-sm font-black">check</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-5 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[88vh] flex flex-col space-y-4" onclick="event.stopPropagation()">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between pb-3.5 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center font-bold border border-primary/20">
+                                <span class="material-symbols-outlined text-xl">home_work</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white">Filtrar por Propiedad</h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Selecciona la publicación para ver sus postulantes</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeOwnerPropertyFilterModal()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Contenedor scrolleable con diseño moderno -->
+                    <div class="overflow-y-auto pr-1 space-y-2.5 sm:space-y-3 flex-1 custom-scrollbar">
+                        <!-- Opción 1: Todas las propiedades -->
+                        <div onclick="selectOwnerPropertyFilter('all', 'Todas las propiedades')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
+                            isAllSelected
+                                ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                                : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                        }">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-tr from-primary/10 to-primary/20 dark:from-red-950/40 dark:to-red-900/30 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                <span class="material-symbols-outlined text-3xl sm:text-4xl">domain</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="font-headline font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white truncate group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                    Todas las propiedades publicadas
+                                </h4>
+                                <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 font-medium">
+                                    Ver postulantes de todas tus publicaciones activas
+                                </p>
+                                <div class="mt-2 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black bg-primary/10 text-primary dark:text-red-400 border border-primary/20">
+                                        ${ownerAppsState.length} candidatos en total
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center ${
+                                    isAllSelected
+                                        ? 'bg-primary text-white'
+                                        : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                                }">
+                                    <span class="material-symbols-outlined text-sm font-black">check</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Propiedades Publicadas -->
+                        ${propCardsHtml}
+                    </div>
+                </div>
+            `;
+        };
+
+        window.closeOwnerPropertyFilterModal = function() {
+            const modal = document.getElementById('owner-property-filter-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.selectOwnerPropertyFilter = function(propId, propTitle) {
+            ownerSelectedPropFilter = propId;
+            ownerSelectedPropTitle = propTitle || 'Todas las propiedades';
+            
+            const label = document.getElementById('owner-active-filter-label');
+            if (label) label.textContent = ownerSelectedPropTitle;
+
+            closeOwnerPropertyFilterModal();
+            renderFilteredOwnerApplications();
+        };
+
+        window.openOwnerRentalFilterModal = function() {
+            let modal = document.getElementById('owner-rental-filter-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'owner-rental-filter-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-detail-open font-body';
+            modal.style.display = 'flex';
+
+            // Tarjetas de contratos de alquiler activos
+            const rentalCardsHtml = ownerActiveContractsMock.map(c => {
+                const isSelected = c.id === activeSelectedContractId;
+                const cleanTitle = (c.property_title || 'Propiedad').split(' - ')[0].split(' | ')[0];
+                const matchedProp = (ownerRawProperties || []).find(p => String(p.id) === String(c.property_id || c.propertyId) || (p.title && c.property_title && p.title.toLowerCase().includes(cleanTitle.toLowerCase())));
+                const imgUrl = c.image || c.imagen || (c.images && c.images[0]) || (matchedProp && matchedProp.images && matchedProp.images[0]) || (matchedProp && (matchedProp.imagen || matchedProp.image)) || 'img/hero-marketplace.jpg';
+                const rentFmt = `$ ${Number(c.monthly_rent || 0).toLocaleString('es-AR')}`;
+
+                return `
+                    <div onclick="selectOwnerRentalContract('${c.id}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
+                        isSelected
+                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                            : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                    }">
+                        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+                            <img src="${imgUrl}" alt="${cleanTitle}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='img/hero-marketplace.jpg'">
+                            <span class="absolute bottom-1 left-1 bg-black/80 text-white text-[9px] font-black px-1.5 py-0.2 rounded">${rentFmt}/m</span>
+                        </div>
+                        
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-headline font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white truncate group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                    ${cleanTitle}
+                                </h4>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5 truncate font-medium">
+                                <span class="material-symbols-outlined text-xs text-rose-500 shrink-0">location_on</span>
+                                <span class="truncate">${c.property_address || 'Mendoza'}</span>
+                            </p>
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">person</span>
+                                    <span class="truncate">${c.tenant_name || 'Inquilino'}</span>
+                                </span>
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-bold bg-zinc-200/70 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+                                    Ajuste ${c.adjustment_index || 'IPC'} (${c.adjustment_frequency_months || 3}m)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="shrink-0">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${
+                                isSelected
+                                    ? 'bg-primary text-white'
+                                    : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                            }">
+                                <span class="material-symbols-outlined text-sm font-black">check</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-5 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[88vh] flex flex-col space-y-4" onclick="event.stopPropagation()">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between pb-3.5 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center font-bold border border-primary/20">
+                                <span class="material-symbols-outlined text-xl">payments</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white">Seleccionar Propiedad en Alquiler</h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Elige el contrato o propiedad activa que deseas administrar</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeOwnerRentalFilterModal()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Contenedor scrolleable con diseño moderno -->
+                    <div class="overflow-y-auto pr-1 space-y-2.5 sm:space-y-3 flex-1 custom-scrollbar">
+                        ${rentalCardsHtml || '<p class="text-center text-zinc-400 py-6">No hay contratos activos disponibles.</p>'}
+                    </div>
+                </div>
+            `;
+        };
+
+        window.closeOwnerRentalFilterModal = function() {
+            const modal = document.getElementById('owner-rental-filter-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.selectOwnerRentalContract = function(contractId) {
+            activeSelectedContractId = contractId;
+            closeOwnerRentalFilterModal();
+            loadOwnerActiveRental();
+        };
+
+        window.toggleOwnerRejectedCandidates = function() {
+            ownerShowRejected = !ownerShowRejected;
+            const container = document.getElementById('owner-rejected-apps-container');
+            const text = document.getElementById('rejected-toggle-text');
+            const icon = document.getElementById('rejected-toggle-icon');
+            if (container) {
+                if (ownerShowRejected) {
+                    container.classList.remove('hidden');
+                    container.classList.add('block');
+                } else {
+                    container.classList.add('hidden');
+                    container.classList.remove('block');
+                }
+            }
+            if (text) text.textContent = ownerShowRejected ? 'Ocultar' : 'Ver rechazados';
+            if (icon) {
+                if (ownerShowRejected) icon.classList.add('rotate-180');
+                else icon.classList.remove('rotate-180');
+            }
+        };
+
+        window.reactivateApplication = async function(appId) {
+            try {
+                if (window.supabaseClient && appId) {
+                    await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                        id_solicitud: appId,
+                        id_estado_solicitud: 1, // Pendiente
+                        fecha_inicio: new Date().toISOString()
+                    }]);
+                }
+                const raw = localStorage.getItem('habitat_tenant_applications');
+                if (raw) {
+                    const apps = JSON.parse(raw);
+                    apps.forEach(a => {
+                        if (String(a.id) === String(appId)) {
+                            a.status = 'pendiente';
+                        }
+                    });
+                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                }
+            } catch (e) {
+                console.warn("Reactivate error:", e);
+            }
+            await loadOwnerApplications();
+        };
+
+        function renderCandidateCardHtml(a, isRejected = false) {
+            const pData = getApplicantPassportData(a);
+            return `
+                <div class="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 transition-all hover:shadow-md ${isRejected ? 'border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40' : ''}">
+                    <!-- Cabecera de la Propiedad y Estado de la Postulación -->
+                    <div class="flex items-start justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                        <div class="min-w-0 flex-1">
+                            <!-- Título de la Propiedad (Sin fondo ni borde) -->
+                            <div class="flex items-center gap-1.5 ${isRejected ? 'text-zinc-500' : 'text-primary dark:text-red-400'} font-headline text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5">
+                                <span class="material-symbols-outlined text-sm sm:text-base shrink-0">home_work</span>
+                                <span class="truncate">${a.property_title}</span>
+                            </div>
+                            <!-- Dirección de la Propiedad -->
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
+                                <span class="material-symbols-outlined text-xs sm:text-sm text-rose-500 shrink-0">location_on</span>
+                                <span class="truncate">${a.property_address}</span>
+                            </p>
+                        </div>
+                        <div class="shrink-0 flex items-center gap-2">
+                            ${!isRejected && a.status === 'pendiente' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5 shrink-0"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Pendiente</span>' : ''}
+                            ${!isRejected && a.status === 'aceptada' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-xs sm:text-sm">check_circle</span> Seleccionado</span>' : ''}
+                            ${isRejected || a.status === 'rechazada' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-bold rounded-xl bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border border-zinc-500/20 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-xs sm:text-sm">person_off</span> Rechazado</span>' : ''}
+                        </div>
+                    </div>
+
+                    <!-- Credencial Digital Pasaporte Hábitat Estilo DNI -->
+                    <div class="relative rounded-2xl sm:rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md sm:shadow-xl overflow-hidden transition-all hover:shadow-2xl cursor-pointer group" onclick="openPasaporteHabitatModal('${a.id}')">
+                        <!-- Passport Top Header Bar -->
+                        <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-3.5 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-xs">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-6 sm:h-8 w-auto bg-white p-1 rounded-lg shadow-xs shrink-0">
+                                <div class="min-w-0">
+                                    <h4 class="font-headline text-[11px] sm:text-sm font-black tracking-widest uppercase leading-tight truncate">HABITAT PASSPORT</h4>
+                                    <p class="text-[8px] sm:text-[10px] text-white/90 font-headline font-extrabold tracking-widest truncate">ID: HBT-2026-${String(a.id || '').substring(0,8).toUpperCase()}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-0.5 sm:p-1 rounded-lg sm:rounded-xl shadow-xs border border-white/30 shrink-0">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${a.id}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-contain">
+                            </div>
+                        </div>
+
+                        <!-- Passport Card Body -->
+                        <div class="p-3.5 sm:p-5 space-y-3 sm:space-y-4">
+                            <div class="flex items-center gap-3 sm:gap-4">
+                                <!-- Profile Avatar / Photo (DNI Style) -->
+                                <div class="relative shrink-0">
+                                    <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-900 flex items-center justify-center font-black shadow-inner">
+                                        <span class="material-symbols-outlined text-2xl sm:text-3xl">person</span>
+                                    </div>
+                                    <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-0.5 sm:p-1 rounded-full shadow-md" title="Identidad Verificada">
+                                        <span class="material-symbols-outlined text-[10px] sm:text-xs font-bold block">verified</span>
+                                    </span>
+                                </div>
+
+                                <!-- Personal & Document Info -->
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="font-headline text-base sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-snug truncate">${pData.name}</h3>
+                                        <span class="px-2 py-0.5 text-[9px] sm:text-[10px] font-headline font-black rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">Score ${pData.score}/100</span>
+                                    </div>
+                                    <p class="font-headline text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-semibold tracking-normal mt-0.5">
+                                        DNI: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.dni}</span> • CUIT: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.cuit}</span>
+                                    </p>
+                                    <p class="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 font-medium truncate mt-0.5">
+                                        ${pData.email}${pData.phone && pData.phone !== 'No informado' ? ` • Tel: ${pData.phone}` : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Badges Grid (Identidad, Fiscal, Judicios, Garantes) -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Biometría</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1 truncate">
+                                        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">check_circle</span>
+                                        <span class="truncate">${pData.kycStatus}</span>
+                                    </p>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Ingresos</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${pData.incomeFormatted}</p>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Antecedentes</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">Sin Desalojos</p>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Garantías</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1 truncate">
+                                        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">shield_person</span>
+                                        <span class="truncate">${pData.guarantees}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Footer Bar of Card: Mobile optimized -->
+                            <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <span class="text-[11px] font-bold text-primary dark:text-red-400 flex items-center justify-center sm:justify-start gap-1 group-hover:underline">
+                                    <span class="material-symbols-outlined text-sm shrink-0">workspace_premium</span> Ver Documentación & Certificados
+                                </span>
+                                <span class="w-full sm:w-auto text-center justify-center px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 shrink-0">
+                                    <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Hábitat
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${a.message ? `
+                        <div class="bg-primary-light p-3.5 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 space-y-1">
+                            <span class="font-extrabold text-primary dark:text-red-900">Mensaje del Candidato:</span>
+                            <p class="italic">"${a.message}"</p>
+                        </div>
+                    ` : ''}
+
+                    ${!isRejected && a.status === 'pendiente' ? `
+                        <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
+                            <button type="button" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
+                                <span class="material-symbols-outlined text-base">check_circle</span>
+                                Aceptar Postulación y Firmar Contrato
+                            </button>
+                            <button type="button" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
+                                Rechazar
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${isRejected ? `
+                        <div class="pt-1 flex items-center justify-between flex-wrap gap-2">
+                            <span class="text-xs text-zinc-400 italic">Postulación archivada / rechazada</span>
+                            <button type="button" onclick="reactivateApplication('${a.id}')" class="py-2 px-3.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs">
+                                <span class="material-symbols-outlined text-sm">replay</span>
+                                Reconsiderar Postulante
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderFilteredOwnerApplications() {
+            const list = document.getElementById('owner-list-apps');
+            const countBadge = document.getElementById('owner-apps-filter-count-badge');
+            if (!list) return;
+
+            let filtered = ownerAppsState;
+            if (ownerSelectedPropFilter !== 'all') {
+                filtered = filtered.filter(a => a.resolved_prop_id === ownerSelectedPropFilter);
+            }
+
+            const activeCandidates = filtered.filter(a => a.status !== 'rechazada');
+            const rejectedCandidates = filtered.filter(a => a.status === 'rechazada');
+
+            if (countBadge) {
+                countBadge.textContent = `${activeCandidates.length}`;
+            }
+
+            if (activeCandidates.length === 0 && rejectedCandidates.length === 0) {
+                list.innerHTML = `
+                    <div class="glass-card rounded-2xl p-8 text-center space-y-2">
+                        <span class="material-symbols-outlined text-4xl text-zinc-400">person_search</span>
+                        <h4 class="font-headline font-bold text-sm text-zinc-800 dark:text-zinc-200">No hay postulantes para esta propiedad</h4>
+                        <p class="text-xs text-zinc-500">Selecciona otra propiedad o revisa todas las postulaciones.</p>
+                        <button type="button" onclick="selectOwnerPropertyFilter('all', 'Todas las propiedades');" class="mt-2 text-xs font-bold text-primary dark:text-red-400 hover:underline cursor-pointer">
+                            Mostrar todas las propiedades
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            // 1. Candidatos Activos (Pendientes / Aceptados)
+            if (activeCandidates.length > 0) {
+                html += activeCandidates.map(a => renderCandidateCardHtml(a, false)).join('');
+            } else {
+                html += `
+                    <div class="glass-card rounded-2xl p-6 text-center space-y-1">
+                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">No hay candidatos activos pendientes para esta selección.</p>
+                        <p class="text-[11px] text-zinc-500">Tienes ${rejectedCandidates.length} candidato${rejectedCandidates.length === 1 ? '' : 's'} no seleccionado${rejectedCandidates.length === 1 ? '' : 's'} en la sección inferior.</p>
+                    </div>
+                `;
+            }
+
+            // 2. Sección Inferior Desplegable de Candidatos Rechazados
+            if (rejectedCandidates.length > 0) {
+                html += `
+                    <div class="mt-8 pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
+                        <button type="button" onclick="toggleOwnerRejectedCandidates()" class="w-full flex items-center justify-between p-4 rounded-2xl bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/70 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/80 transition-all cursor-pointer group shadow-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
+                                    <span class="material-symbols-outlined text-lg">person_off</span>
+                                </div>
+                                <div class="text-left">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs sm:text-sm font-headline font-extrabold text-zinc-700 dark:text-zinc-200">
+                                            Candidatos no seleccionados
+                                        </span>
+                                        <span class="px-2 py-0.2 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 text-[10px] font-black">
+                                            ${rejectedCandidates.length}
+                                        </span>
+                                    </div>
+                                    <span class="block text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">
+                                        Postulantes rechazados o archivados
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-200">
+                                <span id="rejected-toggle-text">${ownerShowRejected ? 'Ocultar' : 'Ver rechazados'}</span>
+                                <span class="material-symbols-outlined text-lg transition-transform duration-200 ${ownerShowRejected ? 'rotate-180' : ''}" id="rejected-toggle-icon">expand_more</span>
+                            </div>
+                        </button>
+
+                        <div id="owner-rejected-apps-container" class="${ownerShowRejected ? 'block' : 'hidden'} space-y-4 pt-2">
+                            ${rejectedCandidates.map(a => renderCandidateCardHtml(a, true)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            list.innerHTML = html;
+
+            // Vincular acciones de aceptar postulación
+            list.querySelectorAll('.btn-owner-accept').forEach(b => {
+                b.onclick = async () => {
+                    const appId = b.getAttribute('data-id');
+                    b.disabled = true;
+                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
+                    let res = null;
+                    try {
+                        if (window.DataManager && window.DataManager.acceptApplication) {
+                            res = await window.DataManager.acceptApplication(appId);
+                        }
+                    } catch (e) {
+                        console.warn("Aviso local postulación:", e);
+                    }
+                    const targetContractId = res?.contractId || 'CTR-2026-0001';
+                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                };
+            });
+
+            // Vincular acciones de rechazar postulación
+            list.querySelectorAll('.btn-owner-reject').forEach(b => {
+                b.onclick = async () => {
+                    const appId = b.getAttribute('data-id');
+                    b.disabled = true;
+                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span>';
+                    await window.DataManager.rejectApplication(appId);
+                    await loadOwnerApplications();
+                };
+            });
+        }
+
         let ownerCurrentCalendarYear = 2026;
-        let ownerCurrentCalendarMonth = 7; // Agosto
+        let ownerCurrentCalendarMonth = 7; // Agosto (0-indexed)
         let ownerSelectedCalendarDay = null;
         let ownerSelectedCalendarTypeFilter = 'todos';
         let ownerPickerSelectedYear = 2026;
@@ -1399,27 +1966,32 @@
                             </div>
                         </div>
 
-                        <!-- Selector de Cartera de Alquileres -->
+                        <!-- Selector Moderno de Propiedades en Alquiler -->
                         <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
                             <div>
                                 <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-2xl">payments</span>
-                                    Cartera de Alquileres Activos (${ownerActiveContractsMock.length})
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">payments</span>
+                                    Gestión de Alquileres & Cobranzas
                                 </h2>
-                                <p class="text-xs text-zinc-500">Administra montos, expensas, intereses punitorios y comisiones de tus propiedades alquiladas.</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Administra montos, expensas, intereses punitorios y comisiones de tus propiedades alquiladas.</p>
                             </div>
 
-                            <div class="flex items-center gap-2 overflow-x-auto shrink-0 pb-1 sm:pb-0">
-                                ${ownerActiveContractsMock.map(c => {
-                                    const titleClean = (c.property_title || 'Propiedad').split(' - ')[0].split(' | ')[0];
-                                    return `
-                                        <button type="button" onclick="selectOwnerActiveContract('${c.id}')" class="px-4 py-2.5 rounded-xl font-headline font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0 ${c.id === activeSelectedContractId ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'}">
-                                            <span class="material-symbols-outlined text-base">home</span>
-                                            <span>${titleClean}</span>
-                                        </button>
-                                    `;
-                                }).join('')}
-                            </div>
+                            <!-- Botón moderno para abrir el Pop-Up de selección de propiedad en alquiler -->
+                            <button type="button" onclick="openOwnerRentalFilterModal()" id="btn-open-rental-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[240px]">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                        <span class="material-symbols-outlined text-lg">home_work</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Alquiler Seleccionado</span>
+                                        <span id="owner-active-rental-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">${(contract.property_title || 'Propiedad').split(' - ')[0]}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0 pl-1">
+                                    <span class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">${ownerActiveContractsMock.length}</span>
+                                    <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
+                                </div>
+                            </button>
                         </div>
 
                         <!-- Card Principal del Alquiler Seleccionado -->
@@ -1842,15 +2414,12 @@
         }
 
         function openPasaporteHabitatModal(appId) {
-            let app = null;
-            if (window.DataManager && window.DataManager._mockApplications) {
-                app = window.DataManager._mockApplications.find(a => a.id === appId);
+            let app = ownerAppsState.find(a => String(a.id) === String(appId));
+            if (!app && window.DataManager && window.DataManager._mockApplications) {
+                app = window.DataManager._mockApplications.find(a => String(a.id) === String(appId));
             }
             
-            const candidateName = app ? app.tenant_name : 'Gonzalo Fernández';
-            const candidateEmail = app ? app.tenant_email : 'gonzalo.f@gmail.com';
-            const candidatePhone = app ? app.tenant_phone : '+54 11 4455-8899';
-            const monthlyIncome = app ? Number(app.monthly_income).toLocaleString('es-AR') : '1.650.000';
+            const pData = getApplicantPassportData(app);
 
             let modal = document.getElementById('pasaporte-habitat-full-modal');
             if (!modal) {
@@ -1873,7 +2442,7 @@
                                 <p class="text-xs text-zinc-500">Auditoría completa de perfil, ingresos, garantes y scoring locativo</p>
                             </div>
                         </div>
-                        <button type="button" onclick="document.getElementById('pasaporte-habitat-full-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer">
+                        <button type="button" onclick="document.getElementById('pasaporte-habitat-full-modal').style.display='none'" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
                             <span class="material-symbols-outlined text-base">close</span>
                         </button>
                     </div>
@@ -1901,26 +2470,26 @@
                                     <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-900 flex items-center justify-center font-black shadow-inner">
                                         <span class="material-symbols-outlined text-4xl">person</span>
                                     </div>
-                                    <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
+                                    <span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="Identidad Verificada">
                                         <span class="material-symbols-outlined text-xs font-bold block">verified</span>
                                     </span>
                                 </div>
 
                                 <div>
-                                    <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${candidateName}</h2>
+                                    <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${pData.name}</h2>
                                     <p class="font-headline text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
-                                        Inquilino Verificado • DNI: 38.491.024 • CUIT: 20-38491024-8
+                                        DNI: ${pData.dni} • CUIT: ${pData.cuit}
                                     </p>
                                     <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
-                                        ${candidateEmail} • ${candidatePhone}
+                                        ${pData.email} • ${pData.phone}
                                     </p>
                                 </div>
                             </div>
 
                             <div class="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center shrink-0 shadow-sm">
                                 <span class="block text-[10px] font-headline font-extrabold uppercase text-zinc-400">Score de Solvencia</span>
-                                <span class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400">98 <span class="text-xs font-normal text-zinc-400">/ 100</span></span>
-                                <span class="block text-[9px] font-bold text-emerald-600 uppercase">Riesgo Nulo</span>
+                                <span class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400">${pData.score} <span class="text-xs font-normal text-zinc-400">/ 100</span></span>
+                                <span class="block text-[9px] font-bold text-emerald-600 uppercase">Riesgo Mínimo</span>
                             </div>
                         </div>
                     </div>
@@ -1934,7 +2503,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                             <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60">
                                 <span class="block text-[10px] font-bold uppercase text-zinc-400">DNI / CUIL Validado</span>
-                                <span class="font-extrabold text-zinc-900 dark:text-white text-sm">20-38491024-8</span>
+                                <span class="font-extrabold text-zinc-900 dark:text-white text-sm">${pData.cuit}</span>
                             </div>
                             <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60">
                                 <span class="block text-[10px] font-bold uppercase text-zinc-400">Prueba Biométrica (Didit KYC)</span>
@@ -1961,16 +2530,16 @@
                             <div class="flex items-center justify-between flex-wrap gap-2 border-b border-zinc-200/60 dark:border-zinc-700/60 pb-3">
                                 <div>
                                     <span class="block text-[10px] font-bold uppercase text-zinc-400">Ingresos Mensuales Certificados</span>
-                                    <span class="text-xl font-headline font-black text-emerald-600 dark:text-emerald-400">$ ${monthlyIncome} / mes</span>
+                                    <span class="text-xl font-headline font-black text-emerald-600 dark:text-emerald-400">${pData.incomeFormatted} / mes</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Relación de Dependencia</span>
-                                    <span class="font-extrabold text-zinc-800 dark:text-zinc-200">Tech Solutions SA (Antigüedad 5 años)</span>
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Estado de Ingresos</span>
+                                    <span class="font-extrabold text-zinc-800 dark:text-zinc-200">Actividad Laboral Auditada</span>
                                 </div>
                             </div>
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-zinc-600 dark:text-zinc-300 font-medium">📄 Recibo de Sueldo y Certificado de Ingresos Auditado</span>
-                                <button type="button" onclick="alert('Descargando Recibo de Sueldo de ${candidateName}...')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs">
+                                <button type="button" onclick="alert('Descargando Documentación de ${pData.name}...')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs">
                                     <span class="material-symbols-outlined text-sm">download</span> Descargar PDF
                                 </button>
                             </div>
@@ -1986,31 +2555,18 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                             <div class="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border border-blue-500/20 space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-600 dark:text-blue-400">Garante Propietario</span>
-                                    <span class="text-[10px] font-bold text-emerald-600">Verificado RPI</span>
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-600 dark:text-blue-400">Garante Principal</span>
+                                    <span class="text-[10px] font-bold text-emerald-600">Verificado</span>
                                 </div>
-                                <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white">Roberto Fernández (Padre)</h4>
-                                <p class="text-zinc-500 text-[11px]">Propiedad en Av. Libertador 2450, CABA. Libre de embargos e inhibiciones.</p>
-                                <button type="button" onclick="alert('Descargando Escritura de Propiedad...')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pt-1">
-                                    <span class="material-symbols-outlined text-sm">description</span> Ver Escritura Adjunta
-                                </button>
+                                <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white">${pData.guarantees}</h4>
+                                <p class="text-zinc-500 text-[11px]">Garantía aprobada con solvencia certificada y libre de embargos.</p>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-950/20 border border-blue-500/20 space-y-2">
+                            <div class="p-4 rounded-xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-600 dark:text-blue-400">Seguro de Caución</span>
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">Seguro de Caución</span>
                                     <span class="text-[10px] font-bold text-emerald-600">Póliza Emitida</span>
                                 </div>
-                                <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white">Finaer Seguro de Caución</h4>
-                                <p class="text-zinc-500 text-[11px]">Póliza N° FIN-2026-9942. Cobertura de $15.000.000 para alquiler y expensas.</p>
-                                <button type="button" onclick="alert('Descargando Póliza Finaer...')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pt-1">
-                                    <span class="material-symbols-outlined text-sm">description</span> Ver Póliza Finaer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección 4: Central de Deudores BCRA & Historial de Alquileres -->
                     <div class="space-y-3">
                         <h3 class="font-headline text-xs font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-emerald-600 text-base">history_edu</span>
@@ -2047,11 +2603,12 @@
         }
 
         function openGuarantorsModal(appId) {
-            let candidateName = 'Postulante';
-            if (window.DataManager && window.DataManager._mockApplications) {
-                const app = window.DataManager._mockApplications.find(a => a.id === appId);
-                if (app) candidateName = app.tenant_name;
+            let app = ownerAppsState.find(a => String(a.id) === String(appId));
+            if (!app && window.DataManager && window.DataManager._mockApplications) {
+                app = window.DataManager._mockApplications.find(a => String(a.id) === String(appId));
             }
+            const pData = getApplicantPassportData(app);
+            let candidateName = pData.name;
 
             const guarantors = [
                 {
