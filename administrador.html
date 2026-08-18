@@ -765,11 +765,11 @@
 
                         ${a.status === 'pendiente' ? `
                             <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                                <button type="button" onclick="event.stopPropagation(); window.location.href='contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
+                                <button type="button" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
                                     <span class="material-symbols-outlined text-base">check_circle</span>
                                     Aceptar Postulación y Firmar Contrato
                                 </button>
-                                <button type="button" onclick="event.stopPropagation();" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
+                                <button type="button" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
                                     Rechazar
                                 </button>
                             </div>
@@ -780,21 +780,27 @@
                 list.querySelectorAll('.btn-owner-accept').forEach(b => {
                     b.onclick = async () => {
                         const appId = b.getAttribute('data-id');
+                        b.disabled = true;
+                        b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
+                        let res = null;
                         try {
                             if (window.DataManager && window.DataManager.acceptApplication) {
-                                await window.DataManager.acceptApplication(appId);
+                                res = await window.DataManager.acceptApplication(appId);
                             }
                         } catch (e) {
                             console.warn("Aviso local postulación:", e);
                         }
-                        // Redirect directly to contratos.html for Liveness Check and digital signing
-                        window.location.href = 'contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';
+                        const targetContractId = res?.contractId || 'CTR-2026-0001';
+                        // Redirect directly to contratos.html with the EXACT generated contract
+                        window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
                     };
                 });
 
                 list.querySelectorAll('.btn-owner-reject').forEach(b => {
                     b.onclick = async () => {
                         const appId = b.getAttribute('data-id');
+                        b.disabled = true;
+                        b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span>';
                         await window.DataManager.rejectApplication(appId);
                         await loadOwnerApplications();
                     };
@@ -2092,6 +2098,7 @@
     <!-- Contracts & Verification Modules -->
     <script src="js/didit-kyc.js"></script>
     <script src="js/owner-verification.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/contracts-manager.js"></script>
 </body>
 

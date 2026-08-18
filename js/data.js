@@ -1058,15 +1058,94 @@ var DataManager = {
     },
 
     acceptApplication: async function (appId) {
+        let contractId = `CTR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        let propTitle = 'Propiedad en Alquiler';
+        let propAddress = 'Buenos Aires';
+        let monthlyRent = 450000;
+        let tenantName = 'Inquilino Postulante';
+        let tenantEmail = 'inquilino@habitat.ar';
+        let tenantPhone = '+54 9 11 0000-0000';
+        let photoUrls = ['img/hero-marketplace.jpg'];
+        let ownerName = 'Propietario Verificado';
+        let ownerEmail = 'propietario@habitat.ar';
+
+        // 1. Obtener datos desde localStorage si existen
+        let localApp = null;
+        try {
+            const raw = localStorage.getItem('habitat_tenant_applications');
+            if (raw) {
+                const apps = JSON.parse(raw);
+                localApp = apps.find(a => String(a.id) === String(appId));
+                if (localApp) {
+                    propTitle = localApp.property_title || propTitle;
+                    propAddress = localApp.property_address || propAddress;
+                    monthlyRent = Number(localApp.property_price || monthlyRent);
+                    tenantName = localApp.tenant_name || tenantName;
+                    tenantEmail = localApp.tenant_email || tenantEmail;
+                    tenantPhone = localApp.tenant_phone || tenantPhone;
+                    if (Array.isArray(localApp.property_photos) && localApp.property_photos.length > 0) {
+                        photoUrls = localApp.property_photos;
+                    } else if (localApp.property_image) {
+                        photoUrls = [localApp.property_image];
+                    }
+                }
+            }
+        } catch (e) {}
+
         if (window.supabaseClient && appId) {
             try {
                 const profileId = await DataManager._getOrCreateProfile();
 
+                // Consultar Perfil del Propietario
+                try {
+                    const { data: ownerPerf } = await window.supabaseClient.from('Perfil').select('*').eq('id_perfil', profileId).maybeSingle();
+                    if (ownerPerf) {
+                        ownerName = ownerPerf.nombre_completo || ownerName;
+                        ownerEmail = ownerPerf.mail || ownerEmail;
+                    }
+                } catch (e) {}
+
+                // Consultar Solicitud con jerarquía completa
                 const { data: sol } = await window.supabaseClient
                     .from('Solicitud')
-                    .select('*')
+                    .select(`
+                        *,
+                        Propiedad (
+                            *,
+                            Publicacion (
+                                *,
+                                Multimedia (*)
+                            )
+                        ),
+                        Perfil (*)
+                    `)
                     .eq('id_solicitud', appId)
                     .maybeSingle();
+
+                const prop = sol?.Propiedad || {};
+                const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                const media = pub?.Multimedia || [];
+                if (media.length > 0) {
+                    photoUrls = media.map(m => m.url_archivo);
+                }
+
+                if (pub?.descripcion) {
+                    propTitle = pub.descripcion.split(' | Detalles: ')[0];
+                } else if (prop.calle) {
+                    propTitle = `Propiedad en ${prop.calle} ${prop.numero || ''}`.trim();
+                }
+
+                if (prop.calle) {
+                    propAddress = `${prop.calle} ${prop.numero || ''}`.trim();
+                }
+
+                if (pub?.precio) monthlyRent = Number(pub.precio);
+                else if (prop.expensas_mensuales && !localApp) monthlyRent = Number(prop.expensas_mensuales * 10);
+
+                const perf = sol?.Perfil || {};
+                if (perf.nombre_completo) tenantName = perf.nombre_completo;
+                if (perf.mail) tenantEmail = perf.mail;
+                if (sol?.telefono || perf.telefono) tenantPhone = sol?.telefono || perf.telefono;
 
                 const solPropId = sol?.id_propiedad || 1;
                 const solPerfilId = sol?.id_perfil || profileId;
@@ -1094,7 +1173,7 @@ var DataManager = {
                         fecha_firma_contrato: todayStr,
                         fecha_inicio_contrato: todayStr,
                         fecha_fin_contrato: nextYearStr,
-                        monto_cierre: 380000,
+                        monto_cierre: monthlyRent,
                         periodo_aumento_meses: 3,
                         dia_vencimiento_mensual: 10,
                         alias_cbu: 'HABITAT.ALQUILER.MP'
@@ -1102,9 +1181,9 @@ var DataManager = {
                     .select()
                     .single();
 
-                if (cErr) console.error("Error creating contract:", cErr);
+                if (contract && contract.id_contrato) {
+                    contractId = `CTR-2026-${String(contract.id_contrato).padStart(4, '0')}`;
 
-                if (contract) {
                     // Record Historial_Estado_Contrato (1 = Activo)
                     try {
                         await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
@@ -1120,7 +1199,7 @@ var DataManager = {
                         .insert([{
                             id_contrato: contract.id_contrato,
                             id_metodo_pago: 1,
-                            monto: 380000,
+                            monto: monthlyRent,
                             fecha_vencimiento: todayStr,
                             periodo: 'Julio 2026'
                         }])
@@ -1147,7 +1226,7 @@ var DataManager = {
 
                     await window.supabaseClient.from('Historial_estado_propiedad').insert([{
                         id_propiedad: solPropId,
-                        id_estado_propiedad: 4, // Alquilada
+                        id_estado_propiedad: 4,
                         fecha_inicio: new Date().toISOString()
                     }]);
                 } catch (e) { }
@@ -1173,22 +1252,121 @@ var DataManager = {
             }
         }
 
+        // Crear objeto de contrato completo con la propiedad real y guardarlo en habitat_contracts
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
+        const contractObj = {
+            id: contractId,
+            contractNumber: contractId,
+            propertyId: String(appId),
+            title: `Contrato de Locación - ${propTitle}`,
+            propertyAddress: propAddress,
+            propertyCity: 'Buenos Aires',
+            propertyImage: photoUrls[0] || 'img/hero-marketplace.jpg',
+            propertyPhotos: photoUrls,
+            monthlyRent: monthlyRent,
+            currency: 'ARS',
+            status: 'WAITING_OWNER',
+            startDate: todayStr,
+            endDate: nextYearStr,
+            durationMonths: 24,
+            paymentDueDay: 10,
+            adjustmentIndex: 'IPC',
+            adjustmentFrequencyMonths: 3,
+            depositAmount: monthlyRent,
+            aliasCbu: 'HABITAT.ALQUILER.MP',
+            tenant: {
+                role: 'TENANT',
+                name: tenantName,
+                email: tenantEmail,
+                phone: tenantPhone,
+                cuil: '20-38491029-4',
+                dni: '38.491.029',
+                hasSigned: false,
+                isKycVerified: true
+            },
+            owner: {
+                role: 'OWNER',
+                name: ownerName,
+                email: ownerEmail,
+                cuil: '27-33918274-8',
+                dni: '33.918.274',
+                hasSigned: false,
+                isKycVerified: true
+            },
+            broker: {
+                name: 'Martín Palermo',
+                license: 'CUCICBA Mat. 6842',
+                agencyName: 'Palermo & Asociados Propiedades',
+                email: 'contacto@palermoprop.com'
+            },
+            sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            auditTrailEvents: [
+                {
+                    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    action: 'CONTRATO_GENERADO',
+                    actor: `${ownerName} (Aceptación de Postulación)`,
+                    details: `Contrato digital confeccionado para ${tenantName} en ${propAddress}.`
+                }
+            ]
+        };
+
+        try {
+            const rawContr = localStorage.getItem('habitat_contracts');
+            let existingContracts = [];
+            if (rawContr) existingContracts = JSON.parse(rawContr);
+            existingContracts = existingContracts.filter(c => c && c.id !== contractId);
+            existingContracts.unshift(contractObj);
+            localStorage.setItem('habitat_contracts', JSON.stringify(existingContracts));
+        } catch (e) {}
+
         // Actualizar copia local en localStorage
         try {
             const raw = localStorage.getItem('habitat_tenant_applications');
             if (raw) {
                 const apps = JSON.parse(raw);
                 apps.forEach(a => {
-                    if (String(a.id) === String(appId)) a.status = 'aceptada';
+                    if (String(a.id) === String(appId)) {
+                        a.status = 'aceptada';
+                        a.contract_id = contractId;
+                    }
                 });
                 localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
             }
         } catch (e) {}
 
-        return { id: appId, status: 'aceptada' };
+        // Despachar notificaciones in-app para ambas partes
+        if (window.NotificationManager) {
+            window.NotificationManager.createNotification({
+                title: '¡Postulación Aceptada! Contrato Listo para Firma',
+                message: `Has aceptado a ${tenantName} para "${propTitle}". El contrato digital ya está disponible para firmar.`,
+                type: 'contract',
+                link: `contratos.html?contract=${contractId}&sign=1&role=OWNER`,
+                role: 'OWNER'
+            });
+            window.NotificationManager.createNotification({
+                title: '¡Tu postulación fue aprobada por el propietario! 🎉',
+                message: `El propietario aprobó tu postulación para "${propTitle}". Ingresa para realizar tu validación biométrica y firmar el contrato digital.`,
+                type: 'contract',
+                link: `contratos.html?contract=${contractId}&sign=1&role=TENANT`,
+                role: 'TENANT'
+            });
+        }
+
+        return {
+            id: appId,
+            status: 'aceptada',
+            contractId: contractId,
+            tenantName: tenantName,
+            propertyTitle: propTitle,
+            propertyAddress: propAddress
+        };
     },
 
     rejectApplication: async function (appId) {
+        let propTitle = 'la propiedad';
         if (window.supabaseClient && appId) {
             try {
                 await window.supabaseClient.from('Historial_estado_solicitud').insert([{
@@ -1207,11 +1385,24 @@ var DataManager = {
             if (raw) {
                 const apps = JSON.parse(raw);
                 apps.forEach(a => {
-                    if (String(a.id) === String(appId)) a.status = 'rechazada';
+                    if (String(a.id) === String(appId)) {
+                        a.status = 'rechazada';
+                        if (a.property_title) propTitle = a.property_title;
+                    }
                 });
                 localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
             }
         } catch (e) {}
+
+        if (window.NotificationManager) {
+            window.NotificationManager.createNotification({
+                title: 'Estado de postulación actualizado',
+                message: `El proceso de evaluación para "${propTitle}" ha concluido. Puedes explorar más propiedades disponibles en el Marketplace.`,
+                type: 'rejection',
+                link: 'index.html',
+                role: 'TENANT'
+            });
+        }
 
         return { id: appId, status: 'rechazada' };
     },
