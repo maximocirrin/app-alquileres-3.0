@@ -345,6 +345,7 @@ var DataManager = {
                     cantidad_visualizaciones_total: pub.cantidad_visualizaciones_total || 0,
                     views_count: pub.cantidad_visualizaciones_total || 0,
                     views: pub.cantidad_visualizaciones_total || 0,
+                    historial: pub.Historial_Estado_Publicacion || [],
                     extraInfo: extraInfo,
                     Propiedad: prop
                 };
