@@ -83,7 +83,94 @@
 
         getContractById: function (id) {
             if (!id) return contracts[0] || null;
-            return contracts.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id)) || contracts[0];
+            let match = contracts.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id) || String(c.dbContractId) === String(id));
+            if (match) return match;
+
+            // Intentar recuperar de habitat_contracts actualizado
+            try {
+                const raw = localStorage.getItem('habitat_contracts');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    const found = parsed.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id));
+                    if (found) {
+                        contracts = parsed;
+                        return found;
+                    }
+                }
+            } catch (e) {}
+
+            // Intentar recuperar desde habitat_tenant_applications
+            try {
+                const appsRaw = localStorage.getItem('habitat_tenant_applications');
+                if (appsRaw) {
+                    const apps = JSON.parse(appsRaw);
+                    const foundApp = apps.find(a => a && (a.contract_id === id || String(a.id) === String(id) || String(a.property_id) === String(id)));
+                    if (foundApp) {
+                        const fallbackContract = {
+                            id: id,
+                            contractNumber: id,
+                            propertyId: String(foundApp.property_id || 1),
+                            title: `Contrato de Locación - ${foundApp.property_title || 'Propiedad'}`,
+                            propertyAddress: foundApp.property_address || 'Buenos Aires',
+                            propertyCity: 'Buenos Aires',
+                            propertyImage: foundApp.property_image || (foundApp.property_photos && foundApp.property_photos[0]) || 'img/hero-marketplace.jpg',
+                            propertyPhotos: foundApp.property_photos || [foundApp.property_image || 'img/hero-marketplace.jpg'],
+                            monthlyRent: foundApp.property_price || 450000,
+                            currency: 'ARS',
+                            status: 'WAITING_OWNER',
+                            startDate: new Date().toISOString().split('T')[0],
+                            endDate: new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
+                            durationMonths: 24,
+                            paymentDueDay: 10,
+                            adjustmentIndex: 'IPC',
+                            adjustmentFrequencyMonths: 3,
+                            depositAmount: foundApp.property_price || 450000,
+                            aliasCbu: 'HABITAT.ALQUILER.MP',
+                            tenant: {
+                                role: 'TENANT',
+                                name: foundApp.tenant_name || 'Inquilino Postulante',
+                                email: foundApp.tenant_email || 'inquilino@habitat.ar',
+                                phone: foundApp.tenant_phone || '+54 9 11 0000-0000',
+                                cuil: '20-38491029-4',
+                                dni: '38.491.029',
+                                hasSigned: false,
+                                isKycVerified: true
+                            },
+                            owner: {
+                                role: 'OWNER',
+                                name: 'Propietario Verificado',
+                                email: 'propietario@habitat.ar',
+                                cuil: '27-33918274-8',
+                                dni: '33.918.274',
+                                hasSigned: false,
+                                isKycVerified: true
+                            },
+                            broker: {
+                                name: 'Martín Palermo',
+                                license: 'CUCICBA Mat. 6842',
+                                agencyName: 'Palermo & Asociados Propiedades',
+                                email: 'contacto@palermoprop.com'
+                            },
+                            sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            auditTrailEvents: [
+                                {
+                                    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                                    action: 'CONTRATO_GENERADO',
+                                    actor: 'Habitat Smart Contracts Generator',
+                                    details: `Contrato digital confeccionado para ${foundApp.tenant_name} en ${foundApp.property_address}.`
+                                }
+                            ]
+                        };
+                        contracts.unshift(fallbackContract);
+                        saveContracts();
+                        return fallbackContract;
+                    }
+                }
+            } catch (e) {}
+
+            return contracts[0] || null;
         },
 
         switchRole: function (newRole) {

@@ -9118,21 +9118,27 @@ document.addEventListener('DOMContentLoaded', () => {
             container.querySelectorAll('.btn-accept-app').forEach(b => {
                 b.onclick = async () => {
                     const appId = b.getAttribute('data-id');
+                    b.disabled = true;
+                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
+                    let res = null;
                     try {
                         if (window.DataManager && window.DataManager.acceptApplication) {
-                            await window.DataManager.acceptApplication(appId);
+                            res = await window.DataManager.acceptApplication(appId);
                         }
                     } catch (e) {
                         console.warn("Aviso local postulación:", e);
                     }
-                    // Redirect directly to contratos.html for Liveness Check and digital signing
-                    window.location.href = 'contratos.html?contract=CTR-2026-0742&sign=1&role=OWNER';
+                    const targetContractId = res?.contractId || 'CTR-2026-0001';
+                    // Redirect directly to contratos.html for Liveness Check and digital signing with the real contract
+                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
                 };
             });
 
             container.querySelectorAll('.btn-reject-app').forEach(b => {
                 b.onclick = async () => {
                     const appId = b.getAttribute('data-id');
+                    b.disabled = true;
+                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span>';
                     await window.DataManager.rejectApplication(appId);
                     await renderLandlordApplications();
                 };
