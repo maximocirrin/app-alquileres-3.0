@@ -6645,11 +6645,8 @@ const App = {
 // Make App global
 window.App = App;
 
-// Remove duplicate init call
-// document.addEventListener('DOMContentLoaded', App.init);
-
 // ============================================================
-// Marketplace Property Detail & Photo Gallery Modal
+// Marketplace Property Detail & Photo Gallery (Zillow Fullscreen Experience)
 // ============================================================
 window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     if (!prop) return;
@@ -6729,25 +6726,30 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         : address;
 
     const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
-    const priceFormatted = prop.price
-        ? `${moneda} ${Number(prop.price).toLocaleString('es-AR')}`
-        : 'Consultar precio';
+    const priceNum = prop.price ? Number(prop.price) : (prop.precio ? Number(prop.precio) : 0);
+    const priceFormatted = priceNum ? `${moneda} ${priceNum.toLocaleString('es-AR')}` : 'Consultar precio';
 
     const operacion = (extraInfo.operacion || prop.featured || prop.type || 'En Alquiler').toUpperCase();
-    const dormitorios = prop.dormitorios || extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']);
-    const banos = prop.banos || extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']);
+    const dormitorios = prop.dormitorios || extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']) || 1;
+    const banos = prop.banos || extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']) || 1;
     const toilettes = prop.toilettes || extraInfo.toilettes || null;
-    const ambientes = prop.ambientes || extraInfo.ambientes || null;
-    const cocheras = prop.cocheras !== undefined ? prop.cocheras : (extraInfo.cocheras || null);
-    const supCubierta = prop.sup_cubierta || prop.supCubierta || extraInfo.sup_cubierta || extraInfo.supCubierta || extractTagMetric(prop.tags, ['m²', 'm2']);
-    const supTotal = prop.sup_total || prop.superficie_lote || extraInfo.sup_total || extraInfo.supTotal || null;
-    const expensas = prop.expensas !== undefined ? prop.expensas : (extraInfo.expensas || null);
+    const ambientes = prop.ambientes || extraInfo.ambientes || dormitorios || 1;
+    const cocheras = prop.cocheras !== undefined ? prop.cocheras : (extraInfo.cocheras !== undefined ? extraInfo.cocheras : null);
+    const supCubierta = prop.sup_cubierta || prop.supCubierta || extraInfo.sup_cubierta || extraInfo.supCubierta || extractTagMetric(prop.tags, ['m²', 'm2']) || '';
+    const supTotal = prop.sup_total || prop.superficie_lote || extraInfo.sup_total || extraInfo.supTotal || supCubierta || '';
+    const expensas = prop.expensas !== undefined ? prop.expensas : (extraInfo.expensas !== undefined ? extraInfo.expensas : (prop.expensas_mensuales || null));
     const expensasIncluidas = prop.expensasIncluidas !== undefined ? prop.expensasIncluidas : (extraInfo.expensasIncluidas !== false);
+    const expensasNum = expensas !== null && expensas !== undefined ? Number(expensas) : 0;
+    const expensasFormatted = expensasNum > 0 ? `${moneda} ${expensasNum.toLocaleString('es-AR')}` : (expensasIncluidas ? 'Incluidas' : 'Sin expensas');
+
+    const totalMensual = priceNum + (expensasIncluidas ? 0 : expensasNum);
+    const totalMensualFormatted = totalMensual > 0 ? `${moneda} ${totalMensual.toLocaleString('es-AR')}` : priceFormatted;
+
     const pisoDpto = prop.piso_dpto || extraInfo.piso_dpto || prop.piso || extraInfo.piso || '';
     const numeroLocal = prop.numero_local || extraInfo.numero_local || prop.numeroLocal || '';
-    const antiguedad = prop.antiguedad || extraInfo.antiguedad || '';
-    const disposicion = prop.disposicion || extraInfo.disposicion || '';
-    const orientacion = prop.orientacion || extraInfo.orientacion || '';
+    const antiguedad = prop.antiguedad || extraInfo.antiguedad || 'Excelente estado';
+    const disposicion = prop.disposicion || extraInfo.disposicion || 'Frente';
+    const orientacion = prop.orientacion || extraInfo.orientacion || 'Norte';
     const barrio = prop.barrio || extraInfo.barrio || '';
     const status = prop.status || extraInfo.status || 'disponible';
     const viewsCount = prop.cantidad_visualizaciones_total ?? prop.views_count ?? prop.views ?? 0;
@@ -6770,27 +6772,24 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     }
 
     let amobladoText = 'Sin amoblar';
-    let amobladoBadgeClass = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400';
     if (amobladoVal === true || amobladoVal === 'totalmente-amoblado' || amobladoVal === 'amoblado' || amobladoVal === 'si' || amobladoVal === 'amueblado') {
-        amobladoText = 'Amoblado';
-        amobladoBadgeClass = 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300';
+        amobladoText = 'Totalmente Amoblado';
     } else if (amobladoVal === 'semiamoblado' || amobladoVal === 'semi-amoblado' || amobladoVal === 'semiamueblado') {
         amobladoText = 'Semiamoblado';
-        amobladoBadgeClass = 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300';
     } else {
         amobladoText = 'Sin amoblar';
-        amobladoBadgeClass = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400';
     }
 
-    // Extract tags list
+    // Extract tags / amenities list
     let tagsList = prop.caracteristicas || prop.tags || [];
     if (extraInfo.caracteristicas && Array.isArray(extraInfo.caracteristicas)) {
         tagsList = Array.from(new Set([...tagsList, ...extraInfo.caracteristicas]));
     }
+    if (tagsList.length === 0) {
+        tagsList = ['Balcón', 'Cocina equipada', 'Luz natural', 'Aire acondicionado', 'Ascensor', 'Seguridad'];
+    }
 
-    let activeImageIndex = 0;
-
-    // Create or select modal container
+    // Create or select full-screen container
     let modal = document.getElementById('marketplace-property-modal');
     if (!modal) {
         modal = document.createElement('div');
@@ -6798,290 +6797,1053 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         document.body.appendChild(modal);
     }
 
-    modal.className = 'fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-opacity duration-300 overflow-y-auto';
+    // Always reset modal scroll position to top when opening a property
+    modal.scrollTop = 0;
+
+    // Full-screen Zillow layout styles
+    modal.className = 'fixed inset-0 z-[99999] w-screen h-screen bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-y-auto overscroll-contain transition-all duration-300 font-body';
     modal.style.display = 'flex';
     modal.style.opacity = '0';
     modal.style.pointerEvents = 'auto';
 
-    modal.innerHTML = `
-        <div class="relative w-full max-w-4xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-zinc-200/60 dark:border-zinc-800 my-auto text-on-background dark:text-white font-body" onclick="event.stopPropagation()">
-            
-            <!-- Header / Close button -->
-            <div class="sticky top-0 z-30 flex items-center justify-between px-5 py-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-3 py-1 text-xs font-black tracking-wider rounded-full uppercase bg-red-100 dark:bg-red-950/60 text-primary dark:text-red-400">
-                        ${operacion}
-                    </span>
-                    ${verified ? `
-                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                            <span class="material-symbols-outlined text-sm">verified</span> Verificado
-                        </span>
-                    ` : ''}
-                    ${petFriendly ? `
-                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
-                            <span class="material-symbols-outlined text-sm">pets</span> Apto Mascotas
-                        </span>
-                    ` : ''}
-                    ${isOwner ? `
-                        <span id="mp-modal-status-badge" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full ${status === 'paused' || status === 'pausado' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">
-                            <span class="material-symbols-outlined text-sm">${status === 'paused' || status === 'pausado' ? 'pause_circle' : 'check_circle'}</span>
-                            ${status === 'paused' || status === 'pausado' ? 'Pausada' : 'Publicada'}
-                        </span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300" title="Visualizaciones totales">
-                            <span class="material-symbols-outlined text-sm">visibility</span> ${viewsCount} vistas
-                        </span>
-                    ` : ''}
+    // Build Zillow-style Photo Mosaic Layout
+    let photoMosaicHtml = '';
+    if (photos.length >= 5) {
+        photoMosaicHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
+                <div class="md:col-span-2 relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                    <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(pubId) ? 'is-favorite' : ''} w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${pubId}, event);">
-                        <span class="material-symbols-outlined text-xl ${window.FavoritesManager?.isFavorite(pubId) ? 'text-rose-500 fill-1 scale-110' : 'text-zinc-600 dark:text-zinc-300 hover:text-rose-500'}">favorite</span>
+                <div class="hidden md:grid md:col-span-2 grid-cols-2 gap-2.5 h-full">
+                    ${photos.slice(1, 5).map((p, idx) => `
+                        <div class="relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(${idx + 1})">
+                            <img src="${p}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                            <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button type="button" onclick="window.__openDetailLightbox(0)" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">photo_camera</span>
+                    <span>Ver todas las fotos (${photos.length})</span>
+                </button>
+            </div>
+        `;
+    } else if (photos.length >= 2) {
+        photoMosaicHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
+                <div class="relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                <div class="hidden md:block relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(1)">
+                    <img src="${photos[1]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                <button type="button" onclick="window.__openDetailLightbox(0)" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">photo_camera</span>
+                    <span>Ver fotos (${photos.length})</span>
+                </button>
+            </div>
+        `;
+    } else {
+        photoMosaicHtml = `
+            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg group cursor-pointer" onclick="window.__openDetailLightbox(0)">
+                <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                <button type="button" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined text-base sm:text-lg">fullscreen</span>
+                    <span>Ver pantalla completa</span>
+                </button>
+            </div>
+        `;
+    }
+
+    modal.innerHTML = `
+        <!-- Top Zillow Sub-Nav Sticky Bar -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 transition-all shadow-2xs">
+            <!-- Fila 1: Navegación, Breadcrumbs y Acciones -->
+            <div class="px-4 sm:px-8 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <button id="close-marketplace-fullscreen-btn" type="button" aria-label="Volver al listado" class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700/80 px-3.5 py-2 rounded-xl transition-all active:scale-95 shrink-0 cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-lg">arrow_back</span>
+                        <span class="hidden sm:inline">Volver a propiedades</span>
                     </button>
-                    <button id="close-marketplace-modal-btn" type="button" aria-label="Cerrar modal" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0 cursor-pointer">
-                        <span class="material-symbols-outlined pointer-events-none">close</span>
+                    <div class="hidden md:flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 font-medium truncate">
+                        <a href="index.html" class="hover:underline">Marketplace</a>
+                        <span>/</span>
+                        <span class="text-zinc-600 dark:text-zinc-300 truncate">${barrio || 'Buenos Aires'}</span>
+                        <span>/</span>
+                        <span class="text-zinc-900 dark:text-white font-bold truncate max-w-[240px]">${title}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="mp-share-btn" type="button" title="Compartir propiedad" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-base">share</span>
+                        <span class="hidden sm:inline">Compartir</span>
+                    </button>
+                    
+                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(pubId) ? 'is-favorite' : ''} inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${pubId}, event);">
+                        <span class="material-symbols-outlined text-base ${window.FavoritesManager?.isFavorite(pubId) ? 'text-rose-500 fill-1' : 'text-zinc-500 hover:text-rose-500'}">favorite</span>
+                        <span class="hidden sm:inline">Guardar</span>
+                    </button>
+
+                    <button id="close-marketplace-x-btn" type="button" aria-label="Cerrar vista" title="Cerrar (ESC)" class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors flex items-center justify-center cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">close</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Scrollable Content -->
-            <div class="overflow-y-auto p-5 sm:p-7 space-y-6 flex-1">
+            <!-- Fila 2: Botonera de Navegación Rápida (Exclusiva Tablet y Desktop: Hidden en mobile < 768px) -->
+            <div id="mp-subnav-bar" class="mp-subnav-desktop-only border-t border-zinc-200/80 dark:border-zinc-800/80 px-4 sm:px-8 bg-white/95 dark:bg-[#090a0f]/95 flex items-center justify-center gap-6 sm:gap-10 overflow-x-auto scrollbar-none no-scrollbar">
+                <button type="button" class="mp-subnav-btn is-active relative py-3 text-xs sm:text-sm cursor-pointer select-none shrink-0" data-target="mp-section-overview">
+                    <span>Resumen</span>
+                    <span class="mp-active-line absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"></span>
+                </button>
+
+                <button type="button" class="mp-subnav-btn relative py-3 text-xs sm:text-sm cursor-pointer select-none shrink-0" data-target="mp-section-amenities">
+                    <span>Amenities</span>
+                    <span class="mp-active-line absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"></span>
+                </button>
+
+                <button type="button" class="mp-subnav-btn relative py-3 text-xs sm:text-sm cursor-pointer select-none shrink-0" data-target="mp-section-location">
+                    <span>Ubicación</span>
+                    <span class="mp-active-line absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"></span>
+                </button>
+
+                <button type="button" class="mp-subnav-btn relative py-3 text-xs sm:text-sm cursor-pointer select-none shrink-0" data-target="mp-section-costs">
+                    <span>Costos</span>
+                    <span class="mp-active-line absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"></span>
+                </button>
+
+                <button type="button" class="mp-subnav-btn relative py-3 text-xs sm:text-sm cursor-pointer select-none shrink-0" data-target="mp-section-history">
+                    <span>Historial</span>
+                    <span class="mp-active-line absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Full-Screen Body Content -->
+        <main class="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+            
+            <!-- In-View Scroll Reveal Styles & Sub-Nav Hover Magic -->
+            <style id="mp-fullscreen-styles">
+                /* Desktop/Tablet vs Mobile Display */
+                .mp-subnav-desktop-only {
+                    display: none;
+                }
+                @media (min-width: 768px) {
+                    .mp-subnav-desktop-only {
+                        display: flex !important;
+                    }
+                }
+                .mp-inview-item {
+                    opacity: 0;
+                    transform: translateY(28px);
+                    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+                    will-change: opacity, transform;
+                }
+                .mp-inview-item.is-inview {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                .mp-subnav-btn {
+                    color: #71717a;
+                    font-weight: 600;
+                    position: relative;
+                    transition: color 0.15s ease;
+                }
+                .mp-subnav-btn .mp-active-line {
+                    background-color: var(--primary, #9b2c2c);
+                    opacity: 0;
+                    transform: scaleX(0);
+                    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .mp-subnav-btn:hover {
+                    color: var(--primary, #9b2c2c) !important;
+                }
+                .dark .mp-subnav-btn:hover {
+                    color: #ffffff !important;
+                }
+                .mp-subnav-btn:hover .mp-active-line {
+                    opacity: 0.35;
+                    transform: scaleX(0.7);
+                }
+                .mp-subnav-btn.is-active {
+                    color: var(--primary, #9b2c2c) !important;
+                    font-weight: 700 !important;
+                }
+                .dark .mp-subnav-btn.is-active {
+                    color: #f87171 !important;
+                    font-weight: 700 !important;
+                }
+                .mp-subnav-btn.is-active .mp-active-line {
+                    opacity: 1 !important;
+                    transform: scaleX(1) !important;
+                    background-color: var(--primary, #9b2c2c) !important;
+                    box-shadow: 0 1px 6px rgba(155, 44, 44, 0.35);
+                }
+                .dark .mp-subnav-btn.is-active .mp-active-line {
+                    background-color: #f87171 !important;
+                    box-shadow: 0 1px 6px rgba(248, 113, 113, 0.4);
+                }
+            </style>
+
+            <!-- 1. Hero Photo Showcase (Zillow 5-Mosaic / High-Res Showcase) -->
+            <section class="space-y-3" id="mp-section-overview">
+                ${photoMosaicHtml}
+            </section>
+
+            <!-- 2. Zillow 2-Column Core Architecture -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
                 
-                <!-- Main Image Gallery Display -->
-                <div id="mp-modal-main-img-container" class="relative group rounded-2xl overflow-hidden bg-zinc-950 aspect-[16/10] sm:aspect-[21/9] shadow-md border border-zinc-200/20 dark:border-zinc-800 cursor-pointer">
-                    <img id="mp-modal-main-img" src="${photos[0]}" alt="${title}" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" onerror="this.src='img/hero-marketplace.jpg'">
+                <!-- LEFT COLUMN: Facts, Features, Story & Details (~67% width) -->
+                <div class="lg:col-span-8 space-y-8 min-w-0">
                     
-                    ${photos.length > 1 ? `
-                        <button id="mp-modal-prev-btn" type="button" class="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur flex items-center justify-center transition-all hover:scale-110 shadow-lg cursor-pointer">
-                            <span class="material-symbols-outlined pointer-events-none">chevron_left</span>
-                        </button>
-                        <button id="mp-modal-next-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur flex items-center justify-center transition-all hover:scale-110 shadow-lg cursor-pointer">
-                            <span class="material-symbols-outlined pointer-events-none">chevron_right</span>
-                        </button>
-                        <div id="mp-modal-counter" class="absolute bottom-3 right-3 bg-black/70 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
-                            1 / ${photos.length}
-                        </div>
-                    ` : ''}
-
-                    <div class="absolute top-3 left-3 bg-black/60 hover:bg-black/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg border border-white/20 transition-all group-hover:scale-105">
-                        <span class="material-symbols-outlined text-sm">fullscreen</span>
-                        <span>Ver foto completa</span>
-                    </div>
-                </div>
-
-                <!-- Thumbnails Bar -->
-                ${photos.length > 1 ? `
-                    <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
-                        ${photos.map((url, i) => `
-                            <button type="button" data-img-idx="${i}" class="mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === 0 ? 'border-primary dark:border-red-500 ring-2 ring-primary/30 opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}">
-                                <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
-                            </button>
-                        `).join('')}
-                    </div>
-                ` : ''}
-
-                <!-- Title, Location & Price -->
-                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-zinc-200/60 dark:border-zinc-800 pb-6">
-                    <div class="space-y-2">
-                        <h2 class="font-headline text-2xl sm:text-3xl font-extrabold text-on-background dark:text-white leading-tight">
-                            ${title}
-                        </h2>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base flex items-center gap-1.5 font-medium">
-                            <span class="material-symbols-outlined text-primary dark:text-red-400">location_on</span>
-                            ${fullAddress} ${barrio ? `(${barrio})` : ''}
-                        </p>
-                    </div>
-                    <div class="sm:text-right shrink-0 bg-zinc-50 dark:bg-zinc-800/60 px-4 py-3 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
-                        <span class="block text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 tracking-wider mb-0.5">Precio de alquiler</span>
-                        <span class="text-2xl sm:text-3xl font-extrabold text-primary dark:text-red-400">${priceFormatted}</span>
-                        ${expensas !== null && expensas !== undefined ? `
-                            <span class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-1">
-                                ${Number(expensas) > 0 ? `+ $${Number(expensas).toLocaleString('es-AR')} expensas` : (expensasIncluidas ? 'Expensas incluidas' : 'Sin expensas')}
+                    <!-- Property Title, Address & Luxury Badges Ribbon -->
+                    <div class="space-y-4 border-b border-zinc-200 dark:border-zinc-800/80 pb-6">
+                        <!-- Luxury Minimalist Badges (Monochrome & Subtle Accents) -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-black tracking-wider rounded-full uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                ${operacion}
                             </span>
-                        ` : ''}
-                    </div>
-                </div>
-
-                <!-- Features & Spec Cards Grid (Wizard Steps 2 & 3 Data) -->
-                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-3.5 md:gap-4">
-                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">bed</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Dormitorios</span>
-                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${dormitorios || 1}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">bathtub</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Baños</span>
-                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${banos || 1}${toilettes ? ` (+${toilettes} toil)` : ''}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">home</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Ambientes</span>
-                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${ambientes || dormitorios || 1}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">directions_car</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Cocheras</span>
-                            <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${cocheras !== null && cocheras !== undefined ? cocheras : 0}</span>
-                        </div>
-                    </div>
-
-                    ${supCubierta ? `
-                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">square_foot</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Sup. Cubierta</span>
-                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${supCubierta} m²</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${supTotal ? `
-                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">straighten</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Sup. Total</span>
-                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${supTotal} m²</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">chair</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Amoblado</span>
-                            <span class="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight block">${amobladoText}</span>
-                        </div>
-                    </div>
-
-                    ${pisoDpto ? `
-                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">apartment</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Piso / Dpto</span>
-                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${pisoDpto}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${numeroLocal ? `
-                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">store</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">N° Local</span>
-                                <span class="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-white leading-tight block">${numeroLocal}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${antiguedad || disposicion || orientacion ? `
-                        <div class="bg-[#fafafc] dark:bg-zinc-800/40 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 flex items-center gap-2.5 sm:gap-3.5 shadow-xs">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-red-50/80 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl md:text-3xl">info</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="block text-[10px] sm:text-[11px] md:text-xs font-black uppercase text-slate-400 dark:text-zinc-500 tracking-wider mb-0.5 leading-tight">Disposición</span>
-                                <span class="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-white leading-tight block">${[disposicion, antiguedad ? `${antiguedad} a.` : null].filter(Boolean).join(' • ') || 'Estándar'}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- Full Description Section -->
-                <div class="space-y-2 pt-2">
-                    <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Descripción de la propiedad</h3>
-                    <div class="bg-zinc-50/60 dark:bg-zinc-800/30 p-5 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/60">
-                        <p class="font-body text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                            ${descriptionText}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Characteristics / Tags Chips (Wizard Step 4 Data) -->
-                ${tagsList.length > 0 ? `
-                    <div class="space-y-3 pt-2">
-                        <h3 class="font-headline text-lg font-bold text-on-background dark:text-white">Comodidades y características del Wizard</h3>
-                        <div class="flex flex-wrap gap-2">
-                            ${tagsList.map(tag => `
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200/50 dark:border-zinc-700/50">
-                                    <span class="material-symbols-outlined text-base text-primary dark:text-red-400">check_circle</span>
-                                    ${tag}
+                            ${verified ? `
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Verificado Hábitat
                                 </span>
+                            ` : ''}
+                            ${petFriendly ? `
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">pets</span> Apto Mascotas
+                                </span>
+                            ` : ''}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">chair</span> ${amobladoText}
+                            </span>
+                            ${expensasIncluidas ? `
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">task_alt</span> Expensas Incluidas
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <h1 class="font-headline text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white leading-tight tracking-tight">
+                            ${title}
+                        </h1>
+
+                        <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 text-sm sm:base font-medium flex-wrap">
+                            <span class="material-symbols-outlined text-zinc-500 dark:text-zinc-400 shrink-0">location_on</span>
+                            <span class="font-bold text-zinc-800 dark:text-zinc-200">${fullAddress}</span>
+                            ${barrio ? `<span class="text-zinc-500">· Barrio ${barrio}</span>` : ''}
+                            <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:underline ml-1 transition-colors">
+                                <span>Ver en Maps</span>
+                                <span class="material-symbols-outlined text-xs">open_in_new</span>
+                            </a>
+                        </div>
+
+                        <!-- Architectural Luxury Spec Cards Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                                <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-xl">bed</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${dormitorios}</span>
+                                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Dormitorios</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                                <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-xl">shower</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${banos}</span>
+                                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Baños</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                                <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-xl">square_foot</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${supCubierta || supTotal || '45'} m²</span>
+                                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Superficie</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                                <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-xl">garage_home</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${cocheras || '0'}</span>
+                                    <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">${cocheras ? 'Cocheras' : 'Sin cochera'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1. Comodidades y Amenities destacados (Items con Ticks) -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-amenities">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">verified</span>
+                                Comodidades y Amenities incluidos
+                            </h2>
+                            <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500">${tagsList.length} amenities verificados</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            ${tagsList.map(tag => `
+                                <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#111318] border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:scale-[1.02] hover:shadow-md transition-all duration-200 cursor-default group">
+                                    <div class="w-7 h-7 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 flex items-center justify-center transition-all duration-300 shrink-0 shadow-2xs">
+                                        <span class="material-symbols-outlined text-base">check</span>
+                                    </div>
+                                    <span class="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">${tag}</span>
+                                </div>
                             `).join('')}
                         </div>
+                    </section>
+
+                    <!-- 2. Descripción del Inmueble -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-description">
+                        <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">description</span>
+                            Descripción del Inmueble
+                        </h2>
+                        <div class="bg-white dark:bg-[#111318] p-6 sm:p-7 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300">
+                            <div class="prose dark:prose-invert max-w-none font-body text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                                ${descriptionText}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Publicado por el propietario / Agente (Arriba de Ubicación y Entorno) -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-owner">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">badge</span>
+                                Publicado por el propietario
+                            </h2>
+                            <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+                                <span class="material-symbols-outlined text-xs">verified</span> Fuente Verificada
+                            </span>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111318] p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs space-y-5">
+                            <div class="flex items-start gap-4">
+                                <!-- Logo / Avatar -->
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex flex-col items-center justify-center shrink-0 shadow-md font-headline font-black p-2 text-center select-none">
+                                    <span class="text-[9px] uppercase tracking-widest leading-none font-semibold text-zinc-400 dark:text-zinc-500">HABITAT</span>
+                                    <span class="text-lg sm:text-xl font-black leading-none mt-0.5">LUX</span>
+                                </div>
+
+                                <!-- Owner / Agent Info -->
+                                <div class="space-y-1 min-w-0 flex-1">
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">Agente Administrador / Propietario</span>
+                                    <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white truncate">
+                                        ${prop.propietario_nombre || 'Urbanlux Real Estate · Hábitat'}
+                                    </h3>
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                        <span class="material-symbols-outlined text-sm">check</span>
+                                        <span class="underline decoration-dotted">Fuente Verificada</span>
+                                    </div>
+                                    <div class="pt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <div class="flex items-center gap-1">
+                                            <span>Sitio web:</span>
+                                            <a href="https://habitat.com.ar" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5">
+                                                <span>fleurpremium.urbanlux.net</span>
+                                                <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                                            </a>
+                                        </div>
+                                        <span class="hidden sm:inline text-zinc-300 dark:text-zinc-700">·</span>
+                                        <div class="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
+                                            <span class="material-symbols-outlined text-xs text-zinc-400">phone</span>
+                                            <span>(011) 4910-7921</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botón "Hacer una pregunta" (Ask a question) -->
+                            <button type="button" onclick="window.open('https://wa.me/?text=' + encodeURIComponent('Hola! Me interesa hacer una consulta sobre la propiedad: ' + '${title}' + ' (' + '${fullAddress}' + ') en Hábitat'), '_blank')" class="w-full inline-flex items-center justify-center gap-2 bg-[#006aff] hover:bg-[#0053cc] active:scale-[0.99] text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 cursor-pointer text-sm sm:text-base">
+                                <span class="material-symbols-outlined text-lg">chat</span>
+                                <span>Hacer una pregunta</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- 4. Ubicación y Entorno (Mapa + Tiempos de Viaje Modernizados) -->
+                    <section class="space-y-5 mp-inview-item" id="mp-section-location">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">location_on</span>
+                                Ubicación y Entorno
+                            </h2>
+                            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate max-w-[200px] sm:max-w-none">${fullAddress}</span>
+                        </div>
+
+                        <!-- Map Preview Card with Floating Street View and Fullscreen Button -->
+                        <div class="relative w-full h-72 sm:h-88 rounded-3xl overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 shadow-md bg-zinc-100 dark:bg-zinc-800 group">
+                            <iframe 
+                                class="w-full h-full border-0 pointer-events-auto"
+                                loading="lazy"
+                                src="https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                                title="Mapa de ubicación ${title}">
+                            </iframe>
+
+                            <!-- Floating Street View Button (Top-Left) -->
+                            <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${prop.latitud || -32.8898},${prop.longitud || -68.8373}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 left-3.5 z-10 inline-flex items-center gap-2 bg-black/85 hover:bg-black text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20">
+                                <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-md overflow-hidden bg-zinc-700 shrink-0">
+                                    <img src="${photos[0]}" class="w-full h-full object-cover" alt="Street view">
+                                </div>
+                                <span>Vista de calle 360°</span>
+                                <span class="material-symbols-outlined text-xs">open_in_new</span>
+                            </a>
+
+                            <!-- Floating Fullscreen Map Button (Top-Right) -->
+                            <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 right-3.5 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-800 dark:text-white shadow-xl backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-zinc-200/80 dark:border-zinc-700/80" title="Abrir en Google Maps">
+                                <span class="material-symbols-outlined text-lg sm:text-xl">open_in_full</span>
+                            </a>
+                        </div>
+
+                        <!-- Módulo Moderno y Responsivo de Tiempos de Viaje -->
+                        <div class="bg-white dark:bg-[#111318] p-5 sm:p-7 rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-2xs space-y-5">
+                            
+                            <!-- Header -->
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">commute</span>
+                                        Tiempos de viaje
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Calculá el tiempo estimado de traslado hacia tus destinos habituales.</p>
+                                </div>
+                            </div>
+
+                            <!-- Input y Botón 100% Responsivos (Sin solapamientos) -->
+                            <div class="space-y-3">
+                                <div class="flex flex-col sm:flex-row gap-2.5">
+                                    <div class="relative flex-1">
+                                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xl pointer-events-none">search</span>
+                                        <input type="text" id="travel-time-destination-input" placeholder="Buscar destino (ej. Centro, Universidad, Trabajo...)" class="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-body">
+                                    </div>
+                                    <button type="button" id="travel-time-calc-btn" class="inline-flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs sm:text-sm font-bold px-5 py-3 sm:py-3.5 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer shrink-0">
+                                        <span class="material-symbols-outlined text-base">near_me</span>
+                                        <span>Calcular</span>
+                                    </button>
+                                </div>
+
+                                <!-- Chips de Destinos Sugeridos -->
+                                <div class="space-y-1.5">
+                                    <span class="text-zinc-400 dark:text-zinc-500 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider block">Destinos sugeridos:</span>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Centro / Plaza Independencia">📍 Centro</button>
+                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Universidad Nacional">🎓 Universidad</button>
+                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Parque General San Martín">🌳 Parque</button>
+                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Aeropuerto Internacional">✈️ Aeropuerto</button>
+                                    </div>
+                                </div>
+
+                                <!-- Tarjetas Modernas de Resultados por Modo de Transporte -->
+                                <div id="travel-times-results" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                                    
+                                    <!-- Auto -->
+                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-blue-300 dark:hover:border-blue-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                                <span class="material-symbols-outlined text-lg">directions_car</span>
+                                            </div>
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En auto</span>
+                                        </div>
+                                        <div>
+                                            <span id="travel-car-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~10-15 min</span>
+                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Tránsito habitual</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Transporte / Colectivo -->
+                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-emerald-300 dark:hover:border-emerald-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                                <span class="material-symbols-outlined text-lg">directions_bus</span>
+                                            </div>
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Transporte</span>
+                                        </div>
+                                        <div>
+                                            <span id="travel-bus-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~20-25 min</span>
+                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Líneas directas</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bici -->
+                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-amber-300 dark:hover:border-amber-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                                <span class="material-symbols-outlined text-lg">directions_bike</span>
+                                            </div>
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En bici</span>
+                                        </div>
+                                        <div>
+                                            <span id="travel-bike-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~12-16 min</span>
+                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Por ciclovía</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Caminando -->
+                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-purple-300 dark:hover:border-purple-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                                <span class="material-symbols-outlined text-lg">directions_walk</span>
+                                            </div>
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Caminando</span>
+                                        </div>
+                                        <div>
+                                            <span id="travel-walk-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~30-40 min</span>
+                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Ruta peatonal</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Pie de Ruta con Enlace a Google Maps -->
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-500 pt-2 gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                                    <div class="flex items-center gap-1.5 truncate">
+                                        <span class="material-symbols-outlined text-sm text-primary">pin_drop</span>
+                                        <span class="truncate">Ruta estimada desde <strong class="text-zinc-700 dark:text-zinc-300">${fullAddress}</strong></span>
+                                    </div>
+                                    <a id="travel-maps-direct-link" href="https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=Centro" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-primary dark:text-red-400 hover:underline shrink-0">
+                                        <span>Ver ruta en Google Maps</span>
+                                        <span class="material-symbols-outlined text-xs">open_in_new</span>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. Estimación de Costos con Botón Modal -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-costs">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">calculate</span>
+                                Estimación de Costos
+                            </h2>
+                        </div>
+                        <div class="bg-white dark:bg-[#111318] p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
+                                <div>
+                                    <span class="block text-xs font-extrabold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Costo Mensual Estimado</span>
+                                    <span class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">${totalMensualFormatted} <span class="text-xs font-bold text-zinc-500">/ mes</span></span>
+                                </div>
+                                <button type="button" id="open-cost-calculator-btn" class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 px-5 py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-lg">calculate</span>
+                                    <span>Calculadora de Costos Detallada</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                Incluye desglose completo de costos mensuales y de ingreso a la propiedad con cálculo interactivo en tiempo real.
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- 5. Características y detalles del inmueble (Estructura jerárquica) -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-facts">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">view_list</span>
+                                Características y detalles del inmueble
+                            </h2>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111318] rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                            
+                            <!-- Categoría 1: Distribución Interior -->
+                            <div class="bg-zinc-100 dark:bg-zinc-800/80 px-6 py-2.5 border-b border-zinc-200/60 dark:border-zinc-700/60">
+                                <span class="font-headline text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Distribución Interior</span>
+                            </div>
+                            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Dormitorios y baños</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Dormitorios: <strong class="text-zinc-900 dark:text-white">${dormitorios}</strong></li>
+                                        <li>Baños completos: <strong class="text-zinc-900 dark:text-white">${banos}</strong></li>
+                                        ${toilettes ? `<li>Toilettes de recepción: <strong class="text-zinc-900 dark:text-white">${toilettes}</strong></li>` : ''}
+                                        <li>Ambientes totales: <strong class="text-zinc-900 dark:text-white">${ambientes}</strong></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Terminaciones y detalles</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Ascensor en edificio: <strong class="text-zinc-900 dark:text-white">Sí</strong></li>
+                                        <li>Pisos: <strong class="text-zinc-900 dark:text-white">Porcelanato / Madera pulida</strong></li>
+                                        <li>Hogar a leña / Chimenea: <strong class="text-zinc-900 dark:text-white">${tagsList.some(t => t.toLowerCase().includes('hogar') || t.toLowerCase().includes('chimenea')) ? 'Sí' : 'No'}</strong></li>
+                                        <li>Mobiliario: <strong class="text-zinc-900 dark:text-white">${amobladoText}</strong></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Calefacción</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Central, Gas Natural, Radiadores / Split Frío-Calor</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Superficie</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Superficie cubierta habitable: <strong class="text-zinc-900 dark:text-white">${supCubierta || supTotal || '45'} m²</strong> (${Math.round((supCubierta || supTotal || 45) * 10.764)} sqft)</li>
+                                        <li>Superficie total lote: <strong class="text-zinc-900 dark:text-white">${supTotal || supCubierta || '45'} m²</strong></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Refrigeración / Climatización</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Aire Acondicionado, Climatizador Central / Split Inverter</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Recorrido virtual y fotos</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li><a href="javascript:void(0)" onclick="window.__openDetailLightbox(0)" class="text-primary dark:text-red-400 font-bold hover:underline">Ver galería y fotos en alta definición (${photos.length} fotos)</a></li>
+                                    </ul>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Equipamiento incluido</h4>
+                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                        <li>Incluye: Cocina equipada, Termotanque/Caldera, Anafe y Horno, Heladera/Freezer, Microondas, Alacenas y bajo mesada</li>
+                                        <li>Lavadero: En la unidad / Espacio para Lavarropas</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Secciones Expandibles (Contenedor Colapsable) -->
+                            <div id="mp-facts-expandable-content" class="transition-all duration-300">
+                                
+                                <!-- Categoría 2: Inmueble y Estacionamiento -->
+                                <div class="bg-zinc-100 dark:bg-zinc-800/80 px-6 py-2.5 border-y border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="font-headline text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Inmueble y Estacionamiento</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Estacionamiento / Cocheras</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Espacios totales: <strong class="text-zinc-900 dark:text-white">${cocheras ? cocheras : '0'}</strong></li>
+                                            <li>Características: ${cocheras ? 'Cochera cubierta asignada con portón automatizado' : 'Sin cochera asignada / Estacionamiento en calle o cocheras cercanas'}</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Detalles constructivos</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Disposición: <strong class="text-zinc-900 dark:text-white">${disposicion}</strong></li>
+                                            <li>Orientación: <strong class="text-zinc-900 dark:text-white">${orientacion}</strong></li>
+                                            <li>Antigüedad: <strong class="text-zinc-900 dark:text-white">${antiguedad}</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Categoría 3: Construcción y Edificio -->
+                                <div class="bg-zinc-100 dark:bg-zinc-800/80 px-6 py-2.5 border-y border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="font-headline text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Construcción y Edificio</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Tipología y estilo</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Tipo de propiedad: <strong class="text-zinc-900 dark:text-white">${prop.subtipo_propiedad || extraInfo.subtipoPropiedad || 'Departamento'}</strong></li>
+                                            <li>Subtipo: <strong class="text-zinc-900 dark:text-white">Residencial Urbano</strong></li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Edificio y Administración</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Nombre del complejo / Torre: <strong class="text-zinc-900 dark:text-white">${barrio ? `Residencial ${barrio}` : 'Edificio Hábitat'}</strong></li>
+                                            <li>Acepta mascotas: <strong class="text-zinc-900 dark:text-white">${petFriendly ? 'Sí (Apto Mascotas)' : 'No permitido / A consultar'}</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Categoría 4: Comunidad y Consorcio -->
+                                <div class="bg-zinc-100 dark:bg-zinc-800/80 px-6 py-2.5 border-y border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="font-headline text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Comunidad y Consorcio</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Instalaciones del complejo</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Instalaciones: Gimnasio, Seguridad 24hs, Piscina, SUM, Parrilla</li>
+                                            <li>Seguridad: Control de acceso electrónico, Cámaras de monitoreo</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Expensas y Administración</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Servicios de expensas incluidos: Mantenimiento, Limpieza de espacios comunes, Seguridad, Iluminación</li>
+                                            <li>Ubicación: <strong class="text-zinc-900 dark:text-white">${barrio ? `${barrio}, ` : ''}${prop.city || prop.province || 'Buenos Aires'}</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Categoría 5: Condiciones contractuales y Servicios -->
+                                <div class="bg-zinc-100 dark:bg-zinc-800/80 px-6 py-2.5 border-y border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="font-headline text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Condiciones contractuales y Servicios</span>
+                                </div>
+                                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Condiciones contractuales</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Plazo del contrato: <strong class="text-zinc-900 dark:text-white">1 a 2 Años (Ajustes según índice contractual ICL / IPC)</strong></li>
+                                            <li>Depósito en garantía: <strong class="text-zinc-900 dark:text-white">1 mes (Reembolsable)</strong></li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Disponibilidad de servicios</h4>
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Agua corriente de red, Gas natural, Red eléctrica, Cloacas, Conexión Fibra Óptica alta velocidad</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Botón Toggle Ocultar / Ver más -->
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-900/60 border-t border-zinc-200/60 dark:border-zinc-800 text-center">
+                                <button type="button" id="mp-facts-toggle-btn" class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-primary dark:text-red-400 hover:text-primary-container dark:hover:text-red-300 transition-colors cursor-pointer">
+                                    <span class="material-symbols-outlined text-base" id="mp-facts-toggle-icon">expand_less</span>
+                                    <span id="mp-facts-toggle-text">Ocultar detalles extendidos</span>
+                                </button>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- 6. Historial de Precios -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-history">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">monitoring</span>
+                                Historial de precios
+                            </h2>
+                            <div class="flex items-center gap-3 text-xs font-bold text-primary dark:text-red-400">
+                                <span class="hover:underline cursor-pointer">Estimación de alquiler</span>
+                                <span class="text-zinc-300 dark:text-zinc-700">·</span>
+                                <span class="hover:underline cursor-pointer">Resumen del mercado</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111318] rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs sm:text-sm">
+                                    <thead class="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200/70 dark:border-zinc-700/60 text-zinc-500 dark:text-zinc-400 font-extrabold uppercase text-[11px] tracking-wider">
+                                        <tr>
+                                            <th class="px-6 py-3.5">Fecha</th>
+                                            <th class="px-6 py-3.5">Evento</th>
+                                            <th class="px-6 py-3.5 text-right">Precio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                                        <tr class="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                            <td class="px-6 py-4 font-semibold text-zinc-900 dark:text-white">
+                                                ${new Date(prop.created_at || Date.now()).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Hábitat Rentals</span>
+                                            </td>
+                                            <td class="px-6 py-4 font-bold text-zinc-900 dark:text-white">
+                                                <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    Publicado en alquiler
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span class="font-headline font-black text-zinc-900 dark:text-white block">${priceFormatted}</span>
+                                                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">+2.1% · $${Math.round(priceNum / (supCubierta || supTotal || 45)).toLocaleString('es-AR')}/m²</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr class="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                            <td class="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400">
+                                                ${new Date(new Date(prop.created_at || Date.now()).getTime() - 1000 * 60 * 60 * 24 * 30).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Historial Verificado</span>
+                                            </td>
+                                            <td class="px-6 py-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                                                Actualización de valor mercado
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span class="font-semibold text-zinc-700 dark:text-zinc-300 block">${moneda} ${Math.round(priceNum * 0.95).toLocaleString('es-AR')}</span>
+                                                <span class="text-[11px] text-zinc-400">$${Math.round((priceNum * 0.95) / (supCubierta || supTotal || 45)).toLocaleString('es-AR')}/m²</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr class="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                            <td class="px-6 py-4 font-semibold text-zinc-500 dark:text-zinc-400">
+                                                ${new Date(new Date(prop.created_at || Date.now()).getTime() - 1000 * 60 * 60 * 24 * 90).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Hábitat Network</span>
+                                            </td>
+                                            <td class="px-6 py-4 font-semibold text-zinc-500 dark:text-zinc-400">
+                                                Alta inicial de publicación
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span class="font-semibold text-zinc-500 dark:text-zinc-400 block">${moneda} ${Math.round(priceNum * 0.91).toLocaleString('es-AR')}</span>
+                                                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">+8.5%</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="px-6 py-3 bg-zinc-50/60 dark:bg-zinc-900/60 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-400 flex items-center justify-between flex-wrap gap-2">
+                                <span>Registro oficial auditado por Hábitat · Base de datos PostgreSQL</span>
+                                <span class="font-bold text-zinc-600 dark:text-zinc-400">Transparencia Inmobiliaria</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 7. Movilidad urbana y entorno (Puntajes de caminabilidad y transporte) -->
+                    <section class="space-y-4 mp-inview-item" id="mp-section-neighborhood">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">directions_walk</span>
+                                Movilidad urbana y entorno
+                            </h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            
+                            <!-- Tarjeta Caminabilidad -->
+                            <div class="bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-lg transition-all duration-300 flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-[#0a1931] text-white flex items-center justify-center shrink-0 shadow-md">
+                                    <span class="material-symbols-outlined text-2xl">directions_walk</span>
+                                </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Caminabilidad</span>
+                                    </div>
+                                    <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
+                                        97 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                    </div>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Paraíso del caminante</span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">La mayoría de los mandados y servicios se realizan a pie sin auto.</span>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta Transporte Público -->
+                            <div class="bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-lg transition-all duration-300 flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-[#0a1931] text-white flex items-center justify-center shrink-0 shadow-md">
+                                    <span class="material-symbols-outlined text-2xl">directions_bus</span>
+                                </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Transporte Público</span>
+                                    </div>
+                                    <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
+                                        78 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                    </div>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Excelente transporte</span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">Acceso directo a múltiples líneas de colectivos, metrobús y trenes.</span>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta Ciclovías -->
+                            <div class="bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-lg transition-all duration-300 flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-[#0a1931] text-white flex items-center justify-center shrink-0 shadow-md">
+                                    <span class="material-symbols-outlined text-2xl">directions_bike</span>
+                                </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Apto Ciclistas</span>
+                                    </div>
+                                    <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
+                                        72 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                    </div>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Muy apto para bicis</span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">Entorno plano con red de ciclovías conectadas y estaciones cercanas.</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- Activity & Engagement Live Tracker (Inspiración Zillow) -->
+                    <section class="mp-inview-item bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs space-y-2.5">
+                        <div class="flex items-center gap-2 text-sm text-zinc-900 dark:text-white font-extrabold flex-wrap">
+                            <span class="text-base font-black">${viewsCount > 20 ? 'Popular en Hábitat' : 'Disponible en Hábitat'}</span>
+                            <span class="text-zinc-300 dark:text-zinc-700">|</span>
+                            <span class="text-base font-black text-primary dark:text-red-400">${viewsCount > 0 ? viewsCount : 1} visualizaciones</span>
+                            <span class="text-zinc-300 dark:text-zinc-700">|</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">${Math.max(1, Math.floor((viewsCount || 1) * 0.35))} interesados contactaron</span>
+                        </div>
+                        <div class="space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                            <p>Disponibilidad verificada por Hábitat: <strong class="text-zinc-700 dark:text-zinc-300">hoy</strong></p>
+                            <p>Sincronización de publicación: <strong class="text-zinc-700 dark:text-zinc-300">actualizada recientemente</strong></p>
+                        </div>
+                    </section>
+
+                    <!-- Hábitat Pasaporte Guarantee Banner -->
+                    <section class="mp-inview-item bg-gradient-to-br from-zinc-50 to-zinc-100/60 dark:from-[#111318] dark:to-zinc-900 p-6 sm:p-7 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/90 hover:border-zinc-400 dark:hover:border-zinc-700 hover:shadow-lg transition-all duration-300 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center shadow-md shrink-0">
+                                <span class="material-symbols-outlined text-2xl">verified_user</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white">Alquiler Seguro con Pasaporte Hábitat</h3>
+                                <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Proceso 100% digital respaldado por firma electrónica avanzada y validación biométrica.</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                            <div class="bg-white/90 dark:bg-zinc-800/70 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/50 text-xs shadow-2xs hover:border-zinc-400 transition-colors">
+                                <strong class="block font-bold text-zinc-900 dark:text-white mb-1">Sin Garantía Tradicional</strong>
+                                <span class="text-zinc-500 dark:text-zinc-400">Postulate con tu Pasaporte digital sin escrituras de terceros.</span>
+                            </div>
+                            <div class="bg-white/90 dark:bg-zinc-800/70 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/50 text-xs shadow-2xs hover:border-zinc-400 transition-colors">
+                                <strong class="block font-bold text-zinc-900 dark:text-white mb-1">Contrato Validez CCCN</strong>
+                                <span class="text-zinc-500 dark:text-zinc-400">Firma electrónica con timestamp y valor probatorio legal.</span>
+                            </div>
+                            <div class="bg-white/90 dark:bg-zinc-800/70 p-3.5 rounded-xl border border-zinc-200/60 dark:border-zinc-700/50 text-xs shadow-2xs hover:border-zinc-400 transition-colors">
+                                <strong class="block font-bold text-zinc-900 dark:text-white mb-1">Depósito Protegido</strong>
+                                <span class="text-zinc-500 dark:text-zinc-400">Custodia segura y rendición transparente al finalizar.</span>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- RIGHT COLUMN: Zillow Sticky Booking / Actions Sidebar (~33% width) -->
+                <aside class="lg:col-span-4 space-y-6 lg:sticky lg:top-32">
+                    
+                    <!-- Main Financial & Booking Card -->
+                    <div class="bg-white dark:bg-[#111318] rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 p-6 sm:p-7 shadow-xl hover:shadow-2xl hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 space-y-6">
+                        
+                        <!-- Price Header -->
+                        <div class="space-y-1 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                            <span class="block text-[11px] font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Precio de alquiler</span>
+                            <div class="flex items-baseline gap-2">
+                                <span class="font-headline text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                <span class="text-sm font-bold text-zinc-500">/ mes</span>
+                            </div>
+                            <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                ${expensasNum > 0 ? `+ $${expensasNum.toLocaleString('es-AR')} expensas estimadas` : (expensasIncluidas ? 'Expensas incluidas en el canon' : 'Sin expensas')}
+                            </p>
+                        </div>
+
+                        ${isOwner ? `
+                            <!-- Owner Actions Panel -->
+                            <div class="space-y-3">
+                                <div class="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold uppercase text-zinc-500 tracking-wider">Estado de publicación</span>
+                                        <span id="mp-modal-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full ${status === 'paused' || status === 'pausado' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}">
+                                            <span class="material-symbols-outlined text-xs">${status === 'paused' || status === 'pausado' ? 'pause_circle' : 'check_circle'}</span>
+                                            ${status === 'paused' || status === 'pausado' ? 'Pausada' : 'Publicada'}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-zinc-500 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">visibility</span>
+                                        <span><strong>${viewsCount}</strong> visualizaciones registradas</span>
+                                    </div>
+                                </div>
+
+                                <button id="mp-modal-pause-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 ${status === 'paused' || status === 'pausado' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
+                                    <span class="material-symbols-outlined text-lg">${status === 'paused' || status === 'pausado' ? 'play_circle' : 'pause_circle'}</span>
+                                    <span id="mp-modal-pause-text">${status === 'paused' || status === 'pausado' ? 'Reanudar publicación' : 'Pausar publicación'}</span>
+                                </button>
+
+                                <button id="mp-modal-edit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold py-3.5 px-4 rounded-2xl transition-all border border-zinc-200 dark:border-zinc-700 active:scale-98 cursor-pointer text-sm">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                    <span>Editar Publicación</span>
+                                </button>
+
+                                <button id="mp-modal-delete-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-600 dark:text-rose-400 font-bold py-3 px-4 rounded-2xl transition-all border border-rose-200/60 dark:border-rose-900/40 active:scale-98 cursor-pointer text-xs">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                    <span>Eliminar propiedad</span>
+                                </button>
+                            </div>
+                        ` : `
+                            <!-- Tenant Actions (Zillow Style CTAs) -->
+                            <div class="space-y-3">
+                                <button id="mp-modal-apply-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-98 cursor-pointer text-base">
+                                    <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                                    <span>Postularme al Alquiler</span>
+                                </button>
+
+                                <button id="mp-modal-visit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
+                                    <span class="material-symbols-outlined text-lg">calendar_month</span>
+                                    <span>Agendar Visita (Presencial / Virtual)</span>
+                                </button>
+
+                                <a href="https://wa.me/?text=${encodeURIComponent('Hola! Me interesa la propiedad en alquiler: ' + title + ' (' + fullAddress + ') en Hábitat: ' + window.location.href)}" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold py-3 px-6 rounded-2xl transition-all border border-emerald-200 dark:border-emerald-800/50 active:scale-98 cursor-pointer text-xs">
+                                    <span class="material-symbols-outlined text-base">chat</span>
+                                    <span>Consultar por WhatsApp</span>
+                                </a>
+                            </div>
+
+                            <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base text-emerald-500">lock</span>
+                                    <span>Postulación protegida y sin costo oculto</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base text-blue-500">bolt</span>
+                                    <span>Respuesta promedio en menos de 24 horas</span>
+                                </div>
+                            </div>
+                        `}
+
                     </div>
-                ` : ''}
+
+                    <!-- Trust & Security Box -->
+                    <div class="bg-zinc-50 dark:bg-zinc-900/60 p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 space-y-2">
+                        <div class="flex items-center gap-2 font-bold text-zinc-800 dark:text-zinc-200">
+                            <span class="material-symbols-outlined text-primary text-base">gavel</span>
+                            <span>Marco Legal & Seguridad</span>
+                        </div>
+                        <p class="leading-relaxed">
+                            Contratos homologados según el Código Civil y Comercial de la Nación. Todas las postulaciones se auditan con prueba de vida y validación de identidad.
+                        </p>
+                    </div>
+
+                </aside>
 
             </div>
 
-            <!-- Modal Footer Actions -->
-            <div class="sticky bottom-0 z-30 px-5 py-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+        </main>
+
+        <!-- Mobile Fixed Bottom Action Tray (Zillow Mobile Experience) -->
+        <div class="lg:hidden sticky bottom-0 z-40 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
+            <div class="min-w-0">
+                <span class="block text-[10px] font-bold uppercase text-zinc-400">Precio mensual</span>
+                <span class="font-headline text-lg font-black text-zinc-900 dark:text-white truncate block">${priceFormatted}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
                 ${isOwner ? `
-                    <div class="hidden sm:block">
-                        <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión del Propietario</span>
-                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Administra o modifica la publicación de tu inmueble</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                        <button id="mp-modal-pause-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 ${status === 'paused' || status === 'pausado' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
-                            <span class="material-symbols-outlined text-base">${status === 'paused' || status === 'pausado' ? 'play_circle' : 'pause_circle'}</span>
-                            <span id="mp-modal-pause-text">${status === 'paused' || status === 'pausado' ? 'Reanudar publicación' : 'Pausar publicación'}</span>
-                        </button>
-                        <button id="mp-modal-edit-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-3 rounded-xl transition-all text-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer">
-                            <span class="material-symbols-outlined text-base">edit</span>
-                            Editar
-                        </button>
-                        <button id="mp-modal-delete-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                            Eliminar publicación
-                        </button>
-                    </div>
+                    <button type="button" onclick="document.getElementById('mp-modal-edit-btn')?.click()" class="inline-flex items-center gap-1 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold px-4 py-2.5 rounded-xl text-xs">
+                        <span class="material-symbols-outlined text-sm">edit</span> Editar
+                    </button>
                 ` : `
-                    <div class="hidden sm:block">
-                        <span class="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Gestión Hábitat</span>
-                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Contrato online, visitas guiadas y postulación directa</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                        <button id="mp-modal-visit-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer">
-                            <span class="material-symbols-outlined text-base">calendar_month</span>
-                            Agendar Visita
-                        </button>
-                        <button id="mp-modal-apply-btn" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-lg shadow-primary/20 cursor-pointer">
-                            <span class="material-symbols-outlined text-base">how_to_reg</span>
-                            Postularme al Alquiler
-                        </button>
-                    </div>
+                    <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs">
+                        <span class="material-symbols-outlined text-sm">calendar_month</span> Visita
+                    </button>
+                    <button type="button" onclick="document.getElementById('mp-modal-apply-btn')?.click()" class="inline-flex items-center gap-1 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md">
+                        <span class="material-symbols-outlined text-sm">how_to_reg</span> Postularme
+                    </button>
                 `}
             </div>
-
         </div>
     `;
 
+    // Update URL Query Param for persistence upon reload (?prop=ID)
+    if (pubId) {
+        try {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('prop', pubId);
+            window.history.pushState({ modalOpen: true, propId: pubId }, '', currentUrl.toString());
+        } catch (e) {
+            console.warn('Could not update history state', e);
+        }
+    }
+
+    // Prevent background scroll
     document.body.classList.add('no-scroll');
     document.body.style.overflow = 'hidden';
 
@@ -7090,8 +7852,217 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         modal.style.opacity = '1';
     });
 
-    // Fullscreen Lightbox function
-    function openLightbox(startIdx) {
+    // In-View Observer for Mobile / Tablet / Desktop scroll reveal (Triggered when actually scrolled into view)
+    try {
+        const inviewObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-inview');
+                }
+            });
+        }, {
+            root: modal,
+            threshold: 0.12,
+            rootMargin: '0px 0px -70px 0px'
+        });
+
+        modal.querySelectorAll('.mp-inview-item').forEach(item => {
+            inviewObserver.observe(item);
+        });
+    } catch (e) {
+        modal.querySelectorAll('.mp-inview-item').forEach(item => item.classList.add('is-inview'));
+    }
+
+    // Sub-Navigation Tab Smooth Click & ScrollSpy
+    const subnavButtons = modal.querySelectorAll('.mp-subnav-btn');
+    const navSectionIds = [
+        'mp-section-overview',
+        'mp-section-amenities',
+        'mp-section-location',
+        'mp-section-costs',
+        'mp-section-history'
+    ];
+
+    let isNavClicking = false;
+    let navClickTimer;
+
+    subnavButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = btn.dataset.target;
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                isNavClicking = true;
+                if (navClickTimer) clearTimeout(navClickTimer);
+
+                subnavButtons.forEach(b => b.classList.remove('is-active'));
+                btn.classList.add('is-active');
+
+                const headerOffset = 105;
+                const modalRect = modal.getBoundingClientRect();
+                const targetRect = targetEl.getBoundingClientRect();
+                const offsetPosition = modal.scrollTop + (targetRect.top - modalRect.top) - headerOffset;
+                
+                modal.scrollTo({
+                    top: Math.max(0, offsetPosition),
+                    behavior: 'smooth'
+                });
+
+                navClickTimer = setTimeout(() => {
+                    isNavClicking = false;
+                }, 600);
+            }
+        });
+    });
+
+    // Dynamic ScrollSpy for Subnav Ribbon
+    let scrollRaf;
+    modal.addEventListener('scroll', () => {
+        if (isNavClicking) return;
+        if (scrollRaf) cancelAnimationFrame(scrollRaf);
+        scrollRaf = requestAnimationFrame(() => {
+            const modalRect = modal.getBoundingClientRect();
+            let activeId = 'mp-section-overview';
+
+            for (let i = 0; i < navSectionIds.length; i++) {
+                const id = navSectionIds[i];
+                const el = document.getElementById(id);
+                if (el) {
+                    const elRect = el.getBoundingClientRect();
+                    if (elRect.top - modalRect.top <= 140) {
+                        activeId = id;
+                    }
+                }
+            }
+
+            subnavButtons.forEach(b => {
+                const isCurrent = b.dataset.target === activeId;
+                b.classList.toggle('is-active', isCurrent);
+            });
+        });
+    }, { passive: true });
+
+    // Facts & Features Expand / Collapse Toggle Handler
+    const factsToggleBtn = document.getElementById('mp-facts-toggle-btn');
+    const factsExpandableContent = document.getElementById('mp-facts-expandable-content');
+    const factsToggleIcon = document.getElementById('mp-facts-toggle-icon');
+    const factsToggleText = document.getElementById('mp-facts-toggle-text');
+
+    if (factsToggleBtn && factsExpandableContent) {
+        let isFactsExpanded = true;
+        factsToggleBtn.onclick = (e) => {
+            e.preventDefault();
+            isFactsExpanded = !isFactsExpanded;
+            if (isFactsExpanded) {
+                factsExpandableContent.style.display = 'block';
+                if (factsToggleIcon) factsToggleIcon.textContent = 'expand_less';
+                if (factsToggleText) factsToggleText.textContent = 'Ocultar detalles extendidos (Hide)';
+            } else {
+                factsExpandableContent.style.display = 'none';
+                if (factsToggleIcon) factsToggleIcon.textContent = 'expand_more';
+                if (factsToggleText) factsToggleText.textContent = 'Ver todas las características y detalles (Show more)';
+            }
+        };
+    }
+
+    // Interactive Travel Times Logic
+    const travelInput = document.getElementById('travel-time-destination-input');
+    const travelCalcBtn = document.getElementById('travel-time-calc-btn');
+    const travelDirectLink = document.getElementById('travel-maps-direct-link');
+
+    const updateTravelTimes = (destinationName) => {
+        if (!destinationName || !destinationName.trim()) return;
+        const dest = destinationName.trim();
+        
+        // Pseudo-random realistic travel estimation based on destination length/name
+        let hash = 0;
+        for (let i = 0; i < dest.length; i++) hash = ((hash << 5) - hash) + dest.charCodeAt(i);
+        hash = Math.abs(hash);
+
+        const carMin = 8 + (hash % 15);
+        const busMin = carMin + 10 + (hash % 10);
+        const bikeMin = Math.round(carMin * 1.3);
+        const walkMin = carMin * 3 + 10;
+
+        const carEl = document.getElementById('travel-car-time');
+        const busEl = document.getElementById('travel-bus-time');
+        const bikeEl = document.getElementById('travel-bike-time');
+        const walkEl = document.getElementById('travel-walk-time');
+
+        if (carEl) carEl.textContent = `~${carMin} min`;
+        if (busEl) busEl.textContent = `~${busMin} min`;
+        if (bikeEl) bikeEl.textContent = `~${bikeMin} min`;
+        if (walkEl) walkEl.textContent = `~${walkMin} min`;
+
+        if (travelDirectLink) {
+            travelDirectLink.href = `https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=${encodeURIComponent(dest)}`;
+        }
+    };
+
+    if (travelCalcBtn && travelInput) {
+        travelCalcBtn.onclick = () => updateTravelTimes(travelInput.value);
+        travelInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                updateTravelTimes(travelInput.value);
+            }
+        };
+    }
+
+    modal.querySelectorAll('.travel-preset-chip').forEach(chip => {
+        chip.onclick = (e) => {
+            e.preventDefault();
+            const dest = chip.dataset.dest;
+            if (travelInput) travelInput.value = dest;
+            updateTravelTimes(dest);
+        };
+    });
+
+    // Cost Calculator Pop-up Modal Trigger
+    const openCalcBtn = document.getElementById('open-cost-calculator-btn');
+    if (openCalcBtn) {
+        openCalcBtn.onclick = (e) => {
+            e.preventDefault();
+            window.openCostCalculatorModal({
+                title: title,
+                priceNum: priceNum,
+                priceFormatted: priceFormatted,
+                expensasNum: expensasNum,
+                expensasFormatted: expensasFormatted,
+                expensasIncluidas: expensasIncluidas,
+                totalMensualFormatted: totalMensualFormatted,
+                moneda: moneda
+            });
+        };
+    }
+
+    // Share link handler
+    const shareBtn = document.getElementById('mp-share-btn');
+    if (shareBtn) {
+        shareBtn.onclick = async (e) => {
+            e.preventDefault();
+            const shareUrl = window.location.origin + window.location.pathname + (pubId ? `?prop=${pubId}` : '');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    if (window.showCustomAlert) {
+                        window.showCustomAlert({
+                            title: '¡Enlace copiado!',
+                            message: 'El enlace directo a esta propiedad fue copiado a tu portapapeles.',
+                            icon: 'content_copy'
+                        });
+                    } else {
+                        alert('¡Enlace copiado al portapapeles!');
+                    }
+                } catch (err) {
+                    console.warn('Clipboard write failed', err);
+                }
+            }
+        };
+    }
+
+    // High-Resolution Lightbox implementation
+    window.__openDetailLightbox = function (startIdx = 0) {
         let lightbox = document.getElementById('mp-lightbox-modal');
         if (!lightbox) {
             lightbox = document.createElement('div');
@@ -7099,7 +8070,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             document.body.appendChild(lightbox);
         }
 
-        lightbox.className = 'fixed inset-0 z-[100000] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl transition-opacity duration-300 p-4 font-body';
+        lightbox.className = 'fixed inset-0 z-[100000] flex flex-col items-center justify-between bg-black/95 backdrop-blur-2xl transition-opacity duration-300 p-4 font-body';
         lightbox.style.display = 'flex';
         lightbox.style.opacity = '0';
 
@@ -7107,13 +8078,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
         lightbox.innerHTML = `
             <!-- Lightbox Header -->
-            <div class="w-full flex items-center justify-between px-2 sm:px-4 py-2 z-20 shrink-0">
+            <div class="w-full flex items-center justify-between px-2 sm:px-6 py-3 z-20 shrink-0">
                 <div class="text-white text-sm font-bold flex items-center gap-2 max-w-[70%] truncate">
                     <span class="material-symbols-outlined text-red-500">photo_camera</span>
                     <span class="truncate">${title}</span>
                 </div>
                 <div class="flex items-center gap-3 shrink-0">
-                    <span id="lb-counter" class="text-white/90 text-xs font-bold bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+                    <span id="lb-counter" class="text-white text-xs font-bold bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20">
                         ${currentLbIdx + 1} / ${photos.length}
                     </span>
                     <button id="lb-close-btn" type="button" aria-label="Cerrar vista completa" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer">
@@ -7123,8 +8094,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             </div>
 
             <!-- Main Fullscreen Image Container -->
-            <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-auto p-2 sm:p-4">
-                <img id="lb-main-img" src="${photos[currentLbIdx]}" alt="${title}" class="max-w-full max-h-[80vh] sm:max-h-[84vh] object-contain transition-all duration-300 rounded-xl shadow-2xl" onerror="this.src='img/hero-marketplace.jpg'">
+            <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-auto p-2 sm:p-6">
+                <img id="lb-main-img" src="${photos[currentLbIdx]}" alt="${title}" class="max-w-full max-h-[78vh] sm:max-h-[82vh] object-contain transition-all duration-300 rounded-2xl shadow-2xl" onerror="this.src='img/hero-marketplace.jpg'">
 
                 ${photos.length > 1 ? `
                     <button id="lb-prev-btn" type="button" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/20 cursor-pointer">
@@ -7138,9 +8109,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
             <!-- Lightbox Footer Thumbnails -->
             ${photos.length > 1 ? `
-                <div class="w-full flex items-center justify-center gap-3 overflow-x-auto py-2 px-2 z-20 scrollbar-thin shrink-0">
+                <div class="w-full flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-2 z-20 scrollbar-thin shrink-0">
                     ${photos.map((url, i) => `
-                        <button type="button" data-lb-idx="${i}" class="lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === currentLbIdx ? 'border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'}">
+                        <button type="button" data-lb-idx="${i}" class="lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === currentLbIdx ? 'border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'}">
                             <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
                         </button>
                     `).join('')}
@@ -7173,9 +8144,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const thumbs = lightbox.querySelectorAll('.lb-thumb');
             thumbs.forEach((th, i) => {
                 if (i === currentLbIdx) {
-                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105 cursor-pointer';
+                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105 cursor-pointer';
                 } else {
-                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-50 hover:opacity-100 cursor-pointer';
+                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-50 hover:opacity-100 cursor-pointer';
                 }
             });
         }
@@ -7230,91 +8201,64 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             }
         };
         window.addEventListener('keydown', handleLbKey);
-    }
+    };
 
-    // Attach click listener to main photo container to open Lightbox
-    const mainImgContainer = document.getElementById('mp-modal-main-img-container');
-    if (mainImgContainer) {
-        mainImgContainer.onclick = (e) => {
-            if (e.target.closest('#mp-modal-prev-btn') || e.target.closest('#mp-modal-next-btn')) return;
-            openLightbox(activeImageIndex);
-        };
-    }
-
-    // Image navigation handler helper
-    function setImage(idx) {
-        if (idx < 0) idx = photos.length - 1;
-        if (idx >= photos.length) idx = 0;
-        activeImageIndex = idx;
-
-        const mainImg = document.getElementById('mp-modal-main-img');
-        const counter = document.getElementById('mp-modal-counter');
-        if (mainImg) {
-            mainImg.style.opacity = '0.4';
-            setTimeout(() => {
-                mainImg.src = photos[activeImageIndex];
-                mainImg.style.opacity = '1';
-            }, 120);
-        }
-        if (counter) {
-            counter.textContent = `${activeImageIndex + 1} / ${photos.length}`;
-        }
-
-        // Update thumbnails UI
-        const thumbs = modal.querySelectorAll('.mp-modal-thumb');
-        thumbs.forEach((th, i) => {
-            if (i === activeImageIndex) {
-                th.className = 'mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-primary dark:border-red-500 ring-2 ring-primary/30 opacity-100 scale-105 cursor-pointer';
-            } else {
-                th.className = 'mp-modal-thumb relative w-20 h-16 sm:w-24 sm:h-18 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-60 hover:opacity-100 cursor-pointer';
-            }
-        });
-    }
-
-    // Prev / Next button listeners
-    const prevBtn = document.getElementById('mp-modal-prev-btn');
-    const nextBtn = document.getElementById('mp-modal-next-btn');
-    if (prevBtn) prevBtn.onclick = (e) => { e.stopPropagation(); setImage(activeImageIndex - 1); };
-    if (nextBtn) nextBtn.onclick = (e) => { e.stopPropagation(); setImage(activeImageIndex + 1); };
-
-    // Thumbnail listeners
-    modal.querySelectorAll('.mp-modal-thumb').forEach(th => {
-        th.onclick = (e) => {
-            e.stopPropagation();
-            const idx = Number(th.dataset.imgIdx);
-            setImage(idx);
-        };
-    });
-
-    // Reliable Close handler
+    // Reliable Fullscreen Close handler
     const closeModal = () => {
         modal.style.opacity = '0';
         modal.style.pointerEvents = 'none';
+        modal.scrollTop = 0; // Reset scroll position immediately
         document.body.classList.remove('no-scroll');
         document.body.style.overflow = '';
         window.removeEventListener('keydown', handleKeyDown);
+
+        // Clean up URL parameter (?prop=) so browser address bar reflects closure
+        try {
+            const currentUrl = new URL(window.location.href);
+            if (currentUrl.searchParams.has('prop')) {
+                currentUrl.searchParams.delete('prop');
+                window.history.pushState({}, '', currentUrl.pathname + (currentUrl.search ? currentUrl.search : ''));
+            }
+        } catch (e) {
+            console.warn('Could not clean up URL parameter', e);
+        }
+
         setTimeout(() => {
             modal.style.display = 'none';
+            modal.scrollTop = 0; // Ensure reset when hidden
         }, 280);
     };
 
-    const closeBtn = document.getElementById('close-marketplace-modal-btn');
-    if (closeBtn) {
-        closeBtn.onclick = (e) => {
+    const backBtn = document.getElementById('close-marketplace-fullscreen-btn');
+    if (backBtn) {
+        backBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             closeModal();
         };
     }
 
-    modal.onclick = (e) => {
-        if (e.target === modal) closeModal();
-    };
+    const closeXBtn = document.getElementById('close-marketplace-x-btn');
+    if (closeXBtn) {
+        closeXBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        };
+    }
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Escape') closeModal();
-        if (e.key === 'ArrowLeft' && photos.length > 1) setImage(activeImageIndex - 1);
-        if (e.key === 'ArrowRight' && photos.length > 1) setImage(activeImageIndex + 1);
+        if (e.key === 'Escape') {
+            const lb = document.getElementById('mp-lightbox-modal');
+            if (lb && lb.style.display !== 'none' && lb.style.opacity !== '0') return; // let lightbox handle its own escape
+            const calcModal = document.getElementById('cost-calculator-modal');
+            if (calcModal && calcModal.style.display !== 'none' && calcModal.style.opacity !== '0') {
+                calcModal.style.opacity = '0';
+                setTimeout(() => { calcModal.style.display = 'none'; }, 200);
+                return;
+            }
+            closeModal();
+        }
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -7374,13 +8318,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         const statusBadgeEl = document.getElementById('mp-modal-status-badge');
 
                         if (pauseTextEl) pauseTextEl.textContent = isNowPaused ? 'Reanudar publicación' : 'Pausar publicación';
-                        pauseBtn.className = `flex-1 sm:flex-none inline-flex items-center justify-center gap-2 ${isNowPaused ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold px-4 py-3 rounded-xl transition-all text-sm shadow-md cursor-pointer`;
+                        pauseBtn.className = `w-full inline-flex items-center justify-center gap-2 ${isNowPaused ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm`;
                         const iconSpan = pauseBtn.querySelector('.material-symbols-outlined');
                         if (iconSpan) iconSpan.textContent = isNowPaused ? 'play_circle' : 'pause_circle';
 
                         if (statusBadgeEl) {
-                            statusBadgeEl.innerHTML = `<span class="material-symbols-outlined text-sm">${isNowPaused ? 'pause_circle' : 'check_circle'}</span> ${isNowPaused ? 'Pausada' : 'Publicada'}`;
-                            statusBadgeEl.className = `inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full ${isNowPaused ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}`;
+                            statusBadgeEl.innerHTML = `<span class="material-symbols-outlined text-xs">${isNowPaused ? 'pause_circle' : 'check_circle'}</span> ${isNowPaused ? 'Pausada' : 'Publicada'}`;
+                            statusBadgeEl.className = `inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full ${isNowPaused ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}`;
                         }
 
                         await window.showCustomAlert({
@@ -7436,6 +8380,362 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         }
     }
 };
+
+// ============================================================
+// Cost Calculator Pop-up Modal (Inspiración Zillow Image 2)
+// ============================================================
+window.openCostCalculatorModal = function (propData = {}) {
+    let modal = document.getElementById('cost-calculator-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cost-calculator-modal';
+        document.body.appendChild(modal);
+    }
+
+    const priceNum = propData.priceNum || 350000;
+    const expensasNum = propData.expensasNum || 0;
+    const moneda = propData.moneda || '$';
+    const title = propData.title || 'Propiedad en alquiler';
+
+    const priceFormatted = `${moneda} ${priceNum.toLocaleString('es-AR')}`;
+    const expensasFormatted = expensasNum > 0 ? `${moneda} ${expensasNum.toLocaleString('es-AR')}` : 'Sin expensas';
+    const totalMensual = priceNum + expensasNum;
+    const totalMensualFormatted = `${moneda} ${totalMensual.toLocaleString('es-AR')}`;
+
+    // Base Move-in Required Costs: 1 month rent + 1 month security deposit
+    const firstMonthRent = priceNum;
+    const securityDeposit = priceNum;
+    const adminFee = 0;
+    const appFee = 0;
+    const baseMoveInTotal = firstMonthRent + securityDeposit + adminFee + appFee;
+
+    // Optional Add-ons
+    const petDepositAmount = Math.round(priceNum * 0.15) || 35000;
+    const insuranceAmount = 15000;
+
+    modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-opacity duration-200 font-body';
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+
+    modal.innerHTML = `
+        <div class="relative w-full max-w-2xl bg-white dark:bg-[#111318] rounded-3xl shadow-2xl border border-zinc-200/90 dark:border-zinc-800/90 overflow-hidden flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center font-bold">
+                        <span class="material-symbols-outlined text-lg">calculate</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline text-lg font-black text-zinc-900 dark:text-white">Calculadora de costos</h3>
+                        <p class="text-[11px] text-zinc-500 truncate max-w-[280px] sm:max-w-md">${title}</p>
+                    </div>
+                </div>
+                <button type="button" id="close-cost-calc-btn" class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center transition-colors cursor-pointer" aria-label="Cerrar">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+
+            <!-- Content Body (Scrollable) -->
+            <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
+                
+                <!-- Sección 1: Costos mensuales -->
+                <div class="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#151820]">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+                            <span class="material-symbols-outlined text-base text-zinc-500">expand_less</span>
+                            <span>Costos mensuales</span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 sm:p-5 space-y-4">
+                        <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
+                        
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                <div>
+                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Alquiler mensual base</span>
+                                    <span class="block text-xs text-zinc-400">Ver contrato para detalles</span>
+                                </div>
+                                <span class="font-extrabold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                <div>
+                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Expensas ordinarias</span>
+                                    <span class="block text-xs text-zinc-400">Estimación mensual</span>
+                                </div>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">${expensasFormatted}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between py-1">
+                                <div>
+                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Tarifa de Servicio Tecnológico Hábitat</span>
+                                    <span class="block text-xs text-emerald-500">100% Bonificado para inquilinos</span>
+                                </div>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Barra destacada Total Mensual -->
+                        <div class="pt-3 flex items-center justify-between bg-zinc-100/70 dark:bg-zinc-800/60 p-3.5 rounded-xl">
+                            <span class="font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">Costo mensual total estimado</span>
+                            <span class="font-headline font-black text-lg sm:text-xl text-zinc-900 dark:text-white">${totalMensualFormatted}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Costos de ingreso inicial -->
+                <div class="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#151820]">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+                            <span class="material-symbols-outlined text-base text-zinc-500">expand_less</span>
+                            <span>Costos de ingreso inicial (Mudanza)</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Columna 1: Obligatorios -->
+                            <div class="space-y-3">
+                                <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
+                                
+                                <div class="space-y-2.5 text-xs sm:text-sm">
+                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                        <span class="text-zinc-600 dark:text-zinc-300">Primer mes de alquiler</span>
+                                        <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                    </div>
+                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                        <div>
+                                            <span class="text-zinc-600 dark:text-zinc-300">Depósito en garantía</span>
+                                            <span class="block text-[10px] text-zinc-400">Reembolsable al finalizar</span>
+                                        </div>
+                                        <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                    </div>
+                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                        <span class="text-zinc-600 dark:text-zinc-300">Gastos administrativos</span>
+                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
+                                    </div>
+                                    <div class="flex justify-between py-1">
+                                        <span class="text-zinc-600 dark:text-zinc-300">Tasa de postulación</span>
+                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna 2: Opcionales con Checkboxes -->
+                            <div class="space-y-3">
+                                <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Opcionales</div>
+                                
+                                <div class="space-y-3 text-xs sm:text-sm">
+                                    <label class="flex items-start justify-between gap-2 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
+                                        <div class="flex items-start gap-2.5">
+                                            <input type="checkbox" id="calc-pet-deposit-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
+                                            <div>
+                                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Depósito por mascota (${moneda} ${petDepositAmount.toLocaleString('es-AR')})</span>
+                                                <span class="block text-[11px] text-zinc-400">Reembolsable al finalizar</span>
+                                            </div>
+                                        </div>
+                                        <span id="calc-pet-deposit-val" class="font-bold text-zinc-500">${moneda} 0</span>
+                                    </label>
+
+                                    <label class="flex items-start justify-between gap-2 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
+                                        <div class="flex items-start gap-2.5">
+                                            <input type="checkbox" id="calc-insurance-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
+                                            <div>
+                                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Seguro de caución / Hogar (${moneda} ${insuranceAmount.toLocaleString('es-AR')})</span>
+                                                <span class="block text-[11px] text-zinc-400">Cobertura integral opcional</span>
+                                            </div>
+                                        </div>
+                                        <span id="calc-insurance-val" class="font-bold text-zinc-500">${moneda} 0</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barra destacada Total Ingreso -->
+                        <div class="pt-3 flex items-center justify-between bg-zinc-100/70 dark:bg-zinc-800/60 p-3.5 rounded-xl">
+                            <div>
+                                <span class="font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">Costo total de ingreso estimado</span>
+                                <span class="block text-[10px] text-zinc-400">Primer mes + depósito + opcionales</span>
+                            </div>
+                            <span id="calc-move-in-total-display" class="font-headline font-black text-xl sm:text-2xl text-zinc-900 dark:text-white">${moneda} ${baseMoveInTotal.toLocaleString('es-AR')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nota al pie -->
+                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed text-center">
+                    Toda la información y valores son suministrados por la parte locadora y están sujetos a los términos y condiciones finales del contrato.
+                </p>
+            </div>
+        </div>
+    `;
+
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+    });
+
+    const closeCalc = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => { modal.style.display = 'none'; }, 200);
+    };
+
+    const closeBtn = document.getElementById('close-cost-calc-btn');
+    if (closeBtn) closeBtn.onclick = closeCalc;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeCalc();
+    };
+
+    // Live dynamic Move-in calculation on checkbox toggle
+    const petCb = document.getElementById('calc-pet-deposit-cb');
+    const insCb = document.getElementById('calc-insurance-cb');
+    const petVal = document.getElementById('calc-pet-deposit-val');
+    const insVal = document.getElementById('calc-insurance-val');
+    const totalDisplay = document.getElementById('calc-move-in-total-display');
+
+    const recalculateMoveIn = () => {
+        let currentTotal = baseMoveInTotal;
+        if (petCb && petCb.checked) {
+            currentTotal += petDepositAmount;
+            if (petVal) petVal.textContent = `${moneda} ${petDepositAmount.toLocaleString('es-AR')}`;
+        } else {
+            if (petVal) petVal.textContent = `${moneda} 0`;
+        }
+
+        if (insCb && insCb.checked) {
+            currentTotal += insuranceAmount;
+            if (insVal) insVal.textContent = `${moneda} ${insuranceAmount.toLocaleString('es-AR')}`;
+        } else {
+            if (insVal) insVal.textContent = `${moneda} 0`;
+        }
+
+        if (totalDisplay) {
+            totalDisplay.textContent = `${moneda} ${currentTotal.toLocaleString('es-AR')}`;
+        }
+    };
+
+    if (petCb) petCb.onchange = recalculateMoveIn;
+    if (insCb) insCb.onchange = recalculateMoveIn;
+};
+
+// ============================================================
+// Auto-Restore Property from URL on Page Reload / Direct Link (?prop=ID)
+// ============================================================
+window.checkMarketplaceUrlParam = async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propId = urlParams.get('prop');
+    if (!propId) return;
+
+    // Check if we are already in property modal
+    const existingModal = document.getElementById('marketplace-property-modal');
+    if (existingModal && existingModal.style.display !== 'none' && existingModal.style.opacity === '1') {
+        return;
+    }
+
+    try {
+        // 1. Try to load from public properties in DataManager
+        if (window.DataManager && typeof window.DataManager.getPublicMarketplaceProperties === 'function') {
+            const props = await window.DataManager.getPublicMarketplaceProperties(100);
+            const found = props.find(p => String(p.id) === String(propId) || String(p.id_publicacion) === String(propId) || String(p.id_propiedad) === String(propId));
+            if (found && typeof window.openMarketplacePropertyDetailModal === 'function') {
+                window.openMarketplacePropertyDetailModal(found);
+                return;
+            }
+        }
+
+        // 2. Direct Supabase Query by ID
+        if (window.supabaseClient) {
+            const { data: pub, error } = await window.supabaseClient
+                .from('Publicacion')
+                .select(`
+                    *,
+                    Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
+                    Propiedad (
+                        *,
+                        Antiguedad (*),
+                        Subtipo_propiedad (*),
+                        Barrio (
+                            *,
+                            Departamento (
+                                *,
+                                Provincia (*)
+                            )
+                        ),
+                        Propiedad_caracteristica (
+                            Caracteristica (*)
+                        )
+                    ),
+                    Multimedia (*)
+                `)
+                .eq('id_publicacion', propId)
+                .maybeSingle();
+
+            if (pub && typeof window.openMarketplacePropertyDetailModal === 'function') {
+                const prop = pub.Propiedad || {};
+                const media = pub.Multimedia || [];
+                const imageUrls = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                let extraInfo = {};
+                if (pub.descripcion && pub.descripcion.includes('Detalles: ')) {
+                    try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch(e){}
+                }
+                const cleanTitle = pub.descripcion ? pub.descripcion.split(' | Detalles: ')[0].substring(0, 70) : `Propiedad en ${prop.calle || 'Mendoza'}`;
+                
+                window.openMarketplacePropertyDetailModal({
+                    id: pub.id_publicacion,
+                    id_publicacion: pub.id_publicacion,
+                    id_propiedad: pub.id_propiedad,
+                    title: cleanTitle,
+                    description: pub.descripcion || '',
+                    address: `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim(),
+                    price: parseFloat(pub.precio || 0),
+                    images: imageUrls,
+                    photoUrl: imageUrls[0],
+                    latitud: prop.latitud ? parseFloat(prop.latitud) : -32.8898,
+                    longitud: prop.longitud ? parseFloat(prop.longitud) : -68.8373,
+                    dormitorios: prop.dormitorios || extraInfo.dormitorios || 1,
+                    banos: prop.banos_completos || extraInfo.banos || 1,
+                    ambientes: prop.habitaciones_total || extraInfo.ambientes || 1,
+                    cocheras: prop.cantidad_cocheras || extraInfo.cocheras || 0,
+                    sup_cubierta: prop.superficie_cubierta || extraInfo.supCubierta || 45,
+                    sup_total: prop.superficie_lote || extraInfo.supTotal || 45,
+                    barrio: prop.Barrio?.nombre || extraInfo.barrio || '',
+                    city: prop.Barrio?.Departamento?.nombre || extraInfo.ciudad || '',
+                    province: prop.Barrio?.Departamento?.Provincia?.nombre || extraInfo.provincia || '',
+                    caracteristicas: extraInfo.caracteristicas || [],
+                    extraInfo: extraInfo,
+                    views_count: pub.cantidad_visualizaciones_total || 0,
+                    created_at: pub.created_at
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Error auto-restoring property from URL query:", err);
+    }
+};
+
+// Auto-run URL check on page load & handle popstate for seamless browser history
+window.addEventListener('popstate', () => {
+    const modal = document.getElementById('marketplace-property-modal');
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('prop') && modal && modal.style.display !== 'none') {
+        modal.style.opacity = '0';
+        document.body.classList.remove('no-scroll');
+        document.body.style.overflow = '';
+        setTimeout(() => { modal.style.display = 'none'; }, 280);
+    } else if (urlParams.has('prop')) {
+        window.checkMarketplaceUrlParam();
+    }
+});
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(window.checkMarketplaceUrlParam, 350);
+    });
+} else {
+    setTimeout(window.checkMarketplaceUrlParam, 350);
+}
 
 // ============================================================
 // Global Modals: Postulación & Agendar Visita

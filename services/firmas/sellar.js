@@ -29,14 +29,14 @@ export default async function sellarHandler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { 
-      id_firma, 
-      id_contrato, 
-      rol = 'TENANT', 
-      didit_session_id, 
-      didit_scores, 
-      email, 
-      user_agent, 
+    const {
+      id_firma,
+      id_contrato,
+      rol = 'TENANT',
+      didit_session_id,
+      didit_scores,
+      email,
+      user_agent,
       ip,
       signer_name,
       signer_dni
@@ -99,8 +99,8 @@ export default async function sellarHandler(req, res) {
           Propiedad (*)
         `).eq('id_contrato', numericContractId).single();
 
-        let perfilId = rol === 'TENANT' 
-          ? (contratoDb?.id_perfil_inquilino || 5) 
+        let perfilId = rol === 'TENANT'
+          ? (contratoDb?.id_perfil_inquilino || 5)
           : (contratoDb?.id_perfil_propietario || 6);
 
         // Si se especificó un email, buscar o crear el perfil
@@ -154,26 +154,7 @@ export default async function sellarHandler(req, res) {
     const contractId = firma.id_contrato;
     const firmaId = firma.id_firma;
 
-    // 2. Calcular Hash SHA-256 del Contrato
-    const contractCanonicalString = JSON.stringify({
-      id_contrato: contrato.id_contrato || contractId,
-      monto_cierre: contrato.monto_cierre || 450000,
-      id_propiedad: contrato.id_propiedad || 5,
-      direccion: `${propiedad.calle || 'Av. Libertador'} ${propiedad.numero || '2450'}`.trim(),
-      inquilino_dni: contrato.Inquilino?.dni || contrato.Inquilino?.mail || email || '40.123.456',
-      propietario_dni: contrato.Propietario?.dni || contrato.Propietario?.mail || '28.987.654',
-      fecha_inicio: contrato.fecha_inicio_contrato || new Date().toISOString(),
-      fecha_fin: contrato.fecha_fin_contrato || new Date().toISOString(),
-      periodo_aumento_meses: contrato.periodo_aumento_meses || 3,
-      dia_vencimiento: contrato.dia_vencimiento_mensual || 10,
-      alias_cbu: contrato.alias_cbu || 'HABITAT.PAGOS.ALQUILER'
-    });
-
-    const hashContratoSha256 = firma.hash_contrato_sha256 || crypto
-      .createHash('sha256')
-      .update(contractCanonicalString, 'utf8')
-      .digest('hex');
-
+    // 2. Calcular Hagit push
     // 3. Generar el PDF del Audit Trail (Certificado de Evidencia) con pdf-lib
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 Standard en puntos
@@ -372,32 +353,6 @@ export default async function sellarHandler(req, res) {
 
     if (uploadErr) {
       console.error('[Error subiendo Audit Trail a Supabase Storage]:', uploadErr);
-    }
-
-    // 4b. Subir Evidencia Biométrica a Supabase Storage (boveda_biometrica)
-    const biometricEvidence = {
-      id_firma: firmaId,
-      id_contrato: contractId,
-      rol_firmante: rol,
-      didit_session_id: didit_session_id || firma.didit_session_id,
-      didit_status: 'Approved',
-      didit_scores: didit_scores || firma.didit_scores || { liveness: 'PASSED', faceMatch: 99.2 },
-      timestamp: new Date().toISOString(),
-      user_agent: user_agent,
-      ip: ip || '127.0.0.1',
-      hash_contrato: hashContratoSha256
-    };
-
-    const biometricPath = `contrato_${contractId}/biometria_liveness_${firmaId}.json`;
-    const { error: uploadBioErr } = await supabase.storage
-      .from('boveda_biometrica')
-      .upload(biometricPath, Buffer.from(JSON.stringify(biometricEvidence, null, 2)), {
-        contentType: 'application/json',
-        upsert: true
-      });
-
-    if (uploadBioErr) {
-      console.error('[Error subiendo Biometría a Supabase Storage]:', uploadBioErr);
     }
 
     // 5. Actualizar Firma_contrato en la base de datos
