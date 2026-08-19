@@ -978,13 +978,18 @@ var DataManager = {
                                 nombre
                             )
                         ),
-                        Propiedad (
+                        Publicacion (
                             *,
+                            Propiedad (
+                                *,
+                            Barrio (*),
                             Publicacion (
                                 *,
                                 Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
                                 Multimedia (*)
                             )
+                        ),
+
                         ),
                         Perfil (
                             *,
@@ -1147,15 +1152,15 @@ var DataManager = {
         if (window.supabaseClient) {
             try {
                 const profileId = await DataManager._getOrCreateProfile();
-                const propIdNum = (typeof appData.propertyId === 'number' || (typeof appData.propertyId === 'string' && /^\d+$/.test(appData.propertyId.trim())))
-                    ? parseInt(appData.propertyId, 10)
-                    : 1;
+                const pubIdNum = appData.publicationId || appData.id_publicacion
+                    ? parseInt(appData.publicationId || appData.id_publicacion, 10)
+                    : null;
 
                 const { data, error } = await window.supabaseClient
                     .from('Solicitud')
                     .insert([{
                         id_perfil: profileId,
-                        id_propiedad: propIdNum,
+                        id_publicacion: pubIdNum,
                         ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || appData.propertyPrice || 0),
                         mensaje: appData.message || '',
                         comprobante_ingreso: appData.incomeProof || 'Pasaporte Hábitat',

@@ -27,21 +27,38 @@
    * Extrae o deriva nombre, apellido y DNI del usuario a partir de datos disponibles.
    */
   function deriveIdentityData(userId) {
-    let firstName = 'Usuario';
-    let lastName = 'Habitat';
+    let firstName = '';
+    let lastName = '';
     let docNumber = '';
 
     try {
+      // 1. Si ya tenemos identidad validada en localStorage (descartar si contenía 'Usuario Habitat')
       const storedIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-      if (storedIdentity.firstName && storedIdentity.lastName && storedIdentity.documentNumber) {
+      if (storedIdentity.fullName && !storedIdentity.fullName.toLowerCase().includes('usuario habitat') && !storedIdentity.fullName.toLowerCase().includes('usuario verificado')) {
         return storedIdentity;
       }
 
+      // 2. Revisar si hay un usuario en localStorage o Pasaporte
       const storedUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
       const storedPassport = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-      const candName = storedPassport.razon_social || storedPassport.nombre_completo || storedUser.nombre_completo || storedUser.name;
+      let candName = storedPassport.razon_social || storedPassport.nombre_completo || storedUser.nombre_completo || storedUser.name || storedUser.full_name;
 
-      if (candName && typeof candName === 'string') {
+      // 3. Revisar si hay sesión de Supabase Auth
+      if (!candName) {
+        try {
+          const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+          if (authKey) {
+            const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
+            const u = authData?.user;
+            candName = u?.user_metadata?.full_name || u?.user_metadata?.name || u?.user_metadata?.user_name;
+            if (!candName && u?.email && !u.email.includes('usuario')) {
+              candName = u.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+          }
+        } catch (eAuth) {}
+      }
+
+      if (candName && typeof candName === 'string' && !candName.toLowerCase().includes('usuario habitat') && !candName.toLowerCase().includes('titular del pasaporte')) {
         const parts = candName.trim().split(' ').filter(Boolean);
         if (parts.length >= 2) {
           firstName = parts.slice(0, parts.length - 1).join(' ');
@@ -50,7 +67,7 @@
           firstName = parts[0];
           lastName = '';
         }
-      } else if (userId && typeof userId === 'string' && !userId.includes('@')) {
+      } else if (userId && typeof userId === 'string' && !userId.includes('@') && !userId.startsWith('user_') && !userId.startsWith('didit_')) {
         const parts = userId.trim().split(' ').filter(Boolean);
         if (parts.length >= 2) {
           firstName = parts.slice(0, parts.length - 1).join(' ');
@@ -68,10 +85,12 @@
       }
     } catch (e) {}
 
+    const fullName = (firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || 'Titular del Pasaporte')).trim();
+
     return {
-      firstName,
-      lastName,
-      fullName: `${firstName} ${lastName}`.trim() || 'Usuario Verificado',
+      firstName: firstName || 'Titular',
+      lastName: lastName || '',
+      fullName: fullName,
       documentNumber: docNumber,
       dni: docNumber
     };
