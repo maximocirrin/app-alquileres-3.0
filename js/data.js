@@ -210,7 +210,7 @@ var DataManager = {
         }
     },
 
-    getPublicMarketplaceProperties: async (limit = 50) => {
+    getPublicMarketplaceProperties: async (limit = 50, includeAllStatuses = false) => {
         if (!window.supabaseClient) return [];
         try {
             const { data: publications, error } = await window.supabaseClient
@@ -304,17 +304,29 @@ var DataManager = {
                     const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
                     const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
                     const estadoNombre = (activeHist.Estado_Publicacion?.nombre || '').toLowerCase();
-                    if (estadoNombre === 'pausada' || activeHist.id_estado_publicacion === 4) {
+                    if (estadoNombre === 'pausada' || estadoNombre === 'pausado' || activeHist.id_estado_publicacion === 4) {
                         currentPropStatus = 'paused';
                     } else if (estadoNombre === 'eliminada' || estadoNombre === 'eliminado' || activeHist.id_estado_publicacion === 5) {
                         currentPropStatus = 'deleted';
-                    } else if (estadoNombre === 'alquilada' || activeHist.id_estado_publicacion === 2) {
+                    } else if (estadoNombre === 'alquilada' || estadoNombre === 'alquilado' || activeHist.id_estado_publicacion === 2) {
                         currentPropStatus = 'alquilada';
-                    } else if (estadoNombre === 'vendida' || activeHist.id_estado_publicacion === 3) {
+                    } else if (estadoNombre === 'vendida' || estadoNombre === 'vendido' || activeHist.id_estado_publicacion === 3) {
                         currentPropStatus = 'vendida';
+                    } else if (estadoNombre === 'borrador' || estadoNombre === 'draft' || activeHist.id_estado_publicacion === 6) {
+                        currentPropStatus = 'draft';
+                    } else if (estadoNombre === 'mantenimiento') {
+                        currentPropStatus = 'mantenimiento';
                     } else {
                         currentPropStatus = 'disponible';
                     }
+                } else if (pub.status || pub.estado) {
+                    const st = (pub.status || pub.estado).toLowerCase();
+                    if (st.includes('paus')) currentPropStatus = 'paused';
+                    else if (st.includes('alquil')) currentPropStatus = 'alquilada';
+                    else if (st.includes('vend')) currentPropStatus = 'vendida';
+                    else if (st.includes('borr') || st.includes('draft')) currentPropStatus = 'draft';
+                    else if (st.includes('mant')) currentPropStatus = 'mantenimiento';
+                    else currentPropStatus = 'disponible';
                 }
 
                 // Check active contract for rental end date if rented
@@ -372,15 +384,19 @@ var DataManager = {
                     extraInfo: extraInfo,
                     Propiedad: prop
                 };
-            }).filter(p => p.status === 'disponible' || p.status === 'alquilada');
+            }).filter(p => {
+                if (p.status === 'deleted') return false;
+                if (includeAllStatuses) return true;
+                return p.status === 'disponible' || p.status === 'alquilada';
+            });
         } catch (e) {
             console.error("Error in getPublicMarketplaceProperties:", e);
             return [];
         }
     },
 
-    getUserMarketplaceProperties: async () => {
-        return DataManager.getPublicMarketplaceProperties(50);
+    getUserMarketplaceProperties: async (limit = 100) => {
+        return DataManager.getPublicMarketplaceProperties(limit, true);
     },
 
     recordPublicationView: async (id_publicacion) => {

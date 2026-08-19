@@ -290,17 +290,62 @@
             <!-- PESTAÑA 1: MIS AVISOS -->
             <div id="panel-content-avisos" class="tab-content active space-y-6">
 
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-card p-5 rounded-2xl shadow-sm">
-                    <div>
-                        <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">Propiedades Publicadas</h2>
-                        <p class="text-xs text-zinc-500">Gestiona tus publicaciones activas en el Marketplace de Hábitat.</p>
+                <!-- Header de Gestión de Publicaciones -->
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-headline text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-primary text-2xl sm:text-3xl shrink-0">home_work</span>
+                                <span>Mis Publicaciones</span>
+                            </h2>
+                            <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                Administra tus propiedades, cambia estados en tiempo real y supervisa el rendimiento de cada aviso.
+                            </p>
+                        </div>
+
+                        <!-- Barra de controles: Buscador + Botón Nuevo Aviso con exactamente el mismo height (h-11) -->
+                        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                            <div class="relative w-full sm:w-72">
+                                <span class="material-symbols-outlined absolute text-zinc-400 text-lg pointer-events-none" style="left: 0.875rem; top: 50%; transform: translateY(-50%);">search</span>
+                                <input id="owner-search-props" type="text" placeholder="Buscar por título, dirección o ID..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl h-11 pr-4 text-xs sm:text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs" style="padding-left: 2.75rem !important;">
+                            </div>
+                            <button type="button" onclick="window.App && window.App.showPublishWizard()" class="h-11 inline-flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-hover text-white font-bold px-4 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0">
+                                <span class="material-symbols-outlined text-lg">add</span>
+                                <span class="whitespace-nowrap">Nuevo Aviso</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="relative w-full sm:w-64">
-                        <input id="owner-search-props" type="text" placeholder="Filtrar propiedades..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-4 pr-10 py-2 text-xs font-semibold text-zinc-900 dark:text-white outline-none">
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 text-base">search</span>
+
+                    <!-- Filtros por Estado de Publicación (Pestañas / Píldoras) -->
+                    <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                        <button type="button" data-status-filter="all" class="owner-status-tab active px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0">
+                            <span>Todas</span>
+                            <span id="badge-count-all" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 dark:bg-zinc-900/20">0</span>
+                        </button>
+                        <button type="button" data-status-filter="disponible" class="owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50"></span>
+                            <span>Disponibles</span>
+                            <span id="badge-count-disponible" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">0</span>
+                        </button>
+                        <button type="button" data-status-filter="alquilada" class="owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
+                            <span>Alquiladas</span>
+                            <span id="badge-count-alquilada" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">0</span>
+                        </button>
+                        <button type="button" data-status-filter="paused" class="owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 shadow-xs shadow-amber-500/50"></span>
+                            <span>Pausadas</span>
+                            <span id="badge-count-paused" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">0</span>
+                        </button>
+                        <button type="button" data-status-filter="draft" class="owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
+                            <span>Borradores / Otras</span>
+                            <span id="badge-count-draft" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
+                        </button>
                     </div>
                 </div>
 
+                <!-- Grid de Tarjetas de Publicaciones -->
                 <div id="owner-grid-props" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="p-8 text-center text-zinc-400 col-span-full">Cargando avisos...</div>
                 </div>
@@ -626,80 +671,359 @@
             }, { passive: true });
         });
 
-        async function loadOwnerAvisos() {
+        let ownerAvisosState = [];
+        let ownerActiveStatusFilter = 'all';
+
+        function normalizePropStatus(status) {
+            const s = (status || '').toLowerCase().trim();
+            if (s === 'paused' || s === 'pausada' || s === 'pausado') return 'paused';
+            if (s === 'alquilada' || s === 'alquilado') return 'alquilada';
+            if (s === 'vendida' || s === 'vendido') return 'vendida';
+            if (s === 'draft' || s === 'borrador') return 'draft';
+            if (s === 'mantenimiento') return 'mantenimiento';
+            return 'disponible';
+        }
+
+        function getStatusBadgeData(status) {
+            const norm = normalizePropStatus(status);
+            switch (norm) {
+                case 'disponible':
+                    return {
+                        label: 'Disponible',
+                        icon: 'check_circle',
+                        pillClass: 'bg-emerald-500 text-white shadow-emerald-500/30',
+                        badgeClass: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800',
+                        isPaused: false
+                    };
+                case 'alquilada':
+                    return {
+                        label: 'Alquilada',
+                        icon: 'key',
+                        pillClass: 'bg-blue-600 text-white shadow-blue-500/30',
+                        badgeClass: 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800',
+                        isPaused: false
+                    };
+                case 'paused':
+                    return {
+                        label: 'Pausada',
+                        icon: 'pause_circle',
+                        pillClass: 'bg-amber-500 text-white shadow-amber-500/30',
+                        badgeClass: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800',
+                        isPaused: true
+                    };
+                case 'draft':
+                    return {
+                        label: 'Borrador',
+                        icon: 'edit_note',
+                        pillClass: 'bg-zinc-600 text-white shadow-zinc-500/30',
+                        badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700',
+                        isPaused: false
+                    };
+                case 'mantenimiento':
+                    return {
+                        label: 'Mantenimiento',
+                        icon: 'build',
+                        pillClass: 'bg-orange-500 text-white shadow-orange-500/30',
+                        badgeClass: 'bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-800',
+                        isPaused: false
+                    };
+                case 'vendida':
+                    return {
+                        label: 'Vendida',
+                        icon: 'sell',
+                        pillClass: 'bg-teal-600 text-white shadow-teal-500/30',
+                        badgeClass: 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-800',
+                        isPaused: false
+                    };
+                default:
+                    return {
+                        label: 'Disponible',
+                        icon: 'check_circle',
+                        pillClass: 'bg-emerald-500 text-white shadow-emerald-500/30',
+                        badgeClass: 'bg-emerald-100 text-emerald-700 border border-emerald-300',
+                        isPaused: false
+                    };
+            }
+        }
+
+        function updateOwnerStatusBadgesCounts(props) {
+            const counts = {
+                all: props.length,
+                disponible: 0,
+                alquilada: 0,
+                paused: 0,
+                draft: 0
+            };
+
+            props.forEach(p => {
+                const norm = normalizePropStatus(p.status);
+                if (norm === 'disponible') counts.disponible++;
+                else if (norm === 'alquilada') counts.alquilada++;
+                else if (norm === 'paused') counts.paused++;
+                else counts.draft++; // draft, mantenimiento, vendida
+            });
+
+            const badgeAll = document.getElementById('badge-count-all');
+            const badgeDisp = document.getElementById('badge-count-disponible');
+            const badgeAlq = document.getElementById('badge-count-alquilada');
+            const badgePaus = document.getElementById('badge-count-paused');
+            const badgeDraft = document.getElementById('badge-count-draft');
+
+            if (badgeAll) badgeAll.textContent = counts.all;
+            if (badgeDisp) badgeDisp.textContent = counts.disponible;
+            if (badgeAlq) badgeAlq.textContent = counts.alquilada;
+            if (badgePaus) badgePaus.textContent = counts.paused;
+            if (badgeDraft) badgeDraft.textContent = counts.draft;
+        }
+
+        function renderOwnerAvisosGrid() {
             const grid = document.getElementById('owner-grid-props');
-            if (!grid || !window.DataManager) return;
+            if (!grid) return;
 
-            try {
-                const props = await window.DataManager.getUserMarketplaceProperties();
+            const searchTerm = (document.getElementById('owner-search-props')?.value || '').toLowerCase().trim();
 
-                if (!props || props.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full glass-card rounded-2xl p-8 text-center space-y-3">
-                            <span class="material-symbols-outlined text-4xl text-zinc-400">home_work</span>
-                            <h3 class="font-headline font-bold text-base">No tienes propiedades publicadas</h3>
-                            <p class="text-xs text-zinc-500">Publica tu primer aviso para recibir postulantes e inquilinos verificados.</p>
-                             <button type="button" onclick="window.App && window.App.showPublishWizard()" class="inline-block px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-xs shadow-md cursor-pointer">Publicar Propiedad</button>
-                        </div>
-                    `;
-                    return;
+            let filtered = ownerAvisosState.filter(p => {
+                const norm = normalizePropStatus(p.status);
+                if (ownerActiveStatusFilter === 'disponible' && norm !== 'disponible') return false;
+                if (ownerActiveStatusFilter === 'alquilada' && norm !== 'alquilada') return false;
+                if (ownerActiveStatusFilter === 'paused' && norm !== 'paused') return false;
+                if (ownerActiveStatusFilter === 'draft' && norm === 'disponible' || (ownerActiveStatusFilter === 'draft' && (norm === 'alquilada' || norm === 'paused'))) return false;
+
+                if (searchTerm) {
+                    const searchStr = [
+                        p.title,
+                        p.address,
+                        p.city,
+                        p.province,
+                        p.tipo_propiedad || p.type,
+                        p.operacion || p.operation,
+                        String(p.id || ''),
+                        String(p.price || '')
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return searchStr.includes(searchTerm);
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                let emptyTitle = 'No se encontraron publicaciones';
+                let emptyMsg = 'Intenta cambiar los filtros o el término de búsqueda.';
+                if (ownerActiveStatusFilter === 'paused') {
+                    emptyTitle = 'No tienes publicaciones pausadas';
+                    emptyMsg = 'Las propiedades que pauses temporalmente aparecerán en esta sección.';
+                } else if (ownerActiveStatusFilter === 'alquilada') {
+                    emptyTitle = 'No tienes publicaciones alquiladas';
+                    emptyMsg = 'Cuando un contrato se active o marques una propiedad como alquilada se listará aquí.';
+                } else if (ownerActiveStatusFilter === 'disponible') {
+                    emptyTitle = 'No tienes publicaciones disponibles';
+                    emptyMsg = 'Publica o reanuda tus propiedades para comenzar a recibir interesados.';
+                } else if (ownerActiveStatusFilter === 'draft') {
+                    emptyTitle = 'No tienes borradores u otras publicaciones';
+                    emptyMsg = 'Los borradores guardados o propiedades en mantenimiento aparecerán aquí.';
                 }
 
-                grid.innerHTML = props.map(p => {
-                    const isVerifOwner = Boolean(p.isVerifiedOwner || p.verified || p.is_verified_owner || p.propietario_verificado);
-                    return `
-                    <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group">
-                        <div class="aspect-[16/10] w-full min-h-[220px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
-                            <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-                                <span class="px-3 py-1 text-[11px] font-black rounded-full ${p.status === 'paused' || p.status === 'pausado' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'} uppercase shadow">
-                                    ${p.status === 'paused' || p.status === 'pausado' ? 'Pausada' : (p.status === 'alquilada' ? 'Alquilada' : 'Publicada')}
-                                </span>
-                                ${isVerifOwner ? `
-                                    <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow inline-flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-xs">verified</span> Verificado
-                                    </span>
-                                ` : ''}
-                            </div>
+                grid.innerHTML = `
+                    <div class="col-span-full glass-card rounded-2xl p-10 text-center space-y-4 border border-zinc-200/80 dark:border-zinc-800">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                            <span class="material-symbols-outlined text-3xl">inventory_2</span>
                         </div>
-                        <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
-                            <div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">${(p.tipo_propiedad || p.type || 'Departamento').toUpperCase()} / ${(p.operacion || p.operation || 'Alquiler').toUpperCase()}</span>
-                                <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white line-clamp-1 mt-0.5">${p.title}</h3>
-                                <p class="text-xs text-zinc-500 flex items-center gap-1 mt-1 line-clamp-1">
-                                    <span class="material-symbols-outlined text-sm text-zinc-400 dark:text-zinc-500">location_on</span> ${p.address}
-                                </p>
-                                <div class="mt-3 flex items-baseline gap-1">
-                                    <span class="text-2xl font-black text-zinc-900 dark:text-white">$ ${Number(p.price).toLocaleString('es-AR')}</span>
+                        <div class="space-y-1">
+                            <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${emptyTitle}</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">${emptyMsg}</p>
+                        </div>
+                        <div class="pt-2 flex items-center justify-center gap-3">
+                            ${ownerActiveStatusFilter !== 'all' || searchTerm ? `
+                                <button type="button" onclick="resetOwnerAvisosFilters()" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-xl text-xs hover:bg-zinc-300 transition-colors cursor-pointer">
+                                    Ver todas las publicaciones
+                                </button>
+                            ` : ''}
+                            <button type="button" onclick="window.App && window.App.showPublishWizard()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer">
+                                Publicar Propiedad
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                const isVerifOwner = Boolean(p.isVerifiedOwner || p.verified || p.is_verified_owner || p.propietario_verificado);
+                const st = getStatusBadgeData(p.status);
+                const normStatus = normalizePropStatus(p.status);
+                const isPaused = normStatus === 'paused';
+                const dorms = p.dormitorios || p.extraInfo?.dormitorios || 0;
+                const banos = p.banos || p.extraInfo?.banos || 0;
+                const sup = p.sup_cubierta || p.superficie_cubierta || p.extraInfo?.supCubierta || 0;
+                const vistas = p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0;
+                const safePropJson = JSON.stringify(p).replace(/"/g, '&quot;');
+
+                return `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80">
+                    <div class="aspect-[16/10] w-full min-h-[210px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                        <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                        
+                        <!-- Badges de Estado Superior -->
+                        <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10">
+                            <span class="px-3 py-1 text-[11px] font-black rounded-full ${st.pillClass} uppercase shadow flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">${st.icon}</span>
+                                ${st.label}
+                            </span>
+                            ${isVerifOwner ? `
+                                <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow inline-flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">verified</span> Verificado
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- ID Badge Flotante -->
+                        <div class="absolute top-3 right-3 z-10">
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded-lg bg-black/60 backdrop-blur-md text-zinc-300">
+                                ID ${String(p.id || '').substring(0, 8)}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                <span>${(p.tipo_propiedad || p.type || 'Departamento')} • ${(p.operacion || p.operation || 'Alquiler')}</span>
+                                ${p.city ? `<span class="text-zinc-400 font-medium">${p.city}</span>` : ''}
+                            </div>
+                            <h3 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">${p.title}</h3>
+                            <p class="text-xs text-zinc-500 flex items-center gap-1 mt-1 line-clamp-1">
+                                <span class="material-symbols-outlined text-sm text-zinc-400 dark:text-zinc-500">location_on</span> ${p.address || 'Ubicación no especificada'}
+                            </p>
+
+                            <!-- Features chips -->
+                            <div class="flex items-center gap-2 mt-3 text-[11px] text-zinc-500 dark:text-zinc-400 flex-wrap">
+                                ${dorms ? `<span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-md font-semibold">${dorms} dorm.</span>` : ''}
+                                ${banos ? `<span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-md font-semibold">${banos} bañ.</span>` : ''}
+                                ${sup ? `<span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-md font-semibold">${sup} m²</span>` : ''}
+                            </div>
+
+                            <div class="mt-4 flex items-baseline justify-between">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-2xl font-black text-zinc-900 dark:text-white">$ ${Number(p.price || 0).toLocaleString('es-AR')}</span>
                                     <span class="text-xs text-zinc-400">/ mes</span>
                                 </div>
-                            </div>
-                            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs">
-                                <span class="text-zinc-500 font-medium flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm text-zinc-400">visibility</span> ${p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0} vistas
+                                <span class="text-xs font-semibold text-zinc-500 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm text-zinc-400">visibility</span> ${vistas} vistas
                                 </span>
-                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${JSON.stringify(p).replace(/"/g, '&quot;')}, { isOwner: true })" class="font-bold text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white flex items-center gap-1 hover:underline">
-                                    Ver Ficha <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            </div>
+                        </div>
+
+                        <!-- Acciones directas -->
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+                            <button type="button" onclick="toggleOwnerPropPause('${p.id}', '${normStatus}', this)" class="px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${isPaused ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-300/60 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 border border-amber-300/60 dark:border-amber-800'}">
+                                <span class="material-symbols-outlined text-sm">${isPaused ? 'play_circle' : 'pause_circle'}</span>
+                                <span>${isPaused ? 'Reanudar' : 'Pausar'}</span>
+                            </button>
+
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="if(window.App && typeof window.App.showPublishWizard === 'function') window.App.showPublishWizard(${safePropJson})" class="p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Editar Publicación">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${safePropJson}, { isOwner: true })" class="px-3 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-extrabold rounded-xl text-xs shadow-xs transition-all flex items-center gap-1 cursor-pointer">
+                                    <span>Ver Ficha</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
                                 </button>
                             </div>
                         </div>
                     </div>
-                    `;
-                }).join('');
+                </div>
+                `;
+            }).join('');
+        }
 
+        window.resetOwnerAvisosFilters = function() {
+            ownerActiveStatusFilter = 'all';
+            const searchInput = document.getElementById('owner-search-props');
+            if (searchInput) searchInput.value = '';
+            document.querySelectorAll('.owner-status-tab').forEach(tab => {
+                if (tab.getAttribute('data-status-filter') === 'all') {
+                    tab.className = 'owner-status-tab active px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0';
+                } else {
+                    tab.className = 'owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0';
+                }
+            });
+            renderOwnerAvisosGrid();
+        };
+
+        window.toggleOwnerPropPause = async function(propId, currentStatus, btnElem) {
+            if (!window.DataManager || typeof window.DataManager.togglePauseProperty !== 'function') return;
+            if (btnElem) {
+                btnElem.disabled = true;
+                btnElem.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Procesando...';
+            }
+            try {
+                const newStatus = await window.DataManager.togglePauseProperty(propId, currentStatus);
+                const targetProp = ownerAvisosState.find(p => String(p.id) === String(propId));
+                if (targetProp) {
+                    targetProp.status = newStatus;
+                }
+                const isNowPaused = (newStatus === 'paused' || newStatus === 'pausada' || newStatus === 'pausado');
+                if (window.showCustomAlert) {
+                    await window.showCustomAlert({
+                        title: isNowPaused ? 'Aviso Pausado' : 'Aviso Reanudado',
+                        message: isNowPaused ? 'La propiedad ha sido pausada y no aparecerá en búsquedas públicas.' : 'La propiedad ha sido reanudada y ya está disponible en el marketplace.',
+                        icon: isNowPaused ? 'pause_circle' : 'check_circle'
+                    });
+                }
+                updateOwnerStatusBadgesCounts(ownerAvisosState);
+                renderOwnerAvisosGrid();
+            } catch (err) {
+                console.error("Error al pausar/reanudar aviso:", err);
+                if (window.showCustomAlert) {
+                    await window.showCustomAlert({
+                        title: 'Error',
+                        message: 'No se pudo cambiar el estado de la publicación. Intente nuevamente.',
+                        icon: 'error'
+                    });
+                }
+                if (btnElem) btnElem.disabled = false;
+            }
+        };
+
+        async function loadOwnerAvisos() {
+            const grid = document.getElementById('owner-grid-props');
+            if (!grid || !window.DataManager) return;
+
+            grid.innerHTML = '<div class="p-8 text-center text-zinc-400 col-span-full"><span class="material-symbols-outlined text-2xl animate-spin inline-block mb-2">sync</span><p>Cargando avisos...</p></div>';
+
+            try {
+                ownerAvisosState = await window.DataManager.getUserMarketplaceProperties(100);
+                updateOwnerStatusBadgesCounts(ownerAvisosState);
+
+                // Setup Status Tab Clicks
+                document.querySelectorAll('.owner-status-tab').forEach(tab => {
+                    tab.onclick = () => {
+                        const targetStatus = tab.getAttribute('data-status-filter');
+                        ownerActiveStatusFilter = targetStatus;
+                        document.querySelectorAll('.owner-status-tab').forEach(t => {
+                            t.className = 'owner-status-tab px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0';
+                        });
+                        tab.className = 'owner-status-tab active px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0';
+                        renderOwnerAvisosGrid();
+                    };
+                });
+
+                // Search filter handler
                 const searchInput = document.getElementById('owner-search-props');
                 if (searchInput) {
-                    searchInput.oninput = () => {
-                        const term = searchInput.value.toLowerCase();
-                        grid.querySelectorAll('.glass-card').forEach(card => {
-                            const txt = card.textContent.toLowerCase();
-                            card.style.display = txt.includes(term) ? '' : 'none';
-                        });
-                    };
+                    searchInput.oninput = () => renderOwnerAvisosGrid();
                 }
 
+                renderOwnerAvisosGrid();
             } catch (err) {
                 console.error("Error al cargar avisos:", err);
+                grid.innerHTML = `
+                    <div class="col-span-full glass-card rounded-2xl p-8 text-center space-y-3">
+                        <span class="material-symbols-outlined text-4xl text-red-500">error</span>
+                        <h3 class="font-headline font-bold text-base">Error al cargar avisos</h3>
+                        <p class="text-xs text-zinc-500">No se pudieron recuperar las publicaciones del servidor.</p>
+                        <button type="button" onclick="loadOwnerAvisos()" class="px-4 py-2 bg-primary text-white font-bold rounded-xl text-xs cursor-pointer">Reintentar</button>
+                    </div>
+                `;
             }
         }
 

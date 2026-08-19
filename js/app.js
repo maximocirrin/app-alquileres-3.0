@@ -10546,12 +10546,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mis Avisos Navigation & Rendering
     // ============================================================
     let allAvisos = [];
+    let misAvisosStatusFilter = 'all';
+    let activeMisAvisosFilters = { tipo: null, operacion: null, ciudad: null, estado: null };
+
     const menuMisAvisos = document.getElementById('menu-mis-avisos');
     const misAvisosView = document.getElementById('mis-avisos-view');
     const landingView = document.getElementById('landing-marketplace-view');
     const btnBackFromAvisos = document.getElementById('btn-back-from-avisos');
     const btnNuevoAviso = document.getElementById('btn-nuevo-aviso');
     const btnPublicarEmpty = document.getElementById('btn-publicar-empty');
+
+    function normalizeAvisoStatus(status) {
+        const s = (status || '').toLowerCase().trim();
+        if (s === 'paused' || s === 'pausada' || s === 'pausado') return 'paused';
+        if (s === 'alquilada' || s === 'alquilado') return 'alquilada';
+        if (s === 'vendida' || s === 'vendido') return 'vendida';
+        if (s === 'draft' || s === 'borrador') return 'draft';
+        if (s === 'mantenimiento') return 'mantenimiento';
+        return 'disponible';
+    }
 
     // Sync avatar initial in avisos nav
     function syncAvisosAvatar() {
@@ -10632,17 +10645,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (avisosSearch) avisosSearch.addEventListener('input', () => renderFilteredAvisos());
     if (avisosSort) avisosSort.addEventListener('change', () => renderFilteredAvisos());
 
-    function renderFilteredAvisos() {
-        const term = (avisosSearch?.value || '').toLowerCase();
-        const sortVal = avisosSort?.value || 'recent';
-        let filtered = allAvisos.filter(a => {
-            const searchable = [a.titulo_aviso, a.calle_altura, a.ciudad, a.provincia, a.tipo_propiedad, String(a.id || '').substring(0, 8)].filter(Boolean).join(' ').toLowerCase();
-            return searchable.includes(term);
+    // Status tabs handlers in Mis Avisos view
+    document.querySelectorAll('.mis-avisos-status-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const targetStatus = pill.getAttribute('data-mis-avisos-status');
+            misAvisosStatusFilter = targetStatus;
+            document.querySelectorAll('.mis-avisos-status-pill').forEach(p => {
+                p.className = 'mis-avisos-status-pill px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0';
+            });
+            pill.className = 'mis-avisos-status-pill active px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0';
+            renderFilteredAvisos();
         });
+    });
+
+    function renderFilteredAvisos() {
+        const term = (avisosSearch?.value || '').toLowerCase().trim();
+        const sortVal = avisosSort?.value || 'recent';
+
+        let filtered = allAvisos.filter(a => {
+            const norm = normalizeAvisoStatus(a.status);
+
+            // Filter by active status pill
+            if (misAvisosStatusFilter === 'disponible' && norm !== 'disponible') return false;
+            if (misAvisosStatusFilter === 'alquilada' && norm !== 'alquilada') return false;
+            if (misAvisosStatusFilter === 'paused' && norm !== 'paused') return false;
+            if (misAvisosStatusFilter === 'draft' && (norm === 'disponible' || norm === 'alquilada' || norm === 'paused')) return false;
+
+            // Filter by sidebar filters
+            if (activeMisAvisosFilters.tipo && a.tipo_propiedad !== activeMisAvisosFilters.tipo && a.extraInfo?.tipo_propiedad !== activeMisAvisosFilters.tipo) return false;
+            if (activeMisAvisosFilters.operacion && a.operacion !== activeMisAvisosFilters.operacion && a.extraInfo?.operacion !== activeMisAvisosFilters.operacion) return false;
+            if (activeMisAvisosFilters.ciudad && a.ciudad !== activeMisAvisosFilters.ciudad && a.city !== activeMisAvisosFilters.ciudad) return false;
+            if (activeMisAvisosFilters.estado && norm !== activeMisAvisosFilters.estado) return false;
+
+            // Search query
+            if (term) {
+                const searchable = [
+                    a.title,
+                    a.titulo_aviso,
+                    a.address,
+                    a.calle_altura,
+                    a.city,
+                    a.ciudad,
+                    a.province,
+                    a.provincia,
+                    a.tipo_propiedad,
+                    a.extraInfo?.tipo_propiedad,
+                    a.operacion,
+                    a.extraInfo?.operacion,
+                    String(a.id || '').substring(0, 8),
+                    String(a.price || a.precio || '')
+                ].filter(Boolean).join(' ').toLowerCase();
+                if (!searchable.includes(term)) return false;
+            }
+
+            return true;
+        });
+
         if (sortVal === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        else if (sortVal === 'price-asc') filtered.sort((a, b) => (Number(a.precio) || 0) - (Number(b.precio) || 0));
-        else if (sortVal === 'price-desc') filtered.sort((a, b) => (Number(b.precio) || 0) - (Number(a.precio) || 0));
+        else if (sortVal === 'price-asc') filtered.sort((a, b) => (Number(a.price || a.precio) || 0) - (Number(b.price || b.precio) || 0));
+        else if (sortVal === 'price-desc') filtered.sort((a, b) => (Number(b.price || b.precio) || 0) - (Number(a.price || a.precio) || 0));
         else filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
         renderAvisosCards(filtered);
     }
 
@@ -10664,22 +10727,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateFilters(avisos) {
-        const tipoMap = {}, opMap = {}, cityMap = {};
+        const tipoMap = {}, opMap = {}, cityMap = {}, estadoMap = {
+            'disponible': 0,
+            'alquilada': 0,
+            'paused': 0,
+            'draft': 0
+        };
+
         avisos.forEach(a => {
-            if (a.tipo_propiedad) tipoMap[a.tipo_propiedad] = (tipoMap[a.tipo_propiedad] || 0) + 1;
-            if (a.operacion) opMap[a.operacion] = (opMap[a.operacion] || 0) + 1;
-            if (a.ciudad) cityMap[a.ciudad] = (cityMap[a.ciudad] || 0) + 1;
+            const tipoVal = a.tipo_propiedad || a.extraInfo?.tipo_propiedad;
+            const opVal = a.operacion || a.extraInfo?.operacion;
+            const cityVal = a.ciudad || a.city;
+            const normSt = normalizeAvisoStatus(a.status);
+
+            if (tipoVal) tipoMap[tipoVal] = (tipoMap[tipoVal] || 0) + 1;
+            if (opVal) opMap[opVal] = (opMap[opVal] || 0) + 1;
+            if (cityVal) cityMap[cityVal] = (cityMap[cityVal] || 0) + 1;
+
+            if (normSt === 'disponible') estadoMap.disponible++;
+            else if (normSt === 'alquilada') estadoMap.alquilada++;
+            else if (normSt === 'paused') estadoMap.paused++;
+            else estadoMap.draft++;
         });
+
+        // Update Top Status Badges
+        const bAll = document.getElementById('mis-avisos-badge-all');
+        const bDisp = document.getElementById('mis-avisos-badge-disponible');
+        const bAlq = document.getElementById('mis-avisos-badge-alquilada');
+        const bPaus = document.getElementById('mis-avisos-badge-paused');
+        const bDraft = document.getElementById('mis-avisos-badge-draft');
+
+        if (bAll) bAll.textContent = avisos.length;
+        if (bDisp) bDisp.textContent = estadoMap.disponible;
+        if (bAlq) bAlq.textContent = estadoMap.alquilada;
+        if (bPaus) bPaus.textContent = estadoMap.paused;
+        if (bDraft) bDraft.textContent = estadoMap.draft;
+
         const tipoLabels = { 'departamento': 'Departamento', 'casa': 'Casa', 'ph': 'PH', 'terreno': 'Terreno', 'local-comercial': 'Local comercial', 'oficina-comercial': 'Oficina comercial', 'quinta-vacacional': 'Quinta Vacacional' };
         const opLabels = { 'venta': 'Venta', 'alquiler': 'Alquiler', 'temporada': 'Temporada', 'on': 'Venta' };
-        const makeFilterItem = (label, count) => `<a class="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 cursor-pointer transition-colors py-0.5"><span>${label}</span><span class="text-xs text-zinc-400">(${count})</span></a>`;
+        const estadoLabels = { 'disponible': 'Disponible', 'alquilada': 'Alquilada', 'paused': 'Pausada', 'draft': 'Borradores / Otras' };
+
+        const makeFilterItem = (cat, key, label, count) => {
+            const isActive = activeMisAvisosFilters[cat] === key;
+            return `<a data-filter-cat="${cat}" data-filter-key="${key}" class="sidebar-filter-item flex items-center justify-between text-sm ${isActive ? 'text-primary dark:text-red-400 font-bold' : 'text-zinc-600 dark:text-zinc-400'} hover:text-primary dark:hover:text-red-400 cursor-pointer transition-colors py-0.5"><span>${label}</span><span class="text-xs text-zinc-400">(${count})</span></a>`;
+        };
+
         ['', '-mobile'].forEach(suffix => {
+            const estadoEl = document.getElementById('filter-estado' + suffix);
             const tipoEl = document.getElementById('filter-tipo' + suffix);
             const opEl = document.getElementById('filter-operacion' + suffix);
             const cityEl = document.getElementById('filter-ciudad' + suffix);
-            if (tipoEl) tipoEl.innerHTML = Object.entries(tipoMap).map(([k, v]) => makeFilterItem(tipoLabels[k] || k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
-            if (opEl) opEl.innerHTML = Object.entries(opMap).map(([k, v]) => makeFilterItem(opLabels[k] || k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
-            if (cityEl) cityEl.innerHTML = Object.entries(cityMap).map(([k, v]) => makeFilterItem(k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+
+            if (estadoEl) {
+                estadoEl.innerHTML = Object.entries(estadoMap).map(([k, v]) => makeFilterItem('estado', k, estadoLabels[k] || k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+            }
+            if (tipoEl) tipoEl.innerHTML = Object.entries(tipoMap).map(([k, v]) => makeFilterItem('tipo', k, tipoLabels[k] || k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+            if (opEl) opEl.innerHTML = Object.entries(opMap).map(([k, v]) => makeFilterItem('operacion', k, opLabels[k] || k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+            if (cityEl) cityEl.innerHTML = Object.entries(cityMap).map(([k, v]) => makeFilterItem('ciudad', k, k, v)).join('') || '<p class="text-xs text-zinc-400">Sin datos</p>';
+        });
+
+        document.querySelectorAll('.sidebar-filter-item').forEach(item => {
+            item.onclick = () => {
+                const cat = item.getAttribute('data-filter-cat');
+                const key = item.getAttribute('data-filter-key');
+                if (activeMisAvisosFilters[cat] === key) {
+                    activeMisAvisosFilters[cat] = null;
+                } else {
+                    activeMisAvisosFilters[cat] = key;
+                }
+                populateFilters(allAvisos);
+                renderFilteredAvisos();
+            };
         });
     }
 
@@ -10694,7 +10812,7 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.classList.remove('hidden');
         if (countEl) countEl.innerHTML = `<span class="material-symbols-outlined text-lg text-zinc-400 animate-spin">progress_activity</span> Cargando avisos...`;
         try {
-            allAvisos = await window.DataManager.getUserMarketplaceProperties();
+            allAvisos = await window.DataManager.getUserMarketplaceProperties(100);
             grid.querySelectorAll('.mis-avisos-skeleton').forEach(el => el.remove());
             populateFilters(allAvisos);
             renderFilteredAvisos();
@@ -11249,31 +11367,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createAvisoCard(aviso, index) {
+        const normStatus = normalizeAvisoStatus(aviso.status);
         const statusCfg = {
-            'disponible': { label: 'Disponible', dot: 'bg-emerald-400', text: 'text-emerald-700 dark:text-emerald-300' },
-            'draft': { label: 'Borrador', dot: 'bg-amber-400', text: 'text-amber-700 dark:text-amber-300' },
-            'published': { label: 'Publicado', dot: 'bg-emerald-400', text: 'text-emerald-700 dark:text-emerald-300' },
-            'alquilada': { label: 'Alquilada', dot: 'bg-blue-400', text: 'text-blue-700 dark:text-blue-300' },
-            'mantenimiento': { label: 'Mantenimiento', dot: 'bg-zinc-400', text: 'text-zinc-600 dark:text-zinc-400' },
-            'paused': { label: 'Pausado', dot: 'bg-zinc-400', text: 'text-zinc-600 dark:text-zinc-400' },
-            'expired': { label: 'Expirado', dot: 'bg-red-400', text: 'text-red-600 dark:text-red-400' }
+            'disponible': { label: 'Disponible', dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300', badgeBg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+            'alquilada': { label: 'Alquilada', dot: 'bg-blue-500', text: 'text-blue-700 dark:text-blue-300', badgeBg: 'bg-blue-50 dark:bg-blue-950/40' },
+            'paused': { label: 'Pausada', dot: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-300', badgeBg: 'bg-amber-50 dark:bg-amber-950/40' },
+            'draft': { label: 'Borrador', dot: 'bg-zinc-400', text: 'text-zinc-600 dark:text-zinc-400', badgeBg: 'bg-zinc-100 dark:bg-zinc-800' },
+            'mantenimiento': { label: 'Mantenimiento', dot: 'bg-orange-500', text: 'text-orange-700 dark:text-orange-300', badgeBg: 'bg-orange-50 dark:bg-orange-950/40' },
+            'vendida': { label: 'Vendida', dot: 'bg-teal-500', text: 'text-teal-700 dark:text-teal-300', badgeBg: 'bg-teal-50 dark:bg-teal-950/40' },
+            'expired': { label: 'Expirado', dot: 'bg-red-400', text: 'text-red-600 dark:text-red-400', badgeBg: 'bg-red-50 dark:bg-red-950/40' }
         };
-        const st = statusCfg[aviso.status] || statusCfg['draft'];
+        const st = statusCfg[normStatus] || statusCfg['disponible'];
+        const isPaused = normStatus === 'paused';
 
         // Parse extra info from description JSON if present
-        let extraInfo = {};
+        let extraInfo = aviso.extraInfo || {};
         if (aviso.description && aviso.description.includes('Detalles: ')) {
-            try { extraInfo = JSON.parse(aviso.description.split('Detalles: ')[1]); } catch (e) { }
+            try { extraInfo = { ...extraInfo, ...JSON.parse(aviso.description.split('Detalles: ')[1]) }; } catch (e) { }
         }
 
         const tipoLabels = { 'departamento': 'Departamento', 'casa': 'Casa', 'ph': 'PH', 'terreno': 'Terreno', 'local-comercial': 'Local comercial', 'oficina-comercial': 'Oficina comercial', 'quinta-vacacional': 'Quinta Vacacional' };
         const opLabels = { 'venta': 'Venta', 'alquiler': 'Alquiler', 'temporada': 'Temporada', 'on': 'Venta' };
-        const tipo = tipoLabels[extraInfo.tipo_propiedad] || extraInfo.tipo_propiedad || 'Propiedad';
-        const op = opLabels[extraInfo.operacion?.toLowerCase()] || extraInfo.operacion || '';
+        const tipo = tipoLabels[extraInfo.tipo_propiedad || aviso.tipo_propiedad] || extraInfo.tipo_propiedad || aviso.tipo_propiedad || 'Propiedad';
+        const op = opLabels[(extraInfo.operacion || aviso.operacion)?.toLowerCase()] || extraInfo.operacion || aviso.operacion || '';
         const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
-        const precio = aviso.price ? `${moneda} ${Number(aviso.price).toLocaleString('es-AR')}` : 'Consultar';
-        const ubicacion = aviso.address || 'Sin ubicación';
-        const titulo = aviso.title || `${tipo} en ${op}`;
+        const precio = (aviso.price || aviso.precio) ? `${moneda} ${Number(aviso.price || aviso.precio).toLocaleString('es-AR')}` : 'Consultar';
+        const ubicacion = aviso.address || aviso.calle_altura || 'Sin ubicación';
+        const titulo = aviso.title || aviso.titulo_aviso || `${tipo} en ${op}`;
         const date = aviso.created_at ? new Date(aviso.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
         const shortId = aviso.id ? String(aviso.id).substring(0, 8) : '';
 
@@ -11284,14 +11404,16 @@ document.addEventListener('DOMContentLoaded', () => {
             imgSrc = sorted[0].url;
         } else if (aviso.images && aviso.images.length > 0) {
             imgSrc = aviso.images[0];
+        } else if (aviso.photoUrl || aviso.image) {
+            imgSrc = aviso.photoUrl || aviso.image;
         }
 
-        const dormitorios = extraInfo.dormitorios || 0;
-        const banos = extraInfo.banos || 0;
-        const supCubierta = extraInfo.sup_cubierta || '';
+        const dormitorios = extraInfo.dormitorios || aviso.dormitorios || 0;
+        const banos = extraInfo.banos || aviso.banos || 0;
+        const supCubierta = extraInfo.sup_cubierta || aviso.sup_cubierta || '';
 
         // Completeness percentage
-        const fields = [aviso.title, aviso.price, aviso.address, extraInfo.tipo_propiedad, extraInfo.operacion, dormitorios, banos, supCubierta, aviso.description, aviso.images?.length || aviso.propiedad_imagenes?.length];
+        const fields = [titulo, (aviso.price || aviso.precio), ubicacion, tipo, op, dormitorios, banos, supCubierta, aviso.description, (aviso.images?.length || aviso.propiedad_imagenes?.length)];
         const filled = fields.filter(Boolean).length;
         const pct = Math.round((filled / fields.length) * 100);
         const pctColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
@@ -11310,9 +11432,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2 mb-1">
                         <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">${tipo}</span>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md ${st.badgeBg}">
                             <span class="w-2 h-2 rounded-full ${st.dot} inline-block"></span>
-                            <span class="text-xs font-semibold ${st.text}">${st.label}</span>
+                            <span class="text-xs font-bold ${st.text}">${st.label}</span>
                         </div>
                     </div>
                     <h3 class="font-headline text-sm md:text-base font-bold text-on-background dark:text-white leading-snug line-clamp-1 mb-0.5">${titulo}</h3>
@@ -11344,10 +11466,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>Creado ${date}</span>
                     <span class="hidden sm:inline">${dormitorios ? dormitorios + ' dorm.' : ''} ${banos ? banos + ' baños' : ''} ${supCubierta ? supCubierta + 'm²' : ''}</span>
                 </div>
-                <div class="flex items-center gap-1">
-                    <button class="btn-ver-aviso p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver"><span class="material-symbols-outlined text-lg">visibility</span></button>
-                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Editar"><span class="material-symbols-outlined text-lg">edit</span></button>
-                    <button class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Compartir"><span class="material-symbols-outlined text-lg">share</span></button>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" class="btn-toggle-pause-aviso p-1.5 px-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer ${isPaused ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100'}" title="${isPaused ? 'Reanudar publicación' : 'Pausar publicación'}">
+                        <span class="material-symbols-outlined text-base">${isPaused ? 'play_circle' : 'pause_circle'}</span>
+                        <span class="hidden sm:inline">${isPaused ? 'Reanudar' : 'Pausar'}</span>
+                    </button>
+                    <button type="button" class="btn-ver-aviso p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Ver Ficha"><span class="material-symbols-outlined text-lg">visibility</span></button>
+                    <button type="button" class="btn-edit-aviso p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Editar"><span class="material-symbols-outlined text-lg">edit</span></button>
+                    <button type="button" class="btn-share-aviso p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" title="Compartir"><span class="material-symbols-outlined text-lg">share</span></button>
                 </div>
             </div>
         `;
@@ -11362,17 +11488,58 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
 
-        const buttons = card.querySelectorAll('.flex.items-center.gap-1 button');
-        if (buttons && buttons.length >= 2) {
-            const btnEditarCard = buttons[1];
-            if (btnEditarCard) {
-                btnEditarCard.onclick = (e) => {
-                    e.stopPropagation();
-                    if (window.App && typeof window.App.showPublishWizard === 'function') {
-                        window.App.showPublishWizard(aviso);
+        const btnEdit = card.querySelector('.btn-edit-aviso');
+        if (btnEdit) {
+            btnEdit.onclick = (e) => {
+                e.stopPropagation();
+                if (window.App && typeof window.App.showPublishWizard === 'function') {
+                    window.App.showPublishWizard(aviso);
+                }
+            };
+        }
+
+        const btnShare = card.querySelector('.btn-share-aviso');
+        if (btnShare) {
+            btnShare.onclick = (e) => {
+                e.stopPropagation();
+                const shareUrl = `${window.location.origin}/buscar.html?id=${aviso.id}`;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        if (window.showCustomAlert) {
+                            window.showCustomAlert({ title: 'Enlace copiado', message: 'El enlace del aviso ha sido copiado al portapapeles.', icon: 'link' });
+                        } else {
+                            alert('Enlace copiado al portapapeles');
+                        }
+                    });
+                }
+            };
+        }
+
+        const btnPause = card.querySelector('.btn-toggle-pause-aviso');
+        if (btnPause) {
+            btnPause.onclick = async (e) => {
+                e.stopPropagation();
+                if (!window.DataManager || typeof window.DataManager.togglePauseProperty !== 'function') return;
+                btnPause.disabled = true;
+                btnPause.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span>';
+                try {
+                    const newStatus = await window.DataManager.togglePauseProperty(aviso.id, normStatus);
+                    aviso.status = newStatus;
+                    const isNowPaused = (newStatus === 'paused' || newStatus === 'pausada' || newStatus === 'pausado');
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: isNowPaused ? 'Aviso Pausado' : 'Aviso Reanudado',
+                            message: isNowPaused ? 'La propiedad ha sido pausada correctamente.' : 'La propiedad ha sido reanudada exitosamente.',
+                            icon: isNowPaused ? 'pause_circle' : 'check_circle'
+                        });
                     }
-                };
-            }
+                    populateFilters(allAvisos);
+                    renderFilteredAvisos();
+                } catch (err) {
+                    console.error("Error toggling pause status:", err);
+                    btnPause.disabled = false;
+                }
+            };
         }
 
         card.style.cursor = 'pointer';
