@@ -9037,13 +9037,20 @@ window.openPostulacionModal = function(prop) {
         let tenantCondicion = 'Monotributista';
         let tenantDniVal = null;
         let tenantCuitVal = null;
+        let tenantNameVal = defaultName || '';
         try {
             const pass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
             const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
             const u = JSON.parse(localStorage.getItem('habitat_user') || '{}');
             tenantCondicion = pass.condicion_fiscal || pass.condicionFiscal || pass.actividad || u.condicion_fiscal || u.condicionFiscal || 'Monotributista';
             tenantDniVal = didit.documentNumber || didit.dni || u.dni || pass.dni || null;
-            tenantCuitVal = pass.cuit || u.cuit || null;
+            tenantCuitVal = didit.cuit || pass.cuit || u.cuit || null;
+            if (!tenantCuitVal && tenantDniVal && typeof window.calcularCUIL === 'function') {
+                tenantCuitVal = window.calcularCUIL(tenantDniVal, 'M');
+            }
+            if (!tenantNameVal) {
+                tenantNameVal = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || pass.razon_social || u.nombre_completo || u.name || '';
+            }
         } catch (e) {}
 
         const appData = {
@@ -9059,7 +9066,7 @@ window.openPostulacionModal = function(prop) {
             propertyRooms: prop?.ambientes || prop?.rooms || 2,
             propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
             propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
-            tenantName: defaultName || 'Inquilino Verificado',
+            tenantName: tenantNameVal || 'Inquilino Verificado',
             tenantEmail: defaultEmail || 'inquilino@habitat.com.ar',
             tenantPhone: defaultPhone || '+54 9 11',
             tenantDni: tenantDniVal,
