@@ -98,14 +98,28 @@ export default async function handler(req, res) {
             let nuevoEstadoPasaporte = null;
             let observacionHistorial = '';
 
+            // Extraer datos OCR del documento escaneado por Didit
+            const ocr = body.extracted_data || body.document || body.ocr || (body.decision && body.decision.document) || {};
+            const ocrFirst = ocr.first_name || ocr.firstName || body.first_name || '';
+            const ocrLast = ocr.last_name || ocr.lastName || body.last_name || '';
+            const ocrFullName = ocr.full_name || ocr.fullName || (ocrFirst && ocrLast ? `${ocrFirst} ${ocrLast}`.trim() : (ocrFirst || ocrLast || null));
+            const ocrDni = ocr.document_number || ocr.documentNumber || ocr.id_number || body.document_number || null;
+
             switch (currentStatus.toLowerCase()) {
               case 'approved':
                 nuevoEstadoPasaporte = 3; // Activo
                 observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
-                // Marcar cuenta como verificada en Perfil
+                // Marcar cuenta como verificada en Perfil y actualizar nombre/DNI de Didit OCR
+                const perfilUpdate = { 
+                  cuenta_verificada: true, 
+                  fecha_verificacion: new Date().toISOString() 
+                };
+                if (ocrFullName) perfilUpdate.nombre_completo = ocrFullName;
+                if (ocrDni) perfilUpdate.dni = ocrDni;
+
                 await supabase
                   .from('Perfil')
-                  .update({ cuenta_verificada: true, fecha_verificacion: new Date().toISOString() })
+                  .update(perfilUpdate)
                   .eq('id_perfil', perfil.id_perfil);
                 break;
 
@@ -123,10 +137,17 @@ export default async function handler(req, res) {
             }
 
             if (nuevoEstadoPasaporte) {
-              // Actualizar estado en Pasaporte_habitat
+              // Actualizar estado en Pasaporte_habitat con datos OCR de Didit
+              const pasaporteUpdate = { 
+                id_estado_pasaporte: nuevoEstadoPasaporte, 
+                updated_at: new Date().toISOString() 
+              };
+              if (ocrFullName) pasaporteUpdate.razon_social = ocrFullName;
+              if (ocrDni) pasaporteUpdate.dni = ocrDni;
+
               await supabase
                 .from('Pasaporte_habitat')
-                .update({ id_estado_pasaporte: nuevoEstadoPasaporte, updated_at: new Date().toISOString() })
+                .update(pasaporteUpdate)
                 .eq('id_pasaporte', pasaporte.id_pasaporte);
 
               // Registrar en Historial_estado_pasaporte

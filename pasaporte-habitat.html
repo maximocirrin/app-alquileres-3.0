@@ -672,14 +672,36 @@
             }
         }
 
+        function getCleanVerifiedName(diditIdent, pasaporte, perfil, session) {
+            const isInvalid = (str) => !str || str.toLowerCase().includes('usuario habitat') || str.toLowerCase().includes('usuario verificado') || str.trim().toLowerCase() === 'usuario';
+            if (diditIdent?.fullName && !isInvalid(diditIdent.fullName)) return diditIdent.fullName;
+            if (diditIdent?.firstName && !isInvalid(diditIdent.firstName)) return `${diditIdent.firstName} ${diditIdent.lastName || ''}`.trim();
+            if (pasaporte?.razon_social && !isInvalid(pasaporte.razon_social)) return pasaporte.razon_social;
+            if (perfil?.nombre_completo && !isInvalid(perfil.nombre_completo)) return perfil.nombre_completo;
+            if (session?.user?.user_metadata?.full_name && !isInvalid(session.user.user_metadata.full_name)) return session.user.user_metadata.full_name;
+            if (session?.user?.user_metadata?.name && !isInvalid(session.user.user_metadata.name)) return session.user.user_metadata.name;
+            if (session?.user?.email) {
+                const raw = session.user.email.split('@')[0].replace(/[._-]/g, ' ');
+                return raw.replace(/\b\w/g, l => l.toUpperCase());
+            }
+            return 'Titular del Pasaporte';
+        }
+
         async function checkExistingPassport() {
-            // 1. Verificar si existe identidad Didit en localStorage
+            // 1. Limpiar cualquier remanente corrupto de "Usuario Habitat" en localStorage
             try {
                 const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                if (diditIdent?.fullName && (diditIdent.fullName.toLowerCase().includes('usuario habitat') || diditIdent.fullName.toLowerCase() === 'usuario')) {
+                    localStorage.removeItem('habitat_didit_identity');
+                }
                 const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                const verifiedName = diditIdent.fullName || (diditIdent.firstName && diditIdent.lastName ? `${diditIdent.firstName} ${diditIdent.lastName}` : null) || pData.razon_social;
-                
-                if (verifiedName) {
+                if (pData?.razon_social && (pData.razon_social.toLowerCase().includes('usuario habitat') || pData.razon_social.toLowerCase() === 'usuario')) {
+                    delete pData.razon_social;
+                    delete pData.nombre_completo;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
+                }
+                const verifiedName = getCleanVerifiedName(diditIdent, pData, null, null);
+                if (verifiedName && verifiedName !== 'Titular del Pasaporte') {
                     const elNombre = document.getElementById('passport-user-fullname');
                     if (elNombre) elNombre.textContent = verifiedName;
 
@@ -702,7 +724,7 @@
                 if (session && session.user) {
                     const { data: perfil } = await window.supabaseClient
                         .from('Perfil')
-                        .select('id_perfil, nombre_completo, mail')
+                        .select('id_perfil, nombre_completo, mail, dni')
                         .eq('user_id', session.user.id)
                         .maybeSingle();
 
@@ -738,16 +760,30 @@
                                 elQr.src = qrUrl;
                             }
                             const elNombre = document.getElementById('passport-user-fullname');
+                            const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                            const realFullName = getCleanVerifiedName(diditIdent, pasaporte, perfil, session);
+                            
                             if (elNombre) {
-                                const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                                elNombre.textContent = diditIdent.fullName || pasaporte.razon_social || perfil.nombre_completo || (session.user.email ? session.user.email.split('@')[0] : 'Titular del Pasaporte');
+                                elNombre.textContent = realFullName;
+                            }
+
+                            const elAvatar = document.getElementById('passport-avatar-letter');
+                            if (elAvatar && realFullName) {
+                                const inits = realFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                                elAvatar.textContent = inits;
+                            }
+
+                            const elHeader = document.getElementById('passport-cuit-header');
+                            const realDni = diditIdent.documentNumber || perfil.dni || pasaporte.dni;
+                            if (elHeader && (realDni || pasaporte.cuit)) {
+                                elHeader.textContent = realDni ? `DNI: ${realDni} • Didit KYC Validado` : `CUIT: ${pasaporte.cuit}`;
                             }
 
                             if (window.actualizarPasaporteUI) {
                                 window.actualizarPasaporteUI({
                                     cuit: pasaporte.cuit || '',
                                     condicionFiscal: pasaporte.condicion_fiscal || 'Monotributo H',
-                                    razonSocial: pasaporte.razon_social || perfil.nombre_completo || '',
+                                    razonSocial: realFullName,
                                     estadoCuit: 'ACTIVO',
                                     actividadPrincipal: pasaporte.datos_arca ? pasaporte.datos_arca.actividadPrincipal : 'Servicios Comerciales / Profesionales'
                                 });
