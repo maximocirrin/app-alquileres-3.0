@@ -117,6 +117,16 @@ var DataManager = {
     },
 
     logout: async () => {
+        try {
+            localStorage.removeItem('habitat_tenant_applications');
+            localStorage.removeItem('habitat_passport_data');
+            localStorage.removeItem('habitat_didit_identity');
+            localStorage.removeItem('habitat_user');
+            localStorage.removeItem('habitat_user_id');
+            sessionStorage.removeItem('habitat_pending_didit_session');
+            window.hasActivePassport = false;
+            window.currentPasaporteId = null;
+        } catch (e) {}
         if (window.supabaseClient) {
             const { error } = await window.supabaseClient.auth.signOut();
             if (error) console.error("Logout error:", error);
@@ -210,6 +220,7 @@ var DataManager = {
                     Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
                     Propiedad (
                         *,
+                        Contrato (*),
                         Antiguedad (*),
                         Subtipo_propiedad (*),
                         Barrio (
@@ -306,6 +317,11 @@ var DataManager = {
                     }
                 }
 
+                // Check active contract for rental end date if rented
+                const contractsList = Array.isArray(prop.Contrato) ? prop.Contrato : (prop.Contrato ? [prop.Contrato] : []);
+                const latestContract = contractsList.sort((a, b) => (b.id_contrato || 0) - (a.id_contrato || 0))[0];
+                const contractEndDate = latestContract?.fecha_fin_contrato || extraInfo.contractEndDate || extraInfo.fecha_fin_contrato || null;
+
                 return {
                     id: pub.id_publicacion,
                     id_propiedad: pub.id_propiedad,
@@ -344,6 +360,7 @@ var DataManager = {
                     verified: isVerifiedOwner,
                     isVerifiedOwner: isVerifiedOwner,
                     status: currentPropStatus,
+                    contractEndDate: contractEndDate,
                     expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
                     expensas: extraInfo.expensas || 0,
                     featured: (extraInfo.operacion || 'ALQUILER').toUpperCase(),
@@ -355,7 +372,7 @@ var DataManager = {
                     extraInfo: extraInfo,
                     Propiedad: prop
                 };
-            }).filter(p => p.status !== 'deleted');
+            }).filter(p => p.status === 'disponible' || p.status === 'alquilada');
         } catch (e) {
             console.error("Error in getPublicMarketplaceProperties:", e);
             return [];
@@ -1157,10 +1174,57 @@ var DataManager = {
         if (window.supabaseClient) {
             try {
                 const profileId = await DataManager._getOrCreateProfile();
+                if (!profileId) {
+                    throw new Error('Debes iniciar sesión para postularte a un alquiler.');
+                }
+
+                // 1. Validar OBLIGATORIAMENTE que el usuario posea Pasaporte Hábitat Activo en Supabase
+                const { data: activePassports, error: errPass } = await window.supabaseClient
+                    .from('Pasaporte_habitat')
+                    .select('id_pasaporte, id_estado_pasaporte, fecha_vencimiento')
+                    .eq('id_perfil', profileId)
+                    .eq('id_estado_pasaporte', 3); // 3 = Activo
+
+                let hasValidPass = false;
+                if (activePassports && activePassports.length > 0) {
+                    const pass = activePassports[0];
+                    if (!pass.fecha_vencimiento || new Date(pass.fecha_vencimiento).getTime() > Date.now()) {
+                        hasValidPass = true;
+                    }
+                }
+
+                if (!hasValidPass) {
+                    const err = new Error('Para postularte es requisito obligatorio contar con tu Pasaporte Hábitat digital activo y verificado.');
+                    err.code = 'PASSPORT_REQUIRED';
+                    throw err;
+                }
+
                 const pubIdNum = appData.publicationId || appData.id_publicacion
                     ? parseInt(appData.publicationId || appData.id_publicacion, 10)
                     : null;
 
+                // 2. Prevenir duplicados: verificar si ya existe una postulación activa para esta propiedad
+                if (pubIdNum) {
+                    const { data: existingApp } = await window.supabaseClient
+                        .from('Solicitud')
+                        .select('id_solicitud, fecha_solicitud')
+                        .eq('id_perfil', profileId)
+                        .eq('id_publicacion', pubIdNum)
+                        .maybeSingle();
+
+                    if (existingApp) {
+                        console.log("[DataManager] Postulación existente detectada para evitar duplicación. ID:", existingApp.id_solicitud);
+                        return {
+                            id: existingApp.id_solicitud,
+                            status: 'pendiente',
+                            created_at: existingApp.fecha_solicitud || fecha,
+                            isDuplicate: true,
+                            message: 'Ya posees una postulación enviada para esta propiedad.'
+                        };
+                    }
+                }
+
+                // 3. Insertar Solicitud en Supabase
                 const { data, error } = await window.supabaseClient
                     .from('Solicitud')
                     .insert([{
@@ -1184,42 +1248,66 @@ var DataManager = {
                             fecha_inicio: new Date().toISOString()
                         }]);
                     } catch (e) { }
+
+                    // 4. Notificar en tiempo real al PROPIETARIO
+                    try {
+                        if (window.NotificationManager && typeof window.NotificationManager.add === 'function') {
+                            window.NotificationManager.add({
+                                title: '🎉 ¡Nueva postulación recibida!',
+                                message: `${appData.tenantName || 'Un inquilino verificado'} se ha postulado para alquilar "${appData.propertyTitle || 'tu propiedad'}".`,
+                                type: 'application',
+                                icon: 'person_add',
+                                link: 'administrador.html#postulantes',
+                                role: 'OWNER'
+                            });
+                        }
+                    } catch (eNotif) {
+                        console.warn("[DataManager] Aviso enviando notificación al propietario:", eNotif);
+                    }
+                } else if (error) {
+                    console.error("[DataManager] Error insertando Solicitud:", error);
+                    throw error;
                 }
             } catch (err) {
-                console.warn("[DataManager] Error insertando en Supabase Solicitud:", err);
+                console.error("[DataManager] Error en submitApplication:", err);
+                throw err;
             }
         }
 
-        // Guardar copia completa en localStorage
+        // Guardar copia local exclusiva para el usuario
         try {
             const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
-            const newApp = {
-                id: insertedId,
-                property_id: appData.propertyId || 1,
-                property_title: appData.propertyTitle || 'Propiedad en Alquiler',
-                property_address: appData.propertyAddress || 'Buenos Aires',
-                property_price: appData.propertyPrice || appData.price || 420000,
-                property_expenses: appData.propertyExpenses || 45000,
-                property_image: appData.propertyImage || (Array.isArray(appData.propertyPhotos) && appData.propertyPhotos[0]) || 'img/hero-marketplace.jpg',
-                property_photos: Array.isArray(appData.propertyPhotos) && appData.propertyPhotos.length > 0 ? appData.propertyPhotos : [appData.propertyImage || 'img/hero-marketplace.jpg'],
-                property_m2: appData.propertyM2 || 65,
-                property_rooms: appData.propertyRooms || 2,
-                property_beds: appData.propertyBeds || 1,
-                property_baths: appData.propertyBaths || 1,
-                tenant_name: appData.tenantName || 'Inquilino Postulante',
-                tenant_email: appData.tenantEmail || 'inquilino@habitat.ar',
-                tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
-                tenant_dni: appData.tenantDni || null,
-                tenant_cuit: appData.tenantCuit || null,
-                condicion_fiscal: appData.condicion_fiscal || appData.condicionFiscal || 'Monotributista',
-                monthly_income: parseFloat(appData.declaredIncome || appData.monthly_income || 1500000),
-                income_proof: appData.incomeProof || 'Recibo de Sueldo / Pasaporte Hábitat',
-                message: appData.message || 'Interesado en alquilar la propiedad.',
-                status: 'pendiente',
-                created_at: fecha
-            };
-            localApps.unshift(newApp);
-            localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+            const existsLocal = localApps.some(a => String(a.id) === String(insertedId));
+            if (!existsLocal) {
+                const newApp = {
+                    id: insertedId,
+                    property_id: appData.propertyId || 1,
+                    publication_id: appData.publicationId || null,
+                    property_title: appData.propertyTitle || 'Propiedad en Alquiler',
+                    property_address: appData.propertyAddress || 'Buenos Aires',
+                    property_price: appData.propertyPrice || appData.price || 420000,
+                    property_expenses: appData.propertyExpenses || 45000,
+                    property_image: appData.propertyImage || (Array.isArray(appData.propertyPhotos) && appData.propertyPhotos[0]) || 'img/hero-marketplace.jpg',
+                    property_photos: Array.isArray(appData.propertyPhotos) && appData.propertyPhotos.length > 0 ? appData.propertyPhotos : [appData.propertyImage || 'img/hero-marketplace.jpg'],
+                    property_m2: appData.propertyM2 || 65,
+                    property_rooms: appData.propertyRooms || 2,
+                    property_beds: appData.propertyBeds || 1,
+                    property_baths: appData.propertyBaths || 1,
+                    tenant_name: appData.tenantName || 'Inquilino Postulante',
+                    tenant_email: appData.tenantEmail || 'inquilino@habitat.ar',
+                    tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
+                    tenant_dni: appData.tenantDni || null,
+                    tenant_cuit: appData.tenantCuit || null,
+                    condicion_fiscal: appData.condicion_fiscal || appData.condicionFiscal || 'Monotributista',
+                    monthly_income: parseFloat(appData.declaredIncome || appData.monthly_income || 1500000),
+                    income_proof: appData.incomeProof || 'Pasaporte Hábitat',
+                    message: appData.message || 'Interesado en alquilar la propiedad.',
+                    status: 'pendiente',
+                    created_at: fecha
+                };
+                localApps.unshift(newApp);
+                localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+            }
         } catch (e) {
             console.warn("Error saving local application:", e);
         }
@@ -1234,14 +1322,17 @@ var DataManager = {
     acceptApplication: async function (appId) {
         let contractId = `CTR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
         let propTitle = 'Propiedad en Alquiler';
-        let propAddress = 'Buenos Aires';
-        let monthlyRent = 450000;
-        let tenantName = 'Inquilino Postulante';
-        let tenantEmail = 'inquilino@habitat.ar';
-        let tenantPhone = '+54 9 11 0000-0000';
+        let propAddress = 'Mendoza, Argentina';
+        let monthlyRent = 4;
+        let tenantName = 'Máximo Cirrincione';
+        let tenantEmail = 'cirrinmaximo@gmail.com';
+        let tenantPhone = '+54 9 261 000-0000';
         let photoUrls = ['img/hero-marketplace.jpg'];
-        let ownerName = 'Propietario Verificado';
-        let ownerEmail = 'propietario@habitat.ar';
+        let ownerName = 'Maximo cirrin';
+        let ownerEmail = 'maximocirrin@gmail.com';
+        let solPropId = null;
+        let solPerfilId = 15;
+        let solPubId = null;
 
         // 1. Obtener datos desde localStorage si existen
         let localApp = null;
@@ -1279,28 +1370,38 @@ var DataManager = {
                     }
                 } catch (e) {}
 
-                // Consultar Solicitud con jerarquía completa
+                // Consultar Solicitud con jerarquía exacta: Solicitud -> Publicacion -> Propiedad
                 const { data: sol } = await window.supabaseClient
                     .from('Solicitud')
                     .select(`
                         *,
-                        Propiedad (
-                            *,
-                            Publicacion (
-                                *,
-                                Multimedia (*)
-                            )
+                        Publicacion (
+                            id_publicacion,
+                            id_propiedad,
+                            descripcion,
+                            precio,
+                            Propiedad (
+                                id_propiedad,
+                                id_perfil_propietario,
+                                calle,
+                                numero,
+                                piso,
+                                depto,
+                                expensas_mensuales,
+                                Barrio (*)
+                            ),
+                            Multimedia (*)
                         ),
                         Perfil (*)
                     `)
                     .eq('id_solicitud', appId)
                     .maybeSingle();
 
-                const prop = sol?.Propiedad || {};
-                const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                const pub = sol?.Publicacion || {};
+                const prop = pub?.Propiedad || {};
                 const media = pub?.Multimedia || [];
                 if (media.length > 0) {
-                    photoUrls = media.map(m => m.url_archivo);
+                    photoUrls = media.map(m => m.url_archivo).filter(Boolean);
                 }
 
                 if (pub?.descripcion) {
@@ -1314,112 +1415,144 @@ var DataManager = {
                 }
 
                 if (pub?.precio) monthlyRent = Number(pub.precio);
-                else if (prop.expensas_mensuales && !localApp) monthlyRent = Number(prop.expensas_mensuales * 10);
+                else if (sol?.ingreso_mensual_declarado) monthlyRent = Number(sol.ingreso_mensual_declarado);
 
                 const perf = sol?.Perfil || {};
                 if (perf.nombre_completo) tenantName = perf.nombre_completo;
                 if (perf.mail) tenantEmail = perf.mail;
                 if (sol?.telefono || perf.telefono) tenantPhone = sol?.telefono || perf.telefono;
 
-                const solPropId = sol?.id_propiedad || 1;
-                const solPerfilId = sol?.id_perfil || profileId;
+                solPropId = prop?.id_propiedad || pub?.id_propiedad || localApp?.property_id || 42;
+                solPerfilId = sol?.id_perfil || localApp?.tenant_id || 15;
+                solPubId = pub?.id_publicacion || sol?.id_publicacion || localApp?.publication_id || 40;
 
                 const todayStr = new Date().toISOString().split('T')[0];
-                const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
+                const nextYearStr = new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0];
 
-                // 1. Record Historial_estado_solicitud (Aprobada = 2)
-                await window.supabaseClient.from('Historial_estado_solicitud').insert([{
-                    id_solicitud: appId,
-                    id_estado_solicitud: 2, // Aprobada
-                    fecha_inicio: new Date().toISOString()
-                }]);
+                // 1. Registrar Historial_estado_solicitud (Aprobada / Aceptada = 2)
+                try {
+                    await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                        id_solicitud: appId,
+                        id_estado_solicitud: 2, // Aceptada
+                        fecha_inicio: new Date().toISOString()
+                    }]);
+                } catch (e) {
+                    console.warn("Aviso al registrar Historial_estado_solicitud:", e);
+                }
 
-                // 2. Create Contrato
-                const { data: contract, error: cErr } = await window.supabaseClient
-                    .from('Contrato')
-                    .insert([{
-                        id_perfil_propietario: profileId,
-                        id_perfil_inquilino: solPerfilId,
-                        id_propiedad: solPropId,
-                        id_tipo_garantia: 1,
-                        "id_Indice": 1,
-                        id_moneda: 1,
-                        fecha_firma_contrato: todayStr,
-                        fecha_inicio_contrato: todayStr,
-                        fecha_fin_contrato: nextYearStr,
-                        monto_cierre: monthlyRent,
-                        periodo_aumento_meses: 3,
-                        dia_vencimiento_mensual: 10,
-                        alias_cbu: 'HABITAT.ALQUILER.MP'
-                    }])
-                    .select()
-                    .single();
+                // 2. Buscar o crear registro en tabla Contrato con todos los campos obligatorios
+                let contract = null;
+                try {
+                    if (solPropId) {
+                        const { data: existingC } = await window.supabaseClient
+                            .from('Contrato')
+                            .select('*')
+                            .eq('id_propiedad', solPropId)
+                            .order('id_contrato', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (existingC && existingC.id_contrato) {
+                            contract = existingC;
+                        }
+                    }
+
+                    if (!contract && solPropId) {
+                        const { data: cData, error: cErr } = await window.supabaseClient
+                            .from('Contrato')
+                            .insert([{
+                                id_perfil_propietario: prop?.id_perfil_propietario || profileId || 6,
+                                id_perfil_inquilino: solPerfilId,
+                                id_propiedad: solPropId,
+                                id_publicacion: solPubId,
+                                id_tipo_garantia: 1,
+                                "id_Indice": 1,
+                                id_moneda: 1,
+                                fecha_firma_contrato: todayStr,
+                                fecha_inicio_contrato: todayStr,
+                                fecha_fin_contrato: nextYearStr,
+                                monto_cierre: monthlyRent,
+                                descuentos_aplicados: 0,
+                                periodo_aumento_meses: 3,
+                                dia_vencimiento_mensual: 10,
+                                monto_deposito: monthlyRent,
+                                deposito_devuelto: false,
+                                tasa_punitoria_diaria: 0.5,
+                                alias_cbu: 'HABITAT.ALQUILER.MP'
+                            }])
+                            .select()
+                            .maybeSingle();
+
+                        if (!cErr && cData) contract = cData;
+                    }
+                } catch (e) {
+                    console.warn("Aviso al crear fila en Contrato:", e);
+                }
 
                 if (contract && contract.id_contrato) {
                     contractId = `CTR-2026-${String(contract.id_contrato).padStart(4, '0')}`;
 
-                    // Record Historial_Estado_Contrato (1 = Activo)
+                    // 3. Registrar Historial_Estado_Contrato (5 = pendiente_firma)
                     try {
                         await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
                             id_contrato: contract.id_contrato,
-                            id_estado_contrato: 1,
+                            id_estado_contrato: 5, // pendiente_firma
                             fecha_inicio: new Date().toISOString()
                         }]);
                     } catch (e) { }
 
-                    // Create initial Pago
-                    const { data: pago } = await window.supabaseClient
-                        .from('Pago')
-                        .insert([{
-                            id_contrato: contract.id_contrato,
-                            id_metodo_pago: 1,
-                            monto: monthlyRent,
-                            fecha_vencimiento: todayStr,
-                            periodo: 'Julio 2026'
-                        }])
-                        .select()
-                        .maybeSingle();
+                    // 4. Crear registro en tabla Pago
+                    try {
+                        const { data: pago } = await window.supabaseClient
+                            .from('Pago')
+                            .insert([{
+                                id_contrato: contract.id_contrato,
+                                id_metodo_pago: 1, // Transferencia
+                                monto: monthlyRent,
+                                fecha_vencimiento: todayStr,
+                                periodo: new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+                            }])
+                            .select()
+                            .maybeSingle();
 
-                    if (pago) {
-                        try {
+                        if (pago) {
+                            // 5. Registrar Historial_pago (1 = pendiente)
                             await window.supabaseClient.from('Historial_pago').insert([{
                                 id_pago: pago.id_pago,
                                 id_estado_pago: 1, // Pendiente
                                 fecha_inicio: new Date().toISOString()
                             }]);
-                        } catch (e) { }
-                    }
+                        }
+                    } catch (e) { }
                 }
 
-                // 3. Update Propiedad state to 'Alquilada' (id_estado_propiedad = 4)
-                try {
-                    await window.supabaseClient
-                        .from('Propiedad')
-                        .update({ id_estado_propiedad: 4 })
-                        .eq('id_propiedad', solPropId);
+                // 6. Actualizar estado de la Propiedad a 'Reservada' (id_estado_propiedad = 3)
+                if (solPropId) {
+                    try {
+                        await window.supabaseClient
+                            .from('Propiedad')
+                            .update({ id_estado_propiedad: 3 })
+                            .eq('id_propiedad', solPropId);
 
-                    await window.supabaseClient.from('Historial_estado_propiedad').insert([{
-                        id_propiedad: solPropId,
-                        id_estado_propiedad: 4,
-                        fecha_inicio: new Date().toISOString()
-                    }]);
-                } catch (e) { }
-
-                // 4. Update Publicacion state
-                const { data: pubData } = await window.supabaseClient
-                    .from('Publicacion')
-                    .select('id_publicacion')
-                    .eq('id_propiedad', solPropId)
-                    .maybeSingle();
-
-                if (pubData) {
-                    await window.supabaseClient
-                        .from('Historial_Estado_Publicacion')
-                        .insert([{
-                            id_publicacion: pubData.id_publicacion,
-                            id_estado_publicacion: 2,
+                        await window.supabaseClient.from('Historial_estado_propiedad').insert([{
+                            id_propiedad: solPropId,
+                            id_estado_propiedad: 3, // Reservada
                             fecha_inicio: new Date().toISOString()
                         }]);
+                    } catch (e) { }
+                }
+
+                // 7. Actualizar estado de la Publicacion a 'Pausada / En proceso' (id_estado_publicacion = 4)
+                if (solPubId) {
+                    try {
+                        await window.supabaseClient
+                            .from('Historial_Estado_Publicacion')
+                            .insert([{
+                                id_publicacion: solPubId,
+                                id_estado_publicacion: 4, // Pausada
+                                fecha_inicio: new Date().toISOString()
+                            }]);
+                    } catch (e) { }
                 }
             } catch (err) {
                 console.error("Error in acceptApplication:", err);
@@ -1428,14 +1561,14 @@ var DataManager = {
 
         // Crear objeto de contrato completo con la propiedad real y guardarlo en habitat_contracts
         const todayStr = new Date().toISOString().split('T')[0];
-        const nextYearStr = new Date(Date.now() + 86400000 * 365).toISOString().split('T')[0];
+        const nextYearStr = new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0];
         const contractObj = {
             id: contractId,
             contractNumber: contractId,
-            propertyId: String(appId),
+            propertyId: String(solPropId || appId),
             title: `Contrato de Locación - ${propTitle}`,
             propertyAddress: propAddress,
-            propertyCity: 'Buenos Aires',
+            propertyCity: 'Mendoza',
             propertyImage: photoUrls[0] || 'img/hero-marketplace.jpg',
             propertyPhotos: photoUrls,
             monthlyRent: monthlyRent,
@@ -1451,19 +1584,21 @@ var DataManager = {
             aliasCbu: 'HABITAT.ALQUILER.MP',
             tenant: {
                 role: 'TENANT',
+                profileId: solPerfilId,
                 name: tenantName,
                 email: tenantEmail,
                 phone: tenantPhone,
-                cuil: '20-38491029-4',
-                dni: '38.491.029',
+                cuil: '20-46665957-7',
+                dni: '46.665.957',
                 hasSigned: false,
                 isKycVerified: true
             },
             owner: {
                 role: 'OWNER',
+                profileId: 6,
                 name: ownerName,
                 email: ownerEmail,
-                cuil: '27-33918274-8',
+                cuil: '20-33918274-7',
                 dni: '33.918.274',
                 hasSigned: false,
                 isKycVerified: true
@@ -1491,7 +1626,7 @@ var DataManager = {
             const rawContr = localStorage.getItem('habitat_contracts');
             let existingContracts = [];
             if (rawContr) existingContracts = JSON.parse(rawContr);
-            existingContracts = existingContracts.filter(c => c && c.id !== contractId);
+            existingContracts = existingContracts.filter(c => c && c.id !== contractId && c.tenant?.email !== c.owner?.email);
             existingContracts.unshift(contractObj);
             localStorage.setItem('habitat_contracts', JSON.stringify(existingContracts));
         } catch (e) {}
@@ -1514,6 +1649,7 @@ var DataManager = {
         // Despachar notificaciones in-app para ambas partes
         if (window.NotificationManager) {
             window.NotificationManager.createNotification({
+                id: `notif_accept_owner_${appId}_${contractId}`,
                 title: '¡Postulación Aceptada! Contrato Listo para Firma',
                 message: `Has aceptado a ${tenantName} para "${propTitle}". El contrato digital ya está disponible para firmar.`,
                 type: 'contract',
@@ -1521,6 +1657,7 @@ var DataManager = {
                 role: 'OWNER'
             });
             window.NotificationManager.createNotification({
+                id: `notif_accept_tenant_${appId}_${contractId}`,
                 title: '¡Tu postulación fue aprobada por el propietario! 🎉',
                 message: `El propietario aprobó tu postulación para "${propTitle}". Ingresa para realizar tu validación biométrica y firmar el contrato digital.`,
                 type: 'contract',
@@ -1706,13 +1843,12 @@ var DataManager = {
 
     getOwnerContracts: async function() {
         let contractsList = [];
-        // 1. Local contracts
         try {
             const raw = localStorage.getItem('habitat_contracts');
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
-                    contractsList = parsed.filter(c => c && c.id && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández');
+                    contractsList = parsed.filter(c => c && c.id && !['CTR-2026-0891', 'CTR-2026-0742', 'CTR-2026-0610', 'CTR-2026-0925', 'CTR-2026-0518'].includes(c.id) && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández');
                 }
             }
         } catch(e) {}
@@ -1752,9 +1888,21 @@ var DataManager = {
                         ? pub.descripcion.split(' | Detalles: ')[0] 
                         : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
 
-                    const cleanAddress = `${prop.calle || 'Calle'} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim();
+                    const cleanAddress = prop.calle 
+                        ? `${prop.calle} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim()
+                        : 'Mendoza, Argentina';
 
-                    const inqName = inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : (inq.mail ? inq.mail.split('@')[0] : 'Inquilino Verificado'));
+                    const inqName = inq.nombre_completo || 'Bruno Cirrincione';
+                    const inqEmail = inq.mail || 'nunimamu@gmail.com';
+                    const inqPhone = inq.telefono || '+54 9 11';
+
+                    const tenantFirmado = (item.Firma_contrato || []).some(f => f.rol_firmante === 'TENANT' && f.estado_firma === 'sellada');
+                    const ownerFirmado = (item.Firma_contrato || []).some(f => f.rol_firmante === 'OWNER' && f.estado_firma === 'sellada');
+
+                    let status = 'WAITING_TENANT';
+                    if (tenantFirmado && ownerFirmado) status = 'SIGNED_AND_SEALED';
+                    else if (tenantFirmado) status = 'WAITING_OWNER';
+                    else if (ownerFirmado) status = 'WAITING_TENANT';
 
                     return {
                         id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
@@ -1764,31 +1912,24 @@ var DataManager = {
                         property_address: cleanAddress,
                         property_image: photos[0] || 'img/hero-marketplace.jpg',
                         photos: photos,
-                        monthly_rent: Number(item.monto_cierre || pub?.precio || 380000),
-                        expenses_amount: Number(prop.expensas_mensuales || 48000),
+                        monthly_rent: Number(item.monto_cierre || pub?.precio || 555),
+                        expenses_amount: Number(prop.expensas_mensuales || 0),
                         payment_due_day: item.dia_vencimiento_mensual || 10,
                         punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
                         adjustment_index: item.indice_ajuste || 'IPC',
                         adjustment_frequency_months: item.periodo_aumento_meses || 3,
                         broker_commission_percent: 4.15,
-                        start_date: item.fecha_inicio_contrato || '2026-08-01',
-                        end_date: item.fecha_fin_contrato || '2027-08-01',
+                        start_date: item.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
+                        end_date: item.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
                         tenant_name: inqName,
-                        tenant_email: inq.mail || 'inquilino@habitat.ar',
-                        tenant_phone: inq.telefono || '+54 9 261 412-3456',
-                        cbu_alias: item.alias_cbu || 'HABITAT.PAGOS.ALQUILER',
-                        status: (item.Firma_contrato && item.Firma_contrato.length > 0) ? 'SIGNED_AND_SEALED' : 'ACTIVE'
+                        tenant_email: inqEmail,
+                        tenant_phone: inqPhone,
+                        cbu_alias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
+                        status: status
                     };
                 });
 
-                // Combinar sin duplicados
-                const combined = [...dbContracts];
-                for (const lc of contractsList) {
-                    if (!combined.some(c => c.id === lc.id || c.dbContractId === lc.dbContractId)) {
-                        combined.push(lc);
-                    }
-                }
-                return combined;
+                return dbContracts;
             }
         } catch(e) {
             console.error("Error in getOwnerContracts:", e);
