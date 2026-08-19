@@ -1140,9 +1140,20 @@
 
                 if (kycResult && (kycResult.status === 'APPROVED' || kycResult.status === 'SUCCESS')) {
                     const doc = kycResult.document || {};
-                    const verifiedFullName = doc.fullName || (doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}` : null);
+                    let currentSession = null;
+                    let existingProfile = null;
+                    if (window.supabaseClient) {
+                        const { data } = await window.supabaseClient.auth.getSession();
+                        currentSession = data?.session;
+                        if (currentSession?.user) {
+                            const { data: p } = await window.supabaseClient.from('Perfil').select('nombre_completo').eq('user_id', currentSession.user.id).maybeSingle();
+                            existingProfile = p;
+                        }
+                    }
+
+                    const verifiedFullName = getCleanVerifiedName(doc, { razon_social: razonSocialFinal }, existingProfile, currentSession);
                     
-                    if (verifiedFullName) {
+                    if (verifiedFullName && verifiedFullName !== 'Titular del Pasaporte') {
                         const elNombre = document.getElementById('passport-user-fullname');
                         if (elNombre) elNombre.textContent = verifiedFullName;
 
@@ -1182,15 +1193,16 @@
                                         })
                                         .eq('id_pasaporte', window.currentPasaporteId);
                                 }
-                                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                                if (session && session.user) {
+                                if (currentSession?.user) {
                                     const updateObj = {
-                                        nombre_completo: verifiedFullName,
                                         cuenta_verificada: true,
                                         fecha_verificacion: new Date().toISOString()
                                     };
+                                    if (verifiedFullName && verifiedFullName !== 'Titular del Pasaporte') {
+                                        updateObj.nombre_completo = verifiedFullName;
+                                    }
                                     if (doc.documentNumber) updateObj.dni = doc.documentNumber;
-                                    await window.supabaseClient.from('Perfil').update(updateObj).eq('user_id', session.user.id);
+                                    await window.supabaseClient.from('Perfil').update(updateObj).eq('user_id', currentSession.user.id);
                                 }
                             }
                         } catch (eStorage) {}
