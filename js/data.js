@@ -910,12 +910,13 @@ var DataManager = {
                                 nombre
                             )
                         ),
-                        Propiedad (
+                        Publicacion (
                             *,
-                            Publicacion (
+                            Propiedad (
                                 *,
-                                Multimedia (*)
-                            )
+                                Barrio (*)
+                            ),
+                            Multimedia (*)
                         ),
                         Perfil (
                             *,
@@ -926,10 +927,10 @@ var DataManager = {
 
                 if (!error && data) {
                     dbApps = data.map(s => {
-                        const prop = s.Propiedad || {};
+                        const pub = s.Publicacion || {};
+                        const prop = pub.Propiedad || s.Propiedad || {};
                         const perf = s.Perfil || {};
                         const pass = (Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat[0] : perf.Pasaporte_habitat) || {};
-                        const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
                         const media = pub?.Multimedia || [];
                         const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
                         const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
@@ -1046,15 +1047,15 @@ var DataManager = {
         if (window.supabaseClient) {
             try {
                 const profileId = await DataManager._getOrCreateProfile();
-                const propIdNum = (typeof appData.propertyId === 'number' || (typeof appData.propertyId === 'string' && /^\d+$/.test(appData.propertyId.trim())))
-                    ? parseInt(appData.propertyId, 10)
-                    : 1;
+                const pubIdNum = appData.publicationId || appData.id_publicacion
+                    ? parseInt(appData.publicationId || appData.id_publicacion, 10)
+                    : null;
 
                 const { data, error } = await window.supabaseClient
                     .from('Solicitud')
                     .insert([{
                         id_perfil: profileId,
-                        id_propiedad: propIdNum,
+                        id_publicacion: pubIdNum,
                         ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || appData.propertyPrice || 0),
                         mensaje: appData.message || '',
                         comprobante_ingreso: appData.incomeProof || 'Pasaporte Hábitat',
