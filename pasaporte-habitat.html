@@ -832,8 +832,11 @@
             modal = document.createElement('div');
             modal.id = 'modal-pago-pasaporte';
             modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 transition-opacity duration-300';
+            modal.onclick = (e) => {
+                if (e.target === modal) closePaymentModal();
+            };
             modal.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden" onclick="event.stopPropagation()">
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-5">
                         <div class="flex items-center gap-3">
@@ -879,6 +882,28 @@
                     <!-- Form simulation & Terms acceptance -->
                     <form id="form-pago-pasaporte" onsubmit="procesarPagoSimulado(event)">
                         <div class="space-y-4 mb-6">
+                            <!-- Condición Fiscal / Actividad del Postulante -->
+                            <div>
+                                <label for="select-condicion-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
+                                    ¿Cuál es tu ocupación o condición fiscal principal?
+                                </label>
+                                <div class="relative flex items-center">
+                                    <span class="absolute left-3.5 text-zinc-400 pointer-events-none flex items-center">
+                                        <span class="material-symbols-outlined text-xl">work</span>
+                                    </span>
+                                    <select id="select-condicion-pasaporte" required 
+                                        class="w-full pl-11 pr-8 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-body text-zinc-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer">
+                                        <option value="Monotributista">Monotributista</option>
+                                        <option value="Relación de Dependencia">Empleado en Relación de Dependencia</option>
+                                        <option value="Responsable Inscripto">Responsable Inscripto</option>
+                                        <option value="Estudiante">Estudiante</option>
+                                        <option value="Autónomo">Autónomo / Profesional Independiente</option>
+                                        <option value="Jubilado / Pensionado">Jubilado / Pensionado</option>
+                                    </select>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se certificará y mostrará en tu credencial para los propietarios.</p>
+                            </div>
+
                             <!-- CUIT / CUIL Input Field -->
                             <div>
                                 <label for="input-cuit-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
@@ -933,6 +958,7 @@
             e.preventDefault();
 
             const inputCuit = document.getElementById('input-cuit-pasaporte');
+            const selectCondicion = document.getElementById('select-condicion-pasaporte');
             const checkTerminos = document.getElementById('check-terminos-pasaporte');
             const btn = document.getElementById('btn-confirmar-pago-simulado');
 
@@ -946,6 +972,8 @@
                 alert('Por favor ingresá de forma válida tu CUIT o CUIL.');
                 return;
             }
+
+            const condicionElegida = selectCondicion ? selectCondicion.value : 'Monotributista';
 
             if (btn) {
                 btn.disabled = true;
@@ -1004,9 +1032,40 @@
                     console.warn("Aviso al consultar servicios ARCA/BCRA:", eServices);
                 }
 
-                const condicionFiscalFinal = arcaData && arcaData.condicionFiscal ? arcaData.condicionFiscal : 'Monotributo Categoría H';
+                let condicionFiscalFinal = condicionElegida;
+                if (condicionElegida === 'Monotributista' && arcaData && arcaData.condicionFiscal) {
+                    condicionFiscalFinal = arcaData.condicionFiscal;
+                } else if (condicionElegida === 'Estudiante') {
+                    condicionFiscalFinal = 'Estudiante';
+                } else if (condicionElegida === 'Responsable Inscripto') {
+                    condicionFiscalFinal = 'Responsable Inscripto';
+                } else if (condicionElegida === 'Relación de Dependencia') {
+                    condicionFiscalFinal = 'Relación de Dependencia';
+                } else if (condicionElegida === 'Jubilado / Pensionado') {
+                    condicionFiscalFinal = 'Jubilado / Pensionado';
+                } else if (condicionElegida === 'Autónomo') {
+                    condicionFiscalFinal = 'Autónomo';
+                }
+
                 const razonSocialFinal = arcaData && arcaData.razonSocial ? arcaData.razonSocial : null;
                 const situacionCrediticiaFinal = bcraData && bcraData.situacionCrediticia ? bcraData.situacionCrediticia : 'Situación 1 (Normal)';
+
+                // Guardar en localStorage inmediatamente
+                try {
+                    const pDataLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    pDataLocal.condicion_fiscal = condicionFiscalFinal;
+                    pDataLocal.condicionFiscal = condicionFiscalFinal;
+                    pDataLocal.actividad = condicionFiscalFinal;
+                    pDataLocal.cuit = cuitVal;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pDataLocal));
+
+                    const uDataLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    uDataLocal.condicion_fiscal = condicionFiscalFinal;
+                    uDataLocal.condicionFiscal = condicionFiscalFinal;
+                    uDataLocal.actividad = condicionFiscalFinal;
+                    uDataLocal.cuit = cuitVal;
+                    localStorage.setItem('habitat_user', JSON.stringify(uDataLocal));
+                } catch (eLoc) {}
 
                 // Create Pasaporte_habitat in Supabase if Client and Perfil are available
                 if (window.supabaseClient && idPerfil) {
@@ -1045,7 +1104,7 @@
                             .insert([{
                                 id_pasaporte: pasaporte.id_pasaporte,
                                 id_estado_pasaporte: 3,
-                                observacion: `Pago simulado acreditado. Pasaporte activado. Validación ARCA: ${condicionFiscalFinal}`
+                                observacion: `Pago simulado acreditado. Pasaporte activado. Condición: ${condicionFiscalFinal}`
                             }]);
 
                         // Reemplazar inmediatamente los datos de ejemplo por los datos reales en pantalla
@@ -1066,14 +1125,14 @@
                                 condicionFiscal: condicionFiscalFinal,
                                 razonSocial: razonSocialFinal || null,
                                 estadoCuit: 'ACTIVO',
-                                actividadPrincipal: arcaData && arcaData.actividadPrincipal ? arcaData.actividadPrincipal : 'Servicios Comerciales / Profesionales'
+                                actividadPrincipal: (condicionElegida === 'Estudiante') ? 'Estudiante' : (arcaData && arcaData.actividadPrincipal ? arcaData.actividadPrincipal : condicionFiscalFinal)
                             });
                         }
                     }
                 }
 
                 closePaymentModal();
-                alert(`¡Pago simulado y Validación ARCA completados!\n\nCondición Fiscal verificada: ${condicionFiscalFinal}\nIniciando la validación biométrica Didit KYC...`);
+                alert(`¡Pago simulado completado con éxito!\n\nCondición registrada: ${condicionFiscalFinal}\nIniciando la validación biométrica Didit KYC...`);
 
                 // Iniciar Didit KYC pasando el callbackUrl explícito a pasaporte-habitat.html
                 const returnUrl = window.location.origin + window.location.pathname;

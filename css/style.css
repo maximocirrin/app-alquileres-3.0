@@ -1906,9 +1906,55 @@ html.dark .floating-dock,
 
 /* Scroll Lock for Modals */
 body.no-scroll {
-    overflow: hidden;
-    height: 100vh; /* Prevent scrolling on some mobile browsers */
-    touch-action: none; /* Disable touch actions */
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+}
+
+/* Safari Safe Area & Fullscreen Modal Utilities */
+.pb-safe {
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.pt-safe {
+    padding-top: max(0.85rem, env(safe-area-inset-top, 0px)) !important;
+}
+
+#marketplace-property-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    width: 100dvw !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+    box-sizing: border-box !important;
+}
+
+#mp-mobile-bottom-tray {
+    position: sticky !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: calc(1rem + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(1rem + env(safe-area-inset-right, 0px)) !important;
+    margin-top: auto !important;
+    z-index: 50 !important;
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    backdrop-filter: blur(16px) !important;
+}
+
+.dark #mp-mobile-bottom-tray {
+    background-color: rgba(17, 19, 24, 0.98) !important;
 }
 
 /* Form Switch */
