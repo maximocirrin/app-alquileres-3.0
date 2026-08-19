@@ -1165,30 +1165,8 @@
                                 elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoPasaporte)}&color=811b1e&bgcolor=ffffff`;
                             }
 
-                if (kycResult && (kycResult.status === 'APPROVED' || kycResult.status === 'SUCCESS')) {
-                    const doc = kycResult.document || {};
-                    let currentSession = null;
-                    let existingProfile = null;
-                    if (window.supabaseClient) {
-                        const { data } = await window.supabaseClient.auth.getSession();
-                        currentSession = data?.session;
-                        if (currentSession?.user) {
-                            const { data: p } = await window.supabaseClient.from('Perfil').select('nombre_completo').eq('user_id', currentSession.user.id).maybeSingle();
-                            existingProfile = p;
-                        }
-                    }
-
-                    const verifiedFullName = getCleanVerifiedName(doc, { razon_social: razonSocialFinal }, existingProfile, currentSession);
-                    
-                    if (verifiedFullName && verifiedFullName !== 'Titular del Pasaporte') {
-                        const elNombre = document.getElementById('passport-user-fullname');
-                        if (elNombre) elNombre.textContent = verifiedFullName;
-
-                        const elAvatar = document.getElementById('passport-avatar-letter');
-                        if (elAvatar) {
-                            const inits = verifiedFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                            elAvatar.textContent = inits;
-                        }
+                            const elNombre = document.getElementById('passport-user-fullname');
+                            if (elNombre) elNombre.textContent = verifiedFullName;
 
                             const elAvatar = document.getElementById('passport-avatar-letter');
                             if (elAvatar && verifiedFullName) {
