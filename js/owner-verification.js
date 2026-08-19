@@ -44,9 +44,51 @@
   }
 
   function isOwnerVerified(email) {
-    if (!email) return false;
-    const list = getVerifiedOwners();
-    return Boolean(list[email.toLowerCase().trim()]?.verified);
+    try {
+      // 1. Si no hay email, obtenerlo del entorno
+      const targetEmail = email || 
+        (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
+        (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
+        (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
+        null;
+
+      // 2. Verificar datos reales de pasaporte / KYC en localStorage
+      const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+      const hasValidPassport = Boolean(
+        pData && (pData.cuit || pData.id_pasaporte || pData.codigo_pasaporte || pData.status === 'valid' || pData.status === 'verified')
+      );
+
+      const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+      const hasValidDidit = Boolean(
+        didit && (didit.documentNumber || didit.status === 'APPROVED' || didit.verified)
+      );
+
+      const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+      const hasValidUser = Boolean(user && user.cuenta_verificada);
+
+      // Si el usuario eliminó su pasaporte e identidad Didit, NO está verificado
+      if (!hasValidPassport && !hasValidDidit && !hasValidUser && !window.hasActivePassport && !window.currentPasaporteId) {
+        if (targetEmail) {
+          const list = getVerifiedOwners();
+          if (list[targetEmail.toLowerCase().trim()]) {
+            delete list[targetEmail.toLowerCase().trim()];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          }
+        }
+        return false;
+      }
+
+      if (targetEmail) {
+        const list = getVerifiedOwners();
+        if (list[targetEmail.toLowerCase().trim()]?.verified) {
+          return true;
+        }
+      }
+
+      return Boolean(hasValidPassport || hasValidDidit || hasValidUser);
+    } catch (e) {
+      return false;
+    }
   }
 
   /**
@@ -98,7 +140,7 @@
 
     const modalHtml = `
       <div id="${modalId}" class="fixed inset-0 z-[999999] overflow-y-auto bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 font-body animate-fadeIn">
-        <div class="relative w-full max-w-lg bg-white dark:bg-[#141417] text-zinc-900 dark:text-zinc-100 rounded-3xl shadow-2xl border border-zinc-200/90 dark:border-zinc-800/90 p-6 sm:p-8 space-y-6 overflow-hidden">
+        <div class="relative w-full max-w-lg bg-white dark:bg-[#141417] text-zinc-900 dark:text-zinc-100 rounded-3xl shadow-2xl border border-zinc-200/90 dark:border-zinc-800/90 p-6 sm:p-8 space-y-6 overflow-hidden" onclick="event.stopPropagation()">
           
           <!-- Accent Line -->
           <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-rose-500 to-amber-500"></div>
@@ -117,7 +159,7 @@
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Validá tu identidad antes de publicar tu alquiler</p>
               </div>
             </div>
-            <button onclick="document.getElementById('${modalId}').remove()" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1 rounded-xl transition-colors cursor-pointer">
+            <button id="btn-close-didit-prompt" type="button" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1 rounded-xl transition-colors cursor-pointer">
               <span class="material-symbols-outlined text-xl">close</span>
             </button>
           </div>
@@ -128,7 +170,7 @@
               <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-2xl shrink-0">check_circle</span>
               <div class="text-xs">
                 <p class="font-bold text-emerald-800 dark:text-emerald-300">¡Tu identidad ya se encuentra verificada!</p>
-                <p class="text-emerald-700 dark:text-emerald-400/90 mt-0.5">Tu aviso se publicará automáticamente con la Insignia Oficial.</p>
+                <p class="text-emerald-700 dark:text-emerald-400/90 mt-0.5">Tu aviso puede publicarse con la Insignia Oficial de Propietario Verificado.</p>
               </div>
             </div>
           ` : ''}
@@ -179,6 +221,10 @@
               <button id="btn-modal-reverify" type="button" class="w-full py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-semibold text-xs transition-colors cursor-pointer text-center">
                 Volver a escanear rostro biométrico
               </button>
+
+              <button id="btn-modal-skip-verification" type="button" class="w-full py-2.5 px-4 rounded-xl bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white font-headline font-bold text-xs transition-colors cursor-pointer text-center">
+                Publicar sin la insignia de verificado
+              </button>
             ` : `
               <button id="btn-modal-verify-and-publish" type="button" class="w-full py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                 <span class="material-symbols-outlined text-xl">face</span>
@@ -186,7 +232,7 @@
               </button>
 
               <button id="btn-modal-skip-verification" type="button" class="w-full py-2.5 px-4 rounded-xl bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white font-headline font-bold text-xs transition-colors cursor-pointer text-center">
-                Publicar sin verificar por ahora
+                Publicar sin la insignia de verificado
               </button>
             `}
           </div>
@@ -198,10 +244,27 @@
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     const modalEl = document.getElementById(modalId);
+    const closeBtn = document.getElementById('btn-close-didit-prompt');
     const verifyBtn = document.getElementById('btn-modal-verify-and-publish');
     const skipBtn = document.getElementById('btn-modal-skip-verification');
     const directVerifiedBtn = document.getElementById('btn-modal-publish-verified-direct');
     const reverifyBtn = document.getElementById('btn-modal-reverify');
+
+    if (modalEl) {
+      modalEl.onclick = (e) => {
+        if (e.target === modalEl) {
+          modalEl.remove();
+          if (typeof onProceed === 'function') onProceed(false);
+        }
+      };
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        if (modalEl) modalEl.remove();
+        if (typeof onProceed === 'function') onProceed(false);
+      };
+    }
 
     if (directVerifiedBtn) {
       directVerifiedBtn.onclick = () => {

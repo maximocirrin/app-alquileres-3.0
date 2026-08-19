@@ -645,13 +645,22 @@
                     return;
                 }
 
-                grid.innerHTML = props.map(p => `
+                grid.innerHTML = props.map(p => {
+                    const isVerifOwner = Boolean(p.isVerifiedOwner || p.verified || p.is_verified_owner || p.propietario_verificado);
+                    return `
                     <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group">
                         <div class="h-44 bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                             <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <span class="absolute top-3 left-3 px-3 py-1 text-[11px] font-black rounded-full ${p.status === 'paused' || p.status === 'pausado' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'} uppercase shadow">
-                                ${p.status === 'paused' || p.status === 'pausado' ? 'Pausada' : (p.status === 'alquilada' ? 'Alquilada' : 'Publicada')}
-                            </span>
+                            <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+                                <span class="px-3 py-1 text-[11px] font-black rounded-full ${p.status === 'paused' || p.status === 'pausado' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'} uppercase shadow">
+                                    ${p.status === 'paused' || p.status === 'pausado' ? 'Pausada' : (p.status === 'alquilada' ? 'Alquilada' : 'Publicada')}
+                                </span>
+                                ${isVerifOwner ? `
+                                    <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow inline-flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">verified</span> Verificado
+                                    </span>
+                                ` : ''}
+                            </div>
                         </div>
                         <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
                             <div>
@@ -675,7 +684,8 @@
                             </div>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 const searchInput = document.getElementById('owner-search-props');
                 if (searchInput) {
@@ -710,6 +720,7 @@
                 cuit: 'No registrado',
                 income: 0,
                 incomeFormatted: '$ 0',
+                condicionFiscal: 'Monotributista',
                 score: 95,
                 guarantees: 'Garantía Finaer / Recibo de Sueldo',
                 kycStatus: 'KYC Pendiente'
@@ -718,11 +729,24 @@
             const name = a.tenant_name || a.name || 'Postulante';
             const email = a.tenant_email || a.email || '';
             const phone = a.tenant_phone || a.telefono || a.phone || '';
-            const income = Number(a.monthly_income || a.ingreso_mensual_declarado || 0);
+            let rawIncome = a.monthly_income ?? a.ingreso_mensual_declarado ?? a.income;
+            if (rawIncome === undefined || rawIncome === null || rawIncome === '') {
+                rawIncome = a.property_price || a.propertyPrice || 450000;
+            }
+            let income = Number(rawIncome) || 0;
+            if (income > 0 && income < 100) {
+                income = income * 100000;
+            }
 
             // 1. Obtener DNI auténtico
             let rawDni = a.tenant_dni || a.dni;
             let rawCuit = a.tenant_cuit || a.cuit || a.cuil_cuit;
+
+            // 2. Obtener Condición Fiscal / Actividad (Monotributista, Estudiante, Responsable Inscripto, etc.)
+            let rawCondicion = a.condicion_fiscal || a.condicionFiscal || a.actividad || a.tax_condition || a.tipo_actividad;
+            if (!rawCondicion && a.datos_arca && a.datos_arca.condicionFiscal) {
+                rawCondicion = a.datos_arca.condicionFiscal;
+            }
 
             // Consultar datos locales si coinciden con el usuario activo
             try {
@@ -738,6 +762,18 @@
                 if (!rawCuit && (localPass.cuit || localUser.cuit)) {
                     if (localUser.email === email || localUser.mail === email || localPass.razon_social === name) {
                         rawCuit = localPass.cuit || localUser.cuit;
+                    }
+                }
+                if (!rawCondicion) {
+                    if (localPass.condicion_fiscal || localPass.condicionFiscal || localPass.actividad) {
+                        if (localUser.email === email || localUser.mail === email || localPass.razon_social === name) {
+                            rawCondicion = localPass.condicion_fiscal || localPass.condicionFiscal || localPass.actividad;
+                        }
+                    }
+                    if (!rawCondicion && (localUser.condicion_fiscal || localUser.condicionFiscal || localUser.actividad)) {
+                        if (localUser.email === email || localUser.mail === email) {
+                            rawCondicion = localUser.condicion_fiscal || localUser.condicionFiscal || localUser.actividad;
+                        }
                     }
                 }
             } catch (e) {}
@@ -780,6 +816,30 @@
                 }
             }
 
+            // Normalizar texto de Condición Fiscal
+            let condicionFiscal = 'Monotributista';
+            if (rawCondicion) {
+                const condLower = String(rawCondicion).toLowerCase();
+                if (condLower.includes('monotribut')) {
+                    const matchCat = String(rawCondicion).match(/categor[ií]a\s+([A-K])/i) || String(rawCondicion).match(/monotributo\s+([A-K])/i);
+                    condicionFiscal = matchCat ? `Monotributista (Cat. ${matchCat[1].toUpperCase()})` : 'Monotributista';
+                } else if (condLower.includes('inscripto') || condLower.includes('ri')) {
+                    condicionFiscal = 'Responsable Inscripto';
+                } else if (condLower.includes('dependencia') || condLower.includes('emplead') || condLower.includes('sueldo')) {
+                    condicionFiscal = 'Relación de Dependencia';
+                } else if (condLower.includes('estudiant')) {
+                    condicionFiscal = 'Estudiante';
+                } else if (condLower.includes('jubilad') || condLower.includes('pension')) {
+                    condicionFiscal = 'Jubilado / Pensionado';
+                } else if (condLower.includes('autonom') || condLower.includes('autónom')) {
+                    condicionFiscal = 'Autónomo';
+                } else {
+                    condicionFiscal = String(rawCondicion);
+                }
+            } else {
+                condicionFiscal = (income > 0) ? 'Monotributista' : 'Estudiante';
+            }
+
             const score = a.score || (income > 1200000 ? 98 : (income > 650000 ? 94 : 90));
             const guarantees = a.guarantees || a.garantia || 'Garantía Finaer / Recibo';
             const kycStatus = (rawDni && rawDni !== 'Pendiente' && rawDni !== 'Pendiente de registrar') ? 'Identidad Validada' : 'En Proceso';
@@ -791,6 +851,7 @@
                 phone: phone || 'No informado',
                 dni: formattedDni,
                 cuit: formattedCuit,
+                condicionFiscal,
                 income,
                 incomeFormatted: income > 0 ? `$ ${income.toLocaleString('es-AR')}` : '$ 0',
                 score,
@@ -813,16 +874,44 @@
 
                 ownerRawProperties = Array.isArray(props) ? props : [];
                 ownerAppsPropMap = new Map();
+                const validPropIds = new Set();
                 if (Array.isArray(props)) {
                     props.forEach(p => {
-                        if (p && p.id) ownerAppsPropMap.set(String(p.id), p);
+                        if (p) {
+                            if (p.id) {
+                                ownerAppsPropMap.set(String(p.id), p);
+                                validPropIds.add(String(p.id));
+                            }
+                            if (p.id_propiedad) {
+                                ownerAppsPropMap.set(String(p.id_propiedad), p);
+                                validPropIds.add(String(p.id_propiedad));
+                            }
+                            if (p.id_publicacion) {
+                                ownerAppsPropMap.set(String(p.id_publicacion), p);
+                                validPropIds.add(String(p.id_publicacion));
+                            }
+                        }
                     });
                 }
 
-                if (badgeTop) badgeTop.textContent = apps.length;
-                if (badgeDock) badgeDock.style.display = apps.length > 0 ? '' : 'none';
+                // Filtrar para que solo se muestren candidatos de propiedades existentes y publicadas (no eliminadas)
+                const activeOwnerApps = (apps || []).filter(a => {
+                    if (!a) return false;
+                    const pid = String(a.property_id || a.propertyId || a.id_propiedad || '');
+                    const pubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
+                    
+                    if (ownerRawProperties.length > 0) {
+                        return validPropIds.has(pid) || validPropIds.has(pubId);
+                    }
+                    // Si el propietario no tiene avisos activos/publicados, no debe haber candidatos mostrados
+                    return false;
+                });
 
-                if (!apps || apps.length === 0) {
+                if (badgeTop) badgeTop.textContent = activeOwnerApps.length;
+                if (badgeDock) badgeDock.style.display = activeOwnerApps.length > 0 ? '' : 'none';
+
+                if (activeOwnerApps.length === 0) {
+                    ownerAppsState = [];
                     list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay postulaciones registradas en este momento.</div>';
                     const activeCountBadge = document.getElementById('owner-apps-filter-count-badge');
                     if (activeCountBadge) activeCountBadge.textContent = '0';
@@ -830,11 +919,11 @@
                 }
 
                 // Normalizar cada postulación asociando su propiedad, título y dirección exacta
-                ownerAppsState = apps.map(a => {
-                    const matchedProp = ownerAppsPropMap.get(String(a.property_id || a.propertyId)) || {};
+                ownerAppsState = activeOwnerApps.map(a => {
+                    const matchedProp = ownerAppsPropMap.get(String(a.property_id || a.propertyId || a.id_propiedad || '')) || {};
                     const propTitle = a.property_title || matchedProp.title || 'Propiedad en Alquiler';
                     const propAddress = a.property_address || matchedProp.address || (matchedProp.calle ? `${matchedProp.calle} ${matchedProp.numero || ''}`.trim() : '') || 'Dirección de la propiedad';
-                    const propId = String(a.property_id || a.propertyId || matchedProp.id || 'general');
+                    const propId = String(matchedProp.id || a.property_id || a.propertyId || 'general');
 
                     return {
                         ...a,
@@ -862,6 +951,9 @@
 
             modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-detail-open font-body';
             modal.style.display = 'flex';
+            modal.onclick = (e) => {
+                if (e.target === modal) closeOwnerPropertyFilterModal();
+            };
 
             // Conteo por propiedad
             const counts = new Map();
@@ -927,10 +1019,8 @@
                 <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-5 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[88vh] flex flex-col space-y-4" onclick="event.stopPropagation()">
                     <!-- Header -->
                     <div class="flex items-center justify-between pb-3.5 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-2xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center font-bold border border-primary/20">
-                                <span class="material-symbols-outlined text-xl">home_work</span>
-                            </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-2xl text-primary dark:text-red-400 shrink-0">home_work</span>
                             <div>
                                 <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white">Filtrar por Propiedad</h3>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Selecciona la publicación para ver sus postulantes</p>
@@ -949,7 +1039,7 @@
                                 ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
                                 : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
                         }">
-                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-tr from-primary/10 to-primary/20 dark:from-red-950/40 dark:to-red-900/30 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 text-primary dark:text-red-400">
                                 <span class="material-symbols-outlined text-3xl sm:text-4xl">domain</span>
                             </div>
                             <div class="min-w-0 flex-1">
@@ -1206,6 +1296,10 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h3 class="font-headline text-base sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-snug truncate">${pData.name}</h3>
                                         <span class="px-2 py-0.5 text-[9px] sm:text-[10px] font-headline font-black rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">Score ${pData.score}/100</span>
+                                        <span class="px-2 py-0.5 text-[9px] sm:text-[10px] font-headline font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[11px] sm:text-xs">badge</span>
+                                            ${pData.condicionFiscal}
+                                        </span>
                                     </div>
                                     <p class="font-headline text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-semibold tracking-normal mt-0.5">
                                         DNI: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.dni}</span> • CUIT: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.cuit}</span>
@@ -1216,7 +1310,7 @@
                                 </div>
                             </div>
 
-                            <!-- Badges Grid (Identidad, Fiscal, Judicios, Garantes) -->
+                            <!-- Badges Grid (Identidad, Ingresos, Condición Fiscal, Garantías) -->
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
                                     <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Biometría</p>
@@ -1230,8 +1324,11 @@
                                     <p class="text-[10px] sm:text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">${pData.incomeFormatted}</p>
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
-                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Antecedentes</p>
-                                    <p class="text-[10px] sm:text-xs font-headline font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">Sin Desalojos</p>
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Condición Fiscal</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1 truncate" title="${pData.condicionFiscal}">
+                                        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">account_balance</span>
+                                        <span class="truncate">${pData.condicionFiscal}</span>
+                                    </p>
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
                                     <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Garantías</p>
@@ -2476,9 +2573,15 @@
                                 </div>
 
                                 <div>
-                                    <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${pData.name}</h2>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${pData.name}</h2>
+                                        <span class="px-2.5 py-0.5 text-[10px] sm:text-xs font-headline font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">badge</span>
+                                            ${pData.condicionFiscal}
+                                        </span>
+                                    </div>
                                     <p class="font-headline text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
-                                        DNI: ${pData.dni} • CUIT: ${pData.cuit}
+                                        DNI: ${pData.dni} • CUIT: ${pData.cuit} • <span class="text-primary dark:text-red-400">${pData.condicionFiscal}</span>
                                     </p>
                                     <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
                                         ${pData.email} • ${pData.phone}
@@ -2533,12 +2636,15 @@
                                     <span class="text-xl font-headline font-black text-emerald-600 dark:text-emerald-400">${pData.incomeFormatted} / mes</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Estado de Ingresos</span>
-                                    <span class="font-extrabold text-zinc-800 dark:text-zinc-200">Actividad Laboral Auditada</span>
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Condición Fiscal / Actividad</span>
+                                    <span class="font-extrabold text-blue-600 dark:text-blue-400 flex items-center gap-1 justify-end">
+                                        <span class="material-symbols-outlined text-sm">account_balance</span>
+                                        ${pData.condicionFiscal}
+                                    </span>
                                 </div>
                             </div>
                             <div class="flex items-center justify-between gap-3">
-                                <span class="text-zinc-600 dark:text-zinc-300 font-medium">📄 Recibo de Sueldo y Certificado de Ingresos Auditado</span>
+                                <span class="text-zinc-600 dark:text-zinc-300 font-medium">📄 Certificado de Ingresos y Constancia de Inscripción ARCA</span>
                                 <button type="button" onclick="alert('Descargando Documentación de ${pData.name}...')" class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs">
                                     <span class="material-symbols-outlined text-sm">download</span> Descargar PDF
                                 </button>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1163,10 +1163,16 @@
                                     const isIncluidas = rental.expensasIncluidas;
                                     const expensasVal = rental.expensas ? moneyLabel(rental.expensas) : '';
                                     const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
+                                    const isVerified = Boolean(rental.isVerifiedOwner || rental.verified || (rental.tags && rental.tags.includes('Propietario Verificado')));
 
                                     card.innerHTML = `
                                         <div class="listing-media relative overflow-hidden">
                                             <img src="${rental.image}" alt="${rental.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                            ${isVerified ? `
+                                                <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-emerald-600/90 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-emerald-400/30">
+                                                    <span class="material-symbols-outlined text-xs">verified</span> Propietario Verificado
+                                                </div>
+                                            ` : ''}
                                             <button class="favorite-btn" type="button" aria-label="Guardar ${rental.title}">
                                                 <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
                                             </button>
@@ -1183,14 +1189,21 @@
                                                     <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
                                                         <strong class="listing-price" style="margin: 0; display: inline-block;">${moneyLabel(rental.price)} / mes</strong>
                                                         <span class="status-badge ${isIncluidas ? 'status-expensas-incluidas' : 'status-expensas-mas'}">${expensasText}</span>
+                                                        ${isVerified ? `
+                                                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/25 inline-flex items-center gap-0.5">
+                                                                <span class="material-symbols-outlined text-xs text-emerald-600 dark:text-emerald-400">verified</span> Verificado
+                                                            </span>
+                                                        ` : ''}
                                                     </div>
                                                     <h2 class="listing-title">${rental.title}</h2>
                                                 </div>
-                                                <span class="material-symbols-rounded" aria-hidden="true">verified_user</span>
+                                                ${isVerified ? `
+                                                    <span class="material-symbols-rounded text-emerald-600 dark:text-emerald-400" aria-hidden="true" title="Propietario Verificado">verified_user</span>
+                                                ` : ''}
                                             </div>
                                             <span class="listing-address">${rental.address}</span>
                                             <ul class="spec-list">
-                                                ${rental.tags.map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
+                                                ${rental.tags.filter(t => t !== 'Propietario Verificado').map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
                                             </ul>
                                             <p class="listing-note">${rental.note}</p>
                                             <div class="card-actions">

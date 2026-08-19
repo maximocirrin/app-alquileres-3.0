@@ -2783,7 +2783,7 @@ const App = {
 
                         // Multimedia
                         photos: window.selectedPropertyPhotos || [],
-                        isVerifiedOwner: Boolean(isVerified || window.HabitatOwnerVerification?.isOwnerVerified(getVal('contact-email')))
+                        isVerifiedOwner: Boolean(isVerified)
                     };
 
                     // Guardar en Supabase
@@ -6755,7 +6755,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const viewsCount = prop.cantidad_visualizaciones_total ?? prop.views_count ?? prop.views ?? 0;
 
     const petFriendly = extraInfo.mascotas || prop.pet || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('mascota')));
-    const verified = prop.verified || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')));
+    const verified = Boolean(
+        prop.verified ||
+        prop.isVerifiedOwner ||
+        prop.is_verified_owner ||
+        prop.propietario_verificado ||
+        (extraInfo && (extraInfo.isVerifiedOwner || extraInfo.verified)) ||
+        (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')))
+    );
 
     // Extract Furnishing / Amoblado state
     let amobladoVal = prop.amoblado !== undefined ? prop.amoblado : extraInfo.amoblado;
@@ -6800,17 +6807,29 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     // Always reset modal scroll position to top when opening a property
     modal.scrollTop = 0;
 
-    // Full-screen Zillow layout styles
-    modal.className = 'fixed inset-0 z-[99999] w-screen h-screen bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-y-auto overscroll-contain transition-all duration-300 font-body';
+    // Full-screen Zillow layout styles (Safe for Safari, iPhone, iPad, and Tab Previews)
+    modal.className = 'fixed inset-0 z-[99999] w-full max-w-full h-full h-[100dvh] max-h-[100dvh] bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-y-auto overscroll-contain transition-opacity duration-200 font-body';
     modal.style.display = 'flex';
     modal.style.opacity = '0';
     modal.style.pointerEvents = 'auto';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.right = '0';
+    modal.style.bottom = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100dvh';
+    modal.style.maxHeight = '100dvh';
 
     // Build Zillow-style Photo Mosaic Layout
     let photoMosaicHtml = '';
     if (photos.length >= 5) {
         photoMosaicHtml = `
             <div class="grid grid-cols-1 md:grid-cols-4 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
+                ${verified ? `
+                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
+                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+                    </div>
+                ` : ''}
                 <div class="md:col-span-2 relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
                     <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
                     <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
@@ -6832,6 +6851,11 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     } else if (photos.length >= 2) {
         photoMosaicHtml = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
+                ${verified ? `
+                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
+                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+                    </div>
+                ` : ''}
                 <div class="relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
                     <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
                 </div>
@@ -6847,6 +6871,11 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     } else {
         photoMosaicHtml = `
             <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg group cursor-pointer" onclick="window.__openDetailLightbox(0)">
+                ${verified ? `
+                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
+                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+                    </div>
+                ` : ''}
                 <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
                 <button type="button" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">fullscreen</span>
@@ -6922,7 +6951,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         </header>
 
         <!-- Main Full-Screen Body Content -->
-        <main class="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+        <main class="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-36 lg:pb-12 space-y-8">
             
             <!-- In-View Scroll Reveal Styles & Sub-Nav Hover Magic -->
             <style id="mp-fullscreen-styles">
@@ -6935,15 +6964,49 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         display: flex !important;
                     }
                 }
+                /* Safari Tab Preview / Snapshot Fix: Content is immediately visible and rendered without blank states */
                 .mp-inview-item {
-                    opacity: 0;
-                    transform: translateY(28px);
-                    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-                    will-change: opacity, transform;
+                    opacity: 1 !important;
+                    transform: none !important;
                 }
                 .mp-inview-item.is-inview {
-                    opacity: 1;
-                    transform: translateY(0);
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
+                /* Safari Dynamic Viewport & Safe Area Bottom Bar Fix for Tablet & iPhone */
+                #marketplace-property-modal {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    height: 100% !important;
+                    height: 100dvh !important;
+                    max-height: 100dvh !important;
+                    overflow-y: auto !important;
+                    -webkit-overflow-scrolling: touch !important;
+                    overscroll-behavior-y: contain !important;
+                    touch-action: pan-y !important;
+                    box-sizing: border-box !important;
+                }
+                #mp-mobile-bottom-tray {
+                    position: sticky !important;
+                    bottom: 0 !important;
+                    width: 100% !important;
+                    padding-top: 0.75rem !important;
+                    padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+                    padding-left: calc(1rem + env(safe-area-inset-left, 0px)) !important;
+                    padding-right: calc(1rem + env(safe-area-inset-right, 0px)) !important;
+                    margin-top: auto !important;
+                    z-index: 50 !important;
+                    background-color: rgba(255, 255, 255, 0.98) !important;
+                    -webkit-backdrop-filter: blur(16px) !important;
+                    backdrop-filter: blur(16px) !important;
+                }
+                .dark #mp-mobile-bottom-tray {
+                    background-color: rgba(17, 19, 24, 0.98) !important;
                 }
                 .mp-subnav-btn {
                     color: #71717a;
@@ -7008,7 +7071,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             </span>
                             ${verified ? `
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
-                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Verificado Hábitat
+                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Propietario Verificado
                                 </span>
                             ` : ''}
                             ${petFriendly ? `
@@ -7213,48 +7276,58 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             <!-- Header -->
                             <div class="flex items-start justify-between gap-3">
                                 <div>
-                                    <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">commute</span>
+                                    <h3 class="font-headline text-base sm:text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300 text-xl">commute</span>
                                         Tiempos de viaje
                                     </h3>
                                     <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Calculá el tiempo estimado de traslado hacia tus destinos habituales.</p>
                                 </div>
                             </div>
 
-                            <!-- Input y Botón 100% Responsivos (Sin solapamientos) -->
-                            <div class="space-y-3">
+                            <!-- Input y Botón 100% Responsivos -->
+                            <div class="space-y-3.5">
                                 <div class="flex flex-col sm:flex-row gap-2.5">
                                     <div class="relative flex-1">
-                                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xl pointer-events-none">search</span>
-                                        <input type="text" id="travel-time-destination-input" placeholder="Buscar destino (ej. Centro, Universidad, Trabajo...)" class="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-body">
+                                        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
+                                        <input type="text" id="travel-time-destination-input" placeholder="Buscar destino (ej. Centro, Universidad, Trabajo...)" class="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200/90 dark:border-zinc-700/80 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 focus:border-zinc-400 dark:focus:border-zinc-500 transition-all font-body">
                                     </div>
-                                    <button type="button" id="travel-time-calc-btn" class="inline-flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs sm:text-sm font-bold px-5 py-3 sm:py-3.5 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer shrink-0">
+                                    <button type="button" id="travel-time-calc-btn" class="inline-flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs sm:text-sm font-bold px-5 py-3 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0">
                                         <span class="material-symbols-outlined text-base">near_me</span>
                                         <span>Calcular</span>
                                     </button>
                                 </div>
 
-                                <!-- Chips de Destinos Sugeridos -->
-                                <div class="space-y-1.5">
-                                    <span class="text-zinc-400 dark:text-zinc-500 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider block">Destinos sugeridos:</span>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Centro / Plaza Independencia">📍 Centro</button>
-                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Universidad Nacional">🎓 Universidad</button>
-                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Parque General San Martín">🌳 Parque</button>
-                                        <button type="button" class="travel-preset-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs transition-all cursor-pointer border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-95 shrink-0" data-dest="Aeropuerto Internacional">✈️ Aeropuerto</button>
-                                    </div>
+                                <!-- Chips de Destinos Sugeridos (Elegantes y Monocromáticos) -->
+                                <div class="flex items-center gap-2 flex-wrap pt-0.5">
+                                    <span class="text-zinc-400 dark:text-zinc-500 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider mr-1">Sugeridos:</span>
+                                    <button type="button" class="travel-preset-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/90 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-xs transition-all cursor-pointer border border-zinc-200/70 dark:border-zinc-700/60 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 shrink-0" data-dest="Centro / Plaza Independencia">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">location_city</span>
+                                        <span>Centro</span>
+                                    </button>
+                                    <button type="button" class="travel-preset-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/90 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-xs transition-all cursor-pointer border border-zinc-200/70 dark:border-zinc-700/60 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 shrink-0" data-dest="Universidad Nacional">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">school</span>
+                                        <span>Universidad</span>
+                                    </button>
+                                    <button type="button" class="travel-preset-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/90 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-xs transition-all cursor-pointer border border-zinc-200/70 dark:border-zinc-700/60 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 shrink-0" data-dest="Parque General San Martín">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">park</span>
+                                        <span>Parque</span>
+                                    </button>
+                                    <button type="button" class="travel-preset-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/90 hover:bg-zinc-200/90 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-xs transition-all cursor-pointer border border-zinc-200/70 dark:border-zinc-700/60 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 shrink-0" data-dest="Aeropuerto Internacional">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">flight</span>
+                                        <span>Aeropuerto</span>
+                                    </button>
                                 </div>
 
-                                <!-- Tarjetas Modernas de Resultados por Modo de Transporte -->
+                                <!-- Tarjetas Minimalistas & Profesionales de Resultados por Modo de Transporte -->
                                 <div id="travel-times-results" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                                     
                                     <!-- Auto -->
-                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-blue-300 dark:hover:border-blue-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                    <div class="p-4 rounded-2xl bg-zinc-50/60 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-800/80 transition-all duration-200 flex flex-col justify-between gap-3 group">
                                         <div class="flex items-center justify-between">
-                                            <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                                                <span class="material-symbols-outlined text-lg">directions_car</span>
+                                            <div class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 transition-colors">
+                                                <span class="material-symbols-outlined text-base">directions_car</span>
                                             </div>
-                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En auto</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En auto</span>
                                         </div>
                                         <div>
                                             <span id="travel-car-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~10-15 min</span>
@@ -7263,12 +7336,12 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
 
                                     <!-- Transporte / Colectivo -->
-                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-emerald-300 dark:hover:border-emerald-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                    <div class="p-4 rounded-2xl bg-zinc-50/60 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-800/80 transition-all duration-200 flex flex-col justify-between gap-3 group">
                                         <div class="flex items-center justify-between">
-                                            <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                                                <span class="material-symbols-outlined text-lg">directions_bus</span>
+                                            <div class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 transition-colors">
+                                                <span class="material-symbols-outlined text-base">directions_bus</span>
                                             </div>
-                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Transporte</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Transporte</span>
                                         </div>
                                         <div>
                                             <span id="travel-bus-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~20-25 min</span>
@@ -7277,12 +7350,12 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
 
                                     <!-- Bici -->
-                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-amber-300 dark:hover:border-amber-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                    <div class="p-4 rounded-2xl bg-zinc-50/60 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-800/80 transition-all duration-200 flex flex-col justify-between gap-3 group">
                                         <div class="flex items-center justify-between">
-                                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                                                <span class="material-symbols-outlined text-lg">directions_bike</span>
+                                            <div class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 transition-colors">
+                                                <span class="material-symbols-outlined text-base">directions_bike</span>
                                             </div>
-                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En bici</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En bici</span>
                                         </div>
                                         <div>
                                             <span id="travel-bike-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~12-16 min</span>
@@ -7291,12 +7364,12 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
 
                                     <!-- Caminando -->
-                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 shadow-2xs hover:border-purple-300 dark:hover:border-purple-900 hover:bg-white dark:hover:bg-zinc-800 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5 group">
+                                    <div class="p-4 rounded-2xl bg-zinc-50/60 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-white dark:hover:bg-zinc-800/80 transition-all duration-200 flex flex-col justify-between gap-3 group">
                                         <div class="flex items-center justify-between">
-                                            <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                                                <span class="material-symbols-outlined text-lg">directions_walk</span>
+                                            <div class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 transition-colors">
+                                                <span class="material-symbols-outlined text-base">directions_walk</span>
                                             </div>
-                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Caminando</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Caminando</span>
                                         </div>
                                         <div>
                                             <span id="travel-walk-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~30-40 min</span>
@@ -7307,12 +7380,12 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
 
                                 <!-- Pie de Ruta con Enlace a Google Maps -->
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-500 pt-2 gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-2 gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
                                     <div class="flex items-center gap-1.5 truncate">
-                                        <span class="material-symbols-outlined text-sm text-primary">pin_drop</span>
+                                        <span class="material-symbols-outlined text-sm text-zinc-400 dark:text-zinc-500">pin_drop</span>
                                         <span class="truncate">Ruta estimada desde <strong class="text-zinc-700 dark:text-zinc-300">${fullAddress}</strong></span>
                                     </div>
-                                    <a id="travel-maps-direct-link" href="https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=Centro" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-primary dark:text-red-400 hover:underline shrink-0">
+                                    <a id="travel-maps-direct-link" href="https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=Centro" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:underline shrink-0 transition-colors">
                                         <span>Ver ruta en Google Maps</span>
                                         <span class="material-symbols-outlined text-xs">open_in_new</span>
                                     </a>
@@ -7809,23 +7882,23 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
         </main>
 
-        <!-- Mobile Fixed Bottom Action Tray (Zillow Mobile Experience) -->
-        <div class="lg:hidden sticky bottom-0 z-40 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
+        <!-- Mobile & Tablet Fixed Bottom Action Tray (Zillow Mobile Experience with Safari Safe-Area) -->
+        <div id="mp-mobile-bottom-tray" class="lg:hidden sticky bottom-0 z-50 bg-white/98 dark:bg-[#111318]/98 backdrop-blur-xl border-t border-zinc-200/90 dark:border-zinc-800/90 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 shadow-2xl">
             <div class="min-w-0">
-                <span class="block text-[10px] font-bold uppercase text-zinc-400">Precio mensual</span>
-                <span class="font-headline text-lg font-black text-zinc-900 dark:text-white truncate block">${priceFormatted}</span>
+                <span class="block text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Precio mensual</span>
+                <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white truncate block">${priceFormatted}</span>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                 ${isOwner ? `
-                    <button type="button" onclick="document.getElementById('mp-modal-edit-btn')?.click()" class="inline-flex items-center gap-1 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold px-4 py-2.5 rounded-xl text-xs">
-                        <span class="material-symbols-outlined text-sm">edit</span> Editar
+                    <button type="button" onclick="document.getElementById('mp-modal-edit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">edit</span> Editar
                     </button>
                 ` : `
-                    <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs">
-                        <span class="material-symbols-outlined text-sm">calendar_month</span> Visita
+                    <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">calendar_month</span> Visita
                     </button>
-                    <button type="button" onclick="document.getElementById('mp-modal-apply-btn')?.click()" class="inline-flex items-center gap-1 bg-primary text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md">
-                        <span class="material-symbols-outlined text-sm">how_to_reg</span> Postularme
+                    <button type="button" onclick="document.getElementById('mp-modal-apply-btn')?.click()" class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">how_to_reg</span> Postularme
                     </button>
                 `}
             </div>
@@ -7852,26 +7925,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         modal.style.opacity = '1';
     });
 
-    // In-View Observer for Mobile / Tablet / Desktop scroll reveal (Triggered when actually scrolled into view)
-    try {
-        const inviewObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-inview');
-                }
-            });
-        }, {
-            root: modal,
-            threshold: 0.12,
-            rootMargin: '0px 0px -70px 0px'
-        });
-
-        modal.querySelectorAll('.mp-inview-item').forEach(item => {
-            inviewObserver.observe(item);
-        });
-    } catch (e) {
-        modal.querySelectorAll('.mp-inview-item').forEach(item => item.classList.add('is-inview'));
-    }
+    // In-View state immediate initialization (prevents blank/hidden content during tab minimize/preview)
+    modal.querySelectorAll('.mp-inview-item').forEach(item => {
+        item.classList.add('is-inview');
+    });
 
     // Sub-Navigation Tab Smooth Click & ScrollSpy
     const subnavButtons = modal.querySelectorAll('.mp-subnav-btn');
@@ -8250,7 +8307,22 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
             const lb = document.getElementById('mp-lightbox-modal');
-            if (lb && lb.style.display !== 'none' && lb.style.opacity !== '0') return; // let lightbox handle its own escape
+            if (lb && lb.style.display !== 'none' && lb.style.opacity !== '0') return;
+            const postulaModal = document.getElementById('habitat-postulacion-modal');
+            if (postulaModal && postulaModal.style.display !== 'none' && postulaModal.style.opacity !== '0') {
+                postulaModal.style.display = 'none';
+                return;
+            }
+            const passReqModal = document.getElementById('habitat-passport-required-modal');
+            if (passReqModal && passReqModal.style.display !== 'none' && passReqModal.style.opacity !== '0') {
+                passReqModal.style.display = 'none';
+                return;
+            }
+            const visitaModal = document.getElementById('habitat-visita-modal');
+            if (visitaModal && visitaModal.style.display !== 'none' && visitaModal.style.opacity !== '0') {
+                visitaModal.style.display = 'none';
+                return;
+            }
             const calcModal = document.getElementById('cost-calculator-modal');
             if (calcModal && calcModal.style.display !== 'none' && calcModal.style.opacity !== '0') {
                 calcModal.style.opacity = '0';
@@ -8289,6 +8361,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         if (typeof window.loadMisAvisos === 'function') window.loadMisAvisos();
                         if (typeof window.loadOwnerAvisos === 'function') window.loadOwnerAvisos();
                         if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
+                        if (typeof window.loadOwnerApplications === 'function') window.loadOwnerApplications();
+                        if (typeof loadOwnerApplications === 'function') loadOwnerApplications();
+                        if (typeof window.loadBrokerApplications === 'function') window.loadBrokerApplications();
                         if (window.App && typeof window.App.refreshData === 'function') window.App.refreshData();
                     } catch (err) {
                         console.error('Error al eliminar la propiedad:', err);
@@ -8356,12 +8431,11 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             };
         }
     } else {
-        // Public Action Handlers: Visit & Apply
+        // Public Action Handlers: Visit & Apply (Keep property detail open in background)
         const visitBtn = document.getElementById('mp-modal-visit-btn');
         if (visitBtn) {
             visitBtn.onclick = (e) => {
                 e.preventDefault();
-                closeModal();
                 if (typeof window.openAgendarVisitaModal === 'function') {
                     window.openAgendarVisitaModal(prop);
                 }
@@ -8372,7 +8446,6 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         if (applyBtn) {
             applyBtn.onclick = (e) => {
                 e.preventDefault();
-                closeModal();
                 if (typeof window.openPostulacionModal === 'function') {
                     window.openPostulacionModal(prop);
                 }
@@ -8737,10 +8810,111 @@ if (document.readyState === 'loading') {
     setTimeout(window.checkMarketplaceUrlParam, 350);
 }
 
-// ============================================================
-// Global Modals: Postulación & Agendar Visita
-// ============================================================
+// Helper to verify if the tenant has generated their Pasaporte Hábitat
+window.hasCompletedPassport = function() {
+    try {
+        const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+        if (pData && (pData.cuit || pData.id_pasaporte || pData.codigo_pasaporte || pData.razon_social || pData.status === 'valid' || pData.status === 'verified')) {
+            return true;
+        }
+        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+        if (didit && (didit.documentNumber || (didit.firstName && didit.lastName) || didit.fullName)) {
+            return true;
+        }
+        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        if (user && (user.hasPassport || user.passport_id || user.id_pasaporte || user.cuit)) {
+            return true;
+        }
+        if (window.currentPasaporteId || window.habitatUserPassport) {
+            return true;
+        }
+    } catch (e) {}
+    return false;
+};
+
+// Modal when tenant does not have a passport yet
+window.openPassportRequiredModal = function(prop) {
+    const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
+    const propPrice = prop?.price || prop?.precio || 0;
+
+    let modal = document.getElementById('habitat-passport-required-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'habitat-passport-required-modal';
+        document.body.appendChild(modal);
+    }
+
+    modal.className = 'fixed inset-0 z-[100002] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md transition-opacity duration-200 font-body';
+    modal.style.display = 'flex';
+
+    modal.innerHTML = `
+        <div class="relative w-full max-w-md bg-white dark:bg-[#111318] rounded-[28px] shadow-2xl p-6 sm:p-7 border border-zinc-200/90 dark:border-zinc-800/90 text-zinc-900 dark:text-white space-y-5 my-auto" onclick="event.stopPropagation()">
+            
+            <!-- Top Bar -->
+            <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1">
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Requisito Obligatorio
+                    </span>
+                    <h3 class="font-headline text-lg sm:text-xl font-bold text-zinc-900 dark:text-white tracking-tight leading-snug">
+                        Generá tu Pasaporte Hábitat
+                    </h3>
+                </div>
+                <button type="button" id="close-no-passport-modal" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0" aria-label="Cerrar">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal">
+                Para postularte a <strong class="text-zinc-900 dark:text-white">${propTitle}</strong> necesitás contar con tu Pasaporte Digital validado.
+            </p>
+
+            <!-- Features list -->
+            <div class="space-y-2.5 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">check_circle</span>
+                    <span><strong>100% Digital:</strong> Se genera en solo 2 minutos.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">check_circle</span>
+                    <span><strong>Sin garantías tradicionales:</strong> Validación ARCA y BCRA.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">check_circle</span>
+                    <span><strong>Válido para todo Hábitat:</strong> Postulate con 1 solo click.</span>
+                </div>
+            </div>
+
+            <!-- Buttons with identical matched heights -->
+            <div class="flex items-center gap-2.5 pt-1">
+                <button type="button" id="btn-cancel-no-passport" class="h-12 px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0">
+                    Cerrar
+                </button>
+                <a href="pasaporte-habitat.html" id="btn-create-passport-now" class="flex-1 h-12 inline-flex items-center justify-center gap-2 px-5 rounded-2xl bg-primary hover:bg-[#992226] text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-98 cursor-pointer text-center">
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    <span>Generar Pasaporte (2 min)</span>
+                </a>
+            </div>
+        </div>
+    `;
+
+    const closeFn = () => { modal.style.display = 'none'; };
+    document.getElementById('close-no-passport-modal').onclick = closeFn;
+    document.getElementById('btn-cancel-no-passport').onclick = closeFn;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeFn();
+    };
+};
+
 window.openPostulacionModal = function(prop) {
+    // Si el inquilino no tiene el pasaporte hecho, avisarle y ofrecerle crearlo
+    if (!window.hasCompletedPassport()) {
+        window.openPassportRequiredModal(prop);
+        return;
+    }
+
     const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
     const pubId = prop?.id_publicacion || prop?.idPublicacion || prop?.id;
     const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
@@ -8776,51 +8950,72 @@ window.openPostulacionModal = function(prop) {
         document.body.appendChild(modal);
     }
 
-    modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300 overflow-y-auto font-body';
+    modal.className = 'fixed inset-0 z-[100002] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md transition-opacity duration-200 font-body';
     modal.style.display = 'flex';
 
     modal.innerHTML = `
-        <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white my-auto" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 mb-6">
-                <div>
-                    <span class="text-xs font-bold text-primary dark:text-red-400 uppercase tracking-wider">Postulación a Alquiler</span>
-                    <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">${propTitle}</h3>
+        <div class="relative w-full max-w-md sm:max-w-lg bg-white dark:bg-[#111318] rounded-[28px] shadow-2xl p-6 sm:p-7 border border-zinc-200/90 dark:border-zinc-800/90 text-zinc-900 dark:text-white space-y-5 my-auto" onclick="event.stopPropagation()">
+            
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1 min-w-0 flex-1">
+                    <span class="text-[11px] font-bold text-primary dark:text-red-400 uppercase tracking-wider block">
+                        Postulación al Alquiler
+                    </span>
+                    <h3 class="font-headline text-lg sm:text-xl font-bold text-zinc-900 dark:text-white truncate">
+                        ${propTitle}
+                    </h3>
                 </div>
-                <button type="button" id="close-postulacion-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 flex items-center justify-center cursor-pointer">
+                <button type="button" id="close-postulacion-modal" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0" aria-label="Cerrar">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
 
+            <!-- Property Preview Mini Tile -->
+            <div class="flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-800">
+                <div class="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-xs border border-zinc-200/60 dark:border-zinc-700/60">
+                    <img src="${mainPhoto}" alt="${propTitle}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="font-headline font-black text-sm text-zinc-900 dark:text-white truncate">
+                            $${Number(propPrice).toLocaleString('es-AR')} <span class="text-xs font-semibold text-zinc-400">/ mes</span>
+                        </div>
+                        ${(prop?.isVerifiedOwner || prop?.verified || prop?.is_verified_owner || prop?.propietario_verificado) ? `
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20 inline-flex items-center gap-0.5 shrink-0">
+                                <span class="material-symbols-outlined text-xs text-emerald-600 dark:text-emerald-400">verified</span> Verificado
+                            </span>
+                        ` : ''}
+                    </div>
+                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate flex items-center gap-1 mt-0.5">
+                        <span class="material-symbols-outlined text-xs text-zinc-400">location_on</span>
+                        <span class="truncate">${propAddress}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verified Passport Notice (Sleek and subtle) -->
+            <div class="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300">
+                <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">verified</span>
+                <span class="leading-tight">Tu <strong>Pasaporte Hábitat</strong> verificado se adjuntará automáticamente.</span>
+            </div>
+
+            <!-- Form: Only Message -->
             <form id="form-postulacion-modal" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Nombre completo</label>
-                    <input type="text" id="postula-nombre" required value="${defaultName}" placeholder="Tu nombre y apellido" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
+                <div class="space-y-2">
+                    <label for="postula-mensaje" class="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                        Mensaje para el propietario <span class="text-zinc-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea id="postula-mensaje" rows="4" class="w-full p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:focus:ring-red-400/20 focus:border-primary dark:focus:border-red-400 transition-all resize-none font-body leading-relaxed" placeholder="Escribí una breve presentación, consulta sobre disponibilidad o fecha estimada de ingreso..."></textarea>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Correo Electrónico</label>
-                        <input type="email" id="postula-email" required value="${defaultEmail}" placeholder="correo@ejemplo.com" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Teléfono WhatsApp</label>
-                        <input type="tel" id="postula-telefono" required value="${defaultPhone || '+54 9 11 '}" placeholder="+54 9 11 ..." class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Demostración de Ingresos / Garantía</label>
-                    <input type="text" id="postula-ingresos" required value="Pasaporte Hábitat Verificado (Didit KYC + ARCA)" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-semibold focus:ring-2 focus:ring-primary">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Mensaje para el propietario (opcional)</label>
-                    <textarea id="postula-mensaje" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm font-medium focus:ring-2 focus:ring-primary" placeholder="Cuéntale un poco sobre ti y tu disponibilidad para ingresar...">¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.</textarea>
-                </div>
-                <div class="pt-2 flex gap-3">
-                    <button type="button" id="btn-cancel-postulacion" class="flex-1 py-3 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
+
+                <div class="flex items-center gap-2.5 pt-1">
+                    <button type="button" id="btn-cancel-postulacion" class="h-12 px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <button type="submit" id="btn-submit-postulacion" class="flex-1 h-12 inline-flex items-center justify-center gap-2 px-5 rounded-2xl bg-primary hover:bg-[#992226] text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-98 cursor-pointer">
                         <span class="material-symbols-outlined text-base">send</span>
-                        Enviar Postulación
+                        <span>Enviar Postulación</span>
                     </button>
                 </div>
             </form>
@@ -8831,8 +9026,26 @@ window.openPostulacionModal = function(prop) {
     document.getElementById('close-postulacion-modal').onclick = closeFn;
     document.getElementById('btn-cancel-postulacion').onclick = closeFn;
 
+    modal.onclick = (e) => {
+        if (e.target === modal) closeFn();
+    };
+
     document.getElementById('form-postulacion-modal').onsubmit = async (e) => {
         e.preventDefault();
+        const userMsg = document.getElementById('postula-mensaje')?.value?.trim() || '¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.';
+        
+        let tenantCondicion = 'Monotributista';
+        let tenantDniVal = null;
+        let tenantCuitVal = null;
+        try {
+            const pass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+            const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+            const u = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            tenantCondicion = pass.condicion_fiscal || pass.condicionFiscal || pass.actividad || u.condicion_fiscal || u.condicionFiscal || 'Monotributista';
+            tenantDniVal = didit.documentNumber || didit.dni || u.dni || pass.dni || null;
+            tenantCuitVal = pass.cuit || u.cuit || null;
+        } catch (e) {}
+
         const appData = {
             propertyId: propId,
             publicationId: pubId,
@@ -8846,20 +9059,37 @@ window.openPostulacionModal = function(prop) {
             propertyRooms: prop?.ambientes || prop?.rooms || 2,
             propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
             propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
-            tenantName: document.getElementById('postula-nombre').value,
-            tenantEmail: document.getElementById('postula-email').value,
-            tenantPhone: document.getElementById('postula-telefono').value,
-            incomeProof: document.getElementById('postula-ingresos').value,
-            message: document.getElementById('postula-mensaje').value
+            tenantName: defaultName || 'Inquilino Verificado',
+            tenantEmail: defaultEmail || 'inquilino@habitat.com.ar',
+            tenantPhone: defaultPhone || '+54 9 11',
+            tenantDni: tenantDniVal,
+            tenantCuit: tenantCuitVal,
+            condicion_fiscal: tenantCondicion,
+            incomeProof: `Pasaporte Hábitat (${tenantCondicion})`,
+            message: userMsg
         };
 
-        if (window.DataManager) {
+        if (window.DataManager && typeof window.DataManager.submitApplication === 'function') {
             await window.DataManager.submitApplication(appData);
         }
         closeFn();
 
-        if (confirm("¡Tu postulación ha sido enviada con éxito al propietario!\n\n¿Deseas ir a la sección 'Tus Postulaciones' para hacerle seguimiento?")) {
-            window.location.href = 'tu-alquiler.html#postulaciones';
+        if (window.showCustomConfirm) {
+            const goToApps = await window.showCustomConfirm({
+                title: '¡Postulación Enviada!',
+                message: `Tu postulación para "${propTitle}" fue enviada con éxito al propietario junto con tu Pasaporte Hábitat.\n\n¿Deseas ir a 'Tus Postulaciones' para hacerle seguimiento?`,
+                confirmText: 'Ver mis postulaciones',
+                cancelText: 'Continuar navegando'
+            });
+            if (goToApps) {
+                window.location.href = 'tu-alquiler.html#postulaciones';
+            }
+        } else if (window.showCustomAlert) {
+            await window.showCustomAlert({
+                title: '¡Postulación Enviada!',
+                message: 'Tu postulación fue enviada exitosamente al propietario.',
+                icon: 'check_circle'
+            });
         }
     };
 };
@@ -9033,6 +9263,15 @@ function createMarketplaceCard(prop, index) {
     const isSemiamoblado = amobladoVal === 'semiamoblado' || amobladoVal === 'semi-amoblado';
     const amobladoLabel = isAmoblado ? 'Amoblado' : (isSemiamoblado ? 'Semiamoblado' : null);
 
+    const isVerifiedOwner = Boolean(
+        prop.isVerifiedOwner ||
+        prop.verified ||
+        prop.is_verified_owner ||
+        prop.propietario_verificado ||
+        (extraInfo && (extraInfo.isVerifiedOwner || extraInfo.verified)) ||
+        (prop.tags && prop.tags.some(t => t.toLowerCase().includes('verificad')))
+    );
+
     const card = document.createElement('div');
     card.className = `group cursor-pointer animate-on-scroll ${delay}`;
     card.onclick = () => {
@@ -9047,6 +9286,11 @@ function createMarketplaceCard(prop, index) {
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 src="${imgSrc}"
                 onerror="this.src='img/hero-marketplace.jpg'">
+            ${isVerifiedOwner ? `
+                <div class="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-emerald-400/30">
+                    <span class="material-symbols-outlined text-xs">verified</span> Propietario Verificado
+                </div>
+            ` : ''}
             <div class="absolute top-4 right-4 flex flex-col items-end gap-1.5">
                 <span class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur px-3 py-1 rounded shadow-sm text-[10px] font-bold tracking-widest text-primary uppercase">${operacionLabel}</span>
                 ${amobladoLabel ? `<span class="bg-purple-100/95 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 backdrop-blur px-2.5 py-0.5 rounded shadow-sm text-[10px] font-extrabold flex items-center gap-1"><span class="material-symbols-outlined text-xs">chair</span>${amobladoLabel}</span>` : ''}

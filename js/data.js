@@ -266,6 +266,11 @@ var DataManager = {
                 const ambientes = prop.habitaciones_total || extraInfo.ambientes || dormitorios;
                 const cocheras = prop.cantidad_cocheras || extraInfo.cocheras || 0;
                 const supCubierta = prop.superficie_cubierta || extraInfo.supCubierta || 0;
+                const isVerifiedOwner = Boolean(
+                    extraInfo.isVerifiedOwner ||
+                    extraInfo.verified ||
+                    (pub.descripcion && pub.descripcion.includes('"isVerifiedOwner":true'))
+                );
 
                 const tags = [
                     dormitorios ? `${dormitorios} dorm.` : null,
@@ -273,7 +278,7 @@ var DataManager = {
                     ambientes ? `${ambientes} amb.` : null,
                     cocheras ? `${cocheras} coch.` : null,
                     supCubierta ? `${supCubierta} m²` : null,
-                    'Verificado'
+                    isVerifiedOwner ? 'Propietario Verificado' : null
                 ].filter(Boolean);
 
                 const dbBarrio = prop.Barrio?.nombre;
@@ -336,7 +341,8 @@ var DataManager = {
                     note: cleanTitle,
                     type: extraInfo.tipo || 'apartment',
                     pet: extraInfo.mascotas || false,
-                    verified: true,
+                    verified: isVerifiedOwner,
+                    isVerifiedOwner: isVerifiedOwner,
                     status: currentPropStatus,
                     expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
                     expensas: extraInfo.expensas || 0,
@@ -657,9 +663,36 @@ var DataManager = {
             }
         }
 
-        // 3. Construct clean description string (only publication description, no JSON metadata)
+        // 3. Construct description string with metadata suffix
         const baseDescription = propertyData.descripcionAviso || propertyData.tituloAviso || 'Propiedad publicada en alquiler';
         const price = parseFloat(propertyData.precio || propertyData.price || 0);
+
+        const extraMeta = {
+            isVerifiedOwner: Boolean(propertyData.isVerifiedOwner),
+            moneda: propertyData.moneda || 'ARS',
+            operacion: propertyData.operacion || 'Alquiler',
+            dormitorios: parseInt(propertyData.dormitorios || 0),
+            banos: parseInt(propertyData.banos || 0),
+            toilettes: parseInt(propertyData.toilettes || 0),
+            ambientes: parseInt(propertyData.ambientes || 0),
+            cocheras: parseInt(propertyData.cocheras || 0),
+            supCubierta: parseFloat(propertyData.supCubierta || 0),
+            supTotal: parseFloat(propertyData.supTotal || 0),
+            provincia: propertyData.provincia,
+            ciudad: propertyData.ciudad,
+            barrio: propertyData.barrio,
+            piso_dpto: propertyData.piso ? `${propertyData.piso} ${propertyData.depto || ''}`.trim() : null,
+            numero_local: propertyData.numeroLocal || propertyData.numero_local || null,
+            antiguedad: propertyData.antiguedad,
+            disposicion: propertyData.disposicion,
+            orientacion: propertyData.orientacion,
+            subtipoPropiedad: propertyData.subtipoPropiedad,
+            amoblado: propertyData.amoblado,
+            expensasIncluidas: Boolean(propertyData.expensasIncluidas),
+            expensas: propertyData.expensasIncluidas ? 0 : parseFloat(propertyData.expensas || 0),
+            caracteristicas: propertyData.caracteristicas || []
+        };
+        const descriptionWithMeta = `${baseDescription} | Detalles: ${JSON.stringify(extraMeta)}`;
 
         const { data: pubData, error: pubErr } = await window.supabaseClient
             .from('Publicacion')
@@ -669,7 +702,7 @@ var DataManager = {
                 id_tipo_operacion: 1,
                 id_moneda: propertyData.moneda === 'USD' ? 2 : 1,
                 precio: price,
-                descripcion: baseDescription
+                descripcion: descriptionWithMeta
             }])
             .select()
             .single();
@@ -832,26 +865,56 @@ var DataManager = {
     },
 
     deleteProperty: async (id_publicacion) => {
-        if (!window.supabaseClient || !id_publicacion) return;
+        if (!id_publicacion) return;
         const nowIso = new Date().toISOString();
-        try {
-            // Close active status history
-            await window.supabaseClient
-                .from('Historial_Estado_Publicacion')
-                .update({ fecha_fin: nowIso })
-                .eq('id_publicacion', id_publicacion)
-                .is('fecha_fin', null);
+        const strId = String(id_publicacion);
 
-            // Insert new status history with id_estado_publicacion = 5 ('eliminada')
-            await window.supabaseClient
-                .from('Historial_Estado_Publicacion')
-                .insert([{
-                    id_publicacion: id_publicacion,
-                    id_estado_publicacion: 5,
-                    fecha_inicio: nowIso
-                }]);
+        // 1. Guardar en lista local de eliminadas para filtrado inmediato
+        try {
+            const deletedProps = JSON.parse(localStorage.getItem('habitat_deleted_properties') || '[]');
+            if (!deletedProps.includes(strId)) {
+                deletedProps.push(strId);
+                localStorage.setItem('habitat_deleted_properties', JSON.stringify(deletedProps));
+            }
+
+            // Eliminar postulaciones locales asociadas a esta propiedad / publicación
+            const rawApps = localStorage.getItem('habitat_tenant_applications');
+            if (rawApps) {
+                const parsed = JSON.parse(rawApps);
+                if (Array.isArray(parsed)) {
+                    const remainingApps = parsed.filter(a => {
+                        const pid = String(a.property_id || a.propertyId || a.id_propiedad || '');
+                        const pPubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
+                        return pid !== strId && pPubId !== strId;
+                    });
+                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(remainingApps));
+                }
+            }
         } catch (e) {
-            console.error("Error setting property status to eliminada:", e);
+            console.warn("Error updating local deleted properties:", e);
+        }
+
+        // 2. Si Supabase está disponible, registrar estado 5 (eliminada)
+        if (window.supabaseClient) {
+            try {
+                // Close active status history
+                await window.supabaseClient
+                    .from('Historial_Estado_Publicacion')
+                    .update({ fecha_fin: nowIso })
+                    .eq('id_publicacion', id_publicacion)
+                    .is('fecha_fin', null);
+
+                // Insert new status history with id_estado_publicacion = 5 ('eliminada')
+                await window.supabaseClient
+                    .from('Historial_Estado_Publicacion')
+                    .insert([{
+                        id_publicacion: id_publicacion,
+                        id_estado_publicacion: 5,
+                        fecha_inicio: nowIso
+                    }]);
+            } catch (e) {
+                console.error("Error setting property status to eliminada in Supabase:", e);
+            }
         }
     },
 
@@ -894,6 +957,11 @@ var DataManager = {
 
     // Postulaciones / Solicitudes
     getApplications: async function () {
+        let deletedProps = [];
+        try {
+            deletedProps = JSON.parse(localStorage.getItem('habitat_deleted_properties') || '[]');
+        } catch (e) {}
+
         let dbApps = [];
         if (window.supabaseClient) {
             try {
@@ -914,6 +982,7 @@ var DataManager = {
                             *,
                             Publicacion (
                                 *,
+                                Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
                                 Multimedia (*)
                             )
                         ),
@@ -925,77 +994,102 @@ var DataManager = {
                     .order('fecha_solicitud', { ascending: false });
 
                 if (!error && data) {
-                    dbApps = data.map(s => {
-                        const prop = s.Propiedad || {};
-                        const perf = s.Perfil || {};
-                        const pass = (Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat[0] : perf.Pasaporte_habitat) || {};
-                        const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
-                        const media = pub?.Multimedia || [];
-                        const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
-                        const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
-
-                        // Parse extraInfo from pub.descripcion if available
-                        let extraInfo = {};
-                        if (pub?.descripcion && pub.descripcion.includes('Detalles: ')) {
-                            try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) {}
-                        }
-
-                        const title = pub?.descripcion 
-                            ? pub.descripcion.split(' | Detalles: ')[0] 
-                            : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
-
-                        // Determinar estado real desde Historial_estado_solicitud
-                        const hist = s.Historial_estado_solicitud || [];
-                        let appStatus = 'pendiente';
-                        if (hist.length > 0) {
-                            const sortedHist = [...hist].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
-                            const latest = sortedHist[0];
-                            const stName = (latest.Estado_solicitud?.nombre || '').toLowerCase();
-                            if (latest.id_estado_solicitud === 2 || stName === 'aceptada' || stName === 'aprobada') {
-                                appStatus = 'aceptada';
-                            } else if (latest.id_estado_solicitud === 3 || stName === 'rechazada') {
-                                appStatus = 'rechazada';
+                    dbApps = data
+                        .filter(s => {
+                            const prop = s.Propiedad || {};
+                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            
+                            // Verificar si la publicación está eliminada en Supabase
+                            if (pub?.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
+                                const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+                                const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
+                                const estadoNombre = (activeHist.Estado_Publicacion?.nombre || '').toLowerCase();
+                                if (estadoNombre === 'eliminada' || estadoNombre === 'eliminado' || activeHist.id_estado_publicacion === 5) {
+                                    return false;
+                                }
                             }
-                        }
 
-                        // Resolver DNI y CUIT reales
-                        let realDni = perf.dni || null;
-                        let realCuit = pass.cuit || null;
-                        if (!realDni && realCuit && realCuit.replace(/\D/g, '').length === 11) {
-                            const clean = realCuit.replace(/\D/g, '');
-                            realDni = clean.substring(2, clean.length - 1);
-                        }
+                            // Verificar si está en la lista de eliminadas local
+                            const pubIdStr = String(pub?.id_publicacion || '');
+                            const propIdStr = String(s.id_propiedad || prop.id_propiedad || '');
+                            if (deletedProps.includes(pubIdStr) || deletedProps.includes(propIdStr)) {
+                                return false;
+                            }
 
-                        return {
-                            id: s.id_solicitud,
-                            property_id: s.id_propiedad,
-                            property_title: title,
-                            property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
-                            property_price: pub?.precio || prop.expensas_mensuales || 450000,
-                            property_expenses: prop.expensas_mensuales || 45000,
-                            property_image: photoUrl,
-                            property_photos: photoUrls.length > 0 ? photoUrls : [photoUrl],
-                            property_m2: prop.superficie_total || prop.superficie_cubierta || extraInfo.supTotal || 65,
-                            property_rooms: prop.ambientes || prop.habitaciones_total || extraInfo.ambientes || 2,
-                            property_beds: prop.dormitorios || extraInfo.dormitorios || 1,
-                            property_baths: prop.banos_completos || prop.banos || extraInfo.banos || 1,
-                            tenant_id: s.id_perfil,
-                            tenant_name: perf.nombre_completo || 'Postulante Verificado',
-                            tenant_email: perf.mail || 'inquilino@email.com',
-                            tenant_phone: s.telefono || perf.telefono || '',
-                            tenant_dni: realDni,
-                            tenant_cuit: realCuit,
-                            passport_code: pass.codigo_pasaporte || (s.id_pasaporte ? `HBT-2026-${s.id_pasaporte}` : null),
-                            condicion_fiscal: pass.condicion_fiscal || null,
-                            situacion_crediticia: pass.situacion_crediticia || null,
-                            monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
-                            income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
-                            income_proof_url: '#',
-                            message: s.mensaje || 'Interesado en alquilar la propiedad.',
-                            status: appStatus,
-                            created_at: s.fecha_solicitud
-                        };
-                    });
+                            return true;
+                        })
+                        .map(s => {
+                            const prop = s.Propiedad || {};
+                            const perf = s.Perfil || {};
+                            const pass = (Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat[0] : perf.Pasaporte_habitat) || {};
+                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            const media = pub?.Multimedia || [];
+                            const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
+                            const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
+
+                            // Parse extraInfo from pub.descripcion if available
+                            let extraInfo = {};
+                            if (pub?.descripcion && pub.descripcion.includes('Detalles: ')) {
+                                try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) {}
+                            }
+
+                            const title = pub?.descripcion 
+                                ? pub.descripcion.split(' | Detalles: ')[0] 
+                                : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
+
+                            // Determinar estado real desde Historial_estado_solicitud
+                            const hist = s.Historial_estado_solicitud || [];
+                            let appStatus = 'pendiente';
+                            if (hist.length > 0) {
+                                const sortedHist = [...hist].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+                                const latest = sortedHist[0];
+                                const stName = (latest.Estado_solicitud?.nombre || '').toLowerCase();
+                                if (latest.id_estado_solicitud === 2 || stName === 'aceptada' || stName === 'aprobada') {
+                                    appStatus = 'aceptada';
+                                } else if (latest.id_estado_solicitud === 3 || stName === 'rechazada') {
+                                    appStatus = 'rechazada';
+                                }
+                            }
+
+                            // Resolver DNI y CUIT reales
+                            let realDni = perf.dni || null;
+                            let realCuit = pass.cuit || null;
+                            if (!realDni && realCuit && realCuit.replace(/\D/g, '').length === 11) {
+                                const clean = realCuit.replace(/\D/g, '');
+                                realDni = clean.substring(2, clean.length - 1);
+                            }
+
+                            return {
+                                id: s.id_solicitud,
+                                property_id: s.id_propiedad,
+                                publication_id: pub?.id_publicacion,
+                                property_title: title,
+                                property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
+                                property_price: pub?.precio || prop.expensas_mensuales || 450000,
+                                property_expenses: prop.expensas_mensuales || 45000,
+                                property_image: photoUrl,
+                                property_photos: photoUrls.length > 0 ? photoUrls : [photoUrl],
+                                property_m2: prop.superficie_total || prop.superficie_cubierta || extraInfo.supTotal || 65,
+                                property_rooms: prop.ambientes || prop.habitaciones_total || extraInfo.ambientes || 2,
+                                property_beds: prop.dormitorios || extraInfo.dormitorios || 1,
+                                property_baths: prop.banos_completos || prop.banos || extraInfo.banos || 1,
+                                tenant_id: s.id_perfil,
+                                tenant_name: perf.nombre_completo || 'Postulante Verificado',
+                                tenant_email: perf.mail || 'inquilino@email.com',
+                                tenant_phone: s.telefono || perf.telefono || '',
+                                tenant_dni: realDni,
+                                tenant_cuit: realCuit,
+                                passport_code: pass.codigo_pasaporte || (s.id_pasaporte ? `HBT-2026-${s.id_pasaporte}` : null),
+                                condicion_fiscal: pass.condicion_fiscal || null,
+                                situacion_crediticia: pass.situacion_crediticia || null,
+                                monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
+                                income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
+                                income_proof_url: '#',
+                                message: s.mensaje || 'Interesado en alquilar la propiedad.',
+                                status: appStatus,
+                                created_at: s.fecha_solicitud
+                            };
+                        });
                 }
             } catch (e) {
                 console.error("Error in getApplications (Supabase query):", e);
@@ -1008,7 +1102,14 @@ var DataManager = {
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
-                    localSavedApps = parsed.filter(a => a && a.id && !String(a.id).startsWith('app-00') && !String(a.property_title || '').includes('Carlos Gómez') && !String(a.tenant_name || '').includes('Carlos Gómez'));
+                    localSavedApps = parsed.filter(a => {
+                        if (!a || !a.id) return false;
+                        if (String(a.id).startsWith('app-00') || String(a.property_title || '').includes('Carlos Gómez') || String(a.tenant_name || '').includes('Carlos Gómez')) return false;
+                        const pid = String(a.property_id || a.propertyId || a.id_propiedad || '');
+                        const pPubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
+                        if (deletedProps.includes(pid) || deletedProps.includes(pPubId)) return false;
+                        return true;
+                    });
                 }
             }
         } catch (e) {}
@@ -1098,6 +1199,9 @@ var DataManager = {
                 tenant_name: appData.tenantName || 'Inquilino Postulante',
                 tenant_email: appData.tenantEmail || 'inquilino@habitat.ar',
                 tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
+                tenant_dni: appData.tenantDni || null,
+                tenant_cuit: appData.tenantCuit || null,
+                condicion_fiscal: appData.condicion_fiscal || appData.condicionFiscal || 'Monotributista',
                 monthly_income: parseFloat(appData.declaredIncome || appData.monthly_income || 1500000),
                 income_proof: appData.incomeProof || 'Recibo de Sueldo / Pasaporte Hábitat',
                 message: appData.message || 'Interesado en alquilar la propiedad.',
