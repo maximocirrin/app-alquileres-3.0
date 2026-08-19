@@ -23,6 +23,16 @@
     return '';
   }
 
+  function isRealFullName(str) {
+    if (!str || typeof str !== 'string') return false;
+    const clean = str.trim().toLowerCase();
+    if (!clean || clean.length < 3) return false;
+    if (clean === 'usuario' || clean === 'usuario habitat' || clean === 'usuario verificado' || clean === 'titular del pasaporte' || clean === 'titular' || clean === 'titular hábitat') {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Extrae o deriva nombre, apellido y DNI del usuario a partir de datos disponibles.
    */
@@ -32,9 +42,9 @@
     let docNumber = '';
 
     try {
-      // 1. Si ya tenemos identidad validada en localStorage (descartar si contenía 'Usuario Habitat')
+      // 1. Si ya tenemos identidad validada real en localStorage
       const storedIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-      if (storedIdentity.fullName && !storedIdentity.fullName.toLowerCase().includes('usuario habitat') && !storedIdentity.fullName.toLowerCase().includes('usuario verificado')) {
+      if (isRealFullName(storedIdentity.fullName)) {
         return storedIdentity;
       }
 
@@ -44,21 +54,21 @@
       let candName = storedPassport.razon_social || storedPassport.nombre_completo || storedUser.nombre_completo || storedUser.name || storedUser.full_name;
 
       // 3. Revisar si hay sesión de Supabase Auth
-      if (!candName) {
+      if (!isRealFullName(candName)) {
         try {
           const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
           if (authKey) {
             const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
             const u = authData?.user;
             candName = u?.user_metadata?.full_name || u?.user_metadata?.name || u?.user_metadata?.user_name;
-            if (!candName && u?.email && !u.email.includes('usuario')) {
+            if (!isRealFullName(candName) && u?.email && !u.email.includes('usuario')) {
               candName = u.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
             }
           }
         } catch (eAuth) {}
       }
 
-      if (candName && typeof candName === 'string' && !candName.toLowerCase().includes('usuario habitat') && !candName.toLowerCase().includes('titular del pasaporte')) {
+      if (isRealFullName(candName)) {
         const parts = candName.trim().split(' ').filter(Boolean);
         if (parts.length >= 2) {
           firstName = parts.slice(0, parts.length - 1).join(' ');
@@ -67,7 +77,7 @@
           firstName = parts[0];
           lastName = '';
         }
-      } else if (userId && typeof userId === 'string' && !userId.includes('@') && !userId.startsWith('user_') && !userId.startsWith('didit_')) {
+      } else if (userId && typeof userId === 'string' && !userId.includes('@') && !userId.startsWith('user_') && !userId.startsWith('didit_') && !userId.includes('-')) {
         const parts = userId.trim().split(' ').filter(Boolean);
         if (parts.length >= 2) {
           firstName = parts.slice(0, parts.length - 1).join(' ');
@@ -85,14 +95,16 @@
       }
     } catch (e) {}
 
-    const fullName = (firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || 'Titular del Pasaporte')).trim();
+    const hasRealName = Boolean(firstName && lastName);
+    const fullName = hasRealName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || 'Titular del Pasaporte');
 
     return {
       firstName: firstName || 'Titular',
       lastName: lastName || '',
       fullName: fullName,
       documentNumber: docNumber,
-      dni: docNumber
+      dni: docNumber,
+      isReal: hasRealName
     };
   }
 
@@ -230,30 +242,34 @@
             verifiedAt: new Date().toISOString()
           }));
 
-          const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-          pData.razon_social = identity.fullName;
-          pData.nombre_completo = identity.fullName;
-          pData.nombre = identity.firstName;
-          pData.apellido = identity.lastName;
-          if (identity.documentNumber) pData.dni = identity.documentNumber;
-          if (calculatedCuit) pData.cuit = calculatedCuit;
-          localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
+          if (identity.isReal && isRealFullName(identity.fullName)) {
+            const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+            pData.razon_social = identity.fullName;
+            pData.nombre_completo = identity.fullName;
+            pData.nombre = identity.firstName;
+            pData.apellido = identity.lastName;
+            if (identity.documentNumber) pData.dni = identity.documentNumber;
+            if (calculatedCuit) pData.cuit = calculatedCuit;
+            localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
 
-          const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-          uData.nombre_completo = identity.fullName;
-          if (identity.documentNumber) uData.dni = identity.documentNumber;
-          if (calculatedCuit) uData.cuit = calculatedCuit;
-          localStorage.setItem('habitat_user', JSON.stringify(uData));
+            const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            uData.nombre_completo = identity.fullName;
+            if (identity.documentNumber) uData.dni = identity.documentNumber;
+            if (calculatedCuit) uData.cuit = calculatedCuit;
+            localStorage.setItem('habitat_user', JSON.stringify(uData));
+          }
 
           // Actualizar Perfil en Supabase si está logueado
           if (window.supabaseClient) {
             window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
               if (session && session.user) {
                 const updateFields = {
-                  nombre_completo: identity.fullName,
                   cuenta_verificada: true,
                   fecha_verificacion: new Date().toISOString()
                 };
+                if (identity.isReal && isRealFullName(identity.fullName)) {
+                  updateFields.nombre_completo = identity.fullName;
+                }
                 if (identity.documentNumber) updateFields.dni = identity.documentNumber;
                 window.supabaseClient.from('Perfil').update(updateFields).eq('user_id', session.user.id).then();
               }
