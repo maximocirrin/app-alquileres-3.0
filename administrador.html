@@ -929,18 +929,24 @@
                     });
                 }
 
-                // Filtrar para que solo se muestren candidatos de propiedades existentes y publicadas (no eliminadas)
-                const activeOwnerApps = (apps || []).filter(a => {
-                    if (!a) return false;
+                // Filtrar para que solo se muestren candidatos de propiedades existentes y publicadas (no eliminadas) y deduplicar por ID
+                const deduplicatedMap = new Map();
+                (apps || []).forEach(a => {
+                    if (!a || !a.id) return;
+                    const key = String(a.id_solicitud || a.id);
                     const pid = String(a.property_id || a.propertyId || a.id_propiedad || '');
                     const pubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
                     
                     if (ownerRawProperties.length > 0) {
-                        return validPropIds.has(pid) || validPropIds.has(pubId);
+                        if (validPropIds.has(pid) || validPropIds.has(pubId)) {
+                            if (!deduplicatedMap.has(key)) {
+                                deduplicatedMap.set(key, a);
+                            }
+                        }
                     }
-                    // Si el propietario no tiene avisos activos/publicados, no debe haber candidatos mostrados
-                    return false;
                 });
+
+                const activeOwnerApps = Array.from(deduplicatedMap.values());
 
                 if (badgeTop) badgeTop.textContent = activeOwnerApps.length;
                 if (badgeDock) badgeDock.style.display = activeOwnerApps.length > 0 ? '' : 'none';
@@ -2155,15 +2161,15 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 shrink-0">
-                                    <a href="contratos.html?contract=${contract.id || 'CTR-2026-0742'}&sign=1&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <a href="contratos.html?contract=${contract.id}&sign=1&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">draw</span>
                                         <span>Firmar Contrato (Didit Liveness)</span>
                                     </a>
-                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || 'CTR-2026-0742'}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
+                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">download</span>
                                         <span>PDF</span>
                                     </button>
-                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || 'CTR-2026-0742'}')" class="px-3 py-2.5 bg-zinc-900 text-white dark:bg-zinc-800 font-headline font-bold text-xs rounded-xl hover:bg-black flex items-center gap-1 cursor-pointer">
+                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="px-3 py-2.5 bg-zinc-900 text-white dark:bg-zinc-800 font-headline font-bold text-xs rounded-xl hover:bg-black flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
                                         <span>Audit Trail</span>
                                     </button>

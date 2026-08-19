@@ -10,6 +10,18 @@
     const NOTIF_STORAGE_KEY = 'habitat_in_app_notifications';
     const BROADCAST_CHANNEL_NAME = 'habitat_notifications_realtime_channel';
 
+    // Generar un ID único por pestaña para evitar loops de eco
+    let TAB_ID = null;
+    try {
+        TAB_ID = sessionStorage.getItem('habitat_tab_session_id');
+        if (!TAB_ID) {
+            TAB_ID = 'tab_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+            sessionStorage.setItem('habitat_tab_session_id', TAB_ID);
+        }
+    } catch(e) {
+        TAB_ID = 'tab_' + Date.now();
+    }
+
     const DEFAULT_NOTIFICATIONS = [
         {
             id: 'notif_welcome_01',
@@ -24,6 +36,32 @@
         }
     ];
 
+    // Detectar rol activo del usuario actual
+    function getActiveUserRole() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRole = urlParams.get('role');
+        if (urlRole && ['TENANT', 'OWNER', 'BROKER'].includes(urlRole.toUpperCase())) {
+            return urlRole.toUpperCase();
+        }
+        if (document.referrer.includes('tu-alquiler') || window.location.pathname.includes('tu-alquiler') || window.location.pathname.includes('pasaporte')) {
+            return 'TENANT';
+        }
+        if (document.referrer.includes('administrador') || window.location.pathname.includes('administrador')) {
+            return 'OWNER';
+        }
+        if (document.referrer.includes('panel-corredor') || window.location.pathname.includes('panel-corredor')) {
+            return 'BROKER';
+        }
+        const storedRole = localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || localStorage.getItem('habitat_user_type');
+        if (storedRole) {
+            const up = storedRole.toUpperCase();
+            if (up === 'INQUILINO' || up === 'TENANT') return 'TENANT';
+            if (up === 'PROPIETARIO' || up === 'OWNER') return 'OWNER';
+            if (up === 'CORREDOR' || up === 'BROKER') return 'BROKER';
+        }
+        return 'TENANT';
+    }
+
     // BroadcastChannel cross-tab/cross-window
     let broadcastChannel = null;
     try {
@@ -34,7 +72,7 @@
         console.warn('[BroadcastChannel Error]:', e);
     }
 
-    // Reproducir un sonido de notificación sutil y moderno usando Web Audio API
+    // Sonido sutil y moderno usando Web Audio API
     function playNotificationChime() {
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -60,7 +98,7 @@
             osc.start();
             osc.stop(ctx.currentTime + 0.36);
         } catch (e) {
-            // Audio no permitido por directiva de autoplay
+            // Silencioso si no hay interacción de usuario
         }
     }
 
@@ -68,17 +106,33 @@
         _realtimeInitialized: false,
         _processedNotifIds: new Set(),
 
-        getAll: function () {
+        // Obtener notificaciones filtradas para el rol del usuario logueado
+        getAll: function (roleFilter = null) {
+            const activeRole = roleFilter || getActiveUserRole();
+            let storedList = [];
             try {
                 const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        storedList = parsed;
+                    }
                 }
             } catch (e) { }
-            return [...DEFAULT_NOTIFICATIONS];
+
+            if (storedList.length === 0) {
+                return [...DEFAULT_NOTIFICATIONS];
+            }
+
+            // Filtrado estricto por rol para que el Propietario no reciba notificaciones del Inquilino y viceversa
+            return storedList.filter(n => {
+                if (!n || !n.title) return false;
+                if (!n.role || n.role === 'ALL') return true;
+                return n.role === activeRole;
+            });
         },
 
+        // Guardar lista completa en almacenamiento
         saveAll: function (list) {
             try {
                 localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(list));
@@ -88,18 +142,37 @@
         },
 
         getByRole: function (role) {
-            const all = this.getAll();
-            if (!role || role === 'ALL') return all;
-            return all.filter(n => n.role === 'ALL' || n.role === role || (role === 'TENANT' && n.role === 'TENANT') || (role === 'OWNER' && n.role === 'OWNER'));
+            return this.getAll(role);
         },
 
-        getUnreadCount: function (role) {
-            const list = this.getByRole(role);
+        getUnreadCount: function (role = null) {
+            const list = this.getAll(role);
             return list.filter(n => !n.read).length;
         },
 
-        createNotification: function ({ title, message, type = 'contract', link = '#', role = 'ALL', icon = null }) {
-            const list = this.getAll();
+        createNotification: function ({ id = null, title, message, type = 'contract', link = '#', role = 'ALL', icon = null }) {
+            const activeRole = getActiveUserRole();
+            const notifId = id || ('notif_' + (type || 'gen') + '_' + (role || 'all') + '_' + title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + '_' + new Date().toISOString().slice(0, 10));
+
+            // Leer almacenamiento completo
+            let allStored = [];
+            try {
+                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) allStored = parsed;
+                }
+            } catch (e) { }
+
+            // Deduplicación estricta: evitar crear la misma notificación si ya existe (en los últimos 2 minutos)
+            const isDuplicate = allStored.some(n => 
+                n.id === notifId || 
+                (n.title === title && n.role === role && (Date.now() - new Date(n.createdAt).getTime()) < 120000)
+            );
+
+            if (isDuplicate) {
+                return null;
+            }
 
             let resolvedIcon = icon;
             if (!resolvedIcon) {
@@ -117,7 +190,7 @@
             }
 
             const newNotif = {
-                id: 'notif_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                id: notifId,
                 title,
                 message,
                 type,
@@ -125,60 +198,91 @@
                 link,
                 role,
                 read: false,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                senderTabId: TAB_ID
             };
 
-            // Evitar duplicados idénticos recientes (últimos 15 segundos)
-            const existingDuplicate = list.find(n => n.title === title && (!n.read || (Date.now() - new Date(n.createdAt).getTime()) < 15000));
-            if (!existingDuplicate) {
-                list.unshift(newNotif);
-                this.saveAll(list);
+            allStored.unshift(newNotif);
+            if (allStored.length > 30) allStored = allStored.slice(0, 30);
+
+            try {
+                localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
+            } catch (e) { }
+
+            this._processedNotifIds.add(newNotif.id);
+            this.updateBadge();
+            this.renderDropdown();
+
+            // Solo mostrar Toast si la notificación corresponde al rol activo
+            if (role === 'ALL' || role === activeRole) {
                 this.showToast(newNotif);
                 playNotificationChime();
-                this._processedNotifIds.add(newNotif.id);
-
-                // 1. Enviar vía BroadcastChannel para todas las pestañas abiertas localmente
-                if (broadcastChannel) {
-                    try {
-                        broadcastChannel.postMessage({
-                            type: 'HABITAT_REALTIME_NOTIF',
-                            notification: newNotif
-                        });
-                    } catch (e) { }
-                }
-
-                // 2. Transmitir vía Supabase Realtime WebSockets para clientes en otros dispositivos/sesiones
-                this.broadcastSupabaseRealtime(newNotif);
-
-                // 3. Notificar a las vistas para que refresquen listas reactivamente
-                window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newNotif }));
-                window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: newNotif }));
             }
+
+            // 1. Enviar vía BroadcastChannel para otras pestañas abiertas
+            if (broadcastChannel) {
+                try {
+                    broadcastChannel.postMessage({
+                        type: 'HABITAT_REALTIME_NOTIF',
+                        senderTabId: TAB_ID,
+                        notification: newNotif
+                    });
+                } catch (e) { }
+            }
+
+            // 2. Transmitir vía Supabase Realtime WebSockets para otros dispositivos
+            this.broadcastSupabaseRealtime(newNotif);
+
+            // 3. Disparar eventos reactivos locales
+            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newNotif }));
+            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: newNotif }));
 
             return newNotif;
         },
 
-        receiveIncomingNotification: function (notif) {
+        receiveIncomingNotification: function (payload) {
+            if (!payload) return;
+            const senderTabId = payload.senderTabId;
+            const notif = payload.notification || payload;
+
+            // Ignorar si provino de esta misma pestaña (evita loop de eco)
+            if (senderTabId && senderTabId === TAB_ID) return;
             if (!notif || !notif.id) return;
             if (this._processedNotifIds.has(notif.id)) return;
             this._processedNotifIds.add(notif.id);
 
-            const list = this.getAll();
-            const exists = list.some(n => n.id === notif.id || (n.title === notif.title && Math.abs(new Date(n.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 10000));
+            let allStored = [];
+            try {
+                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) allStored = parsed;
+                }
+            } catch (e) { }
+
+            const exists = allStored.some(n => 
+                n.id === notif.id || 
+                (n.title === notif.title && n.role === notif.role && Math.abs(new Date(n.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 60000)
+            );
 
             if (!exists) {
-                list.unshift(notif);
+                allStored.unshift(notif);
+                if (allStored.length > 30) allStored = allStored.slice(0, 30);
                 try {
-                    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(list));
+                    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
                 } catch (e) { }
             }
 
             this.updateBadge();
             this.renderDropdown();
-            this.showToast(notif);
-            playNotificationChime();
 
-            // Disparar eventos de actualización reactiva en vivo
+            const activeRole = getActiveUserRole();
+            // Solo mostrar Toast si la notificación corresponde al rol actual
+            if (notif.role === 'ALL' || notif.role === activeRole) {
+                this.showToast(notif);
+                playNotificationChime();
+            }
+
             window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: notif }));
             window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: notif }));
         },
@@ -190,7 +294,10 @@
                     channel.send({
                         type: 'broadcast',
                         event: 'habitat_notification',
-                        payload: notif
+                        payload: {
+                            senderTabId: TAB_ID,
+                            notification: notif
+                        }
                     }).catch(() => { });
                 } catch (e) { }
             }
@@ -204,20 +311,18 @@
             if (broadcastChannel) {
                 broadcastChannel.onmessage = (event) => {
                     if (event.data && event.data.type === 'HABITAT_REALTIME_NOTIF') {
-                        this.receiveIncomingNotification(event.data.notification);
+                        this.receiveIncomingNotification(event.data);
                     }
                 };
             }
 
-            // B. Escuchar en Storage Event (multi-tab sync garantizado)
+            // B. Escuchar en Storage Event (multi-tab sync)
             window.addEventListener('storage', (e) => {
                 if (e.key === NOTIF_STORAGE_KEY) {
                     this.updateBadge();
                     this.renderDropdown();
-                    this.syncSystemAlerts();
                 }
                 if (e.key === 'habitat_tenant_applications' || e.key === 'habitat_contracts') {
-                    this.syncSystemAlerts();
                     window.dispatchEvent(new CustomEvent('habitat:application_updated'));
                     window.dispatchEvent(new CustomEvent('habitat:contract_updated'));
                 }
@@ -240,26 +345,42 @@
                     console.warn('[Supabase Realtime Sub Error]:', e);
                 }
             }
-
-            // D. Polling reactivo cada 2.5s para atrapar cambios asíncronos instantáneamente
-            setInterval(() => {
-                this.syncSystemAlerts();
-            }, 2500);
         },
 
         markAsRead: function (notifId) {
-            const list = this.getAll();
-            const target = list.find(n => n.id === notifId);
+            let allStored = [];
+            try {
+                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) allStored = parsed;
+                }
+            } catch (e) { }
+
+            const target = allStored.find(n => n.id === notifId);
             if (target) {
                 target.read = true;
-                this.saveAll(list);
+                this.saveAll(allStored);
             }
         },
 
         markAllAsRead: function () {
-            const list = this.getAll();
-            list.forEach(n => n.read = true);
-            this.saveAll(list);
+            let allStored = [];
+            try {
+                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) allStored = parsed;
+                }
+            } catch (e) { }
+
+            const activeRole = getActiveUserRole();
+            allStored.forEach(n => {
+                if (n.role === 'ALL' || n.role === activeRole) {
+                    n.read = true;
+                }
+            });
+            this.saveAll(allStored);
         },
 
         showToast: function (notif) {
@@ -342,13 +463,11 @@
                 : document.getElementById('habitat-notif-dropdown-panel');
 
             if (!panel) {
-                console.warn("Habitat Notifications: Panel not found for type", type);
                 return;
             }
 
             const isCurrentlyHidden = panel.classList.contains('hidden');
 
-            // Cerrar otros dropdowns
             document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => {
                 p.classList.add('hidden');
             });
@@ -426,36 +545,6 @@
             this.updateBadge();
         },
 
-        syncSystemAlerts: function () {
-            // Sincronizar postulaciones aceptadas pendientes de firma
-            try {
-                const rawApps = localStorage.getItem('habitat_tenant_applications');
-                if (rawApps) {
-                    const apps = JSON.parse(rawApps);
-                    apps.forEach(app => {
-                        if (['aceptada', 'aprobada'].includes(String(app.status || '').toLowerCase())) {
-                            const contractId = app.contract_id || `CTR-2026-${String(app.id).replace(/\D/g, '').slice(-4) || '1042'}`;
-                            const title = `¡Postulación Aprobada! Firma tu Contrato ✍️`;
-                            const message = `El propietario aceptó tu postulación para "${app.property_title}". Ya puedes realizar tu verificación biométrica y firmar el contrato.`;
-                            const link = `contratos.html?contract=${contractId}&sign=1&role=TENANT`;
-
-                            const list = this.getAll();
-                            if (!list.some(n => n.title === title || n.link === link)) {
-                                this.createNotification({
-                                    title,
-                                    message,
-                                    type: 'contract',
-                                    link,
-                                    role: 'TENANT',
-                                    icon: 'draw'
-                                });
-                            }
-                        }
-                    });
-                }
-            } catch (e) { }
-        },
-
         initUI: function () {
             // Vincular botones existentes
             const desktopBell = document.getElementById('habitat-notif-bell-btn');
@@ -470,7 +559,7 @@
                 mobileBell.onclick = (e) => this.toggleDropdown(e, 'mobile');
             }
 
-            // Fallback: Si la navbar estática no tiene el botón, inyectarlo dinámicamente
+            // Inyectar en caso de que no existan en el navbar
             const containers = document.querySelectorAll('#desktop-auth-container, #mobile-auth-container');
             containers.forEach(container => {
                 if (!container || container.querySelector('.habitat-notif-btn-wrapper')) return;
@@ -506,14 +595,13 @@
                 }
             });
 
-            // Cerrar al click afuera
+            // Cerrar al hacer click afuera
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.habitat-notif-btn-wrapper')) {
                     document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => p.classList.add('hidden'));
                 }
             });
 
-            this.syncSystemAlerts();
             this.updateBadge();
             this.initRealtimeWebSockets();
         }
@@ -527,11 +615,10 @@
         NotificationManager.initUI();
     }
 
-    // Re-check badge and sync every time window gets focus
     window.addEventListener('focus', () => {
         if (window.NotificationManager) {
-            window.NotificationManager.syncSystemAlerts();
             window.NotificationManager.updateBadge();
+            window.NotificationManager.renderDropdown();
         }
     });
 })();

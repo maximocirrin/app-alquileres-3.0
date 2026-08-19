@@ -376,6 +376,17 @@ app.post('/api/create-session', async (req, res) => {
     }
 });
 
+// API Endpoint - Didit KYC Session Decision & Document OCR Query
+app.all('/api/session-decision', async (req, res) => {
+    try {
+        const sessionDecisionHandler = (await import('./api/session-decision.js')).default;
+        await sessionDecisionHandler(req, res);
+    } catch (err) {
+        console.error('Error en /api/session-decision:', err);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
 // API Endpoint - Unified /api/firmas/* (iniciar, sellar, finalizar, webhook)
 app.all(['/api/firmas', '/api/firmas/:action'], async (req, res) => {
     try {

@@ -7835,10 +7835,27 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         ` : `
                             <!-- Tenant Actions (Zillow Style CTAs) -->
                             <div class="space-y-3">
-                                <button id="mp-modal-apply-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-98 cursor-pointer text-base">
-                                    <span class="material-symbols-outlined text-xl">how_to_reg</span>
-                                    <span>Postularme al Alquiler</span>
-                                </button>
+                                ${(status === 'alquilada' || status === 'alquilado') ? `
+                                    <div class="bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 rounded-2xl p-4 space-y-1.5 text-amber-800 dark:text-amber-200">
+                                        <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                                            <span class="material-symbols-outlined text-base">key</span>
+                                            <span>Propiedad Actualmente Alquilada</span>
+                                        </div>
+                                        <p class="text-xs leading-relaxed font-medium">
+                                            ${prop.contractEndDate ? `Esta propiedad tiene un contrato vigente hasta el <strong>${new Date(prop.contractEndDate).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</strong>.` : 'Esta propiedad se encuentra actualmente alquilada con contrato vigente.'}
+                                        </p>
+                                    </div>
+
+                                    <button type="button" disabled class="w-full inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-400 dark:text-zinc-500 font-bold py-3.5 px-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 cursor-not-allowed text-sm">
+                                        <span class="material-symbols-outlined text-base">lock</span>
+                                        <span>Alquilada ${prop.contractEndDate ? `(Hasta ${new Date(prop.contractEndDate).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })})` : ''}</span>
+                                    </button>
+                                ` : `
+                                    <button id="mp-modal-apply-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-98 cursor-pointer text-base">
+                                        <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                                        <span>Postularme al Alquiler</span>
+                                    </button>
+                                `}
 
                                 <button id="mp-modal-visit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
                                     <span class="material-symbols-outlined text-lg">calendar_month</span>
@@ -8811,21 +8828,42 @@ if (document.readyState === 'loading') {
 }
 
 // Helper to verify if the tenant has generated their Pasaporte Hábitat
-window.hasCompletedPassport = function() {
+window.hasCompletedPassport = async function() {
     try {
+        if (window.supabaseClient) {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session && session.user) {
+                const { data: perfil } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+
+                if (perfil) {
+                    const { data: activePassports } = await window.supabaseClient
+                        .from('Pasaporte_habitat')
+                        .select('id_pasaporte, id_estado_pasaporte, fecha_vencimiento')
+                        .eq('id_perfil', perfil.id_perfil)
+                        .eq('id_estado_pasaporte', 3); // 3 = Activo
+
+                    if (activePassports && activePassports.length > 0) {
+                        const pass = activePassports[0];
+                        if (!pass.fecha_vencimiento || new Date(pass.fecha_vencimiento).getTime() > Date.now()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        
+        // Fallback local: verificar si el usuario tiene pasaporte activo en memoria/local
+        if (window.hasActivePassport && window.currentPasaporteId) {
+            return true;
+        }
         const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-        if (pData && (pData.cuit || pData.id_pasaporte || pData.codigo_pasaporte || pData.razon_social || pData.status === 'valid' || pData.status === 'verified')) {
-            return true;
-        }
         const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-        if (didit && (didit.documentNumber || (didit.firstName && didit.lastName) || didit.fullName)) {
-            return true;
-        }
-        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-        if (user && (user.hasPassport || user.passport_id || user.id_pasaporte || user.cuit)) {
-            return true;
-        }
-        if (window.currentPasaporteId || window.habitatUserPassport) {
+        if ((pData.id_pasaporte || pData.codigo_pasaporte) && (didit.documentNumber || didit.verified)) {
             return true;
         }
     } catch (e) {}
@@ -8908,9 +8946,10 @@ window.openPassportRequiredModal = function(prop) {
     };
 };
 
-window.openPostulacionModal = function(prop) {
+window.openPostulacionModal = async function(prop) {
     // Si el inquilino no tiene el pasaporte hecho, avisarle y ofrecerle crearlo
-    if (!window.hasCompletedPassport()) {
+    const hasPassport = await window.hasCompletedPassport();
+    if (!hasPassport) {
         window.openPassportRequiredModal(prop);
         return;
     }
@@ -9032,71 +9071,116 @@ window.openPostulacionModal = function(prop) {
 
     document.getElementById('form-postulacion-modal').onsubmit = async (e) => {
         e.preventDefault();
-        const userMsg = document.getElementById('postula-mensaje')?.value?.trim() || '¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.';
         
-        let tenantCondicion = 'Monotributista';
-        let tenantDniVal = null;
-        let tenantCuitVal = null;
-        let tenantNameVal = defaultName || '';
-        try {
-            const pass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-            const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-            const u = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-            tenantCondicion = pass.condicion_fiscal || pass.condicionFiscal || pass.actividad || u.condicion_fiscal || u.condicionFiscal || 'Monotributista';
-            tenantDniVal = didit.documentNumber || didit.dni || u.dni || pass.dni || null;
-            tenantCuitVal = didit.cuit || pass.cuit || u.cuit || null;
-            if (!tenantCuitVal && tenantDniVal && typeof window.calcularCUIL === 'function') {
-                tenantCuitVal = window.calcularCUIL(tenantDniVal, 'M');
-            }
-            if (!tenantNameVal) {
-                tenantNameVal = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || pass.razon_social || u.nombre_completo || u.name || '';
-            }
-        } catch (e) {}
+        if (window._isSubmittingApp) return;
+        window._isSubmittingApp = true;
 
-        const appData = {
-            propertyId: propId,
-            publicationId: pubId,
-            propertyTitle: propTitle,
-            propertyAddress: propAddress,
-            propertyPrice: propPrice,
-            propertyExpenses: propExpenses,
-            propertyImage: mainPhoto,
-            propertyPhotos: photosList.length > 0 ? photosList : [mainPhoto],
-            propertyM2: prop?.sup_total || prop?.sup_cubierta || prop?.m2 || prop?.area || 65,
-            propertyRooms: prop?.ambientes || prop?.rooms || 2,
-            propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
-            propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
-            tenantName: tenantNameVal || 'Inquilino Verificado',
-            tenantEmail: defaultEmail || 'inquilino@habitat.com.ar',
-            tenantPhone: defaultPhone || '+54 9 11',
-            tenantDni: tenantDniVal,
-            tenantCuit: tenantCuitVal,
-            condicion_fiscal: tenantCondicion,
-            incomeProof: `Pasaporte Hábitat (${tenantCondicion})`,
-            message: userMsg
-        };
-
-        if (window.DataManager && typeof window.DataManager.submitApplication === 'function') {
-            await window.DataManager.submitApplication(appData);
+        const submitBtn = document.getElementById('btn-submit-postulacion');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Enviando postulación...';
         }
-        closeFn();
 
-        if (window.showCustomConfirm) {
-            const goToApps = await window.showCustomConfirm({
-                title: '¡Postulación Enviada!',
-                message: `Tu postulación para "${propTitle}" fue enviada con éxito al propietario junto con tu Pasaporte Hábitat.\n\n¿Deseas ir a 'Tus Postulaciones' para hacerle seguimiento?`,
-                confirmText: 'Ver mis postulaciones',
-                cancelText: 'Continuar navegando'
-            });
-            if (goToApps) {
-                window.location.href = 'tu-alquiler.html#postulaciones';
+        try {
+            // Revalidar que tenga pasaporte activo
+            const validPassport = await window.hasCompletedPassport();
+            if (!validPassport) {
+                closeFn();
+                window.openPassportRequiredModal(prop);
+                return;
             }
-        } else if (window.showCustomAlert) {
-            await window.showCustomAlert({
-                title: '¡Postulación Enviada!',
-                message: 'Tu postulación fue enviada exitosamente al propietario.',
-                icon: 'check_circle'
-            });
+
+            const userMsg = document.getElementById('postula-mensaje')?.value?.trim() || '¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.';
+            
+            let tenantCondicion = 'Monotributista';
+            let tenantDniVal = null;
+            let tenantCuitVal = null;
+            let tenantNameVal = defaultName || '';
+            try {
+                const pass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                const u = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                tenantCondicion = pass.condicion_fiscal || pass.condicionFiscal || pass.actividad || u.condicion_fiscal || u.condicionFiscal || 'Monotributista';
+                tenantDniVal = didit.documentNumber || didit.dni || u.dni || pass.dni || null;
+                tenantCuitVal = didit.cuit || pass.cuit || u.cuit || null;
+                if (!tenantCuitVal && tenantDniVal && typeof window.calcularCUIL === 'function') {
+                    tenantCuitVal = window.calcularCUIL(tenantDniVal, 'M');
+                }
+                if (!tenantNameVal) {
+                    tenantNameVal = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || pass.razon_social || u.nombre_completo || u.name || '';
+                }
+            } catch (e) {}
+
+            const appData = {
+                propertyId: propId,
+                publicationId: pubId,
+                propertyTitle: propTitle,
+                propertyAddress: propAddress,
+                propertyPrice: propPrice,
+                propertyExpenses: propExpenses,
+                propertyImage: mainPhoto,
+                propertyPhotos: photosList.length > 0 ? photosList : [mainPhoto],
+                propertyM2: prop?.sup_total || prop?.sup_cubierta || prop?.m2 || prop?.area || 65,
+                propertyRooms: prop?.ambientes || prop?.rooms || 2,
+                propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
+                propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
+                tenantName: tenantNameVal || 'Inquilino Verificado',
+                tenantEmail: defaultEmail || 'inquilino@habitat.com.ar',
+                tenantPhone: defaultPhone || '+54 9 11',
+                tenantDni: tenantDniVal,
+                tenantCuit: tenantCuitVal,
+                condicion_fiscal: tenantCondicion,
+                incomeProof: `Pasaporte Hábitat (${tenantCondicion})`,
+                message: userMsg
+            };
+
+            if (window.DataManager && typeof window.DataManager.submitApplication === 'function') {
+                const res = await window.DataManager.submitApplication(appData);
+                closeFn();
+
+                if (res && res.isDuplicate) {
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: 'Postulación Ya Registrada',
+                            message: `Ya tenías una postulación activa enviada para "${propTitle}". Podés ver su estado en tu panel.`,
+                            icon: 'info'
+                        });
+                    } else {
+                        alert(`Ya tenías una postulación activa enviada para "${propTitle}".`);
+                    }
+                    return;
+                }
+            } else {
+                closeFn();
+            }
+
+            if (window.showCustomConfirm) {
+                const goToApps = await window.showCustomConfirm({
+                    title: '¡Postulación Enviada!',
+                    message: `Tu postulación para "${propTitle}" fue enviada con éxito al propietario junto con tu Pasaporte Hábitat.\n\n¿Deseas ir a 'Tus Postulaciones' para hacerle seguimiento?`,
+                    confirmText: 'Ver mis postulaciones',
+                    cancelText: 'Continuar navegando'
+                });
+                if (goToApps) {
+                    window.location.href = 'tu-alquiler.html#postulaciones';
+                }
+            } else if (window.showCustomAlert) {
+                await window.showCustomAlert({
+                    title: '¡Postulación Enviada!',
+                    message: 'Tu postulación fue enviada exitosamente al propietario.',
+                    icon: 'check_circle'
+                });
+            }
+        } catch (err) {
+            console.error("Error submitting application:", err);
+            if (err.code === 'PASSPORT_REQUIRED') {
+                closeFn();
+                window.openPassportRequiredModal(prop);
+            } else {
+                alert("Error al enviar postulación: " + (err.message || err));
+            }
+        } finally {
+            window._isSubmittingApp = false;
         }
     };
 };

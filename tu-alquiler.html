@@ -1956,29 +1956,40 @@
                     }
                 } catch (e) {}
 
-                const localAppIds = new Set(localSavedApps.map(a => String(a.id || '')));
+                // 4. Filtrar ESTRICTAMENTE las postulaciones que correspondan al inquilino actual
+                const userAppsMap = new Map();
 
-                // 4. Filtrar únicamente las postulaciones que correspondan al inquilino actual
-                let myApps = (allApps || []).filter(a => {
+                (allApps || []).forEach(a => {
                     if (!a || !a.id) return false;
-                    if (String(a.id).startsWith('app-00') || String(a.property_title || '').includes('Carlos Gómez') || String(a.tenant_name || '').includes('Carlos Gómez')) return false;
+                    if (String(a.id).startsWith('app-00') || String(a.property_title || '').includes('Carlos Gómez') || String(a.tenant_name || '').includes('Carlos Gómez')) return;
 
-                    const isLocalApp = localAppIds.has(String(a.id));
                     const matchUserId = currentUserId && (String(a.tenant_user_id) === String(currentUserId));
                     const matchProfileId = currentProfileId && (String(a.tenant_id) === String(currentProfileId));
                     const matchEmail = currentUserEmail && (String(a.tenant_email || '').toLowerCase().trim() === currentUserEmail);
                     const matchDni = currentDni && (String(a.tenant_dni || '').replace(/\D/g, '') === String(currentDni).replace(/\D/g, ''));
 
-                    return isLocalApp || matchUserId || matchProfileId || matchEmail || matchDni;
-                });
-
-                // Si hay postulaciones locales que no estaban en la lista general, agregarlas
-                localSavedApps.forEach(la => {
-                    if (!myApps.some(a => String(a.id) === String(la.id))) {
-                        myApps.unshift(la);
+                    // Solo incluir si coincide con el usuario autenticado
+                    if (matchProfileId || matchUserId || matchEmail || matchDni) {
+                        userAppsMap.set(String(a.id), a);
                     }
                 });
 
+                // Si hay postulaciones locales, verificar si pertenecen al usuario antes de incluirlas
+                localSavedApps.forEach(la => {
+                    if (!la || !la.id) return;
+                    const matchUserId = currentUserId && (String(la.tenant_user_id) === String(currentUserId));
+                    const matchProfileId = currentProfileId && (String(la.tenant_id) === String(currentProfileId));
+                    const matchEmail = currentUserEmail && (String(la.tenant_email || '').toLowerCase().trim() === currentUserEmail);
+                    const matchDni = currentDni && (String(la.tenant_dni || '').replace(/\D/g, '') === String(currentDni).replace(/\D/g, ''));
+
+                    if (matchProfileId || matchUserId || matchEmail || matchDni) {
+                        if (!userAppsMap.has(String(la.id))) {
+                            userAppsMap.set(String(la.id), la);
+                        }
+                    }
+                });
+
+                const myApps = Array.from(userAppsMap.values());
                 window._allTenantApplications = myApps;
 
                 // 5. Actualizar los contadores en las píldoras de filtro
