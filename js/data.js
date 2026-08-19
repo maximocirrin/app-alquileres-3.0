@@ -980,16 +980,12 @@ var DataManager = {
                         ),
                         Publicacion (
                             *,
+                            Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
+                            Multimedia (*),
                             Propiedad (
                                 *,
-                            Barrio (*),
-                            Publicacion (
-                                *,
-                                Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
-                                Multimedia (*)
+                                Barrio (*)
                             )
-                        ),
-
                         ),
                         Perfil (
                             *,
@@ -1001,8 +997,8 @@ var DataManager = {
                 if (!error && data) {
                     dbApps = data
                         .filter(s => {
-                            const prop = s.Propiedad || {};
-                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            const pub = s.Publicacion || {};
+                            const prop = pub.Propiedad || s.Propiedad || {};
                             
                             // Verificar si la publicación está eliminada en Supabase
                             if (pub?.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
@@ -1015,8 +1011,8 @@ var DataManager = {
                             }
 
                             // Verificar si está en la lista de eliminadas local
-                            const pubIdStr = String(pub?.id_publicacion || '');
-                            const propIdStr = String(s.id_propiedad || prop.id_propiedad || '');
+                            const pubIdStr = String(pub?.id_publicacion || s.id_publicacion || '');
+                            const propIdStr = String(prop?.id_propiedad || pub?.id_propiedad || s.id_propiedad || '');
                             if (deletedProps.includes(pubIdStr) || deletedProps.includes(propIdStr)) {
                                 return false;
                             }
@@ -1024,13 +1020,17 @@ var DataManager = {
                             return true;
                         })
                         .map(s => {
-                            const prop = s.Propiedad || {};
+                            const pub = s.Publicacion || {};
+                            const prop = pub.Propiedad || s.Propiedad || {};
                             const perf = s.Perfil || {};
-                            const pass = (Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat[0] : perf.Pasaporte_habitat) || {};
-                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            const passList = Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat : (perf.Pasaporte_habitat ? [perf.Pasaporte_habitat] : []);
+                            const pass = passList[0] || {};
                             const media = pub?.Multimedia || [];
                             const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
                             const photoUrl = photoUrls[0] || 'img/hero-marketplace.jpg';
+
+                            const propId = String(prop.id_propiedad || pub.id_propiedad || s.id_propiedad || '');
+                            const pubId = pub.id_publicacion || s.id_publicacion || null;
 
                             // Parse extraInfo from pub.descripcion if available
                             let extraInfo = {};
@@ -1057,7 +1057,7 @@ var DataManager = {
                             }
 
                             // Resolver DNI y CUIT reales
-                            let realDni = perf.dni || null;
+                            let realDni = perf.dni || pass.dni || null;
                             let realCuit = pass.cuit || null;
                             if (!realDni && realCuit && realCuit.replace(/\D/g, '').length === 11) {
                                 const clean = realCuit.replace(/\D/g, '');
@@ -1066,8 +1066,12 @@ var DataManager = {
 
                             return {
                                 id: s.id_solicitud,
-                                property_id: s.id_propiedad,
-                                publication_id: pub?.id_publicacion,
+                                property_id: propId,
+                                propertyId: propId,
+                                id_propiedad: propId,
+                                publication_id: pubId,
+                                publicationId: pubId,
+                                id_publicacion: pubId,
                                 property_title: title,
                                 property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
                                 property_price: pub?.precio || prop.expensas_mensuales || 450000,
@@ -1079,12 +1083,13 @@ var DataManager = {
                                 property_beds: prop.dormitorios || extraInfo.dormitorios || 1,
                                 property_baths: prop.banos_completos || prop.banos || extraInfo.banos || 1,
                                 tenant_id: s.id_perfil,
-                                tenant_name: perf.nombre_completo || 'Postulante Verificado',
+                                tenant_user_id: perf.user_id || null,
+                                tenant_name: perf.nombre_completo || pass.razon_social || 'Postulante Verificado',
                                 tenant_email: perf.mail || 'inquilino@email.com',
                                 tenant_phone: s.telefono || perf.telefono || '',
                                 tenant_dni: realDni,
                                 tenant_cuit: realCuit,
-                                passport_code: pass.codigo_pasaporte || (s.id_pasaporte ? `HBT-2026-${s.id_pasaporte}` : null),
+                                passport_code: pass.codigo_pasaporte || (pass.id_pasaporte ? `HBT-2026-${pass.id_pasaporte}` : null),
                                 condicion_fiscal: pass.condicion_fiscal || null,
                                 situacion_crediticia: pass.situacion_crediticia || null,
                                 monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),

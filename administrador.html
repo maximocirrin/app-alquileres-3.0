@@ -649,7 +649,7 @@
                     const isVerifOwner = Boolean(p.isVerifiedOwner || p.verified || p.is_verified_owner || p.propietario_verificado);
                     return `
                     <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col group">
-                        <div class="h-44 bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                        <div class="aspect-[16/10] w-full min-h-[220px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                             <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                                 <span class="px-3 py-1 text-[11px] font-black rounded-full ${p.status === 'paused' || p.status === 'pausado' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'} uppercase shadow">
@@ -844,6 +844,38 @@
             const guarantees = a.guarantees || a.garantia || 'Garantía Finaer / Recibo';
             const kycStatus = (rawDni && rawDni !== 'Pendiente' && rawDni !== 'Pendiente de registrar') ? 'Identidad Validada' : 'En Proceso';
 
+            // 4. Formatear Fecha y Hora de la postulación
+            let appliedAtFormatted = '';
+            let appliedAtDate = '';
+            let appliedAtTime = '';
+            const rawDate = a.created_at || a.fecha_solicitud || a.fecha || a.date || a.createdAt;
+            if (rawDate) {
+                try {
+                    const d = new Date(rawDate);
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        const hours = String(d.getHours()).padStart(2, '0');
+                        const mins = String(d.getMinutes()).padStart(2, '0');
+                        appliedAtDate = `${day}/${month}/${year}`;
+                        appliedAtTime = `${hours}:${mins} hs`;
+                        appliedAtFormatted = `${day}/${month}/${year} • ${hours}:${mins} hs`;
+                    }
+                } catch (e) {}
+            }
+            if (!appliedAtFormatted) {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const mins = String(now.getMinutes()).padStart(2, '0');
+                appliedAtDate = `${day}/${month}/${year}`;
+                appliedAtTime = `${hours}:${mins} hs`;
+                appliedAtFormatted = `${day}/${month}/${year} • ${hours}:${mins} hs`;
+            }
+
             return {
                 id: a.id,
                 name,
@@ -856,7 +888,10 @@
                 incomeFormatted: income > 0 ? `$ ${income.toLocaleString('es-AR')}` : '$ 0',
                 score,
                 guarantees,
-                kycStatus
+                kycStatus,
+                appliedAtFormatted,
+                appliedAtDate,
+                appliedAtTime
             };
         }
 
@@ -920,10 +955,12 @@
 
                 // Normalizar cada postulación asociando su propiedad, título y dirección exacta
                 ownerAppsState = activeOwnerApps.map(a => {
-                    const matchedProp = ownerAppsPropMap.get(String(a.property_id || a.propertyId || a.id_propiedad || '')) || {};
-                    const propTitle = a.property_title || matchedProp.title || 'Propiedad en Alquiler';
+                    const pidStr = String(a.property_id || a.propertyId || a.id_propiedad || '');
+                    const pubIdStr = String(a.publication_id || a.publicationId || a.id_publicacion || '');
+                    const matchedProp = ownerAppsPropMap.get(pidStr) || ownerAppsPropMap.get(pubIdStr) || {};
+                    const propTitle = a.property_title || matchedProp.title || matchedProp.descripcion?.split(' | Detalles: ')[0] || 'Propiedad en Alquiler';
                     const propAddress = a.property_address || matchedProp.address || (matchedProp.calle ? `${matchedProp.calle} ${matchedProp.numero || ''}`.trim() : '') || 'Dirección de la propiedad';
-                    const propId = String(matchedProp.id || a.property_id || a.propertyId || 'general');
+                    const propId = String(matchedProp.id || matchedProp.id_propiedad || a.property_id || a.propertyId || 'general');
 
                     return {
                         ...a,
@@ -1240,19 +1277,28 @@
             const pData = getApplicantPassportData(a);
             return `
                 <div class="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 transition-all hover:shadow-md ${isRejected ? 'border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40' : ''}">
-                    <!-- Cabecera de la Propiedad y Estado de la Postulación -->
-                    <div class="flex items-start justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                    <!-- Cabecera de la Propiedad, Fecha/Hora y Estado de la Postulación -->
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
                         <div class="min-w-0 flex-1">
                             <!-- Título de la Propiedad (Sin fondo ni borde) -->
                             <div class="flex items-center gap-1.5 ${isRejected ? 'text-zinc-500' : 'text-primary dark:text-red-400'} font-headline text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5">
                                 <span class="material-symbols-outlined text-sm sm:text-base shrink-0">home_work</span>
                                 <span class="truncate">${a.property_title}</span>
                             </div>
-                            <!-- Dirección de la Propiedad -->
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
-                                <span class="material-symbols-outlined text-xs sm:text-sm text-rose-500 shrink-0">location_on</span>
-                                <span class="truncate">${a.property_address}</span>
-                            </p>
+                            
+                            <div class="flex items-center gap-2 sm:gap-3 text-xs text-zinc-600 dark:text-zinc-400 font-bold flex-wrap mt-1">
+                                <!-- Dirección de la Propiedad -->
+                                <span class="flex items-center gap-1 truncate">
+                                    <span class="material-symbols-outlined text-xs sm:text-sm text-rose-500 shrink-0">location_on</span>
+                                    <span class="truncate">${a.property_address}</span>
+                                </span>
+                                <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
+                                <!-- Fecha y Hora de Postulación -->
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/90 px-2.5 py-0.5 rounded-md shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-xs text-primary dark:text-red-400">schedule</span>
+                                    Postulado el <strong>${pData.appliedAtFormatted}</strong>
+                                </span>
+                            </div>
                         </div>
                         <div class="shrink-0 flex items-center gap-2">
                             ${!isRejected && a.status === 'pendiente' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5 shrink-0"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Pendiente</span>' : ''}
@@ -2583,9 +2629,13 @@
                                     <p class="font-headline text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
                                         DNI: ${pData.dni} • CUIT: ${pData.cuit} • <span class="text-primary dark:text-red-400">${pData.condicionFiscal}</span>
                                     </p>
-                                    <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
-                                        ${pData.email} • ${pData.phone}
-                                    </p>
+                                    <div class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                                        <span>${pData.email}${pData.phone && pData.phone !== 'No informado' ? ` • Tel: ${pData.phone}` : ''}</span>
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-200/60 dark:bg-zinc-700/60 px-2 py-0.5 rounded-lg border border-zinc-300/50 dark:border-zinc-600/50">
+                                            <span class="material-symbols-outlined text-xs text-primary dark:text-red-400">schedule</span>
+                                            Postulado: ${pData.appliedAtFormatted}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

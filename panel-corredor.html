@@ -1822,7 +1822,7 @@
 
             grid.innerHTML = currentBrokerProperties.map(p => `
                 <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
-                    <div class="h-44 bg-zinc-100 dark:bg-zinc-800 relative">
+                    <div class="aspect-[16/10] w-full min-h-[220px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                         <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover">
                         <span class="absolute top-3 left-3 px-3 py-1 text-[10px] font-black rounded-full uppercase text-white ${p.status === 'publicada' ? 'bg-emerald-500' : 'bg-amber-500'}">
                             ${p.status}
@@ -1975,6 +1975,38 @@
             const guarantees = a.guarantees || a.garantia || 'Garantía Finaer / Recibo';
             const kycStatus = (rawDni && rawDni !== 'Pendiente' && rawDni !== 'Pendiente de registrar') ? 'Identidad Validada' : 'En Proceso';
 
+            // 4. Formatear Fecha y Hora de la postulación
+            let appliedAtFormatted = '';
+            let appliedAtDate = '';
+            let appliedAtTime = '';
+            const rawDate = a.created_at || a.fecha_solicitud || a.fecha || a.date || a.createdAt;
+            if (rawDate) {
+                try {
+                    const d = new Date(rawDate);
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        const hours = String(d.getHours()).padStart(2, '0');
+                        const mins = String(d.getMinutes()).padStart(2, '0');
+                        appliedAtDate = `${day}/${month}/${year}`;
+                        appliedAtTime = `${hours}:${mins} hs`;
+                        appliedAtFormatted = `${day}/${month}/${year} • ${hours}:${mins} hs`;
+                    }
+                } catch (e) {}
+            }
+            if (!appliedAtFormatted) {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const mins = String(now.getMinutes()).padStart(2, '0');
+                appliedAtDate = `${day}/${month}/${year}`;
+                appliedAtTime = `${hours}:${mins} hs`;
+                appliedAtFormatted = `${day}/${month}/${year} • ${hours}:${mins} hs`;
+            }
+
             return {
                 id: a.id,
                 name,
@@ -1987,7 +2019,10 @@
                 incomeFormatted: income > 0 ? `$ ${income.toLocaleString('es-AR')}` : '$ 0',
                 score,
                 guarantees,
-                kycStatus
+                kycStatus,
+                appliedAtFormatted,
+                appliedAtDate,
+                appliedAtTime
             };
         }
 
@@ -2000,17 +2035,25 @@
             return `
                 <div class="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 border border-zinc-200 dark:border-zinc-800 hover:shadow-md transition-all ${isRejected ? 'opacity-70 bg-zinc-50/50 dark:bg-zinc-900/40' : ''}">
                     
-                    <!-- Header con Propiedad y Estado -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 min-w-0">
+                    <!-- Header con Propiedad, Fecha/Hora y Estado -->
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 min-w-0 mb-0.5">
                                 <span class="material-symbols-outlined text-primary text-base shrink-0">home</span>
                                 <span class="text-xs sm:text-sm font-headline font-black text-primary dark:text-red-400 truncate">${a.property_title || 'Propiedad en Cartera'}</span>
                             </div>
-                            <p class="text-[11px] sm:text-xs text-zinc-500 flex items-center gap-1 mt-0.5 truncate font-medium">
-                                <span class="material-symbols-outlined text-xs text-rose-500 shrink-0">location_on</span>
-                                <span class="truncate">${a.property_address || 'Buenos Aires'}</span>
-                            </p>
+                            
+                            <div class="flex items-center gap-2 sm:gap-3 text-xs text-zinc-500 font-bold flex-wrap mt-1">
+                                <span class="flex items-center gap-1 truncate">
+                                    <span class="material-symbols-outlined text-xs text-rose-500 shrink-0">location_on</span>
+                                    <span class="truncate">${a.property_address || 'Buenos Aires'}</span>
+                                </span>
+                                <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/90 px-2.5 py-0.5 rounded-md shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-xs text-primary dark:text-red-400">schedule</span>
+                                    Postulado el <strong>${pData.appliedAtFormatted}</strong>
+                                </span>
+                            </div>
                         </div>
                         <div class="shrink-0 flex items-center gap-2">
                             ${isPending && !isRejected ? '<span class="px-2.5 py-1 text-[11px] font-headline font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pendiente de Decisión</span>' : ''}
@@ -3972,12 +4015,13 @@
         }
 
         function openPasaporteHabitatModal(appId) {
-            let app = brokerApplicationsMock.find(a => a.id === appId);
+            let app = (typeof brokerApplicationsMock !== 'undefined' ? brokerApplicationsMock : []).find(a => a.id === appId);
+            if (!app && window.DataManager && window.DataManager._mockApplications) {
+                app = window.DataManager._mockApplications.find(a => String(a.id) === String(appId));
+            }
             
-            const candidateName = app ? app.tenant_name : 'Gonzalo Fernández';
-            const candidateEmail = app ? app.tenant_email : 'gonzalo.f@gmail.com';
-            const candidatePhone = app ? app.tenant_phone : '+54 11 4455-8899';
-            const monthlyIncome = app ? Number(app.monthly_income).toLocaleString('es-AR') : '1.650.000';
+            const pData = getApplicantPassportData(app);
+            const monthlyIncome = pData.incomeFormatted;
 
             let modal = document.getElementById('pasaporte-habitat-full-modal');
             if (!modal) {
@@ -4034,19 +4078,29 @@
                                 </div>
 
                                 <div>
-                                    <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${candidateName}</h2>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="font-headline text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">${pData.name}</h2>
+                                        <span class="px-2.5 py-0.5 text-[10px] sm:text-xs font-headline font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">badge</span>
+                                            ${pData.condicionFiscal}
+                                        </span>
+                                    </div>
                                     <p class="font-headline text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
-                                        Inquilino Verificado • DNI: 38.491.024 • CUIT: 20-38491024-8
+                                        DNI: ${pData.dni} • CUIT: ${pData.cuit} • <span class="text-primary dark:text-red-400">${pData.condicionFiscal}</span>
                                     </p>
-                                    <p class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-0.5">
-                                        ${candidateEmail} • ${candidatePhone}
-                                    </p>
+                                    <div class="text-xs text-zinc-600 dark:text-zinc-300 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                                        <span>${pData.email}${pData.phone && pData.phone !== 'No informado' ? ` • Tel: ${pData.phone}` : ''}</span>
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-200/60 dark:bg-zinc-700/60 px-2 py-0.5 rounded-lg border border-zinc-300/50 dark:border-zinc-600/50">
+                                            <span class="material-symbols-outlined text-xs text-primary dark:text-red-400">schedule</span>
+                                            Postulado: ${pData.appliedAtFormatted}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-center shrink-0 shadow-sm">
                                 <span class="block text-[10px] font-headline font-extrabold uppercase text-zinc-400">Score de Solvencia</span>
-                                <span class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400">98 <span class="text-xs font-normal text-zinc-400">/ 100</span></span>
+                                <span class="text-2xl font-headline font-black text-emerald-600 dark:text-emerald-400">${pData.score} <span class="text-xs font-normal text-zinc-400">/ 100</span></span>
                                 <span class="block text-[9px] font-bold text-emerald-600 uppercase">Riesgo Nulo</span>
                             </div>
                         </div>
