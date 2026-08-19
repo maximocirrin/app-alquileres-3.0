@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1583,6 +1583,16 @@
                             <h3 class="font-headline font-bold text-sm text-on-background dark:text-white mb-4">Filtros
                             </h3>
 
+                            <!-- Estado de publicación -->
+                            <div class="mb-5">
+                                <p
+                                    class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5 uppercase tracking-wider">
+                                    Estado del aviso</p>
+                                <div id="filter-estado" class="space-y-1.5">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
                             <!-- Tipo de inmueble -->
                             <div class="mb-5">
                                 <p
@@ -1636,7 +1646,13 @@
                     <div id="mobile-filters-drawer"
                         class="hidden lg:hidden bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-5 mb-2">
                         <h3 class="font-headline font-bold text-sm text-on-background dark:text-white mb-4">Filtros</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                            <div>
+                                <p
+                                    class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">
+                                    Estado</p>
+                                <div id="filter-estado-mobile" class="space-y-1.5"></div>
+                            </div>
                             <div>
                                 <p
                                     class="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">
@@ -1661,6 +1677,39 @@
                     <!-- Main Content -->
                     <div class="flex-1 min-w-0">
 
+                        <!-- Status Filter Tabs / Pills -->
+                        <div class="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+                            <button type="button" data-mis-avisos-status="all"
+                                class="mis-avisos-status-pill active px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0">
+                                <span>Todas</span>
+                                <span id="mis-avisos-badge-all" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 dark:bg-zinc-900/20">0</span>
+                            </button>
+                            <button type="button" data-mis-avisos-status="disponible"
+                                class="mis-avisos-status-pill px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50"></span>
+                                <span>Disponibles</span>
+                                <span id="mis-avisos-badge-disponible" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">0</span>
+                            </button>
+                            <button type="button" data-mis-avisos-status="alquilada"
+                                class="mis-avisos-status-pill px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
+                                <span>Alquiladas</span>
+                                <span id="mis-avisos-badge-alquilada" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">0</span>
+                            </button>
+                            <button type="button" data-mis-avisos-status="paused"
+                                class="mis-avisos-status-pill px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 shadow-xs shadow-amber-500/50"></span>
+                                <span>Pausadas</span>
+                                <span id="mis-avisos-badge-paused" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">0</span>
+                            </button>
+                            <button type="button" data-mis-avisos-status="draft"
+                                class="mis-avisos-status-pill px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                                <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
+                                <span>Borradores / Otras</span>
+                                <span id="mis-avisos-badge-draft" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
+                            </button>
+                        </div>
+
                         <!-- Toolbar: count + search + sort -->
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
                             <p id="avisos-count"
@@ -1669,14 +1718,12 @@
                                 Cargando avisos...
                             </p>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <div class="relative flex-1 sm:flex-initial">
-                                    <input id="avisos-search" type="text" placeholder="Código / ID / Título / Dirección"
-                                        class="w-full sm:w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-4 pr-10 py-2.5 text-sm text-on-background dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow">
-                                    <span
-                                        class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-lg text-zinc-400 pointer-events-none">search</span>
+                                <div class="relative w-full sm:w-64">
+                                    <span class="material-symbols-outlined absolute text-zinc-400 text-lg pointer-events-none" style="left: 0.875rem; top: 50%; transform: translateY(-50%);">search</span>
+                                    <input id="avisos-search" type="text" placeholder="Buscar por título, ID o calle..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl h-11 pr-4 text-xs sm:text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs" style="padding-left: 2.75rem !important;">
                                 </div>
                                 <select id="avisos-sort"
-                                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer min-w-[160px] hidden sm:block">
+                                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer min-w-[160px] hidden sm:block">
                                     <option value="recent">Modificados recientes</option>
                                     <option value="oldest">Más antiguos</option>
                                     <option value="price-asc">Menor precio</option>
