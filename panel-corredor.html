@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,13 +21,12 @@
                 } else {
                     root.removeAttribute('data-theme');
                     root.classList.remove('dark');
-                    root.style.backgroundColor = '#ffffff';
+                    root.style.backgroundColor = '#f8fafc';
                     root.style.colorScheme = 'light';
                 }
-                var meta = document.getElementById('meta-theme-color') || document.querySelector('meta[name="theme-color"]');
-                if (meta) {
-                    meta.removeAttribute('media');
-                    meta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
+                var appleMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+                if (appleMeta) {
+                    appleMeta.setAttribute('content', 'black-translucent');
                 }
             } catch (e) {}
         })();
@@ -352,52 +350,6 @@
 
     <main class="flex-grow pt-24 pb-36 px-4 sm:px-6 lg:px-8 max-w-[1580px] mx-auto w-full flex flex-col space-y-6">
 
-        <!-- Header Principal CRM de Corredores -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
-                    <span class="text-zinc-300 dark:text-zinc-700">•</span>
-                    <div id="header-lead-balance-badge" class="inline-flex items-center"></div>
-                </div>
-                <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-3xl">dashboard_customize</span>
-                    Accesos Directos
-                </h1>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
-                <a href="contratos.html" class="inline-flex items-center gap-2 bg-zinc-900 hover:bg-black text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer border border-zinc-700/60">
-                    <span class="material-symbols-outlined text-emerald-400 text-base sm:text-lg">draw</span>
-                    Firma & Contratos
-                </a>
-                <button type="button" onclick="switchBrokerTab('leads'); HabitatLeadModule.switchLeadsSubtab('store');" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
-                    <span class="material-symbols-outlined text-base sm:text-lg">storefront</span>
-                    Tienda de Leads
-                </button>
-                <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
-                    <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
-                    Nueva Captación
-                </button>
-                <button type="button" onclick="openDigitalInventoryModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-purple-600 text-base sm:text-lg">inventory_2</span>
-                    Inventario Digital
-                </button>
-                <button type="button" onclick="goToCalculatorWithAnimation()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
-                    <span class="material-symbols-outlined text-emerald-600 text-base sm:text-lg">calculate</span>
-                    Calculadora Ingreso
-                </button>
-                <button type="button" onclick="openBlindCardModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
-                    <span class="material-symbols-outlined text-blue-600 text-base sm:text-lg">visibility_off</span>
-                    Ficha Ciega
-                </button>
-                <button type="button" onclick="openTicketsSummaryModal()" class="inline-flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-95">
-                    <span class="material-symbols-outlined text-amber-500 text-base sm:text-lg">build</span>
-                    Tickets Mantenimiento
-                </button>
-            </div>
-        </div>
-
         <!-- PESTAÑAS SUPERIORES (6 PESTAÑAS CONSOLIDADAS) -->
         <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
             <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
@@ -437,8 +389,91 @@
         <!-- CONTENIDO DE TODAS LAS PESTAÑAS (CADA PESTAÑA CONTIENE ÚNICAMENTE LO SUYO) -->
         <div class="w-full">
 
-            <!-- PESTAÑA 1: GENERAL (PANEL GENERAL CON MÉTRICAS Y GRÁFICOS) -->
+            <!-- PESTAÑA 1: GENERAL (PANEL GENERAL CON ACCESOS DIRECTOS, MÉTRICAS Y GRÁFICOS) -->
             <div id="panel-content-general" class="tab-content active space-y-6">
+
+                <!-- Header Principal CRM de Corredores & Accesos Directos -->
+                <div class="space-y-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
+                    <!-- Fila Superior: Título, Matrícula y CTA Principal -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
+                                <span class="text-zinc-300 dark:text-zinc-700">•</span>
+                                <div id="header-lead-balance-badge" class="inline-flex items-center"></div>
+                            </div>
+                            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-primary text-2xl sm:text-3xl">dashboard_customize</span>
+                                <span>Accesos Directos</span>
+                            </h1>
+                        </div>
+
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                                <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
+                                <span>Nueva Captación</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Suite de Herramientas Rápidas (Grid Limpio y Profesional Sin Fondo en Iconos) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                        <!-- 1. Firma & Contratos -->
+                        <a href="contratos.html" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover:scale-110">draw</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate transition-colors">Contratos</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Firma digital</span>
+                            </div>
+                        </a>
+
+                        <!-- 2. Tienda de Leads -->
+                        <button type="button" onclick="switchBrokerTab('leads'); HabitatLeadModule.switchLeadsSubtab('store');" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover:scale-110">storefront</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate transition-colors">Tienda Leads</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Comprar datos</span>
+                            </div>
+                        </button>
+
+                        <!-- 3. Inventario Digital -->
+                        <button type="button" onclick="openDigitalInventoryModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-purple-600 dark:text-purple-400 shrink-0 transition-transform duration-200 group-hover:scale-110">inventory_2</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate transition-colors">Inventario</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Check-in digital</span>
+                            </div>
+                        </button>
+
+                        <!-- 4. Calculadora Ingreso -->
+                        <button type="button" onclick="goToCalculatorWithAnimation()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-teal-600 dark:text-teal-400 shrink-0 transition-transform duration-200 group-hover:scale-110">calculate</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 truncate transition-colors">Calculadora</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Ajustes & IPC</span>
+                            </div>
+                        </button>
+
+                        <!-- 5. Ficha Ciega -->
+                        <button type="button" onclick="openBlindCardModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400 shrink-0 transition-transform duration-200 group-hover:scale-110">visibility_off</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">Ficha Ciega</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Red inmobiliaria</span>
+                            </div>
+                        </button>
+
+                        <!-- 6. Tickets Mantenimiento -->
+                        <button type="button" onclick="openTicketsSummaryModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-amber-600 dark:text-amber-400 shrink-0 transition-transform duration-200 group-hover:scale-110">build</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate transition-colors">Tickets</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Mantenimiento</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- TARJETAS DE MÉTRICAS FINANCIAL & OPERATIONAL KPIs -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Metric 1: Alquileres Activos -->

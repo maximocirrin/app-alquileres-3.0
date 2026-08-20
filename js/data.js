@@ -2051,23 +2051,59 @@ var DataManager = {
         }
     },
 
+    _getStoredPaymentState: function (contractId) {
+        if (!contractId) return null;
+        try {
+            const raw = localStorage.getItem('habitat_payment_state_' + contractId);
+            if (raw) return JSON.parse(raw);
+        } catch (e) { }
+        return null;
+    },
+
+    _setStoredPaymentState: function (contractId, state) {
+        if (!contractId) return;
+        try {
+            const existing = this._getStoredPaymentState(contractId) || {};
+            const merged = { ...existing, ...state, updated_at: new Date().toISOString() };
+            localStorage.setItem('habitat_payment_state_' + contractId, JSON.stringify(merged));
+        } catch (e) { }
+    },
+
     getCurrentPayment: async function (contractId) {
-        // Si no hay cliente o el ID es un mock string como 'cnt-001' (la columna id_contrato en Postgres es numérica), retornar mock
         const isNumeric = contractId !== null && contractId !== undefined && (typeof contractId === 'number' || (typeof contractId === 'string' && /^\d+$/.test(contractId.trim())));
         
+        const now = new Date();
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const currentPeriod = `${months[now.getMonth()]} ${now.getFullYear()}`;
+        const dueMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const defaultDueDate = `${now.getFullYear()}-${dueMonth}-10`;
+
+        const stored = this._getStoredPaymentState(contractId);
+
         if (!isNumeric) {
             return {
                 id: 'pay-' + (contractId || 'current'),
                 contract_id: contractId,
-                period: 'Julio 2026',
-                amount_base: 380000,
-                due_date: '2026-07-10',
-                status: 'pendiente',
-                is_punitive_waived: false
+                period: stored?.period || currentPeriod,
+                amount_base: stored?.amount_base || 380000,
+                due_date: stored?.due_date || defaultDueDate,
+                status: stored?.status || 'pendiente',
+                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
             };
         }
 
-        if (!window.supabaseClient) return null;
+        if (!window.supabaseClient) {
+            return {
+                id: 'pay-' + (contractId || 'current'),
+                contract_id: contractId,
+                period: stored?.period || currentPeriod,
+                amount_base: stored?.amount_base || 380000,
+                due_date: stored?.due_date || defaultDueDate,
+                status: stored?.status || 'pendiente',
+                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
+            };
+        }
+
         try {
             const { data, error } = await window.supabaseClient
                 .from('Pago')
@@ -2081,68 +2117,116 @@ var DataManager = {
                 return {
                     id: 'pay-' + contractId,
                     contract_id: contractId,
-                    period: 'Julio 2026',
-                    amount_base: 380000,
-                    due_date: '2026-07-10',
-                    status: 'pendiente',
-                    is_punitive_waived: false
+                    period: stored?.period || currentPeriod,
+                    amount_base: stored?.amount_base || 380000,
+                    due_date: stored?.due_date || defaultDueDate,
+                    status: stored?.status || 'pendiente',
+                    is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
                 };
             }
+
+            const dbWaived = data.interes_perdonado || false;
+            const isWaived = (stored && stored.is_punitive_waived !== undefined) ? stored.is_punitive_waived : dbWaived;
+            const dbStatus = data.fecha_pago ? 'pagado' : 'pendiente';
+            const status = (stored && stored.status) ? stored.status : dbStatus;
 
             return {
                 id: data.id_pago,
                 contract_id: data.id_contrato,
-                period: data.periodo || 'Mes Actual',
-                amount_base: data.monto,
-                due_date: data.fecha_vencimiento,
-                status: data.fecha_pago ? 'pagado' : 'pendiente',
-                is_punitive_waived: data.interes_perdonado || false
+                period: data.periodo || currentPeriod,
+                amount_base: data.monto || 380000,
+                due_date: data.fecha_vencimiento || defaultDueDate,
+                status: status,
+                is_punitive_waived: isWaived
             };
         } catch (e) {
-            return null;
+            return {
+                id: 'pay-' + (contractId || 'current'),
+                contract_id: contractId,
+                period: stored?.period || currentPeriod,
+                amount_base: stored?.amount_base || 380000,
+                due_date: stored?.due_date || defaultDueDate,
+                status: stored?.status || 'pendiente',
+                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
+            };
         }
     },
 
     calculatePunitiveInterests: function (contract, payment) {
-        if (!contract || !payment) return { daysLate: 0, dailyRate: 0, punitiveAmount: 0, totalAmount: 0 };
-        if (payment.status === 'pagado' || payment.is_punitive_waived) {
-            return { daysLate: 0, dailyRate: contract.punitive_daily_rate || 0.5, punitiveAmount: 0, totalAmount: payment.amount_base };
+        if (!contract || !payment) return { daysLate: 0, dailyRate: 0, punitiveAmount: 0, totalAmount: 0, isWaived: false, isPaid: false };
+        
+        const isWaived = Boolean(payment.is_punitive_waived);
+        const isPaid = (payment.status === 'pagado');
+        const dailyRate = Number(contract.punitive_daily_rate || contract.punitiveDailyRate || 0.5);
+        const baseAmount = Number(payment.amount_base || contract.monthly_rent || 0);
+
+        if (isPaid || isWaived) {
+            return {
+                daysLate: 0,
+                dailyRate,
+                punitiveAmount: 0,
+                totalAmount: baseAmount,
+                isWaived,
+                isPaid
+            };
         }
 
         const today = new Date();
         const dueDate = new Date(payment.due_date);
-        const diffTime = today - dueDate;
+        
+        // Comparación a nivel de fecha (medianoche local)
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const dueMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const diffTime = todayMidnight - dueMidnight;
         const daysLate = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 
         if (daysLate <= 0) {
-            return { daysLate: 0, dailyRate: contract.punitive_daily_rate || 0.5, punitiveAmount: 0, totalAmount: payment.amount_base };
+            return {
+                daysLate: 0,
+                dailyRate,
+                punitiveAmount: 0,
+                totalAmount: baseAmount,
+                isWaived: false,
+                isPaid: false
+            };
         }
 
-        const dailyRate = contract.punitive_daily_rate || 0.5;
-        const punitiveAmount = Math.round(payment.amount_base * (dailyRate / 100) * daysLate);
+        const punitiveAmount = Math.round(baseAmount * (dailyRate / 100) * daysLate);
         return {
             daysLate,
             dailyRate,
             punitiveAmount,
-            totalAmount: payment.amount_base + punitiveAmount
+            totalAmount: baseAmount + punitiveAmount,
+            isWaived: false,
+            isPaid: false
         };
     },
 
-    waivePunitiveInterests: async function (paymentId) {
+    waivePunitiveInterests: async function (paymentId, contractId) {
+        const cId = contractId || (typeof paymentId === 'string' && paymentId.startsWith('pay-') ? paymentId.replace('pay-', '') : null);
+        if (cId) {
+            this._setStoredPaymentState(cId, { is_punitive_waived: true });
+        }
         if (window.supabaseClient && typeof paymentId === 'number') {
-            await window.supabaseClient.from('Pago').update({ interes_perdonado: true }).eq('id_pago', paymentId);
+            try {
+                await window.supabaseClient.from('Pago').update({ interes_perdonado: true }).eq('id_pago', paymentId);
+            } catch (e) { }
         }
         return { id: paymentId, is_punitive_waived: true };
     },
 
-    markPaymentAsPaid: async function (paymentId, method = 'Transferencia') {
+    markPaymentAsPaid: async function (paymentId, method = 'Transferencia', contractId) {
+        const cId = contractId || (typeof paymentId === 'string' && paymentId.startsWith('pay-') ? paymentId.replace('pay-', '') : null);
+        if (cId) {
+            this._setStoredPaymentState(cId, { status: 'pagado', payment_method: method, fecha_pago: new Date().toISOString() });
+        }
         if (window.supabaseClient && typeof paymentId === 'number') {
-            await window.supabaseClient
-                .from('Pago')
-                .update({ fecha_pago: new Date().toISOString(), id_metodo_pago: 1 })
-                .eq('id_pago', paymentId);
-
             try {
+                await window.supabaseClient
+                    .from('Pago')
+                    .update({ fecha_pago: new Date().toISOString(), id_metodo_pago: 1 })
+                    .eq('id_pago', paymentId);
+
                 await window.supabaseClient.from('Historial_pago').insert([{
                     id_pago: paymentId,
                     id_estado_pago: 2, // Pagado

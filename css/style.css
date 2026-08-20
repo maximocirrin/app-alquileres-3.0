@@ -209,20 +209,24 @@
 }
 
 :root {
-    color-scheme: light;
+    color-scheme: light dark;
 }
 
 :root.dark,
 html.dark,
-html[data-theme="dark"] {
+html[data-theme="dark"],
+[data-theme="dark"] {
     background-color: #09090b !important;
     color-scheme: dark !important;
 }
 
 html {
-    background-color: #ffffff;
-    color-scheme: light;
+    background-color: #f8fafc;
+    color-scheme: light dark;
     min-height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
 }
 
 html.dark,
@@ -242,17 +246,35 @@ body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--bg-color);
+    background-color: #f8fafc;
     background-image: none;
     color: var(--text-main);
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html.dark body,
-html[data-theme="dark"] body {
+html[data-theme="dark"] body,
+[data-theme="dark"] body {
     background-color: #09090b !important;
+}
+
+/* iOS Safari Notch & Status Bar Support */
+nav.fixed.top-0,
+header.fixed.top-0 {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* iOS Safari Home Indicator / Bottom Bar Support */
+#owner-floating-dock-container {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+footer {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 input, button, select, textarea {
@@ -3613,6 +3635,201 @@ html.dark .checkbox-wrapper .checkbox-tick,
     }
     80% {
         transform: scale(1.005) translateX(3px);
+        height: 2.45rem;
+    }
+
+    .landing-menu__store-row,
+    .landing-menu__store {
+        width: 100%;
+    }
+
+    .landing-menu__help {
+        width: 100%;
+    }
+}
+
+@media (max-height: 700px) {
+    .landing-menu__content {
+        gap: 1rem;
+    }
+
+    .landing-menu__nav {
+        gap: 1.5rem;
+    }
+
+    .landing-menu__lower {
+        gap: 1.4rem;
+    }
+
+    .landing-menu__brand img {
+        height: clamp(2.7rem, 10vh, 4rem);
+    }
+
+    .landing-menu__link {
+        font-size: clamp(1rem, 4vh, 1.35rem);
+    }
+
+    .landing-menu__divider {
+        opacity: 0.7;
+    }
+
+    .landing-menu__store {
+        height: 3rem;
+    }
+
+    .landing-menu__store .material-symbols-outlined {
+        font-size: 1.65rem;
+    }
+
+    .landing-menu__store-large {
+        font-size: 0.98rem;
+    }
+}
+
+@media (max-height: 560px) {
+    .landing-menu__panel {
+        padding-block: 0.75rem;
+    }
+
+    .landing-menu__content,
+    .landing-menu__main,
+    .landing-menu__lower {
+        gap: 0.7rem;
+    }
+
+    .landing-menu__download {
+        gap: 0.5rem;
+    }
+
+    .landing-menu__download-title {
+        font-size: 0.72rem;
+    }
+}
+
+/* ==========================================================================
+   MÓDULO CRM LEADS - KANBAN & CARDS CUSTOM STYLING
+   ========================================================================== */
+.kanban-col-scroll {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.kanban-col-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.kanban-col-scroll::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.3);
+    border-radius: 4px;
+}
+
+.animate-on-scroll {
+    animation: fadeInUp 0.35s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.4);
+    border-radius: 6px;
+}
+
+/* Custom animated SVG checkbox & radio buttons for Wizard & Forms */
+.checkbox-wrapper input[type="checkbox"],
+.checkbox-wrapper input[type="radio"] {
+    display: none !important;
+}
+
+.checkbox-wrapper .terms-label {
+    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center !important;
+    user-select: none;
+}
+
+.checkbox-wrapper .checkbox-svg {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    flex-shrink: 0 !important;
+}
+
+.checkbox-wrapper .checkbox-box {
+    fill: #ebebeb;
+    stroke: #A13333;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    transition: stroke-dashoffset 0.6s ease-in;
+    rx: 30px;
+}
+
+html.dark .checkbox-wrapper .checkbox-box,
+.dark .checkbox-wrapper .checkbox-box {
+    fill: #282828;
+    stroke: #ef4444;
+}
+
+.checkbox-wrapper .checkbox-tick {
+    stroke: #A13333;
+    stroke-dasharray: 172;
+    stroke-dashoffset: 172;
+    transition: stroke-dashoffset 0.6s ease-in;
+}
+
+html.dark .checkbox-wrapper .checkbox-tick,
+.dark .checkbox-wrapper .checkbox-tick {
+    stroke: #ef4444;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-box,
+.checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-tick,
+.checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-box,
+.checkbox-wrapper input[type="radio"]:checked + .terms-label .checkbox-tick {
+    stroke-dashoffset: 0 !important;
+}
+
+/* Modern Validation Error Highlight & Smooth Attention Shake Animation */
+@keyframes modernErrorPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    }
+    20% {
+        transform: scale(1.03) translateX(-5px);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.4);
+    }
+    40% {
+        transform: scale(1.02) translateX(5px);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.25);
+    }
+    60% {
+        transform: scale(1.01) translateX(-3px);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15);
+    }
+    80% {
+        transform: scale(1.005) translateX(3px);
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
     100% {
@@ -3628,5 +3845,54 @@ html.dark .checkbox-wrapper .checkbox-tick,
     border-color: #ef4444 !important;
 }
 
+/* Mobile & Tablet In-View Hover Simulation for Property Cards & Candidate Cards */
+@media (max-width: 1024px), (hover: none) {
+    .owner-prop-card,
+    .owner-inview-card,
+    .owner-banner-inview {
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+    }
 
+    /* Sombra negra profesional idéntica para cards de avisos y postulantes */
+    .owner-prop-card.is-in-view,
+    .owner-inview-card.is-in-view {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 16px 28px -6px rgba(0, 0, 0, 0.12), 0 6px 12px -2px rgba(0, 0, 0, 0.06) !important;
+        border-color: rgba(0, 0, 0, 0.14) !important;
+    }
 
+    html.dark .owner-prop-card.is-in-view,
+    html.dark .owner-inview-card.is-in-view,
+    [data-theme="dark"] .owner-prop-card.is-in-view,
+    [data-theme="dark"] .owner-inview-card.is-in-view {
+        box-shadow: 0 18px 30px -6px rgba(0, 0, 0, 0.65), 0 6px 14px -2px rgba(0, 0, 0, 0.4) !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+    }
+
+    .owner-banner-inview.is-in-view {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 20px 25px -5px rgba(30, 58, 138, 0.35), 0 10px 10px -5px rgba(30, 58, 138, 0.2) !important;
+        border-color: rgba(147, 197, 253, 0.6) !important;
+    }
+
+    .owner-prop-card.is-in-view img {
+        transform: scale(1.04) !important;
+    }
+}
+
+/* Ocultar barras de scroll visuales preservando funcionalidad de deslizamiento */
+.scrollbar-hide::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+.scrollbar-hide,
+.no-scrollbar,
+.scrollbar-none {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}

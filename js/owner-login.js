@@ -12,17 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.documentElement.style.colorScheme = 'light';
             if (document.body) document.body.style.backgroundColor = '#ffffff';
         }
-        let themeMetas = document.querySelectorAll('meta[name="theme-color"]');
-        if (themeMetas.length === 0) {
-            const m = document.createElement('meta');
-            m.name = 'theme-color';
-            m.content = isDark ? '#09090b' : '#ffffff';
-            document.head.appendChild(m);
-        } else {
-            themeMetas.forEach(m => {
-                m.content = isDark ? '#09090b' : '#ffffff';
-            });
-        }
+        document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.remove());
     };
 
     const theme = localStorage.getItem('theme') || 'light';
