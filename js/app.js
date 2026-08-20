@@ -9,21 +9,44 @@ window.showCustomAlert = function (msgOrOpts) {
         let message = '';
         let icon = 'info';
         let buttonText = 'Entendido';
+        let type = 'info'; // 'info', 'success', 'error', 'warning'
 
         if (typeof msgOrOpts === 'object' && msgOrOpts !== null) {
             title = msgOrOpts.title || title;
             message = msgOrOpts.message || '';
             icon = msgOrOpts.icon || icon;
             buttonText = msgOrOpts.buttonText || buttonText;
+            type = msgOrOpts.type || (icon === 'error' ? 'error' : (icon === 'check_circle' ? 'success' : 'info'));
         } else {
             message = String(msgOrOpts || '');
-            if (message.toLowerCase().includes('éxito') || message.toLowerCase().includes('exitosa') || message.toLowerCase().includes('cread') || message.toLowerCase().includes('activad') || message.toLowerCase().includes('enviad') || message.toLowerCase().includes('eliminad')) {
+            const msgLower = message.toLowerCase();
+            if (msgLower.includes('éxito') || msgLower.includes('exitosa') || msgLower.includes('cread') || msgLower.includes('activad') || msgLower.includes('enviad') || msgLower.includes('eliminad') || msgLower.includes('registrad')) {
                 icon = 'check_circle';
                 title = '¡Operación Exitosa!';
-            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('inválid')) {
+                type = 'success';
+            } else if (msgLower.includes('perdonad') || msgLower.includes('condonad') || msgLower.includes('punitori')) {
+                icon = 'savings';
+                title = 'Intereses Condonados';
+                type = 'warning';
+            } else if (msgLower.includes('error') || msgLower.includes('inválid') || msgLower.includes('falló') || msgLower.includes('atención')) {
                 icon = 'error';
                 title = 'Atención';
+                type = 'error';
             }
+        }
+
+        let iconTheme = 'bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/20';
+        let btnTheme = 'bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900';
+
+        if (type === 'success' || icon === 'check_circle' || icon === 'verified_user') {
+            iconTheme = 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+            btnTheme = 'bg-emerald-600 hover:bg-emerald-700 text-white';
+        } else if (type === 'warning' || icon === 'savings' || icon === 'warning') {
+            iconTheme = 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+            btnTheme = 'bg-amber-600 hover:bg-amber-700 text-white';
+        } else if (type === 'error' || icon === 'error') {
+            iconTheme = 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-500/20';
+            btnTheme = 'bg-rose-600 hover:bg-rose-700 text-white';
         }
 
         let modal = document.getElementById('custom-alert-modal');
@@ -36,9 +59,9 @@ window.showCustomAlert = function (msgOrOpts) {
         modal.style.display = 'flex';
 
         modal.innerHTML = `
-            <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 text-on-background dark:text-white space-y-5" onclick="event.stopPropagation()">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl ${icon === 'error' ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'} flex items-center justify-center shrink-0">
+            <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white space-y-5 animate-detail-open" onclick="event.stopPropagation()">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl ${iconTheme} flex items-center justify-center shrink-0 shadow-inner">
                         <span class="material-symbols-outlined text-2xl">${icon}</span>
                     </div>
                     <div class="min-w-0 flex-1">
@@ -46,10 +69,12 @@ window.showCustomAlert = function (msgOrOpts) {
                     </div>
                 </div>
 
-                <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal">${message.replace(/\n/g, '<br>')}</p>
+                <div class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                    ${message.replace(/\n/g, '<br>')}
+                </div>
 
-                <div class="pt-2">
-                    <button type="button" id="custom-alert-ok-btn" class="w-full px-5 py-3 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-sm shadow-md transition-all cursor-pointer text-center">
+                <div class="pt-1">
+                    <button type="button" id="custom-alert-ok-btn" class="w-full px-5 py-3 rounded-xl ${btnTheme} font-headline font-extrabold text-xs shadow-md transition-all cursor-pointer text-center active:scale-95">
                         ${buttonText}
                     </button>
                 </div>
@@ -555,34 +580,26 @@ const App = {
 
     setTheme: (theme) => {
         const isDark = theme === 'dark';
+        const lightBg = '#f8fafc';
+        const darkBg = '#09090b';
+        const bgColor = isDark ? darkBg : lightBg;
+
         if (isDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.documentElement.classList.add('dark');
-            document.documentElement.style.backgroundColor = '#09090b';
+            document.documentElement.style.backgroundColor = darkBg;
             document.documentElement.style.colorScheme = 'dark';
-            if (document.body) document.body.style.backgroundColor = '#09090b';
+            if (document.body) document.body.style.backgroundColor = darkBg;
         } else {
             document.documentElement.removeAttribute('data-theme');
             document.documentElement.classList.remove('dark');
-            document.documentElement.style.backgroundColor = '#ffffff';
+            document.documentElement.style.backgroundColor = lightBg;
             document.documentElement.style.colorScheme = 'light';
-            if (document.body) document.body.style.backgroundColor = '#ffffff';
+            if (document.body) document.body.style.backgroundColor = lightBg;
         }
 
-        // Dynamic update for Safari / iOS theme-color and status-bar
-        let themeMetas = document.querySelectorAll('meta[name="theme-color"]');
-        if (themeMetas.length === 0) {
-            const m = document.createElement('meta');
-            m.name = 'theme-color';
-            m.id = 'meta-theme-color';
-            m.content = isDark ? '#09090b' : '#ffffff';
-            document.head.appendChild(m);
-        } else {
-            themeMetas.forEach(m => {
-                m.removeAttribute('media');
-                m.content = isDark ? '#09090b' : '#ffffff';
-            });
-        }
+        // Eliminar meta theme-color para evitar que Safari pinte el fondo de la barra de URL en iPhone
+        document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.remove());
 
         let appleStatusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
         if (!appleStatusBarMeta) {
@@ -590,7 +607,7 @@ const App = {
             appleStatusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
             document.head.appendChild(appleStatusBarMeta);
         }
-        appleStatusBarMeta.content = isDark ? 'black-translucent' : 'default';
+        appleStatusBarMeta.content = 'black-translucent';
 
         localStorage.setItem('theme', theme);
 
@@ -10704,7 +10721,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sortVal === 'oldest') filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         else if (sortVal === 'price-asc') filtered.sort((a, b) => (Number(a.price || a.precio) || 0) - (Number(b.price || b.precio) || 0));
         else if (sortVal === 'price-desc') filtered.sort((a, b) => (Number(b.price || b.precio) || 0) - (Number(a.price || a.precio) || 0));
-        else filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        else {
+            filtered.sort((a, b) => {
+                const normA = normalizeAvisoStatus(a.status);
+                const normB = normalizeAvisoStatus(b.status);
+                const isDispA = (normA === 'disponible');
+                const isDispB = (normB === 'disponible');
+                if (isDispA && !isDispB) return -1;
+                if (!isDispA && isDispB) return 1;
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            });
+        }
 
         renderAvisosCards(filtered);
     }
@@ -10724,6 +10751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (emptyState) emptyState.classList.add('hidden');
         grid.classList.remove('hidden');
         avisos.forEach((a, i) => grid.appendChild(createAvisoCard(a, i)));
+        if (typeof setupOwnerCardsIntersectionObserver === 'function') setupOwnerCardsIntersectionObserver();
     }
 
     function populateFilters(avisos) {
@@ -11203,8 +11231,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnWaive = document.getElementById('btn-waive-interests');
             if (btnWaive && payment) {
                 btnWaive.onclick = async () => {
-                    await window.DataManager.waivePunitiveInterests(payment.id);
-                    alert("¡Los intereses punitorios han sido perdonados para este período!");
+                    if (typeof openWaiveInterestsModal === 'function') {
+                        openWaiveInterestsModal(contract, payment, punitives);
+                        return;
+                    }
+                    await window.DataManager.waivePunitiveInterests(payment.id, contract.id);
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: '¡Intereses Condonados!',
+                            message: `Se han bonificado los intereses punitorios por mora correspondientes al período ${payment.period}.`,
+                            icon: 'savings',
+                            type: 'warning'
+                        });
+                    }
                     await renderLandlordActiveRental();
                 };
             }
@@ -11212,8 +11251,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnMarkPaid = document.getElementById('btn-mark-paid');
             if (btnMarkPaid && payment) {
                 btnMarkPaid.onclick = async () => {
-                    await window.DataManager.markPaymentAsPaid(payment.id, "Registrado por Propietario");
-                    alert("¡El alquiler ha sido marcado como pagado!");
+                    if (window.showCustomConfirm) {
+                        const confirmed = await window.showCustomConfirm({
+                            title: '¿Registrar cobro de alquiler?',
+                            message: `¿Confirmas que se recibió el pago correspondiente al período ${payment.period}?`,
+                            confirmText: 'Sí, marcar como pagado'
+                        });
+                        if (!confirmed) return;
+                    }
+                    await window.DataManager.markPaymentAsPaid(payment.id, "Registrado por Propietario", contract.id);
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: '¡Pago Registrado!',
+                            message: `El cobro del período ${payment.period} ha sido registrado exitosamente.`,
+                            icon: 'check_circle',
+                            type: 'success'
+                        });
+                    }
                     await renderLandlordActiveRental();
                 };
             }
@@ -11421,7 +11475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const strokeOffset = circumference - (pct / 100) * circumference;
 
         const card = document.createElement('div');
-        card.className = 'aviso-card bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 group';
+        card.className = 'owner-prop-card aviso-card bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 group';
         card.innerHTML = `
             <div class="flex gap-4 md:gap-5">
                 <!-- Thumbnail -->
