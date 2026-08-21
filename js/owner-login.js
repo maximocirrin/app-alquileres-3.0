@@ -98,6 +98,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const switchCopy = document.getElementById('owner-auth-switch-copy');
     const nameField = document.getElementById('owner-name-field');
     const nameInput = document.getElementById('owner-name');
+    const usernameField = document.getElementById('owner-username-field');
+    const usernameInput = document.getElementById('owner-username');
     const emailInput = document.getElementById('owner-email');
     const passwordInput = document.getElementById('owner-password');
     const brokerFieldsContainer = document.getElementById('broker-fields-container');
@@ -149,6 +151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         modeBtn.textContent = isSignup ? 'Iniciar sesión' : 'Crear cuenta';
         nameField.style.display = isSignup ? 'grid' : 'none';
         nameInput.required = isSignup;
+        if (usernameField) usernameField.style.display = isSignup ? 'grid' : 'none';
+        if (usernameInput) usernameInput.required = isSignup;
         passwordInput.autocomplete = isSignup ? 'new-password' : 'current-password';
 
         // Broker exclusive fields
@@ -433,6 +437,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const fullName = nameInput.value.trim();
+        const username = usernameInput ? usernameInput.value.trim() : '';
         const roleData = ROLES[currentRole];
 
         const getRedirectUrl = () => {
@@ -448,6 +453,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const signUpData = {
                     full_name: fullName,
                     name: fullName,
+                    nombre_usuario: username,
                     role: roleData.roleName,
                     id_tipo_perfil: roleData.id
                 };
