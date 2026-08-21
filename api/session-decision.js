@@ -70,13 +70,23 @@ export default async function handler(req, res) {
       });
     }
 
-    const decisionObj = data.decision || data;
-    const docObj = decisionObj.document || data.document || decisionObj.extracted_data || {};
-    
-    const firstName = docObj.first_name || docObj.firstName || '';
-    const lastName = docObj.last_name || docObj.lastName || '';
-    const fullName = docObj.full_name || docObj.fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
-    const documentNumber = docObj.document_number || docObj.documentNumber || docObj.id_number || '';
+    const findDeep = (obj, keys) => {
+      if (!obj || typeof obj !== 'object') return null;
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+      }
+      for (const key of Object.keys(obj)) {
+        const result = findDeep(obj[key], keys);
+        if (result) return result;
+      }
+      return null;
+    };
+
+    const firstName = findDeep(data, ['first_name', 'firstName', 'given_names', 'name']) || '';
+    const lastName = findDeep(data, ['last_name', 'lastName', 'surnames', 'surname']) || '';
+    let fullName = findDeep(data, ['full_name', 'fullName']);
+    if (!fullName) fullName = (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
+    const documentNumber = findDeep(data, ['document_number', 'documentNumber', 'id_number', 'dni', 'personal_number']) || '';
     const rawStatus = (decisionObj.status || data.status || 'Approved').toString();
 
     // Sincronizar automáticamente en Supabase Perfil y Pasaporte_habitat si está Aprobado
@@ -151,7 +161,7 @@ export default async function handler(req, res) {
         fullName: fullName,
         documentNumber: documentNumber,
         dni: documentNumber,
-        type: docObj.type || 'ARG_DNI'
+        type: 'ARG_DNI'
       },
       scores: decisionObj.scores || data.scores || { liveness: 'PASSED', faceMatch: 99.4 },
       raw: data
