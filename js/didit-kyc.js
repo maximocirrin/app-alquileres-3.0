@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  const DIDIT_WORKFLOW_ID = 'b4b3aeef-801d-4b19-b46e-adcbaaec9b90';
+  const DIDIT_WORKFLOW_ID = 'afbeab6f-d051-409e-bd9a-d9b95f98bbfd';
 
   /**
    * Determina la URL base de la API backend si está en desarrollo local.
@@ -60,6 +60,9 @@
               isReal: true
             };
           }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.error(`[Didit KYC] HTTP ${res.status} from ${ep}:`, errData);
         }
       } catch (err) {
         console.warn(`[Didit KYC] Falló ${ep}:`, err);
