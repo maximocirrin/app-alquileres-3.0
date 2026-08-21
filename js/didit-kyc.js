@@ -17,8 +17,11 @@
    * Si se ejecuta en Live Server (puerto 5500/5501/5502), apunta a http://localhost:3000 para conectar con server.js.
    */
   function getApiBaseUrl() {
-    if (typeof window !== 'undefined' && (window.location.port === '5500' || window.location.port === '5501' || window.location.port === '5502')) {
-      return 'http://localhost:3000';
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      if (port === '5500' || port === '5501' || port === '5502' || port === '5173' || port === '8080') {
+        return 'http://localhost:3000';
+      }
     }
     return '';
   }
@@ -82,6 +85,8 @@
         if (c.length === 11) {
           docNumber = c.substring(2, 10);
         }
+      } catch (e) {
+        console.warn(`[Didit KYC] Intento de conexión con ${ep} falló:`, e.message);
       }
     } catch (e) {}
 
