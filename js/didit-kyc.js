@@ -162,25 +162,86 @@
           localStorage.setItem('habitat_didit_identity', JSON.stringify(identityData));
         } catch (e) {}
 
-        // Actualizar Perfil en Supabase con los datos extraídos del DNI
+        // Actualizar Perfil y Pasaporte_habitat en Supabase con los datos extraídos del DNI
         if (window.supabaseClient) {
           try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session && session.user) {
-              const perfilUpdate = {
-                cuenta_verificada: true,
-                fecha_verificacion: new Date().toISOString()
-              };
-              if (fullName && fullName !== 'Titular Verificado') perfilUpdate.nombre_completo = fullName;
-              if (dni) perfilUpdate.dni = dni;
+            let targetUserId = null;
+            let targetPerfilId = null;
+            let targetEmail = null;
 
+            const { data: authData } = await window.supabaseClient.auth.getSession();
+            if (authData?.session?.user) {
+              targetUserId = authData.session.user.id;
+              targetEmail = authData.session.user.email;
+            }
+
+            if (!targetUserId) {
+              try {
+                const localU = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                targetUserId = localU.id || localU.user_id || localStorage.getItem('habitat_user_id');
+                targetEmail = targetEmail || localU.email || localU.mail;
+                targetPerfilId = localU.id_perfil || localStorage.getItem('habitat_profile_id');
+              } catch (eLocal) {}
+            }
+
+            let perfilIdToUpdate = targetPerfilId;
+
+            // Buscar Perfil si aún no tenemos el id_perfil
+            if (!perfilIdToUpdate) {
+              let query = window.supabaseClient.from('Perfil').select('id_perfil, user_id, mail');
+              if (targetUserId) {
+                query = query.eq('user_id', targetUserId);
+              } else if (targetEmail) {
+                query = query.eq('mail', targetEmail);
+              }
+              const { data: perfDb } = await query.maybeSingle();
+              if (perfDb) perfilIdToUpdate = perfDb.id_perfil;
+            }
+
+            const perfilUpdate = {
+              cuenta_verificada: true,
+              fecha_verificacion: new Date().toISOString()
+            };
+            if (fullName && fullName !== 'Titular Verificado') perfilUpdate.nombre_completo = fullName;
+            if (dni) perfilUpdate.dni = dni;
+
+            if (perfilIdToUpdate) {
               await window.supabaseClient
                 .from('Perfil')
                 .update(perfilUpdate)
-                .eq('user_id', session.user.id);
+                .eq('id_perfil', perfilIdToUpdate);
+
+              // Actualizar también Pasaporte_habitat si ya existe
+              const { data: passDb } = await window.supabaseClient
+                .from('Pasaporte_habitat')
+                .select('id_pasaporte')
+                .eq('id_perfil', perfilIdToUpdate)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (passDb) {
+                const passUpdate = {
+                  id_estado_pasaporte: 3, // Activo
+                  updated_at: new Date().toISOString()
+                };
+                if (fullName && fullName !== 'Titular Verificado') passUpdate.razon_social = fullName;
+                if (dni) passUpdate.dni = dni;
+                if (cuit) passUpdate.cuit = cuit;
+
+                await window.supabaseClient
+                  .from('Pasaporte_habitat')
+                  .update(passUpdate)
+                  .eq('id_pasaporte', passDb.id_pasaporte);
+              }
+            } else if (targetUserId) {
+              await window.supabaseClient
+                .from('Perfil')
+                .update(perfilUpdate)
+                .eq('user_id', targetUserId);
             }
           } catch (eSupabase) {
-            console.warn('[Didit KYC] Aviso actualizando Perfil en Supabase:', eSupabase);
+            console.warn('[Didit KYC] Aviso actualizando Perfil/Pasaporte en Supabase:', eSupabase);
           }
         }
 
