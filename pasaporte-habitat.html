@@ -1286,6 +1286,8 @@
                         } else {
                             // Crear nuevo Pasaporte_habitat
                             const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+                            const now = new Date();
+                            const expiration = new Date(now.getTime() + (60 * 24 * 60 * 60 * 1000));
 
                             const { data: pCreated, error: errIns } = await window.supabaseClient
                                 .from('Pasaporte_habitat')
@@ -1294,6 +1296,8 @@
                                     id_estado_pasaporte: 3, // Activo
                                     codigo_pasaporte: codigoPasaporte,
                                     monto_pagado: 20000.00,
+                                    fecha_emision: now.toISOString(),
+                                    fecha_vencimiento: expiration.toISOString(),
                                     cuit: cuitCalculado,
                                     dni: extractedDni,
                                     razon_social: verifiedFullName,

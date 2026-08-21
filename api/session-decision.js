@@ -90,10 +90,24 @@ export default async function handler(req, res) {
       });
     }
 
-    const firstName = docObj.first_name || docObj.firstName || '';
-    const lastName = docObj.last_name || docObj.lastName || '';
-    const fullName = docObj.full_name || docObj.fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
-    const documentNumber = docObj.document_number || docObj.documentNumber || docObj.id_number || '';
+    // Helper para buscar recursivamente campos en la respuesta de Didit
+    const findDeep = (obj, keys) => {
+      if (!obj || typeof obj !== 'object') return null;
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+      }
+      for (const key of Object.keys(obj)) {
+        const result = findDeep(obj[key], keys);
+        if (result) return result;
+      }
+      return null;
+    };
+
+    const firstName = findDeep(rawData, ['first_name', 'firstName', 'given_names', 'name']) || docObj.first_name || docObj.firstName || '';
+    const lastName = findDeep(rawData, ['last_name', 'lastName', 'surnames', 'surname']) || docObj.last_name || docObj.lastName || '';
+    let fullName = findDeep(rawData, ['full_name', 'fullName']) || docObj.full_name || docObj.fullName;
+    if (!fullName) fullName = (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
+    const documentNumber = findDeep(rawData, ['document_number', 'documentNumber', 'id_number', 'dni', 'personal_number']) || docObj.document_number || docObj.documentNumber || docObj.id_number || '';
 
     // Sincronizar en Supabase Perfil y Pasaporte_habitat si está Aprobado
     const vendorData = rawData.vendor_data || decisionObj.vendor_data || req.query.user_id || req.query.userId || req.query.email;
