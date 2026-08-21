@@ -79,6 +79,68 @@ export default async function handler(req, res) {
     const documentNumber = docObj.document_number || docObj.documentNumber || docObj.id_number || '';
     const rawStatus = (decisionObj.status || data.status || 'Approved').toString();
 
+    // Sincronizar automáticamente en Supabase Perfil y Pasaporte_habitat si está Aprobado
+    const vendorData = data.vendor_data || decisionObj.vendor_data || req.query.user_id || req.query.userId || req.query.email;
+    const isApproved = rawStatus.toLowerCase() === 'approved' || rawStatus.toLowerCase() === 'success';
+
+    if (isApproved && (documentNumber || fullName)) {
+      try {
+        const supabaseUrl = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+        if (supabaseUrl && supabaseKey) {
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(supabaseUrl, supabaseKey);
+
+          let targetPerfil = null;
+          if (vendorData) {
+            let pQuery = supabase.from('Perfil').select('id_perfil, user_id, mail');
+            if (String(vendorData).includes('@')) {
+              pQuery = pQuery.eq('mail', String(vendorData).trim());
+            } else if (!isNaN(Number(vendorData)) && Number(vendorData) > 0) {
+              pQuery = pQuery.eq('id_perfil', Number(vendorData));
+            } else {
+              pQuery = pQuery.eq('user_id', String(vendorData).trim());
+            }
+            const { data: pFound } = await pQuery.maybeSingle();
+            targetPerfil = pFound;
+          }
+
+          if (targetPerfil) {
+            const perfUp = {
+              cuenta_verificada: true,
+              fecha_verificacion: new Date().toISOString()
+            };
+            if (fullName) perfUp.nombre_completo = fullName;
+            if (documentNumber) perfUp.dni = documentNumber;
+
+            await supabase.from('Perfil').update(perfUp).eq('id_perfil', targetPerfil.id_perfil);
+
+            // Actualizar Pasaporte_habitat si existe
+            const { data: passFound } = await supabase
+              .from('Pasaporte_habitat')
+              .select('id_pasaporte')
+              .eq('id_perfil', targetPerfil.id_perfil)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (passFound) {
+              const passUp = {
+                id_estado_pasaporte: 3,
+                updated_at: new Date().toISOString()
+              };
+              if (fullName) passUp.razon_social = fullName;
+              if (documentNumber) passUp.dni = documentNumber;
+
+              await supabase.from('Pasaporte_habitat').update(passUp).eq('id_pasaporte', passFound.id_pasaporte);
+            }
+          }
+        }
+      } catch (eDb) {
+        console.warn('[Session Decision] Aviso sincronizando en Supabase:', eDb.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       sessionId: sessionId,
