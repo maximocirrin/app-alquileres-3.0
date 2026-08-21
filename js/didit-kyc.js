@@ -60,8 +60,6 @@
             };
           }
         }
-      } catch (e) {
-        console.warn(`[Didit KYC] Intento de conexión con ${ep} falló:`, e.message);
       }
     }
 
