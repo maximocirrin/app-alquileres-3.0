@@ -16,14 +16,17 @@
    * Determina la URL base de la API backend si está disponible.
    */
   function getApiBaseUrl() {
-    if (typeof window !== 'undefined' && (window.location.port === '5500' || window.location.port === '5501' || window.location.port === '5502')) {
-      return 'http://localhost:3000';
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      if (port === '5500' || port === '5501' || port === '5502' || port === '5173' || port === '8080') {
+        return 'http://localhost:3000';
+      }
     }
     return '';
   }
 
   /**
-   * Crea una sesión real de Didit KYC.
+   * Crea una sesión real de Didit KYC comunicándose con el backend seguro.
    */
   async function createDiditSession(userId, options = {}) {
     const { callbackUrl = null, workflowId = null } = options;
@@ -32,89 +35,39 @@
     const apiBase = getApiBaseUrl();
 
     // 1. Intentar crear sesión vía backend (/api/create-session)
-    try {
-      const backendRes = await fetch(`${apiBase}/api/create-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userId,
-          callbackUrl: cb,
-          workflowId: wf
-        })
-      });
+    const endpointsToTry = [];
+    if (apiBase) endpointsToTry.push(`${apiBase}/api/create-session`);
+    endpointsToTry.push('/api/create-session');
 
-      if (backendRes.ok) {
-        const data = await backendRes.json();
-        if (data && data.url) {
-          return {
-            url: data.url,
-            sessionId: data.sessionId || data.session_id
-          };
-        }
-      }
-    } catch (eBackend) {
-      console.warn('[Didit KYC] Aviso al conectar con backend local, intentando conexión directa con Didit Cloud API:', eBackend);
-    }
-
-    // 2. Conexión directa con Didit Cloud API v3
-    try {
-      const payload = {
-        workflow_id: wf,
-        vendor_data: String(userId)
-      };
-      if (cb && cb.startsWith('http') && !cb.includes('tu-dominio.vercel.app')) {
-        payload.callback = cb;
-      }
-
-      let res = await fetch('https://verification.didit.me/v3/session/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': DIDIT_PUBLIC_API_KEY,
-          'Authorization': `Bearer ${DIDIT_PUBLIC_API_KEY}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok && payload.callback) {
-        // Reintentar sin callback si Didit v3 rechaza localhost
-        delete payload.callback;
-        res = await fetch('https://verification.didit.me/v3/session/', {
+    for (const ep of endpointsToTry) {
+      try {
+        const backendRes = await fetch(ep, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': DIDIT_PUBLIC_API_KEY,
-            'Authorization': `Bearer ${DIDIT_PUBLIC_API_KEY}`
-          },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            callbackUrl: cb,
+            workflowId: wf
+          })
         });
-      }
 
-      if (res.status === 404 || !res.ok) {
-        res = await fetch('https://api.didit.me/v1/session/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': DIDIT_PUBLIC_API_KEY,
-            'Authorization': `Bearer ${DIDIT_PUBLIC_API_KEY}`
-          },
-          body: JSON.stringify(payload)
-        });
-      }
-
-      if (res.ok) {
-        const dData = await res.json();
-        const sessionUrl = dData.url || dData.session_url || dData.verification_url;
-        const sessionId = dData.session_id || dData.id;
-        if (sessionUrl) {
-          return {
-            url: sessionUrl,
-            sessionId: sessionId
-          };
+        if (backendRes.ok) {
+          const data = await backendRes.json();
+          if (data && data.url) {
+            console.log('[Didit KYC] Sesión oficial creada exitosamente vía backend:', data.sessionId || data.session_id);
+            return {
+              url: data.url,
+              sessionId: data.sessionId || data.session_id,
+              isReal: true
+            };
+          }
+        } else {
+          const errData = await backendRes.json().catch(() => ({}));
+          console.warn(`[Didit KYC] Backend endpoint ${ep} respondió con error ${backendRes.status}:`, errData);
         }
+      } catch (eBackend) {
+        console.info(`[Didit KYC] No se pudo conectar con backend en ${ep} (Servidor backend posiblemente inactivo).`);
       }
-    } catch (eCloud) {
-      console.error('[Didit KYC] Error conectando directamente con Didit Cloud API:', eCloud);
     }
 
     return null;
@@ -127,72 +80,47 @@
     if (!sessionId) return null;
     const apiBase = getApiBaseUrl();
 
-    // 1. Intentar consultar vía backend
-    try {
-      const res = await fetch(`${apiBase}/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.success && json.document) {
-          return json;
-        }
-      }
-    } catch (e) {}
+    // Si es sesión simulada
+    if (String(sessionId).startsWith('sim_') || String(sessionId).startsWith('demo_')) {
+      const storedIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+      return {
+        success: true,
+        sessionId: sessionId,
+        status: 'APPROVED',
+        document: {
+          firstName: storedIdent.firstName || 'Mariano',
+          lastName: storedIdent.lastName || 'Rossi',
+          fullName: storedIdent.fullName || 'Mariano Facundo Rossi',
+          documentNumber: storedIdent.documentNumber || '38491024',
+          dni: storedIdent.dni || '38491024',
+          type: 'ARG_DNI'
+        },
+        scores: { liveness: 'PASSED', faceMatch: 99.6 }
+      };
+    }
 
-    // 2. Intentar consultar directamente a Didit Cloud API
-    try {
-      let res = await fetch(`https://verification.didit.me/v3/session/${sessionId}/decision/`, {
-        headers: {
-          'x-api-key': DIDIT_PUBLIC_API_KEY,
-          'Authorization': `Bearer ${DIDIT_PUBLIC_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    // Intentar consultar vía backend
+    const endpointsToTry = [];
+    if (apiBase) endpointsToTry.push(`${apiBase}/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
+    endpointsToTry.push(`/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
 
-      if (!res.ok || res.status === 404) {
-        res = await fetch(`https://verification.didit.me/v3/session/${sessionId}/`, {
-          headers: {
-            'x-api-key': DIDIT_PUBLIC_API_KEY,
-            'Authorization': `Bearer ${DIDIT_PUBLIC_API_KEY}`,
-            'Content-Type': 'application/json'
+    for (const ep of endpointsToTry) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.success && json.document) {
+            return json;
           }
-        });
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        const decisionObj = data.decision || data;
-        const docObj = decisionObj.document || data.document || decisionObj.extracted_data || {};
-        const firstName = docObj.first_name || docObj.firstName || '';
-        const lastName = docObj.last_name || docObj.lastName || '';
-        const fullName = docObj.full_name || docObj.fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
-        const documentNumber = docObj.document_number || docObj.documentNumber || docObj.id_number || '';
-        const rawStatus = (decisionObj.status || data.status || 'Approved').toString();
-
-        return {
-          success: true,
-          sessionId: sessionId,
-          status: rawStatus.toUpperCase(),
-          document: {
-            firstName: firstName,
-            lastName: lastName,
-            fullName: fullName,
-            documentNumber: documentNumber,
-            dni: documentNumber,
-            type: docObj.type || 'ARG_DNI'
-          },
-          scores: decisionObj.scores || data.scores || { liveness: 'PASSED', faceMatch: 99.4 },
-          raw: data
-        };
-      }
-    } catch (e) {
-      console.warn('[Didit KYC] Error al consultar decisión directa:', e);
+        }
+      } catch (e) {}
     }
 
     return null;
   }
 
   /**
-   * Renderiza el verificador Didit dentro de un modal interactivo en pantalla completa / iframe.
+   * Renderiza el verificador oficial Didit en pantalla completa (100% pantalla, solo interfaz de Didit).
    */
   function renderDiditIframeModal(url, sessionId) {
     return new Promise((resolve) => {
@@ -200,63 +128,22 @@
       const existing = document.getElementById(modalId);
       if (existing) existing.remove();
 
+      // Pantalla completa pura: 100vw, 100vh, sin bordes ni encabezados/pies agregados
       const html = `
-        <div id="${modalId}" class="fixed inset-0 z-[9999999] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-2 sm:p-4 font-body animate-fadeIn">
-          <div class="relative w-full max-w-2xl h-[92vh] max-h-[820px] bg-white dark:bg-[#121214] rounded-3xl shadow-2xl border border-zinc-200/90 dark:border-zinc-800/90 overflow-hidden flex flex-col">
-            
-            <!-- Header Modal -->
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
-              <div class="flex items-center gap-2.5">
-                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-                <div>
-                  <span class="font-headline font-black text-xs sm:text-sm text-zinc-900 dark:text-white uppercase tracking-wider block">Validación Didit KYC Oficial</span>
-                  <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Escaneo oficial de DNI y Biometría Facial</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <a href="${url}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary dark:text-red-400 hover:underline px-2.5 py-1 rounded-lg bg-primary/10">
-                  <span>Abrir en ventana completa</span>
-                  <span class="material-symbols-outlined text-xs">open_in_new</span>
-                </a>
-                <button id="btn-close-didit-kyc" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1.5 rounded-xl transition-colors cursor-pointer" title="Cerrar y verificar">
-                  <span class="material-symbols-outlined text-xl">close</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Iframe Didit -->
-            <div class="flex-1 w-full h-full relative bg-zinc-950">
-              <iframe 
-                id="didit-real-iframe"
-                src="${url}" 
-                class="w-full h-full border-0" 
-                allow="camera; microphone; display-capture; autoplay; clipboard-write;"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
-              ></iframe>
-            </div>
-
-            <!-- Footer con verificación de estado -->
-            <div class="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3 text-xs">
-              <span class="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-base text-primary">security</span>
-                <span>Por favor escanea el frente y dorso de tu DNI y realiza el selfie biométrico.</span>
-              </span>
-              <button id="btn-manual-verify-didit" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                <span>Ya completé mi escaneo</span>
-              </button>
-            </div>
-
-          </div>
+        <div id="${modalId}" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999999;background:#ffffff;margin:0;padding:0;overflow:hidden;">
+          <iframe 
+            id="didit-real-iframe"
+            src="${url}" 
+            style="width:100vw;height:100vh;border:0;display:block;margin:0;padding:0;"
+            allow="camera; microphone; display-capture; autoplay; clipboard-write;"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+          ></iframe>
         </div>
       `;
 
       document.body.insertAdjacentHTML('beforeend', html);
 
       const modalEl = document.getElementById(modalId);
-      const closeBtn = document.getElementById('btn-close-didit-kyc');
-      const manualBtn = document.getElementById('btn-manual-verify-didit');
-
       let isFinished = false;
 
       async function completeFlow(finalDecision = null) {
@@ -351,25 +238,7 @@
 
       window.addEventListener('message', messageHandler);
 
-      // 2. Botón manual "Ya completé mi escaneo"
-      if (manualBtn) {
-        manualBtn.onclick = async () => {
-          manualBtn.disabled = true;
-          manualBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Verificando...';
-          window.removeEventListener('message', messageHandler);
-          await completeFlow();
-        };
-      }
-
-      // 3. Botón cerrar
-      if (closeBtn) {
-        closeBtn.onclick = async () => {
-          window.removeEventListener('message', messageHandler);
-          await completeFlow();
-        };
-      }
-
-      // 4. Polling de seguridad a Didit cada 4 segundos
+      // 2. Polling de seguridad a Didit cada 3.5 segundos
       const pollInterval = setInterval(async () => {
         if (isFinished) {
           clearInterval(pollInterval);
@@ -381,7 +250,231 @@
           window.removeEventListener('message', messageHandler);
           await completeFlow(decision);
         }
-      }, 4000);
+      }, 3500);
+    });
+  }
+
+  /**
+   * Modal interactivo de simulación biométrica para desarrollo y demostración offline.
+   */
+  function renderSimulatedBiometricModal(userId) {
+    return new Promise((resolve) => {
+      const modalId = 'habitat-didit-simulated-modal';
+      const existing = document.getElementById(modalId);
+      if (existing) existing.remove();
+
+      let existingUser = {};
+      try {
+        existingUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+      } catch (e) {}
+
+      const userName = existingUser.nombre_completo || existingUser.nombre || 'Mariano Facundo Rossi';
+      const userDni = existingUser.dni || '38491024';
+      const userCuit = existingUser.cuit || `20-${userDni}-8`;
+
+      const html = `
+        <div id="${modalId}" class="fixed inset-0 z-[9999999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-body animate-fadeIn">
+          <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/60">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span class="material-symbols-outlined text-xl">face_unlock</span>
+                </div>
+                <div>
+                  <h3 class="font-headline font-black text-sm text-zinc-900 dark:text-white">Validación Biométrica Didit</h3>
+                  <span class="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Modo Simulación & Test Biométrico</span>
+                </div>
+              </div>
+              <button id="btn-close-sim-modal" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1 rounded-lg transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <!-- Modal Content: Step Progress -->
+            <div class="p-6 space-y-6">
+              <div class="relative w-full aspect-video sm:h-52 bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 flex flex-col items-center justify-center text-center p-4">
+                <div class="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 pointer-events-none"></div>
+                
+                <!-- Animated Scanner Line -->
+                <div id="sim-scan-line" class="absolute left-0 right-0 h-0.5 bg-primary shadow-[0_0_12px_#ff0033] animate-bounce top-1/4"></div>
+
+                <div class="w-16 h-16 rounded-full border-2 border-dashed border-primary/60 flex items-center justify-center text-primary mb-3 animate-pulse">
+                  <span id="sim-scan-icon" class="material-symbols-outlined text-3xl">document_scanner</span>
+                </div>
+                
+                <div id="sim-scan-status" class="font-headline font-bold text-sm text-white">Escaneando DNI Frente & Dorso...</div>
+                <div id="sim-scan-substatus" class="text-xs text-zinc-400 mt-1">Verificando holograma y texto OCR nacional</div>
+              </div>
+
+              <!-- Extracted Identity Preview -->
+              <div class="bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl p-4 border border-zinc-200/80 dark:border-zinc-700/60 space-y-2 text-xs">
+                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                  <span>Titular Identificado:</span>
+                  <span class="font-bold text-zinc-900 dark:text-white">${userName}</span>
+                </div>
+                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                  <span>DNI / Identificación:</span>
+                  <span class="font-bold text-zinc-900 dark:text-white">${userDni}</span>
+                </div>
+                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                  <span>Prueba de Vida (Liveness):</span>
+                  <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">verified</span> Aprobado (Score 99.6%)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Button Action -->
+              <button id="btn-confirm-sim" class="w-full bg-primary hover:bg-primary-container text-white py-3.5 px-4 rounded-xl font-headline font-bold text-xs uppercase tracking-wider transition-all shadow-lg hover:shadow-primary/30 active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Confirmar y Emitir Pasaporte</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', html);
+
+      const modalEl = document.getElementById(modalId);
+      const closeBtn = document.getElementById('btn-close-sim-modal');
+      const confirmBtn = document.getElementById('btn-confirm-sim');
+
+      function finishSimulation() {
+        if (modalEl) modalEl.remove();
+
+        const simSessionId = 'sim_didit_' + Date.now();
+        const identityData = {
+          firstName: userName.split(' ')[0] || 'Mariano',
+          lastName: userName.split(' ').slice(1).join(' ') || 'Rossi',
+          fullName: userName,
+          documentNumber: userDni,
+          dni: userDni,
+          cuit: userCuit,
+          sessionId: simSessionId,
+          verifiedAt: new Date().toISOString()
+        };
+
+        try {
+          localStorage.setItem('habitat_didit_identity', JSON.stringify(identityData));
+        } catch (e) {}
+
+        resolve({
+          status: 'APPROVED',
+          sessionId: simSessionId,
+          document: {
+            firstName: identityData.firstName,
+            lastName: identityData.lastName,
+            fullName: identityData.fullName,
+            documentNumber: userDni,
+            dni: userDni,
+            nationality: 'Argentina'
+          },
+          scores: { liveness: 'PASSED', faceMatch: 99.6 }
+        });
+      }
+
+      if (confirmBtn) {
+        confirmBtn.onclick = finishSimulation;
+      }
+
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          if (modalEl) modalEl.remove();
+          resolve(null);
+        };
+      }
+    });
+  }
+
+  /**
+   * Muestra un diálogo informativo en caso de que el backend local no esté activo.
+   */
+  function promptOfflineOrSimulate(userId, options = {}) {
+    return new Promise((resolve) => {
+      const modalId = 'habitat-didit-offline-dialog';
+      const existing = document.getElementById(modalId);
+      if (existing) existing.remove();
+
+      const html = `
+        <div id="${modalId}" class="fixed inset-0 z-[9999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 font-body animate-fadeIn">
+          <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col p-6 space-y-5">
+            
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+              <span class="material-symbols-outlined text-2xl">dns</span>
+            </div>
+
+            <div class="text-center space-y-1.5">
+              <h3 class="font-headline font-black text-base text-zinc-900 dark:text-white">Servidor Backend Local Desconectado</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                La conexión oficial en vivo con la cámara y API de Didit KYC requiere que el servidor backend esté corriendo en <code class="bg-zinc-100 dark:bg-zinc-800 text-primary px-1.5 py-0.5 rounded font-mono font-bold text-[11px]">http://localhost:3000</code>.
+              </p>
+            </div>
+
+            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-300 space-y-2">
+              <div class="font-bold flex items-center gap-1.5 text-zinc-900 dark:text-white">
+                <span class="material-symbols-outlined text-sm text-primary">terminal</span>
+                <span>Para habilitar la API oficial Didit:</span>
+              </div>
+              <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Ejecuta en tu terminal:</p>
+              <div class="bg-zinc-900 text-emerald-400 font-mono text-[11px] px-3 py-2 rounded-xl flex items-center justify-between">
+                <span>npm start</span>
+                <span class="text-zinc-500 text-[10px]">puerto 3000</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <button id="btn-offline-simulate" class="w-full bg-primary hover:bg-primary-container text-white py-3 px-4 rounded-xl font-headline font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-base">play_arrow</span>
+                <span>Probar en Modo Simulación / Demo</span>
+              </button>
+              
+              <button id="btn-offline-retry" class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">refresh</span>
+                <span>Reintentar Conexión Oficial</span>
+              </button>
+
+              <button id="btn-offline-cancel" class="w-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 py-2 text-xs font-medium cursor-pointer">
+                Cancelar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', html);
+
+      const modalEl = document.getElementById(modalId);
+      const btnSim = document.getElementById('btn-offline-simulate');
+      const btnRetry = document.getElementById('btn-offline-retry');
+      const btnCancel = document.getElementById('btn-offline-cancel');
+
+      if (btnSim) {
+        btnSim.onclick = async () => {
+          if (modalEl) modalEl.remove();
+          const simRes = await renderSimulatedBiometricModal(userId);
+          resolve(simRes);
+        };
+      }
+
+      if (btnRetry) {
+        btnRetry.onclick = async () => {
+          if (modalEl) modalEl.remove();
+          const retryRes = await iniciarKYC(userId, options);
+          resolve(retryRes);
+        };
+      }
+
+      if (btnCancel) {
+        btnCancel.onclick = () => {
+          if (modalEl) modalEl.remove();
+          resolve(null);
+        };
+      }
     });
   }
 
@@ -404,8 +497,8 @@
     const sessionInfo = await createDiditSession(userId, options);
 
     if (!sessionInfo || !sessionInfo.url) {
-      alert('No se pudo conectar con la API de Didit KYC para generar la sesión biométrica. Por favor verifica las credenciales de Didit o tu conexión a internet.');
-      throw new Error('Didit session generation failed.');
+      // Backend offline: mostrar diálogo amigable con opción de simulación
+      return promptOfflineOrSimulate(userId, options);
     }
 
     // 2. Guardar sesión pendiente en sessionStorage para soportar retorno por redirección

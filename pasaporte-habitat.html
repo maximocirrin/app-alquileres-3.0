@@ -1191,7 +1191,10 @@
                 const kycResult = await iniciarKYC(userId, { callbackUrl: returnUrl });
 
                 if (!kycResult || (kycResult.status !== 'APPROVED' && kycResult.status !== 'SUCCESS')) {
-                    alert('La verificación Didit no pudo completarse. Por favor reintenta.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<span class="material-symbols-outlined text-base">verified_user</span> Confirmar y Pagar Pasaporte ($20.000 ARS)`;
+                    }
                     return;
                 }
 
