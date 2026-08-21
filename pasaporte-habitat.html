@@ -1088,8 +1088,8 @@
                 closePaymentModal();
 
                 // Iniciar Verificación Oficial Didit KYC (Pantalla Completa)
-                const returnUrl = window.location.origin + window.location.pathname;
-                const kycResult = await iniciarKYC(userId, { callbackUrl: returnUrl });
+                // Se elimina callbackUrl para evitar que Didit redirija la página y corte la ejecución
+                const kycResult = await iniciarKYC(userId, {});
 
                 if (!kycResult || (kycResult.status !== 'APPROVED' && kycResult.status !== 'SUCCESS')) {
                     console.log('[Pasaporte] Didit KYC cancelado o pendiente.');
@@ -1251,6 +1251,9 @@
                     uData.ingreso_mensual = ingresosVal;
                     localStorage.setItem('habitat_user', JSON.stringify(uData));
                 } catch (eStorage) {}
+
+                // Redirigir al panel del inquilino (Tu pasaporte)
+                window.location.href = '/tu-alquiler.html';
 
             } catch (err) {
                 console.error("Error al procesar emisión del pasaporte:", err);
