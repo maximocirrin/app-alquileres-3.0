@@ -805,6 +805,24 @@
             openPaymentModal();
         }
 
+        window.formatCurrencyInput = function(input) {
+            if (!input) return;
+            let val = input.value.replace(/\D/g, '');
+            if (!val) {
+                input.value = '';
+                return;
+            }
+            const num = parseInt(val, 10);
+            input.value = '$ ' + num.toLocaleString('es-AR');
+        };
+
+        window.setQuickIncome = function(amount) {
+            const input = document.getElementById('input-ingresos-pasaporte');
+            if (input) {
+                input.value = '$ ' + Number(amount).toLocaleString('es-AR');
+            }
+        };
+
         function openPaymentModal() {
             if (window.hasActivePassport) {
                 alert('Ya posees un Pasaporte Hábitat activo (Válido por 60 días).');
@@ -813,70 +831,94 @@
             let modal = document.getElementById('modal-pago-pasaporte');
             if (modal) modal.remove();
 
+            // Leer ingresos previos si existen
+            let prevIncome = 850000;
+            try {
+                const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                if (pData.monthly_income || pData.ingreso_mensual || uData.monthly_income) {
+                    prevIncome = pData.monthly_income || pData.ingreso_mensual || uData.monthly_income;
+                }
+            } catch (e) {}
+
             modal = document.createElement('div');
             modal.id = 'modal-pago-pasaporte';
-            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 transition-opacity duration-300';
+            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md opacity-0 transition-opacity duration-300 font-body';
             modal.onclick = (e) => {
                 if (e.target === modal) closePaymentModal();
             };
             modal.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden" onclick="event.stopPropagation()">
+                <div class="bg-white dark:bg-[#131418] text-zinc-900 dark:text-zinc-100 rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 max-w-lg w-full p-5 sm:p-7 shadow-2xl relative overflow-hidden max-h-[92vh] flex flex-col space-y-4 animate-fadeIn" onclick="event.stopPropagation()">
+                    
+                    <!-- Decorative Top Glow Line -->
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#811b1e] via-rose-500 to-amber-500"></div>
+
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 mb-5">
+                    <div class="flex items-center justify-between pb-3.5 border-b border-zinc-200/80 dark:border-zinc-800/80 shrink-0">
                         <div class="flex items-center gap-3">
-                            <span class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center font-bold shrink-0">
-                                <span class="material-symbols-outlined text-xl">workspace_premium</span>
-                            </span>
+                            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500/15 to-[#811b1e]/20 text-primary dark:text-red-400 flex items-center justify-center font-bold border border-primary/20 shadow-xs shrink-0">
+                                <span class="material-symbols-outlined text-xl sm:text-2xl">workspace_premium</span>
+                            </div>
                             <div>
-                                <h3 class="font-headline font-bold text-zinc-900 dark:text-white text-lg leading-tight">Generar Pasaporte Hábitat</h3>
-                                <p class="text-xs text-zinc-500 font-body">Credencial de Inquilino Verificado</p>
+                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-base sm:text-lg leading-tight tracking-tight">Generar Pasaporte Hábitat</h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Credencial Oficial de Inquilino Verificado</p>
                             </div>
                         </div>
-                        <button type="button" onclick="closePaymentModal()" class="w-8 h-8 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex items-center justify-center transition-colors cursor-pointer">
-                            <span class="material-symbols-outlined text-xl">close</span>
+                        <button type="button" onclick="closePaymentModal()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center transition-colors cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-lg">close</span>
                         </button>
                     </div>
 
-                    <!-- Tariff Card (Dark Container) -->
-                    <div class="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white p-5 rounded-2xl mb-4 shadow-md border border-zinc-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[11px] font-headline font-extrabold uppercase text-amber-400 tracking-wider">Tarifa Única de Emisión</span>
-                            <span class="text-xs font-headline font-bold bg-white/10 px-3 py-1 rounded-full text-zinc-300">Vigencia 60 Días</span>
-                        </div>
-                        <div class="flex items-baseline gap-2 mb-2">
-                            <span class="font-headline text-3xl sm:text-4xl font-extrabold text-white">$20.000</span>
-                            <span class="text-xs font-headline font-extrabold text-zinc-400">ARS</span>
-                        </div>
-                        <p class="text-xs text-zinc-300 font-body leading-relaxed">
-                            Incluye auditoría de solvencia, validación biométrica DNI con Didit y certificación de antecedentes sin juicios por desalojo.
-                        </p>
-                    </div>
+                    <!-- Scrollable Modal Content -->
+                    <div class="overflow-y-auto pr-1 space-y-4 flex-1 custom-scrollbar">
+                        
+                        <!-- Tariff Card (Dark Luxury Banner) -->
+                        <div class="relative bg-gradient-to-br from-zinc-950 via-[#18181b] to-black text-white p-4 sm:p-5 rounded-2xl shadow-lg border border-zinc-800/90 overflow-hidden">
+                            <div class="flex items-center justify-between gap-2 mb-2.5">
+                                <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-headline font-black uppercase text-amber-400 tracking-wider bg-amber-400/10 px-2.5 py-0.5 rounded-md border border-amber-400/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    Tarifa Única de Emisión
+                                </span>
+                                <span class="text-[11px] font-headline font-extrabold bg-white/10 text-zinc-200 px-2.5 py-0.5 rounded-full border border-white/10">
+                                    Vigencia 60 Días
+                                </span>
+                            </div>
 
-                    <!-- Payment Method Container -->
-                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-4">
-                        <div class="flex items-center justify-between text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                            <span>Método de Pago (Simulador Activo)</span>
-                            <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-extrabold">
-                                <span class="material-symbols-outlined text-sm">bolt</span> Sin Pasarela Real
-                            </span>
-                        </div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-body">Se simulará la acreditación inmediata de $20.000 ARS para dar acceso completo al pasaporte.</p>
-                    </div>
+                            <div class="flex items-baseline gap-2 mb-3">
+                                <span class="font-headline text-3xl sm:text-4xl font-black text-white tracking-tight">$20.000</span>
+                                <span class="text-xs font-headline font-extrabold text-zinc-400">ARS</span>
+                            </div>
 
-                    <!-- Form simulation & Terms acceptance -->
-                    <form id="form-pago-pasaporte" onsubmit="procesarPagoSimulado(event)">
-                        <div class="space-y-4 mb-6">
-                            <!-- Condición Fiscal / Actividad del Postulante -->
+                            <div class="space-y-1.5 text-[11px] sm:text-xs text-zinc-300">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-emerald-400 shrink-0">verified_user</span>
+                                    <span>Validación biométrica facial Renaper / Didit con DNI.</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-emerald-400 shrink-0">account_balance</span>
+                                    <span>Auditoría financiera en Central de Deudores BCRA.</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-emerald-400 shrink-0">gavel</span>
+                                    <span>Certificación de antecedentes sin juicios por desalojo.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form -->
+                        <form id="form-pago-pasaporte" onsubmit="procesarPagoSimulado(event)" class="space-y-4">
+                            
+                            <!-- Campo 1: Condición Fiscal / Ocupación -->
                             <div>
                                 <label for="select-condicion-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
                                     ¿Cuál es tu ocupación o condición fiscal principal?
                                 </label>
                                 <div class="relative flex items-center">
-                                    <span class="absolute left-3.5 text-zinc-400 pointer-events-none flex items-center">
-                                        <span class="material-symbols-outlined text-xl">work</span>
+                                    <span class="absolute left-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none flex items-center">
+                                        <span class="material-symbols-outlined text-lg">work</span>
                                     </span>
                                     <select id="select-condicion-pasaporte" required 
-                                        class="w-full pl-11 pr-8 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-body text-zinc-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer">
+                                        class="w-full pl-10 pr-8 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700/80 rounded-xl text-xs sm:text-sm font-body text-zinc-900 dark:text-white focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all cursor-pointer">
                                         <option value="Monotributista">Monotributista</option>
                                         <option value="Relación de Dependencia">Empleado en Relación de Dependencia</option>
                                         <option value="Responsable Inscripto">Responsable Inscripto</option>
@@ -888,41 +930,65 @@
                                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se certificará y mostrará en tu credencial para los propietarios.</p>
                             </div>
 
-                            <!-- CUIT / CUIL Input Field -->
+                            <!-- Campo 2: Ingresos Mensuales Demostrables (En lugar de CUIT) -->
                             <div>
-                                <label for="input-cuit-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
-                                    CUIT o CUIL del Titular (para Auditoría ARCA y BCRA):
-                                </label>
-                                <div class="relative flex items-center">
-                                    <span class="absolute left-3.5 text-zinc-400 pointer-events-none flex items-center">
-                                        <span class="material-symbols-outlined text-xl">badge</span>
-                                    </span>
-                                    <input type="text" id="input-cuit-pasaporte" required placeholder="Ej: 20-34567890-9" 
-                                        class="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-body text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label for="input-ingresos-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200">
+                                        Ingresos mensuales netos demostrables (ARS):
+                                    </label>
+                                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Scoring Financiero</span>
                                 </div>
-                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se consultará el Padrón ARCA y la Central de Deudores BCRA para auditar solvencia.</p>
+                                <div class="relative flex items-center">
+                                    <input 
+                                        type="text" 
+                                        id="input-ingresos-pasaporte" 
+                                        required 
+                                        placeholder="Ej: $ 850.000"
+                                        value="$ ${Number(prevIncome || 850000).toLocaleString('es-AR')}"
+                                        oninput="formatCurrencyInput(this)"
+                                        class="w-full px-4 py-2.5 sm:py-3 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700/80 rounded-xl text-sm sm:text-base font-headline font-extrabold text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                                    >
+                                </div>
+                                <!-- Chips de Selección Rápida de Ingresos -->
+                                <div class="flex items-center gap-1.5 flex-wrap mt-2">
+                                    <span class="text-[10px] text-zinc-400 font-medium mr-0.5">Sugerencias:</span>
+                                    <button type="button" onclick="setQuickIncome(500000)" class="px-2 py-0.5 rounded-lg text-[10px] font-headline font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700/60">$ 500.000</button>
+                                    <button type="button" onclick="setQuickIncome(850000)" class="px-2 py-0.5 rounded-lg text-[10px] font-headline font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700/60">$ 850.000</button>
+                                    <button type="button" onclick="setQuickIncome(1200000)" class="px-2 py-0.5 rounded-lg text-[10px] font-headline font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700/60">$ 1.200.000</button>
+                                    <button type="button" onclick="setQuickIncome(1800000)" class="px-2 py-0.5 rounded-lg text-[10px] font-headline font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700/60">$ 1.800.000</button>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5">Se utilizará para calcular tu ratio de solvencia y capacidad de pago frente a los alquileres.</p>
+                            </div>
+
+                            <!-- Nota Informativa de Auto-Cálculo de CUIT / DNI -->
+                            <div class="p-3 rounded-2xl bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 flex items-start gap-2.5">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-base shrink-0 mt-0.5">fingerprint</span>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                                    Tu <strong>DNI y CUIT/CUIL</strong> se certificarán y calcularán automáticamente al escanear tu documento en el siguiente paso con <strong>Didit KYC</strong>.
+                                </p>
                             </div>
 
                             <!-- Terms and Conditions Checkbox -->
-                            <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
-                                <input type="checkbox" id="check-terminos-pasaporte" required class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 dark:border-zinc-600 shrink-0 cursor-pointer">
+                            <div class="flex items-start gap-3 p-3 sm:p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60">
+                                <input type="checkbox" id="check-terminos-pasaporte" required checked class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary border-zinc-300 dark:border-zinc-600 shrink-0 cursor-pointer">
                                 <label for="check-terminos-pasaporte" class="text-xs text-zinc-700 dark:text-zinc-300 font-body leading-normal cursor-pointer select-none">
-                                    Acepto los <a href="#" class="text-primary dark:text-red-400 font-bold underline">Términos y Condiciones</a> del Pasaporte Hábitat y autorizo el procesamiento de mis datos para la evaluación crediticia.
+                                    Acepto los <a href="#" class="text-primary dark:text-red-400 font-bold underline">Términos y Condiciones</a> del Pasaporte Hábitat y autorizo el procesamiento biométrico para mi credencial locativa.
                                 </label>
                             </div>
-                        </div>
 
-                        <!-- Footer Actions -->
-                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                            <button type="button" onclick="closePaymentModal()" class="px-5 py-3 rounded-2xl font-headline font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
-                                Cancelar
-                            </button>
-                            <button type="submit" id="btn-confirmar-pago-simulado" class="inline-flex items-center justify-center gap-2 bg-[#811b1e] hover:bg-[#6b1619] text-white px-6 py-3 rounded-2xl font-headline font-extrabold text-xs transition-all shadow-lg active:scale-95 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">verified</span>
-                                Confirmar y Simular Pago ($20.000)
-                            </button>
-                        </div>
-                    </form>
+                            <!-- Footer Actions -->
+                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-200/80 dark:border-zinc-800/80">
+                                <button type="button" onclick="closePaymentModal()" class="px-4 py-2.5 rounded-xl font-headline font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                                    Cancelar
+                                </button>
+                                <button type="submit" id="btn-confirmar-pago-simulado" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#811b1e] via-[#9e2226] to-[#811b1e] hover:brightness-110 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-headline font-black text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">verified</span>
+                                    <span>Confirmar y Pagar ($20.000)</span>
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
                 </div>
             `;
 
@@ -941,7 +1007,7 @@
         async function procesarPagoSimulado(e) {
             e.preventDefault();
 
-            const inputCuit = document.getElementById('input-cuit-pasaporte');
+            const inputIngresos = document.getElementById('input-ingresos-pasaporte');
             const selectCondicion = document.getElementById('select-condicion-pasaporte');
             const checkTerminos = document.getElementById('check-terminos-pasaporte');
             const btn = document.getElementById('btn-confirmar-pago-simulado');
@@ -951,17 +1017,19 @@
                 return;
             }
 
-            const cuitVal = inputCuit ? inputCuit.value.trim() : '';
-            if (!cuitVal) {
-                alert('Por favor ingresá de forma válida tu CUIT o CUIL.');
-                return;
+            let ingresosVal = 850000;
+            if (inputIngresos && inputIngresos.value) {
+                const cleanNum = parseInt(inputIngresos.value.replace(/\D/g, ''), 10);
+                if (!isNaN(cleanNum) && cleanNum > 0) {
+                    ingresosVal = cleanNum;
+                }
             }
 
             const condicionElegida = selectCondicion ? selectCondicion.value : 'Monotributista';
 
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Consultando ARCA y BCRA...`;
+                btn.innerHTML = `<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Conectando con Didit KYC...`;
             }
 
             try {
@@ -973,7 +1041,6 @@
                     if (session && session.user) {
                         userId = session.user.id;
                         
-                        // Check if Perfil exists
                         const { data: perfil } = await window.supabaseClient
                             .from('Perfil')
                             .select('id_perfil')
@@ -982,7 +1049,6 @@
 
                         if (perfil) {
                             idPerfil = perfil.id_perfil;
-                            // Update terms acceptance in Perfil
                             await window.supabaseClient
                                 .from('Perfil')
                                 .update({
@@ -999,195 +1065,199 @@
                     localStorage.setItem('habitat_user_id', userId);
                 }
 
+                // Guardar ingresos y condición elegida localmente
+                try {
+                    const pDataLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    pDataLocal.condicion_fiscal = condicionElegida;
+                    pDataLocal.condicionFiscal = condicionElegida;
+                    pDataLocal.actividad = condicionElegida;
+                    pDataLocal.monthly_income = ingresosVal;
+                    pDataLocal.ingreso_mensual = ingresosVal;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pDataLocal));
+
+                    const uDataLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    uDataLocal.condicion_fiscal = condicionElegida;
+                    uDataLocal.condicionFiscal = condicionElegida;
+                    uDataLocal.actividad = condicionElegida;
+                    uDataLocal.monthly_income = ingresosVal;
+                    uDataLocal.ingreso_mensual = ingresosVal;
+                    localStorage.setItem('habitat_user', JSON.stringify(uDataLocal));
+                } catch (eLoc) {}
+
+                closePaymentModal();
+
+                // Iniciar Verificación Oficial Didit KYC (Pantalla Completa)
+                const returnUrl = window.location.origin + window.location.pathname;
+                const kycResult = await iniciarKYC(userId, { callbackUrl: returnUrl });
+
+                if (!kycResult || (kycResult.status !== 'APPROVED' && kycResult.status !== 'SUCCESS')) {
+                    console.log('[Pasaporte] Didit KYC cancelado o pendiente.');
+                    return;
+                }
+
+                const doc = kycResult.document || {};
+                const verifiedFullName = doc.fullName || (doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}`.trim() : null) || 'Titular Verificado';
+                const extractedDni = doc.documentNumber || doc.dni || null;
+
+                // Calcular automáticamente CUIT/CUIL a partir del DNI verificado de Didit
+                let cuitCalculado = null;
+                if (extractedDni) {
+                    const cleanD = String(extractedDni).replace(/\D/g, '');
+                    if (typeof window.calcularCUIL === 'function') {
+                        cuitCalculado = window.calcularCUIL(cleanD, 'M');
+                    } else {
+                        cuitCalculado = `20-${cleanD}-7`;
+                    }
+                }
+
+                // Consultar Web Services de ARCA y Central de Deudores BCRA con el CUIT calculado
                 let arcaData = null;
                 let bcraData = null;
-
-                try {
-                    // Consultar Web Services de ARCA y Central de Deudores BCRA en paralelo
-                    const [resArca, resBcra] = await Promise.allSettled([
-                        window.consultarArca ? window.consultarArca(cuitVal, window.currentPasaporteId || null, userId) : Promise.resolve(null),
-                        window.consultarBcra ? window.consultarBcra(cuitVal, window.currentPasaporteId || null, userId) : Promise.resolve(null)
-                    ]);
-
-                    if (resArca.status === 'fulfilled') arcaData = resArca.value;
-                    if (resBcra.status === 'fulfilled') bcraData = resBcra.value;
-
-                } catch (eServices) {
-                    console.warn("Aviso al consultar servicios ARCA/BCRA:", eServices);
+                if (cuitCalculado) {
+                    try {
+                        const [resArca, resBcra] = await Promise.allSettled([
+                            window.consultarArca ? window.consultarArca(cuitCalculado, window.currentPasaporteId || null, userId) : Promise.resolve(null),
+                            window.consultarBcra ? window.consultarBcra(cuitCalculado, window.currentPasaporteId || null, userId) : Promise.resolve(null)
+                        ]);
+                        if (resArca.status === 'fulfilled') arcaData = resArca.value;
+                        if (resBcra.status === 'fulfilled') bcraData = resBcra.value;
+                    } catch (eServices) {
+                        console.warn("Aviso al consultar servicios ARCA/BCRA:", eServices);
+                    }
                 }
 
                 let condicionFiscalFinal = condicionElegida;
                 if (condicionElegida === 'Monotributista' && arcaData && arcaData.condicionFiscal) {
                     condicionFiscalFinal = arcaData.condicionFiscal;
-                } else if (condicionElegida === 'Estudiante') {
-                    condicionFiscalFinal = 'Estudiante';
-                } else if (condicionElegida === 'Responsable Inscripto') {
-                    condicionFiscalFinal = 'Responsable Inscripto';
-                } else if (condicionElegida === 'Relación de Dependencia') {
-                    condicionFiscalFinal = 'Relación de Dependencia';
-                } else if (condicionElegida === 'Jubilado / Pensionado') {
-                    condicionFiscalFinal = 'Jubilado / Pensionado';
-                } else if (condicionElegida === 'Autónomo') {
-                    condicionFiscalFinal = 'Autónomo';
                 }
-
-                const razonSocialFinal = arcaData && arcaData.razonSocial ? arcaData.razonSocial : null;
                 const situacionCrediticiaFinal = bcraData && bcraData.situacionCrediticia ? bcraData.situacionCrediticia : 'Situación 1 (Normal)';
 
-                // Guardar en localStorage inmediatamente
-                try {
-                    const pDataLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                    pDataLocal.condicion_fiscal = condicionFiscalFinal;
-                    pDataLocal.condicionFiscal = condicionFiscalFinal;
-                    pDataLocal.actividad = condicionFiscalFinal;
-                    pDataLocal.cuit = cuitVal;
-                    localStorage.setItem('habitat_passport_data', JSON.stringify(pDataLocal));
+                // Guardar en Supabase (Perfil y Pasaporte_habitat)
+                if (window.supabaseClient) {
+                    if (!idPerfil && window.DataManager && window.DataManager._getOrCreateProfile) {
+                        idPerfil = await window.DataManager._getOrCreateProfile();
+                    }
 
-                    const uDataLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                    uDataLocal.condicion_fiscal = condicionFiscalFinal;
-                    uDataLocal.condicionFiscal = condicionFiscalFinal;
-                    uDataLocal.actividad = condicionFiscalFinal;
-                    uDataLocal.cuit = cuitVal;
-                    localStorage.setItem('habitat_user', JSON.stringify(uDataLocal));
-                } catch (eLoc) {}
+                    if (idPerfil) {
+                        // 1. Actualizar DNI y Nombre en Perfil
+                        const perfilUpdate = {
+                            nombre_completo: verifiedFullName,
+                            cuenta_verificada: true,
+                            fecha_verificacion: new Date().toISOString()
+                        };
+                        if (extractedDni) perfilUpdate.dni = extractedDni;
+                        await window.supabaseClient.from('Perfil').update(perfilUpdate).eq('id_perfil', idPerfil);
 
-                // Create Pasaporte_habitat in Supabase if Client and Perfil are available
-                if (window.supabaseClient && idPerfil) {
-                    const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+                        // 2. Crear Pasaporte_habitat en Supabase
+                        const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
 
-                    const { data: pasaporte, error: errP } = await window.supabaseClient
-                        .from('Pasaporte_habitat')
-                        .insert([{
-                            id_perfil: idPerfil,
-                            id_estado_pasaporte: 3, // Activo
-                            codigo_pasaporte: codigoPasaporte,
-                            monto_pagado: 20000.00,
-                            cuit: cuitVal,
-                            razon_social: razonSocialFinal,
-                            condicion_fiscal: condicionFiscalFinal,
-                            situacion_crediticia: situacionCrediticiaFinal,
-                            antecedentes_legales: true,
-                            datos_arca: arcaData || null,
-                            datos_bcra: bcraData || null
-                        }])
-                        .select()
-                        .single();
-
-                    if (!errP && pasaporte) {
-                        window.hasActivePassport = true;
-                        window.currentPasaporteId = pasaporte.id_pasaporte;
-
-                        // Actualizar todos los botones e indicadores a estado Activo con los días restantes
-                        if (window.actualizarEstadoPasaporteActivoUI) {
-                            window.actualizarEstadoPasaporteActivoUI(pasaporte);
-                        }
-
-                        // Add Entry in Historial_estado_pasaporte
-                        await window.supabaseClient
-                            .from('Historial_estado_pasaporte')
+                        const { data: pasaporte, error: errP } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
                             .insert([{
-                                id_pasaporte: pasaporte.id_pasaporte,
-                                id_estado_pasaporte: 3,
-                                observacion: `Pago simulado acreditado. Pasaporte activado. Condición: ${condicionFiscalFinal}`
-                            }]);
+                                id_perfil: idPerfil,
+                                id_estado_pasaporte: 3, // Activo
+                                codigo_pasaporte: codigoPasaporte,
+                                monto_pagado: 20000.00,
+                                cuit: cuitCalculado,
+                                dni: extractedDni,
+                                razon_social: verifiedFullName,
+                                condicion_fiscal: condicionFiscalFinal,
+                                situacion_crediticia: situacionCrediticiaFinal,
+                                ingreso_mensual_declarado: ingresosVal,
+                                antecedentes_legales: true,
+                                datos_arca: arcaData || null,
+                                datos_bcra: bcraData || null
+                            }])
+                            .select()
+                            .single();
 
-                        // Reemplazar inmediatamente los datos de ejemplo por los datos reales en pantalla
-                        const elTitle = document.getElementById('passport-section-title');
-                        if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
+                        if (!errP && pasaporte) {
+                            window.hasActivePassport = true;
+                            window.currentPasaporteId = pasaporte.id_pasaporte;
 
-                        const elCode = document.getElementById('passport-code-id');
-                        if (elCode) elCode.textContent = `ID: ${codigoPasaporte}`;
-
-                        const elQr = document.getElementById('passport-qr-code');
-                        if (elQr) {
-                            elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoPasaporte)}&color=811b1e&bgcolor=ffffff`;
-                        }
-
-                        if (window.actualizarPasaporteUI) {
-                            window.actualizarPasaporteUI({
-                                cuit: cuitVal,
-                                condicionFiscal: condicionFiscalFinal,
-                                razonSocial: razonSocialFinal || null,
-                                estadoCuit: 'ACTIVO',
-                                actividadPrincipal: (condicionElegida === 'Estudiante') ? 'Estudiante' : (arcaData && arcaData.actividadPrincipal ? arcaData.actividadPrincipal : condicionFiscalFinal)
-                            });
-                        }
-                    }
-                }
-
-                closePaymentModal();
-                alert(`¡Pago simulado completado con éxito!\n\nCondición registrada: ${condicionFiscalFinal}\nIniciando la validación biométrica Didit KYC...`);
-
-                // Iniciar Didit KYC pasando el callbackUrl explícito a pasaporte-habitat.html
-                const returnUrl = window.location.origin + window.location.pathname;
-                const kycResult = await iniciarKYC(userId, { callbackUrl: returnUrl });
-
-                if (kycResult && (kycResult.status === 'APPROVED' || kycResult.status === 'SUCCESS')) {
-                    const doc = kycResult.document || {};
-                    const verifiedFullName = doc.fullName || (doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}` : null);
-                    
-                    if (verifiedFullName) {
-                        const elNombre = document.getElementById('passport-user-fullname');
-                        if (elNombre) elNombre.textContent = verifiedFullName;
-
-                        const elAvatar = document.getElementById('passport-avatar-letter');
-                        if (elAvatar) {
-                            const inits = verifiedFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                            elAvatar.textContent = inits;
-                        }
-
-                        const elHeader = document.getElementById('passport-cuit-header');
-                        if (elHeader && (doc.documentNumber || cuitVal)) {
-                            elHeader.textContent = doc.documentNumber ? `DNI: ${doc.documentNumber} • CUIT/CUIL: ${cuitVal}` : `CUIT/CUIL: ${cuitVal}`;
-                        }
-
-                        try {
-                            const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                            pData.razon_social = verifiedFullName;
-                            pData.nombre = doc.firstName;
-                            pData.apellido = doc.lastName;
-                            pData.cuit = cuitVal;
-                            if (doc.documentNumber) pData.dni = doc.documentNumber;
-                            localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
-
-                            const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                            uData.nombre_completo = verifiedFullName;
-                            if (doc.documentNumber) uData.dni = doc.documentNumber;
-                            if (cuitVal) uData.cuit = cuitVal;
-                            localStorage.setItem('habitat_user', JSON.stringify(uData));
-
-                            if (window.supabaseClient) {
-                                if (window.currentPasaporteId) {
-                                    await window.supabaseClient
-                                        .from('Pasaporte_habitat')
-                                        .update({ 
-                                            razon_social: verifiedFullName,
-                                            cuit: cuitVal 
-                                        })
-                                        .eq('id_pasaporte', window.currentPasaporteId);
-                                }
-                                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                                if (session && session.user) {
-                                    const updateObj = {
-                                        nombre_completo: verifiedFullName,
-                                        cuenta_verificada: true,
-                                        fecha_verificacion: new Date().toISOString()
-                                    };
-                                    if (doc.documentNumber) updateObj.dni = doc.documentNumber;
-                                    await window.supabaseClient.from('Perfil').update(updateObj).eq('user_id', session.user.id);
-                                }
+                            if (window.actualizarEstadoPasaporteActivoUI) {
+                                window.actualizarEstadoPasaporteActivoUI(pasaporte);
                             }
-                        } catch (eStorage) {}
+
+                            // Historial de estado
+                            await window.supabaseClient
+                                .from('Historial_estado_pasaporte')
+                                .insert([{
+                                    id_pasaporte: pasaporte.id_pasaporte,
+                                    id_estado_pasaporte: 3,
+                                    observacion: `Pasaporte activado vía Didit KYC. DNI: ${extractedDni}, Ingresos: $ ${ingresosVal.toLocaleString('es-AR')}`
+                                }]);
+
+                            // Actualizar UI en vivo
+                            const elTitle = document.getElementById('passport-section-title');
+                            if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
+
+                            const elCode = document.getElementById('passport-code-id');
+                            if (elCode) elCode.textContent = `ID: ${codigoPasaporte}`;
+
+                            const elQr = document.getElementById('passport-qr-code');
+                            if (elQr) {
+                                elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoPasaporte)}&color=811b1e&bgcolor=ffffff`;
+                            }
+
+                            const elNombre = document.getElementById('passport-user-fullname');
+                            if (elNombre) elNombre.textContent = verifiedFullName;
+
+                            const elAvatar = document.getElementById('passport-avatar-letter');
+                            if (elAvatar) {
+                                const inits = verifiedFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                                elAvatar.textContent = inits;
+                            }
+
+                            const elHeader = document.getElementById('passport-cuit-header');
+                            if (elHeader) {
+                                elHeader.textContent = extractedDni ? `DNI: ${extractedDni} • CUIT: ${cuitCalculado}` : `CUIT: ${cuitCalculado}`;
+                            }
+
+                            if (window.actualizarPasaporteUI) {
+                                window.actualizarPasaporteUI({
+                                    cuit: cuitCalculado || '',
+                                    condicionFiscal: condicionFiscalFinal,
+                                    razonSocial: verifiedFullName,
+                                    estadoCuit: 'ACTIVO',
+                                    actividadPrincipal: (condicionElegida === 'Estudiante') ? 'Estudiante' : (arcaData && arcaData.actividadPrincipal ? arcaData.actividadPrincipal : condicionFiscalFinal)
+                                });
+                            }
+                        }
                     }
                 }
+
+                // Guardar en localStorage
+                try {
+                    const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    pData.razon_social = verifiedFullName;
+                    pData.nombre_completo = verifiedFullName;
+                    pData.nombre = doc.firstName;
+                    pData.apellido = doc.lastName;
+                    pData.cuit = cuitCalculado;
+                    pData.dni = extractedDni;
+                    pData.condicion_fiscal = condicionFiscalFinal;
+                    pData.monthly_income = ingresosVal;
+                    pData.ingreso_mensual = ingresosVal;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pData));
+
+                    const uData = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    uData.nombre_completo = verifiedFullName;
+                    uData.dni = extractedDni;
+                    uData.cuit = cuitCalculado;
+                    uData.condicion_fiscal = condicionFiscalFinal;
+                    uData.monthly_income = ingresosVal;
+                    uData.ingreso_mensual = ingresosVal;
+                    localStorage.setItem('habitat_user', JSON.stringify(uData));
+                } catch (eStorage) {}
 
             } catch (err) {
-                console.error("Error al procesar pago simulado:", err);
+                console.error("Error al procesar emisión del pasaporte:", err);
                 alert("Ocurrió un error al procesar la solicitud: " + err.message);
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = `<span class="material-symbols-outlined text-base">verified</span> Confirmar y Simular Pago ($20.000)`;
+                    btn.innerHTML = `<span class="material-symbols-outlined text-base">verified</span> Confirmar y Pagar ($20.000)`;
                 }
             }
         }
