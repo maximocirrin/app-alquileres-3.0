@@ -85,8 +85,6 @@
         if (c.length === 11) {
           docNumber = c.substring(2, 10);
         }
-      } catch (e) {
-        console.warn(`[Didit KYC] Intento de conexión con ${ep} falló:`, e.message);
       }
     } catch (e) {}
 
@@ -214,7 +212,7 @@
         }
       }, 1600);
 
-      setTimeout(() => {
+      setTimeout(async () => {
         // Guardar identidad verificada en localStorage y Supabase
         try {
           let calculatedCuit = null;
