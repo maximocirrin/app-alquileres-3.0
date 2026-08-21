@@ -18,7 +18,8 @@
     if (typeof window !== 'undefined') {
       const port = window.location.port;
       if (port === '5500' || port === '5501' || port === '5502' || port === '5173' || port === '8080') {
-        return 'http://localhost:3000';
+        // Usa el backend de Vercel ya que las variables de entorno (DIDIT) están allí
+        return 'https://app-alquileres-3-0.vercel.app';
       }
     }
     return '';
@@ -60,8 +61,8 @@
             };
           }
         }
-      } catch (e) {
-        console.warn(`[Didit KYC] Intento de conexión con ${ep} falló:`, e.message);
+      } catch (err) {
+        console.warn(`[Didit KYC] Falló ${ep}:`, err);
       }
     }
 
@@ -88,7 +89,7 @@
             return json;
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return null;
@@ -160,7 +161,7 @@
 
         try {
           localStorage.setItem('habitat_didit_identity', JSON.stringify(identityData));
-        } catch (e) {}
+        } catch (e) { }
 
         // Actualizar Perfil y Pasaporte_habitat en Supabase con los datos extraídos del DNI
         if (window.supabaseClient) {
@@ -181,7 +182,7 @@
                 targetUserId = localU.id || localU.user_id || localStorage.getItem('habitat_user_id');
                 targetEmail = targetEmail || localU.email || localU.mail;
                 targetPerfilId = localU.id_perfil || localStorage.getItem('habitat_profile_id');
-              } catch (eLocal) {}
+              } catch (eLocal) { }
             }
 
             let perfilIdToUpdate = targetPerfilId;
@@ -320,7 +321,7 @@
         userId: userId,
         startedAt: new Date().toISOString()
       }));
-    } catch (e) {}
+    } catch (e) { }
 
     // 3. Abrir verificador oficial Didit KYC (Pantalla Completa)
     return renderDiditIframeModal(sessionInfo.url, sessionInfo.sessionId);
