@@ -128,14 +128,6 @@
         }
 
         /* Passport Custom Styles */
-        .passport-card-glow {
-            background: radial-gradient(circle at 50% 0%, rgba(129, 27, 30, 0.12), transparent 70%);
-        }
-
-        html.dark .passport-card-glow {
-            background: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.15), transparent 70%);
-        }
-
         .passport-tab-btn.active {
             background-color: #811b1e;
             color: #ffffff;
@@ -269,7 +261,7 @@
             </div>
 
             <!-- Main Digital Passport Container -->
-            <div class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden passport-card-glow transition-all duration-300">
+            <div id="passport-main-card" class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden transition-all duration-300">
                 
                 <!-- Passport Top Banner / Header Bar -->
                 <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-4 sm:px-10 py-3.5 sm:py-6 flex flex-row items-center justify-between gap-3">
@@ -304,22 +296,19 @@
                             <h3 class="font-headline text-2xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
                                 Titular del Pasaporte
                             </h3>
-                            <p class="font-headline text-[11px] sm:text-sm text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5" id="passport-cuit-header">
-                                Identidad Digital • Didit KYC Validado
-                            </p>
 
-                            <div class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2" id="passport-badges-container">
-                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
-                                    <span class="material-symbols-outlined text-sm sm:text-base">fingerprint</span> Identidad Validada
+                            <div class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4" id="passport-badges-container">
+                                <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="material-symbols-outlined text-base sm:text-lg">fingerprint</span> Identidad Validada
                                 </span>
-                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
-                                    <span class="material-symbols-outlined text-sm sm:text-base">account_balance</span> Perfil Fiscal Regular
+                                <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="material-symbols-outlined text-base sm:text-lg">account_balance</span> Perfil Fiscal Regular
                                 </span>
-                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
-                                    <span class="material-symbols-outlined text-sm sm:text-base">gavel</span> Sin Historial Judicial
+                                <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="material-symbols-outlined text-base sm:text-lg">gavel</span> Sin Historial Judicial
                                 </span>
-                                <span class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1">
-                                    <span class="material-symbols-outlined text-sm sm:text-base">shield_person</span> 2 Garantes Verificados
+                                <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="material-symbols-outlined text-base sm:text-lg">shield_person</span> 2 Garantes Verificados
                                 </span>
                             </div>
                         </div>
@@ -486,8 +475,8 @@
             <!-- 3 Core Pillars Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                 <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                    <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6">
-                        <span class="material-symbols-outlined text-3xl">badge</span>
+                    <div class="text-primary dark:text-red-400 flex items-center mb-6">
+                        <span class="material-symbols-outlined text-4xl">badge</span>
                     </div>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
                         Identidad y Perfil Fiscal
@@ -498,8 +487,8 @@
                 </article>
 
                 <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
-                        <span class="material-symbols-outlined text-3xl">analytics</span>
+                    <div class="text-emerald-600 dark:text-emerald-400 flex items-center mb-6">
+                        <span class="material-symbols-outlined text-4xl">analytics</span>
                     </div>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
                         Historial Financiero y Crediticio
@@ -510,8 +499,8 @@
                 </article>
 
                 <article class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                    <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6">
-                        <span class="material-symbols-outlined text-3xl">balance</span>
+                    <div class="text-amber-600 dark:text-amber-400 flex items-center mb-6">
+                        <span class="material-symbols-outlined text-4xl">balance</span>
                     </div>
                     <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white mb-3">
                         Certificación de Historial Judicial
@@ -535,7 +524,7 @@
                             Abonás una sola vez tu Pasaporte Hábitat. Si el propietario elige otro postulante o decidís postularte a más propiedades dentro de la red, tu credencial sigue 100% activa durante 60 días sin costo adicional.
                         </p>
                         <div class="flex flex-wrap gap-3">
-                            <button type="button" onclick="alert('Iniciando proceso de emisión por $20.000 ARS.')" class="bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-full font-headline font-black text-sm transition-all shadow-lg cursor-pointer">
+                            <button type="button" id="btn-pricing-pasaporte" onclick="handleGenerarPasaporte()" class="bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-full font-headline font-black text-sm transition-all shadow-lg cursor-pointer">
                                 Generar Pasaporte
                             </button>
                             <div class="flex items-center gap-2 bg-white/10 px-4 py-3 rounded-full text-xs font-bold backdrop-blur-md">
@@ -648,6 +637,13 @@
             return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
         }
 
+        function handleVerMiPasaporte() {
+            const target = document.getElementById('passport-main-card') || document.getElementById('passport-section-title');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function actualizarEstadoPasaporteActivoUI(pasaporte) {
             const diasRestantes = calcularDiasRestantesPasaporte(pasaporte);
 
@@ -655,18 +651,27 @@
             const btnCta = document.getElementById('btn-generar-pasaporte');
             if (btnCta) {
                 btnCta.className = 'w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-headline font-black text-base transition-all shadow-xl hover:scale-[1.02] cursor-pointer';
-                btnCta.innerHTML = `<span class="material-symbols-outlined text-xl">verified</span><span>Ver Mi Pasaporte Activo (${diasRestantes} días restantes)</span>`;
+                btnCta.innerHTML = `<span class="material-symbols-outlined text-xl">verified</span><span>Ver mi pasaporte</span>`;
+                btnCta.onclick = handleVerMiPasaporte;
             }
 
             // 2. Botón dentro de la tarjeta del pasaporte
             const btnCard = document.getElementById('btn-card-pasaporte');
             if (btnCard) {
-                btnCard.className = 'flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 dark:bg-emerald-600 text-white px-6 py-3 rounded-2xl font-headline font-black text-xs shadow-md border border-emerald-500/50 cursor-default';
-                btnCard.innerHTML = `<span class="material-symbols-outlined text-base">check_circle</span> Activo (${diasRestantes} días restantes)`;
-                btnCard.onclick = null;
+                btnCard.className = 'flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-headline font-black text-xs shadow-md border border-emerald-500/50 cursor-pointer';
+                btnCard.innerHTML = `<span class="material-symbols-outlined text-base">verified</span> Ver mi pasaporte`;
+                btnCard.onclick = handleVerMiPasaporte;
             }
 
-            // 3. Texto del pie de validez
+            // 3. Botón sección inferior / pricing
+            const btnPricing = document.getElementById('btn-pricing-pasaporte');
+            if (btnPricing) {
+                btnPricing.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-headline font-black text-sm transition-all shadow-lg cursor-pointer inline-flex items-center gap-2';
+                btnPricing.innerHTML = `<span class="material-symbols-outlined text-base">verified</span> Ver mi pasaporte`;
+                btnPricing.onclick = handleVerMiPasaporte;
+            }
+
+            // 4. Texto del pie de validez
             const elValidez = document.getElementById('passport-validity-footer');
             if (elValidez) {
                 elValidez.textContent = `Validez: ${diasRestantes} días restantes • Emitido por Red Hábitat`;
@@ -795,12 +800,7 @@
 
         function handleGenerarPasaporte() {
             if (window.hasActivePassport) {
-                const target = document.getElementById('passport-section-title') || document.querySelector('.passport-card-glow');
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    alert('Ya posees un Pasaporte Hábitat activo.');
-                }
+                handleVerMiPasaporte();
                 return;
             }
             openPaymentModal();

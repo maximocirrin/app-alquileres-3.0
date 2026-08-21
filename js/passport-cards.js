@@ -107,9 +107,7 @@
         <div class="legal-background-card bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800/80 mb-5">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-bold shadow-inner ${hasEviction ? 'bg-red-500/10 text-red-600 dark:text-red-400' : isPending ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}">
-                <span class="material-symbols-outlined text-2xl">${hasEviction ? 'gavel' : isPending ? 'hourglass_top' : 'verified_user'}</span>
-              </div>
+              <span class="material-symbols-outlined text-3xl shrink-0 ${hasEviction ? 'text-red-600 dark:text-red-400' : isPending ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${hasEviction ? 'gavel' : isPending ? 'hourglass_top' : 'verified_user'}</span>
               <div>
                 <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg tracking-tight">Antecedentes Judiciales</h3>
                 <p class="text-xs text-zinc-500 font-headline font-semibold">Poder Judicial Mendoza (Render Microservice)</p>
@@ -165,9 +163,7 @@
         <div class="atm-card bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800/80 mb-5">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-bold shadow-inner ${hasDebt ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}">
-                <span class="material-symbols-outlined text-2xl">${hasDebt ? 'account_balance_wallet' : 'account_balance'}</span>
-              </div>
+              <span class="material-symbols-outlined text-3xl shrink-0 ${hasDebt ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${hasDebt ? 'account_balance_wallet' : 'account_balance'}</span>
               <div>
                 <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg tracking-tight">Estado Fiscal Provincial (ATM Mendoza)</h3>
                 <p class="text-xs text-zinc-500 font-headline font-semibold">Administración Tributaria Mendoza</p>
@@ -201,9 +197,7 @@
         <div class="employment-card bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
           <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800/80 mb-5">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold shadow-inner">
-                <span class="material-symbols-outlined text-2xl">work</span>
-              </div>
+              <span class="material-symbols-outlined text-3xl shrink-0 text-primary dark:text-red-400">work</span>
               <div>
                 <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg tracking-tight">Ingresos y Antigüedad Laboral</h3>
                 <p class="text-xs text-zinc-500 font-headline font-semibold">Recibos de Sueldo & Certificación de Haberes</p>
@@ -244,9 +238,7 @@
           <div class="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl animate-pulse">
             <div class="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 mb-5">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
-                  <span class="material-symbols-outlined text-2xl animate-spin">sync</span>
-                </div>
+                <span class="material-symbols-outlined text-3xl shrink-0 text-amber-600 animate-spin">sync</span>
                 <div>
                   <div class="h-5 w-48 bg-zinc-200 dark:bg-zinc-800 rounded mb-1"></div>
                   <div class="h-3 w-36 bg-zinc-100 dark:bg-zinc-800/60 rounded"></div>
