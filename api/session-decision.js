@@ -180,7 +180,7 @@ export default async function handler(req, res) {
         fullName: fullName,
         documentNumber: documentNumber,
         dni: documentNumber,
-        type: docObj.type || 'ARG_DNI'
+        type: 'ARG_DNI'
       },
       scores: decisionObj.scores || rawData.scores || { liveness: 'PASSED', faceMatch: 99.4 },
       raw: rawData

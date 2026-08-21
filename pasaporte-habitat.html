@@ -1314,6 +1314,18 @@
                             errP = errIns;
                         }
 
+                        if (errP) {
+                            console.error("[Pasaporte] Error de Supabase al insertar Pasaporte_habitat:", errP);
+                            alert("Hubo un error al guardar tu pasaporte en la base de datos: " + errP.message + ". Por favor, contacta a soporte o revisa la consola.");
+                            
+                            // Habilitar el botón nuevamente en caso de error
+                            if (btn) {
+                                btn.disabled = false;
+                                btn.innerHTML = `Confirmar y Pagar`;
+                            }
+                            return;
+                        }
+
                         if (!errP && pasaporte) {
                             window.hasActivePassport = true;
                             window.currentPasaporteId = pasaporte.id_pasaporte;
@@ -1367,6 +1379,8 @@
                                 });
                             }
                         }
+                    } else {
+                        throw new Error("No se pudo obtener el perfil de usuario. Por favor, asegúrate de haber iniciado sesión.");
                     }
                 }
 
@@ -1395,7 +1409,7 @@
                 } catch (eStorage) {}
 
                 // Redirigir al panel del inquilino (Tu pasaporte)
-                window.location.href = '/tu-alquiler.html';
+                window.location.href = '/tu-alquiler.html#pasaporte';
 
             } catch (err) {
                 console.error("Error al procesar emisión del pasaporte:", err);
