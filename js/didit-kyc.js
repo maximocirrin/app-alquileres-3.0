@@ -111,8 +111,8 @@
             id="didit-real-iframe"
             src="${url}" 
             style="width:100vw;height:100vh;border:0;display:block;margin:0;padding:0;"
-            allow="camera; microphone; display-capture; autoplay; clipboard-write;"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+            allow="camera *; microphone *; display-capture *; autoplay *; clipboard-write *; fullscreen *"
+            allowfullscreen="true"
           ></iframe>
         </div>
       `;
