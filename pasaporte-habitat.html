@@ -728,67 +728,89 @@
                             .maybeSingle();
 
                         if (pasaporte) {
-                            window.hasActivePassport = true;
-                            window.currentPasaporteId = pasaporte.id_pasaporte;
-                            console.log("Pasaporte Hábitat activo detectado ID:", pasaporte.id_pasaporte);
+                            const diasRestantes = calcularDiasRestantesPasaporte(pasaporte);
+                            const estaVigente = diasRestantes > 0;
 
-                            // Actualizar los botones e indicadores a estado Activo con días restantes
-                            actualizarEstadoPasaporteActivoUI(pasaporte);
+                            if (estaVigente) {
+                                window.hasActivePassport = true;
+                                window.currentPasaporteId = pasaporte.id_pasaporte;
+                                console.log(`Pasaporte Hábitat activo detectado ID: ${pasaporte.id_pasaporte} (${diasRestantes} días restantes)`);
 
-                            // Reemplazar los datos del pasaporte de ejemplo por los datos reales
-                            const elTitle = document.getElementById('passport-section-title');
-                            if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
+                                // Actualizar los botones e indicadores a estado Activo con días restantes
+                                actualizarEstadoPasaporteActivoUI(pasaporte);
 
-                            const elCode = document.getElementById('passport-code-id');
-                            if (elCode && pasaporte.codigo_pasaporte) {
-                                elCode.textContent = `ID: ${pasaporte.codigo_pasaporte}`;
-                            }
+                                // Reemplazar los datos del pasaporte de ejemplo por los datos reales
+                                const elTitle = document.getElementById('passport-section-title');
+                                if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
 
-                            const elQr = document.getElementById('passport-qr-code');
-                            if (elQr && pasaporte.codigo_pasaporte) {
-                                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + pasaporte.codigo_pasaporte)}&color=811b1e&bgcolor=ffffff`;
-                                elQr.src = qrUrl;
-                            }
-                            const elNombre = document.getElementById('passport-user-fullname');
-                            const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                            const realFullName = getCleanVerifiedName(diditIdent, pasaporte, perfil, session);
-                            
-                            if (elNombre) {
-                                elNombre.textContent = realFullName;
-                            }
+                                const elCode = document.getElementById('passport-code-id');
+                                if (elCode && pasaporte.codigo_pasaporte) {
+                                    elCode.textContent = `ID: ${pasaporte.codigo_pasaporte}`;
+                                }
 
-                            const elAvatar = document.getElementById('passport-avatar-letter');
-                            if (elAvatar && realFullName) {
-                                const inits = realFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
-                                elAvatar.textContent = inits;
-                            }
+                                const elQr = document.getElementById('passport-qr-code');
+                                if (elQr && pasaporte.codigo_pasaporte) {
+                                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + pasaporte.codigo_pasaporte)}&color=811b1e&bgcolor=ffffff`;
+                                    elQr.src = qrUrl;
+                                }
+                                const elNombre = document.getElementById('passport-user-fullname');
+                                const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                                const realFullName = getCleanVerifiedName(diditIdent, pasaporte, perfil, session);
+                                
+                                if (elNombre) {
+                                    elNombre.textContent = realFullName;
+                                }
 
-                            const elHeader = document.getElementById('passport-cuit-header');
-                            const realDni = diditIdent.documentNumber || perfil.dni || pasaporte.dni;
-                            if (elHeader && (realDni || pasaporte.cuit)) {
-                                elHeader.textContent = realDni ? `DNI: ${realDni} • Didit KYC Validado` : `CUIT: ${pasaporte.cuit}`;
-                            }
+                                const elAvatar = document.getElementById('passport-avatar-letter');
+                                if (elAvatar && realFullName) {
+                                    const inits = realFullName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                                    elAvatar.textContent = inits;
+                                }
 
-                            if (window.actualizarPasaporteUI) {
-                                window.actualizarPasaporteUI({
-                                    cuit: pasaporte.cuit || '',
-                                    condicionFiscal: pasaporte.condicion_fiscal || 'Monotributo H',
-                                    razonSocial: realFullName,
-                                    estadoCuit: 'ACTIVO',
-                                    actividadPrincipal: pasaporte.datos_arca ? pasaporte.datos_arca.actividadPrincipal : 'Servicios Comerciales / Profesionales'
-                                });
-                            }
+                                const elHeader = document.getElementById('passport-cuit-header');
+                                const realDni = diditIdent.documentNumber || perfil.dni || pasaporte.dni;
+                                if (elHeader && (realDni || pasaporte.cuit)) {
+                                    elHeader.textContent = realDni ? `DNI: ${realDni} • Didit KYC Validado` : `CUIT: ${pasaporte.cuit}`;
+                                }
 
-                            if (window.actualizarBcraUI && pasaporte.datos_bcra) {
-                                window.actualizarBcraUI(pasaporte.datos_bcra);
-                            }
+                                if (window.actualizarPasaporteUI) {
+                                    window.actualizarPasaporteUI({
+                                        cuit: pasaporte.cuit || '',
+                                        condicionFiscal: pasaporte.condicion_fiscal || 'Monotributo H',
+                                        razonSocial: realFullName,
+                                        estadoCuit: 'ACTIVO',
+                                        actividadPrincipal: pasaporte.datos_arca ? pasaporte.datos_arca.actividadPrincipal : 'Servicios Comerciales / Profesionales'
+                                    });
+                                }
 
-                            if (window.PassportCards) {
-                                window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                                if (window.actualizarBcraUI && pasaporte.datos_bcra) {
+                                    window.actualizarBcraUI(pasaporte.datos_bcra);
+                                }
+
+                                if (window.PassportCards) {
+                                    window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                                }
+                            } else {
+                                window.hasActivePassport = false;
+                                window.currentPasaporteId = null;
+                                console.log("Pasaporte expirado/vencido. Renovación habilitada.");
+
+                                if (window.PassportCards) {
+                                    window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                                }
                             }
                         } else {
+                            window.hasActivePassport = false;
+                            window.currentPasaporteId = null;
+
                             if (window.PassportCards) {
                                 window.PassportCards.loadAndRenderCards(perfil.id_perfil);
+                            }
+
+                            // Si venía de iniciar sesión con la intención de generar el pasaporte
+                            if (localStorage.getItem('habitat_auth_intent') === 'generar_pasaporte') {
+                                localStorage.removeItem('habitat_auth_intent');
+                                openPaymentModal();
                             }
                         }
                     }
@@ -798,11 +820,34 @@
             }
         }
 
-        function handleGenerarPasaporte() {
+        async function handleGenerarPasaporte() {
             if (window.hasActivePassport) {
+                alert('Ya posees un Pasaporte Hábitat activo y vigente.');
                 handleVerMiPasaporte();
                 return;
             }
+
+            // Obligatorio: Validar sesión iniciada antes de generar pasaporte
+            if (window.supabaseClient) {
+                try {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (!session || !session.user) {
+                        localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                        window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Error al validar sesión:", err);
+                    localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                    window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                    return;
+                }
+            } else {
+                localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                return;
+            }
+
             openPaymentModal();
         }
 
@@ -824,9 +869,59 @@
             }
         };
 
-        function openPaymentModal() {
+        async function openPaymentModal() {
             if (window.hasActivePassport) {
-                alert('Ya posees un Pasaporte Hábitat activo (Válido por 60 días).');
+                alert('Ya posees un Pasaporte Hábitat activo y vigente (Validez de 60 días).');
+                handleVerMiPasaporte();
+                return;
+            }
+
+            // Validar sesión antes de abrir el modal
+            if (window.supabaseClient) {
+                try {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (!session || !session.user) {
+                        localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                        window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                        return;
+                    }
+
+                    // Verificación en BD por si ya existe uno activo
+                    const { data: perfil } = await window.supabaseClient
+                        .from('Perfil')
+                        .select('id_perfil')
+                        .eq('user_id', session.user.id)
+                        .maybeSingle();
+
+                    if (perfil) {
+                        const { data: passActivo } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('*')
+                            .eq('id_perfil', perfil.id_perfil)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (passActivo) {
+                            const dias = calcularDiasRestantesPasaporte(passActivo);
+                            if (dias > 0) {
+                                window.hasActivePassport = true;
+                                window.currentPasaporteId = passActivo.id_pasaporte;
+                                actualizarEstadoPasaporteActivoUI(passActivo);
+                                alert(`Ya posees un Pasaporte Hábitat activo con ${dias} días restantes. Podrás renovarlo cuando expire.`);
+                                handleVerMiPasaporte();
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                    window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                    return;
+                }
+            } else {
+                localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                window.location.href = 'login.html?redirect=pasaporte&mode=login';
                 return;
             }
             let modal = document.getElementById('modal-pago-pasaporte');
@@ -1062,8 +1157,13 @@
                 }
 
                 if (!userId) {
-                    userId = localStorage.getItem('habitat_user_id') || 'usr_' + Math.random().toString(36).substring(2, 10);
-                    localStorage.setItem('habitat_user_id', userId);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<span class="material-symbols-outlined text-base">verified</span><span>Confirmar y Pagar ($20.000)</span>`;
+                    }
+                    localStorage.setItem('habitat_auth_intent', 'generar_pasaporte');
+                    window.location.href = 'login.html?redirect=pasaporte&mode=login';
+                    return;
                 }
 
                 // Guardar ingresos y condición elegida localmente
@@ -1149,27 +1249,66 @@
                         if (extractedDni) perfilUpdate.dni = extractedDni;
                         await window.supabaseClient.from('Perfil').update(perfilUpdate).eq('id_perfil', idPerfil);
 
-                        // 2. Crear Pasaporte_habitat en Supabase
-                        const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
-
-                        const { data: pasaporte, error: errP } = await window.supabaseClient
+                        // 2. Crear o actualizar Pasaporte_habitat en Supabase
+                        const { data: existingP } = await window.supabaseClient
                             .from('Pasaporte_habitat')
-                            .insert([{
-                                id_perfil: idPerfil,
-                                id_estado_pasaporte: 3, // Activo
-                                codigo_pasaporte: codigoPasaporte,
-                                monto_pagado: 20000.00,
-                                cuit: cuitCalculado,
-                                dni: extractedDni,
-                                razon_social: verifiedFullName,
-                                condicion_fiscal: condicionFiscalFinal,
-                                situacion_crediticia: situacionCrediticiaFinal,
-                                antecedentes_legales: true,
-                                datos_arca: arcaData || null,
-                                datos_bcra: bcraData || null
-                            }])
-                            .select()
-                            .single();
+                            .select('*')
+                            .eq('id_perfil', idPerfil)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        let pasaporte = null;
+                        let errP = null;
+
+                        if (existingP && calcularDiasRestantesPasaporte(existingP) > 0) {
+                            // Ya posee uno activo: sincronizar datos sin duplicar
+                            const { data: pUpdated, error: errUp } = await window.supabaseClient
+                                .from('Pasaporte_habitat')
+                                .update({
+                                    id_estado_pasaporte: 3,
+                                    cuit: cuitCalculado || existingP.cuit,
+                                    dni: extractedDni || existingP.dni,
+                                    razon_social: verifiedFullName || existingP.razon_social,
+                                    condicion_fiscal: condicionFiscalFinal,
+                                    situacion_crediticia: situacionCrediticiaFinal,
+                                    ingreso_mensual_declarado: ingresosVal,
+                                    antecedentes_legales: true,
+                                    datos_arca: arcaData || existingP.datos_arca,
+                                    datos_bcra: bcraData || existingP.datos_bcra,
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id_pasaporte', existingP.id_pasaporte)
+                                .select()
+                                .single();
+                            pasaporte = pUpdated;
+                            errP = errUp;
+                        } else {
+                            // Crear nuevo Pasaporte_habitat
+                            const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+
+                            const { data: pCreated, error: errIns } = await window.supabaseClient
+                                .from('Pasaporte_habitat')
+                                .insert([{
+                                    id_perfil: idPerfil,
+                                    id_estado_pasaporte: 3, // Activo
+                                    codigo_pasaporte: codigoPasaporte,
+                                    monto_pagado: 20000.00,
+                                    cuit: cuitCalculado,
+                                    dni: extractedDni,
+                                    razon_social: verifiedFullName,
+                                    condicion_fiscal: condicionFiscalFinal,
+                                    situacion_crediticia: situacionCrediticiaFinal,
+                                    ingreso_mensual_declarado: ingresosVal,
+                                    antecedentes_legales: true,
+                                    datos_arca: arcaData || null,
+                                    datos_bcra: bcraData || null
+                                }])
+                                .select()
+                                .single();
+                            pasaporte = pCreated;
+                            errP = errIns;
+                        }
 
                         if (errP) {
                             console.error("[Pasaporte] Error de Supabase al insertar Pasaporte_habitat:", errP);
