@@ -2,18 +2,17 @@
  * Módulo Frontend para la Integración de Didit KYC Real & Liveness Check en Hábitat
  * Cumple con Ley Nacional N° 25.506 de Firma Digital y validación biométrica facial.
  * 
- * 100% Real: Conecta directamente con la API de Didit KYC.
- * Extrae y guarda el Nombre Completo y DNI directamente desde el escaneo oficial del DNI a la base de datos de Supabase.
+ * 100% Real: Conecta vía Serverless Function / Backend (/api/create-session) a la API de Didit KYC.
+ * Extrae y guarda el Nombre Completo y DNI directamente desde el escaneo oficial del DNI a Supabase.
  */
 
 (function () {
   'use strict';
 
-  const DIDIT_PUBLIC_API_KEY = 'tLAOOmPiLz5dW0CIlvu6yjVkmRljgUkRAVdJxXC22tc';
   const DIDIT_WORKFLOW_ID = 'b4b3aeef-801d-4b19-b46e-adcbaaec9b90';
 
   /**
-   * Determina la URL base de la API backend si está disponible.
+   * Determina la URL base de la API backend si está en desarrollo local.
    */
   function getApiBaseUrl() {
     if (typeof window !== 'undefined') {
@@ -26,7 +25,7 @@
   }
 
   /**
-   * Crea una sesión real de Didit KYC comunicándose con el backend seguro.
+   * Crea una sesión real de Didit KYC comunicándose con el endpoint /api/create-session de Vercel/Express.
    */
   async function createDiditSession(userId, options = {}) {
     const { callbackUrl = null, workflowId = null } = options;
@@ -34,14 +33,13 @@
     const cb = callbackUrl || window.location.href.split('#')[0];
     const apiBase = getApiBaseUrl();
 
-    // 1. Intentar crear sesión vía backend (/api/create-session)
     const endpointsToTry = [];
-    if (apiBase) endpointsToTry.push(`${apiBase}/api/create-session`);
     endpointsToTry.push('/api/create-session');
+    if (apiBase) endpointsToTry.push(`${apiBase}/api/create-session`);
 
     for (const ep of endpointsToTry) {
       try {
-        const backendRes = await fetch(ep, {
+        const res = await fetch(ep, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -51,22 +49,19 @@
           })
         });
 
-        if (backendRes.ok) {
-          const data = await backendRes.json();
+        if (res.ok) {
+          const data = await res.json();
           if (data && data.url) {
-            console.log('[Didit KYC] Sesión oficial creada exitosamente vía backend:', data.sessionId || data.session_id);
+            console.log('[Didit KYC] Sesión oficial creada exitosamente:', data.sessionId || data.session_id);
             return {
               url: data.url,
               sessionId: data.sessionId || data.session_id,
               isReal: true
             };
           }
-        } else {
-          const errData = await backendRes.json().catch(() => ({}));
-          console.warn(`[Didit KYC] Backend endpoint ${ep} respondió con error ${backendRes.status}:`, errData);
         }
-      } catch (eBackend) {
-        console.info(`[Didit KYC] No se pudo conectar con backend en ${ep} (Servidor backend posiblemente inactivo).`);
+      } catch (e) {
+        console.warn(`[Didit KYC] Intento de conexión con ${ep} falló:`, e.message);
       }
     }
 
@@ -80,29 +75,9 @@
     if (!sessionId) return null;
     const apiBase = getApiBaseUrl();
 
-    // Si es sesión simulada
-    if (String(sessionId).startsWith('sim_') || String(sessionId).startsWith('demo_')) {
-      const storedIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-      return {
-        success: true,
-        sessionId: sessionId,
-        status: 'APPROVED',
-        document: {
-          firstName: storedIdent.firstName || 'Mariano',
-          lastName: storedIdent.lastName || 'Rossi',
-          fullName: storedIdent.fullName || 'Mariano Facundo Rossi',
-          documentNumber: storedIdent.documentNumber || '38491024',
-          dni: storedIdent.dni || '38491024',
-          type: 'ARG_DNI'
-        },
-        scores: { liveness: 'PASSED', faceMatch: 99.6 }
-      };
-    }
-
-    // Intentar consultar vía backend
     const endpointsToTry = [];
-    if (apiBase) endpointsToTry.push(`${apiBase}/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
     endpointsToTry.push(`/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
+    if (apiBase) endpointsToTry.push(`${apiBase}/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
 
     for (const ep of endpointsToTry) {
       try {
@@ -255,230 +230,6 @@
   }
 
   /**
-   * Modal interactivo de simulación biométrica para desarrollo y demostración offline.
-   */
-  function renderSimulatedBiometricModal(userId) {
-    return new Promise((resolve) => {
-      const modalId = 'habitat-didit-simulated-modal';
-      const existing = document.getElementById(modalId);
-      if (existing) existing.remove();
-
-      let existingUser = {};
-      try {
-        existingUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-      } catch (e) {}
-
-      const userName = existingUser.nombre_completo || existingUser.nombre || 'Mariano Facundo Rossi';
-      const userDni = existingUser.dni || '38491024';
-      const userCuit = existingUser.cuit || `20-${userDni}-8`;
-
-      const html = `
-        <div id="${modalId}" class="fixed inset-0 z-[9999999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-body animate-fadeIn">
-          <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col">
-            
-            <!-- Modal Header -->
-            <div class="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/60">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                  <span class="material-symbols-outlined text-xl">face_unlock</span>
-                </div>
-                <div>
-                  <h3 class="font-headline font-black text-sm text-zinc-900 dark:text-white">Validación Biométrica Didit</h3>
-                  <span class="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Modo Simulación & Test Biométrico</span>
-                </div>
-              </div>
-              <button id="btn-close-sim-modal" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1 rounded-lg transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-lg">close</span>
-              </button>
-            </div>
-
-            <!-- Modal Content: Step Progress -->
-            <div class="p-6 space-y-6">
-              <div class="relative w-full aspect-video sm:h-52 bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 flex flex-col items-center justify-center text-center p-4">
-                <div class="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 pointer-events-none"></div>
-                
-                <!-- Animated Scanner Line -->
-                <div id="sim-scan-line" class="absolute left-0 right-0 h-0.5 bg-primary shadow-[0_0_12px_#ff0033] animate-bounce top-1/4"></div>
-
-                <div class="w-16 h-16 rounded-full border-2 border-dashed border-primary/60 flex items-center justify-center text-primary mb-3 animate-pulse">
-                  <span id="sim-scan-icon" class="material-symbols-outlined text-3xl">document_scanner</span>
-                </div>
-                
-                <div id="sim-scan-status" class="font-headline font-bold text-sm text-white">Escaneando DNI Frente & Dorso...</div>
-                <div id="sim-scan-substatus" class="text-xs text-zinc-400 mt-1">Verificando holograma y texto OCR nacional</div>
-              </div>
-
-              <!-- Extracted Identity Preview -->
-              <div class="bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl p-4 border border-zinc-200/80 dark:border-zinc-700/60 space-y-2 text-xs">
-                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-                  <span>Titular Identificado:</span>
-                  <span class="font-bold text-zinc-900 dark:text-white">${userName}</span>
-                </div>
-                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-                  <span>DNI / Identificación:</span>
-                  <span class="font-bold text-zinc-900 dark:text-white">${userDni}</span>
-                </div>
-                <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-                  <span>Prueba de Vida (Liveness):</span>
-                  <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">verified</span> Aprobado (Score 99.6%)
-                  </span>
-                </div>
-              </div>
-
-              <!-- Button Action -->
-              <button id="btn-confirm-sim" class="w-full bg-primary hover:bg-primary-container text-white py-3.5 px-4 rounded-xl font-headline font-bold text-xs uppercase tracking-wider transition-all shadow-lg hover:shadow-primary/30 active:scale-95 cursor-pointer flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-base">check_circle</span>
-                <span>Confirmar y Emitir Pasaporte</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      document.body.insertAdjacentHTML('beforeend', html);
-
-      const modalEl = document.getElementById(modalId);
-      const closeBtn = document.getElementById('btn-close-sim-modal');
-      const confirmBtn = document.getElementById('btn-confirm-sim');
-
-      function finishSimulation() {
-        if (modalEl) modalEl.remove();
-
-        const simSessionId = 'sim_didit_' + Date.now();
-        const identityData = {
-          firstName: userName.split(' ')[0] || 'Mariano',
-          lastName: userName.split(' ').slice(1).join(' ') || 'Rossi',
-          fullName: userName,
-          documentNumber: userDni,
-          dni: userDni,
-          cuit: userCuit,
-          sessionId: simSessionId,
-          verifiedAt: new Date().toISOString()
-        };
-
-        try {
-          localStorage.setItem('habitat_didit_identity', JSON.stringify(identityData));
-        } catch (e) {}
-
-        resolve({
-          status: 'APPROVED',
-          sessionId: simSessionId,
-          document: {
-            firstName: identityData.firstName,
-            lastName: identityData.lastName,
-            fullName: identityData.fullName,
-            documentNumber: userDni,
-            dni: userDni,
-            nationality: 'Argentina'
-          },
-          scores: { liveness: 'PASSED', faceMatch: 99.6 }
-        });
-      }
-
-      if (confirmBtn) {
-        confirmBtn.onclick = finishSimulation;
-      }
-
-      if (closeBtn) {
-        closeBtn.onclick = () => {
-          if (modalEl) modalEl.remove();
-          resolve(null);
-        };
-      }
-    });
-  }
-
-  /**
-   * Muestra un diálogo informativo en caso de que el backend local no esté activo.
-   */
-  function promptOfflineOrSimulate(userId, options = {}) {
-    return new Promise((resolve) => {
-      const modalId = 'habitat-didit-offline-dialog';
-      const existing = document.getElementById(modalId);
-      if (existing) existing.remove();
-
-      const html = `
-        <div id="${modalId}" class="fixed inset-0 z-[9999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 font-body animate-fadeIn">
-          <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col p-6 space-y-5">
-            
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
-              <span class="material-symbols-outlined text-2xl">dns</span>
-            </div>
-
-            <div class="text-center space-y-1.5">
-              <h3 class="font-headline font-black text-base text-zinc-900 dark:text-white">Servidor Backend Local Desconectado</h3>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                La conexión oficial en vivo con la cámara y API de Didit KYC requiere que el servidor backend esté corriendo en <code class="bg-zinc-100 dark:bg-zinc-800 text-primary px-1.5 py-0.5 rounded font-mono font-bold text-[11px]">http://localhost:3000</code>.
-              </p>
-            </div>
-
-            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-800/80 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-300 space-y-2">
-              <div class="font-bold flex items-center gap-1.5 text-zinc-900 dark:text-white">
-                <span class="material-symbols-outlined text-sm text-primary">terminal</span>
-                <span>Para habilitar la API oficial Didit:</span>
-              </div>
-              <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Ejecuta en tu terminal:</p>
-              <div class="bg-zinc-900 text-emerald-400 font-mono text-[11px] px-3 py-2 rounded-xl flex items-center justify-between">
-                <span>npm start</span>
-                <span class="text-zinc-500 text-[10px]">puerto 3000</span>
-              </div>
-            </div>
-
-            <div class="space-y-2 pt-1">
-              <button id="btn-offline-simulate" class="w-full bg-primary hover:bg-primary-container text-white py-3 px-4 rounded-xl font-headline font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-base">play_arrow</span>
-                <span>Probar en Modo Simulación / Demo</span>
-              </button>
-              
-              <button id="btn-offline-retry" class="w-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-4 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined text-sm">refresh</span>
-                <span>Reintentar Conexión Oficial</span>
-              </button>
-
-              <button id="btn-offline-cancel" class="w-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 py-2 text-xs font-medium cursor-pointer">
-                Cancelar
-              </button>
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      document.body.insertAdjacentHTML('beforeend', html);
-
-      const modalEl = document.getElementById(modalId);
-      const btnSim = document.getElementById('btn-offline-simulate');
-      const btnRetry = document.getElementById('btn-offline-retry');
-      const btnCancel = document.getElementById('btn-offline-cancel');
-
-      if (btnSim) {
-        btnSim.onclick = async () => {
-          if (modalEl) modalEl.remove();
-          const simRes = await renderSimulatedBiometricModal(userId);
-          resolve(simRes);
-        };
-      }
-
-      if (btnRetry) {
-        btnRetry.onclick = async () => {
-          if (modalEl) modalEl.remove();
-          const retryRes = await iniciarKYC(userId, options);
-          resolve(retryRes);
-        };
-      }
-
-      if (btnCancel) {
-        btnCancel.onclick = () => {
-          if (modalEl) modalEl.remove();
-          resolve(null);
-        };
-      }
-    });
-  }
-
-  /**
    * Inicia el proceso REAL de Didit KYC.
    * @param {string} userId - ID o email del usuario.
    * @param {Object} [options] - Opciones.
@@ -493,12 +244,12 @@
 
     console.log(`[Didit KYC Real] Creando sesión oficial para: ${userId}...`);
 
-    // 1. Crear sesión oficial en Didit
+    // 1. Crear sesión oficial en Didit vía Backend/Vercel
     const sessionInfo = await createDiditSession(userId, options);
 
     if (!sessionInfo || !sessionInfo.url) {
-      // Backend offline: mostrar diálogo amigable con opción de simulación
-      return promptOfflineOrSimulate(userId, options);
+      alert('No se pudo conectar con el servicio de verificación Didit KYC.');
+      throw new Error('Didit session generation failed.');
     }
 
     // 2. Guardar sesión pendiente en sessionStorage para soportar retorno por redirección
@@ -511,7 +262,7 @@
       }));
     } catch (e) {}
 
-    // 3. Abrir verificador oficial Didit KYC (In-Page Iframe Modal)
+    // 3. Abrir verificador oficial Didit KYC (Pantalla Completa)
     return renderDiditIframeModal(sessionInfo.url, sessionInfo.sessionId);
   }
 
