@@ -638,10 +638,7 @@
         }
 
         function handleVerMiPasaporte() {
-            const target = document.getElementById('passport-main-card') || document.getElementById('passport-section-title');
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            window.location.href = 'tu-alquiler.html#pasaporte';
         }
 
         function actualizarEstadoPasaporteActivoUI(pasaporte) {
@@ -1260,6 +1257,7 @@
 
                         let pasaporte = null;
                         let errP = null;
+                        const codigoGenerado = existingP?.codigo_pasaporte || ('HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9');
 
                         if (existingP && calcularDiasRestantesPasaporte(existingP) > 0) {
                             // Ya posee uno activo: sincronizar datos sin duplicar
@@ -1285,7 +1283,6 @@
                             errP = errUp;
                         } else {
                             // Crear nuevo Pasaporte_habitat
-                            const codigoPasaporte = 'HBT-2026-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
                             const now = new Date();
                             const expiration = new Date(now.getTime() + (60 * 24 * 60 * 60 * 1000));
 
@@ -1294,7 +1291,7 @@
                                 .insert([{
                                     id_perfil: idPerfil,
                                     id_estado_pasaporte: 3, // Activo
-                                    codigo_pasaporte: codigoPasaporte,
+                                    codigo_pasaporte: codigoGenerado,
                                     monto_pagado: 20000.00,
                                     fecha_emision: now.toISOString(),
                                     fecha_vencimiento: expiration.toISOString(),
@@ -1318,7 +1315,6 @@
                             console.error("[Pasaporte] Error de Supabase al insertar Pasaporte_habitat:", errP);
                             alert("Hubo un error al guardar tu pasaporte en la base de datos: " + errP.message + ". Por favor, contacta a soporte o revisa la consola.");
                             
-                            // Habilitar el botón nuevamente en caso de error
                             if (btn) {
                                 btn.disabled = false;
                                 btn.innerHTML = `Confirmar y Pagar`;
@@ -1329,6 +1325,7 @@
                         if (!errP && pasaporte) {
                             window.hasActivePassport = true;
                             window.currentPasaporteId = pasaporte.id_pasaporte;
+                            const codigoFinal = pasaporte.codigo_pasaporte || codigoGenerado;
 
                             if (window.actualizarEstadoPasaporteActivoUI) {
                                 window.actualizarEstadoPasaporteActivoUI(pasaporte);
@@ -1348,11 +1345,11 @@
                             if (elTitle) elTitle.textContent = 'Pasaporte Verificado en la Red Hábitat';
 
                             const elCode = document.getElementById('passport-code-id');
-                            if (elCode) elCode.textContent = `ID: ${codigoPasaporte}`;
+                            if (elCode) elCode.textContent = `ID: ${codigoFinal}`;
 
                             const elQr = document.getElementById('passport-qr-code');
                             if (elQr) {
-                                elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoPasaporte)}&color=811b1e&bgcolor=ffffff`;
+                                elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://habitat.com.ar/pasaporte-habitat.html?id=' + codigoFinal)}&color=811b1e&bgcolor=ffffff`;
                             }
 
                             const elNombre = document.getElementById('passport-user-fullname');
