@@ -287,11 +287,28 @@
             window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: notif }));
         },
 
+        add: function (payload) {
+            return this.createNotification(payload);
+        },
+
+        _supabaseChannel: null,
+
         broadcastSupabaseRealtime: function (notif) {
-            if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
+            if (this._supabaseChannel && typeof this._supabaseChannel.send === 'function') {
                 try {
-                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
-                    channel.send({
+                    this._supabaseChannel.send({
+                        type: 'broadcast',
+                        event: 'habitat_notification',
+                        payload: {
+                            senderTabId: TAB_ID,
+                            notification: notif
+                        }
+                    }).catch(() => { });
+                } catch (e) { }
+            } else if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
+                try {
+                    const ch = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    ch.send({
                         type: 'broadcast',
                         event: 'habitat_notification',
                         payload: {
@@ -307,7 +324,7 @@
             if (this._realtimeInitialized) return;
             this._realtimeInitialized = true;
 
-            // A. Escuchar en BroadcastChannel
+            // A. Escuchar en BroadcastChannel local entre pestañas
             if (broadcastChannel) {
                 broadcastChannel.onmessage = (event) => {
                     if (event.data && event.data.type === 'HABITAT_REALTIME_NOTIF') {
@@ -328,15 +345,87 @@
                 }
             });
 
-            // C. Suscribirse al canal Supabase Realtime Broadcast
+            // C. Suscribirse al canal Supabase Realtime (Broadcast + Postgres Changes)
             if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
                 try {
-                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
-                    channel
+                    this._supabaseChannel = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    this._supabaseChannel
+                        // 1. Mensajes directos Broadcast
                         .on('broadcast', { event: 'habitat_notification' }, ({ payload }) => {
                             if (payload) {
                                 this.receiveIncomingNotification(payload);
                             }
+                        })
+                        // 2. Postgres Changes: Nueva Solicitud (Postulación)
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Solicitud' }, async (payload) => {
+                            const newSol = payload.new;
+                            if (!newSol) return;
+                            console.log('[Supabase Realtime] Nueva Solicitud detectada:', newSol);
+                            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newSol }));
+
+                            let applicantName = 'Un inquilino verificado';
+                            let propTitle = 'tu propiedad';
+                            try {
+                                if (newSol.id_perfil) {
+                                    const { data: p } = await window.supabaseClient.from('Perfil').select('nombre_completo').eq('id_perfil', newSol.id_perfil).maybeSingle();
+                                    if (p?.nombre_completo) applicantName = p.nombre_completo;
+                                }
+                                if (newSol.id_publicacion) {
+                                    const { data: pub } = await window.supabaseClient.from('Publicacion').select('descripcion, Propiedad(calle, numero)').eq('id_publicacion', newSol.id_publicacion).maybeSingle();
+                                    if (pub?.Propiedad?.calle) propTitle = `${pub.Propiedad.calle} ${pub.Propiedad.numero || ''}`.trim();
+                                    else if (pub?.descripcion) propTitle = pub.descripcion.split(' | ')[0];
+                                }
+                            } catch(e) {}
+
+                            NotificationManager.receiveIncomingNotification({
+                                id: `notif_solicitud_${newSol.id_solicitud}`,
+                                title: '🎉 ¡Nueva postulación recibida!',
+                                message: `${applicantName} se ha postulado para alquilar "${propTitle}".`,
+                                type: 'application',
+                                icon: 'person_add',
+                                link: 'administrador.html#postulaciones',
+                                role: 'OWNER'
+                            });
+                        })
+                        // 3. Postgres Changes: Firmas de Contrato
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'Firma_contrato' }, async (payload) => {
+                            const firma = payload.new;
+                            if (!firma) return;
+                            console.log('[Supabase Realtime] Evento Firma_contrato detectado:', firma);
+                            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: firma }));
+
+                            const isSigned = ['sellada', 'completada', 'firmada'].includes(firma.estado_firma) || firma.didit_status === 'APPROVED';
+                            if (!isSigned) return;
+
+                            const isTenant = ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(firma.rol_firmante);
+                            const contractIdNum = firma.id_contrato;
+                            const ctrCode = `CTR-2026-${String(contractIdNum).padStart(4, '0')}`;
+
+                            if (isTenant) {
+                                NotificationManager.receiveIncomingNotification({
+                                    id: `notif_firma_inq_${firma.id_firma || contractIdNum}`,
+                                    title: '✍️ ¡El inquilino firmó el contrato!',
+                                    message: `El locatario completó su firma digital para el contrato ${ctrCode}. Ya puedes ingresar a firmar como propietario.`,
+                                    type: 'contract',
+                                    icon: 'draw',
+                                    link: `contratos.html?contract=${ctrCode}&sign=1&role=OWNER`,
+                                    role: 'OWNER'
+                                });
+                            } else {
+                                NotificationManager.receiveIncomingNotification({
+                                    id: `notif_firma_prop_${firma.id_firma || contractIdNum}`,
+                                    title: '✍️ ¡El propietario firmó el contrato!',
+                                    message: `El propietario completó la firma del contrato ${ctrCode}. El documento se encuentra 100% sellado bajo Ley 25.506.`,
+                                    type: 'contract',
+                                    icon: 'verified_user',
+                                    link: `contratos.html?contract=${ctrCode}&role=TENANT`,
+                                    role: 'TENANT'
+                                });
+                            }
+                        })
+                        // 4. Postgres Changes: Contrato
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, (payload) => {
+                            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: payload.new }));
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);

@@ -1036,8 +1036,18 @@
                     let backendSellar = null;
                     try {
                         const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
-                        // Intentar obtener info del backend si existe
-                        const sellRes = await fetch(`${apiBase}/api/firmas/sellar?id_contrato=${dbContractId}&role=${dbRole}`);
+                        const sellRes = await fetch(`${apiBase}/api/firmas/sellar`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                id_contrato: dbContractId,
+                                rol: dbRole,
+                                didit_session_id: currentSessionId,
+                                ip: clientIp,
+                                geolocalizacion: clientGeo,
+                                user_agent: navigator.userAgent
+                            })
+                        });
                         if (sellRes.ok) {
                             const sj = await sellRes.json();
                             backendSellar = sj.data;
@@ -1154,7 +1164,19 @@
                         console.warn("Aviso registrando pago en Supabase:", pErr);
                     }
 
+                    let backendFinalizar = null;
                     if (tenantHasSigned && ownerHasSigned) {
+                        try {
+                            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+                            const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`);
+                            if (finRes.ok) {
+                                const fj = await finRes.json();
+                                backendFinalizar = fj.data;
+                            }
+                        } catch (e) {
+                            console.warn("[ContractsManager] Fallo al contactar backend finalizar", e);
+                        }
+
                         try {
                             await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
                                 id_contrato: dbContractId,
