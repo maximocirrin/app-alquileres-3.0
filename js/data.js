@@ -1335,20 +1335,28 @@ var DataManager = {
         };
     },
 
-    acceptApplication: async function (appId) {
+    acceptApplication: async function (appId, customTerms = null) {
         let contractId = `CTR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
         let propTitle = 'Propiedad en Alquiler';
         let propAddress = 'Mendoza, Argentina';
-        let monthlyRent = 4;
-        let tenantName = 'Máximo Cirrincione';
-        let tenantEmail = 'cirrinmaximo@gmail.com';
+        let monthlyRent = customTerms?.monthlyRent || 450000;
+        let tenantName = 'Bruno Cirrincione Ornstein';
+        let tenantDni = '46.665.957';
+        let tenantEmail = 'nunimamu@gmail.com';
         let tenantPhone = '+54 9 261 000-0000';
         let photoUrls = ['img/hero-marketplace.jpg'];
-        let ownerName = 'Maximo cirrin';
+        let ownerName = 'Maximo Cirrincione Ornstein';
+        let ownerDni = '44.662.043';
         let ownerEmail = 'maximocirrin@gmail.com';
         let solPropId = null;
-        let solPerfilId = 15;
+        let solPerfilId = 14;
         let solPubId = null;
+
+        const durationMonths = customTerms?.durationMonths || 24;
+        const periodoAumento = customTerms?.adjustmentFrequencyMonths || 3;
+        const diaVencimiento = customTerms?.paymentDueDay || 10;
+        const aliasCbu = customTerms?.aliasCbu || 'HABITAT.ALQUILER.MP';
+        const adjustmentIndex = customTerms?.adjustmentIndex || 'IPC';
 
         // 1. Obtener datos desde localStorage si existen
         let localApp = null;
@@ -1360,7 +1368,9 @@ var DataManager = {
                 if (localApp) {
                     propTitle = localApp.property_title || propTitle;
                     propAddress = localApp.property_address || propAddress;
-                    monthlyRent = Number(localApp.property_price || monthlyRent);
+                    if (!customTerms?.monthlyRent) {
+                        monthlyRent = Number(localApp.property_price || monthlyRent);
+                    }
                     tenantName = localApp.tenant_name || tenantName;
                     tenantEmail = localApp.tenant_email || tenantEmail;
                     tenantPhone = localApp.tenant_phone || tenantPhone;
@@ -1383,6 +1393,7 @@ var DataManager = {
                     if (ownerPerf) {
                         ownerName = ownerPerf.nombre_completo || ownerName;
                         ownerEmail = ownerPerf.mail || ownerEmail;
+                        if (ownerPerf.dni) ownerDni = ownerPerf.dni;
                     }
                 } catch (e) {}
 
@@ -1430,20 +1441,23 @@ var DataManager = {
                     propAddress = `${prop.calle} ${prop.numero || ''}`.trim();
                 }
 
-                if (pub?.precio) monthlyRent = Number(pub.precio);
-                else if (sol?.ingreso_mensual_declarado) monthlyRent = Number(sol.ingreso_mensual_declarado);
+                if (!customTerms?.monthlyRent) {
+                    if (pub?.precio) monthlyRent = Number(pub.precio);
+                    else if (sol?.ingreso_mensual_declarado) monthlyRent = Number(sol.ingreso_mensual_declarado);
+                }
 
                 const perf = sol?.Perfil || {};
                 if (perf.nombre_completo) tenantName = perf.nombre_completo;
                 if (perf.mail) tenantEmail = perf.mail;
+                if (perf.dni) tenantDni = perf.dni;
                 if (sol?.telefono || perf.telefono) tenantPhone = sol?.telefono || perf.telefono;
 
                 solPropId = prop?.id_propiedad || pub?.id_propiedad || localApp?.property_id || 42;
-                solPerfilId = sol?.id_perfil || localApp?.tenant_id || 15;
+                solPerfilId = sol?.id_perfil || localApp?.tenant_id || 14;
                 solPubId = pub?.id_publicacion || sol?.id_publicacion || localApp?.publication_id || 40;
 
                 const todayStr = new Date().toISOString().split('T')[0];
-                const nextYearStr = new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0];
+                const nextYearStr = new Date(Date.now() + 86400000 * 30.5 * durationMonths).toISOString().split('T')[0];
 
                 // 1. Registrar Historial_estado_solicitud (Aprobada / Aceptada = 2)
                 try {
@@ -1470,6 +1484,28 @@ var DataManager = {
 
                         if (existingC && existingC.id_contrato) {
                             contract = existingC;
+                            // Actualizar condiciones si fueron personalizadas
+                            if (customTerms) {
+                                await window.supabaseClient.from('Contrato').update({
+                                    monto_cierre: monthlyRent,
+                                    periodo_aumento_meses: periodoAumento,
+                                    dia_vencimiento_mensual: diaVencimiento,
+                                    alias_cbu: aliasCbu,
+                                    fecha_fin_contrato: nextYearStr,
+                                    tasa_punitoria_diaria: customTerms?.clauses?.tasaMoraDiaria || 0.5,
+                                    clausulas_adicionales: customTerms?.clauses || {}
+                                }).eq('id_contrato', existingC.id_contrato);
+                            }
+
+                            // Limpiar firmas anteriores si se re-acepta para permitir firmar nuevamente
+                            try {
+                                await window.supabaseClient
+                                    .from('Firma_contrato')
+                                    .delete()
+                                    .eq('id_contrato', existingC.id_contrato);
+                            } catch (e) {
+                                console.warn("Aviso al limpiar firmas previas:", e);
+                            }
                         }
                     }
 
@@ -1482,19 +1518,20 @@ var DataManager = {
                                 id_propiedad: solPropId,
                                 id_publicacion: solPubId,
                                 id_tipo_garantia: 1,
-                                "id_Indice": 1,
-                                id_moneda: 1,
+                                "id_Indice": customTerms?.adjustmentIndex === 'ICL' ? 2 : 1,
+                                id_moneda: customTerms?.currency === 'USD' ? 2 : 1,
                                 fecha_firma_contrato: todayStr,
                                 fecha_inicio_contrato: todayStr,
                                 fecha_fin_contrato: nextYearStr,
                                 monto_cierre: monthlyRent,
                                 descuentos_aplicados: 0,
-                                periodo_aumento_meses: 3,
-                                dia_vencimiento_mensual: 10,
+                                periodo_aumento_meses: periodoAumento,
+                                dia_vencimiento_mensual: diaVencimiento,
                                 monto_deposito: monthlyRent,
                                 deposito_devuelto: false,
-                                tasa_punitoria_diaria: 0.5,
-                                alias_cbu: 'HABITAT.ALQUILER.MP'
+                                tasa_punitoria_diaria: customTerms?.clauses?.tasaMoraDiaria || 0.5,
+                                alias_cbu: aliasCbu,
+                                clausulas_adicionales: customTerms?.clauses || {}
                             }])
                             .select()
                             .maybeSingle();
@@ -1589,7 +1626,7 @@ var DataManager = {
             propertyPhotos: photoUrls,
             monthlyRent: monthlyRent,
             currency: 'ARS',
-            status: 'WAITING_OWNER',
+            status: 'WAITING_TENANT',
             startDate: todayStr,
             endDate: nextYearStr,
             durationMonths: 24,
@@ -1604,8 +1641,8 @@ var DataManager = {
                 name: tenantName,
                 email: tenantEmail,
                 phone: tenantPhone,
-                cuil: '20-46665957-7',
-                dni: '46.665.957',
+                cuil: tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7',
+                dni: tenantDni,
                 hasSigned: false,
                 isKycVerified: true
             },
@@ -1614,8 +1651,8 @@ var DataManager = {
                 profileId: 6,
                 name: ownerName,
                 email: ownerEmail,
-                cuil: '20-33918274-7',
-                dni: '33.918.274',
+                cuil: ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7',
+                dni: ownerDni,
                 hasSigned: false,
                 isKycVerified: true
             },
@@ -1642,7 +1679,7 @@ var DataManager = {
             const rawContr = localStorage.getItem('habitat_contracts');
             let existingContracts = [];
             if (rawContr) existingContracts = JSON.parse(rawContr);
-            existingContracts = existingContracts.filter(c => c && c.id !== contractId && c.tenant?.email !== c.owner?.email);
+            existingContracts = existingContracts.filter(c => c && c.id !== contractId && c.contractNumber !== contractId);
             existingContracts.unshift(contractObj);
             localStorage.setItem('habitat_contracts', JSON.stringify(existingContracts));
         } catch (e) {}
@@ -1662,10 +1699,11 @@ var DataManager = {
             }
         } catch (e) {}
 
-        // Despachar notificaciones in-app para ambas partes
+        // Despachar notificaciones in-app para ambas partes con timestamp único
+        const notifTimestamp = Date.now();
         if (window.NotificationManager) {
             window.NotificationManager.createNotification({
-                id: `notif_accept_owner_${appId}_${contractId}`,
+                id: `notif_accept_owner_${appId}_${contractId}_${notifTimestamp}`,
                 title: '¡Postulación Aceptada! Contrato Listo para Firma',
                 message: `Has aceptado a ${tenantName} para "${propTitle}". El contrato digital ya está disponible para firmar.`,
                 type: 'contract',
@@ -1673,7 +1711,7 @@ var DataManager = {
                 role: 'OWNER'
             });
             window.NotificationManager.createNotification({
-                id: `notif_accept_tenant_${appId}_${contractId}`,
+                id: `notif_accept_tenant_${appId}_${contractId}_${notifTimestamp}`,
                 title: '¡Tu postulación fue aprobada por el propietario! 🎉',
                 message: `El propietario aprobó tu postulación para "${propTitle}". Ingresa para realizar tu validación biométrica y firmar el contrato digital.`,
                 type: 'contract',
