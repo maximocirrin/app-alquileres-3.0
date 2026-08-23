@@ -1003,45 +1003,24 @@
                         profileId = isTenantRole ? 15 : 6;
                     }
 
-                    let backendSellar = null;
-                    const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+                    // 2.1. Obtener IP y Geolocalización del cliente
+                    let clientIp = '127.0.0.1';
+                    let clientGeo = null;
                     try {
-                        const signerEmail = (isTenantRole ? contractObj?.tenant?.email : contractObj?.owner?.email) || '';
-                        const signerName = (isTenantRole ? contractObj?.tenant?.name : contractObj?.owner?.name) || '';
-                        const signerDni = (isTenantRole ? contractObj?.tenant?.dni : contractObj?.owner?.dni) || '';
-
-                        const sellarResponse = await fetch(`${apiBase}/api/firmas/sellar`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                id_contrato: dbContractId,
-                                rol: dbRole,
-                                didit_session_id: currentSessionId,
-                                email: signerEmail,
-                                signer_name: signerName,
-                                signer_dni: signerDni,
-                                user_agent: navigator.userAgent,
-                                didit_scores: diditSessionData?.scores || { face_match_score: 99.2, liveness: 'PASSED' }
-                            })
-                        });
-
-                        if (sellarResponse.ok) {
-                            const sJson = await sellarResponse.json();
-                            backendSellar = sJson.data;
+                        const geoResponse = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                        if (geoResponse.ok) {
+                            const geoData = await geoResponse.json();
+                            clientIp = geoData.ip;
+                            clientGeo = {
+                                latitude: geoData.latitude,
+                                longitude: geoData.longitude,
+                                city: geoData.city,
+                                region: geoData.region,
+                                country: geoData.country
+                            };
                         }
-                    } catch (sErr) {
-                        console.warn("[ContractsManager] Aviso llamando a backend /api/firmas/sellar:", sErr);
-                    }
-
-                    let backendFinalizar = null;
-                    try {
-                        const finResponse = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`);
-                        if (finResponse.ok) {
-                            const finJson = await finResponse.json();
-                            backendFinalizar = finJson.data;
-                        }
-                    } catch (fErr) {
-                        console.warn("[ContractsManager] Aviso llamando a backend /api/firmas/finalizar:", fErr);
+                    } catch (e) {
+                        console.warn("[ContractsManager] No se pudo obtener la IP/Geo:", e);
                     }
 
                     const signatureData = {
@@ -1061,7 +1040,11 @@
                         },
                         url_audit_trail_pdf: backendSellar?.url_audit_trail_pdf || `contrato_${dbContractId}/audit_trail_${dbRole}.pdf`,
                         url_contrato_final_pdf: backendSellar?.url_contrato_final_pdf || `contrato_${dbContractId}/contrato_definitivo.pdf`,
-                        fecha_firma: new Date().toISOString()
+                        fecha_firma: new Date().toISOString(),
+                        ip_origen: clientIp,
+                        geolocalizacion: clientGeo,
+                        user_agent: navigator.userAgent
+
                     };
 
                     const { data: allSignatures } = await window.supabaseClient
