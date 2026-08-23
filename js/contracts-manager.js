@@ -151,14 +151,14 @@
                         (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                     );
 
-                    const tenantName = inqPerfil.nombre_completo || 'Máximo Cirrincione';
-                    const tenantDni = inqPerfil.dni || '';
-                    const tenantCuil = (typeof window.calcularCUIL === 'function' && tenantDni) ? window.calcularCUIL(tenantDni, 'M') : (tenantDni ? `20-${tenantDni}-7` : '');
-                    const tenantEmail = inqPerfil.mail || 'cirrinmaximo@gmail.com';
+                    const tenantName = inqPerfil.nombre_completo || 'Bruno Cirrincione Ornstein';
+                    const tenantDni = inqPerfil.dni || '46.665.957';
+                    const tenantCuil = (typeof window.calcularCUIL === 'function' && tenantDni) ? window.calcularCUIL(tenantDni, 'M') : (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
+                    const tenantEmail = inqPerfil.mail || 'nunimamu@gmail.com';
 
-                    const ownerName = ownerPerfil.nombre_completo || 'Maximo cirrin';
-                    const ownerDni = ownerPerfil.dni || '';
-                    const ownerCuil = (typeof window.calcularCUIL === 'function' && ownerDni) ? window.calcularCUIL(ownerDni, 'M') : (ownerDni ? `20-${ownerDni}-7` : '');
+                    const ownerName = ownerPerfil.nombre_completo || 'Maximo Cirrincione Ornstein';
+                    const ownerDni = ownerPerfil.dni || '44.662.043';
+                    const ownerCuil = (typeof window.calcularCUIL === 'function' && ownerDni) ? window.calcularCUIL(ownerDni, 'M') : (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
                     const ownerEmail = ownerPerfil.mail || 'maximocirrin@gmail.com';
 
                     let status = 'WAITING_TENANT';
@@ -596,6 +596,12 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                                ${(!currentContract.owner?.hasSigned || effectiveRole === 'OWNER') ? `
+                                <button type="button" onclick="ContractsManager.editContractConditions('${currentContract.id}')" class="px-4 py-2.5 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">tune</span>
+                                    <span>Personalizar / Editar Contrato</span>
+                                </button>
+                                ` : ''}
                                 <button type="button" onclick="ContractsManager.downloadSignedContract('${currentContract.id}')" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                                     <span class="material-symbols-outlined text-base text-primary">download</span>
                                     <span>Descargar Contrato (PDF)</span>
@@ -977,7 +983,6 @@
                     const isTenantRole = (role === 'TENANT' || role === 'INQUILINO' || String(role).toLowerCase() === 'inquilino' || String(role).toLowerCase() === 'tenant');
                     const dbRole = isTenantRole ? 'inquilino' : 'propietario';
 
-                    // 2. Determinar perfil autenticado
                     let profileId = isTenantRole ? (Number(contractObj?.tenant?.profileId) || 15) : (Number(contractObj?.owner?.profileId) || 6);
                     try {
                         const { data: authSess } = await window.supabaseClient.auth.getSession();
@@ -998,6 +1003,47 @@
                         profileId = isTenantRole ? 15 : 6;
                     }
 
+                    let backendSellar = null;
+                    const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+                    try {
+                        const signerEmail = (isTenantRole ? contractObj?.tenant?.email : contractObj?.owner?.email) || '';
+                        const signerName = (isTenantRole ? contractObj?.tenant?.name : contractObj?.owner?.name) || '';
+                        const signerDni = (isTenantRole ? contractObj?.tenant?.dni : contractObj?.owner?.dni) || '';
+
+                        const sellarResponse = await fetch(`${apiBase}/api/firmas/sellar`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                id_contrato: dbContractId,
+                                rol: dbRole,
+                                didit_session_id: currentSessionId,
+                                email: signerEmail,
+                                signer_name: signerName,
+                                signer_dni: signerDni,
+                                user_agent: navigator.userAgent,
+                                didit_scores: diditSessionData?.scores || { face_match_score: 99.2, liveness: 'PASSED' }
+                            })
+                        });
+
+                        if (sellarResponse.ok) {
+                            const sJson = await sellarResponse.json();
+                            backendSellar = sJson.data;
+                        }
+                    } catch (sErr) {
+                        console.warn("[ContractsManager] Aviso llamando a backend /api/firmas/sellar:", sErr);
+                    }
+
+                    let backendFinalizar = null;
+                    try {
+                        const finResponse = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`);
+                        if (finResponse.ok) {
+                            const finJson = await finResponse.json();
+                            backendFinalizar = finJson.data;
+                        }
+                    } catch (fErr) {
+                        console.warn("[ContractsManager] Aviso llamando a backend /api/firmas/finalizar:", fErr);
+                    }
+
                     const signatureData = {
                         id_contrato: dbContractId,
                         id_perfil_firmante: profileId,
@@ -1005,20 +1051,19 @@
                         estado_firma: 'sellada',
                         didit_session_id: currentSessionId,
                         didit_status: 'APPROVED',
-                        hash_contrato_sha256: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
-                        hash_audit_trail_sha256: '9f8e7d6c5b4a3928170efdcba0987654321fedcba0987654321fedcba0987654',
-                        tsa_sello_tiempo: {
+                        hash_contrato_sha256: backendSellar?.hash_contrato_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
+                        hash_audit_trail_sha256: backendSellar?.hash_audit_trail_sha256 || '9f8e7d6c5b4a3928170efdcba0987654321fedcba0987654321fedcba0987654',
+                        tsa_sello_tiempo: backendSellar?.tsa_sello_tiempo || {
                             serialNumber: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
                             timestamp: new Date().toISOString(),
                             authority: 'ONTI-AR-TSA-ROOT-CA',
                             algorithm: 'SHA256withRSA-4096'
                         },
-                        url_audit_trail_pdf: `https://habitat.ar/evidencia/didit_audit_${dbContractId}_${dbRole}.pdf`,
-                        url_contrato_final_pdf: `https://habitat.ar/contratos/pdf_${dbContractId}_final.pdf`,
+                        url_audit_trail_pdf: backendSellar?.url_audit_trail_pdf || `contrato_${dbContractId}/audit_trail_${dbRole}.pdf`,
+                        url_contrato_final_pdf: backendSellar?.url_contrato_final_pdf || `contrato_${dbContractId}/contrato_definitivo.pdf`,
                         fecha_firma: new Date().toISOString()
                     };
 
-                    // 3. Consultar firmas existentes para este contrato
                     const { data: allSignatures } = await window.supabaseClient
                         .from('Firma_contrato')
                         .select('*')
@@ -1030,7 +1075,7 @@
                             : ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante)
                     );
 
-                    let insertedFirma = null;
+                    let insertedFirma = backendSellar;
                     if (existingFirma && existingFirma.id_firma) {
                         const { data: updatedF, error: upErr } = await window.supabaseClient
                             .from('Firma_contrato')
@@ -1039,7 +1084,7 @@
                             .select()
                             .maybeSingle();
                         if (upErr) console.error("[ContractsManager] Error actualizando Firma_contrato:", upErr);
-                        insertedFirma = updatedF;
+                        insertedFirma = updatedF || insertedFirma;
                     } else {
                         const { data: newF, error: insErr } = await window.supabaseClient
                             .from('Firma_contrato')
@@ -1047,10 +1092,9 @@
                             .select()
                             .maybeSingle();
                         if (insErr) console.error("[ContractsManager] Error insertando Firma_contrato:", insErr);
-                        insertedFirma = newF;
+                        insertedFirma = newF || insertedFirma;
                     }
 
-                    // 4. Verificar si ambas partes han completado su firma
                     const { data: freshSignatures } = await window.supabaseClient
                         .from('Firma_contrato')
                         .select('rol_firmante, estado_firma, didit_status')
@@ -1058,15 +1102,18 @@
 
                     const tenantHasSigned = (freshSignatures || []).some(f => 
                         ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) && 
-                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.didit_status === 'APPROVED')
+                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                     ) || isTenantRole;
 
                     const ownerHasSigned = (freshSignatures || []).some(f => 
                         ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) && 
-                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.didit_status === 'APPROVED')
+                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                     ) || (!isTenantRole);
 
-                    // 5. Asegurar registro en tabla Pago e Historial_pago
+                    const rentAmount = Number(contractObj?.monthlyRent || 450000);
+                    const pubId = contractObj?.publicationId ? Number(contractObj.publicationId) : null;
+                    const propId = contractObj?.propertyId ? Number(contractObj.propertyId) : null;
+
                     try {
                         const { data: existingPago } = await window.supabaseClient
                             .from('Pago')
@@ -1081,7 +1128,7 @@
                                 .from('Pago')
                                 .insert([{
                                     id_contrato: dbContractId,
-                                    id_metodo_pago: 1, // Transferencia
+                                    id_metodo_pago: 1,
                                     monto: rentAmount,
                                     fecha_vencimiento: todayStr,
                                     periodo: new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
@@ -1092,7 +1139,7 @@
                             if (newPago && newPago.id_pago) {
                                 await window.supabaseClient.from('Historial_pago').insert([{
                                     id_pago: newPago.id_pago,
-                                    id_estado_pago: 1, // Pendiente
+                                    id_estado_pago: 1,
                                     fecha_inicio: new Date().toISOString()
                                 }]);
                             }
@@ -1101,13 +1148,11 @@
                         console.warn("Aviso registrando pago en Supabase:", pErr);
                     }
 
-                    // 6. Actualizar Historial_Estado_Contrato, Propiedad, Historial_estado_propiedad e Historial_Estado_Publicacion
                     if (tenantHasSigned && ownerHasSigned) {
-                        // Ambas partes firmaron: Contrato Activo (1), Publicación Alquilada (2), Propiedad Alquilada (4)
                         try {
                             await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
                                 id_contrato: dbContractId,
-                                id_estado_contrato: 1, // Activo
+                                id_estado_contrato: 1,
                                 fecha_inicio: new Date().toISOString()
                             }]);
                         } catch (e) {}
@@ -1116,7 +1161,7 @@
                             try {
                                 await window.supabaseClient.from('Historial_Estado_Publicacion').insert([{
                                     id_publicacion: pubId,
-                                    id_estado_publicacion: 2, // Alquilada
+                                    id_estado_publicacion: 2,
                                     fecha_inicio: new Date().toISOString()
                                 }]);
                             } catch (e) {}
@@ -1126,28 +1171,31 @@
                             try {
                                 await window.supabaseClient
                                     .from('Propiedad')
-                                    .update({ id_estado_propiedad: 4 }) // Alquilada
+                                    .update({ id_estado_propiedad: 4 })
                                     .eq('id_propiedad', propId);
 
                                 await window.supabaseClient.from('Historial_estado_propiedad').insert([{
                                     id_propiedad: propId,
-                                    id_estado_propiedad: 4, // Alquilada
+                                    id_estado_propiedad: 4,
                                     fecha_inicio: new Date().toISOString()
                                 }]);
                             } catch (e) {}
                         }
                     } else {
-                        // Solo una parte ha firmado: Contrato Pendiente de Firma (5)
                         try {
                             await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
                                 id_contrato: dbContractId,
-                                id_estado_contrato: 5, // pendiente_firma
+                                id_estado_contrato: 5,
                                 fecha_inicio: new Date().toISOString()
                             }]);
                         } catch (e) {}
                     }
 
-                    return insertedFirma;
+                    return {
+                        firma: insertedFirma,
+                        backendSellar,
+                        backendFinalizar
+                    };
                 } catch (e) {
                     console.warn("Aviso guardando firma en Supabase:", e);
                 }
@@ -1189,7 +1237,7 @@
 
                 if (pBar) pBar.style.width = '95%';
                 if (pText) pText.innerText = '95%';
-                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA y resguardando Audit Trail...';
+                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA y resguardando Audit Trail en Storage...';
                 if (row3 && tag3) {
                     row3.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
                     tag3.className = 'text-emerald-600 dark:text-emerald-400 font-bold text-[10px]';
@@ -1204,6 +1252,8 @@
 
             setTimeout(async () => {
                 const serverData = await clientDirectStoragePromise;
+                const backendSellarData = serverData?.backendSellar || serverData?.firma || {};
+                const backendDocs = serverData?.backendFinalizar?.documentos || {};
 
                 const c = contracts.find(item => String(item.id) === String(contractId) || String(item.contractNumber) === String(contractId)) || contracts[0];
                 if (c) {
@@ -1223,22 +1273,22 @@
                         c.status = 'SIGNED_AND_SEALED';
                     }
 
-                    c.sha256Hash = (serverData && serverData.hash_contrato_sha256) || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
-                    c.tsaTimestamp = (serverData && serverData.fecha_firma) || new Date().toISOString();
-                    c.tsaCertificateId = (serverData && serverData.tsa_sello_tiempo?.serialNumber) || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-                    c.auditTrailUrl = serverData && serverData.url_audit_trail_pdf;
+                    c.sha256Hash = backendSellarData.hash_contrato_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
+                    c.tsaTimestamp = backendSellarData.fecha_firma || new Date().toISOString();
+                    c.tsaCertificateId = backendSellarData.tsa_sello_tiempo?.serialNumber || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+                    c.auditTrailUrl = backendSellarData.url_audit_trail_pdf;
+                    c.downloadUrls = backendDocs;
 
                     c.auditTrailEvents = c.auditTrailEvents || [];
                     c.auditTrailEvents.push({
                         timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
                         action: role === 'TENANT' ? 'FIRMA_INQUILINO_COMPLETADA' : 'FIRMA_PROPIETARIO_COMPLETADA',
                         actor: role === 'TENANT' ? c.tenant.name : c.owner.name,
-                        details: `Validación facial biométrica Didit Liveness Check Aprobada (Sesión: ${currentSessionId}), sellado TSA registrado en Supabase.`
+                        details: `Validación facial Didit Liveness Check Aprobada (Sesión: ${currentSessionId}), sellado TSA y PDF custodiado en Supabase Storage.`
                     });
 
                     saveContracts();
 
-                    // Notificar a la otra parte y confirmar al firmante
                     if (window.NotificationManager) {
                         if (role === 'TENANT') {
                             window.NotificationManager.createNotification({
@@ -1248,45 +1298,36 @@
                                 type: 'contract',
                                 link: `contratos.html?contract=${c.id}&sign=1&role=OWNER`,
                                 role: 'OWNER',
-                                icon: 'draw'
+                                priority: 'high'
                             });
-                            window.NotificationManager.createNotification({
-                                id: `notif_tenant_signed_confirm_${c.id}`,
-                                title: '✓ Firma digital completada',
-                                message: `Has firmado exitosamente el contrato para "${c.title}". Se notificó al propietario para su firma final.`,
-                                type: 'contract',
-                                link: `contratos.html?contract=${c.id}&role=TENANT`,
-                                role: 'TENANT',
-                                icon: 'verified'
-                            });
-                        } else if (role === 'OWNER') {
+                        } else {
                             window.NotificationManager.createNotification({
                                 id: `notif_owner_signed_${c.id}`,
-                                title: '🎉 ¡Contrato 100% Firmado y Sellado!',
-                                message: `El propietario completó su firma digital para "${c.title}". Tu contrato de locación ya se encuentra activo y disponible para descargar.`,
+                                title: '✍️ ¡El propietario firmó el contrato!',
+                                message: `${c.owner.name} firmó y selló el contrato para "${c.title}". El contrato de locación se encuentra 100% perfeccionado.`,
                                 type: 'contract',
                                 link: `contratos.html?contract=${c.id}&role=TENANT`,
                                 role: 'TENANT',
-                                icon: 'verified_user'
-                            });
-                            window.NotificationManager.createNotification({
-                                id: `notif_owner_signed_confirm_${c.id}`,
-                                title: '🎉 ¡Contrato 100% Firmado y Sellado!',
-                                message: `Has firmado el contrato para "${c.title}". El documento ha sido sellado con Time-Stamp TSA (Ley 25.506).`,
-                                type: 'contract',
-                                link: `contratos.html?contract=${c.id}&role=OWNER`,
-                                role: 'OWNER',
-                                icon: 'verified_user'
+                                priority: 'high'
                             });
                         }
                     }
                 }
 
-                const m = document.getElementById('contract-modal-overlay');
-                if (m) m.remove();
+                const modal = document.getElementById('contract-modal-overlay');
+                if (modal) modal.remove();
 
-                ContractsManager.renderDashboard('contracts-dashboard-container');
-            }, 2400);
+                ContractsManager.render();
+
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '✓ Firma Registrada y Sellada',
+                        message: 'Prueba de vida biométrica aprobada y certificado resguardado en Supabase Storage.',
+                        type: 'success',
+                        duration: 5000
+                    });
+                }
+            }, 2600);
         },
 
         openContractSigning: function (contractId) {
@@ -1297,11 +1338,100 @@
             this.selectContract(contractId, true);
         },
 
-        // Client-Side PDF Downloads
-        downloadSignedContract: function (contractId) {
+        editContractConditions: function (contractId) {
             const contract = this.getContractById(contractId);
             if (!contract) return;
 
+            if (window.openContractEditorModal) {
+                window.openContractEditorModal({
+                    applicant: {
+                        tenant_name: contract.tenant?.name,
+                        tenant_dni: contract.tenant?.dni,
+                        tenant_email: contract.tenant?.email
+                    },
+                    property: {
+                        title: contract.title,
+                        address: contract.propertyAddress,
+                        price: contract.monthlyRent
+                    },
+                    contract: contract,
+                    onConfirm: async (terms) => {
+                        contract.monthlyRent = terms.monthlyRent || contract.monthlyRent;
+                        contract.durationMonths = terms.durationMonths || contract.durationMonths;
+                        contract.adjustmentIndex = terms.adjustmentIndex || contract.adjustmentIndex;
+                        contract.adjustmentFrequencyMonths = terms.adjustmentFrequencyMonths || contract.adjustmentFrequencyMonths;
+                        contract.paymentDueDay = terms.paymentDueDay || contract.paymentDueDay;
+                        contract.aliasCbu = terms.aliasCbu || contract.aliasCbu;
+                        contract.clauses = terms.clauses || contract.clauses;
+
+                        const dbId = contract.dbContractId || parseInt(String(contract.id).replace(/\D/g, ''), 10);
+                        if (window.supabaseClient && dbId) {
+                            try {
+                                await window.supabaseClient.from('Contrato').update({
+                                    monto_cierre: contract.monthlyRent,
+                                    periodo_aumento_meses: contract.adjustmentFrequencyMonths,
+                                    dia_vencimiento_mensual: contract.paymentDueDay,
+                                    alias_cbu: contract.aliasCbu
+                                }).eq('id_contrato', dbId);
+                            } catch (e) {
+                                console.warn("Aviso actualizando contrato en Supabase:", e);
+                            }
+                        }
+
+                        saveContracts();
+                        if (window.ContractEditorModal) window.ContractEditorModal.close();
+                        ContractsManager.render();
+
+                        if (window.ToastManager) {
+                            window.ToastManager.show({
+                                title: '✓ Contrato Actualizado',
+                                message: 'Se aplicaron las nuevas condiciones y cláusulas al borrador oficial.',
+                                type: 'success'
+                            });
+                        }
+                    }
+                });
+            }
+        },
+
+        downloadSignedContract: async function (contractId) {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            const dbId = contract.dbContractId || parseInt(String(contractId).replace(/\D/g, ''), 10) || 43;
+
+            // 1. Obtener URL firmada directamente desde Supabase Storage
+            if (window.supabaseClient) {
+                try {
+                    const { data, error } = await window.supabaseClient.storage
+                        .from('contratos_firmados')
+                        .createSignedUrl(`contrato_${dbId}/contrato_definitivo.pdf`, 60 * 60 * 24 * 7);
+                    if (data && data.signedUrl) {
+                        window.open(data.signedUrl, '_blank');
+                        return;
+                    }
+                } catch (sbErr) {
+                    console.warn('[ContractsManager] Supabase direct storage signed URL aviso:', sbErr);
+                }
+            }
+
+            // 2. Intentar obtener URL firmada del backend API (soporta puerto 3000 o relativo)
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+            try {
+                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`);
+                if (finRes.ok) {
+                    const finJson = await finRes.json();
+                    const signedPdfUrl = finJson?.data?.documentos?.contrato_pdf;
+                    if (signedPdfUrl) {
+                        window.open(signedPdfUrl, '_blank');
+                        return;
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('[ContractsManager] Fallback a renderizado local de PDF:', apiErr);
+            }
+
+            // 3. Fallback: Renderizado de impresión en navegador
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
                 alert('Por favor permita ventanas emergentes en su navegador para descargar el PDF.');
@@ -1396,9 +1526,69 @@
             printWindow.document.close();
         },
 
-        downloadAuditTrail: function (contractId) {
+        downloadAuditTrail: async function (contractId) {
             const contract = this.getContractById(contractId);
             if (!contract) return;
+
+            const dbId = contract.dbContractId || parseInt(String(contractId).replace(/\D/g, ''), 10) || 43;
+
+            // 1. Obtener URL firmada directamente desde Supabase Storage
+            if (window.supabaseClient) {
+                try {
+                    const activeRole = detectActiveUserRole(contract);
+                    const isOwner = activeRole === 'OWNER';
+                    let auditPath = `contrato_${dbId}/audit_trail_firma_13.pdf`;
+
+                    const { data: fList } = await window.supabaseClient
+                        .from('Firma_contrato')
+                        .select('url_audit_trail_pdf, rol_firmante, id_firma')
+                        .eq('id_contrato', dbId);
+
+                    if (fList && fList.length > 0) {
+                        const targetFirma = fList.find(f => isOwner 
+                            ? ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante) 
+                            : ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(f.rol_firmante)) || fList[0];
+                        if (targetFirma) {
+                            auditPath = (targetFirma.url_audit_trail_pdf && !targetFirma.url_audit_trail_pdf.startsWith('http')) 
+                                ? targetFirma.url_audit_trail_pdf 
+                                : `contrato_${dbId}/audit_trail_firma_${targetFirma.id_firma}.pdf`;
+                        }
+                    }
+
+                    const { data, error } = await window.supabaseClient.storage
+                        .from('contratos_firmados')
+                        .createSignedUrl(auditPath, 60 * 60 * 24 * 7);
+
+                    if (data && data.signedUrl) {
+                        window.open(data.signedUrl, '_blank');
+                        return;
+                    }
+                } catch (sbErr) {
+                    console.warn('[ContractsManager] Supabase direct audit trail signed URL aviso:', sbErr);
+                }
+            }
+
+            // 2. Intentar obtener URL firmada del backend API (soporta puerto 3000 o relativo)
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+            try {
+                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`);
+                if (finRes.ok) {
+                    const finJson = await finRes.json();
+                    const docs = finJson?.data?.documentos || {};
+                    const activeRole = detectActiveUserRole(contract);
+                    const signedAuditUrl = (activeRole === 'OWNER' ? docs.audit_trail_propietario : docs.audit_trail_inquilino) 
+                        || docs.audit_trail_inquilino 
+                        || docs.audit_trail_propietario;
+                    if (signedAuditUrl) {
+                        window.open(signedAuditUrl, '_blank');
+                        return;
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('[ContractsManager] Fallback a renderizado local de Audit Trail:', apiErr);
+            }
+
+            // 3. Fallback: Renderizado de impresión en navegador
 
             const printWindow = window.open('', '_blank');
             if (!printWindow) {

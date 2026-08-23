@@ -1660,6 +1660,136 @@
             }
         };
 
+        let ownerShowAccepted = false;
+
+        window.toggleOwnerAcceptedCandidates = function() {
+            ownerShowAccepted = !ownerShowAccepted;
+            const container = document.getElementById('owner-accepted-apps-container');
+            const text = document.getElementById('accepted-toggle-text');
+            const icon = document.getElementById('accepted-toggle-icon');
+            if (container) {
+                container.className = ownerShowAccepted ? 'space-y-4 pt-2 block' : 'hidden';
+            }
+            if (text) text.textContent = ownerShowAccepted ? 'Ocultar' : 'Ver aceptados';
+            if (icon) {
+                if (ownerShowAccepted) icon.classList.add('rotate-180');
+                else icon.classList.remove('rotate-180');
+            }
+        };
+
+        window.cancelAcceptedApplication = async function(appId) {
+            let confirmed = true;
+            if (window.showCustomConfirm) {
+                confirmed = await window.showCustomConfirm({
+                    title: '¿Cancelar aceptación del postulante?',
+                    message: 'El candidato volverá al estado pendiente y la propiedad se desbloqueará para que puedas seleccionar a otro postulante.',
+                    confirmText: 'Sí, cancelar aceptación'
+                });
+            } else {
+                confirmed = confirm('¿Cancelar la aceptación del postulante y devolverlo al estado pendiente?');
+            }
+            if (!confirmed) return;
+
+            try {
+                if (window.supabaseClient && appId) {
+                    await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                        id_solicitud: appId,
+                        id_estado_solicitud: 1, // Pendiente
+                        fecha_inicio: new Date().toISOString()
+                    }]);
+
+                    const raw = localStorage.getItem('habitat_tenant_applications');
+                    if (raw) {
+                        const apps = JSON.parse(raw);
+                        const targetApp = apps.find(a => String(a.id) === String(appId));
+                        if (targetApp && targetApp.contract_id) {
+                            const numericCId = parseInt(String(targetApp.contract_id).replace(/\D/g, ''), 10);
+                            if (numericCId) {
+                                await window.supabaseClient.from('Firma_contrato').delete().eq('id_contrato', numericCId);
+                            }
+                        }
+                    }
+                }
+                const raw = localStorage.getItem('habitat_tenant_applications');
+                if (raw) {
+                    const apps = JSON.parse(raw);
+                    apps.forEach(a => {
+                        if (String(a.id) === String(appId)) {
+                            a.status = 'pendiente';
+                        }
+                    });
+                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                }
+
+                const rawContr = localStorage.getItem('habitat_contracts');
+                if (rawContr) {
+                    const parsed = JSON.parse(rawContr);
+                    parsed.forEach(c => {
+                        if (c.tenant) c.tenant.hasSigned = false;
+                        if (c.owner) c.owner.hasSigned = false;
+                        c.status = 'WAITING_TENANT';
+                    });
+                    localStorage.setItem('habitat_contracts', JSON.stringify(parsed));
+                }
+
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Aceptación Cancelada',
+                        message: 'El postulante volvió al estado pendiente.',
+                        type: 'info'
+                    });
+                }
+            } catch (e) {
+                console.warn("Cancel accepted app error:", e);
+            }
+            await loadOwnerApplications();
+        };
+
+        window.rejectApplication = async function(appId) {
+            let confirmed = true;
+            if (window.showCustomConfirm) {
+                confirmed = await window.showCustomConfirm({
+                    title: '¿Rechazar postulación?',
+                    message: 'El candidato pasará a la sección de postulantes no seleccionados / archivados.',
+                    confirmText: 'Sí, rechazar'
+                });
+            } else {
+                confirmed = confirm('¿Rechazar y archivar esta postulación?');
+            }
+            if (!confirmed) return;
+
+            try {
+                if (window.supabaseClient && appId) {
+                    await window.supabaseClient.from('Historial_estado_solicitud').insert([{
+                        id_solicitud: appId,
+                        id_estado_solicitud: 3, // Rechazada
+                        fecha_inicio: new Date().toISOString()
+                    }]);
+                }
+                const raw = localStorage.getItem('habitat_tenant_applications');
+                if (raw) {
+                    const apps = JSON.parse(raw);
+                    apps.forEach(a => {
+                        if (String(a.id) === String(appId)) {
+                            a.status = 'rechazada';
+                        }
+                    });
+                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                }
+
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Postulación Rechazada',
+                        message: 'El candidato fue movido a no seleccionados.',
+                        type: 'info'
+                    });
+                }
+            } catch (e) {
+                console.warn("Reject app error:", e);
+            }
+            await loadOwnerApplications();
+        };
+
         window.reactivateApplication = async function(appId) {
             try {
                 if (window.supabaseClient && appId) {
@@ -1687,13 +1817,15 @@
 
         function renderCandidateCardHtml(a, isRejected = false) {
             const pData = getApplicantPassportData(a);
+            const isAccepted = a.status === 'aceptada';
+
             return `
-                <div class="glass-card owner-inview-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 transition-all hover:shadow-md ${isRejected ? 'border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40' : ''}">
+                <div class="glass-card owner-inview-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 transition-all hover:shadow-md ${isRejected ? 'border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40' : (isAccepted ? 'border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/10' : '')}">
                     <!-- Cabecera de la Propiedad, Fecha/Hora y Estado de la Postulación -->
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 border-b border-zinc-200/60 dark:border-zinc-800 pb-3">
                         <div class="min-w-0 flex-1">
                             <!-- Título de la Propiedad (Sin fondo ni borde) -->
-                            <div class="flex items-center gap-1.5 ${isRejected ? 'text-zinc-500' : 'text-primary dark:text-red-400'} font-headline text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5">
+                            <div class="flex items-center gap-1.5 ${isRejected ? 'text-zinc-500' : (isAccepted ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary dark:text-red-400')} font-headline text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5">
                                 <span class="material-symbols-outlined text-sm sm:text-base shrink-0">home_work</span>
                                 <span class="truncate">${a.property_title}</span>
                             </div>
@@ -1714,7 +1846,7 @@
                         </div>
                         <div class="shrink-0 flex items-center gap-2">
                             ${!isRejected && a.status === 'pendiente' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5 shrink-0"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Pendiente</span>' : ''}
-                            ${!isRejected && a.status === 'aceptada' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-xs sm:text-sm">check_circle</span> Seleccionado</span>' : ''}
+                            ${!isRejected && a.status === 'aceptada' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-extrabold rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-xs sm:text-sm">check_circle</span> Aceptado / En Firma</span>' : ''}
                             ${isRejected || a.status === 'rechazada' ? '<span class="px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-headline font-bold rounded-xl bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border border-zinc-500/20 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-xs sm:text-sm">person_off</span> Rechazado</span>' : ''}
                         </div>
                     </div>
@@ -1822,8 +1954,25 @@
                                 <span class="material-symbols-outlined text-base">check_circle</span>
                                 Aceptar Postulación y Firmar Contrato
                             </button>
-                            <button type="button" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
+                            <button type="button" onclick="rejectApplication('${a.id}')" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
                                 Rechazar
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${!isRejected && a.status === 'aceptada' ? `
+                        <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
+                            <a href="contratos.html?contract=${a.contract_id || 'CTR-2026-0043'}&sign=1&role=OWNER" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-base">description</span>
+                                Ver y Firmar Contrato
+                            </a>
+                            <button type="button" onclick="cancelAcceptedApplication('${a.id}')" class="py-2.5 px-3.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Cancelar aceptación y volver a evaluar postulantes">
+                                <span class="material-symbols-outlined text-base">undo</span>
+                                Cancelar Aceptación
+                            </button>
+                            <button type="button" onclick="rejectApplication('${a.id}')" class="py-2.5 px-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Rechazar y desestimar postulación">
+                                <span class="material-symbols-outlined text-base">person_remove</span>
+                                Rechazar / Eliminar
                             </button>
                         </div>
                     ` : ''}
@@ -1851,14 +2000,15 @@
                 filtered = filtered.filter(a => a.resolved_prop_id === ownerSelectedPropFilter);
             }
 
-            const activeCandidates = filtered.filter(a => a.status !== 'rechazada');
+            const pendingCandidates = filtered.filter(a => a.status === 'pendiente' || !a.status);
+            const acceptedCandidates = filtered.filter(a => a.status === 'aceptada');
             const rejectedCandidates = filtered.filter(a => a.status === 'rechazada');
 
             if (countBadge) {
-                countBadge.textContent = `${activeCandidates.length}`;
+                countBadge.textContent = `${pendingCandidates.length}`;
             }
 
-            if (activeCandidates.length === 0 && rejectedCandidates.length === 0) {
+            if (pendingCandidates.length === 0 && acceptedCandidates.length === 0 && rejectedCandidates.length === 0) {
                 list.innerHTML = `
                     <div class="glass-card rounded-2xl p-8 text-center space-y-2">
                         <span class="material-symbols-outlined text-4xl text-zinc-400">person_search</span>
@@ -1874,19 +2024,55 @@
 
             let html = '';
 
-            // 1. Candidatos Activos (Pendientes / Aceptados)
-            if (activeCandidates.length > 0) {
-                html += activeCandidates.map(a => renderCandidateCardHtml(a, false)).join('');
+            // 1. Postulantes Pendientes (Principales arriba)
+            if (pendingCandidates.length > 0) {
+                html += pendingCandidates.map(a => renderCandidateCardHtml(a, false)).join('');
             } else {
                 html += `
                     <div class="glass-card rounded-2xl p-6 text-center space-y-1">
-                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">No hay candidatos activos pendientes para esta selección.</p>
-                        <p class="text-[11px] text-zinc-500">Tienes ${rejectedCandidates.length} candidato${rejectedCandidates.length === 1 ? '' : 's'} no seleccionado${rejectedCandidates.length === 1 ? '' : 's'} en la sección inferior.</p>
+                        <p class="text-xs font-bold text-zinc-700 dark:text-zinc-300">No hay postulantes pendientes para esta selección.</p>
+                        ${acceptedCandidates.length > 0 ? `<p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">Tienes ${acceptedCandidates.length} postulante(s) aceptado(s) en la sección inferior.</p>` : ''}
                     </div>
                 `;
             }
 
-            // 2. Sección Inferior Desplegable de Candidatos Rechazados
+            // 2. Sección Inferior Desplegable de Candidatos Aceptados (Escondidos abajo del todo)
+            if (acceptedCandidates.length > 0) {
+                html += `
+                    <div class="mt-8 pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
+                        <button type="button" onclick="toggleOwnerAcceptedCandidates()" class="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-50/80 hover:bg-emerald-100/80 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 transition-all cursor-pointer group shadow-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                    <span class="material-symbols-outlined text-lg">check_circle</span>
+                                </div>
+                                <div class="text-left">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs sm:text-sm font-headline font-extrabold text-emerald-900 dark:text-emerald-200">
+                                            Postulantes Aceptados / En Proceso de Firma
+                                        </span>
+                                        <span class="px-2 py-0.2 rounded-full bg-emerald-200/80 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 text-[10px] font-black">
+                                            ${acceptedCandidates.length}
+                                        </span>
+                                    </div>
+                                    <span class="block text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">
+                                        Candidatos seleccionados con contrato generado
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 group-hover:text-emerald-900">
+                                <span id="accepted-toggle-text">${ownerShowAccepted ? 'Ocultar' : 'Ver aceptados'}</span>
+                                <span class="material-symbols-outlined text-lg transition-transform duration-200 ${ownerShowAccepted ? 'rotate-180' : ''}" id="accepted-toggle-icon">expand_more</span>
+                            </div>
+                        </button>
+
+                        <div id="owner-accepted-apps-container" class="${ownerShowAccepted ? 'block' : 'hidden'} space-y-4 pt-2">
+                            ${acceptedCandidates.map(a => renderCandidateCardHtml(a, false)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. Sección Inferior Desplegable de Candidatos Rechazados
             if (rejectedCandidates.length > 0) {
                 html += `
                     <div class="mt-8 pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
@@ -1924,22 +2110,41 @@
 
             list.innerHTML = html;
 
-            // Vincular acciones de aceptar postulación
+            // Vincular acciones de aceptar postulación con Editor de Contrato
             list.querySelectorAll('.btn-owner-accept').forEach(b => {
-                b.onclick = async () => {
+                b.onclick = () => {
                     const appId = b.getAttribute('data-id');
-                    b.disabled = true;
-                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
-                    let res = null;
-                    try {
-                        if (window.DataManager && window.DataManager.acceptApplication) {
-                            res = await window.DataManager.acceptApplication(appId);
-                        }
-                    } catch (e) {
-                        console.warn("Aviso local postulación:", e);
+                    const app = ownerAppsState.find(a => String(a.id) === String(appId)) || {};
+                    const prop = ownerRawProperties.find(p => String(p.id) === String(app.resolved_prop_id)) || {};
+
+                    if (window.openContractEditorModal) {
+                        window.openContractEditorModal({
+                            applicant: app,
+                            property: {
+                                ...prop,
+                                title: app.property_title || prop.title,
+                                address: app.property_address || prop.address,
+                                price: prop.price || prop.precio || app.property_price || app.propertyPrice
+                            },
+                            onConfirm: async (customTerms) => {
+                                b.disabled = true;
+                                b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
+                                let res = null;
+                                try {
+                                    if (window.DataManager && window.DataManager.acceptApplication) {
+                                        res = await window.DataManager.acceptApplication(appId, customTerms);
+                                    }
+                                } catch (e) {
+                                    console.warn("Aviso local postulación:", e);
+                                }
+                                const targetContractId = res?.contractId || 'CTR-2026-0043';
+                                if (window.ContractEditorModal) window.ContractEditorModal.close();
+                                window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                            }
+                        });
+                    } else {
+                        window.location.href = `contratos.html?contract=CTR-2026-0043&sign=1&role=OWNER`;
                     }
-                    const targetContractId = res?.contractId || 'CTR-2026-0001';
-                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
                 };
             });
 
@@ -3606,6 +3811,7 @@
     <script src="js/didit-kyc.js"></script>
     <script src="js/owner-verification.js"></script>
     <script src="js/notifications.js"></script>
+    <script src="js/contract-editor-modal.js"></script>
     <script src="js/contracts-manager.js"></script>
 </body>
 
