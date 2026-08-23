@@ -19,6 +19,22 @@
          * Abre el modal del editor de contratos
          */
         open: function (options = {}) {
+            const contract = options.contract || {};
+            const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
+
+            if (isSigned) {
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '🔒 Contrato Bloqueado e Inmutable',
+                        message: 'Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados bajo la Ley 25.506.',
+                        type: 'warning'
+                    });
+                } else {
+                    alert('Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados.');
+                }
+                return;
+            }
+
             this._currentOptions = options;
             this._customFile = null;
             this._activeTab = options.initialTab || 'smart';
@@ -32,7 +48,6 @@
 
             const applicant = options.applicant || {};
             const property = options.property || {};
-            const contract = options.contract || {};
 
             const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
             const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';

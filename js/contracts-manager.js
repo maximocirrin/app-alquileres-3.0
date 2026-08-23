@@ -596,11 +596,21 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                                ${(!currentContract.owner?.hasSigned || effectiveRole === 'OWNER') ? `
+                                ${(!currentContract.tenant?.hasSigned && !currentContract.owner?.hasSigned && currentContract.status !== 'SIGNED_AND_SEALED' && (effectiveRole === 'OWNER' || effectiveRole === 'BROKER')) ? `
                                 <button type="button" onclick="ContractsManager.editContractConditions('${currentContract.id}')" class="px-4 py-2.5 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                                     <span class="material-symbols-outlined text-base">tune</span>
-                                    <span>Personalizar / Editar Contrato</span>
+                                    <span>Personalizar / Editar Borrador</span>
                                 </button>
+                                ` : isFullySigned(currentContract) ? `
+                                <div class="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 font-headline font-bold text-xs flex items-center gap-1.5 shadow-2xs">
+                                    <span class="material-symbols-outlined text-base text-emerald-600 dark:text-emerald-400">lock</span>
+                                    <span>Contrato Sellado e Inmutable (Ley 25.506)</span>
+                                </div>
+                                ` : (currentContract.tenant?.hasSigned || currentContract.owner?.hasSigned) ? `
+                                <div class="px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 font-headline font-bold text-xs flex items-center gap-1.5 shadow-2xs">
+                                    <span class="material-symbols-outlined text-base text-amber-600 dark:text-amber-400">lock_clock</span>
+                                    <span>Bloqueado por Firma en Curso</span>
+                                </div>
                                 ` : ''}
                                 <button type="button" onclick="ContractsManager.downloadSignedContract('${currentContract.id}')" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                                     <span class="material-symbols-outlined text-base text-primary">download</span>
@@ -1338,6 +1348,20 @@
             const contract = this.getContractById(contractId);
             if (!contract) return;
 
+            const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
+            if (isSigned) {
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '🔒 Contrato Bloqueado e Inmutable',
+                        message: 'Este contrato ya cuenta con firmas digitales registradas y se encuentra sellado según la Ley 25.506.',
+                        type: 'warning'
+                    });
+                } else {
+                    alert('Este contrato ya cuenta con firmas digitales registradas y se encuentra sellado según la Ley 25.506.');
+                }
+                return;
+            }
+
             if (window.openContractEditorModal) {
                 window.openContractEditorModal({
                     applicant: {
@@ -1376,7 +1400,7 @@
 
                         saveContracts();
                         if (window.ContractEditorModal) window.ContractEditorModal.close();
-                        ContractsManager.render();
+                        ContractsManager.renderDashboard('contracts-dashboard-container');
 
                         if (window.ToastManager) {
                             window.ToastManager.show({
