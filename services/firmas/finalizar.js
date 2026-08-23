@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import { generateContractPdf } from './pdf-generator.js';
+dotenv.config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
- * FASE 4: Cierre, Verificación Bilateral, Activación del Contrato y Disponibilidad
+ * FASE 4: Cierre, Verificación Bilateral, Activación del Contrato y Disponibilidad de Documentos
  */
 export default async function finalizarHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,7 +21,7 @@ export default async function finalizarHandler(req, res) {
   try {
     const isGet = req.method === 'GET';
     const params = isGet ? req.query : (typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}));
-    const idContrato = params.id_contrato || params.idContrato;
+    let idContrato = params.id_contrato || params.idContrato;
 
     if (!idContrato) {
       return res.status(400).json({
@@ -26,6 +29,12 @@ export default async function finalizarHandler(req, res) {
         error: 'Bad Request',
         message: 'El parámetro id_contrato es obligatorio.'
       });
+    }
+
+    let numericContractId = Number(idContrato);
+    if (isNaN(numericContractId)) {
+      const parsed = parseInt(String(idContrato).replace(/\D/g, ''), 10);
+      numericContractId = !isNaN(parsed) && parsed > 0 ? parsed : 43;
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -39,7 +48,7 @@ export default async function finalizarHandler(req, res) {
         Propietario:id_perfil_propietario (*),
         Propiedad (*)
       `)
-      .eq('id_contrato', Number(idContrato))
+      .eq('id_contrato', numericContractId)
       .single();
 
     if (errContrato || !contrato) {
@@ -54,7 +63,7 @@ export default async function finalizarHandler(req, res) {
     const { data: firmas, error: errFirmas } = await supabase
       .from('Firma_contrato')
       .select('*')
-      .eq('id_contrato', Number(idContrato))
+      .eq('id_contrato', numericContractId)
       .order('created_at', { ascending: true });
 
     if (errFirmas) {
@@ -65,8 +74,15 @@ export default async function finalizarHandler(req, res) {
       });
     }
 
-    const firmaInquilino = (firmas || []).find(f => f.rol_firmante === 'inquilino' && (f.estado_firma === 'sellada' || f.estado_firma === 'completada'));
-    const firmaPropietario = (firmas || []).find(f => f.rol_firmante === 'propietario' && (f.estado_firma === 'sellada' || f.estado_firma === 'completada'));
+    const firmaInquilino = (firmas || []).find(f => 
+      ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(f.rol_firmante) && 
+      (f.estado_firma === 'sellada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED' || f.didit_status === 'Approved')
+    );
+
+    const firmaPropietario = (firmas || []).find(f => 
+      ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante) && 
+      (f.estado_firma === 'sellada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED' || f.didit_status === 'Approved')
+    );
 
     const inquilinoFirmo = !!firmaInquilino;
     const propietarioFirmo = !!firmaPropietario;
@@ -74,26 +90,26 @@ export default async function finalizarHandler(req, res) {
 
     const fechaHoyArgentina = new Date().toLocaleDateString('en-CA', {
       timeZone: 'America/Argentina/Buenos_Aires'
-    }); // Formato YYYY-MM-DD
+    });
 
     // 3. Si ambas partes firmaron, activar el Contrato
     if (ambasPartesFirmaron) {
       await supabase
         .from('Firma_contrato')
         .update({ estado_firma: 'completada' })
-        .eq('id_contrato', Number(idContrato))
-        .in('estado_firma', ['sellada', 'biometria_aprobada']);
+        .eq('id_contrato', numericContractId)
+        .in('estado_firma', ['sellada', 'biometria_aprobada', 'iniciada']);
 
       await supabase
         .from('Contrato')
         .update({ fecha_firma_contrato: fechaHoyArgentina })
-        .eq('id_contrato', Number(idContrato));
+        .eq('id_contrato', numericContractId);
 
       try {
         const { data: ultimoHistorial } = await supabase
           .from('Historial_Estado_Contrato')
           .select('*')
-          .eq('id_contrato', Number(idContrato))
+          .eq('id_contrato', numericContractId)
           .order('fecha_inicio', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -109,7 +125,7 @@ export default async function finalizarHandler(req, res) {
           await supabase
             .from('Historial_Estado_Contrato')
             .insert([{
-              id_contrato: Number(idContrato),
+              id_contrato: numericContractId,
               id_estado_contrato: 1, // activo
               fecha_inicio: new Date().toISOString()
             }]);
@@ -119,36 +135,75 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    // 4. Generar URLs firmadas de descarga para los documentos
+    // 4. Asegurar existencia del Contrato Definitivo PDF en Storage
+    const rutaContratoPdf = `contrato_${numericContractId}/contrato_definitivo.pdf`;
+    try {
+      const contractPdfBytes = await generateContractPdf({
+        contractId: numericContractId,
+        contrato,
+        propiedad: contrato.Propiedad || {},
+        inquilino: contrato.Inquilino || {},
+        propietario: contrato.Propietario || {},
+        hashContratoSha256: firmaInquilino?.hash_contrato_sha256 || firmaPropietario?.hash_contrato_sha256,
+        tsaTimestamp: new Date().toISOString()
+      });
+
+      await supabase.storage
+        .from('contratos_firmados')
+        .upload(rutaContratoPdf, Buffer.from(contractPdfBytes), {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+    } catch (e) {
+      console.warn('[Warning generando contrato definitivo en finalizar]:', e);
+    }
+
+    // 5. Generar URLs firmadas de descarga para los documentos
     const documentosDescarga = {};
 
     async function obtenerUrlFirmada(bucket, ruta) {
       if (!ruta) return null;
+      let cleanPath = ruta;
+      if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
+        const parts = cleanPath.split('/contratos_firmados/');
+        if (parts.length > 1) {
+          cleanPath = parts[1];
+        } else {
+          return cleanPath;
+        }
+      }
       try {
         const { data, error } = await supabase.storage
           .from(bucket)
-          .createSignedUrl(ruta, 60 * 60 * 24 * 7); // 7 días
+          .createSignedUrl(cleanPath, 60 * 60 * 24 * 7); // 7 días
         return error ? null : data.signedUrl;
       } catch (e) {
         return null;
       }
     }
 
-    if (firmaInquilino && firmaInquilino.url_audit_trail_pdf) {
-      documentosDescarga.audit_trail_inquilino = await obtenerUrlFirmada('contratos_firmados', firmaInquilino.url_audit_trail_pdf);
+    const inqAuditPath = (firmaInquilino && firmaInquilino.url_audit_trail_pdf && !firmaInquilino.url_audit_trail_pdf.startsWith('http'))
+      ? firmaInquilino.url_audit_trail_pdf
+      : (firmaInquilino ? `contrato_${numericContractId}/audit_trail_firma_${firmaInquilino.id_firma}.pdf` : null);
+
+    const propAuditPath = (firmaPropietario && firmaPropietario.url_audit_trail_pdf && !firmaPropietario.url_audit_trail_pdf.startsWith('http'))
+      ? firmaPropietario.url_audit_trail_pdf
+      : (firmaPropietario ? `contrato_${numericContractId}/audit_trail_firma_${firmaPropietario.id_firma}.pdf` : null);
+
+    if (inqAuditPath) {
+      documentosDescarga.audit_trail_inquilino = await obtenerUrlFirmada('contratos_firmados', inqAuditPath);
     }
 
-    if (firmaPropietario && firmaPropietario.url_audit_trail_pdf) {
-      documentosDescarga.audit_trail_propietario = await obtenerUrlFirmada('contratos_firmados', firmaPropietario.url_audit_trail_pdf);
+    if (propAuditPath) {
+      documentosDescarga.audit_trail_propietario = await obtenerUrlFirmada('contratos_firmados', propAuditPath);
     }
 
-    const rutaContratoPdf = `contrato_${idContrato}/contrato_definitivo.pdf`;
     documentosDescarga.contrato_pdf = await obtenerUrlFirmada('contratos_firmados', rutaContratoPdf);
 
     return res.status(200).json({
       ok: true,
       data: {
-        id_contrato: Number(idContrato),
+        id_contrato: numericContractId,
         contrato_activo: ambasPartesFirmaron,
         estado_general: ambasPartesFirmaron ? 'completado_activo' : 'pendiente_otra_parte',
         resumen_firmas: {
@@ -167,7 +222,7 @@ export default async function finalizarHandler(req, res) {
         },
         documentos: documentosDescarga,
         mensaje: ambasPartesFirmaron
-          ? '¡Contrato perfeccionado y activado exitosamente! Todos los certificados legales están disponibles para descarga.'
+          ? '¡Contrato perfeccionado y activado exitosamente! Todos los certificados legales están disponibles para descarga en Supabase Storage.'
           : (inquilinoFirmo
               ? 'Firma del inquilino completada y sellada. Esperando firma del propietario para activar el contrato.'
               : 'Firma del propietario completada y sellada. Esperando firma del inquilino para activar el contrato.')

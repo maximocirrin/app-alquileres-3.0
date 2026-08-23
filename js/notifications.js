@@ -383,7 +383,21 @@
             this.saveAll(allStored);
         },
 
+        _activeToastKeys: new Set(),
+
         showToast: function (notif) {
+            if (!notif || !notif.title) return;
+            
+            // Deduplicación estricta en memoria por clave para evitar toasts dobles por Realtime / Broadcast
+            const toastKey = (notif.id || '') + '::' + (notif.title || '') + '::' + (notif.message || '').substring(0, 30);
+            if (this._activeToastKeys.has(toastKey)) {
+                return;
+            }
+            this._activeToastKeys.add(toastKey);
+            setTimeout(() => {
+                this._activeToastKeys.delete(toastKey);
+            }, 10000);
+
             let container = document.getElementById('habitat-toast-container');
             if (!container) {
                 container = document.createElement('div');
@@ -392,7 +406,13 @@
                 document.body.appendChild(container);
             }
 
+            // Si ya existe un toast visible con el mismo ID o mismo título en el contenedor, ignorar
+            if (notif.id && container.querySelector(`[data-toast-id="${notif.id}"]`)) {
+                return;
+            }
+
             const toast = document.createElement('div');
+            if (notif.id) toast.setAttribute('data-toast-id', notif.id);
             toast.className = 'pointer-events-auto transform transition-all duration-300 ease-out translate-y-[-20px] opacity-0 scale-95 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 flex gap-3.5 items-start text-zinc-900 dark:text-white border-l-4 border-l-primary dark:border-l-red-500';
 
             toast.innerHTML = `
