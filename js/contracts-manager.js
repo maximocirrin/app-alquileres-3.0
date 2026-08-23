@@ -1023,6 +1023,19 @@
                         console.warn("[ContractsManager] No se pudo obtener la IP/Geo:", e);
                     }
 
+                    let backendSellar = null;
+                    try {
+                        const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+                        // Intentar obtener info del backend si existe
+                        const sellRes = await fetch(`${apiBase}/api/firmas/sellar?id_contrato=${dbContractId}&role=${dbRole}`);
+                        if (sellRes.ok) {
+                            const sj = await sellRes.json();
+                            backendSellar = sj.data;
+                        }
+                    } catch(e) {
+                        console.warn("[ContractsManager] Fallo al contactar el backend de sellado", e);
+                    }
+
                     const signatureData = {
                         id_contrato: dbContractId,
                         id_perfil_firmante: profileId,
@@ -1300,7 +1313,7 @@
                 const modal = document.getElementById('contract-modal-overlay');
                 if (modal) modal.remove();
 
-                ContractsManager.render();
+                ContractsManager.renderDashboard('contracts-dashboard-container');
 
                 if (window.ToastManager) {
                     window.ToastManager.show({
