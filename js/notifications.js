@@ -305,27 +305,13 @@
                         }
                     }).catch(() => { });
                 } catch (e) { }
-            } else if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
-                try {
-                    const ch = window.supabaseClient.channel('habitat-realtime-global-channel');
-                    ch.send({
-                        type: 'broadcast',
-                        event: 'habitat_notification',
-                        payload: {
-                            senderTabId: TAB_ID,
-                            notification: notif
-                        }
-                    }).catch(() => { });
-                } catch (e) { }
             }
         },
 
         initRealtimeWebSockets: function () {
-            if (this._realtimeInitialized) return;
-            this._realtimeInitialized = true;
-
             // A. Escuchar en BroadcastChannel local entre pestañas
-            if (broadcastChannel) {
+            if (broadcastChannel && !this._broadcastInitialized) {
+                this._broadcastInitialized = true;
                 broadcastChannel.onmessage = (event) => {
                     if (event.data && event.data.type === 'HABITAT_REALTIME_NOTIF') {
                         this.receiveIncomingNotification(event.data);
@@ -334,22 +320,37 @@
             }
 
             // B. Escuchar en Storage Event (multi-tab sync)
-            window.addEventListener('storage', (e) => {
-                if (e.key === NOTIF_STORAGE_KEY) {
-                    this.updateBadge();
-                    this.renderDropdown();
-                }
-                if (e.key === 'habitat_tenant_applications' || e.key === 'habitat_contracts') {
-                    window.dispatchEvent(new CustomEvent('habitat:application_updated'));
-                    window.dispatchEvent(new CustomEvent('habitat:contract_updated'));
-                }
-            });
+            if (!this._storageListenerInitialized) {
+                this._storageListenerInitialized = true;
+                window.addEventListener('storage', (e) => {
+                    if (e.key === NOTIF_STORAGE_KEY) {
+                        this.updateBadge();
+                        this.renderDropdown();
+                    }
+                    if (e.key === 'habitat_tenant_applications' || e.key === 'habitat_contracts') {
+                        window.dispatchEvent(new CustomEvent('habitat:application_updated'));
+                        window.dispatchEvent(new CustomEvent('habitat:contract_updated'));
+                    }
+                });
+            }
+
+            // Si ya está suscrito el canal de Supabase, no recrear
+            if (this._supabaseChannel) return;
 
             // C. Suscribirse al canal Supabase Realtime (Broadcast + Postgres Changes)
             if (window.supabaseClient && typeof window.supabaseClient.channel === 'function') {
                 try {
-                    this._supabaseChannel = window.supabaseClient.channel('habitat-realtime-global-channel');
-                    this._supabaseChannel
+                    // Limpiar cualquier canal previo con el mismo topic para evitar conflictos de callbacks
+                    if (typeof window.supabaseClient.getChannels === 'function') {
+                        const existingChannels = window.supabaseClient.getChannels() || [];
+                        const prev = existingChannels.find(c => c.topic === 'realtime:habitat-realtime-global-channel');
+                        if (prev) {
+                            try { window.supabaseClient.removeChannel(prev); } catch (e) {}
+                        }
+                    }
+
+                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    channel
                         // 1. Mensajes directos Broadcast
                         .on('broadcast', { event: 'habitat_notification' }, ({ payload }) => {
                             if (payload) {
@@ -430,9 +431,18 @@
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
                         });
+
+                    this._supabaseChannel = channel;
                 } catch (e) {
                     console.warn('[Supabase Realtime Sub Error]:', e);
                 }
+            } else {
+                // Reintentar si supabaseClient aún no está listo
+                setTimeout(() => {
+                    if (window.supabaseClient && !this._supabaseChannel) {
+                        this.initRealtimeWebSockets();
+                    }
+                }, 300);
             }
         },
 
