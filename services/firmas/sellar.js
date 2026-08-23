@@ -12,36 +12,29 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || proce
  */
 export default async function sellarHandler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      ok: false,
-      error: 'Method Not Allowed',
-      message: 'Únicamente se aceptan peticiones POST.'
-    });
-  }
-
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const isGet = req.method === 'GET';
+    const params = isGet ? (req.query || {}) : (typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}));
     const {
-      id_firma,
-      id_contrato,
-      rol = 'TENANT',
-      didit_session_id,
+      id_firma = params.idFirma,
+      id_contrato = params.idContrato,
+      rol = (params.role || params.rol || 'TENANT'),
+      didit_session_id = params.diditSessionId,
       didit_scores,
       email,
-      user_agent,
-      ip,
+      user_agent = req.headers['user-agent'],
+      ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       signer_name,
       signer_dni,
       geolocalizacion
-    } = body;
+    } = params;
 
     if (!id_firma && !id_contrato) {
       return res.status(400).json({

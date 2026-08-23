@@ -1267,15 +1267,19 @@ var DataManager = {
 
                     // 4. Notificar en tiempo real al PROPIETARIO
                     try {
-                        if (window.NotificationManager && typeof window.NotificationManager.add === 'function') {
-                            window.NotificationManager.add({
-                                title: '🎉 ¡Nueva postulación recibida!',
-                                message: `${appData.tenantName || 'Un inquilino verificado'} se ha postulado para alquilar "${appData.propertyTitle || 'tu propiedad'}".`,
-                                type: 'application',
-                                icon: 'person_add',
-                                link: 'administrador.html#postulantes',
-                                role: 'OWNER'
-                            });
+                        if (window.NotificationManager) {
+                            const notifFn = window.NotificationManager.createNotification || window.NotificationManager.add;
+                            if (typeof notifFn === 'function') {
+                                notifFn.call(window.NotificationManager, {
+                                    id: `notif_app_${insertedId}_${Date.now()}`,
+                                    title: '🎉 ¡Nueva postulación recibida!',
+                                    message: `${appData.tenantName || 'Un inquilino verificado'} se ha postulado para alquilar "${appData.propertyTitle || 'tu propiedad'}".`,
+                                    type: 'application',
+                                    icon: 'person_add',
+                                    link: 'administrador.html#postulaciones',
+                                    role: 'OWNER'
+                                });
+                            }
                         }
                     } catch (eNotif) {
                         console.warn("[DataManager] Aviso enviando notificación al propietario:", eNotif);
@@ -1545,6 +1549,8 @@ var DataManager = {
                                 deposito_devuelto: false,
                                 tasa_punitoria_diaria: customTerms?.clauses?.tasaMoraDiaria || 0.5,
                                 alias_cbu: aliasCbu,
+                                porcentaje_honorarios_cierre: prop?.id_perfil_captador ? (customTerms?.brokerFee || 4.15) : null,
+                                porcentaje_comision_mensual: prop?.id_perfil_captador ? (customTerms?.brokerMonthlyCommission || 5.0) : null,
                                 clausulas_adicionales: customTerms?.clauses || {}
                             }])
                             .select()
