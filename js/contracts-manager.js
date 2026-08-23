@@ -998,6 +998,26 @@
                         profileId = isTenantRole ? 15 : 6;
                     }
 
+                    // 2.1. Obtener IP y Geolocalización del cliente
+                    let clientIp = '127.0.0.1';
+                    let clientGeo = null;
+                    try {
+                        const geoResponse = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                        if (geoResponse.ok) {
+                            const geoData = await geoResponse.json();
+                            clientIp = geoData.ip;
+                            clientGeo = {
+                                latitude: geoData.latitude,
+                                longitude: geoData.longitude,
+                                city: geoData.city,
+                                region: geoData.region,
+                                country: geoData.country
+                            };
+                        }
+                    } catch (e) {
+                        console.warn("[ContractsManager] No se pudo obtener la IP/Geo:", e);
+                    }
+
                     const signatureData = {
                         id_contrato: dbContractId,
                         id_perfil_firmante: profileId,
@@ -1015,7 +1035,10 @@
                         },
                         url_audit_trail_pdf: `https://habitat.ar/evidencia/didit_audit_${dbContractId}_${dbRole}.pdf`,
                         url_contrato_final_pdf: `https://habitat.ar/contratos/pdf_${dbContractId}_final.pdf`,
-                        fecha_firma: new Date().toISOString()
+                        fecha_firma: new Date().toISOString(),
+                        ip_origen: clientIp,
+                        geolocalizacion: clientGeo,
+                        user_agent: navigator.userAgent
                     };
 
                     // 3. Consultar firmas existentes para este contrato
