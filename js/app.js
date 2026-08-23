@@ -9949,97 +9949,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="landing-menu__main p-1 space-y-2">
 
-                    <!-- SECCIÓN 1: PRINCIPAL -->
+                    <!-- SECCIÓN 1: NAVEGACIÓN GENERAL -->
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                        <h4 class="font-headline text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> General
+                        <h4 class="font-headline text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Navegación
                         </h4>
                         <div class="flex flex-col gap-1">
-                            <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-clean w-full text-left cursor-pointer font-bold text-primary dark:text-red-400">
-                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">add_home</span>
-                                <span>Publicar propiedad</span>
-                            </button>
                             <a href="index.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary text-xl">home</span>
                                 <span>Inicio</span>
-                            </a>
-                            <a href="pasaporte-habitat.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
-                                <span class="font-bold">Pasaporte Hábitat</span>
-                            </a>
-                            <a href="agentes.html" class="menu-item-clean flex items-center gap-2">
-                                <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">handshake</span>
-                                <span class="font-bold">Solicitar Agente / Corredor</span>
-                            </a>
-                            <a href="buscar.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-zinc-500 text-xl">search</span>
-                                <span>Buscar Alquileres</span>
                             </a>
                             <a href="como-funciona.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
                                 <span>Cómo funciona</span>
                             </a>
+                            <a href="pasaporte-habitat.html" class="menu-item-clean">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
+                                <span class="font-bold text-primary dark:text-red-400">Pasaporte Hábitat</span>
+                            </a>
                             <button type="button" class="menu-item-clean w-full text-left cursor-pointer" data-menu-action="favorites">
                                 <span class="material-symbols-outlined text-rose-500 text-xl">favorite</span>
                                 <span>Favoritos</span>
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- SECCIÓN 1: INQUILINOS (Verde Esmeralda - Colapsable) -->
-                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
-                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
-                            <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Para Inquilinos
-                            </h4>
-                            <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
-                        </button>
-                        <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
-                            <div class="overflow-hidden flex flex-col gap-2 pt-3">
-                                <a href="tu-alquiler.html" class="menu-item-card bg-emerald-600 text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
-                                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
-                                        <span class="material-symbols-outlined text-xl">key</span>
-                                    </div>
-                                    <div>
-                                        <span class="block text-sm font-extrabold text-white">Mi Alquiler Activo</span>
-                                        <span class="block text-[11px] text-white/80">Pagar alquiler, informar pago y tickets</span>
-                                    </div>
-                                </a>
-                                <a href="tu-alquiler.html#pasaporte" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
-                                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                                        <span class="material-symbols-outlined text-xl">badge</span>
-                                    </div>
-                                    <div>
-                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Tu pasaporte</span>
-                                        <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
-                                    </div>
-                                </a>
-                                <a href="tu-alquiler.html#postulaciones" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">how_to_reg</span>
-                                    <span>Mis Postulaciones</span>
-                                </a>
-                                <a href="tu-alquiler.html#visitas" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">calendar_month</span>
-                                    <span>Mis Visitas Agendadas</span>
-                                </a>
-                                <a href="buscar.html" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">search</span>
-                                    <span>Buscar Alquileres</span>
-                                </a>
-                            </div>
+                            <button type="button" onclick="if(window.App && typeof window.App.openPublishWizard === 'function'){ window.App.openPublishWizard(); } else { window.location.href='index.html?publish=1'; }" class="menu-item-clean w-full text-left cursor-pointer font-bold text-primary dark:text-red-400 border border-primary/20 dark:border-red-900/40 bg-primary/5 dark:bg-red-950/20 rounded-xl mt-1">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">add_home</span>
+                                <span>Publicar propiedad</span>
+                            </button>
                         </div>
                     </div>
 
                     <!-- SECCIÓN 2: PROPIETARIOS (Rojo Borgoña - Colapsable) -->
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
                         <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
-                            <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-primary"></span> Para Propietarios
+                            <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.15em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-primary dark:bg-red-500"></span> Para Propietarios
                             </h4>
                             <span class="material-symbols-outlined text-primary dark:text-red-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                
+                                <!-- Subsección: Gestión de Propiedades -->
+                                <div class="px-1">
+                                    <h5 class="text-[10px] font-black text-primary dark:text-red-400 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-primary dark:bg-red-400"></span> Gestión de Propiedades
+                                    </h5>
+                                </div>
                                 <a href="administrador.html" class="menu-item-card bg-primary text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
                                     <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
                                         <span class="material-symbols-outlined text-xl">manage_accounts</span>
@@ -10066,6 +10021,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">how_to_reg</span>
                                     <span>Postulaciones & Selección</span>
                                 </a>
+
+                                <!-- Subsección: Operaciones & Cobros -->
+                                <div class="px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 mt-1">
+                                    <h5 class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Operaciones & Cobros
+                                    </h5>
+                                </div>
                                 <a href="administrador.html#visitas" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">calendar_month</span>
                                     <span>Agenda de Visitas</span>
@@ -10073,6 +10035,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <a href="administrador.html#alquiler-activo" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">payments</span>
                                     <span>Alquiler Activo & Cobros</span>
+                                </a>
+                                <a href="contratos.html" class="menu-item-clean font-bold text-primary dark:text-red-400">
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">draw</span>
+                                    <span>Firma Digital & Contratos</span>
                                 </a>
                                 <a href="administrador.html#mantenimiento" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">build</span>
@@ -10082,16 +10048,85 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- SECCIÓN 3: CORREDORES E INMOBILIARIAS (Azul Oscuro - Colapsable) -->
+                    <!-- SECCIÓN 3: INQUILINOS (Verde Esmeralda - Colapsable) -->
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
                         <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
-                            <h4 class="font-headline text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-blue-900"></span> Para Corredores & Inmobiliarias
+                            <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.15em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Para Inquilinos
+                            </h4>
+                            <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
+                        </button>
+                        <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
+                            <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                
+                                <!-- Subsección: Tu Contrato & Credencial -->
+                                <div class="px-1">
+                                    <h5 class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tu Contrato & Credencial
+                                    </h5>
+                                </div>
+                                <a href="tu-alquiler.html" class="menu-item-card bg-emerald-600 text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
+                                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
+                                        <span class="material-symbols-outlined text-xl">key</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-white">Mi Alquiler Activo</span>
+                                        <span class="block text-[11px] text-white/80">Pagar alquiler, informar pago y tickets</span>
+                                    </div>
+                                </a>
+                                <a href="tu-alquiler.html#pasaporte" class="menu-item-card bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 hover:border-emerald-500/40 p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01]">
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                                        <span class="material-symbols-outlined text-xl">badge</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-extrabold text-zinc-900 dark:text-white">Tu Pasaporte</span>
+                                        <span class="block text-[11px] text-zinc-500">Credencial e historial de inquilino verificado</span>
+                                    </div>
+                                </a>
+                                <a href="contratos.html" class="menu-item-clean font-bold text-emerald-600 dark:text-emerald-400">
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">draw</span>
+                                    <span>Firma Digital & Contratos</span>
+                                </a>
+
+                                <!-- Subsección: Búsqueda & Visitas -->
+                                <div class="px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 mt-1">
+                                    <h5 class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Búsqueda & Visitas
+                                    </h5>
+                                </div>
+                                <a href="tu-alquiler.html#postulaciones" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">how_to_reg</span>
+                                    <span>Mis Postulaciones</span>
+                                </a>
+                                <a href="tu-alquiler.html#visitas" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">calendar_month</span>
+                                    <span>Mis Visitas Agendadas</span>
+                                </a>
+                                <a href="buscar.html" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">search</span>
+                                    <span>Buscar Alquileres</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 4: CORREDORES E INMOBILIARIAS (Azul Oscuro - Colapsable) -->
+                    <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
+                        <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
+                            <h4 class="font-headline text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.15em] flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-900 dark:bg-blue-500"></span> Para Corredores & Inmobiliarias
                             </h4>
                             <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
                         </button>
                         <div class="drawer-accordion-content grid grid-rows-[0fr] transition-all duration-300 ease-in-out opacity-0 overflow-hidden">
                             <div class="overflow-hidden flex flex-col gap-2 pt-3">
+                                
+                                <!-- Subsección: Gestión CRM & Cartera -->
+                                <div class="px-1">
+                                    <h5 class="text-[10px] font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-900"></span> Gestión CRM & Cartera
+                                    </h5>
+                                </div>
                                 <a href="panel-corredor.html" class="menu-item-card bg-blue-900 text-white p-3 rounded-2xl flex items-center gap-3 transition-all hover:scale-[1.01] w-full text-left cursor-pointer shadow-md">
                                     <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
                                         <span class="material-symbols-outlined text-xl">dashboard_customize</span>
@@ -10115,9 +10150,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span>Cartera de Propiedades en Filas</span>
                                 </a>
                                 <a href="panel-corredor.html#contactos" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">groups</span>
-                                    <span>Contactos & Clientes (Inquilinos/Prop.)</span>
+                                    <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">how_to_reg</span>
+                                    <span>Postulaciones & Selección</span>
                                 </a>
+
+                                <!-- Subsección: Operaciones & Red -->
+                                <div class="px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 mt-1">
+                                    <h5 class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Operaciones & Red
+                                    </h5>
+                                </div>
                                 <a href="panel-corredor.html#alquileres" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-xl">payments</span>
                                     <span>Alquileres Activos & Cobros</span>
@@ -10134,15 +10176,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- Autenticación y Cierre -->
-                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 text-xs">
-                        <div id="premium-menu-logged-out" class="flex items-center gap-3">
-                            <a href="login.html?mode=login" class="font-bold text-zinc-700 dark:text-zinc-300 hover:text-primary">Iniciar sesión</a>
-                            <a href="login.html?mode=register" class="font-bold text-white bg-primary px-4 py-2 rounded-xl">Registrarse</a>
+                    <!-- SECCIÓN 5: Autenticación y Mi Cuenta -->
+                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                        <div id="premium-menu-logged-out" class="flex items-center gap-3 pt-1">
+                            <a href="login.html?mode=login" class="flex-1 text-center py-2 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 transition-colors">Ingresar</a>
+                            <a href="login.html?mode=register" class="flex-1 text-center py-2 px-3 rounded-xl bg-primary dark:bg-red-800 font-bold text-xs text-white hover:bg-red-800 dark:hover:bg-red-700 transition-colors shadow-sm">Registrarse</a>
                         </div>
-                        <div id="premium-menu-logged-in" class="hidden flex items-center justify-between w-full">
-                            <span class="text-xs font-bold text-zinc-500">Sesión iniciada</span>
-                            <button type="button" id="premium-menu-logout" class="font-bold text-rose-600 dark:text-rose-400 hover:underline">Cerrar sesión</button>
+                        <div id="premium-menu-logged-in" class="hidden flex flex-col gap-2 w-full pt-1">
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800/60">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-8 h-8 rounded-full bg-primary dark:bg-red-800 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm auth-user-initial">U</div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate" id="premium-menu-user-name">Mi Cuenta</span>
+                                        <span class="text-[10px] text-zinc-500">Sesión activa</span>
+                                    </div>
+                                </div>
+                                <a href="configuracion.html" class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors flex items-center shrink-0" title="Configuración de cuenta">
+                                    <span class="material-symbols-outlined text-lg">settings</span>
+                                </a>
+                            </div>
+                            <button type="button" id="premium-menu-logout" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-bold text-xs hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-base">logout</span>
+                                <span>Cerrar sesión</span>
+                            </button>
                         </div>
                     </div>
 
@@ -10320,11 +10376,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (href && href.includes('#')) {
                 const currentFile = window.location.pathname.split('/').pop() || 'index.html';
                 const [targetFile, targetHash] = href.split('#');
-                if (!targetFile || targetFile === currentFile || currentFile.includes(targetFile) || (targetFile.includes('tu-alquiler') && currentFile.includes('tu-alquiler'))) {
+                if (!targetFile || targetFile === currentFile || currentFile.includes(targetFile) || (targetFile.includes('tu-alquiler') && currentFile.includes('tu-alquiler')) || (targetFile.includes('administrador') && currentFile.includes('administrador')) || (targetFile.includes('panel-corredor') && currentFile.includes('panel-corredor'))) {
                     event.preventDefault();
                     window.location.hash = '#' + targetHash;
-                    if (window.switchTenantTab) {
+                    if (window.switchTenantTab && (targetFile.includes('tu-alquiler') || currentFile.includes('tu-alquiler'))) {
                         window.switchTenantTab(targetHash);
+                    }
+                    if (window.switchOwnerTab && (targetFile.includes('administrador') || currentFile.includes('administrador'))) {
+                        window.switchOwnerTab(targetHash);
+                    }
+                    if (window.switchCorredorTab && (targetFile.includes('panel-corredor') || currentFile.includes('panel-corredor'))) {
+                        window.switchCorredorTab(targetHash);
                     }
                 }
             }
@@ -10447,12 +10509,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nameEl = document.getElementById('dropdown-user-name');
                 const idEl = document.getElementById('dropdown-user-id');
                 const initialEl = document.getElementById('user-avatar-initial');
+                const premiumUserNameEl = document.getElementById('premium-menu-user-name');
 
+                const displayName = profile?.full_name || user?.email?.split('@')[0] || user?.email || 'Usuario';
                 if (nameEl) nameEl.textContent = profile?.full_name || user?.email || 'Usuario';
                 if (idEl) idEl.textContent = `Identificador: ${String(user?.id || '').substring(0, 8)}`;
                 if (initialEl && (profile?.full_name || user?.email)) {
                     initialEl.textContent = (profile?.full_name || user?.email).charAt(0).toUpperCase();
                 }
+                if (premiumUserNameEl) premiumUserNameEl.textContent = displayName;
 
                 const loggedInEl = document.getElementById('drawer-user-logged-in');
                 const loggedOutEl = document.getElementById('drawer-user-logged-out');
@@ -10482,6 +10547,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (premiumLoggedInEl) premiumLoggedInEl.classList.add('hidden');
                 if (premiumLoggedOutEl) premiumLoggedOutEl.classList.remove('hidden');
 
+                const premiumUserNameEl = document.getElementById('premium-menu-user-name');
+                if (premiumUserNameEl) premiumUserNameEl.textContent = 'Mi Cuenta';
+
                 document.querySelectorAll('#desktop-nav-logged-in').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('#desktop-nav-logged-out').forEach(el => el.classList.remove('hidden'));
 
@@ -10502,9 +10570,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameEl = document.getElementById('dropdown-user-name');
             const idEl = document.getElementById('dropdown-user-id');
             const initialEl = document.getElementById('user-avatar-initial');
+            const premiumUserNameEl = document.getElementById('premium-menu-user-name');
             if (nameEl) nameEl.textContent = 'Usuario';
             if (idEl) idEl.textContent = 'Identificador';
             if (initialEl) initialEl.textContent = 'U';
+            if (premiumUserNameEl) premiumUserNameEl.textContent = 'Mi Cuenta';
 
             const loggedInEl = document.getElementById('drawer-user-logged-in');
             const loggedOutEl = document.getElementById('drawer-user-logged-out');
