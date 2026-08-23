@@ -1483,28 +1483,42 @@ var DataManager = {
                             .maybeSingle();
 
                         if (existingC && existingC.id_contrato) {
-                            contract = existingC;
-                            // Actualizar condiciones si fueron personalizadas
-                            if (customTerms) {
-                                await window.supabaseClient.from('Contrato').update({
-                                    monto_cierre: monthlyRent,
-                                    periodo_aumento_meses: periodoAumento,
-                                    dia_vencimiento_mensual: diaVencimiento,
-                                    alias_cbu: aliasCbu,
-                                    fecha_fin_contrato: nextYearStr,
-                                    tasa_punitoria_diaria: customTerms?.clauses?.tasaMoraDiaria || 0.5,
-                                    clausulas_adicionales: customTerms?.clauses || {}
-                                }).eq('id_contrato', existingC.id_contrato);
-                            }
-
-                            // Limpiar firmas anteriores si se re-acepta para permitir firmar nuevamente
+                            // Verificar si el contrato existente ya está firmado
+                            let isSigned = false;
                             try {
-                                await window.supabaseClient
+                                const { data: sigs } = await window.supabaseClient
                                     .from('Firma_contrato')
-                                    .delete()
+                                    .select('estado_firma, didit_status')
                                     .eq('id_contrato', existingC.id_contrato);
-                            } catch (e) {
-                                console.warn("Aviso al limpiar firmas previas:", e);
+                                isSigned = (sigs || []).some(s => 
+                                    ['sellada', 'completada', 'firmada'].includes(s.estado_firma) || s.didit_status === 'APPROVED'
+                                );
+                            } catch (e) {}
+
+                            if (!isSigned) {
+                                contract = existingC;
+                                // Actualizar condiciones si fueron personalizadas
+                                if (customTerms) {
+                                    await window.supabaseClient.from('Contrato').update({
+                                        monto_cierre: monthlyRent,
+                                        periodo_aumento_meses: periodoAumento,
+                                        dia_vencimiento_mensual: diaVencimiento,
+                                        alias_cbu: aliasCbu,
+                                        fecha_fin_contrato: nextYearStr,
+                                        tasa_punitoria_diaria: customTerms?.clauses?.tasaMoraDiaria || 0.5,
+                                        clausulas_adicionales: customTerms?.clauses || {}
+                                    }).eq('id_contrato', existingC.id_contrato);
+                                }
+
+                                // Limpiar firmas anteriores si es un borrador previo sin completar
+                                try {
+                                    await window.supabaseClient
+                                        .from('Firma_contrato')
+                                        .delete()
+                                        .eq('id_contrato', existingC.id_contrato);
+                                } catch (e) {
+                                    console.warn("Aviso al limpiar firmas previas:", e);
+                                }
                             }
                         }
                     }

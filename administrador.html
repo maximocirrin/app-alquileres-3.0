@@ -2780,10 +2780,17 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                    ${(contract.has_signed || contract.owner_signed || contract.status === 'SIGNED_AND_SEALED') ? `
+                                    <a href="contratos.html?contract=${contract.id}&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">verified</span>
+                                        <span>Ver Contrato Firmado</span>
+                                    </a>
+                                    ` : `
                                     <a href="contratos.html?contract=${contract.id}&sign=1&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">draw</span>
                                         <span>Firmar Contrato (Didit Liveness)</span>
                                     </a>
+                                    `}
                                     <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">download</span>
                                         <span>PDF</span>
