@@ -291,9 +291,10 @@
                 <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">NUEVO</span>
             </a>
 
-            <button data-tab="mantenimiento" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">build</span>
-                <span>Tickets Mantenimiento</span>
+            <button data-tab="chat-negociacion" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
+                <span>Mensajes & Chat</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
             </button>
         </div>
 
@@ -507,15 +508,10 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 5: TICKETS -->
-            <div id="panel-content-mantenimiento" class="tab-content space-y-6">
-                <div class="glass-card p-5 rounded-2xl shadow-sm">
-                    <h2 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-0.5">Tickets de Mantenimiento</h2>
-                    <p class="text-xs text-zinc-500">Solicitudes de reparación enviadas por los inquilinos.</p>
-                </div>
-
-                <div id="owner-list-tickets" class="space-y-4">
-                    <div class="p-8 text-center text-zinc-400">Cargando tickets...</div>
+            <!-- PESTAÑA 5: MENSAJES & NEGOCIACIÓN CHAT -->
+            <div id="panel-content-chat-negociacion" class="tab-content space-y-6">
+                <div id="owner-chat-section-container">
+                    <div class="p-8 text-center text-zinc-400">Cargando centro de negociación y mensajes...</div>
                 </div>
             </div>
 
@@ -549,9 +545,9 @@
                 <span class="text-[10px]">Alquileres</span>
             </button>
 
-            <button data-tab="mantenimiento" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">build</span>
-                <span class="text-[10px]">Tickets</span>
+            <button data-tab="chat-negociacion" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-xl text-emerald-500">forum</span>
+                <span class="text-[10px]">Chat</span>
             </button>
         </nav>
     </div>
@@ -577,6 +573,9 @@
     <script src="js/google-maps-loader.js"></script>
     <script src="js/app.js?v=12"></script>
     <script src="js/publish-property.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/contract-editor-modal.js"></script>
+    <script src="js/contracts-manager.js"></script>
 
     <!-- Interactive Script Handlers -->
     <script>
@@ -592,7 +591,7 @@
                 'postulaciones': document.getElementById('panel-content-postulaciones'),
                 'visitas': document.getElementById('panel-content-visitas'),
                 'alquiler-activo': document.getElementById('panel-content-alquiler-activo'),
-                'mantenimiento': document.getElementById('panel-content-mantenimiento')
+                'chat-negociacion': document.getElementById('panel-content-chat-negociacion')
             };
 
             function updateSlidingIndicator(activeBtn) {
@@ -608,6 +607,12 @@
                 const leftOffset = btnRect.left - navRect.left;
                 indicator.style.left = `${leftOffset}px`;
                 indicator.style.width = `${btnRect.width}px`;
+            }
+
+            function loadOwnerChatSection() {
+                if (window.ContractsManager && typeof window.ContractsManager.renderEmbeddedChat === 'function') {
+                    window.ContractsManager.renderEmbeddedChat('owner-chat-section-container', { role: 'OWNER' });
+                }
             }
 
             function switchViewTab(target) {
@@ -645,7 +650,7 @@
                 if (target === 'postulaciones') loadOwnerApplications();
                 if (target === 'visitas') loadOwnerVisits();
                 if (target === 'alquiler-activo') loadOwnerActiveRental();
-                if (target === 'mantenimiento') loadOwnerTickets();
+                if (target === 'chat-negociacion') loadOwnerChatSection();
 
                 setTimeout(() => {
                     setupOwnerCardsIntersectionObserver();
@@ -1954,6 +1959,10 @@
                                 <span class="material-symbols-outlined text-base">check_circle</span>
                                 Aceptar Postulación y Firmar Contrato
                             </button>
+                            <button type="button" onclick="ContractsManager.openContractFullscreen('${a.contract_id || 'CTR-2026-0046'}', 'chat')" class="py-2.5 px-3.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Negociar términos por chat">
+                                <span class="material-symbols-outlined text-base text-emerald-500">chat</span>
+                                <span>Chat</span>
+                            </button>
                             <button type="button" onclick="rejectApplication('${a.id}')" class="btn-owner-reject py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer" data-id="${a.id}">
                                 Rechazar
                             </button>
@@ -1966,6 +1975,10 @@
                                 <span class="material-symbols-outlined text-base">description</span>
                                 Ver y Firmar Contrato
                             </a>
+                            <button type="button" onclick="ContractsManager.openContractFullscreen('${a.contract_id || 'CTR-2026-0043'}', 'chat')" class="py-2.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Abrir canal de chat y negociación">
+                                <span class="material-symbols-outlined text-base">chat</span>
+                                <span>Chat</span>
+                            </button>
                             <button type="button" onclick="cancelAcceptedApplication('${a.id}')" class="py-2.5 px-3.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Cancelar aceptación y volver a evaluar postulantes">
                                 <span class="material-symbols-outlined text-base">undo</span>
                                 Cancelar Aceptación
@@ -2791,6 +2804,10 @@
                                         <span>Firmar Contrato (Didit Liveness)</span>
                                     </a>
                                     `}
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id}', 'chat')" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir chat en vivo con el inquilino">
+                                        <span class="material-symbols-outlined text-base">chat</span>
+                                        <span>Chat Inquilino</span>
+                                    </button>
                                     <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">download</span>
                                         <span>PDF</span>
@@ -2909,6 +2926,27 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- MÓDULO DE TICKETS DE MANTENIMIENTO INTEGRADO -->
+                        <div class="glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5">
+                            <div class="flex items-center justify-between gap-3 flex-wrap">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-xs">
+                                        <span class="material-symbols-outlined text-2xl">build</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white">
+                                            Tickets de Mantenimiento & Reparaciones
+                                        </h3>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Solicitudes de reparación e incidencias reportadas por el inquilino para este inmueble.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="owner-list-tickets" class="space-y-4 pt-1">
+                                <div class="p-8 text-center text-zinc-400">Cargando tickets de mantenimiento...</div>
+                            </div>
+                        </div>
                     </div>
                 `;
 
@@ -2964,6 +3002,9 @@
                         }
                     };
                 }
+
+                // Cargar tickets de mantenimiento integrados
+                await loadOwnerTickets();
 
                 setupOwnerCardsIntersectionObserver();
             } catch (err) {

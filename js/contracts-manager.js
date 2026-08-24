@@ -1072,6 +1072,55 @@
             });
         },
 
+        resolveCurrentUserInfo: function (contract = null) {
+            let email = '';
+            let name = '';
+            let profileId = null;
+            let userId = null;
+
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                email = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                name = uLocal.name || uLocal.nombre || uLocal.nombre_completo || '';
+                profileId = uLocal.id_perfil || uLocal.profileId || null;
+                userId = uLocal.id || uLocal.user_id || localStorage.getItem('habitat_user_id') || null;
+            } catch (e) {}
+
+            const role = this.currentUserRole || detectActiveUserRole(contract);
+            let effectiveRole = role;
+
+            if (contract && email) {
+                if (contract.tenant?.email && contract.tenant.email.toLowerCase().trim() === email) {
+                    effectiveRole = 'TENANT';
+                    if (!name && contract.tenant.name) name = contract.tenant.name;
+                    if (!profileId && contract.tenant.profileId) profileId = contract.tenant.profileId;
+                } else if (contract.owner?.email && contract.owner.email.toLowerCase().trim() === email) {
+                    effectiveRole = 'OWNER';
+                    if (!name && contract.owner.name) name = contract.owner.name;
+                    if (!profileId && contract.owner.profileId) profileId = contract.owner.profileId;
+                }
+            }
+
+            if (!name) {
+                name = effectiveRole === 'TENANT' 
+                    ? (contract?.tenant?.name || 'Inquilino') 
+                    : (effectiveRole === 'OWNER' ? (contract?.owner?.name || 'Propietario') : 'Corredor Inmobiliario');
+            }
+            if (!email) {
+                email = effectiveRole === 'TENANT' 
+                    ? (contract?.tenant?.email || 'inquilino@habitat.ar') 
+                    : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@habitat.ar') : 'corredor@habitat.ar');
+            }
+
+            return {
+                email: email.toLowerCase().trim(),
+                name: name.trim(),
+                profileId: profileId ? Number(profileId) : null,
+                userId: userId,
+                role: effectiveRole
+            };
+        },
+
         _deduplicateMessages: function (list) {
             if (!Array.isArray(list)) return [];
             const seenIds = new Set();
@@ -1082,11 +1131,14 @@
                 if (id && seenIds.has(id)) continue;
 
                 const mTime = new Date(m.created_at || 0).getTime();
+                const mSender = (m.remitente_email || m.remitente_nombre || '').toLowerCase().trim();
                 const isEcho = result.some(r => {
                     if (r.mensaje !== m.mensaje) return false;
+                    const rSender = (r.remitente_email || r.remitente_nombre || '').toLowerCase().trim();
+                    if (rSender && mSender && rSender !== mSender) return false;
                     if (r.remitente_rol !== m.remitente_rol) return false;
                     const rTime = new Date(r.created_at || 0).getTime();
-                    return Math.abs(rTime - mTime) < 8000;
+                    return Math.abs(rTime - mTime) < 5000;
                 });
 
                 if (isEcho) continue;
@@ -1108,7 +1160,8 @@
             } catch (e) {}
 
             this._chatMessages[contractId] = this._deduplicateMessages(cached);
-            this.renderChatMessages(contractId);
+            this.renderChatMessages(contractId, 'fs-chat-messages-container');
+            this.renderChatMessages(contractId, 'embedded-chat-messages-container');
 
             // Fetch from Supabase Mensaje_Contrato table
             if (window.supabaseClient) {
@@ -1129,7 +1182,8 @@
                     if (!error && dbMsgs && dbMsgs.length > 0) {
                         this._chatMessages[contractId] = this._deduplicateMessages(dbMsgs);
                         localStorage.setItem(storageKey, JSON.stringify(this._chatMessages[contractId]));
-                        this.renderChatMessages(contractId);
+                        this.renderChatMessages(contractId, 'fs-chat-messages-container');
+                        this.renderChatMessages(contractId, 'embedded-chat-messages-container');
                     } else if (this._chatMessages[contractId].length === 0) {
                         // Create initial welcome message
                         const welcomeMsg = {
@@ -1143,7 +1197,8 @@
                         };
                         this._chatMessages[contractId] = [welcomeMsg];
                         localStorage.setItem(storageKey, JSON.stringify(this._chatMessages[contractId]));
-                        this.renderChatMessages(contractId);
+                        this.renderChatMessages(contractId, 'fs-chat-messages-container');
+                        this.renderChatMessages(contractId, 'embedded-chat-messages-container');
                     }
                 } catch (err) {
                     console.warn("[Chat] Error al cargar mensajes desde Supabase:", err);
@@ -1169,23 +1224,29 @@
                         }
                     })
                     .subscribe((status) => {
-                        const statusBadge = document.getElementById('chat-realtime-status-badge');
-                        if (statusBadge) {
-                            if (status === 'SUBSCRIBED') {
-                                statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Tiempo Real Conectado</span>';
-                                statusBadge.className = 'px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5';
+                        const badges = [
+                            document.getElementById('chat-realtime-status-badge'),
+                            document.getElementById('embedded-chat-realtime-status-badge')
+                        ];
+                        badges.forEach(badge => {
+                            if (badge) {
+                                if (status === 'SUBSCRIBED') {
+                                    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Tiempo Real Conectado</span>';
+                                    badge.className = 'px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5';
+                                }
                             }
-                        }
+                        });
                     });
             }
         },
 
-        renderChatMessages: function (contractId) {
-            const container = document.getElementById('fs-chat-messages-container');
+        renderChatMessages: function (contractId, targetContainerId = 'fs-chat-messages-container') {
+            const container = document.getElementById(targetContainerId);
             if (!container) return;
 
+            const contract = this.getContractById(contractId);
             const msgs = this._chatMessages[contractId] || [];
-            const role = this.currentUserRole;
+            const currentUser = this.resolveCurrentUserInfo(contract);
 
             if (msgs.length === 0) {
                 container.innerHTML = `
@@ -1198,15 +1259,25 @@
                 return;
             }
 
-            let uEmail = '';
-            try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                uEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-            } catch (e) {}
-
             container.innerHTML = msgs.map(m => {
-                const isSystem = m.remitente_rol === 'SISTEMA';
-                const isMe = !isSystem && ((m.remitente_email && m.remitente_email.toLowerCase() === uEmail) || (m.remitente_rol === role));
+                const isSystem = m.remitente_rol === 'SISTEMA' || m.remitente_nombre === 'Sistema Hábitat';
+                
+                // Author detection strictly by email, profileId or userId (NEVER blindly by role)
+                let isMe = false;
+                if (!isSystem) {
+                    const msgEmail = (m.remitente_email || '').toLowerCase().trim();
+                    const curEmail = (currentUser.email || '').toLowerCase().trim();
+
+                    if (msgEmail && curEmail && msgEmail === curEmail) {
+                        isMe = true;
+                    } else if (m.id_perfil && currentUser.profileId && Number(m.id_perfil) === Number(currentUser.profileId)) {
+                        isMe = true;
+                    } else if (m.user_id && currentUser.userId && String(m.user_id) === String(currentUser.userId)) {
+                        isMe = true;
+                    } else if (!msgEmail && currentUser.name && m.remitente_nombre && m.remitente_nombre.toLowerCase().trim() === currentUser.name.toLowerCase().trim()) {
+                        isMe = true;
+                    }
+                }
 
                 const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '';
 
@@ -1225,17 +1296,19 @@
 
                 let roleBadge = '';
                 if (m.remitente_rol === 'TENANT' || m.remitente_rol === 'INQUILINO') {
-                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase">Inquilino</span>';
+                    roleBadge = '<span class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase">Inquilino</span>';
                 } else if (m.remitente_rol === 'OWNER' || m.remitente_rol === 'PROPIETARIO') {
-                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-red-100 dark:bg-red-950 text-primary dark:text-red-300 text-[10px] font-extrabold uppercase">Propietario</span>';
+                    roleBadge = '<span class="px-2 py-0.5 rounded-md bg-red-100 dark:bg-red-950 text-primary dark:text-red-300 text-[10px] font-extrabold uppercase">Propietario</span>';
                 } else {
-                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-extrabold uppercase">Corredor</span>';
+                    roleBadge = '<span class="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-extrabold uppercase">Corredor</span>';
                 }
+
+                const displayName = isMe ? 'Tú' : (m.remitente_nombre || 'Usuario');
 
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 max-w-[85%] ${isMe ? 'self-end' : 'self-start'} animate-fadeIn">
                         <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                            <span class="font-bold text-zinc-700 dark:text-zinc-300">${isMe ? 'Tú' : m.remitente_nombre}</span>
+                            <span class="font-bold text-zinc-700 dark:text-zinc-300">${displayName}</span>
                             ${roleBadge}
                             <span class="text-[10px]">${timeStr}</span>
                         </div>
@@ -1271,25 +1344,31 @@
                 const indexById = list.findIndex(m => m.id_mensaje && String(m.id_mensaje) === String(msgObj.id_mensaje));
                 if (indexById !== -1) {
                     list[indexById] = { ...list[indexById], ...msgObj };
-                    this.renderChatMessages(contractId);
+                    this.renderChatMessages(contractId, 'fs-chat-messages-container');
+                    this.renderChatMessages(contractId, 'embedded-chat-messages-container');
                     return;
                 }
             }
 
-            // 2. Fuzzy match to prevent echoes (same text + same sender role within 10s)
+            // 2. Fuzzy match to prevent echoes (same text + same sender within 8s)
             const nowTime = new Date(msgObj.created_at || Date.now()).getTime();
+            const msgSender = (msgObj.remitente_email || msgObj.remitente_nombre || '').toLowerCase().trim();
+
             const duplicateIndex = list.findIndex(m => {
                 if (m.mensaje !== msgObj.mensaje) return false;
+                const mSender = (m.remitente_email || m.remitente_nombre || '').toLowerCase().trim();
+                if (mSender && msgSender && mSender !== msgSender) return false;
                 if (m.remitente_rol !== msgObj.remitente_rol) return false;
                 const mTime = new Date(m.created_at || 0).getTime();
-                return Math.abs(nowTime - mTime) < 10000;
+                return Math.abs(nowTime - mTime) < 8000;
             });
 
             if (duplicateIndex !== -1) {
                 list[duplicateIndex] = { ...list[duplicateIndex], ...msgObj };
                 const storageKey = `habitat_chat_messages_${contractId}`;
                 localStorage.setItem(storageKey, JSON.stringify(list));
-                this.renderChatMessages(contractId);
+                this.renderChatMessages(contractId, 'fs-chat-messages-container');
+                this.renderChatMessages(contractId, 'embedded-chat-messages-container');
                 return;
             }
 
@@ -1297,27 +1376,20 @@
             list.push(msgObj);
             const storageKey = `habitat_chat_messages_${contractId}`;
             localStorage.setItem(storageKey, JSON.stringify(list));
-            this.renderChatMessages(contractId);
+            this.renderChatMessages(contractId, 'fs-chat-messages-container');
+            this.renderChatMessages(contractId, 'embedded-chat-messages-container');
         },
 
-        sendContractMessage: async function (contractId, customText = null, proposalData = null) {
-            const input = document.getElementById('fs-chat-input');
+        sendContractMessage: async function (contractId, customText = null, proposalData = null, inputElementId = null) {
+            const inputId = inputElementId || (document.getElementById('embedded-chat-input') ? 'embedded-chat-input' : 'fs-chat-input');
+            const input = document.getElementById(inputId);
             const text = (customText || (input ? input.value : '')).trim();
             if (!text && !proposalData) return;
 
             if (input && !customText) input.value = '';
 
             const contract = this.getContractById(contractId);
-            const role = this.currentUserRole;
-
-            let myName = 'Usuario';
-            let myEmail = 'usuario@habitat.ar';
-
-            try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                myName = uLocal.name || uLocal.nombre || (role === 'TENANT' ? contract?.tenant?.name : contract?.owner?.name) || 'Usuario';
-                myEmail = (uLocal.email || uLocal.mail || (role === 'TENANT' ? contract?.tenant?.email : contract?.owner?.email) || 'usuario@habitat.ar').toLowerCase().trim();
-            } catch (e) {}
+            const currentUser = this.resolveCurrentUserInfo(contract);
 
             const messageId = this._generateUUID();
             const nowIso = new Date().toISOString();
@@ -1326,9 +1398,10 @@
                 id_mensaje: messageId,
                 id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
                 contract_ref_id: String(contractId),
-                remitente_nombre: myName,
-                remitente_rol: role,
-                remitente_email: myEmail,
+                id_perfil: currentUser.profileId,
+                remitente_nombre: currentUser.name,
+                remitente_rol: currentUser.role,
+                remitente_email: currentUser.email,
                 mensaje: text,
                 propuesta_json: proposalData || null,
                 created_at: nowIso
@@ -1337,16 +1410,17 @@
             // Immediate optimistic UI update
             this.appendIncomingMessage(contractId, msgObj);
 
-            // Save to Supabase Mensaje_Contrato table with the exact same UUID
+            // Save to Supabase Mensaje_Contrato table with the exact same UUID & profileId
             if (window.supabaseClient) {
                 try {
                     const dbPayload = {
                         id_mensaje: messageId,
                         id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
                         contract_ref_id: String(contractId),
-                        remitente_nombre: myName,
-                        remitente_rol: role,
-                        remitente_email: myEmail,
+                        id_perfil: currentUser.profileId || null,
+                        remitente_nombre: currentUser.name,
+                        remitente_rol: currentUser.role,
+                        remitente_email: currentUser.email,
                         mensaje: text,
                         propuesta_json: proposalData || null,
                         created_at: nowIso
@@ -1358,6 +1432,25 @@
                 } catch (err) {
                     console.warn("[Chat] Fallback guardando en Supabase:", err);
                 }
+            }
+
+            // Transmitir notificación instantánea in-app para el destinatario
+            if (window.NotificationManager && typeof window.NotificationManager.broadcastSupabaseRealtime === 'function') {
+                try {
+                    const senderName = currentUser.name || (currentUser.role ? `Usuario (${currentUser.role})` : 'Contraparte');
+                    const msgSnippet = text ? (text.length > 80 ? text.substring(0, 80) + '...' : text) : 'Nueva propuesta de negociación enviada.';
+                    window.NotificationManager.broadcastSupabaseRealtime({
+                        id: `notif_msg_${messageId}`,
+                        title: `💬 Mensaje de ${senderName}`,
+                        message: msgSnippet,
+                        type: 'chat',
+                        icon: 'forum',
+                        link: '#chat-negociacion',
+                        role: 'ALL',
+                        senderEmail: currentUser.email,
+                        senderProfileId: currentUser.profileId
+                    });
+                } catch (e) {}
             }
         },
 
@@ -1395,6 +1488,236 @@
                     detalle: 'Términos aprobados por la parte para firma inmediata.'
                 });
             }
+        },
+
+        openContractChat: function (contractId) {
+            this.openContractFullscreen(contractId, 'chat');
+        },
+
+        // ========================================================
+        // EMBEDDED CHAT SECTION GENERATOR (FOR DASHBOARDS)
+        // ========================================================
+        _embeddedActiveContractId: null,
+        _embeddedSearchTerm: '',
+
+        renderEmbeddedChat: async function (containerId, options = {}) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Ensure contracts are synced
+            if (contracts.length === 0 && window.supabaseClient) {
+                await syncContractsFromSupabase();
+            }
+
+            const allContracts = this.getContracts();
+            if (allContracts.length === 0) {
+                container.innerHTML = `
+                    <div class="p-10 text-center rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                        <span class="material-symbols-outlined text-4xl text-zinc-400">forum</span>
+                        <h3 class="font-headline font-bold text-base text-zinc-800 dark:text-zinc-200">No hay canales de negociación activos</h3>
+                        <p class="text-xs text-zinc-500 max-w-sm mx-auto">Cuando tengas una postulación aceptada o un contrato en curso, el canal de chat y negociación en tiempo real se activará aquí.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const role = options.role || this.currentUserRole || 'OWNER';
+            this.currentUserRole = role;
+
+            if (!this._embeddedActiveContractId || !allContracts.some(c => c.id === this._embeddedActiveContractId)) {
+                this._embeddedActiveContractId = allContracts[0].id;
+            }
+
+            const activeContract = this.getContractById(this._embeddedActiveContractId) || allContracts[0];
+            const activeContractId = activeContract.id;
+
+            // WhatsApp url for current active contract
+            const effectiveRole = this.resolveCurrentUserInfo(activeContract).role;
+            const targetPhone = (effectiveRole === 'TENANT' ? (activeContract.owner?.phone || activeContract.ownerPhone || '') : (activeContract.tenant?.phone || activeContract.tenantPhone || '')).replace(/[^0-9]/g, '');
+            const waText = encodeURIComponent(`Hola! Me contacto por el canal de negociación del contrato ${activeContract.contractNumber} (${activeContract.title}) a través de Hábitat.`);
+            const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
+
+            const filteredContracts = allContracts.filter(c => {
+                if (!this._embeddedSearchTerm) return true;
+                const s = this._embeddedSearchTerm.toLowerCase();
+                return (c.title && c.title.toLowerCase().includes(s)) ||
+                       (c.contractNumber && c.contractNumber.toLowerCase().includes(s)) ||
+                       (c.tenant?.name && c.tenant.name.toLowerCase().includes(s)) ||
+                       (c.owner?.name && c.owner.name.toLowerCase().includes(s));
+            });
+
+            container.innerHTML = `
+                <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col md:flex-row h-[720px] max-h-[82vh] font-body">
+                    
+                    <!-- Left Sidebar: Conversations List -->
+                    <aside class="w-full md:w-80 lg:w-96 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                        <!-- Sidebar Header -->
+                        <div class="p-4 border-b border-zinc-200/80 dark:border-zinc-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">forum</span>
+                                    <h3 class="font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">Mensajes & Negociación</h3>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    ${allContracts.length} ${allContracts.length === 1 ? 'Canal' : 'Canales'}
+                                </span>
+                            </div>
+
+                            <!-- Search Input -->
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-base pointer-events-none">search</span>
+                                <input 
+                                    type="text" 
+                                    placeholder="Buscar por propiedad o nombre..."
+                                    value="${this._embeddedSearchTerm || ''}"
+                                    oninput="ContractsManager._embeddedSearchTerm = this.value; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
+                                    class="w-full pl-9 pr-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Conversations List -->
+                        <div class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                            ${filteredContracts.map(c => {
+                                const isSelected = c.id === activeContractId;
+                                const counterpartName = role === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
+                                const counterpartRole = role === 'TENANT' ? 'Propietario' : (role === 'OWNER' ? 'Inquilino' : 'Partes');
+                                const msgs = this._chatMessages[c.id] || [];
+                                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1].mensaje : 'Canal oficial abierto para negociación de términos.';
+                                
+                                return `
+                                    <div 
+                                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
+                                        class="p-3.5 sm:p-4 transition-all cursor-pointer flex items-start gap-3 group ${isSelected ? 'bg-primary/5 dark:bg-primary/10 border-l-4 border-primary' : 'hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'}"
+                                    >
+                                        <div class="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
+                                            <img src="${c.propertyImage || 'img/hero-marketplace.jpg'}" alt="${c.title}" class="w-full h-full object-cover">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0.5 right-0.5 ring-2 ring-white dark:ring-zinc-900"></span>
+                                        </div>
+
+                                        <div class="min-w-0 flex-1 space-y-1">
+                                            <div class="flex items-center justify-between gap-1">
+                                                <h4 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${isSelected ? 'text-primary dark:text-red-400' : ''}">
+                                                    ${c.title}
+                                                </h4>
+                                                <span class="text-[10px] text-zinc-400 font-mono shrink-0">${c.contractNumber}</span>
+                                            </div>
+
+                                            <div class="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                                <span class="material-symbols-outlined text-xs text-emerald-500">person</span>
+                                                <span class="font-semibold truncate">${counterpartName}</span>
+                                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-extrabold uppercase shrink-0">${counterpartRole}</span>
+                                            </div>
+
+                                            <p class="text-[11px] text-zinc-400 truncate line-clamp-1">
+                                                ${lastMsg}
+                                            </p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </aside>
+
+                    <!-- Right Pane: Active Live Chat Window -->
+                    <section class="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#0c0d14]">
+                        
+                        <!-- Chat Window Header -->
+                        <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                    <span class="material-symbols-outlined text-xl">handshake</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-headline font-black text-xs sm:text-sm text-zinc-900 dark:text-white truncate">
+                                            ${activeContract.title}
+                                        </h3>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                                            ${activeContract.contractNumber}
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-zinc-400 truncate">
+                                        Inquilino: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.tenant.name}</b> • Propietario: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.owner.name}</b>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                                <div id="embedded-chat-realtime-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Tiempo Real</span>
+                                </div>
+
+                                <button type="button" onclick="ContractsManager.openContractFullscreen('${activeContractId}', 'document')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">description</span>
+                                    <span class="hidden sm:inline">Ver Contrato</span>
+                                </button>
+
+                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">WhatsApp</span>
+                                </a>
+                            </div>
+                        </header>
+
+                        <!-- Quick Proposals Bar -->
+                        <div class="px-4 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-[11px] font-headline font-bold">
+                            <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1">Propuestas Rápidas:</span>
+                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'canon')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs text-amber-500">payments</span>
+                                <span>Canon</span>
+                            </button>
+                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'ajuste')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs text-blue-500">trending_up</span>
+                                <span>Ajuste ICL/IPC</span>
+                            </button>
+                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'llaves')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs text-purple-500">key</span>
+                                <span>Entrega Llaves</span>
+                            </button>
+                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'acuerdo')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-xs">check_circle</span>
+                                <span>Conformidad</span>
+                            </button>
+                        </div>
+
+                        <!-- Messages Stream Container -->
+                        <div id="embedded-chat-messages-container" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 flex flex-col bg-zinc-50/30 dark:bg-zinc-950/40">
+                            <div class="p-8 text-center text-zinc-400 space-y-2 my-auto">
+                                <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
+                                <p class="text-xs font-bold">Cargando mensajes del canal...</p>
+                            </div>
+                        </div>
+
+                        <!-- Composer Box -->
+                        <div class="p-3 sm:p-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 shrink-0">
+                            <input 
+                                type="text" 
+                                id="embedded-chat-input" 
+                                placeholder="Escribe un mensaje para acordar términos o condiciones..."
+                                onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
+                                class="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
+                            >
+                            <button 
+                                type="button" 
+                                onclick="ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
+                                class="h-10 px-5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+                            >
+                                <span class="material-symbols-outlined text-base">send</span>
+                                <span class="hidden sm:inline">Enviar</span>
+                            </button>
+                        </div>
+
+                    </section>
+                </div>
+            `;
+
+            // Initialize chat and messages for this active contract
+            this.initChatForContract(activeContractId);
         },
 
         executeSignatureWithDidit: function (contractId, explicitRole) {

@@ -1979,8 +1979,17 @@ const App = {
                     });
                 }, 50);
 
-                if (typeof window.loadGoogleMaps === 'function' && (typeof google === 'undefined' || !window.propertyMap)) {
+                if (typeof window.loadGoogleMaps === 'function') {
                     window.loadGoogleMaps('initGoogleMap', 'places');
+                } else {
+                    const gmScript = document.createElement('script');
+                    gmScript.src = 'js/google-maps-loader.js';
+                    gmScript.onload = () => {
+                        if (typeof window.loadGoogleMaps === 'function') {
+                            window.loadGoogleMaps('initGoogleMap', 'places');
+                        }
+                    };
+                    document.head.appendChild(gmScript);
                 }
                 if (typeof propertyMap !== 'undefined' && propertyMap && typeof google !== 'undefined') {
                     setTimeout(() => {
@@ -9811,12 +9820,34 @@ function createMarketplaceCard(prop, index) {
 }
 // Real Interactive Map using Google Maps JS API
 window.initGoogleMap = async function () {
-    if (typeof google === 'undefined' || !google || !google.maps) {
-        console.warn('Google Maps API no disponible o cargando...');
-        return;
-    }
     const mapContainer = document.getElementById('real-map-container');
     if (!mapContainer) return;
+
+    if (typeof google === 'undefined' || !google || !google.maps) {
+        if (!mapContainer.querySelector('.map-loading-indicator')) {
+            mapContainer.innerHTML = `
+                <div class="map-loading-indicator w-full h-full min-h-[260px] bg-zinc-100 dark:bg-zinc-800/60 rounded-2xl flex flex-col items-center justify-center p-6 text-center text-zinc-500 space-y-3 border border-zinc-200 dark:border-zinc-700">
+                    <div class="w-8 h-8 rounded-full border-3 border-primary/30 border-t-primary animate-spin"></div>
+                    <p class="text-xs font-bold text-zinc-700 dark:text-zinc-200">Cargando mapa interactivo...</p>
+                    <p class="text-[11px] text-zinc-400 max-w-xs">Puedes escribir la calle y número en el buscador mientras el mapa se conecta.</p>
+                </div>
+            `;
+        }
+
+        if (typeof window.loadGoogleMaps === 'function') {
+            window.loadGoogleMaps('initGoogleMap', 'places');
+        } else {
+            const gmScript = document.createElement('script');
+            gmScript.src = 'js/google-maps-loader.js';
+            gmScript.onload = () => {
+                if (typeof window.loadGoogleMaps === 'function') {
+                    window.loadGoogleMaps('initGoogleMap', 'places');
+                }
+            };
+            document.head.appendChild(gmScript);
+        }
+        return;
+    }
 
     try {
         // Mendoza coordinates
@@ -9831,14 +9862,23 @@ window.initGoogleMap = async function () {
             mapId: 'property_wizard_map',
         });
 
-    // Use AdvancedMarkerElement (modern API)
-    const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
-    window.propertyMarker = new AdvancedMarkerElement({
-        position: initialPos,
-        map: window.propertyMap,
-        title: "Arrastra para ajustar tu ubicación",
-        gmpDraggable: true,
-    });
+        // Use AdvancedMarkerElement (modern API) with fallback to standard Marker
+        try {
+            const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
+            window.propertyMarker = new AdvancedMarkerElement({
+                position: initialPos,
+                map: window.propertyMap,
+                title: "Arrastra para ajustar tu ubicación",
+                gmpDraggable: true,
+            });
+        } catch (e) {
+            window.propertyMarker = new google.maps.Marker({
+                position: initialPos,
+                map: window.propertyMap,
+                draggable: true,
+                title: "Arrastra para ajustar tu ubicación"
+            });
+        }
 
     const updateAddressUI = (latLng) => {
         const geocoder = new google.maps.Geocoder();

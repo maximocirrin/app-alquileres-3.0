@@ -1,16 +1,22 @@
 (function () {
     const DEFAULT_KEY = "AIzaSyAdp8M6rgF6dB-KYmC8B1JLlpP37Yf0pI8";
+    const pendingCallbacks = [];
+    let isScriptLoading = false;
 
     async function getApiKey() {
         if (window.GOOGLE_MAPS_API_KEY) {
             return window.GOOGLE_MAPS_API_KEY;
         }
-        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-        if (isLocalDev) {
+        const hostname = window.location.hostname || '';
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.') || window.location.protocol === 'file:';
+        if (isLocal) {
             return DEFAULT_KEY;
         }
         try {
-            const res = await fetch('/api/google-maps-key');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const res = await fetch('/api/google-maps-key', { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.apiKey) {
@@ -19,7 +25,7 @@
                 }
             }
         } catch (e) {
-            // Silently fallback if endpoint is not reachable (e.g. static local preview)
+            // Silently fallback to default key
         }
         return DEFAULT_KEY;
     }
@@ -30,38 +36,50 @@
      * @param {string} libraries Comma-separated libraries (default: 'places')
      */
     async function loadGoogleMaps(callback, libraries = 'places') {
-        const apiKey = await getApiKey();
-
-        let callbackName = typeof callback === 'string' ? callback : '';
         if (typeof callback === 'function') {
-            callbackName = 'googleMapsCallback_' + Math.random().toString(36).substring(2, 9);
-            window[callbackName] = callback;
+            pendingCallbacks.push(callback);
+        } else if (typeof callback === 'string' && callback && typeof window[callback] === 'function') {
+            pendingCallbacks.push(window[callback]);
         }
 
-        const scriptId = 'google-maps-js-sdk';
-        const existingScript = document.getElementById(scriptId);
-        
-        if (existingScript) {
-            if (window.google && window.google.maps) {
-                if (callbackName && typeof window[callbackName] === 'function') {
-                    window[callbackName]();
-                }
-            } else if (callbackName && typeof window[callbackName] === 'function') {
-                const prevCb = window.googleMapsLoadedCallback;
-                window.googleMapsLoadedCallback = function() {
-                    if (typeof prevCb === 'function') prevCb();
-                    if (typeof window[callbackName] === 'function') window[callbackName]();
-                };
+        // Si ya está listo, ejecutar callbacks de inmediato
+        if (window.google && window.google.maps) {
+            while (pendingCallbacks.length > 0) {
+                const cb = pendingCallbacks.shift();
+                try { cb(); } catch (e) { console.error('[Google Maps Callback Error]:', e); }
             }
             return;
         }
 
+        const scriptId = 'google-maps-js-sdk';
+        const existingScript = document.getElementById(scriptId);
+
+        if (existingScript || isScriptLoading) {
+            return;
+        }
+
+        isScriptLoading = true;
+        const apiKey = await getApiKey();
+
+        window.__habitatGoogleMapsGlobalReady = function () {
+            isScriptLoading = false;
+            while (pendingCallbacks.length > 0) {
+                const cb = pendingCallbacks.shift();
+                try { cb(); } catch (e) { console.error('[Google Maps Callback Error]:', e); }
+            }
+        };
+
         const script = document.createElement('script');
         script.id = scriptId;
-        const cbParam = callbackName ? `&callback=${encodeURIComponent(callbackName)}` : '';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=${encodeURIComponent(libraries)}${cbParam}&loading=async&v=weekly`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=${encodeURIComponent(libraries)}&callback=__habitatGoogleMapsGlobalReady&loading=async&v=weekly`;
         script.async = true;
         script.defer = true;
+        script.onerror = function (err) {
+            isScriptLoading = false;
+            console.warn('[Google Maps SDK] Error al cargar desde Google CDN (posible bloqueador de anuncios o red):', err);
+            window.dispatchEvent(new CustomEvent('habitat:google_maps_error', { detail: err }));
+        };
+
         document.head.appendChild(script);
     }
 
