@@ -82,7 +82,6 @@ export default async function iniciarHandler(req, res) {
     // 3. Captura de metadatos técnicos de contexto (IP, User-Agent)
     const clientIp = metadata.ip || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket?.remoteAddress || '127.0.0.1';
     const clientUserAgent = metadata.userAgent || req.headers['user-agent'] || 'Desconocido';
-    const clientGeo = metadata.geolocation || null;
 
     // 4. Integración con Didit (Crear sesión de validación de identidad)
     const diditApiKey = (process.env.DIDIT_API_KEY || '').trim();
@@ -168,7 +167,6 @@ export default async function iniciarHandler(req, res) {
         estado_firma: 'iniciada',
         ip_origen: String(clientIp),
         user_agent: String(clientUserAgent),
-        geolocalizacion: clientGeo,
         didit_session_id: diditSessionId,
         didit_session_url: diditSessionUrl
       }])
