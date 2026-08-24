@@ -113,7 +113,7 @@
 
                                 <div class="flex flex-col items-center gap-1.5 shrink-0 opacity-50" id="progress-step-6">
                                     <div class="w-8 h-8 rounded-full bg-surface-container-high dark:bg-[#282828] text-on-surface dark:text-[#f1f1f1] flex items-center justify-center font-headline font-bold text-sm shrink-0 min-w-8">6</div>
-                                    <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-xs sm:text-sm text-center">Publicar</span>
+                                    <span class="font-headline font-bold text-on-surface dark:text-[#f1f1f1] whitespace-nowrap text-xs sm:text-sm text-center">Revisar y Publicar</span>
                                 </div>
                             </div>
                         </div>
@@ -1398,14 +1398,14 @@
                                 <div class="bg-surface-container/50 dark:bg-[#141417]/80 rounded-2xl p-6 md:p-8 border border-outline-variant/20 dark:border-white/10 space-y-6">
                                     
                                     <!-- Encabezado con Icono y Toggle Principal -->
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-outline-variant/20 dark:border-white/10">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div class="flex items-center gap-4">
                                             <div class="w-12 h-12 rounded-xl bg-primary/10 dark:bg-[#A13333]/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
                                                 <span class="material-symbols-outlined text-2xl">pets</span>
                                             </div>
                                             <div>
-                                                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">Políticas de Mascotas</h3>
-                                                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm">Define las condiciones para inquilinos con animales de compañía</p>
+                                                <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-lg md:text-xl">¿Acepta Mascotas?</h3>
+                                                <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm">Indicá si los inquilinos pueden convivir con animales de compañía en el inmueble</p>
                                             </div>
                                         </div>
 
@@ -1417,118 +1417,13 @@
                                         </label>
                                     </div>
 
-                                    <!-- Detalle de Mascotas (Se despliega sólo si permite mascotas) -->
-                                    <div id="mascotas-detalles-container" class="space-y-8 hidden transition-all duration-300">
-                                        
-                                        <!-- Tipos y Cantidades -->
-                                        <div class="space-y-4">
-                                            <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-secondary dark:text-[#a0a0a0]">Tipos de mascotas permitidas y cantidades máximas</h4>
-                                            
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                                <!-- Gato -->
-                                                <div class="flex items-center justify-between p-2.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-2 sm:gap-3">
-                                                    <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-secondary dark:text-[#c7c6c6] fill-current shrink-0" viewBox="0 0 24 24"><path d="M4 3l4 4.5C9.3 7 10.6 6.5 12 6.5s2.7.5 4 1L20 3l-1.2 7.2C20.2 11.9 21 13.8 21 16c0 3.9-4 7-9 7s-9-3.1-9-7c0-2.2.8-4.1 2.2-5.8L4 3zm4.5 11c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm7 0c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5zm-3.5 3c-1.2 0-2 .5-2 1h4c0-.5-.8-1-2-1z"/></svg>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-xs sm:text-sm leading-tight whitespace-normal">Gatos</span>
-                                                    </div>
-                                                    <div class="flex items-center gap-1 sm:gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-gato'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-gato-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">remove</span></button>
-                                                        <span class="w-6 sm:w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-xs sm:text-sm select-none" id="cant-gato-display">0</span>
-                                                        <input type="hidden" id="cant-gato" value="0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-gato'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-gato-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">add</span></button>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Perro Pequeño -->
-                                                <div class="flex items-center justify-between p-2.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-2 sm:gap-3">
-                                                    <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] shrink-0 text-xl sm:text-[22px]">sound_detection_dog_barking</span>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-xs sm:text-sm leading-tight whitespace-normal">Perro Pequeño</span>
-                                                    </div>
-                                                    <div class="flex items-center gap-1 sm:gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-perro-pequeno-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">remove</span></button>
-                                                        <span class="w-6 sm:w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-xs sm:text-sm select-none" id="cant-perro-pequeno-display">0</span>
-                                                        <input type="hidden" id="cant-perro-pequeno" value="0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-pequeno'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-perro-pequeno-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">add</span></button>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Perro Grande -->
-                                                <div class="flex items-center justify-between p-2.5 sm:p-4 rounded-xl bg-surface-container-lowest dark:bg-[#0c0c0e] border border-outline-variant/30 dark:border-white/5 min-w-0 gap-2 sm:gap-3">
-                                                    <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                                                        <span class="material-symbols-outlined text-secondary dark:text-[#c7c6c6] shrink-0 text-xl sm:text-[22px]">pets</span>
-                                                        <span class="font-headline font-semibold text-on-background dark:text-[#f1f1f1] text-xs sm:text-sm leading-tight whitespace-normal">Perro Grande</span>
-                                                    </div>
-                                                    <div class="flex items-center gap-1 sm:gap-2 bg-surface-container-high dark:bg-[#282828] p-1 rounded-full border border-outline-variant/30 dark:border-white/5 shrink-0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-grande'); i.value = Math.max(0, parseInt(i.value||0)-1); document.getElementById('cant-perro-grande-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">remove</span></button>
-                                                        <span class="w-6 sm:w-8 text-center text-on-background dark:text-[#f1f1f1] font-headline font-bold text-xs sm:text-sm select-none" id="cant-perro-grande-display">0</span>
-                                                        <input type="hidden" id="cant-perro-grande" value="0">
-                                                        <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-on-background dark:text-[#f1f1f1] hover:bg-surface-container-lowest dark:hover:bg-[#0c0c0e] transition-colors shrink-0" onclick="const i = document.getElementById('cant-perro-grande'); i.value = parseInt(i.value||0)+1; document.getElementById('cant-perro-grande-display').textContent = i.value;"><span class="material-symbols-outlined text-sm sm:text-base">add</span></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Negociable Checkbox -->
-                                        <div class="checkbox-wrapper w-full max-w-full">
-                                            <input id="mascotas-negociable" name="mascotas-negociable" type="checkbox">
-                                            <label class="terms-label flex items-start sm:items-center cursor-pointer" for="mascotas-negociable">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200" class="checkbox-svg shrink-0 mt-0.5 sm:mt-0">
-                                                    <mask fill="white" id="path-1-inside-1_negociable"><rect height="200" width="200" rx="30"></rect></mask>
-                                                    <rect mask="url(#path-1-inside-1_negociable)" stroke-width="40" class="checkbox-box" height="200" width="200" rx="30"></rect>
-                                                    <path stroke-width="15" d="M52 111.018L76.9867 136L149 64" class="checkbox-tick"></path>
-                                                </svg>
-                                                <span class="font-body font-normal text-on-background dark:text-[#f1f1f1] text-sm sm:text-base leading-tight break-words ml-3 flex-1 min-w-0">Negociable (evaluar según el caso del inquilino)</span>
-                                            </label>
-                                        </div>
-
-                                        <!-- Tarifas y Costos de Mascotas -->
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-outline-variant/20 dark:border-white/10">
-                                            
-                                            <!-- Tarifa por mascota (depósito) -->
-                                            <div class="flex flex-col justify-between space-y-2">
-                                                <div class="min-h-[2.5rem] flex items-end">
-                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">Tarifa de ingreso por mascota</label>
-                                                </div>
-                                                <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-[#A13333]">
-                                                    <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm">$</div>
-                                                    <input type="number" id="tarifa-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0" onfocus="if(this.value==='0') this.value='';" onblur="if(this.value.trim()==='') this.value='0';">
-                                                </div>
-                                                <p class="text-[12px] text-secondary dark:text-[#c7c6c6]">($0 si no se cobra depósito adicional)</p>
-                                            </div>
-
-                                            <!-- Se puede reembolsar (SÍ / NO) -->
-                                            <div class="flex flex-col justify-between space-y-2">
-                                                <div class="min-h-[2.5rem] flex items-end">
-                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">¿Tarifa reembolsable?</label>
-                                                </div>
-                                                <div class="relative">
-                                                    <select id="tarifa-reembolsable" class="w-full appearance-none bg-surface-container-high dark:bg-[#282828] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 pr-10 font-body text-base focus:ring-0 cursor-pointer">
-                                                        <option value="si" selected>Sí</option>
-                                                        <option value="no">No</option>
-                                                    </select>
-                                                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary dark:text-[#c7c6c6]">expand_more</span>
-                                                </div>
-                                                <p class="text-[12px] text-secondary dark:text-[#c7c6c6] opacity-0 select-none" aria-hidden="true">&nbsp;</p>
-                                            </div>
-
-                                            <!-- Alquiler mensual adicional por mascota -->
-                                            <div class="flex flex-col justify-between space-y-2">
-                                                <div class="min-h-[2.5rem] flex items-end">
-                                                    <label class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm leading-tight">Alquiler mensual por mascota</label>
-                                                </div>
-                                                <div class="flex bg-surface-container-high dark:bg-[#282828] rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-[#A13333]">
-                                                    <div class="bg-surface-container dark:bg-[#1e1e1e] px-4 flex items-center justify-center border-r border-outline-variant/30 dark:border-white/5 text-secondary dark:text-[#c7c6c6] font-body text-sm">$</div>
-                                                    <input type="number" id="alquiler-mascota" class="flex-1 appearance-none bg-transparent border-none text-on-background dark:text-[#f1f1f1] h-14 px-4 font-body text-base focus:ring-0 placeholder:text-secondary/50" placeholder="0" value="0" onfocus="if(this.value==='0') this.value='';" onblur="if(this.value.trim()==='') this.value='0';">
-                                                </div>
-                                                <p class="text-[12px] text-secondary dark:text-[#c7c6c6]">($0 si no se cobra adicional por mes)</p>
-                                            </div>
-
-                                        </div>
-
+                                    <!-- Feedback Informativo -->
+                                    <div id="mascotas-feedback-box" class="p-4 rounded-xl border border-outline-variant/20 dark:border-white/5 bg-surface-container-lowest dark:bg-[#0c0c0e] flex items-center gap-3 transition-all duration-300">
+                                        <span id="mascotas-feedback-icon" class="material-symbols-outlined text-secondary dark:text-zinc-400 text-xl shrink-0">block</span>
+                                        <p id="mascotas-feedback-text" class="text-xs sm:text-sm text-secondary dark:text-zinc-400 leading-relaxed font-body">
+                                            El aviso se publicará sin la etiqueta de apto mascotas. Los inquilinos verán que no se admiten animales de compañía.
+                                        </p>
                                     </div>
-
-                                </div>
 
                                 </div>
                             </form>
@@ -1692,191 +1587,263 @@
                             class="bg-surface/50 dark:bg-[#121212]/50 backdrop-blur-md rounded-3xl p-6 md:p-12 border border-outline-variant/30 dark:border-white/5 shadow-2xl">
                             <form id="form-planes" class="space-y-12">
 
-                                <!-- Plan Seleccionado (Gratis) -->
-                                <div class="space-y-4">
-                                    <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">
-                                        Seleccioná el plan con el que querés publicar</h3>
-                                    <label
-                                        class="block font-headline font-medium text-on-background dark:text-[#f1f1f1] text-sm mt-4">Planes
-                                        disponibles</label>
-
-                                    <div
-                                        class="border border-outline-variant/30 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest dark:bg-[#0c0c0e] relative overflow-hidden cursor-pointer hover:bg-surface-container-high/30 dark:hover:bg-[#1e1e1e] transition-colors border-l-4 border-l-primary dark:border-l-[#A13333]">
-                                        <div class="flex items-center gap-4">
-                                            <div
-                                                class="w-5 h-5 rounded-full border-2 border-primary dark:border-[#A13333] flex items-center justify-center">
-                                                <div class="w-2.5 h-2.5 rounded-full bg-primary dark:bg-[#A13333]"></div>
-                                            </div>
-                                            <span
-                                                class="font-headline font-bold text-primary dark:text-[#A13333] text-lg">Gratis</span>
+                                <!-- Panel de Revisión General de la Publicación -->
+                                <div id="publish-review-container" class="space-y-8">
+                                    
+                                    <!-- Header de Revisión -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-outline-variant/20 dark:border-white/10">
+                                        <div>
+                                            <h3 class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl sm:text-2xl">
+                                                Revisión de tu Publicación
+                                            </h3>
+                                            <p class="font-body text-secondary dark:text-[#c7c6c6] text-xs sm:text-sm mt-0.5">
+                                                Así es exactamente como se verá tu propiedad en el Marketplace. Hacé clic en la tarjeta para ver los detalles completos.
+                                            </p>
                                         </div>
-                                        <span
-                                            class="font-body text-on-background dark:text-[#f1f1f1] text-sm">Visibilidad
-                                            baja</span>
-                                        <span
-                                            class="font-body text-secondary dark:text-[#c7c6c6] text-sm font-medium">Cantidad
-                                            disponible: 1</span>
-                                    </div>
-                                </div>
-
-                                <!-- Otros Planes -->
-                                <div class="space-y-6 pt-8 border-t border-outline-variant/30 dark:border-white/5">
-                                    <div>
-                                        <h3
-                                            class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-xl">
-                                            Más planes para vos</h3>
-                                        <p class="font-body text-secondary dark:text-[#c7c6c6] text-sm mt-1">Obtené y
-                                            publicá con cualquiera de estos planes.</p>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        <!-- Card: Superdestacado -->
-                                        <div
-                                            class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative">
-                                            <span
-                                                class="font-headline font-bold text-indigo-600 dark:text-indigo-400 text-sm mb-4">1
-                                                Superdestacado</span>
-                                            <div class="flex items-end gap-1 mb-6">
-                                                <span
-                                                    class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$
-                                                    48.130,17</span>
-                                                <span
-                                                    class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/
-                                                    mes*</span>
-                                            </div>
-                                            <ul class="space-y-3 mb-8 flex-1">
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Incluye 1 aviso con máxima exposición en los listados
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Genera mayor cantidad de interesados
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Plan con renovación automática
-                                                </li>
-                                            </ul>
-                                            <div class="mb-6">
-                                                <p
-                                                    class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">
-                                                    * Precio sin impuestos:</p>
-                                                <p
-                                                    class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">
-                                                    $ 39.777,00</p>
-                                            </div>
-                                            <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
-                                                Comprar
-                                            </button>
-                                        </div>
-
-                                        <!-- Card: Destacado -->
-                                        <div
-                                            class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative">
-                                            <span
-                                                class="font-headline font-bold text-emerald-600 dark:text-emerald-400 text-sm mb-4">1
-                                                Destacado</span>
-                                            <div class="flex items-end gap-1 mb-6">
-                                                <span
-                                                    class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$
-                                                    30.080,60</span>
-                                                <span
-                                                    class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/
-                                                    mes*</span>
-                                            </div>
-                                            <ul class="space-y-3 mb-8 flex-1">
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Incluye 1 aviso con visibilidad destacada en los listados
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Genera mayor cantidad de interesados
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Plan con renovación automática
-                                                </li>
-                                            </ul>
-                                            <div class="mb-6">
-                                                <p
-                                                    class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">
-                                                    * Precio sin impuestos:</p>
-                                                <p
-                                                    class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">
-                                                    $ 24.860,00</p>
-                                            </div>
-                                            <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
-                                                Comprar
-                                            </button>
-                                        </div>
-
-                                        <!-- Card: Simple -->
-                                        <div
-                                            class="border border-outline-variant/30 dark:border-white/10 rounded-2xl p-6 flex flex-col bg-surface-container-lowest dark:bg-[#0c0c0e] hover:shadow-lg transition-shadow relative mt-4 lg:mt-0">
-                                            <div
-                                                class="absolute -top-4 right-6 bg-surface-container-high dark:bg-[#282828] text-on-background dark:text-[#f1f1f1] text-xs font-bold px-3 py-1 rounded-full border border-outline-variant/30 dark:border-white/10">
-                                                Solo Alquiler</div>
-                                            <span
-                                                class="font-headline font-bold text-orange-500 dark:text-orange-400 text-sm mb-4">1
-                                                Simple</span>
-                                            <div class="flex items-end gap-1 mb-6">
-                                                <span
-                                                    class="font-headline font-bold text-on-background dark:text-[#f1f1f1] text-3xl">$
-                                                    13.879,91</span>
-                                                <span
-                                                    class="font-body text-secondary dark:text-[#c7c6c6] text-sm pb-1">/
-                                                    mes*</span>
-                                            </div>
-                                            <ul class="space-y-3 mb-8 flex-1">
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Incluye 1 aviso con visibilidad estándar
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Genera moderada cantidad de interesados
-                                                </li>
-                                                <li
-                                                    class="flex items-start gap-2 font-body text-sm text-on-background dark:text-[#f1f1f1]">
-                                                    <span
-                                                        class="material-symbols-outlined text-green-500 text-[18px]">check</span>
-                                                    Plan con renovación automática
-                                                </li>
-                                            </ul>
-                                            <div class="mb-6">
-                                                <p
-                                                    class="font-headline font-bold text-xs text-on-background dark:text-[#f1f1f1]">
-                                                    * Precio sin impuestos:</p>
-                                                <p
-                                                    class="font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6]">
-                                                    $ 11.471,00</p>
-                                            </div>
-                                            <button type="button"
-                                                class="w-full py-3 rounded-xl font-headline font-bold text-white bg-primary dark:bg-[#A13333] hover:opacity-90 transition-opacity">
-                                                Comprar
-                                            </button>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-headline font-bold px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Listo para publicar
+                                            </span>
                                         </div>
                                     </div>
+
+                                    <!-- Tarjeta Central del Marketplace -->
+                                    <div class="flex justify-center py-2">
+                                        <div class="w-full max-w-sm">
+                                            <!-- Tarjeta idéntica al Marketplace -->
+                                            <article id="marketplace-preview-card" onclick="if(window.previewMarketplacePropertyDetails){window.previewMarketplacePropertyDetails();}"
+                                                class="w-full bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group cursor-pointer relative">
+                                                <div>
+                                                    <!-- Imagen / Media -->
+                                                    <div class="relative h-52 sm:h-60 rounded-xl overflow-hidden mb-3.5 bg-zinc-100 dark:bg-zinc-800">
+                                                        <img id="review-cover-img" src="img/hero-marketplace.jpg" alt="Foto de portada" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                                        
+                                                        <!-- Badges superiores -->
+                                                        <div class="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1.5" id="review-card-top-badges">
+                                                            <div id="review-badge-verified" class="hidden inline-flex items-center gap-1 bg-emerald-600/90 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-emerald-400/30">
+                                                                <span class="material-symbols-outlined text-xs">verified</span> Propietario Verificado
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Botón favorito estético -->
+                                                        <button type="button" class="btn-favorite absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center transition-all z-10 pointer-events-none" aria-label="Favorito">
+                                                            <span class="material-symbols-outlined text-xl text-white/90">favorite</span>
+                                                        </button>
+
+                                                        <!-- Contador de fotos -->
+                                                        <div id="review-photo-count" class="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-xs">photo_camera</span> 0 fotos
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Precio y Expensas -->
+                                                    <div class="flex items-center gap-2 flex-wrap mb-1.5">
+                                                        <strong id="review-price-display" class="text-base sm:text-lg font-black text-zinc-900 dark:text-white">$ 0 / mes</strong>
+                                                        <span id="review-expensas-display" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200">
+                                                            Sin expensas
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Título del aviso -->
+                                                    <h3 id="review-title-display" class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                                        Título del aviso
+                                                    </h3>
+
+                                                    <!-- Ubicación -->
+                                                    <p id="review-address-display" class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
+                                                        <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
+                                                        <span>Dirección no especificada</span>
+                                                    </p>
+
+                                                    <!-- Tags de características -->
+                                                    <div id="review-tags-container" class="flex flex-wrap gap-1.5 mb-4">
+                                                        <!-- Generado dinámicamente -->
+                                                    </div>
+                                                </div>
+
+                                                <!-- Botón para ver ficha y detalles -->
+                                                <button type="button" onclick="event.stopPropagation(); if(window.previewMarketplacePropertyDetails){window.previewMarketplacePropertyDetails();}"
+                                                    class="w-full bg-zinc-100 dark:bg-zinc-800/80 group-hover:bg-primary group-hover:text-white dark:group-hover:bg-red-700 text-zinc-800 dark:text-zinc-200 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-xs">
+                                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                                    <span>Ver detalle y ficha completa</span>
+                                                </button>
+                                            </article>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grid Modular de Secciones con Botón "Editar" -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                        
+                                        <!-- Card 1: Ubicación y Tipo -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">location_on</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Ubicación y Tipo</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(1,1);}else{goToWizardStep(1,1);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div class="space-y-2 text-xs sm:text-sm font-body">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Tipo de Inmueble:</span>
+                                                    <span id="review-operacion-tipo" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">Departamento</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Dirección:</span>
+                                                    <span id="review-direccion" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">--</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Piso / Depto / Local:</span>
+                                                    <span id="review-piso-depto" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">--</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Barrio / Ciudad:</span>
+                                                    <span id="review-ciudad-barrio" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">Mendoza</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: Características y Distribución -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">straighten</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Características</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(1,3);}else{goToWizardStep(1,3);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div class="space-y-2 text-xs sm:text-sm font-body">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Distribución:</span>
+                                                    <span id="review-distribucion" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">--</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Superficie:</span>
+                                                    <span id="review-superficie" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">--</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Cocheras / Antigüedad:</span>
+                                                    <span id="review-cochera-antiguedad" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">--</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Amoblado:</span>
+                                                    <span id="review-amoblado" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">Sin amoblar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 3: Galería Multimedia -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">photo_library</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Fotos y Videos</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(2);}else{goToWizardStep(2);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div id="review-photos-grid" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar min-h-[60px]">
+                                                <!-- Miniaturas generadas dinámicamente -->
+                                                <span class="text-xs text-secondary dark:text-zinc-500 font-body">Cargando fotos...</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 4: Amenities y Servicios -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">hotel_class</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Amenities y Comodidades</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(3);}else{goToWizardStep(3);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div id="review-amenities-container" class="flex flex-wrap gap-1.5 min-h-[40px] max-h-28 overflow-y-auto">
+                                                <!-- Chips generados dinámicamente -->
+                                                <span class="text-xs text-secondary dark:text-zinc-500 font-body">Sin amenities seleccionados</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 5: Políticas de Mascotas -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">pets</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Políticas de Mascotas</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(4);}else{goToWizardStep(4);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div class="space-y-2 text-xs sm:text-sm font-body">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Admisión de Mascotas:</span>
+                                                    <span id="review-mascotas-status" class="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-sm">check_circle</span> Sí permite
+                                                    </span>
+                                                </div>
+                                                <p class="text-xs text-secondary dark:text-[#a0a0a0] leading-relaxed">
+                                                    Los interesados podrán consultar por sus animales de compañía antes de postularse.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 6: Visitas Presenciales -->
+                                        <div class="p-5 rounded-2xl bg-surface-container-lowest dark:bg-[#101013] border border-outline-variant/30 dark:border-white/5 space-y-4 hover:border-primary/40 dark:hover:border-[#A13333]/40 transition-colors">
+                                            <div class="flex items-center justify-between gap-3 pb-3 border-b border-outline-variant/20 dark:border-white/5">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary dark:text-[#A13333] flex items-center justify-center shrink-0">
+                                                        <span class="material-symbols-outlined text-lg">calendar_month</span>
+                                                    </div>
+                                                    <h4 class="font-headline font-bold text-sm text-on-background dark:text-[#f1f1f1]">Agenda de Visitas</h4>
+                                                </div>
+                                                <button type="button" onclick="if(typeof App!=='undefined'&&App.goToWizardStep){App.goToWizardStep(5);}else{goToWizardStep(5);}"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-headline font-bold bg-primary/10 hover:bg-primary/20 text-primary dark:text-red-400 transition-all cursor-pointer active:scale-95">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                    <span>Editar</span>
+                                                </button>
+                                            </div>
+                                            <div class="space-y-2 text-xs sm:text-sm font-body">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Modalidad:</span>
+                                                    <span id="review-visitas-status" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">Confirmación previa</span>
+                                                </div>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <span class="text-secondary dark:text-[#c7c6c6]">Días y Horarios:</span>
+                                                    <span id="review-visitas-dias-horarios" class="font-semibold text-on-background dark:text-[#f1f1f1] text-right">Lunes a Viernes (09:00 - 18:00)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
                                 </div>
 
                                 <!-- Insignia de Propietario Verificado (Didit KYC) al final del Wizard -->

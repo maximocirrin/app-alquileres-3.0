@@ -104,18 +104,67 @@ export default async function handler(req, res) {
             const ocrLast = ocr.last_name || ocr.lastName || body.last_name || '';
             const ocrFullName = ocr.full_name || ocr.fullName || (ocrFirst && ocrLast ? `${ocrFirst} ${ocrLast}`.trim() : (ocrFirst || ocrLast || null));
             const ocrDni = ocr.document_number || ocr.documentNumber || ocr.id_number || body.document_number || null;
+            const ocrDob = ocr.date_of_birth || ocr.dateOfBirth || ocr.dob || ocr.birth_date || ocr.fecha_nacimiento || body.date_of_birth || null;
+            
+            let ocrAge = null;
+            let ocrIsoDob = null;
+            if (ocrDob) {
+              try {
+                let d = null;
+                if (ocrDob instanceof Date && !isNaN(ocrDob.getTime())) {
+                  d = ocrDob;
+                } else if (typeof ocrDob === 'string') {
+                  const sDob = ocrDob.trim();
+                  if (sDob.includes('/')) {
+                    const parts = sDob.split('/');
+                    if (parts.length === 3) {
+                      if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                      else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                    }
+                  } else if (sDob.includes('-')) {
+                    const parts = sDob.split('-');
+                    if (parts.length === 3) {
+                      if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                      else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                    }
+                  } else {
+                    d = new Date(sDob);
+                  }
+                }
+                if (d && !isNaN(d.getTime())) {
+                  const y = d.getFullYear();
+                  const m = d.getMonth() + 1;
+                  const day = d.getDate();
+                  ocrIsoDob = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                  const today = new Date();
+                  let age = today.getFullYear() - y;
+                  const monthDiff = today.getMonth() - d.getMonth();
+                  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+                    age--;
+                  }
+                  if (age >= 16 && age <= 120) ocrAge = age;
+                }
+              } catch (eAge) {}
+            }
+            if (!ocrAge && (ocr.age || ocr.edad || body.age || body.edad)) {
+              const explicit = ocr.age || ocr.edad || body.age || body.edad;
+              if (!isNaN(Number(explicit))) ocrAge = parseInt(explicit, 10);
+            }
 
             switch (currentStatus.toLowerCase()) {
               case 'approved':
                 nuevoEstadoPasaporte = 3; // Activo
                 observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
-                // Marcar cuenta como verificada en Perfil y actualizar nombre/DNI de Didit OCR
+                // Marcar cuenta como verificada en Perfil y actualizar nombre/DNI/edad de Didit OCR
                 const perfilUpdate = { 
                   cuenta_verificada: true, 
                   fecha_verificacion: new Date().toISOString() 
                 };
                 if (ocrFullName) perfilUpdate.nombre_completo = ocrFullName;
                 if (ocrDni) perfilUpdate.dni = ocrDni;
+                if (ocrIsoDob) perfilUpdate.fecha_nacimiento = ocrIsoDob;
+                if (ocrAge) perfilUpdate.edad = ocrAge;
 
                 await supabase
                   .from('Perfil')
@@ -144,6 +193,8 @@ export default async function handler(req, res) {
               };
               if (ocrFullName) pasaporteUpdate.razon_social = ocrFullName;
               if (ocrDni) pasaporteUpdate.dni = ocrDni;
+              if (ocrIsoDob) pasaporteUpdate.fecha_nacimiento = ocrIsoDob;
+              if (ocrAge) pasaporteUpdate.edad = ocrAge;
 
               await supabase
                 .from('Pasaporte_habitat')

@@ -38,19 +38,44 @@ var DataManager = {
     _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
         try {
-            const { data: { user } } = await window.supabaseClient.auth.getUser();
-            if (!user) {
-                const { data: fallbackProfiles } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil')
-                    .limit(1);
-                return fallbackProfiles?.[0]?.id_perfil || null;
+            let authUser = null;
+            try {
+                const { data: userData } = await window.supabaseClient.auth.getUser();
+                authUser = userData?.user;
+            } catch (e) {}
+
+            if (!authUser) {
+                try {
+                    const { data: sessionData } = await window.supabaseClient.auth.getSession();
+                    authUser = sessionData?.session?.user;
+                } catch (e) {}
+            }
+
+            if (!authUser) {
+                // Check local storage for authenticated user metadata
+                try {
+                    const localUser = JSON.parse(localStorage.getItem('habitat_user') || localStorage.getItem('currentUser') || 'null');
+                    if (localUser) {
+                        if (localUser.id_perfil || localUser.profileId) {
+                            return Number(localUser.id_perfil || localUser.profileId);
+                        }
+                        if (localUser.email) {
+                            const { data: matched } = await window.supabaseClient
+                                .from('Perfil')
+                                .select('id_perfil')
+                                .eq('mail', localUser.email)
+                                .maybeSingle();
+                            if (matched) return matched.id_perfil;
+                        }
+                    }
+                } catch (e) {}
+                return null;
             }
 
             const { data: existing } = await window.supabaseClient
                 .from('Perfil')
                 .select('id_perfil')
-                .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+                .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
                 .limit(1);
 
             if (existing && existing.length > 0) {
@@ -60,9 +85,9 @@ var DataManager = {
             const { data: newProfile, error } = await window.supabaseClient
                 .from('Perfil')
                 .insert([{
-                    user_id: user.id,
-                    mail: user.email,
-                    nombre_completo: user.user_metadata?.full_name || user.email.split('@')[0],
+                    user_id: authUser.id,
+                    mail: authUser.email,
+                    nombre_completo: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
                     id_tipo_perfil: 1,
                     cuenta_verificada: true
                 }])
@@ -70,7 +95,7 @@ var DataManager = {
                 .single();
 
             if (error) {
-                console.warn("Could not insert Perfil, using fallback:", error);
+                console.warn("Could not insert Perfil:", error);
                 return null;
             }
             return newProfile.id_perfil;
@@ -152,9 +177,14 @@ var DataManager = {
     },
 
     // Property & Marketplace Management
-    getProperties: async () => {
+    getProperties: async function (targetProfileId = null, filterByUser = false) {
         if (!window.supabaseClient) return [];
         try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
             const { data: properties, error } = await window.supabaseClient
                 .from('Propiedad')
                 .select(`
@@ -172,7 +202,34 @@ var DataManager = {
                 return [];
             }
 
-            return (properties || []).map(p => {
+            // Also check broker's assigned leads if filtering by user
+            let brokerLeadPropNames = [];
+            if (filterByUser && profileId) {
+                try {
+                    const { data: brokerLeads } = await window.supabaseClient
+                        .from('Lead_inmobiliario')
+                        .select('nombre_propiedad, direccion_propiedad')
+                        .eq('id_perfil_corredor', profileId);
+                    if (brokerLeads) {
+                        brokerLeadPropNames = brokerLeads.map(l => (l.nombre_propiedad || l.direccion_propiedad || '').toLowerCase().trim()).filter(Boolean);
+                    }
+                } catch (e) {}
+            }
+
+            const rawList = properties || [];
+            const filtered = (filterByUser && profileId) ? rawList.filter(p => {
+                const isOwner = Number(p.id_perfil_propietario) === Number(profileId);
+                const isCaptador = Number(p.id_perfil_captador) === Number(profileId);
+                const pubs = Array.isArray(p.Publicacion) ? p.Publicacion : (p.Publicacion ? [p.Publicacion] : []);
+                const hasUserPub = pubs.some(pub => Number(pub.id_perfil) === Number(profileId));
+                
+                const pAddr = `${p.calle || ''} ${p.numero || ''}`.toLowerCase().trim();
+                const isLeadProp = brokerLeadPropNames.some(name => name && (pAddr.includes(name) || name.includes(pAddr)));
+
+                return isOwner || isCaptador || hasUserPub || isLeadProp;
+            }) : rawList;
+
+            return filtered.map(p => {
                 const pub = Array.isArray(p.Publicacion) ? p.Publicacion[0] : p.Publicacion;
                 const media = pub?.Multimedia || [];
                 const contract = Array.isArray(p.Contrato) ? p.Contrato[0] : p.Contrato;
@@ -210,6 +267,10 @@ var DataManager = {
             console.error("getProperties catch error:", e);
             return [];
         }
+    },
+
+    getBrokerProperties: async function (targetProfileId = null) {
+        return this.getProperties(targetProfileId, true);
     },
 
     getPublicMarketplaceProperties: async (limit = 50, includeAllStatuses = false) => {
@@ -993,7 +1054,7 @@ var DataManager = {
     },
 
     // Postulaciones / Solicitudes
-    getApplications: async function () {
+    getApplications: async function (targetProfileId = null, filterByUser = false) {
         let deletedProps = [];
         try {
             deletedProps = JSON.parse(localStorage.getItem('habitat_deleted_properties') || '[]');
@@ -1002,6 +1063,11 @@ var DataManager = {
         let dbApps = [];
         if (window.supabaseClient) {
             try {
+                let profileId = targetProfileId;
+                if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                    profileId = await window.DataManager._getOrCreateProfile();
+                }
+
                 const { data, error } = await window.supabaseClient
                     .from('Solicitud')
                     .select(`
@@ -1036,6 +1102,16 @@ var DataManager = {
                         .filter(s => {
                             const pub = s.Publicacion || {};
                             const prop = pub.Propiedad || s.Propiedad || {};
+
+                            // Strict user filter: only show applications for this user's listings/properties
+                            if (filterByUser && profileId) {
+                                const isPubAuthor = Number(pub.id_perfil) === Number(profileId);
+                                const isPropOwner = Number(prop.id_perfil_propietario) === Number(profileId);
+                                const isPropCaptador = Number(prop.id_perfil_captador) === Number(profileId);
+                                if (!isPubAuthor && !isPropOwner && !isPropCaptador) {
+                                    return false;
+                                }
+                            }
                             
                             // Verificar si la publicación está eliminada en Supabase
                             if (pub?.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
@@ -1126,6 +1202,11 @@ var DataManager = {
                                 tenant_phone: s.telefono || perf.telefono || '',
                                 tenant_dni: realDni,
                                 tenant_cuit: realCuit,
+                                tenant_edad: perf.edad || pass.edad || null,
+                                tenant_fecha_nacimiento: perf.fecha_nacimiento || pass.fecha_nacimiento || null,
+                                edad: perf.edad || pass.edad || null,
+                                age: perf.edad || pass.edad || null,
+                                fecha_nacimiento: perf.fecha_nacimiento || pass.fecha_nacimiento || null,
                                 passport_code: pass.codigo_pasaporte || (pass.id_pasaporte ? `HBT-2026-${pass.id_pasaporte}` : null),
                                 condicion_fiscal: pass.condicion_fiscal || null,
                                 situacion_crediticia: pass.situacion_crediticia || null,
@@ -2375,18 +2456,34 @@ var DataManager = {
     },
 
     // Módulo de Leads y Monetización
-    getLeads: async function () {
+    getLeads: async function (targetProfileId = null, includeStoreLeads = true) {
         if (!window.supabaseClient) return [];
         try {
+            let profileId = targetProfileId;
+            if (!profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
             const { data, error } = await window.supabaseClient
                 .from('Lead_inmobiliario')
                 .select('*, Zona_lead(*)')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return (data || []).map(l => ({
+
+            const rawList = data || [];
+            const filtered = rawList.filter(l => {
+                if (!profileId) return true;
+                if (includeStoreLeads) {
+                    return Number(l.id_perfil_corredor) === Number(profileId) || l.id_perfil_corredor === null;
+                }
+                return Number(l.id_perfil_corredor) === Number(profileId);
+            });
+
+            return filtered.map(l => ({
                 id: `lead-${l.id_lead}`,
                 raw_id: l.id_lead,
+                id_perfil_corredor: l.id_perfil_corredor,
                 clientName: l.nombre_cliente,
                 phone: l.telefono,
                 email: l.email || '',
@@ -2711,9 +2808,14 @@ var DataManager = {
     },
 
     // Tickets de Mantenimiento
-    getMaintenanceTickets: async function () {
+    getMaintenanceTickets: async function (targetProfileId = null, filterByUser = false) {
         if (!window.supabaseClient) return [];
         try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
             const { data, error } = await window.supabaseClient
                 .from('Ticket_mantenimiento')
                 .select(`
@@ -2722,7 +2824,31 @@ var DataManager = {
                 `)
                 .order('created_at', { ascending: false });
 
-            if (error) return [];
+            if (error || !data) return [];
+
+            // If filtering by user, also get user's property addresses
+            let userPropAddresses = [];
+            if (filterByUser && profileId) {
+                try {
+                    const { data: userProps } = await window.supabaseClient
+                        .from('Propiedad')
+                        .select('calle, numero, id_perfil_propietario, id_perfil_captador')
+                        .or(`id_perfil_propietario.eq.${profileId},id_perfil_captador.eq.${profileId}`);
+                    if (userProps) {
+                        userPropAddresses = userProps.map(p => `${p.calle || ''} ${p.numero || ''}`.toLowerCase().trim()).filter(Boolean);
+                    }
+                } catch (e) {}
+            }
+
+            const rawList = data || [];
+            const filtered = (filterByUser && profileId) ? rawList.filter(t => {
+                if (Number(t.id_perfil) === Number(profileId)) return true;
+                const tAddr = (t.direccion_propiedad || '').toLowerCase().trim();
+                if (tAddr && userPropAddresses.some(addr => addr && (tAddr.includes(addr) || addr.includes(tAddr)))) {
+                    return true;
+                }
+                return false;
+            }) : rawList;
 
             const statusMap = {
                 1: 'abierto',
@@ -2732,7 +2858,7 @@ var DataManager = {
                 5: 'cancelado'
             };
 
-            return (data || []).map(t => {
+            return filtered.map(t => {
                 const estadoObj = t.Estado_ticket || {};
                 const mappedStatus = statusMap[t.id_estado_ticket] || (estadoObj.nombre || '').toLowerCase().replace(/\s+/g, '_') || t.estado || 'abierto';
                 return {
@@ -2891,65 +3017,22 @@ var DataManager = {
         }
     },
 
-    // Helper para obtener o resolver el id_perfil del usuario actual o fallback
-    _getOrCreateProfile: async function () {
-        if (!window.supabaseClient) return null;
-        try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session && session.user) {
-                const { data: profile } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil')
-                    .or(`user_id.eq.${session.user.id},mail.eq.${session.user.email}`)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (profile && profile.id_perfil) {
-                    return profile.id_perfil;
-                }
-
-                // Si no existe, insertar perfil
-                const { data: newProf } = await window.supabaseClient
-                    .from('Perfil')
-                    .insert([{
-                        user_id: session.user.id,
-                        mail: session.user.email,
-                        nombre_completo: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-                        id_tipo_perfil: session.user.user_metadata?.id_tipo_perfil || 3,
-                        cuenta_verificada: true,
-                        acepto_terminos: true
-                    }])
-                    .select('id_perfil')
-                    .single();
-
-                if (newProf && newProf.id_perfil) return newProf.id_perfil;
-            }
-
-            const { data: firstProf } = await window.supabaseClient
-                .from('Perfil')
-                .select('id_perfil')
-                .order('id_perfil', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            return firstProf ? firstProf.id_perfil : null;
-        } catch (err) {
-            console.warn("Error getting profile ID:", err);
-            return null;
-        }
-    },
-
     // Eventos y Calendario Inmobiliario
-    getEvents: async function () {
+    getEvents: async function (targetProfileId = null, filterByUser = false) {
         if (!window.supabaseClient) return [];
         try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
             const { data, error } = await window.supabaseClient
                 .from('Evento')
                 .select(`
                     *,
                     Tipo_evento!fk_evento_tipo (*),
                     Estado_evento!fk_evento_estado (*),
-                    Propiedad!fk_evento_propiedad (*)
+                    Propiedad!fk_evento_propiedad (*, Publicacion(*))
                 `)
                 .order('fecha_evento', { ascending: false });
 
@@ -2958,7 +3041,17 @@ var DataManager = {
                 return [];
             }
 
-            return (data || []).map(ev => {
+            const rawList = data || [];
+            const filtered = (filterByUser && profileId) ? rawList.filter(ev => {
+                if (Number(ev.id_perfil) === Number(profileId)) return true;
+                const prop = ev.Propiedad || {};
+                if (Number(prop.id_perfil_propietario) === Number(profileId) || Number(prop.id_perfil_captador) === Number(profileId)) return true;
+                const pubs = Array.isArray(prop.Publicacion) ? prop.Publicacion : (prop.Publicacion ? [prop.Publicacion] : []);
+                if (pubs.some(p => Number(p.id_perfil) === Number(profileId))) return true;
+                return false;
+            }) : rawList;
+
+            return filtered.map(ev => {
                 const tipoObj = ev.Tipo_evento || {};
                 const estadoObj = ev.Estado_evento || {};
                 const prop = ev.Propiedad || {};
@@ -3042,9 +3135,14 @@ var DataManager = {
     },
 
     // Solicitudes de Tasación Comercial
-    getValuations: async function () {
+    getValuations: async function (targetProfileId = null, filterByUser = false) {
         if (!window.supabaseClient) return [];
         try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
             const { data, error } = await window.supabaseClient
                 .from('Tasacion')
                 .select('*')
@@ -3055,7 +3153,12 @@ var DataManager = {
                 return [];
             }
 
-            return (data || []).map(v => ({
+            const rawList = data || [];
+            const filtered = (filterByUser && profileId) ? rawList.filter(v => {
+                return Number(v.id_perfil_corredor) === Number(profileId) || Number(v.id_perfil_solicitante) === Number(profileId) || !v.id_perfil_corredor;
+            }) : rawList;
+
+            return filtered.map(v => ({
                 id: `TAS-00${v.id_tasacion}`,
                 raw_id: v.id_tasacion,
                 address: v.direccion,
@@ -3558,6 +3661,272 @@ var DataManager = {
         } catch (err) {
             console.error("Error en finalizarYObtenerDocumentosContrato:", err);
             throw err;
+        }
+    },
+
+    /**
+     * Obtiene los contratos / alquileres activos del corredor con relaciones completas
+     */
+    getBrokerActiveRentals: async function (targetProfileId = null, filterByUser = true) {
+        if (!window.supabaseClient) return [];
+        try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
+            const { data, error } = await window.supabaseClient
+                .from('Contrato')
+                .select(`
+                    *,
+                    Propiedad (
+                        *,
+                        Publicacion (*, Multimedia (*)),
+                        Propiedad_caracteristica (Caracteristica (*))
+                    ),
+                    Inquilino:Perfil!id_perfil_inquilino (*),
+                    Propietario:Perfil!id_perfil_propietario (*),
+                    Pago (*),
+                    Firma_contrato (*)
+                `)
+                .order('id_contrato', { ascending: false });
+
+            if (error || !Array.isArray(data)) {
+                console.warn("Could not query Contrato for broker:", error);
+                return [];
+            }
+
+            const rawList = data || [];
+            const filtered = (filterByUser && profileId) ? rawList.filter(item => {
+                const isOwner = Number(item.id_perfil_propietario) === Number(profileId);
+                const isInq = Number(item.id_perfil_inquilino) === Number(profileId);
+                const prop = item.Propiedad || {};
+                const isCaptador = Number(prop.id_perfil_captador) === Number(profileId);
+                const pubs = Array.isArray(prop.Publicacion) ? prop.Publicacion : (prop.Publicacion ? [prop.Publicacion] : []);
+                const hasUserPub = pubs.some(pub => Number(pub.id_perfil) === Number(profileId));
+
+                return isOwner || isInq || isCaptador || hasUserPub;
+            }) : rawList;
+
+            return filtered.map(item => {
+                const prop = item.Propiedad || {};
+                const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                const media = pub?.Multimedia || [];
+                const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                const inq = item.Inquilino || {};
+                const propOwner = item.Propietario || {};
+
+                const cleanTitle = pub?.descripcion 
+                    ? pub.descripcion.split(' | Detalles: ')[0] 
+                    : (prop.calle ? `Propiedad en ${prop.calle} ${prop.numero || ''}`.trim() : `Propiedad #${item.id_propiedad}`);
+
+                const cleanAddress = prop.calle 
+                    ? `${prop.calle} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim()
+                    : 'Mendoza, Argentina';
+
+                const payments = item.Pago || [];
+                const latestPayment = payments.length > 0 ? payments[payments.length - 1] : null;
+                const isPaid = latestPayment ? (latestPayment.id_estado_pago === 2 || latestPayment.estado === 'pagado' || latestPayment.estado === 'aprobado') : false;
+
+                const freq = item.periodo_aumento_meses || 3;
+                const adjText = freq === 4 ? 'Cuatrimestral IPC oficial' : (freq === 6 ? 'Semestral ICL oficial' : 'Trimestral IPC oficial');
+
+                const monthlyRentVal = Number(item.monto_cierre || pub?.precio || 0) || 350000;
+                const feeVal = Math.round(monthlyRentVal * 0.0415);
+                const expensesVal = Number(prop.expensas_mensuales || 0) || 0;
+
+                return {
+                    id: `RENT-${item.id_contrato}`,
+                    raw_id: item.id_contrato,
+                    rentalId: `RENT-${item.id_contrato}`,
+                    propertyId: item.id_propiedad,
+                    propertyTitle: cleanTitle,
+                    propertyAddress: cleanAddress,
+                    propertyImage: photos[0] || 'img/hero-marketplace.jpg',
+                    tenantName: inq.nombre_completo || 'Inquilino Hábitat',
+                    tenantEmail: inq.mail || 'inquilino@habitat.com',
+                    tenantPhone: inq.telefono || '+54 9 11',
+                    ownerName: propOwner.nombre_completo || 'Propietario Hábitat',
+                    ownerEmail: propOwner.mail || 'propietario@habitat.com',
+                    ownerPhone: propOwner.telefono || '+54 9 261',
+                    monthlyRent: monthlyRentVal,
+                    feeAmount: feeVal,
+                    feePercent: 4.15,
+                    currency: item.id_moneda === 2 ? 'USD' : 'ARS',
+                    expensesAmount: expensesVal,
+                    punitives: 0,
+                    dueDay: item.dia_vencimiento_mensual || 10,
+                    punitiveDailyRate: Number(item.tasa_punitoria_diaria || 0.5) || 0.5,
+                    startDate: item.fecha_inicio_contrato || '2026-08-01',
+                    endDate: item.fecha_fin_contrato || '2028-08-01',
+                    adjustmentType: adjText,
+                    paymentStatus: isPaid ? 'PAGADO' : 'PENDIENTE',
+                    paymentMethod: isPaid ? (latestPayment?.metodo_pago || 'Transferencia Bancaria') : 'Pendiente de cobro',
+                    cbu: item.alias_cbu || 'HABITAT.ALQUILER.MP',
+                    cbuAlias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
+                    depositAmount: Number(item.monto_deposito || item.monto_cierre || 0) || 0,
+                    contractCode: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
+                    inventoryId: `INV-2026-${String(item.id_contrato).padStart(3, '0')}`,
+                    inventoryItemsCount: 14,
+                    payments: payments
+                };
+            });
+        } catch (e) {
+            console.error("Error in getBrokerActiveRentals:", e);
+            return [];
+        }
+    },
+
+    /**
+     * Obtiene los clientes propietarios de las propiedades administradas
+     */
+    getBrokerOwners: async function (targetProfileId = null, filterByUser = true) {
+        if (!window.supabaseClient) return [];
+        try {
+            let profileId = targetProfileId;
+            if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
+            const { data: props, error } = await window.supabaseClient
+                .from('Propiedad')
+                .select(`
+                    id_propiedad,
+                    calle,
+                    numero,
+                    expensas_mensuales,
+                    id_perfil_propietario,
+                    id_perfil_captador,
+                    Propietario:Perfil!id_perfil_propietario (*),
+                    Publicacion (*),
+                    Contrato (*)
+                `);
+
+            if (error || !Array.isArray(props)) {
+                return [];
+            }
+
+            const rawProps = props || [];
+            const brokerProps = (filterByUser && profileId) ? rawProps.filter(p => {
+                const isCaptador = Number(p.id_perfil_captador) === Number(profileId);
+                const isOwner = Number(p.id_perfil_propietario) === Number(profileId);
+                const pubs = Array.isArray(p.Publicacion) ? p.Publicacion : (p.Publicacion ? [p.Publicacion] : []);
+                const hasUserPub = pubs.some(pub => Number(pub.id_perfil) === Number(profileId));
+
+                return isCaptador || isOwner || hasUserPub;
+            }) : rawProps;
+
+            const ownersMap = new Map();
+            brokerProps.forEach(p => {
+                const owner = p.Propietario;
+                if (!owner) return;
+                const ownerId = String(owner.id_perfil);
+                const propTitle = p.calle ? `${p.calle} ${p.numero || ''}`.trim() : `Propiedad #${p.id_propiedad}`;
+                const pub = Array.isArray(p.Publicacion) ? p.Publicacion[0] : p.Publicacion;
+                const contracts = p.Contrato || [];
+                const activeContract = contracts.find(c => !c.fecha_fin_contrato || new Date(c.fecha_fin_contrato) >= new Date());
+
+                if (!ownersMap.has(ownerId)) {
+                    ownersMap.set(ownerId, {
+                        id: `CLI-00${owner.id_perfil}`,
+                        raw_id: owner.id_perfil,
+                        name: owner.nombre_completo || 'Propietario Hábitat',
+                        phone: owner.telefono || '+54 9 11 4802-9988',
+                        email: owner.mail || 'propietario@habitat.com',
+                        dni: owner.dni || 'Verificado',
+                        propsCount: 0,
+                        propsList: [],
+                        monthlyIncome: 0,
+                        commissionRate: '4.15%',
+                        mandateStatus: 'Activo (Exclusivo)',
+                        verified: owner.cuenta_verificada !== false
+                    });
+                }
+
+                const entry = ownersMap.get(ownerId);
+                entry.propsCount += 1;
+                entry.propsList.push(propTitle);
+                const rentVal = Number(activeContract?.monto_cierre || pub?.precio || 0);
+                entry.monthlyIncome += rentVal;
+            });
+
+            return Array.from(ownersMap.values());
+        } catch (e) {
+            console.error("Error in getBrokerOwners:", e);
+            return [];
+        }
+    },
+
+    /**
+     * Obtiene la billetera de créditos de leads del corredor
+     */
+    getBrokerCreditWallet: async function (profileId = null) {
+        if (!window.supabaseClient) return { creditos_disponibles: 25, total_creditos_adquiridos: 50 };
+        try {
+            let pid = profileId;
+            if (!pid && window.DataManager._getOrCreateProfile) {
+                pid = await window.DataManager._getOrCreateProfile();
+            }
+            if (!pid) pid = 6; // fallback profile
+
+            const { data, error } = await window.supabaseClient
+                .from('Billetera_credito_corredor')
+                .select('*')
+                .eq('id_perfil_corredor', pid)
+                .maybeSingle();
+
+            if (data) {
+                return data;
+            }
+
+            // Insert initial record if not exists
+            const { data: newWallet } = await window.supabaseClient
+                .from('Billetera_credito_corredor')
+                .insert([{
+                    id_perfil_corredor: pid,
+                    creditos_disponibles: 25,
+                    total_creditos_adquiridos: 50,
+                    zonas_activas: ['palermo-soho', 'recoleta', 'belgrano-r']
+                }])
+                .select('*')
+                .maybeSingle();
+
+            return newWallet || { creditos_disponibles: 25, total_creditos_adquiridos: 50 };
+        } catch (e) {
+            console.error("Error in getBrokerCreditWallet:", e);
+            return { creditos_disponibles: 25, total_creditos_adquiridos: 50 };
+        }
+    },
+
+    /**
+     * Compra un lead deduciendo créditos de la billetera
+     */
+    purchaseBrokerLead: async function (leadRawId, costCredits = 1) {
+        if (!window.supabaseClient) return { ok: true };
+        try {
+            const profileId = await window.DataManager._getOrCreateProfile();
+            // 1. Deduct credits
+            const wallet = await window.DataManager.getBrokerCreditWallet(profileId);
+            if ((wallet.creditos_disponibles || 0) < costCredits) {
+                throw new Error("Créditos insuficientes para desbloquear este lead.");
+            }
+
+            const newCredits = Math.max(0, (wallet.creditos_disponibles || 0) - costCredits);
+            await window.supabaseClient
+                .from('Billetera_credito_corredor')
+                .update({ creditos_disponibles: newCredits, updated_at: new Date().toISOString() })
+                .eq('id_billetera', wallet.id_billetera);
+
+            // 2. Assign lead to broker
+            await window.supabaseClient
+                .from('Lead_inmobiliario')
+                .update({ id_perfil_corredor: profileId, estado: 'contacted' })
+                .eq('id_lead', Number(leadRawId));
+
+            return { ok: true, remainingCredits: newCredits };
+        } catch (e) {
+            console.error("Error in purchaseBrokerLead:", e);
+            throw e;
         }
     }
 };

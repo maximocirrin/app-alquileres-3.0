@@ -168,8 +168,8 @@ window.setupInputValidations = function () {
     // Pure numeric inputs (only numbers 0-9 and decimal dot)
     const numericSelectors = [
         '#dormitorios-new', '#banos-new', '#ambientes-new', '#cocheras-new',
-        '#precio', '#expensas-new', '#expensas', '#tarifa-mascota', '#alquiler-mascota',
-        '#sup-cubierta', '#sup-total', '#cant-gato', '#cant-perro-pequeno', '#cant-perro-grande'
+        '#precio', '#expensas-new', '#expensas',
+        '#sup-cubierta', '#sup-total'
     ];
 
     numericSelectors.forEach(sel => {
@@ -1801,14 +1801,24 @@ const App = {
                 }
             }
             if (e.target && e.target.id === 'permite-mascotas') {
-                const detallesContainer = document.getElementById('mascotas-detalles-container');
                 const label = document.getElementById('permite-mascotas-label');
+                const feedbackText = document.getElementById('mascotas-feedback-text');
+                const feedbackIcon = document.getElementById('mascotas-feedback-icon');
+                const feedbackBox = document.getElementById('mascotas-feedback-box');
                 if (e.target.checked) {
-                    if (detallesContainer) detallesContainer.classList.remove('hidden');
-                    if (label) label.textContent = 'Sí permite';
+                    if (label) label.textContent = 'Sí, acepta mascotas';
+                    if (feedbackText) feedbackText.textContent = 'Propiedad Pet-Friendly: Tu aviso incluirá la insignia de Apto Mascotas y aparecerá en las búsquedas filtradas por inquilinos con animales de compañía.';
+                    if (feedbackIcon) feedbackIcon.textContent = 'pets';
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center gap-3 transition-all duration-300';
+                    }
                 } else {
-                    if (detallesContainer) detallesContainer.classList.add('hidden');
                     if (label) label.textContent = 'No permite';
+                    if (feedbackText) feedbackText.textContent = 'El aviso se publicará sin la etiqueta de apto mascotas. Los inquilinos verán que no se admiten animales de compañía.';
+                    if (feedbackIcon) feedbackIcon.textContent = 'block';
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-xl border border-outline-variant/20 dark:border-white/5 bg-surface-container-lowest dark:bg-[#0c0c0e] text-secondary dark:text-zinc-400 flex items-center gap-3 transition-all duration-300';
+                    }
                 }
             }
             if (e.target && e.target.id === 'usar-agenda-visitas') {
@@ -1851,7 +1861,7 @@ const App = {
 
         // Global Progress Header Helpers
         const getStepName = (step) => {
-            const names = { 1: 'Principales', 2: 'Multimedia', 3: 'Extras', 4: 'Preferencias', 5: 'Visitas', 6: 'Publicar' };
+            const names = { 1: 'Principales', 2: 'Multimedia', 3: 'Extras', 4: 'Preferencias', 5: 'Visitas', 6: 'Revisar y Publicar' };
             return names[step] || '';
         };
 
@@ -2254,8 +2264,8 @@ const App = {
                     if (step6Container) {
                         step6Container.classList.remove('hidden');
 
-                        if (title) title.textContent = '¡Estás a un paso de terminar!';
-                        if (subtitle) subtitle.textContent = 'Revisá y elegí tu plan de publicación';
+                        if (title) title.textContent = '¡Revisá y confirmá tu publicación!';
+                        if (subtitle) subtitle.textContent = 'Verificá cómo verán los inquilinos tu aviso y editá cualquier detalle antes de publicar.';
 
                         void step6Container.offsetWidth;
 
@@ -2267,6 +2277,10 @@ const App = {
                         step6Container.style.height = 'auto';
                         step6Container.style.opacity = '1';
                         step6Container.style.display = 'block';
+
+                        if (typeof window.renderPublishReview === 'function') {
+                            window.renderPublishReview();
+                        }
 
                         window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -2477,8 +2491,8 @@ const App = {
                     btnText: 'Continuar'
                 },
                 6: {
-                    title: 'Elegí la exposición de tu aviso',
-                    subtitle: 'Los avisos con mayor exposición reciben hasta 5 veces más consultas',
+                    title: '¡Revisá y confirmá tu publicación!',
+                    subtitle: 'Verificá cómo verán los inquilinos tu aviso y editá cualquier sección antes de publicarlo',
                     formId: 'form-planes',
                     btnText: 'Publicar Aviso'
                 }
@@ -2529,12 +2543,411 @@ const App = {
                 if (typeof window.renderPhotoPreviews === 'function') {
                     window.renderPhotoPreviews();
                 }
+            } else if (targetStep === 6) {
+                if (typeof window.renderPublishReview === 'function') {
+                    window.renderPublishReview();
+                }
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
         if (typeof App !== 'undefined') {
             App.goToWizardStep = window.goToWizardStep;
+        }
+
+        // Get complete property data object from current wizard inputs for preview & modal
+        window.getWizardPropertyDataForPreview = function () {
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : '';
+            };
+
+            const getRadioVal = (name) => {
+                const checked = document.querySelector(`input[name="${name}"]:checked`);
+                return checked ? checked.value : '';
+            };
+
+            const operacion = (getRadioVal('operacion') || 'Alquiler');
+            const tipoSelect = document.getElementById('tipo-propiedad');
+            const tipoText = (tipoSelect && tipoSelect.selectedIndex > 0 && tipoSelect.options[tipoSelect.selectedIndex]?.text) || 'Departamento';
+            const subtipoSelect = document.getElementById('subtipo-propiedad');
+            const subtipoText = (subtipoSelect && subtipoSelect.selectedIndex > 0 && subtipoSelect.options[subtipoSelect.selectedIndex]?.text) || '';
+            const piso = getVal('piso-propiedad');
+            const depto = getVal('depto-propiedad');
+            const numeroLocal = getVal('numero-local');
+            const sectorLocal = getVal('sector-local');
+            const calle = getVal('calle-altura');
+            const barrio = window.selectedPropertyBarrio || getVal('barrio') || 'Centro';
+            const ciudad = window.selectedPropertyCiudad || getVal('ciudad') || 'Mendoza';
+            const provincia = window.selectedPropertyProvincia || getVal('provincia') || 'Mendoza';
+
+            const precioRaw = getVal('precio');
+            const precioNum = parseFloat(precioRaw) || 0;
+            const monedaEl = document.getElementById('moneda') || document.getElementById('precio')?.previousElementSibling;
+            const monedaVal = (monedaEl && (monedaEl.value === 'USD' || monedaEl.value === 'usd' || monedaEl.value === 'U$S')) ? 'USD' : 'ARS';
+            const expensasRaw = getVal('expensas') || getVal('expensas-new');
+            const expensasNum = parseFloat(expensasRaw) || 0;
+            const expensasIncluidas = document.getElementById('expensas-incluidas')?.checked || false;
+
+            const titulo = getVal('titulo-aviso') || `${tipoText} en alquiler en ${barrio}, ${ciudad}`;
+            const descripcion = getVal('descripcion-aviso') || 'Excelente propiedad en alquiler con inmejorable ubicación.';
+
+            const ambientes = getVal('ambientes-new') || '1';
+            const dormitorios = getVal('dormitorios-new') || '1';
+            const banos = getVal('banos-new') || '1';
+            const cocheras = getVal('cocheras-new') || '0';
+            const antiguedad = getRadioVal('antiguedad') || 'A estrenar';
+            const amoblado = getRadioVal('amoblado') || 'sin-amoblar';
+            const supCubierta = getVal('sup-cubierta');
+            const supTotal = getVal('sup-total');
+
+            const photos = Array.isArray(window.selectedPropertyPhotos) ? window.selectedPropertyPhotos : [];
+            let imageSrcs = [];
+            photos.forEach(photo => {
+                if (photo instanceof Blob) {
+                    imageSrcs.push(URL.createObjectURL(photo));
+                } else if (typeof photo === 'string' && photo.length > 0) {
+                    imageSrcs.push(photo);
+                }
+            });
+            if (imageSrcs.length === 0) {
+                imageSrcs = ['img/hero-marketplace.jpg'];
+            }
+
+            const getCheckedFeatures = (formSelector = '#form-extras') => {
+                const form = document.querySelector(formSelector);
+                if (!form) return [];
+                const checked = form.querySelectorAll('input[type="checkbox"]:checked');
+                const features = [];
+                checked.forEach(cb => {
+                    let name = '';
+                    const wrapper = cb.closest('.checkbox-wrapper') || cb.parentElement;
+                    if (wrapper) {
+                        const textSpan = wrapper.querySelector('.terms-label span') || wrapper.querySelector('span');
+                        if (textSpan && textSpan.textContent.trim()) {
+                            name = textSpan.textContent.trim();
+                        }
+                    }
+                    if (!name) name = cb.name || cb.id;
+                    if (name) features.push(name);
+                });
+                const chipsContainer = document.getElementById('selected-features-container');
+                if (chipsContainer) {
+                    chipsContainer.querySelectorAll('span.font-body').forEach(s => {
+                        const t = s.textContent.trim();
+                        if (t) features.push(t);
+                    });
+                }
+                return Array.from(new Set(features));
+            };
+            const amenitiesList = getCheckedFeatures('#form-extras');
+            const permiteMascotas = Boolean(document.getElementById('permite-mascotas')?.checked);
+            const isVerified = Boolean(window.HabitatOwnerVerification && window.HabitatOwnerVerification.isOwnerVerified());
+
+            const tags = [];
+            if (isVerified) tags.push('Propietario Verificado');
+            if (tipoText) tags.push(tipoText);
+            if (ambientes && parseInt(ambientes) > 0) tags.push(`${ambientes} ${parseInt(ambientes) === 1 ? 'amb' : 'ambs'}`);
+            if (dormitorios && parseInt(dormitorios) > 0) tags.push(`${dormitorios} ${parseInt(dormitorios) === 1 ? 'dorm' : 'dorms'}`);
+            if (banos && parseInt(banos) > 0) tags.push(`${banos} ${parseInt(banos) === 1 ? 'baño' : 'baños'}`);
+            if (supCubierta) tags.push(`${supCubierta} m²`);
+            if (permiteMascotas) tags.push('Apto Mascotas');
+            if (cocheras && parseInt(cocheras) > 0) tags.push(`${cocheras} coch`);
+
+            return {
+                id: 'preview-' + Date.now(),
+                title: titulo,
+                address: [calle, barrio, ciudad].filter(Boolean).join(', ') || `${barrio}, ${ciudad}`,
+                province: provincia,
+                city: ciudad,
+                barrio: barrio,
+                price: precioNum,
+                expensas: expensasNum,
+                expensasIncluidas: expensasIncluidas,
+                image: imageSrcs[0],
+                images: imageSrcs,
+                photos: imageSrcs,
+                multimedia: { fotos: imageSrcs },
+                description: descripcion,
+                note: descripcion,
+                type: tipoText,
+                tipo_propiedad: tipoText,
+                subtipo_propiedad: subtipoText,
+                dormitorios: parseInt(dormitorios) || 1,
+                ambientes: parseInt(ambientes) || 1,
+                banos: parseInt(banos) || 1,
+                cocheras: parseInt(cocheras) || 0,
+                sup_cubierta: supCubierta,
+                supCubierta: supCubierta,
+                sup_total: supTotal || supCubierta,
+                antiguedad: antiguedad,
+                amoblado: amoblado,
+                isVerifiedOwner: isVerified,
+                verified: isVerified,
+                permiteMascotas: permiteMascotas,
+                tags: tags,
+                amenities: amenitiesList,
+                caracteristicas: amenitiesList,
+                status: 'disponible',
+                extraInfo: {
+                    moneda: monedaVal,
+                    operacion: operacion,
+                    tipo: tipoText,
+                    piso: piso,
+                    depto: depto,
+                    numero_local: numeroLocal,
+                    sector_local: sectorLocal,
+                    barrio: barrio,
+                    ciudad: ciudad,
+                    provincia: provincia,
+                    permiteMascotas: permiteMascotas,
+                    isVerifiedOwner: isVerified,
+                    photos: imageSrcs,
+                    amenities: amenitiesList
+                }
+            };
+        };
+
+        // Open full interactive details modal for previewing the listing
+        window.previewMarketplacePropertyDetails = function () {
+            if (typeof window.getWizardPropertyDataForPreview !== 'function') return;
+            const propData = window.getWizardPropertyDataForPreview();
+            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                window.openMarketplacePropertyDetailModal(propData, { isOwner: true, isPreview: true });
+            } else {
+                console.warn('openMarketplacePropertyDetailModal is not defined');
+            }
+        };
+
+        // Render Publish Summary & Review in Step 6
+        window.renderPublishReview = function () {
+            const propData = window.getWizardPropertyDataForPreview ? window.getWizardPropertyDataForPreview() : {};
+            const monedaSymbol = (propData.extraInfo?.moneda === 'USD') ? 'USD ' : '$ ';
+            const precioNum = propData.price || 0;
+            const expensasNum = propData.expensas || 0;
+            const expensasIncluidas = Boolean(propData.expensasIncluidas);
+            const photos = propData.photos || [];
+            const photoCount = photos.length;
+            const permiteMascotas = Boolean(propData.permiteMascotas);
+            const isVerified = Boolean(propData.isVerifiedOwner);
+            const amenitiesList = propData.amenities || [];
+            const extra = propData.extraInfo || {};
+
+            // 1. Marketplace Card Image & Badges
+            const coverImgEl = document.getElementById('review-cover-img');
+            if (coverImgEl) {
+                coverImgEl.src = photos[0] || 'img/hero-marketplace.jpg';
+            }
+
+            const verifiedBadgeEl = document.getElementById('review-badge-verified');
+            if (verifiedBadgeEl) {
+                if (isVerified) {
+                    verifiedBadgeEl.classList.remove('hidden');
+                } else {
+                    verifiedBadgeEl.classList.add('hidden');
+                }
+            }
+
+            const photoCountEl = document.getElementById('review-photo-count');
+            if (photoCountEl) {
+                photoCountEl.innerHTML = `<span class="material-symbols-outlined text-xs">photo_camera</span> ${photoCount} ${photoCount === 1 ? 'foto' : 'fotos'}`;
+            }
+
+            // 2. Marketplace Card Price & Expensas
+            const priceDisplay = document.getElementById('review-price-display');
+            if (priceDisplay) {
+                priceDisplay.textContent = `${monedaSymbol}${precioNum > 0 ? precioNum.toLocaleString('es-AR') : '0'} / mes`;
+            }
+
+            const expensasDisplay = document.getElementById('review-expensas-display');
+            if (expensasDisplay) {
+                if (expensasIncluidas) {
+                    expensasDisplay.className = 'text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white';
+                    expensasDisplay.textContent = 'Incluye expensas';
+                } else if (expensasNum > 0) {
+                    expensasDisplay.className = 'text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200';
+                    expensasDisplay.textContent = `+ ${monedaSymbol}${expensasNum.toLocaleString('es-AR')} expensas`;
+                } else {
+                    expensasDisplay.className = 'text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200';
+                    expensasDisplay.textContent = 'Sin expensas';
+                }
+            }
+
+            // 3. Marketplace Card Title & Address
+            const titleDisplay = document.getElementById('review-title-display');
+            if (titleDisplay) {
+                titleDisplay.textContent = propData.title || 'Título de la propiedad';
+            }
+
+            const addressDisplay = document.getElementById('review-address-display');
+            if (addressDisplay) {
+                addressDisplay.innerHTML = `<span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span> <span>${propData.address || 'Dirección no especificada'}</span>`;
+            }
+
+            // 4. Marketplace Card Tags Chips
+            const tagsContainer = document.getElementById('review-tags-container');
+            if (tagsContainer) {
+                const tagsToRender = (propData.tags || []).filter(t => t !== 'Propietario Verificado').slice(0, 4);
+                if (tagsToRender.length === 0) {
+                    tagsContainer.innerHTML = `<span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">${propData.type || 'Inmueble'}</span>`;
+                } else {
+                    tagsContainer.innerHTML = tagsToRender.map(t => `
+                        <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
+                            ${t}
+                        </span>
+                    `).join('');
+                }
+            }
+
+            // 5. Modular Cards Updates (Ubicación, Características, Galería, Amenities, Mascotas, Visitas)
+            const revOpTipo = document.getElementById('review-operacion-tipo');
+            if (revOpTipo) revOpTipo.textContent = `${extra.operacion || 'Alquiler'} • ${propData.type || 'Departamento'}${propData.subtipo_propiedad ? ` (${propData.subtipo_propiedad})` : ''}`;
+
+            const revDireccion = document.getElementById('review-direccion');
+            if (revDireccion) revDireccion.textContent = document.getElementById('calle-altura')?.value?.trim() || 'No especificada';
+
+            const revPisoDepto = document.getElementById('review-piso-depto');
+            if (revPisoDepto) {
+                if (extra.piso || extra.depto) revPisoDepto.textContent = `Piso ${extra.piso || '-'}, Depto ${extra.depto || '-'}`;
+                else if (extra.numero_local) revPisoDepto.textContent = `Local N° ${extra.numero_local}${extra.sector_local ? ` (${extra.sector_local})` : ''}`;
+                else revPisoDepto.textContent = 'Planta única / Toda la propiedad';
+            }
+
+            const revCiudadBarrio = document.getElementById('review-ciudad-barrio');
+            if (revCiudadBarrio) revCiudadBarrio.textContent = `${propData.barrio || 'Centro'}, ${propData.city || 'Mendoza'}, ${propData.province || 'Mendoza'}`;
+
+            const revDistribucion = document.getElementById('review-distribucion');
+            if (revDistribucion) revDistribucion.textContent = `${propData.ambientes || 1} amb • ${propData.dormitorios || 1} dorm • ${propData.banos || 1} baño${propData.banos !== 1 ? 's' : ''}`;
+
+            const revSuperficie = document.getElementById('review-superficie');
+            if (revSuperficie) {
+                const parts = [];
+                if (propData.sup_cubierta) parts.push(`${propData.sup_cubierta} m² cub.`);
+                if (propData.sup_total && propData.sup_total !== propData.sup_cubierta) parts.push(`${propData.sup_total} m² tot.`);
+                revSuperficie.textContent = parts.length > 0 ? parts.join(' / ') : 'No especificada';
+            }
+
+            const revCocheraAnt = document.getElementById('review-cochera-antiguedad');
+            if (revCocheraAnt) {
+                const cochText = propData.cocheras > 0 ? `${propData.cocheras} cochera${propData.cocheras > 1 ? 's' : ''}` : 'Sin cochera';
+                revCocheraAnt.textContent = `${cochText} • ${propData.antiguedad || 'A estrenar'}`;
+            }
+
+            const revAmoblado = document.getElementById('review-amoblado');
+            if (revAmoblado) {
+                const amobladoMap = { 'amoblado': 'Totalmente amoblado', 'semi-amoblado': 'Semi amoblado', 'sin-amoblar': 'Sin amoblar' };
+                revAmoblado.textContent = amobladoMap[propData.amoblado] || 'Sin amoblar';
+            }
+
+            // Photos Grid Strip
+            const photosGrid = document.getElementById('review-photos-grid');
+            if (photosGrid) {
+                if (photoCount === 0 || (photoCount === 1 && photos[0] === 'img/hero-marketplace.jpg')) {
+                    photosGrid.innerHTML = `
+                        <div class="flex items-center gap-2 text-xs text-secondary dark:text-zinc-500 font-body py-1">
+                            <span class="material-symbols-outlined text-base">info</span>
+                            <span>No se adjuntaron fotografías (se usará una imagen ilustrativa).</span>
+                        </div>
+                    `;
+                } else {
+                    let thumbsHtml = '';
+                    photos.slice(0, 8).forEach((photo, idx) => {
+                        thumbsHtml += `
+                            <div class="relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-outline-variant/30 dark:border-white/10 group cursor-pointer" onclick="window.previewMarketplacePropertyDetails()">
+                                <img src="${photo}" class="w-full h-full object-cover">
+                                ${idx === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-primary/90 text-white text-[8px] font-bold text-center py-0.5">Portada</span>' : ''}
+                            </div>
+                        `;
+                    });
+                    if (photoCount > 8) {
+                        thumbsHtml += `
+                            <div class="shrink-0 w-14 h-14 rounded-xl bg-surface-container-high dark:bg-[#202024] border border-outline-variant/30 dark:border-white/10 flex items-center justify-center font-headline font-bold text-xs text-secondary dark:text-[#c7c6c6] cursor-pointer" onclick="window.previewMarketplacePropertyDetails()">
+                                +${photoCount - 8}
+                            </div>
+                        `;
+                    }
+                    photosGrid.innerHTML = thumbsHtml;
+                }
+            }
+
+            // Amenities Container
+            const amenitiesContainer = document.getElementById('review-amenities-container');
+            if (amenitiesContainer) {
+                if (amenitiesList.length === 0) {
+                    amenitiesContainer.innerHTML = `<span class="text-xs text-secondary dark:text-zinc-500 font-body">Sin amenities o servicios adicionales especificados.</span>`;
+                } else {
+                    amenitiesContainer.innerHTML = amenitiesList.map(am => `
+                        <span class="inline-flex items-center gap-1 text-[11px] font-headline font-semibold px-2.5 py-1 rounded-lg bg-surface-container-high/80 dark:bg-[#202024] text-on-background dark:text-[#f1f1f1] border border-outline-variant/20 dark:border-white/5">
+                            <span class="material-symbols-outlined text-[13px] text-primary dark:text-[#A13333]">check_circle</span>
+                            <span>${am}</span>
+                        </span>
+                    `).join('');
+                }
+            }
+
+            // Mascotas Status
+            const mascotasStatus = document.getElementById('review-mascotas-status');
+            if (mascotasStatus) {
+                if (permiteMascotas) {
+                    mascotasStatus.className = 'font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
+                    mascotasStatus.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> Sí, acepta mascotas';
+                } else {
+                    mascotasStatus.className = 'font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1';
+                    mascotasStatus.innerHTML = '<span class="material-symbols-outlined text-sm">cancel</span> No permite mascotas';
+                }
+            }
+
+            // Visitas Status
+            const usarAgenda = Boolean(document.getElementById('usar-agenda-visitas')?.checked);
+            const modalidad = document.querySelector('input[name="modalidad-visitas"]:checked')?.value || 'confirmar';
+            const horaDesde = document.getElementById('visitas-hora-desde')?.value || '09:00';
+            const horaHasta = document.getElementById('visitas-hora-hasta')?.value || '18:00';
+            const activeDays = Array.from(document.querySelectorAll('#dias-visitas-container .dia-visita-btn.active-dia')).map(b => b.textContent.trim() || b.dataset.dia);
+
+            const visitasStatus = document.getElementById('review-visitas-status');
+            if (visitasStatus) {
+                if (usarAgenda) {
+                    visitasStatus.textContent = modalidad === 'automatica' ? 'Reserva directa automática' : 'Con confirmación previa';
+                } else {
+                    visitasStatus.textContent = 'Coordinación directa por chat';
+                }
+            }
+
+            const visitasDiasHorarios = document.getElementById('review-visitas-dias-horarios');
+            if (visitasDiasHorarios) {
+                if (usarAgenda && activeDays.length > 0) {
+                    visitasDiasHorarios.textContent = `${activeDays.join(', ')} (${horaDesde} a ${horaHasta} hs)`;
+                } else if (usarAgenda) {
+                    visitasDiasHorarios.textContent = `Lunes a Viernes (${horaDesde} a ${horaHasta} hs)`;
+                } else {
+                    visitasDiasHorarios.textContent = 'A convenir con el interesado';
+                }
+            }
+
+            // Owner verification badge status in Step 6
+            const verifTag = document.getElementById('wizard-verification-status-tag');
+            if (verifTag) {
+                if (isVerified) {
+                    verifTag.innerHTML = `
+                        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                            <span class="material-symbols-outlined text-sm">verified</span>
+                            Usuario Verificado
+                        </span>
+                    `;
+                } else {
+                    verifTag.innerHTML = `
+                        <span class="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Insignia Opcional
+                        </span>
+                    `;
+                }
+            }
+        };
+        if (typeof App !== 'undefined') {
+            App.renderPublishReview = window.renderPublishReview;
+            App.previewMarketplacePropertyDetails = window.previewMarketplacePropertyDetails;
+            App.getWizardPropertyDataForPreview = window.getWizardPropertyDataForPreview;
         }
 
         // Delegated listener for Continue buttons & Day Selection Pill buttons
@@ -2776,13 +3189,7 @@ const App = {
                         preferenciasAlquiler: {
                             permiteMascotas: document.getElementById('permite-mascotas')?.checked || false,
                             mascotas: {
-                                gatos: parseInt(document.getElementById('cant-gato')?.value || 0),
-                                perrosPequenos: parseInt(document.getElementById('cant-perro-pequeno')?.value || 0),
-                                perrosGrandes: parseInt(document.getElementById('cant-perro-grande')?.value || 0),
-                                negociable: document.getElementById('mascotas-negociable')?.checked || false,
-                                tarifaIngreso: parseFloat(document.getElementById('tarifa-mascota')?.value || 0),
-                                tarifaReembolsable: document.getElementById('tarifa-reembolsable')?.value === 'si',
-                                alquilerMensualMascota: parseFloat(document.getElementById('alquiler-mascota')?.value || 0)
+                                permiteMascotas: document.getElementById('permite-mascotas')?.checked || false
                             }
                         },
 
@@ -9504,6 +9911,8 @@ window.openPostulacionModal = async function(prop) {
                 if (!tenantNameVal) {
                     tenantNameVal = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || pass.razon_social || u.nombre_completo || u.name || '';
                 }
+                var tenantAgeVal = didit.age || didit.edad || u.edad || pass.edad || null;
+                var tenantDobVal = didit.dateOfBirth || didit.dob || didit.fecha_nacimiento || u.fecha_nacimiento || pass.fecha_nacimiento || null;
             } catch (e) {}
 
             const appData = {
@@ -9524,6 +9933,13 @@ window.openPostulacionModal = async function(prop) {
                 tenantPhone: defaultPhone || '+54 9 11',
                 tenantDni: tenantDniVal,
                 tenantCuit: tenantCuitVal,
+                tenantAge: tenantAgeVal,
+                tenant_edad: tenantAgeVal,
+                edad: tenantAgeVal,
+                age: tenantAgeVal,
+                tenantDateOfBirth: tenantDobVal,
+                tenant_fecha_nacimiento: tenantDobVal,
+                fecha_nacimiento: tenantDobVal,
                 condicion_fiscal: tenantCondicion,
                 incomeProof: `Pasaporte Hábitat (${tenantCondicion})`,
                 message: userMsg

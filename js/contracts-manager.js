@@ -23,43 +23,118 @@
         localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
     }
 
+    function isUserOwnerOfContract(contract) {
+        if (!contract) return false;
+
+        let userEmail = '';
+        let userDni = '';
+        let userId = '';
+        let userRole = '';
+
+        try {
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+            userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
+            userId = String(uLocal.id || uLocal.id_perfil || uLocal.user_id || '');
+            userRole = (uLocal.role || uLocal.tipo_usuario || uLocal.user_type || '').toUpperCase();
+        } catch (e) {}
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRole = (urlParams.get('role') || '').toUpperCase();
+
+        const ownerEmail = (contract.owner?.email || contract.owner_email || '').toLowerCase().trim();
+        const ownerDni = (contract.owner?.dni || '').replace(/\D/g, '');
+        const ownerId = String(contract.owner?.id || contract.id_propietario || contract.owner_id || '');
+
+        const tenantEmail = (contract.tenant?.email || contract.tenant_email || '').toLowerCase().trim();
+        const tenantDni = (contract.tenant?.dni || '').replace(/\D/g, '');
+        const tenantId = String(contract.tenant?.id || contract.id_inquilino || contract.tenant_id || '');
+
+        // Si el usuario actual es explícitamente el inquilino del contrato:
+        if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
+            return false;
+        }
+        if (userDni && tenantDni && userDni === tenantDni && userDni !== ownerDni) {
+            return false;
+        }
+        if (userId && tenantId && userId === tenantId && userId !== ownerId) {
+            return false;
+        }
+        if (urlRole === 'TENANT' || urlRole === 'INQUILINO') {
+            return false;
+        }
+        if (window.location.pathname.includes('tu-alquiler')) {
+            return false;
+        }
+
+        // Si el usuario actual coincide con el propietario del contrato:
+        if (userEmail && ownerEmail && userEmail === ownerEmail) {
+            return true;
+        }
+        if (userDni && ownerDni && userDni === ownerDni) {
+            return true;
+        }
+        if (userId && ownerId && userId === ownerId) {
+            return true;
+        }
+
+        // Si tiene rol explícito de propietario o corredor en la URL o sesión:
+        if (urlRole === 'OWNER' || urlRole === 'PROPIETARIO' || urlRole === 'BROKER' || urlRole === 'CORREDOR') {
+            return true;
+        }
+        if (window.location.pathname.includes('administrador') || window.location.pathname.includes('panel-corredor')) {
+            return true;
+        }
+        if (userRole === 'OWNER' || userRole === 'PROPIETARIO' || userRole === 'BROKER' || userRole === 'CORREDOR' || userRole === 'ADMIN') {
+            return true;
+        }
+
+        const storedRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        if (storedRole === 'OWNER' || storedRole === 'PROPIETARIO' || storedRole === 'BROKER' || storedRole === 'CORREDOR') {
+            return true;
+        }
+
+        return false;
+    }
+
     function detectActiveUserRole(contract) {
         const urlParams = new URLSearchParams(window.location.search);
         const urlRole = urlParams.get('role');
-        if (urlRole && ['TENANT', 'OWNER', 'BROKER'].includes(urlRole.toUpperCase())) {
-            const r = urlRole.toUpperCase();
-            localStorage.setItem('habitat_active_role', r);
-            return r;
+        if (urlRole && ['TENANT', 'OWNER', 'BROKER', 'INQUILINO', 'PROPIETARIO', 'CORREDOR'].includes(urlRole.toUpperCase())) {
+            const up = urlRole.toUpperCase();
+            if (up === 'INQUILINO') return 'TENANT';
+            if (up === 'PROPIETARIO') return 'OWNER';
+            if (up === 'CORREDOR') return 'BROKER';
+            return up;
         }
 
-        // Auto-detect based on logged-in user email / profile
+        // Auto-detect based on logged-in user email / profile against contract
         try {
             const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
             const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-            if (contract && userEmail) {
-                if (contract.tenant?.email?.toLowerCase().trim() === userEmail) {
-                    localStorage.setItem('habitat_active_role', 'TENANT');
-                    return 'TENANT';
-                }
-                if (contract.owner?.email?.toLowerCase().trim() === userEmail) {
-                    localStorage.setItem('habitat_active_role', 'OWNER');
-                    return 'OWNER';
-                }
+            const userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
+            if (contract) {
+                const tenantEmail = (contract.tenant?.email || contract.tenant_email || '').toLowerCase().trim();
+                const tenantDni = (contract.tenant?.dni || '').replace(/\D/g, '');
+                const ownerEmail = (contract.owner?.email || contract.owner_email || '').toLowerCase().trim();
+                const ownerDni = (contract.owner?.dni || '').replace(/\D/g, '');
+
+                if (userEmail && tenantEmail && userEmail === tenantEmail) return 'TENANT';
+                if (userDni && tenantDni && userDni === tenantDni) return 'TENANT';
+                if (userEmail && ownerEmail && userEmail === ownerEmail) return 'OWNER';
+                if (userDni && ownerDni && userDni === ownerDni) return 'OWNER';
+            }
+            if (uLocal.role || uLocal.tipo_usuario || uLocal.user_type) {
+                const r = (uLocal.role || uLocal.tipo_usuario || uLocal.user_type).toUpperCase();
+                if (r === 'INQUILINO' || r === 'TENANT') return 'TENANT';
+                if (r === 'PROPIETARIO' || r === 'OWNER') return 'OWNER';
+                if (r === 'CORREDOR' || r === 'BROKER') return 'BROKER';
             }
         } catch (e) {}
 
-        if (document.referrer.includes('tu-alquiler') || document.referrer.includes('inquilino') || document.referrer.includes('pasaporte')) {
-            localStorage.setItem('habitat_active_role', 'TENANT');
-            return 'TENANT';
-        }
-        if (document.referrer.includes('administrador') || document.referrer.includes('propietario')) {
-            localStorage.setItem('habitat_active_role', 'OWNER');
-            return 'OWNER';
-        }
-        if (document.referrer.includes('panel-corredor') || document.referrer.includes('corredor')) {
-            localStorage.setItem('habitat_active_role', 'BROKER');
-            return 'BROKER';
-        }
+        if (window.location.pathname.includes('tu-alquiler')) return 'TENANT';
+        if (window.location.pathname.includes('administrador')) return 'OWNER';
+        if (window.location.pathname.includes('panel-corredor')) return 'BROKER';
 
         const storedRole = localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || localStorage.getItem('habitat_user_type');
         if (storedRole) {
@@ -70,6 +145,144 @@
         }
 
         return 'TENANT';
+    }
+
+    function formatMoney(n) {
+        return '$ ' + Number(n || 0).toLocaleString('es-AR');
+    }
+
+    const ORDINAL_NAMES = [
+        'PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA',
+        'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA',
+        'DÉCIMA PRIMERA', 'DÉCIMA SEGUNDA', 'DÉCIMA TERCERA', 'DÉCIMA CUARTA', 'DÉCIMA QUINTA',
+        'DÉCIMA SEXTA', 'DÉCIMA SÉPTIMA', 'DÉCIMA OCTAVA', 'DÉCIMA NOVENA', 'VIGÉSIMA',
+        'VIGÉSIMA PRIMERA', 'VIGÉSIMA SEGUNDA', 'VIGÉSIMA TERCERA', 'VIGÉSIMA CUARTA', 'VIGÉSIMA QUINTA',
+        'VIGÉSIMA SEXTA', 'VIGÉSIMA SÉPTIMA', 'VIGÉSIMA OCTAVA', 'VIGÉSIMA NOVENA', 'TRIGÉSIMA'
+    ];
+
+    function getOrdinalName(idx) {
+        return ORDINAL_NAMES[idx] || `CLÁUSULA ${idx + 1}`;
+    }
+
+    function renderContractClausesList(contract, isPrint = false) {
+        const clauses = [];
+        const cfg = contract.clauses || {};
+
+        // 1. Objeto y Destino
+        const isVivienda = cfg.viviendaExclusiva !== false;
+        clauses.push({
+            tag: 'OBJETO Y DESTINO',
+            body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress}</b>.${isVivienda ? ' Dicho inmueble tendrá como <b>destino exclusivo el de vivienda familiar y permanente</b>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
+        });
+
+        // 2. Plazo
+        clauses.push({
+            tag: 'PLAZO DE LOCACIÓN',
+            body: `El plazo contractual se estipula en <b>${contract.durationMonths || 24} meses</b> corridos, con inicio el día <b>${contract.startDate || 'acordado'}</b> y finalización indefectible el día <b>${contract.endDate || 'acordado'}</b>.`
+        });
+
+        // 3. Canon Locativo y Actualización
+        const rentFmt = formatMoney(contract.monthlyRent) + ` (${contract.currency || 'ARS'})`;
+        clauses.push({
+            tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
+            body: `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.`
+        });
+
+        // 4. Pagos y Mora
+        const moraTxt = cfg.tasaMoraDiaria ? ` En caso de mora, se devengará un interés punitorio del <b>${cfg.tasaMoraDiaria}% diario</b> hasta su efectiva cancelación.` : '';
+        clauses.push({
+            tag: 'LUGAR Y FORMA DE PAGO',
+            body: `El canon locativo deberá abonarse del 1 al ${contract.paymentDueDay || 10} de cada mes mediante transferencia bancaria al Alias CBU: <b>${contract.aliasCbu || 'HABITAT.CONTRATO.MP'}</b>.${moraTxt}`
+        });
+
+        // 5. Expensas e Impuestos
+        let expensasTxt = 'Las expensas comunes ordinarias y los servicios derivados del uso serán por cuenta exclusiva del LOCATARIO. Las expensas extraordinarias e impuestos sobre la titularidad del inmueble serán a cargo del LOCADOR.';
+        if (cfg.regimenExpensas === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
+        if (cfg.regimenExpensas === 'INCLUIDAS') expensasTxt = 'Las expensas e impuestos se encuentran incluidos dentro del monto del canon locativo mensual fijado.';
+        clauses.push({
+            tag: 'EXPENSAS, SERVICIOS E IMPUESTOS',
+            body: expensasTxt
+        });
+
+        // 6. Depósito en Garantía
+        if (cfg.depositoModalidad !== 'SIN_DEPOSITO') {
+            let depTxt = 'equivalente a UN (1) mes de canon locativo inicial';
+            if (cfg.depositoModalidad === '1_MES_USD') depTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
+            if (cfg.depositoModalidad === '2_MESES') depTxt = 'equivalente a DOS (2) meses de canon locativo inicial';
+            clauses.push({
+                tag: 'DEPÓSITO EN GARANTÍA',
+                body: `EL LOCATARIO entrega a EL LOCADOR la suma ${depTxt}, suma que será restituida al finalizar la locación previa verificación del estado de conservación del inmueble y entrega de llaves.`
+            });
+        }
+
+        // 7. Mascotas
+        if (cfg.mascotas === true) {
+            clauses.push({
+                tag: 'TENENCIA DE MASCOTAS',
+                body: 'Se autoriza la tenencia de animales domésticos en la propiedad bajo exclusiva responsabilidad del LOCATARIO por los cuidados sanitarios, ruidos y eventuales deterioros que pudieran ocasionar.'
+            });
+        } else if (cfg.mascotas === false) {
+            clauses.push({
+                tag: 'PROHIBICIÓN DE MASCOTAS',
+                body: 'Queda terminantemente prohibida la tenencia o permanencia de animales de cualquier especie en el inmueble arrendado.'
+            });
+        }
+
+        // 8. Seguro contra Incendio
+        if (cfg.seguroIncendio !== false) {
+            clauses.push({
+                tag: 'SEGURO CONTRA INCENDIO',
+                body: 'EL LOCATARIO se obliga a contratar y mantener vigente durante todo el plazo contractual una póliza de seguro contra incendio y responsabilidad civil sobre la propiedad, designando al LOCADOR como beneficiario.'
+            });
+        }
+
+        // 9. Prohibición de Subalquiler
+        if (cfg.prohibirSubalquiler !== false) {
+            clauses.push({
+                tag: 'PROHIBICIÓN DE CESIÓN Y SUBLOCACIÓN',
+                body: 'Queda expresamente prohibida la cesión total o parcial del presente contrato, el subarriendo total o parcial y el préstamo de uso del inmueble a terceros bajo apercibimiento de rescisión culposa (Art. 1213 CCyCN).'
+            });
+        }
+
+        // 10. Rescisión Anticipada
+        if (cfg.rescisionAnticipada !== false) {
+            clauses.push({
+                tag: 'RESCISIÓN ANTICIPADA',
+                body: 'EL LOCATARIO podrá rescindir el presente contrato en cualquier momento transcurridos los primeros seis meses de vigencia, notificando fehacientemente al LOCADOR con al menos un mes de anticipación conforme a las pautas del Art. 1221 del Código Civil y Comercial de la Nación.'
+            });
+        }
+
+        // 11. Cláusulas Personalizadas
+        if (Array.isArray(contract.customClauses) && contract.customClauses.length > 0) {
+            contract.customClauses.forEach(cc => {
+                if (cc.title && cc.text) {
+                    clauses.push({
+                        tag: cc.title.toUpperCase(),
+                        body: cc.text
+                    });
+                }
+            });
+        }
+
+        // Cláusula final: Firma Digital y Biometría Didit
+        clauses.push({
+            tag: 'VALIDEZ PROBATORIA Y BIOMETRÍA DIDIT',
+            body: 'Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente instrumento mediante <b>Firma Electrónica y Validación Biométrica Facial en Vivo (Didit Liveness Check)</b>, reconociéndole plena validez legal, eficacia probatoria y fuerza vinculante conforme a la <b>Ley 25.506</b>.'
+        });
+
+        if (isPrint) {
+            return clauses.map((c, idx) => `
+                <div class="clause">
+                    <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                </div>
+            `).join('');
+        }
+
+        return clauses.map((c, idx) => `
+            <p>
+                <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+            </p>
+        `).join('');
     }
 
     async function syncContractsFromSupabase() {
@@ -575,7 +788,7 @@
                                                 <span class="material-symbols-outlined text-sm text-emerald-500">chat</span>
                                                 <span>Chat</span>
                                             </button>
-                                            ${(!isFullySigned(c)) ? `
+                                            ${(!isFullySigned(c) && isUserOwnerOfContract(c)) ? `
                                             <button type="button" onclick="ContractsManager.editContractConditions('${c.id}')" class="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Editar Borrador de Contrato">
                                                 <span class="material-symbols-outlined text-sm">tune</span>
                                                 <span class="hidden sm:inline">Editar</span>
@@ -625,6 +838,8 @@
             } catch (e) {}
 
             const isFullySigned = (c) => c.status === 'SIGNED_AND_SEALED' || (c.tenant?.hasSigned && c.owner?.hasSigned);
+            const isOwner = isUserOwnerOfContract(contract);
+            const canEditContract = (!isFullySigned(contract)) && isOwner;
             const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
             const signerObj = effectiveRole === 'TENANT' ? contract?.tenant : contract?.owner;
             const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
@@ -673,7 +888,7 @@
 
                         <!-- Right Quick Action Bar -->
                         <div class="flex items-center justify-end gap-2 shrink-0 flex-wrap">
-                            ${(!isFullySigned(contract)) ? `
+                            ${(canEditContract) ? `
                             <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="h-9 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Modificar Condiciones y Cláusulas del Contrato">
                                 <span class="material-symbols-outlined text-base">tune</span>
                                 <span>Editar Contrato</span>
@@ -766,7 +981,7 @@
                             </div>
 
                             <!-- Prominent Contract Terms Editor Callout Card -->
-                            ${(!isFullySigned(contract)) ? `
+                            ${(canEditContract) ? `
                             <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-amber-950/20 border-2 border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-start sm:items-center gap-3.5 min-w-0">
                                     <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
@@ -802,7 +1017,7 @@
                                             Conforme a la Ley Nacional N° 25.506 de Firma Digital y Arts. 1187 y concordantes del Código Civil y Comercial de la Nación
                                         </p>
                                     </div>
-                                    ${!isFullySigned(contract) ? `
+                                    ${(canEditContract) ? `
                                     <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
                                         <span class="material-symbols-outlined text-sm">edit</span>
                                         <span>Editar Cláusulas</span>
@@ -811,28 +1026,10 @@
                                 </div>
 
                                 <p>
-                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas:
+                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                                 </p>
 
-                                <p>
-                                    <b>PRIMERA (OBJETO):</b> EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress}</b>, el cual se destinará exclusivamente a vivienda familiar y permanente.
-                                </p>
-
-                                <p>
-                                    <b>SEGUNDA (PLAZO):</b> El plazo contractual se estipula en <b>${contract.durationMonths || 24} meses</b> corridos, con inicio el día <b>${contract.startDate}</b> y finalización indefectible el día <b>${contract.endDate}</b>.
-                                </p>
-
-                                <p>
-                                    <b>TERCERA (CANON LOCATIVO Y ACTUALIZACIÓN):</b> El precio inicial del alquiler mensual se fija en la suma de <b>${formatMoney(contract.monthlyRent)} (${contract.currency || 'ARS'})</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.
-                                </p>
-
-                                <p>
-                                    <b>CUARTA (PAGOS):</b> El canon locativo deberá abonarse del 1 al ${contract.paymentDueDay || 10} de cada mes mediante transferencia bancaria al Alias CBU: <b>${contract.aliasCbu || 'HABITAT.CONTRATO.MP'}</b>.
-                                </p>
-
-                                <p>
-                                    <b>QUINTA (VALIDEZ PROBATORIA Y BIOMETRÍA DIDIT):</b> Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente instrumento mediante <b>Firma Electrónica y Validación Biométrica Facial en Vivo (Didit Liveness Check)</b>, reconociéndole plena validez legal, eficacia probatoria y fuerza vinculante conforme a la <b>Ley 25.506</b>.
-                                </p>
+                                ${renderContractClausesList(contract)}
 
                                 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
                                     <b>Hash SHA-256 del Documento:</b> <span class="font-mono text-emerald-600 dark:text-emerald-400 break-all">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span>
@@ -1019,6 +1216,28 @@
                 this._chatChannel = null;
             }
             this._activeFullscreenContractId = null;
+
+            // Si se abrió en contratos.html desde un enlace externo / panel del inquilino
+            if (window.location.pathname.includes('contratos.html')) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const returnUrl = urlParams.get('returnUrl') || sessionStorage.getItem('habitat_contracts_return_url');
+                if (returnUrl) {
+                    sessionStorage.removeItem('habitat_contracts_return_url');
+                    window.location.href = returnUrl;
+                    return;
+                }
+                if (urlParams.has('contract') || urlParams.has('sign') || urlParams.has('id')) {
+                    if (document.referrer && document.referrer.includes('tu-alquiler')) {
+                        window.location.href = 'tu-alquiler.html#postulaciones';
+                        return;
+                    }
+                    const role = urlParams.get('role') || ContractsManager.currentUserRole;
+                    if (role === 'TENANT') {
+                        window.location.href = 'tu-alquiler.html#postulaciones';
+                        return;
+                    }
+                }
+            }
         },
 
         switchFullscreenTab: function (tabName) {
@@ -2212,6 +2431,20 @@
             const contract = this.getContractById(contractId);
             if (!contract) return;
 
+            // Restricción estricta: Solo si el usuario actual es el propietario/locador del contrato
+            if (!isUserOwnerOfContract(contract)) {
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '🔒 Acceso Restringido',
+                        message: 'Únicamente el propietario / locador tiene permisos para editar las condiciones y cláusulas del contrato.',
+                        type: 'warning'
+                    });
+                } else {
+                    alert('Únicamente el propietario / locador tiene permisos para editar las condiciones y cláusulas del contrato.');
+                }
+                return;
+            }
+
             const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
             if (isSigned) {
                 if (window.ToastManager) {
@@ -2354,28 +2587,10 @@
                     </div>
 
                     <div class="clause">
-                        <b>PARTES INTERVINIENTES:</b> En la Ciudad de Mendoza, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas:
+                        <b>PARTES INTERVINIENTES:</b> En la Ciudad de Mendoza, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                     </div>
 
-                    <div class="clause">
-                        <b>PRIMERA (OBJETO):</b> EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress}</b>, el cual se destinará exclusivamente a vivienda familiar y permanente.
-                    </div>
-
-                    <div class="clause">
-                        <b>SEGUNDA (PLAZO):</b> El plazo contractual se estipula en <b>${contract.durationMonths} meses</b> corridos, con inicio el día <b>${contract.startDate}</b> y finalización indefectible el día <b>${contract.endDate}</b>.
-                    </div>
-
-                    <div class="clause">
-                        <b>TERCERA (CANON LOCATIVO Y ACTUALIZACIÓN):</b> El precio inicial del alquiler mensual se fija en la suma de <b>${formatMoney(contract.monthlyRent)} (${contract.currency})</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex}</b> publicado oficialmente.
-                    </div>
-
-                    <div class="clause">
-                        <b>CUARTA (PAGOS):</b> El canon locativo deberá abonarse del 1 al ${contract.paymentDueDay} de cada mes mediante transferencia bancaria al Alias CBU: <b>${contract.aliasCbu}</b>.
-                    </div>
-
-                    <div class="clause">
-                        <b>QUINTA (VALIDEZ DE FIRMA DIGITAL Y BIOMETRÍA DIDIT):</b> Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente instrumento mediante <b>Firma Electrónica y Validación Biométrica Facial en Vivo (Didit Liveness Check)</b>, reconociéndole plena validez legal, eficacia probatoria y fuerza vinculante conforme a la <b>Ley 25.506</b>.
-                    </div>
+                    ${renderContractClausesList(contract, true)}
 
                     <div class="signatures">
                         <div class="sig-box">

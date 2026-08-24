@@ -138,6 +138,51 @@
         const doc = dec?.document || {};
         const fullName = doc.fullName || (doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}`.trim() : null) || 'Titular Verificado';
         const dni = doc.documentNumber || doc.dni || null;
+        const rawDob = doc.dateOfBirth || doc.date_of_birth || doc.dob || doc.birth_date || doc.fecha_nacimiento || null;
+        let age = doc.age || doc.edad || null;
+        let isoDob = null;
+        let displayDob = null;
+
+        if (rawDob) {
+          try {
+            let d = null;
+            if (rawDob instanceof Date && !isNaN(rawDob.getTime())) {
+              d = rawDob;
+            } else if (typeof rawDob === 'string') {
+              const sDob = String(rawDob).trim();
+              if (sDob.includes('/')) {
+                const parts = sDob.split('/');
+                if (parts.length === 3) {
+                  if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                  else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                }
+              } else if (sDob.includes('-')) {
+                const parts = sDob.split('-');
+                if (parts.length === 3) {
+                  if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                  else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                }
+              } else {
+                d = new Date(sDob);
+              }
+            }
+            if (d && !isNaN(d.getTime())) {
+              const y = d.getFullYear();
+              const m = d.getMonth() + 1;
+              const day = d.getDate();
+              isoDob = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              displayDob = `${String(day).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+
+              const today = new Date();
+              let calculated = today.getFullYear() - y;
+              const mDiff = today.getMonth() - d.getMonth();
+              if (mDiff < 0 || (mDiff === 0 && today.getDate() < day)) {
+                calculated--;
+              }
+              if (calculated >= 16 && calculated <= 120) age = calculated;
+            }
+          } catch (eAge) {}
+        }
 
         // Guardar identidad real extraída en localStorage
         let cuit = null;
@@ -156,6 +201,12 @@
           fullName: fullName,
           documentNumber: dni,
           dni: dni,
+          dateOfBirth: isoDob || displayDob,
+          dob: isoDob || displayDob,
+          fecha_nacimiento: isoDob || displayDob,
+          formattedDateOfBirth: displayDob,
+          age: age,
+          edad: age,
           cuit: cuit,
           sessionId: sessionId,
           verifiedAt: new Date().toISOString()
@@ -206,6 +257,8 @@
             };
             if (fullName && fullName !== 'Titular Verificado') perfilUpdate.nombre_completo = fullName;
             if (dni) perfilUpdate.dni = dni;
+            if (isoDob) perfilUpdate.fecha_nacimiento = isoDob;
+            if (age) perfilUpdate.edad = age;
 
             if (perfilIdToUpdate) {
               await window.supabaseClient
@@ -230,6 +283,8 @@
                 if (fullName && fullName !== 'Titular Verificado') passUpdate.razon_social = fullName;
                 if (dni) passUpdate.dni = dni;
                 if (cuit) passUpdate.cuit = cuit;
+                if (isoDob) passUpdate.fecha_nacimiento = isoDob;
+                if (age) passUpdate.edad = age;
 
                 await window.supabaseClient
                   .from('Pasaporte_habitat')
@@ -256,6 +311,11 @@
             fullName: fullName,
             documentNumber: dni,
             dni: dni,
+            dateOfBirth: dob,
+            dob: dob,
+            fecha_nacimiento: dob,
+            age: age,
+            edad: age,
             nationality: 'Argentina'
           },
           scores: dec?.scores || { liveness: 'PASSED', faceMatch: 99.4 }

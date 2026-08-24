@@ -278,7 +278,7 @@
                             Acceso digital permanente con validación biométrica Didit, sellado TSA y Certificado de Evidencia (Audit Trail).
                         </p>
                         <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                            <a href="contratos.html?role=TENANT" class="w-full py-2 px-3 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                            <a href="contratos.html?role=TENANT&returnUrl=tu-alquiler.html" class="w-full py-2 px-3 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
                                 <span class="material-symbols-outlined text-sm">draw</span>
                                 <span>Revisar y Firmar Contrato (Liveness Didit)</span>
                             </a>
@@ -470,9 +470,14 @@
 
                         <div class="flex-1 text-center md:text-left space-y-2">
                             <div>
-                                <h3 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
-                                    Cargando datos del usuario...
-                                </h3>
+                                <div class="flex items-center gap-2.5 justify-center md:justify-start flex-wrap">
+                                    <h3 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
+                                        Cargando datos del usuario...
+                                    </h3>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-headline font-black rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 shrink-0 hidden" id="passport-user-age-badge">
+                                        <span class="material-symbols-outlined text-xs text-primary">cake</span> <span id="passport-user-age-text"></span>
+                                    </span>
+                                </div>
                                 <p class="font-headline text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5" id="passport-cuit-header">
                                     Inquilino Registrado • CUIT/CUIL: Consultando...
                                 </p>
@@ -549,6 +554,10 @@
                                         <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
                                             <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Autenticidad DNI:</span>
                                             <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-dni-estado">Documento Legítimo</strong>
+                                        </li>
+                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Edad del Titular:</span>
+                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right truncate" id="audit-edad-titular">Validando...</strong>
                                         </li>
                                         <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
                                             <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Biometría facial:</span>
@@ -1087,10 +1096,10 @@
                                         <span class="material-symbols-outlined text-sm">chat</span>
                                         <span>Chat de Negociación</span>
                                     </button>
-                                    <a href="contratos.html?contract=${contract.id || ''}&sign=1&role=TENANT" class="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">draw</span>
-                                        <span>Firma Digital & Biometría Didit</span>
-                                    </a>
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'document')" class="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'description' : 'draw'}</span>
+                                        <span>${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'Ver Contrato' : 'Firma Digital & Biometría Didit'}</span>
+                                    </button>
                                     <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || ''}')" class="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-all flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm">download</span> PDF
                                     </button>
@@ -1753,20 +1762,35 @@
                         const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
                         const isRejected = stNorm === 'rechazada';
 
-                        // Resolver ID de Contrato exacto
+                        // Resolver ID de Contrato exacto y verificar si ya fue firmado por el inquilino
                         let targetContractId = app.contract_id;
-                        if (!targetContractId) {
-                            try {
-                                const rawContr = localStorage.getItem('habitat_contracts');
-                                if (rawContr) {
-                                    const cList = JSON.parse(rawContr);
-                                    const foundC = cList.find(c => c && (String(c.propertyId) === String(app.property_id) || String(c.propertyId) === String(app.id)));
-                                    if (foundC) targetContractId = foundC.id;
+                        let hasTenantSigned = false;
+                        try {
+                            const rawContr = localStorage.getItem('habitat_contracts');
+                            if (rawContr) {
+                                const cList = JSON.parse(rawContr);
+                                const foundC = cList.find(c => c && (
+                                    (targetContractId && String(c.id) === String(targetContractId)) ||
+                                    String(c.propertyId) === String(app.property_id) || 
+                                    String(c.propertyId) === String(app.id) ||
+                                    String(c.id) === String(app.contractId)
+                                ));
+                                if (foundC) {
+                                    targetContractId = foundC.id;
+                                    hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
                                 }
-                            } catch (e) {}
-                        }
+                            }
+                        } catch (e) {}
+
                         if (!targetContractId) {
                             targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').slice(-4) || '1042');
+                        }
+
+                        if (!hasTenantSigned && window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
+                            const cmContract = window.ContractsManager.getContractById(targetContractId);
+                            if (cmContract) {
+                                hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
+                            }
                         }
 
                         // Badge de estado moderno
@@ -1844,18 +1868,22 @@
                                         <div class="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/40 dark:via-emerald-900/20 border border-emerald-500/30 dark:border-emerald-700/50 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                                    <span class="material-symbols-outlined text-xl">celebration</span>
+                                                    <span class="material-symbols-outlined text-xl">${hasTenantSigned ? 'verified_user' : 'celebration'}</span>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-headline font-black text-xs sm:text-sm text-emerald-950 dark:text-emerald-200">¡El propietario aceptó tu postulación! 🎉</h4>
-                                                    <p class="font-body text-[11px] text-emerald-800 dark:text-emerald-400">Ya puedes revisar los términos y firmar el contrato digital con verificación facial Didit.</p>
+                                                    <h4 class="font-headline font-black text-xs sm:text-sm text-emerald-950 dark:text-emerald-200">
+                                                        ${hasTenantSigned ? '¡Contrato firmado digitalmente! ✅' : '¡El propietario aceptó tu postulación! 🎉'}
+                                                    </h4>
+                                                    <p class="font-body text-[11px] text-emerald-800 dark:text-emerald-400">
+                                                        ${hasTenantSigned ? 'Ya has completado tu firma biométrica con Didit KYC. Puedes consultar el contrato y su certificado legal cuando quieras.' : 'Ya puedes revisar los términos y firmar el contrato digital con verificación facial Didit.'}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <a href="contratos.html?contract=${targetContractId}&sign=1&role=TENANT" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
-                                                <span class="material-symbols-outlined text-base">draw</span>
-                                                <span>Firmar Contrato</span>
+                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'document')" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
+                                                <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
+                                                <span>${hasTenantSigned ? 'Ver Contrato' : 'Firmar Contrato'}</span>
                                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                                            </a>
+                                            </button>
                                         </div>
                                     ` : ''}
 
@@ -1916,11 +1944,11 @@
                                             </button>
 
                                             ${isAccepted ? `
-                                                <a href="contratos.html?contract=${targetContractId}&sign=1&role=TENANT" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
-                                                    <span class="material-symbols-outlined text-base">draw</span>
-                                                    <span>Ir a Firmar Contrato (Didit Liveness)</span>
+                                                <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'document')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+                                                    <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
+                                                    <span>${hasTenantSigned ? 'Ver Contrato' : 'Ir a Firmar Contrato (Didit Liveness)'}</span>
                                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                                                </a>
+                                                </button>
                                             ` : ''}
                                         </div>
                                     </div>
@@ -2344,8 +2372,60 @@
                 const elName = document.getElementById('passport-user-fullname');
                 if (elName) elName.textContent = userName;
 
+                // Extraer edad estrictamente desde Didit KYC / Supabase
+                let userAge = (pasaporte && pasaporte.edad)
+                    || (perfil && perfil.edad)
+                    || (diditIdent && (diditIdent.age || diditIdent.edad));
+
+                if (!userAge) {
+                    const dob = (pasaporte && pasaporte.fecha_nacimiento)
+                        || (perfil && perfil.fecha_nacimiento)
+                        || (diditIdent && (diditIdent.dateOfBirth || diditIdent.dob || diditIdent.fecha_nacimiento));
+                    if (dob) {
+                        try {
+                            let d = null;
+                            const s = String(dob).trim();
+                            if (s.includes('/')) {
+                                const p = s.split('/');
+                                if (p.length === 3) {
+                                    if (p[0].length === 4) d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+                                    else d = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+                                }
+                            } else if (s.includes('-')) {
+                                const p = s.split('-');
+                                if (p.length === 3) {
+                                    if (p[0].length === 4) d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+                                    else d = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+                                }
+                            } else {
+                                d = new Date(s);
+                            }
+                            if (d && !isNaN(d.getTime())) {
+                                const today = new Date();
+                                let calc = today.getFullYear() - d.getFullYear();
+                                const m = today.getMonth() - d.getMonth();
+                                if (m < 0 || (m === 0 && today.getDate() < d.getDate())) calc--;
+                                if (calc >= 16 && calc <= 120) userAge = calc;
+                            }
+                        } catch (eAge) {}
+                    }
+                }
+
+                const elAgeBadge = document.getElementById('passport-user-age-badge');
+                const elAgeText = document.getElementById('passport-user-age-text');
+                const elAuditAge = document.getElementById('audit-edad-titular');
+
+                if (userAge) {
+                    if (elAgeBadge) elAgeBadge.style.display = 'inline-flex';
+                    if (elAgeText) elAgeText.textContent = `${userAge} años`;
+                    if (elAuditAge) elAuditAge.textContent = `${userAge} años (Identidad Validada Didit)`;
+                } else {
+                    if (elAgeBadge) elAgeBadge.style.display = 'none';
+                    if (elAuditAge) elAuditAge.textContent = 'Pendiente de validación Didit';
+                }
+
                 const elCuitHeader = document.getElementById('passport-cuit-header');
-                if (elCuitHeader) elCuitHeader.textContent = `CUIT/CUIL: ${userCuit}`;
+                if (elCuitHeader) elCuitHeader.textContent = `CUIT/CUIL: ${userCuit}${userAge ? ` • ${userAge} años` : ''}`;
 
                 const elCode = document.getElementById('passport-code-id');
                 if (elCode) elCode.textContent = `ID: ${passportId}`;

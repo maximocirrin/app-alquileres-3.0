@@ -1129,6 +1129,8 @@
                 phone: '',
                 dni: 'No registrado',
                 cuit: 'No registrado',
+                age: null,
+                ageFormatted: '',
                 income: 0,
                 incomeFormatted: '$ 0',
                 condicionFiscal: 'Monotributista',
@@ -1159,12 +1161,52 @@
                 rawCondicion = a.datos_arca.condicionFiscal;
             }
 
+            // 3. Obtener Edad o calcular a partir de Fecha de Nacimiento / DNI
+            let rawAge = a.age ?? a.edad ?? a.tenant_age ?? a.tenant_edad ?? a.applicant_age;
+            let rawDob = a.date_of_birth ?? a.fecha_nacimiento ?? a.dateOfBirth ?? a.dob ?? a.tenant_fecha_nacimiento;
+
+            if (!rawAge && rawDob) {
+                try {
+                    let d = null;
+                    const sDob = String(rawDob).trim();
+                    if (sDob.includes('/')) {
+                        const parts = sDob.split('/');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                            else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                        }
+                    } else if (sDob.includes('-')) {
+                        const parts = sDob.split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                            else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                        }
+                    } else {
+                        d = new Date(sDob);
+                    }
+                    if (d && !isNaN(d.getTime())) {
+                        const today = new Date();
+                        let calculated = today.getFullYear() - d.getFullYear();
+                        const m = today.getMonth() - d.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) {
+                            calculated--;
+                        }
+                        if (calculated >= 16 && calculated <= 120) rawAge = calculated;
+                    }
+                } catch (eAge) {}
+            }
+
             // Consultar datos locales si coinciden con el usuario activo
             try {
                 const localDidit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
                 const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
                 const localPass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
 
+                if (!rawAge) {
+                    if (localUser.email === email || localUser.mail === email || localDidit.fullName === name || localPass.razon_social === name) {
+                        rawAge = localDidit.age || localDidit.edad || localPass.edad || localUser.edad;
+                    }
+                }
                 if (!rawDni && (localDidit.documentNumber || localDidit.dni)) {
                     if (localUser.email === email || localUser.mail === email || localDidit.fullName === name) {
                         rawDni = localDidit.documentNumber || localDidit.dni;
@@ -1207,6 +1249,14 @@
                 } else {
                     formattedDni = String(rawDni);
                 }
+            }
+
+            // Formatear edad estrictamente si proviene de Didit o fecha de nacimiento
+            let ageNum = null;
+            let ageFormatted = '';
+            if (rawAge && !isNaN(Number(rawAge)) && Number(rawAge) > 0) {
+                ageNum = parseInt(rawAge, 10);
+                ageFormatted = `${ageNum} años`;
             }
 
             // Formatear CUIT
@@ -1294,6 +1344,8 @@
                 phone: phone || 'No informado',
                 dni: formattedDni,
                 cuit: formattedCuit,
+                age: ageNum,
+                ageFormatted,
                 condicionFiscal,
                 income,
                 incomeFormatted: income > 0 ? `$ ${income.toLocaleString('es-AR')}` : '$ 0',
@@ -1891,13 +1943,9 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h3 class="font-headline text-base sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-snug truncate">${pData.name}</h3>
                                         <span class="px-2 py-0.5 text-[9px] sm:text-[10px] font-headline font-black rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">Score ${pData.score}/100</span>
-                                        <span class="px-2 py-0.5 text-[9px] sm:text-[10px] font-headline font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-[11px] sm:text-xs">badge</span>
-                                            ${pData.condicionFiscal}
-                                        </span>
                                     </div>
                                     <p class="font-headline text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-semibold tracking-normal mt-0.5">
-                                        DNI: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.dni}</span> • CUIT: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.cuit}</span>
+                                        DNI: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.dni}</span>${pData.ageFormatted ? ` • <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.ageFormatted}</span>` : ''} • CUIT: <span class="text-zinc-700 dark:text-zinc-300 font-bold">${pData.cuit}</span>
                                     </p>
                                     <p class="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 font-medium truncate mt-0.5">
                                         ${pData.email}${pData.phone && pData.phone !== 'No informado' ? ` • Tel: ${pData.phone}` : ''}
@@ -3538,7 +3586,7 @@
                                         </span>
                                     </div>
                                     <p class="font-headline text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
-                                        DNI: ${pData.dni} • CUIT: ${pData.cuit} • <span class="text-primary dark:text-red-400">${pData.condicionFiscal}</span>
+                                        DNI: ${pData.dni}${pData.ageFormatted ? ` • ${pData.ageFormatted}` : ''} • CUIT: ${pData.cuit} • <span class="text-primary dark:text-red-400">${pData.condicionFiscal}</span>
                                     </p>
                                     <p class="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 font-medium truncate">
                                         ${pData.email}${pData.phone && pData.phone !== 'No informado' ? ` • Tel: ${pData.phone}` : ''}
@@ -3568,13 +3616,19 @@
                                     <span class="material-symbols-outlined text-primary text-base">verified</span>
                                     1. Identidad Verificada & Biometría Didit KYC
                                 </h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                                     <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
                                         <span class="block text-[10px] font-bold uppercase text-zinc-400">DNI / CUIL Validado</span>
                                         <span class="font-extrabold text-zinc-900 dark:text-white text-xs sm:text-sm block mt-0.5">${pData.cuit}</span>
                                     </div>
                                     <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
-                                        <span class="block text-[10px] font-bold uppercase text-zinc-400">Prueba Biométrica (Didit KYC)</span>
+                                        <span class="block text-[10px] font-bold uppercase text-zinc-400">Edad del Postulante</span>
+                                        <span class="font-extrabold text-zinc-900 dark:text-white text-xs sm:text-sm flex items-center gap-1 mt-0.5">
+                                            <span class="material-symbols-outlined text-sm text-primary">cake</span> ${pData.ageFormatted || 'No informada'}
+                                        </span>
+                                    </div>
+                                    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+                                        <span class="block text-[10px] font-bold uppercase text-zinc-400">Prueba Biométrica</span>
                                         <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-1 mt-1">
                                             <span class="material-symbols-outlined text-sm">check_circle</span> Facial Validada 100%
                                         </span>
