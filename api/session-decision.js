@@ -108,6 +108,63 @@ export default async function handler(req, res) {
     let fullName = findDeep(rawData, ['full_name', 'fullName']) || docObj.full_name || docObj.fullName;
     if (!fullName) fullName = (firstName && lastName ? `${firstName} ${lastName}`.trim() : (firstName || lastName || ''));
     const documentNumber = findDeep(rawData, ['document_number', 'documentNumber', 'id_number', 'dni', 'personal_number']) || docObj.document_number || docObj.documentNumber || docObj.id_number || '';
+    
+    // Extraer Fecha de Nacimiento y calcular Edad
+    const rawDob = findDeep(rawData, [
+      'date_of_birth', 'dateOfBirth', 'birth_date', 'dob', 'fecha_nacimiento', 
+      'birthDate', 'birthdate', 'birthday', 'born_date', 'fechaNacimiento'
+    ]) || docObj.date_of_birth || docObj.dateOfBirth || docObj.dob || docObj.birth_date || null;
+    
+    let computedAge = null;
+    let isoDob = null; // YYYY-MM-DD para Postgres
+    let displayDob = null; // DD/MM/YYYY para interfaz
+    
+    if (rawDob) {
+      try {
+        let d = null;
+        if (rawDob instanceof Date && !isNaN(rawDob.getTime())) {
+          d = rawDob;
+        } else if (typeof rawDob === 'string') {
+          const s = rawDob.trim();
+          if (s.includes('/')) {
+            const parts = s.split('/');
+            if (parts.length === 3) {
+              if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+              else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+            }
+          } else if (s.includes('-')) {
+            const parts = s.split('-');
+            if (parts.length === 3) {
+              if (parts[0].length === 4) d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+              else d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+            }
+          } else {
+            d = new Date(s);
+          }
+        }
+        if (d && !isNaN(d.getTime())) {
+          const y = d.getFullYear();
+          const m = d.getMonth() + 1;
+          const day = d.getDate();
+          isoDob = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          displayDob = `${String(day).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+
+          const today = new Date();
+          let age = today.getFullYear() - y;
+          const monthDiff = today.getMonth() - d.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+            age--;
+          }
+          if (age >= 16 && age <= 120) computedAge = age;
+        }
+      } catch (eAge) {}
+    }
+    
+    const explicitAge = findDeep(rawData, ['age', 'edad']) || docObj.age || docObj.edad;
+    if (!computedAge && explicitAge && !isNaN(Number(explicitAge))) {
+      const pAge = parseInt(explicitAge, 10);
+      if (pAge >= 16 && pAge <= 120) computedAge = pAge;
+    }
 
     // Sincronizar en Supabase Perfil y Pasaporte_habitat si está Aprobado
     const vendorData = rawData.vendor_data || decisionObj.vendor_data || req.query.user_id || req.query.userId || req.query.email;
@@ -141,6 +198,8 @@ export default async function handler(req, res) {
             };
             if (fullName) perfUp.nombre_completo = fullName;
             if (documentNumber) perfUp.dni = documentNumber;
+            if (isoDob) perfUp.fecha_nacimiento = isoDob;
+            if (computedAge) perfUp.edad = computedAge;
 
             await supabase.from('Perfil').update(perfUp).eq('id_perfil', targetPerfil.id_perfil);
 
@@ -160,6 +219,8 @@ export default async function handler(req, res) {
               };
               if (fullName) passUp.razon_social = fullName;
               if (documentNumber) passUp.dni = documentNumber;
+              if (isoDob) passUp.fecha_nacimiento = isoDob;
+              if (computedAge) passUp.edad = computedAge;
 
               await supabase.from('Pasaporte_habitat').update(passUp).eq('id_pasaporte', passFound.id_pasaporte);
             }
@@ -180,6 +241,12 @@ export default async function handler(req, res) {
         fullName: fullName,
         documentNumber: documentNumber,
         dni: documentNumber,
+        dateOfBirth: isoDob || displayDob,
+        dob: isoDob || displayDob,
+        fecha_nacimiento: isoDob || displayDob,
+        formattedDateOfBirth: displayDob,
+        age: computedAge,
+        edad: computedAge,
         type: 'ARG_DNI'
       },
       scores: decisionObj.scores || rawData.scores || { liveness: 'PASSED', faceMatch: 99.4 },

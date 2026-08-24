@@ -108,6 +108,14 @@ function actualizarPasaporteUI(data) {
         elNombre.textContent = razonSocial || data.nombreCompleto;
     }
 
+    if (data.edad || data.age) {
+        const ageVal = data.edad || data.age;
+        const elAge = document.getElementById('passport-user-age-text');
+        if (elAge) elAge.textContent = `${ageVal} años`;
+        const elAuditAge = document.getElementById('audit-edad-titular');
+        if (elAuditAge) elAuditAge.textContent = `${ageVal} años (Identidad Validada)`;
+    }
+
     // 3. Auditoría detallada (Accordion)
     const elAuditCondicion = document.getElementById('audit-condicion-fiscal');
     if (elAuditCondicion) {

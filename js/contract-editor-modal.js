@@ -1,24 +1,248 @@
 /**
  * ==============================================================================
- * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.1 Ultra-Modern)
+ * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.2 Legal Architecture)
  * ==============================================================================
  * Modal ejecutivo, minimalista y ultra-moderno para configurar contratos
  * bajo DNU 70/2023 y Ley Nacional N° 25.506 de Firma Digital con Didit KYC.
+ * Incluye:
+ * - Numeración ordinal consecutiva dinámica sin saltos de cláusulas.
+ * - Soporte para cláusulas personalizadas con alta/baja en tiempo real.
+ * - Centro de explicaciones y referencias legales interactivas (Info ℹ️) por sección.
  */
 
 (function () {
     'use strict';
 
+    // Diccionario de números ordinales en español para numeración estricta y consecutiva
+    const ORDINAL_NAMES = [
+        'PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA',
+        'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA',
+        'DÉCIMA PRIMERA', 'DÉCIMA SEGUNDA', 'DÉCIMA TERCERA', 'DÉCIMA CUARTA', 'DÉCIMA QUINTA',
+        'DÉCIMA SEXTA', 'DÉCIMA SÉPTIMA', 'DÉCIMA OCTAVA', 'DÉCIMA NOVENA', 'VIGÉSIMA',
+        'VIGÉSIMA PRIMERA', 'VIGÉSIMA SEGUNDA', 'VIGÉSIMA TERCERA', 'VIGÉSIMA CUARTA', 'VIGÉSIMA QUINTA',
+        'VIGÉSIMA SEXTA', 'VIGÉSIMA SÉPTIMA', 'VIGÉSIMA OCTAVA', 'VIGÉSIMA NOVENA', 'TRIGÉSIMA'
+    ];
+
+    function getOrdinalName(idx) {
+        return ORDINAL_NAMES[idx] || `CLÁUSULA ${idx + 1}`;
+    }
+
+    // Diccionario integral de marco legal, fundamentos y jurisprudencia
+    const LEGAL_INFO_DICTIONARY = {
+        precio: {
+            title: 'Precio Inicial y Moneda de Pago',
+            normative: 'Art. 1187 y Art. 765 CCyCN • DNU 70/2023',
+            badge: 'Libertad de Moneda',
+            summary: 'Pacto de canon y moneda contractual',
+            explanation: 'El canon locativo puede fijarse libremente en moneda de curso legal (Pesos Argentinos - ARS) o en moneda extranjera (Dólares Estadounidenses - USD o Euros - EUR). Tras la reforma del DNU 70/2023 al Art. 765 del CCyCN, cuando se pacta en moneda extranjera, el locatario debe cancelar la obligación entregando la especie de moneda pactada y los jueces no pueden modificar la forma ni la moneda elegida por las partes.',
+            articleQuote: '«El locatario está obligado a pagar el precio convenido en los plazos fijados en el contrato. Si se pacta en moneda extranjera, la obligación sólo se extingue entregando la moneda designada.»'
+        },
+        plazo: {
+            title: 'Plazo y Duración Contractual',
+            normative: 'Art. 1198 CCyCN (sustituido por DNU 70/2023)',
+            badge: 'Autonomía de la Voluntad',
+            summary: 'Libertad de fijación de plazo locativo',
+            explanation: 'El DNU 70/2023 eliminó el plazo mínimo legal obligatorio de 3 años de la derogada Ley 27.551. Las partes son completamente libres para acordar la duración que consideren adecuada (1 mes, 6 meses, 12 meses, 24 meses, 36 meses o más). Si no se estipula plazo expreso en el texto, el Código establece de manera supletoria un término de 2 años para locaciones habitacionales.',
+            articleQuote: '«El plazo de la locación inmobiliaria será el que las partes hayan fijado libremente. Si no se hubiere establecido plazo, el contrato regirá por el término de dos años para locaciones habitacionales.»'
+        },
+        indice: {
+            title: 'Índice de Actualización Periódica',
+            normative: 'Art. 1199 CCyCN (DNU 70/2023) • Resoluciones BCRA / INDEC',
+            badge: 'Indexación Oficial',
+            summary: 'Indexación libre y oficial para el canon',
+            explanation: 'Las partes pueden elegir libremente cualquier índice público o privado para actualizar el canon locativo. Los más transparentes y seguros en el mercado argentino son:\n\n• IPC (Índice de Precios al Consumidor): Publicado mensualmente por el INDEC, refleja la inflación minorista general.\n• ICL (Índice de Contratos de Locación): Publicado diariamente por el Banco Central (BCRA), pondera en partes iguales la inflación (IPC) y la variación de salarios registrados (RIPTE).\n• CAC (Cámara Argentina de la Construcción): Ajuste vinculado al costo de materiales y mano de obra.\n• Fijo: Valor inalterable sin cláusula de indexación.',
+            articleQuote: '«Los alquileres podrán reajustarse utilizando el índice pactado libremente por las partes al celebrar el contrato, sea de carácter público o privado.»'
+        },
+        frecuencia: {
+            title: 'Frecuencia y Periodicidad de Ajuste',
+            normative: 'Art. 1199 CCyCN (DNU 70/2023)',
+            badge: 'Periodicidad Libre',
+            summary: 'Intervalo de tiempo entre actualizaciones',
+            explanation: 'Se eliminó la restricción que exigía ajustes únicamente anuales o semestrales. En la actualidad es 100% legal pactar revisiones trimestrales (cada 3 meses), cuatrimestrales (cada 4 meses), semestrales (cada 6 meses) o anuales, garantizando previsibilidad económica y equilibrio financiero para ambas partes ante escenarios inflacionarios.',
+            articleQuote: '«Las partes podrán pactar el intervalo de tiempo con el que se actualizará el valor locativo conforme a la autonomía de la voluntad.»'
+        },
+        cuenta_vencimiento: {
+            title: 'Cuenta de Cobro, Vencimiento y Régimen de Mora',
+            normative: 'Arts. 886, 887 y 1208 CCyCN',
+            badge: 'Mora Automática',
+            summary: 'Mora automática y constancia fehaciente de pago',
+            explanation: 'La mora en el pago del alquiler opera de pleno derecho de manera automática por el solo vencimiento del plazo fijado (habitualmente del 1 al día 10 de cada mes). El uso de Alias CBU/CVU bancario genera recibo digital automático e inalterable. El contrato estipula una tasa punitoria diaria (por defecto 0.5% por día) para resarcir demoras en la acreditación bancaria.',
+            articleQuote: '«El pago debe ser efectuado en el lugar designado en el contrato. La mora se produce por el mero transcurso del tiempo fijado para el cumplimiento de la obligación.»'
+        },
+        deposito: {
+            title: 'Depósito en Garantía y Resguardo Locativo',
+            normative: 'Art. 1196 CCyCN (sustituido por DNU 70/2023)',
+            badge: 'Garantía Contractual',
+            summary: 'Libertad de fijación y reintegro del depósito',
+            explanation: 'Bajo el marco del DNU 70/2023, las partes determinan libremente la cantidad de meses de depósito, la moneda (pesos o dólares) y los plazos de restitución. El depósito está destinado exclusivamente a responder por deterioros imputables en el inmueble o deudas impagas de servicios al momento de la entrega de llaves. Puede ser sustituido por fianza digital (Pasaporte Hábitat / Seguro de Caución).',
+            articleQuote: '«Las partes pueden determinar libremente el importe del depósito en garantía y la moneda en que se integrará, así como el plazo y condiciones para su devolución.»'
+        },
+        expensas: {
+            title: 'Régimen de Expensas, Impuestos y Servicios',
+            normative: 'Arts. 1204 bis, 1208 y 1209 CCyCN',
+            badge: 'Distribución de Cargas',
+            summary: 'Distribución de cargas, expensas y tributos',
+            explanation: '• Expensas Ordinarias: Gastos habituales de administración, mantenimiento y limpieza del edificio; son a cargo del inquilino (locatario).\n• Expensas Extraordinarias: Reparaciones estructurales de envergadura e innovaciones edilicias; son a cargo del propietario (locador).\n• Impuestos Inmobiliarios: Cargas reales que gravan la titularidad del inmueble corresponden al locador, salvo pacto en contrario.',
+            articleQuote: '«El locatario tiene a su cargo el pago de las cargas y contribuciones que se originen en el destino que dé a la cosa locada. No tiene a su cargo el pago de las que graven la cosa excepto pacto en contrario.»'
+        },
+        mascotas: {
+            title: 'Cláusula de Tenencia de Mascotas',
+            normative: 'Arts. 1197 y 1757 CCyCN (Responsabilidad Civil)',
+            badge: 'Responsabilidad Objetiva',
+            summary: 'Regulación sobre tenencia de animales domésticos',
+            explanation: 'En los contratos de locación es facultativo autorizar o prohibir la permanencia de animales domésticos. Cuando se autoriza, el locatario asume la obligación de velar por la tranquilidad de los vecinos (respetando el Reglamento de Copropiedad del consorcio) y responde de manera objetiva por cualquier daño material ocasionado a la propiedad.',
+            articleQuote: '«Las convenciones hechas en los contratos forman para las partes una regla a la cual deben someterse como a la ley misma. El dueño o guardián de un animal responde objetivamente por el daño que este cause.»'
+        },
+        destino_vivienda: {
+            title: 'Destino Exclusivo de Vivienda Familiar',
+            normative: 'Arts. 1194 y 1205 CCyCN',
+            badge: 'Destino Contractual',
+            summary: 'Uso habitacional y prohibición de cambio de destino',
+            explanation: 'Estipula que el inmueble solo puede ser utilizado como residencia familiar de las personas autorizadas. El cambio inconsulto de destino hacia actividades comerciales, talleres, consultorios o subalquiler turístico (ej. Airbnb) constituye causal objetiva de incumplimiento contractual grave y habilita al locador a demandar la rescisión culpable y el desalojo inmediato.',
+            articleQuote: '«El locatario debe usar y gozar de la cosa conforme al destino determinado en el contrato. No puede variar el destino aunque ello no cause perjuicio al locador.»'
+        },
+        seguro_incendio: {
+            title: 'Seguro de Incendio y Responsabilidad Civil',
+            normative: 'Arts. 1206 y 1710 CCyCN (Deber de Prevención)',
+            badge: 'Resguardo Patrimonial',
+            summary: 'Póliza de cobertura patrimonial a favor del locador',
+            explanation: 'Obliga al locatario a mantener vigente una póliza contra incendio del edificio y su contenido, designando al propietario como acreedor/beneficiario de la indemnización en caso de siniestro. Protege el patrimonio inmobiliario ante contingencias fortuitas y resguarda a ambas partes frente a reclamos de terceros linderos.',
+            articleQuote: '«El locatario responde por cualquier deterioro causado a la cosa, por su culpa o por la de sus dependientes, visitantes o terceros bajo su custodia.»'
+        },
+        subalquiler: {
+            title: 'Prohibición de Cesión y Sublocación',
+            normative: 'Arts. 1213 y 1214 CCyCN',
+            badge: 'Inmutabilidad Subjetiva',
+            summary: 'Prohibición de subarriendo sin conformidad expresa',
+            explanation: 'Prohíbe al locatario ceder sus derechos contractuales, subarrendar total o parcialmente habitaciones o conceder el uso a terceros ajenos al contrato. Cualquier transferencia no consentida por escrito por el locador es inoponible y configura rescisión culposa con derecho a indemnización por daños y perjuicios.',
+            articleQuote: '«El locatario puede ceder su posición contractual o sublocar todo o parte de la cosa si no está expresamente prohibido en el contrato. La prohibición contractual de sublocar incluye la de ceder y viceversa.»'
+        },
+        rescision: {
+            title: 'Régimen de Rescisión Anticipada',
+            normative: 'Art. 1221 CCyCN (modificado por DNU 70/2023)',
+            badge: 'Resolución Unilateral',
+            summary: 'Resolución unilateral por el locatario y preaviso',
+            explanation: 'El locatario puede resolver el contrato en cualquier momento. Tras la reforma del DNU 70/2023, debe abonar una indemnización equivalente al diez por ciento (10%) del saldo restante del canon locativo futuro hasta el vencimiento del contrato, o la penalidad pactada expresamente por las partes. Se recomienda otorgar una notificación previa fehaciente con al menos un mes de anticipación.',
+            articleQuote: '«El locatario podrá, en cualquier momento, resolver la contratación abonando el equivalente al diez por ciento (10%) del saldo del canon locativo futuro, calculado desde la fecha de la notificación de la rescisión hasta la fecha de finalización pactada en el contrato.»'
+        },
+        clausulas_personalizadas: {
+            title: 'Cláusulas Especiales y Autonomía de la Voluntad',
+            normative: 'Arts. 958, 959 y 1197 CCyCN',
+            badge: 'Pactos Específicos',
+            summary: 'Pactos a medida entre propietario e inquilino',
+            explanation: 'Las partes tienen plena facultad para incorporar cláusulas accesorias específicas relativas a: mantenimiento de jardines/piscina, normas de convivencia del consorcio, entrega de llaves y estado de pintura, uso de cocheras y bauleras, o acuerdos sobre mejoras autorizadas.',
+            articleQuote: '«Las partes son libres para celebrar un contrato y determinar su contenido, dentro de los límites impuestos por la ley, el orden público, la moral y las buenas costumbres.»'
+        },
+        firma_digital: {
+            title: 'Firma Electrónica, Biometría Didit y Sello TSA',
+            normative: 'Ley Nacional N° 25.506 de Firma Digital • Arts. 286, 287 y 288 CCyCN',
+            badge: 'Plena Validez Legal',
+            summary: 'Validez probatoria, autenticidad e inmutabilidad jurídica',
+            explanation: 'El contrato firmado digitalmente a través de la plataforma Hábitat utiliza validación biométrica facial en vivo (Didit Liveness Check) y sellado de tiempo criptográfico TSA RFC 3161 sobre el digest SHA-256. Esto otorga presunción de autoría, principio de no repudio e inmutabilidad del documento conforme a los Arts. 286, 287 y 288 del Código Civil y Comercial de la Nación y la Ley 25.506.',
+            articleQuote: '«Los instrumentos generados por medios electrónicos tienen eficacia probatoria idéntica a los instrumentos privados firmados en soporte papel cuando se garantiza la autenticidad e integridad del documento.»'
+        }
+    };
+
+    function isUserOwnerOfContract(contract, options = {}) {
+        const c = contract || options.contract || {};
+        
+        let userEmail = '';
+        let userDni = '';
+        let userId = '';
+        let userRole = '';
+
+        try {
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+            userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
+            userId = String(uLocal.id || uLocal.id_perfil || uLocal.user_id || '');
+            userRole = (uLocal.role || uLocal.tipo_usuario || uLocal.user_type || '').toUpperCase();
+        } catch (e) {}
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRole = (options.role || urlParams.get('role') || '').toUpperCase();
+
+        const ownerEmail = (c.owner?.email || c.owner_email || options.property?.owner_email || '').toLowerCase().trim();
+        const ownerDni = (c.owner?.dni || '').replace(/\D/g, '');
+        const ownerId = String(c.owner?.id || c.id_propietario || c.owner_id || '');
+
+        const tenantEmail = (c.tenant?.email || c.tenant_email || options.applicant?.tenant_email || options.applicant?.email || '').toLowerCase().trim();
+        const tenantDni = (c.tenant?.dni || options.applicant?.tenant_dni || options.applicant?.dni || '').replace(/\D/g, '');
+        const tenantId = String(c.tenant?.id || c.id_inquilino || c.tenant_id || options.applicant?.id || '');
+
+        // Si el usuario que está viendo el contrato es el inquilino de este contrato:
+        if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
+            return false;
+        }
+        if (userDni && tenantDni && userDni === tenantDni && userDni !== ownerDni) {
+            return false;
+        }
+        if (userId && tenantId && userId === tenantId && userId !== ownerId) {
+            return false;
+        }
+        if (urlRole === 'TENANT' || urlRole === 'INQUILINO') {
+            return false;
+        }
+        if (window.location.pathname.includes('tu-alquiler')) {
+            return false;
+        }
+
+        // Si coincide con el propietario de este contrato:
+        if (userEmail && ownerEmail && userEmail === ownerEmail) {
+            return true;
+        }
+        if (userDni && ownerDni && userDni === ownerDni) {
+            return true;
+        }
+        if (userId && ownerId && userId === ownerId) {
+            return true;
+        }
+
+        // Si tiene rol explícito de propietario / corredor en la sesión o URL:
+        if (urlRole === 'OWNER' || urlRole === 'PROPIETARIO' || urlRole === 'BROKER' || urlRole === 'CORREDOR') {
+            return true;
+        }
+        if (window.location.pathname.includes('administrador') || window.location.pathname.includes('panel-corredor')) {
+            return true;
+        }
+        if (userRole === 'OWNER' || userRole === 'PROPIETARIO' || userRole === 'BROKER' || userRole === 'CORREDOR' || userRole === 'ADMIN') {
+            return true;
+        }
+
+        const storedRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        if (storedRole === 'OWNER' || storedRole === 'PROPIETARIO' || storedRole === 'BROKER' || storedRole === 'CORREDOR') {
+            return true;
+        }
+
+        return false;
+    }
+
     window.ContractEditorModal = {
         _currentOptions: null,
         _customFile: null,
         _activeTab: 'smart', // 'smart' | 'upload'
+        _customClauses: [], // Lista de cláusulas personalizadas agregadas dinámicamente
 
         /**
          * Abre el modal del editor de contratos
          */
         open: function (options = {}) {
             const contract = options.contract || {};
+
+            // Validación de permisos: Solo el propietario del contrato o corredor pueden abrir el editor
+            if (!isUserOwnerOfContract(contract, options)) {
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '🔒 Acceso Restringido',
+                        message: 'Únicamente el propietario / locador tiene permisos para editar las condiciones y cláusulas del contrato.',
+                        type: 'warning'
+                    });
+                } else {
+                    alert('Únicamente el propietario / locador tiene permisos para editar las condiciones del contrato.');
+                }
+                return;
+            }
+
             const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
 
             if (isSigned) {
@@ -37,6 +261,7 @@
             this._currentOptions = options;
             this._customFile = null;
             this._activeTab = options.initialTab || 'smart';
+            this._customClauses = Array.isArray(contract.customClauses) ? [...contract.customClauses] : [];
 
             let existingModal = document.getElementById('contract-editor-modal-container');
             if (existingModal) existingModal.remove();
@@ -58,7 +283,6 @@
             const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
             const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
 
-            const propTitle = property.title || contract.title || 'Propiedad en Alquiler';
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
             const defaultRent = Number(contract.monthlyRent || property.price || property.precio || 450000);
             const defaultCurrency = contract.currency || 'ARS';
@@ -119,13 +343,18 @@
                             <!-- COLUMNA IZQUIERDA: CONTROLES MODERNOS (6 Cols) -->
                             <div class="lg:col-span-6 space-y-4">
                                 
-                                <!-- Card 1: Canon & Moneda (Hero Input Sin Doble Borde) -->
+                                <!-- Card 1: Canon & Moneda -->
                                 <div class="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3.5 shadow-xs">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
                                             <span class="material-symbols-outlined text-xl text-primary dark:text-red-400">payments</span>
                                             <div>
-                                                <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Precio Inicial y Moneda</h4>
+                                                <div class="flex items-center gap-1.5">
+                                                    <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Precio Inicial y Moneda</h4>
+                                                    <button type="button" onclick="ContractEditorModal.showLegalInfo('precio')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver explicación y marco legal (Art. 1187 CCyCN)">
+                                                        <span class="material-symbols-outlined text-[13px]">info</span>
+                                                    </button>
+                                                </div>
                                                 <p class="text-[11px] text-zinc-400">Canon mensual acordado para el contrato</p>
                                             </div>
                                         </div>
@@ -138,7 +367,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Clean Flex Monetary Input (Un Solo Borde) -->
+                                    <!-- Monetary Input -->
                                     <div class="flex items-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-12 px-4 focus-within:bg-white dark:focus-within:bg-zinc-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                         <span id="editor-moneda-symbol" class="text-zinc-500 dark:text-zinc-400 font-headline font-black text-lg mr-2.5 select-none shrink-0">${defaultCurrency === 'USD' ? 'USD' : '$'}</span>
                                         <input 
@@ -158,6 +387,9 @@
                                         <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                             <span class="material-symbols-outlined text-sm text-primary">schedule</span>
                                             <span>Duración del Plazo</span>
+                                            <button type="button" onclick="ContractEditorModal.showLegalInfo('plazo')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver explicación y marco legal (Art. 1198 CCyCN)">
+                                                <span class="material-symbols-outlined text-[13px]">info</span>
+                                            </button>
                                         </label>
                                         <span class="text-[10px] text-zinc-400 font-medium">Pacto libre entre partes</span>
                                     </div>
@@ -178,6 +410,9 @@
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">trending_up</span>
                                                 <span>Índice de Actualización</span>
+                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('indice')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver explicación de índices (IPC / ICL / CAC / Fijo)">
+                                                    <span class="material-symbols-outlined text-[13px]">info</span>
+                                                </button>
                                             </label>
                                             <span class="text-[10px] text-zinc-400">Variación oficial</span>
                                         </div>
@@ -207,6 +442,9 @@
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">update</span>
                                                 <span>Frecuencia de Ajuste</span>
+                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('frecuencia')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver explicación de frecuencia">
+                                                    <span class="material-symbols-outlined text-[13px]">info</span>
+                                                </button>
                                             </label>
                                         </div>
                                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="frecuencia-chips-container">
@@ -219,16 +457,21 @@
                                     </div>
                                 </div>
 
-                                <!-- Card 4: Cobro, Cuenta, Depósito y Expensas (Chips Estilo Foto 1) -->
+                                <!-- Card 4: Cobro, Cuenta, Depósito y Expensas -->
                                 <div class="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-4 shadow-xs">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center">
-                                            <span class="material-symbols-outlined text-base">account_balance</span>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center">
+                                                <span class="material-symbols-outlined text-base">account_balance</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Cuenta de Cobro & Vencimiento</h4>
+                                                <p class="text-[11px] text-zinc-400">Datos bancarios y día límite de pago mensual</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Cuenta de Cobro & Vencimiento</h4>
-                                            <p class="text-[11px] text-zinc-400">Datos bancarios y día límite de pago mensual</p>
-                                        </div>
+                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('cuenta_vencimiento')" class="w-6 h-6 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver explicación de pagos y mora">
+                                            <span class="material-symbols-outlined text-sm">info</span>
+                                        </button>
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -268,12 +511,15 @@
                                         </div>
                                     </div>
 
-                                    <!-- Depósito en Garantía (Segmented Chips Estilo Foto 1) -->
+                                    <!-- Depósito en Garantía -->
                                     <div class="space-y-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">lock</span>
                                                 <span>Depósito en Garantía</span>
+                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('deposito')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver marco legal de depósitos">
+                                                    <span class="material-symbols-outlined text-[13px]">info</span>
+                                                </button>
                                             </label>
                                             <span class="text-[10px] text-zinc-400">Resguardo locativo</span>
                                         </div>
@@ -298,12 +544,15 @@
                                         </div>
                                     </div>
 
-                                    <!-- Régimen de Expensas (Segmented Chips Estilo Foto 1) -->
+                                    <!-- Régimen de Expensas -->
                                     <div class="space-y-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">receipt_long</span>
                                                 <span>Régimen de Expensas e Impuestos</span>
+                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('expensas')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver marco legal de expensas">
+                                                    <span class="material-symbols-outlined text-[13px]">info</span>
+                                                </button>
                                             </label>
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="expensas-chips-container">
@@ -325,14 +574,19 @@
                                     <input type="hidden" id="editor-mora" value="0.5">
                                 </div>
 
-                                <!-- Card 5: Cláusulas Especiales (Diseño Unificado Cohesivo Estilo Foto 1) -->
+                                <!-- Card 5: Cláusulas y Permisos Especiales -->
                                 <div class="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
                                             <span class="material-symbols-outlined text-xl text-primary dark:text-red-400">policy</span>
                                             <div>
-                                                <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Cláusulas y Permisos Especiales</h4>
-                                                <p class="text-[11px] text-zinc-400">Personaliza las condiciones contractuales</p>
+                                                <div class="flex items-center gap-1.5">
+                                                    <h4 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Cláusulas y Permisos Especiales</h4>
+                                                    <button type="button" onclick="ContractEditorModal.showLegalInfo('clausulas_personalizadas')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer" title="Ver marco legal de cláusulas especiales">
+                                                        <span class="material-symbols-outlined text-[13px]">info</span>
+                                                    </button>
+                                                </div>
+                                                <p class="text-[11px] text-zinc-400">Personalizá las condiciones contractuales</p>
                                             </div>
                                         </div>
                                         <span class="text-[10px] text-zinc-400 font-medium">Ley 25.506 & CCyCN</span>
@@ -344,7 +598,12 @@
                                             <div class="flex items-center gap-2.5 min-w-0 pr-2">
                                                 <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">pets</span>
                                                 <div class="min-w-0">
-                                                    <span class="font-bold text-zinc-900 dark:text-white block">Permitir Mascotas</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="font-bold text-zinc-900 dark:text-white block">Permitir Mascotas</span>
+                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('mascotas')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver explicación legal">
+                                                            <span class="material-symbols-outlined text-[13px]">info</span>
+                                                        </button>
+                                                    </div>
                                                     <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Tenencia responsable de animales domésticos</span>
                                                 </div>
                                             </div>
@@ -359,7 +618,12 @@
                                             <div class="flex items-center gap-2.5 min-w-0 pr-2">
                                                 <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">home</span>
                                                 <div class="min-w-0">
-                                                    <span class="font-bold text-zinc-900 dark:text-white block">Destino Exclusivo Vivienda Familiar</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="font-bold text-zinc-900 dark:text-white block">Destino Exclusivo Vivienda Familiar</span>
+                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('destino_vivienda')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver explicación legal">
+                                                            <span class="material-symbols-outlined text-[13px]">info</span>
+                                                        </button>
+                                                    </div>
                                                     <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Prohíbe uso comercial o profesional del inmueble</span>
                                                 </div>
                                             </div>
@@ -374,7 +638,12 @@
                                             <div class="flex items-center gap-2.5 min-w-0 pr-2">
                                                 <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">shield</span>
                                                 <div class="min-w-0">
-                                                    <span class="font-bold text-zinc-900 dark:text-white block">Seguro de Incendio Obligatorio</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="font-bold text-zinc-900 dark:text-white block">Seguro de Incendio Obligatorio</span>
+                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('seguro_incendio')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver explicación legal">
+                                                            <span class="material-symbols-outlined text-[13px]">info</span>
+                                                        </button>
+                                                    </div>
                                                     <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Póliza de seguro a favor del locador</span>
                                                 </div>
                                             </div>
@@ -389,7 +658,12 @@
                                             <div class="flex items-center gap-2.5 min-w-0 pr-2">
                                                 <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">block</span>
                                                 <div class="min-w-0">
-                                                    <span class="font-bold text-zinc-900 dark:text-white block">Prohibición de Sublocación (Art. 1213 CCyCN)</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="font-bold text-zinc-900 dark:text-white block">Prohibición de Sublocación (Art. 1213 CCyCN)</span>
+                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('subalquiler')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver explicación legal">
+                                                            <span class="material-symbols-outlined text-[13px]">info</span>
+                                                        </button>
+                                                    </div>
                                                     <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Prohíbe ceder o subarrendar el inmueble a terceros</span>
                                                 </div>
                                             </div>
@@ -404,7 +678,12 @@
                                             <div class="flex items-center gap-2.5 min-w-0 pr-2">
                                                 <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">contract_delete</span>
                                                 <div class="min-w-0">
-                                                    <span class="font-bold text-zinc-900 dark:text-white block">Rescisión Anticipada (Art. 1221 CCyCN)</span>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="font-bold text-zinc-900 dark:text-white block">Rescisión Anticipada (Art. 1221 CCyCN)</span>
+                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('rescision')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver explicación legal">
+                                                            <span class="material-symbols-outlined text-[13px]">info</span>
+                                                        </button>
+                                                    </div>
                                                     <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Notificación previa con 1 mes de antelación</span>
                                                 </div>
                                             </div>
@@ -413,6 +692,33 @@
                                                 <div class="w-11 h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
+
+                                        <!-- Contenedor dinámico de cláusulas adicionales personalizadas -->
+                                        <div id="custom-clauses-list-container" class="space-y-2 pt-1">
+                                            <!-- Se inyectan dinámicamente -->
+                                        </div>
+
+                                        <!-- Formulario colapsable para agregar cláusula personalizada -->
+                                        <div id="add-custom-clause-box" class="hidden p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5 mt-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-headline font-bold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-sm">add_circle</span>
+                                                    <span>Nueva Cláusula Personalizada</span>
+                                                </span>
+                                                <button type="button" id="btn-cancel-custom-clause" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs cursor-pointer">Cancelar</button>
+                                            </div>
+                                            <input type="text" id="new-clause-title" placeholder="Título (ej: PINTURA Y RESTITUCIÓN)" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-xs font-bold uppercase focus:ring-1 focus:ring-primary outline-none">
+                                            <textarea id="new-clause-text" rows="2" placeholder="Redacción legal de la cláusula acordada..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-primary outline-none"></textarea>
+                                            <button type="button" id="btn-save-custom-clause" class="w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                                <span class="material-symbols-outlined text-sm">check</span>
+                                                <span>Insertar Cláusula al Contrato</span>
+                                            </button>
+                                        </div>
+
+                                        <button type="button" id="btn-show-add-clause" class="w-full py-2 px-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 hover:border-primary font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2 bg-white/50 dark:bg-zinc-900/50">
+                                            <span class="material-symbols-outlined text-base">add</span>
+                                            <span>+ Agregar Cláusula Personalizada</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -424,9 +730,15 @@
                                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                         Vista Previa del Documento Legal
                                     </span>
-                                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                                        Actualización en Vivo
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('firma_digital')" class="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver marco de validez probatoria">
+                                            <span class="material-symbols-outlined text-sm">gavel</span>
+                                            <span>Ley 25.506</span>
+                                        </button>
+                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                            Actualización en Vivo
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <!-- Hoja Estilo Papel Legal -->
@@ -508,12 +820,106 @@
             document.body.appendChild(modalContainer);
 
             this._setupEvents(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress, defaultRent);
+            this._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
             this._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
         },
 
         close: function () {
             const modal = document.getElementById('contract-editor-modal-container');
             if (modal) modal.remove();
+            this.closeLegalInfo();
+        },
+
+        /**
+         * Muestra el modal interactivo de Explicación y Marco Legal para una sección específica
+         */
+        showLegalInfo: function (topicKey) {
+            const info = LEGAL_INFO_DICTIONARY[topicKey];
+            if (!info) return;
+
+            this.closeLegalInfo();
+
+            const infoModal = document.createElement('div');
+            infoModal.id = 'contract-legal-info-modal';
+            infoModal.className = 'fixed inset-0 z-[110000] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn font-body';
+
+            infoModal.innerHTML = `
+                <div class="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-5 text-zinc-900 dark:text-zinc-100 animate-scaleUp">
+                    
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                <span class="material-symbols-outlined text-xl">gavel</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white leading-tight">
+                                        ${info.title}
+                                    </h3>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/10 text-primary dark:text-red-300 border border-primary/20 uppercase tracking-wider">
+                                        ${info.badge || 'Marco Jurídico'}
+                                    </span>
+                                </div>
+                                <p class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    📜 ${info.normative}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="ContractEditorModal.closeLegalInfo()" class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer" title="Cerrar">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Explicación Didáctica -->
+                    <div class="space-y-3 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 font-body">
+                        <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-200 font-medium">
+                            ${info.explanation.replace(/\n/g, '<br>')}
+                        </div>
+
+                        <!-- Cita Textual de la Ley -->
+                        <div class="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 text-amber-950 dark:text-amber-200 space-y-1">
+                            <div class="flex items-center gap-1.5 font-headline font-bold text-[11px] uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                                <span class="material-symbols-outlined text-sm">menu_book</span>
+                                <span>Texto de la Norma Aplicable</span>
+                            </div>
+                            <p class="italic text-[11px] font-serif leading-relaxed text-zinc-800 dark:text-zinc-200">
+                                ${info.articleQuote}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs">
+                        <span class="text-[11px] text-zinc-400">Asesoría Legal Hábitat • Conforme a DNU 70/2023</span>
+                        <button type="button" onclick="ContractEditorModal.closeLegalInfo()" class="px-5 py-2 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs shadow-xs transition-all cursor-pointer">
+                            Entendido
+                        </button>
+                    </div>
+
+                </div>
+            `;
+
+            // Cerrar con Escape o click fuera
+            infoModal.addEventListener('click', (e) => {
+                if (e.target === infoModal) this.closeLegalInfo();
+            });
+
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    ContractEditorModal.closeLegalInfo();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+
+            document.body.appendChild(infoModal);
+        },
+
+        closeLegalInfo: function () {
+            const el = document.getElementById('contract-legal-info-modal');
+            if (el) el.remove();
         },
 
         _setupEvents: function (tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress, defaultRent) {
@@ -607,6 +1013,50 @@
                 }
             });
 
+            // Cláusulas personalizadas - Controles
+            const btnShowAdd = document.getElementById('btn-show-add-clause');
+            const addBox = document.getElementById('add-custom-clause-box');
+            const btnCancelCustom = document.getElementById('btn-cancel-custom-clause');
+            const btnSaveCustom = document.getElementById('btn-save-custom-clause');
+            const newTitleInput = document.getElementById('new-clause-title');
+            const newTextInput = document.getElementById('new-clause-text');
+
+            btnShowAdd?.addEventListener('click', () => {
+                addBox?.classList.remove('hidden');
+                btnShowAdd?.classList.add('hidden');
+                newTitleInput?.focus();
+            });
+
+            btnCancelCustom?.addEventListener('click', () => {
+                addBox?.classList.add('hidden');
+                btnShowAdd?.classList.remove('hidden');
+                if (newTitleInput) newTitleInput.value = '';
+                if (newTextInput) newTextInput.value = '';
+            });
+
+            btnSaveCustom?.addEventListener('click', () => {
+                const title = (newTitleInput?.value || '').trim();
+                const text = (newTextInput?.value || '').trim();
+                if (!title || !text) {
+                    alert('Por favor ingrese el título y la redacción de la cláusula.');
+                    return;
+                }
+
+                self._customClauses.push({
+                    id: 'cc_' + Date.now(),
+                    title: title.toUpperCase(),
+                    text: text
+                });
+
+                if (newTitleInput) newTitleInput.value = '';
+                if (newTextInput) newTextInput.value = '';
+                addBox?.classList.add('hidden');
+                btnShowAdd?.classList.remove('hidden');
+
+                self._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
+                triggerPreview();
+            });
+
             // Carga de Archivo Propio (Drag & Drop)
             const dropZone = document.getElementById('drop-zone-custom-contract');
             const fileInput = document.getElementById('input-file-custom-contract');
@@ -682,6 +1132,180 @@
             });
         },
 
+        _renderCustomClausesList: function (tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress) {
+            const container = document.getElementById('custom-clauses-list-container');
+            if (!container) return;
+
+            if (!this._customClauses || this._customClauses.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = this._customClauses.map((cc) => `
+                <div class="flex items-start justify-between p-3 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 text-xs gap-2">
+                    <div class="min-w-0 space-y-0.5">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-headline font-black text-amber-950 dark:text-amber-300 uppercase">${cc.title}</span>
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300">Personalizada</span>
+                        </div>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">${cc.text}</p>
+                    </div>
+                    <button type="button" onclick="ContractEditorModal.removeCustomClause('${cc.id}')" class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer" title="Eliminar cláusula">
+                        <span class="material-symbols-outlined text-base">delete</span>
+                    </button>
+                </div>
+            `).join('');
+        },
+
+        removeCustomClause: function (clauseId) {
+            this._customClauses = this._customClauses.filter(c => c.id !== clauseId);
+            const applicant = this._currentOptions?.applicant || {};
+            const property = this._currentOptions?.property || {};
+            const contract = this._currentOptions?.contract || {};
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
+            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';
+            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
+            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'nunimamu@gmail.com';
+            const ownerName = property.owner_name || contract.owner?.name || 'Maximo Cirrincione Ornstein';
+            const ownerDni = property.owner_dni || contract.owner?.dni || '44.662.043';
+            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
+            const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
+            const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
+
+            this._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
+            this._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
+        },
+
+        /**
+         * Construye la lista de cláusulas activas de forma estrictamente consecutiva
+         */
+        buildActiveClauses: function (propAddress) {
+            const duracion = document.getElementById('editor-duracion')?.value || 24;
+            const moneda = document.getElementById('editor-moneda')?.value || 'ARS';
+            const indice = document.getElementById('editor-indice')?.value || 'IPC';
+            const frecuencia = document.getElementById('editor-frecuencia')?.value || 3;
+            const montoRaw = document.getElementById('editor-monto')?.value || 450000;
+            const sym = moneda === 'USD' ? 'USD ' : '$ ';
+            const montoFmt = sym + Number(montoRaw).toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares Estadounidenses)' : ' (Pesos Argentinos)');
+            const diaVenc = document.getElementById('editor-dia-venc')?.value || 10;
+            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
+            const depositoSel = document.getElementById('editor-deposito')?.value || '1_MES';
+            const moraSel = document.getElementById('editor-mora')?.value || '0.5';
+            const expensasSel = document.getElementById('editor-expensas')?.value || 'ORDINARIAS_INQ';
+
+            const allowPets = document.getElementById('toggle-mascotas')?.checked;
+            const onlyResidential = document.getElementById('toggle-vivienda')?.checked;
+            const needInsurance = document.getElementById('toggle-seguro')?.checked;
+            const noSublease = document.getElementById('toggle-subalquiler')?.checked;
+            const allowEarlyTermination = document.getElementById('toggle-rescision')?.checked;
+
+            const today = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+            let depositoTxt = 'equivalente a UN (1) mes de canon locativo inicial';
+            if (depositoSel === '1_MES_USD') depositoTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
+            if (depositoSel === '2_MESES') depositoTxt = 'equivalente a DOS (2) meses de canon locativo inicial';
+            if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Hábitat / Seguro de Caución sin integración de efectivo en garantía';
+
+            let expensasTxt = 'Las expensas comunes ordinarias y los consumos de servicios (energía eléctrica, gas natural, agua potable, telecomunicaciones) serán por cuenta exclusiva del LOCATARIO. Las expensas extraordinarias e impuestos sobre el inmueble serán a cargo del LOCADOR.';
+            if (expensasSel === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
+            if (expensasSel === 'INCLUIDAS') expensasTxt = 'Las expensas e impuestos se encuentran incluidos dentro del monto del canon locativo mensual fijado.';
+
+            const clauses = [];
+
+            // 1. Objeto y Destino
+            clauses.push({
+                tag: 'OBJETO Y DESTINO',
+                body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <strong>${propAddress}</strong>.${onlyResidential ? ' Dicho inmueble tendrá como <strong>destino exclusivo el de vivienda familiar y permanente</strong>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
+            });
+
+            // 2. Plazo
+            clauses.push({
+                tag: 'PLAZO DE LOCACIÓN',
+                body: `El plazo contractual se pacta libremente entre las partes en <strong>${duracion} meses corridos</strong>, comenzando su vigencia el día <strong>${today}</strong>.`
+            });
+
+            // 3. Canon Locativo y Actualización
+            clauses.push({
+                tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
+                body: `El precio del alquiler se fija en la suma inicial de <strong class="text-primary dark:text-red-400">${montoFmt}</strong> mensuales. Dicho importe se actualizará de forma periódica cada <strong>${frecuencia} meses</strong> aplicando la variación porcentual del índice oficial <strong>${indice}</strong>.`
+            });
+
+            // 4. Lugar y Forma de Pago / Mora
+            clauses.push({
+                tag: 'LUGAR Y FORMA DE PAGO',
+                body: `El pago del alquiler mensual deberá efectuarse del 1 al día <strong>${diaVenc}</strong> de cada mes calendario mediante transferencia bancaria a la cuenta bancaria / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${aliasCbu}</strong>. En caso de mora, se devengará un interés punitorio del <strong>${moraSel}% por cada día de atraso</strong> hasta su efectiva cancelación.`
+            });
+
+            // 5. Expensas, Servicios e Impuestos
+            clauses.push({
+                tag: 'EXPENSAS, SERVICIOS E IMPUESTOS',
+                body: `${expensasTxt}`
+            });
+
+            // 6. Depósito en Garantía
+            clauses.push({
+                tag: 'DEPÓSITO EN GARANTÍA',
+                body: `EL LOCATARIO entrega a EL LOCADOR la suma ${depositoTxt}, suma que será restituida al finalizar la locación previa verificación del estado de conservación del inmueble y entrega de llaves.`
+            });
+
+            // 7. Mascotas
+            if (allowPets) {
+                clauses.push({
+                    tag: 'TENENCIA DE MASCOTAS',
+                    body: `Se autoriza la tenencia de animales domésticos en la propiedad bajo exclusiva responsabilidad del LOCATARIO por los cuidados sanitarios, ruidos y eventuales deterioros que pudieran ocasionar.`
+                });
+            } else {
+                clauses.push({
+                    tag: 'PROHIBICIÓN DE MASCOTAS',
+                    body: `Queda terminantemente prohibida la tenencia o permanencia de animales de cualquier especie en el inmueble arrendado.`
+                });
+            }
+
+            // 8. Seguro contra Incendio (solo si activo)
+            if (needInsurance) {
+                clauses.push({
+                    tag: 'SEGURO CONTRA INCENDIO',
+                    body: `EL LOCATARIO se obliga a contratar y mantener vigente durante todo el plazo contractual una póliza de seguro contra incendio y responsabilidad civil sobre la propiedad, designando al LOCADOR como beneficiario.`
+                });
+            }
+
+            // 9. Prohibición de Sublocación (solo si activo)
+            if (noSublease) {
+                clauses.push({
+                    tag: 'PROHIBICIÓN DE CESIÓN Y SUBLOCACIÓN',
+                    body: `Queda expresamente prohibida la cesión total o parcial del presente contrato, el subarriendo total o parcial y el préstamo de uso del inmueble a terceros bajo apercibimiento de rescisión culposa (Art. 1213 CCyCN).`
+                });
+            }
+
+            // 10. Rescisión Anticipada (solo si activo)
+            if (allowEarlyTermination) {
+                clauses.push({
+                    tag: 'RESCISIÓN ANTICIPADA',
+                    body: `EL LOCATARIO podrá rescindir el presente contrato en cualquier momento transcurridos los primeros seis meses de vigencia, notificando fehacientemente al LOCADOR con al menos un mes de anticipación conforme a las pautas del Art. 1221 del Código Civil y Comercial de la Nación.`
+                });
+            }
+
+            // 11. Cláusulas Personalizadas
+            if (this._customClauses && this._customClauses.length > 0) {
+                this._customClauses.forEach(cc => {
+                    if (cc.title && cc.text) {
+                        clauses.push({
+                            tag: cc.title.toUpperCase(),
+                            body: cc.text
+                        });
+                    }
+                });
+            }
+
+            // Última: Firma Electrónica y Didit Liveness
+            clauses.push({
+                tag: 'FIRMA ELECTRÓNICA Y BIOMETRÍA DIDIT',
+                body: `Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente contrato mediante <strong>Firma Electrónica, Verificación Biométrica Facial en Vivo (Didit KYC) y Sello de Tiempo TSA RFC 3161</strong>, reconociéndole plena validez legal, eficacia probatoria y fuerza ejecutoria bajo la <strong>Ley Nacional N° 25.506</strong>.`
+            });
+
+            return clauses;
+        },
+
         _collectTerms: function () {
             const isUpload = this._activeTab === 'upload';
             const duracion = parseInt(document.getElementById('editor-duracion')?.value || 24, 10);
@@ -695,7 +1319,10 @@
             const mora = parseFloat(document.getElementById('editor-mora')?.value || 0.5);
             const expensas = document.getElementById('editor-expensas')?.value || 'ORDINARIAS_INQ';
 
-            const clauses = {
+            const propAddress = this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
+            const activeClauses = this.buildActiveClauses(propAddress);
+
+            const clausesConfig = {
                 mascotas: document.getElementById('toggle-mascotas')?.checked ?? true,
                 viviendaExclusiva: document.getElementById('toggle-vivienda')?.checked ?? true,
                 seguroIncendio: document.getElementById('toggle-seguro')?.checked ?? true,
@@ -717,7 +1344,9 @@
                 monthlyRent: monto,
                 paymentDueDay: diaVenc,
                 aliasCbu: aliasCbu,
-                clauses: clauses
+                clauses: clausesConfig,
+                customClauses: this._customClauses,
+                activeClausesList: activeClauses
             };
         },
 
@@ -725,35 +1354,17 @@
             const previewEl = document.getElementById('contract-live-preview-box');
             if (!previewEl) return;
 
-            const duracion = document.getElementById('editor-duracion')?.value || 24;
-            const moneda = document.getElementById('editor-moneda')?.value || 'ARS';
-            const indice = document.getElementById('editor-indice')?.value || 'IPC';
-            const frecuencia = document.getElementById('editor-frecuencia')?.value || 3;
-            const montoRaw = document.getElementById('editor-monto')?.value || 450000;
-            const sym = moneda === 'USD' ? 'USD ' : '$ ';
-            const montoFmt = sym + Number(montoRaw).toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares)' : ' (Pesos Argentinos)');
-            const diaVenc = document.getElementById('editor-dia-venc')?.value || 10;
-            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
-            const depositoSel = document.getElementById('editor-deposito')?.value || '1_MES';
-            const moraSel = document.getElementById('editor-mora')?.value || '0.5';
-            const expensasSel = document.getElementById('editor-expensas')?.value || 'ORDINARIAS_INQ';
+            const activeClauses = this.buildActiveClauses(propAddress);
 
-            const allowPets = document.getElementById('toggle-mascotas')?.checked;
-            const onlyResidential = document.getElementById('toggle-vivienda')?.checked;
-            const needInsurance = document.getElementById('toggle-seguro')?.checked;
-            const noSublease = document.getElementById('toggle-subalquiler')?.checked;
-            const allowEarlyTermination = document.getElementById('toggle-rescision')?.checked;
-
-            const today = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-
-            let depositoTxt = 'equivalente a UN (1) mes de canon locativo inicial';
-            if (depositoSel === '1_MES_USD') depositoTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
-            if (depositoSel === '2_MESES') depositoTxt = 'equivalente a DOS (2) meses de canon locativo';
-            if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Hábitat / Seguro de Caución sin integración de efectivo';
-
-            let expensasTxt = 'Las expensas comunes ordinarias y los consumos de servicios (energía eléctrica, gas natural, agua potable, telecomunicaciones) serán por cuenta exclusiva del LOCATARIO. Las expensas extraordinarias e impuestos sobre el inmueble serán a cargo del LOCADOR.';
-            if (expensasSel === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
-            if (expensasSel === 'INCLUIDAS') expensasTxt = 'Las expensas e impuestos se encuentran incluidos dentro del monto del canon locativo mensual.';
+            let clausesHtml = activeClauses.map((clause, idx) => {
+                const ordinal = getOrdinalName(idx);
+                const isSignatureClause = clause.tag.includes('FIRMA ELECTRÓNICA');
+                return `
+                    <p class="text-justify ${isSignatureClause ? 'border-t border-zinc-200 dark:border-zinc-800 pt-3 text-[11px] text-zinc-500' : ''}">
+                        <strong>${ordinal} (${clause.tag}):</strong> ${clause.body}
+                    </p>
+                `;
+            }).join('');
 
             previewEl.innerHTML = `
                 <div class="border-b-2 border-primary pb-3 text-center mb-4 space-y-1">
@@ -762,64 +1373,10 @@
                 </div>
 
                 <p class="text-justify">
-                    <strong>PARTES INTERVINIENTES:</strong> En la República Argentina, entre <strong>${ownerName}</strong> (DNI ${ownerDni}, CUIL ${ownerCuil}, Email: ${ownerEmail}), en adelante <strong>"EL LOCADOR"</strong>; y por la otra <strong>${tenantName}</strong> (DNI ${tenantDni}, CUIL ${tenantCuil}, Email: ${tenantEmail}), en adelante <strong>"EL LOCATARIO"</strong>, convienen en celebrar el presente contrato de locación:
+                    <strong>PARTES INTERVINIENTES:</strong> En la República Argentina, entre <strong>${ownerName}</strong> (DNI ${ownerDni}, CUIL ${ownerCuil}, Email: ${ownerEmail}), en adelante denominado <strong>"EL LOCADOR"</strong>; y por la otra <strong>${tenantName}</strong> (DNI ${tenantDni}, CUIL ${tenantCuil}, Email: ${tenantEmail}), en adelante denominado <strong>"EL LOCATARIO"</strong>, convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                 </p>
 
-                <p class="text-justify">
-                    <strong>PRIMERA (OBJETO):</strong> EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <strong>${propAddress}</strong>.${onlyResidential ? ' Dicho inmueble tendrá como <strong>destino exclusivo el de vivienda familiar y permanente</strong>, quedando expresamente prohibido su cambio de destino o explotación comercial.' : ' Con destino habitacional conforme a derecho.'}
-                </p>
-
-                <p class="text-justify">
-                    <strong>SEGUNDA (PLAZO):</strong> El plazo contractual se pacta libremente entre las partes en <strong>${duracion} meses corridos</strong>, comenzando su vigencia el día <strong>${today}</strong>.
-                </p>
-
-                <p class="text-justify">
-                    <strong>TERCERA (CANON LOCATIVO Y ACTUALIZACIÓN):</strong> El precio del alquiler se fija en la suma inicial de <strong class="text-primary dark:text-red-400">${montoFmt}</strong> mensuales. Dicho importe se actualizará de forma obligatoria cada <strong>${frecuencia} meses</strong> aplicando la variación porcentual del índice oficial <strong>${indice}</strong>.
-                </p>
-
-                <p class="text-justify">
-                    <strong>CUARTA (LUGAR Y FORMA DE PAGO):</strong> El pago del alquiler deberá efectuarse del 1 al día <strong>${diaVenc}</strong> de cada mes calendario mediante transferencia bancaria a la cuenta bancaria / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${aliasCbu}</strong>. En caso de mora, se devengará un interés punitorio del <strong>${moraSel}% por cada día de atraso</strong>.
-                </p>
-
-                <p class="text-justify">
-                    <strong>QUINTA (EXPENSAS, SERVICIOS E IMPUESTOS):</strong> ${expensasTxt}
-                </p>
-
-                <p class="text-justify">
-                    <strong>SEXTA (DEPÓSITO EN GARANTÍA):</strong> EL LOCATARIO entrega a EL LOCADOR la suma ${depositoTxt}, suma que será restituida al finalizar la locación previa verificación del estado de conservación del inmueble y entrega de llaves.
-                </p>
-
-                ${allowPets ? `
-                <p class="text-justify">
-                    <strong>SÉPTIMA (TENENCIA DE MASCOTAS):</strong> Se autoriza la tenencia de animales domésticos en la propiedad bajo exclusiva responsabilidad del LOCATARIO por los daños, ruidos o eventuales deterioros que pudieran ocasionar.
-                </p>
-                ` : `
-                <p class="text-justify">
-                    <strong>SÉPTIMA (MASCOTAS):</strong> Queda terminantemente prohibida la tenencia o permanencia de animales de cualquier especie en el inmueble arrendado.
-                </p>
-                `}
-
-                ${needInsurance ? `
-                <p class="text-justify">
-                    <strong>OCTAVA (SEGURO CONTRA INCENDIO):</strong> EL LOCATARIO se obliga a contratar y mantener vigente durante todo el plazo contractual una póliza de seguro contra incendio y responsabilidad civil sobre la propiedad, designando al LOCADOR como beneficiario.
-                </p>
-                ` : ''}
-
-                ${noSublease ? `
-                <p class="text-justify">
-                    <strong>NOVENA (PROHIBICIÓN DE CESIÓN Y SUBLOCACIÓN):</strong> Queda expresamente prohibida la cesión total o parcial del presente contrato, el subarriendo total o parcial y el préstamo de uso del inmueble a terceros bajo apercibimiento de rescisión culposa (Art. 1213 CCyCN).
-                </p>
-                ` : ''}
-
-                ${allowEarlyTermination ? `
-                <p class="text-justify">
-                    <strong>DÉCIMA (RESCISIÓN ANTICIPADA):</strong> EL LOCATARIO podrá rescindir el presente contrato en cualquier momento transcurridos los primeros seis meses de vigencia, notificando fehacientemente al LOCADOR con al menos un mes de anticipación conforme a las pautas del Art. 1221 del Código Civil y Comercial de la Nación.
-                </p>
-                ` : ''}
-
-                <p class="text-justify border-t border-zinc-200 dark:border-zinc-800 pt-3 text-[11px] text-zinc-500">
-                    <strong>DÉCIMA PRIMERA (FIRMA ELECTRÓNICA Y BIOMETRÍA DIDIT):</strong> Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente contrato mediante <strong>Firma Electrónica, Verificación Biométrica Facial en Vivo (Didit KYC) y Sello de Tiempo TSA RFC 3161</strong>, reconociéndole plena validez legal, eficacia probatoria y fuerza ejecutoria bajo la <strong>Ley Nacional N° 25.506</strong>.
-                </p>
+                ${clausesHtml}
             `;
         }
     };
