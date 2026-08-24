@@ -192,6 +192,12 @@
                 <span class="material-symbols-outlined text-lg">badge</span>
                 <span>Tu pasaporte</span>
             </button>
+
+            <button data-tab="chat-negociacion" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
+                <span>Mensajes & Negociación</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
+            </button>
         </div>
 
         <!-- ========================================================================= -->
@@ -622,6 +628,15 @@
             </div>
         </section>
 
+        <!-- ========================================================================= -->
+        <!-- SECCIÓN 5: MENSAJES & NEGOCIACIÓN CHAT -->
+        <!-- ========================================================================= -->
+        <section id="panel-content-chat-negociacion" class="tab-content space-y-6">
+            <div id="tenant-chat-section-container">
+                <div class="p-8 text-center text-zinc-400">Cargando centro de negociación y mensajes...</div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer Elegante -->
@@ -682,7 +697,7 @@
         </div>
     </footer>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (CONSOLIDA LAS 4 SECCIONES) -->
+    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (CONSOLIDA LAS SECCIONES) -->
     <div id="tenant-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto">
         <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
             <!-- Burbuja Deslizante Activa -->
@@ -707,6 +722,11 @@
                 <span class="material-symbols-outlined text-lg sm:text-xl">badge</span>
                 <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Tu pasaporte</span>
             </button>
+
+            <button type="button" data-tab="chat-negociacion" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">forum</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Chat</span>
+            </button>
         </nav>
     </div>
 
@@ -714,7 +734,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
+    <script src="js/google-maps-loader.js"></script>
     <script src="js/app.js?v=12"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/contract-editor-modal.js"></script>
+    <script src="js/contracts-manager.js"></script>
 
     <!-- Script de Navegación y Funcionalidad Integral del Inquilino -->
     <script>
@@ -730,7 +754,8 @@
                 'alquiler': document.getElementById('panel-content-alquiler'),
                 'postulaciones': document.getElementById('panel-content-postulaciones'),
                 'visitas': document.getElementById('panel-content-visitas'),
-                'pasaporte': document.getElementById('panel-content-pasaporte')
+                'pasaporte': document.getElementById('panel-content-pasaporte'),
+                'chat-negociacion': document.getElementById('panel-content-chat-negociacion')
             };
 
             function updateSlidingIndicator(activeBtn) {
@@ -794,6 +819,10 @@
                     loadTenantVisits();
                 } else if (validTab === 'pasaporte') {
                     loadTenantPassport();
+                } else if (validTab === 'chat-negociacion') {
+                    if (window.ContractsManager && typeof window.ContractsManager.renderEmbeddedChat === 'function') {
+                        window.ContractsManager.renderEmbeddedChat('tenant-chat-section-container', { role: 'TENANT' });
+                    }
                 }
 
                 // Sincronizar URL hash
@@ -1054,6 +1083,10 @@
                                     ${contract.property_title}
                                 </h2>
                                 <div class="flex flex-wrap items-center gap-2 pt-1">
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'chat')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir chat y acordar condiciones con el propietario">
+                                        <span class="material-symbols-outlined text-sm">chat</span>
+                                        <span>Chat de Negociación</span>
+                                    </button>
                                     <a href="contratos.html?contract=${contract.id || ''}&sign=1&role=TENANT" class="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm">draw</span>
                                         <span>Firma Digital & Biometría Didit</span>
@@ -1873,6 +1906,10 @@
                                         </div>
 
                                         <div class="flex items-center gap-2.5 flex-wrap">
+                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'chat')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs" title="Abrir canal de chat y negociación">
+                                                <span class="material-symbols-outlined text-sm">chat</span>
+                                                <span>Chat Negociación</span>
+                                            </button>
                                             <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx+101)}, title: '${(app.property_title || '').replace(/'/g, "\\'")}', address: '${(app.property_address || '').replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
                                                 <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">visibility</span>
                                                 <span>Ver Publicación</span>

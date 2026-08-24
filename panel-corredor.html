@@ -351,28 +351,22 @@
 
     <main class="flex-grow pt-24 pb-36 px-4 sm:px-6 lg:px-8 max-w-[1580px] mx-auto w-full flex flex-col space-y-6">
 
-        <!-- PESTAÑAS SUPERIORES (6 PESTAÑAS CONSOLIDADAS) -->
+        <!-- PESTAÑAS SUPERIORES (5 PESTAÑAS CONSOLIDADAS) -->
         <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
             <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">dashboard</span>
                 <span>General</span>
             </button>
 
-            <button data-tab="leads" onclick="switchBrokerTab('leads')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg text-emerald-500">monetization_on</span>
-                <span>Monetización & Leads</span>
-                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500 text-white">TIENDA</span>
+            <button data-tab="cartera" onclick="switchBrokerTab('cartera')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">home_work</span>
+                <span>Cartera & Leads</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-primary/10 text-primary dark:bg-red-500/20">52 AVISOS</span>
             </button>
 
-            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">table_rows</span>
-                <span>Mis Avisos en Filas</span>
-                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-primary/10 text-primary dark:bg-red-500/20">52</span>
-            </button>
-
-            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">how_to_reg</span>
-                <span>Postulaciones</span>
+            <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-amber-500">how_to_reg</span>
+                <span>Candidatos & Visitas</span>
                 <span id="broker-badge-top-apps" class="px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-white">0</span>
             </button>
 
@@ -381,9 +375,10 @@
                 <span>Alquileres</span>
             </button>
 
-            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">calendar_month</span>
-                <span>Visitas</span>
+            <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
+                <span>Mensajes & Negociación</span>
+                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
             </button>
         </div>
 
@@ -418,7 +413,7 @@
                     </div>
 
                     <!-- Suite de Herramientas Rápidas (Grid Limpio y Profesional Sin Fondo en Iconos) -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 sm:gap-3">
                         <!-- 1. Firma & Contratos -->
                         <a href="contratos.html" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover:scale-110">draw</span>
@@ -428,7 +423,16 @@
                             </div>
                         </a>
 
-                        <!-- 2. Tienda de Leads -->
+                        <!-- 2. Chat Directo -->
+                        <button type="button" onclick="switchBrokerTab('chat-negociacion')" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
+                            <span class="material-symbols-outlined text-2xl text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover:scale-110">forum</span>
+                            <div class="min-w-0">
+                                <span class="block text-xs font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate transition-colors">Chat Directo</span>
+                                <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Negociación en vivo</span>
+                            </div>
+                        </button>
+
+                        <!-- 3. Tienda de Leads -->
                         <button type="button" onclick="switchBrokerTab('leads'); HabitatLeadModule.switchLeadsSubtab('store');" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform duration-200 group-hover:scale-110">storefront</span>
                             <div class="min-w-0">
@@ -437,7 +441,7 @@
                             </div>
                         </button>
 
-                        <!-- 3. Inventario Digital -->
+                        <!-- 4. Inventario Digital -->
                         <button type="button" onclick="openDigitalInventoryModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-purple-600 dark:text-purple-400 shrink-0 transition-transform duration-200 group-hover:scale-110">inventory_2</span>
                             <div class="min-w-0">
@@ -446,7 +450,7 @@
                             </div>
                         </button>
 
-                        <!-- 4. Calculadora Ingreso -->
+                        <!-- 5. Calculadora Ingreso -->
                         <button type="button" onclick="goToCalculatorWithAnimation()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-teal-600 dark:text-teal-400 shrink-0 transition-transform duration-200 group-hover:scale-110">calculate</span>
                             <div class="min-w-0">
@@ -455,7 +459,7 @@
                             </div>
                         </button>
 
-                        <!-- 5. Ficha Ciega -->
+                        <!-- 6. Ficha Ciega -->
                         <button type="button" onclick="openBlindCardModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400 shrink-0 transition-transform duration-200 group-hover:scale-110">visibility_off</span>
                             <div class="min-w-0">
@@ -464,7 +468,7 @@
                             </div>
                         </button>
 
-                        <!-- 6. Tickets Mantenimiento -->
+                        <!-- 7. Tickets Mantenimiento -->
                         <button type="button" onclick="openTicketsSummaryModal()" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer text-left backdrop-blur-md">
                             <span class="material-symbols-outlined text-2xl text-amber-600 dark:text-amber-400 shrink-0 transition-transform duration-200 group-hover:scale-110">build</span>
                             <div class="min-w-0">
@@ -681,110 +685,291 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: MONETIZACIÓN & LEADS (TIENDA DE LEADS & CRM INBOX) -->
-            <div id="panel-content-leads" class="tab-content space-y-6">
-                <!-- Dynamic Content injected by HabitatLeadModule (js/lead-monetization.js) -->
-            </div>
-
-            <!-- PESTAÑA 3: MIS AVISOS EN FILAS / TABLA -->
-            <div id="panel-content-avisos" class="tab-content space-y-4">
-                <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3 flex-1">
-                        <div class="relative flex-1 min-w-[240px]">
-                            <input id="broker-search-input" type="text" oninput="filterBrokerProperties()" placeholder="Buscar por ID, dirección, título, propietario..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
-                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
-                        </div>
-
-                        <button type="button" onclick="openBrokerFilterModal()" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs cursor-pointer transition-all shrink-0">
-                            <span class="material-symbols-outlined text-base text-primary">tune</span>
-                            <span>Filtros</span>
-                            <span id="active-filter-badge" class="hidden px-2 py-0.5 text-[9px] bg-primary text-white font-black rounded-full">0</span>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="openNewPropertyModal()" class="px-3.5 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-base">add_home</span>
-                            <span>Nueva Captación</span>
-                        </button>
-                        <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
-                            <span class="material-symbols-outlined text-base">download</span>
-                            <span>Exportar Excel</span>
-                        </button>
-                        <button type="button" id="btn-view-rows" onclick="toggleBrokerView('rows')" class="px-3 py-2.5 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
-                            <span class="material-symbols-outlined text-base">table_rows</span>
-                            <span class="hidden sm:inline">Vista Filas (Tabla)</span>
-                        </button>
-                        <button type="button" id="btn-view-grid" onclick="toggleBrokerView('grid')" class="px-3 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
-                            <span class="material-symbols-outlined text-base">grid_view</span>
-                            <span class="hidden sm:inline">Vista Tarjetas</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="container-rows-view" class="glass-card rounded-2xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse broker-table">
-                            <thead>
-                                <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
-                                    <th class="p-3 w-8"><input type="checkbox" id="select-all-props" onclick="toggleSelectAllProps(this)" class="rounded border-zinc-300"></th>
-                                    <th class="p-3">Inmueble</th>
-                                    <th class="p-3">ID / Código</th>
-                                    <th class="p-3">Operación</th>
-                                    <th class="p-3">Precio Mensual</th>
-                                    <th class="p-3">Honorarios</th>
-                                    <th class="p-3">Difusión Portales</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3">Propietario / Agente</th>
-                                    <th class="p-3 text-center">Interesados</th>
-                                    <th class="p-3 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="broker-rows-tbody" class="divide-y divide-zinc-200/60 dark:divide-zinc-800 text-xs">
-                                <!-- Populated dynamically by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="container-grid-view" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Populated dynamically by JS -->
-                </div>
-            </div>
-
-            <!-- PESTAÑA 4: POSTULACIONES Y CANDIDATOS -->
-            <div id="panel-content-contactos" class="tab-content space-y-6">
-                <!-- Header con Filtro Pop-Up por Propiedad -->
-                <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
-                    <div>
-                        <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">how_to_reg</span>
-                            Postulaciones y Candidatos
-                        </h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Revisa credenciales de Pasaporte Hábitat, scoring crediticio y selecciona a tu próximo inquilino.</p>
-                    </div>
-
-                    <!-- Botón moderno para abrir el Pop-Up de selección de propiedad -->
-                    <button type="button" onclick="openBrokerPropertyFilterModal()" id="btn-open-broker-prop-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[230px]">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
-                                <span class="material-symbols-outlined text-lg">home_work</span>
-                            </div>
-                            <div class="min-w-0">
-                                <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Propiedad Filtrada</span>
-                                <span id="broker-active-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">Todas las propiedades</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0 pl-1">
-                            <span id="broker-apps-filter-count-badge" class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">0</span>
-                            <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
-                        </div>
+            <!-- PESTAÑA 2: CARTERA & LEADS (CONSOLIDA AVISOS + TIENDA DE LEADS) -->
+            <div id="panel-content-cartera" class="tab-content space-y-6">
+                <!-- Sub-Navbar Píldoras para Cartera & Leads -->
+                <div class="flex items-center gap-2 border-b border-zinc-200/80 dark:border-zinc-800 pb-3 overflow-x-auto">
+                    <button type="button" onclick="switchCarteraSubtab('avisos')" id="btn-cartera-subtab-avisos" class="cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-base">table_rows</span>
+                        <span>Mis Avisos en Cartera</span>
+                        <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 text-white">52</span>
+                    </button>
+                    <button type="button" onclick="switchCarteraSubtab('leads')" id="btn-cartera-subtab-leads" class="cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-base text-emerald-500">monetization_on</span>
+                        <span>Tienda de Leads MLS</span>
+                        <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">TIENDA</span>
                     </button>
                 </div>
 
-                <!-- Lista de Postulaciones -->
-                <div id="broker-list-apps" class="space-y-4">
-                    <div class="p-8 text-center text-zinc-400">Cargando postulaciones...</div>
+                <!-- Sub-Contenido A: Mis Avisos en Filas / Tabla -->
+                <div id="cartera-subcontent-avisos" class="space-y-4">
+                    <div class="glass-card p-4 rounded-2xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3 flex-1">
+                            <div class="relative flex-1 min-w-[240px]">
+                                <input id="broker-search-input" type="text" oninput="filterBrokerProperties()" placeholder="Buscar por ID, dirección, título, propietario..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
+                            </div>
+
+                            <button type="button" onclick="openBrokerFilterModal()" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs cursor-pointer transition-all shrink-0">
+                                <span class="material-symbols-outlined text-base text-primary">tune</span>
+                                <span>Filtros</span>
+                                <span id="active-filter-badge" class="hidden px-2 py-0.5 text-[9px] bg-primary text-white font-black rounded-full">0</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="openNewPropertyModal()" class="px-3.5 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95 transition-all">
+                                <span class="material-symbols-outlined text-base">add_home</span>
+                                <span>Nueva Captación</span>
+                            </button>
+                            <button type="button" onclick="exportPropertiesExcel()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                <span>Exportar Excel</span>
+                            </button>
+                            <button type="button" id="btn-view-rows" onclick="toggleBrokerView('rows')" class="px-3 py-2.5 bg-primary text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer">
+                                <span class="material-symbols-outlined text-base">table_rows</span>
+                                <span class="hidden sm:inline">Vista Filas (Tabla)</span>
+                            </button>
+                            <button type="button" id="btn-view-grid" onclick="toggleBrokerView('grid')" class="px-3 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-base">grid_view</span>
+                                <span class="hidden sm:inline">Vista Tarjetas</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="container-rows-view" class="glass-card rounded-2xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse broker-table">
+                                <thead>
+                                    <tr class="bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
+                                        <th class="p-3 w-8"><input type="checkbox" id="select-all-props" onclick="toggleSelectAllProps(this)" class="rounded border-zinc-300"></th>
+                                        <th class="p-3">Inmueble</th>
+                                        <th class="p-3">ID / Código</th>
+                                        <th class="p-3">Operación</th>
+                                        <th class="p-3">Precio Mensual</th>
+                                        <th class="p-3">Honorarios</th>
+                                        <th class="p-3">Difusión Portales</th>
+                                        <th class="p-3">Estado</th>
+                                        <th class="p-3">Propietario / Agente</th>
+                                        <th class="p-3 text-center">Interesados</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="broker-rows-tbody" class="divide-y divide-zinc-200/60 dark:divide-zinc-800 text-xs">
+                                    <!-- Populated dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="container-grid-view" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Sub-Contenido B: Tienda de Leads & Monetización -->
+                <div id="panel-content-leads" class="hidden space-y-6">
+                    <!-- Dynamic Content injected by HabitatLeadModule (js/lead-monetization.js) -->
+                </div>
+            </div>
+
+            <!-- PESTAÑA 3: CANDIDATOS & VISITAS (CONSOLIDA POSTULACIONES + CALENDARIO Y OPERACIONES) -->
+            <div id="panel-content-candidatos" class="tab-content space-y-6">
+                <!-- Sub-Navbar Píldoras para Candidatos & Visitas -->
+                <div class="flex items-center gap-2 border-b border-zinc-200/80 dark:border-zinc-800 pb-3 overflow-x-auto">
+                    <button type="button" onclick="switchCandidatosSubtab('contactos')" id="btn-candidatos-subtab-contactos" class="candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-base">how_to_reg</span>
+                        <span>Postulaciones Recibidas</span>
+                        <span id="broker-badge-subtab-apps" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 text-white">0</span>
+                    </button>
+                    <button type="button" onclick="switchCandidatosSubtab('operaciones')" id="btn-candidatos-subtab-operaciones" class="candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all">
+                        <span class="material-symbols-outlined text-base text-blue-500">calendar_month</span>
+                        <span>Itinerario de Visitas & Operaciones</span>
+                    </button>
+                </div>
+
+                <!-- Sub-Contenido A: Postulaciones y Candidatos -->
+                <div id="candidatos-subcontent-contactos" class="space-y-6">
+                    <!-- Header con Filtro Pop-Up por Propiedad -->
+                    <div class="glass-card p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
+                        <div>
+                            <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">how_to_reg</span>
+                                Postulaciones y Candidatos
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Revisa credenciales de Pasaporte Hábitat, scoring crediticio y selecciona a tu próximo inquilino.</p>
+                        </div>
+
+                        <!-- Botón moderno para abrir el Pop-Up de selección de propiedad -->
+                        <button type="button" onclick="openBrokerPropertyFilterModal()" id="btn-open-broker-prop-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[230px]">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                    <span class="material-symbols-outlined text-lg">home_work</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Propiedad Filtrada</span>
+                                    <span id="broker-active-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">Todas las propiedades</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0 pl-1">
+                                <span id="broker-apps-filter-count-badge" class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">0</span>
+                                <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Lista de Postulaciones -->
+                    <div id="broker-list-apps" class="space-y-4">
+                        <div class="p-8 text-center text-zinc-400">Cargando postulaciones...</div>
+                    </div>
+                </div>
+
+                <!-- Sub-Contenido B: Operaciones & Visitas -->
+                <div id="candidatos-subcontent-operaciones" class="hidden space-y-8">
+                    <!-- 1. Calendario Mensual & Agenda Profesional de Citas -->
+                    <div class="space-y-6 font-body">
+                        <!-- Header del Calendario (z-30 para superponer el menú emergente de meses) -->
+                        <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
+                            <div>
+                                <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+                                    Calendario Inmobiliario & Agenda de Citas
+                                </h2>
+                                <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato, tasaciones y entregas de llaves.</p>
+                            </div>
+
+                            <div class="flex items-center gap-3 flex-wrap shrink-0">
+                                <div class="relative">
+                                    <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                        <button type="button" onclick="navigateCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                            <span class="material-symbols-outlined text-base">chevron_left</span>
+                                        </button>
+                                        <button type="button" onclick="toggleMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
+                                            <span id="calendar-month-title">Agosto 2026</span>
+                                            <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
+                                        </button>
+                                        <button type="button" onclick="navigateCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                            <span class="material-symbols-outlined text-base">chevron_right</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Popover Selector Rápido de Meses y Años -->
+                                    <div id="calendar-month-picker-popover" class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3" onclick="event.stopPropagation()">
+                                        <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                            <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
+                                            <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                                <button type="button" onclick="changePickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
+                                                <span id="picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-400 px-1">2026</span>
+                                                <button type="button" onclick="changePickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Grilla de 12 Meses -->
+                                        <div id="picker-month-grid" class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
+                                    </div>
+                                </div>
+
+                                <button type="button" onclick="openCreateVisitModal()" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">event</span>
+                                    <span>+ Agendar Cita o Visita</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Grilla de Días de la Semana -->
+                        <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4 border border-zinc-200 dark:border-zinc-800">
+                            <div class="grid grid-cols-7 gap-1 text-center font-headline text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                <div>Dom</div>
+                                <div>Lun</div>
+                                <div>Mar</div>
+                                <div>Mié</div>
+                                <div>Jue</div>
+                                <div>Vie</div>
+                                <div>Sáb</div>
+                            </div>
+
+                            <!-- Celdas de Días -->
+                            <div id="calendar-grid-cells" class="grid grid-cols-7 gap-1.5">
+                                <!-- Generado Dinámicamente por JS -->
+                            </div>
+                        </div>
+
+                        <!-- Listado de Citas del Mes Seleccionado -->
+                        <div id="broker-list-visits" class="space-y-3 font-body"></div>
+                    </div>
+
+                    <!-- 2. Tasaciones Solicitadas en Portal -->
+                    <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4 border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                            <div>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-amber-500 text-xl">real_estate_agent</span>
+                                    Solicitudes de Tasación de Propietarios
+                                </h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Captaciones entrantes pendientes de visita de valuación comercial.</p>
+                            </div>
+                            <span id="badge-valuations-count" class="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs rounded-xl border border-amber-500/20 self-start sm:self-auto">
+                                2 pendientes
+                            </span>
+                        </div>
+
+                        <div id="broker-list-valuations" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- 3. Red Inmobiliaria MLS & Colegas -->
+                    <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4 border border-zinc-200 dark:border-zinc-800">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                            <div>
+                                <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-xl">hub</span>
+                                    Red de Colegas & Bolsa de Operaciones Compartidas (MLS)
+                                </h3>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Cartera de propiedades compartidas al 50/50 de honorarios con matriculados CUCICBA.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="openBlindCardModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-all">
+                                    <span class="material-symbols-outlined text-sm">visibility_off</span>
+                                    <span>Generar Ficha Ciega</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="broker-list-mls" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                    </div>
+
+                    <!-- 4. Calculadora Oficial de Honorarios y Costos de Ingreso -->
+                    <div class="glass-card p-6 rounded-3xl shadow-sm space-y-4 border border-zinc-200 dark:border-zinc-800">
+                        <div class="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                            <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-teal-600 text-xl">calculate</span>
+                                Calculadora Oficial de Liquidación de Ingreso & Honorarios
+                            </h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Calcula con precisión honorarios profesionales (4.15% CUCICBA), depósito en garantía, informes y costo total para el inquilino.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Monto del Alquiler Mensual ($ ARS)</label>
+                                    <input type="number" id="calc-rent-amount" value="450000" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Duración del Contrato (Meses)</label>
+                                    <select id="calc-contract-months" onchange="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                        <option value="24">24 Meses (2 Años - Comercial / Habitacional)</option>
+                                        <option value="36">36 Meses (3 Años)</option>
+                                        <option value="12" selected>12 Meses (1 Año - Temporal / Extranjeros)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Porcentaje Honorarios de Corretaje (%)</label>
+                                    <input type="number" id="calc-fee-percent" value="4.15" step="0.05" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -793,194 +978,18 @@
                 <div id="broker-container-active-rental" class="space-y-6"></div>
             </div>
 
-            <!-- PESTAÑA 5: OPERACIONES & RED (CONSOLIDADAS: CALENDARIO DE VISITAS, TASACIONES, MLS, CALCULADORA) -->
-            <div id="panel-content-operaciones" class="tab-content space-y-8">
-                <!-- 1. Calendario Mensual & Agenda Profesional de Citas -->
-                <div class="space-y-6 font-body">
-                    <!-- Header del Calendario (z-30 para superponer el menú emergente de meses) -->
-                    <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
-                        <div>
-                            <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
-                                Calendario Inmobiliario & Agenda de Citas
-                            </h2>
-                            <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato, tasaciones y entregas de llaves.</p>
-                        </div>
-
-                        <div class="flex items-center gap-3 flex-wrap shrink-0">
-                            <div class="relative">
-                                <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                                    <button type="button" onclick="navigateCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
-                                        <span class="material-symbols-outlined text-base">chevron_left</span>
-                                    </button>
-                                    <button type="button" onclick="toggleMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
-                                        <span id="calendar-month-title">Agosto 2026</span>
-                                        <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
-                                    </button>
-                                    <button type="button" onclick="navigateCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
-                                        <span class="material-symbols-outlined text-base">chevron_right</span>
-                                    </button>
-                                </div>
-
-                                <!-- Popover Selector Rápido de Meses y Años -->
-                                <div id="calendar-month-picker-popover" class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3" onclick="event.stopPropagation()">
-                                    <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                                        <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
-                                        <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                                            <button type="button" onclick="changePickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
-                                            <span id="picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-400 px-1">2026</span>
-                                            <button type="button" onclick="changePickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Grilla de 12 Meses -->
-                                    <div id="picker-month-grid" class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
-                                </div>
-                            </div>
-
-                            <button type="button" onclick="openCreateVisitModal()" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-base">event</span>
-                                <span>+ Agendar Cita o Visita</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Filtros Rápidos por Tipo de Evento (Leyenda y Filtro de Colores) -->
-                    <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
-                        <button type="button" onclick="filterCalendarEventType('todos')" id="cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all">
-                            <span class="flex items-center gap-0.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            </span>
-                            <span>Todos los Eventos</span>
-                        </button>
-                        <button type="button" onclick="filterCalendarEventType('visita')" id="cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
-                            <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                            <span>Visitas / Muestras</span>
-                        </button>
-                        <button type="button" onclick="filterCalendarEventType('firma')" id="cal-filter-firma" class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                            <span>Firmas</span>
-                        </button>
-                        <button type="button" onclick="filterCalendarEventType('tasacion')" id="cal-filter-tasacion" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                            <span>Tasaciones</span>
-                        </button>
-                        <button type="button" onclick="filterCalendarEventType('entrega')" id="cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
-                            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
-                            <span>Entregas de Llaves</span>
-                        </button>
-                    </div>
-
-                    <!-- Matriz de Grilla del Mes -->
-                    <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
-                        <div class="grid grid-cols-7 gap-1 text-center font-headline text-[11px] font-extrabold uppercase text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                            <div>Dom</div>
-                            <div>Lun</div>
-                            <div>Mar</div>
-                            <div>Mié</div>
-                            <div>Jue</div>
-                            <div>Vie</div>
-                            <div>Sáb</div>
-                        </div>
-
-                        <!-- Celdas de Días -->
-                        <div id="calendar-grid-cells" class="grid grid-cols-7 gap-1.5"></div>
-                    </div>
-
-                    <!-- Listado Detallado de Citas -->
-                    <div id="broker-list-visits" class="space-y-4"></div>
+            <!-- PESTAÑA 5: MENSAJES & NEGOCIACIÓN CHAT -->
+            <div id="panel-content-chat-negociacion" class="tab-content space-y-6">
+                <div id="broker-chat-section-container">
+                    <div class="p-8 text-center text-zinc-400">Cargando centro de mensajes y negociación...</div>
                 </div>
-
-
-
-                <!-- 4. Calculadora de Ingreso -->
-                <div id="section-calculadora" class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800 scroll-mt-24">
-                    <div class="glass-card p-6 rounded-3xl shadow-sm max-w-4xl mx-auto space-y-6 border border-zinc-200 dark:border-zinc-800 transition-all duration-300">
-                        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
-                            <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                                <span class="material-symbols-outlined text-emerald-600 text-2xl">calculate</span>
-                                Calculadora de Gastos de Ingreso & Honorarios de Corretaje
-                            </h3>
-                            <p class="text-xs text-zinc-500">Emita presupuestos oficiales de ingreso especificando depósito, honorarios, sellados y primer mes.</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Monto del Alquiler Mensual ($)</label>
-                                    <input type="number" id="calc-rent-price" value="450000" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Porcentaje Honorarios de Corretaje (%)</label>
-                                    <input type="number" id="calc-fee-percent" value="4.15" step="0.05" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Meses de Depósito de Garantía</label>
-                                    <select id="calc-deposit-months" onchange="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
-                                        <option value="1">1 Mes de Depósito</option>
-                                        <option value="2">2 Meses de Depósito</option>
-                                        <option value="0">Sin Depósito (Con Garantía de Fianza)</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-extrabold uppercase text-zinc-500 mb-1">Gastos de Informes & Certificación ($)</label>
-                                    <input type="number" id="calc-reports-cost" value="45000" oninput="calculateEntryCosts()" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm font-bold text-zinc-900 dark:text-white outline-none">
-                                </div>
-                            </div>
-
-                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex flex-col justify-between space-y-4">
-                                <div>
-                                    <span class="text-xs font-black uppercase text-primary dark:text-red-400 tracking-wider">Desglose de Ingreso</span>
-                                    <div class="mt-4 space-y-2.5 text-xs">
-                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
-                                            <span>Primer mes de alquiler:</span>
-                                            <b id="out-calc-first-month" class="text-zinc-900 dark:text-white">$ 450.000</b>
-                                        </div>
-                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
-                                            <span>Depósito de garantía:</span>
-                                            <b id="out-calc-deposit" class="text-zinc-900 dark:text-white">$ 450.000</b>
-                                        </div>
-                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
-                                            <span>Honorarios de corretaje:</span>
-                                            <b id="out-calc-fee" class="text-primary dark:text-red-400 font-extrabold">$ 224.100</b>
-                                        </div>
-                                        <div class="flex justify-between text-zinc-600 dark:text-zinc-300">
-                                            <span>Informes y certificados:</span>
-                                            <b id="out-calc-reports" class="text-zinc-900 dark:text-white">$ 45.000</b>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                                    <span class="block text-[10px] font-extrabold uppercase text-zinc-400">Total Requerido para Ingresar</span>
-                                    <span id="out-calc-total" class="text-3xl font-black text-emerald-600 dark:text-emerald-400">$ 1.169.100</span>
-                                    <button type="button" onclick="copyCalculatorBudget()" class="mt-4 w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">content_copy</span>
-                                        Copiar Presupuesto para WhatsApp
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PESTAÑA 6: GESTIÓN INTEGRAL DE LEADS CRM & MONETIZACIÓN -->
-            <div id="panel-content-leads" class="tab-content space-y-6">
-                <!-- Se renderiza dinámicamente mediante HabitatLeadModule.renderLeadsMainSection() -->
             </div>
 
         </div>
     </main>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (6 BOTONES CONSOLIDADOS) -->
-    <div id="broker-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-lg mx-auto">
+    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (5 BOTONES CONSOLIDADOS) -->
+    <div id="broker-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto">
         <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
             <!-- Burbuja Deslizante Activa -->
             <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
@@ -990,30 +999,25 @@
                 <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">General</span>
             </button>
 
-            <button data-tab="leads" onclick="switchBrokerTab('leads')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">monetization_on</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Leads</span>
+            <button data-tab="cartera" onclick="switchBrokerTab('cartera')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl">home_work</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Cartera</span>
             </button>
 
-            <button data-tab="avisos" onclick="switchBrokerTab('avisos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">table_rows</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Avisos</span>
-            </button>
-
-            <button data-tab="contactos" onclick="switchBrokerTab('contactos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+            <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
                 <span class="material-symbols-outlined text-lg sm:text-xl">how_to_reg</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Postulaciones</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Candidatos</span>
                 <span id="broker-badge-dock-apps" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500"></span>
             </button>
 
             <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">home</span>
+                <span class="material-symbols-outlined text-lg sm:text-xl">payments</span>
                 <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Alquileres</span>
             </button>
 
-            <button data-tab="operaciones" onclick="switchBrokerTab('operaciones')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Visitas</span>
+            <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
+                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">forum</span>
+                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Chat</span>
             </button>
         </nav>
     </div>
@@ -1624,13 +1628,55 @@
             }
         }
 
+        // Sub-tabs para Cartera & Leads
+        function switchCarteraSubtab(subtab = 'avisos') {
+            const subAvisos = document.getElementById('cartera-subcontent-avisos');
+            const subLeads = document.getElementById('panel-content-leads');
+            const btnAvisos = document.getElementById('btn-cartera-subtab-avisos');
+            const btnLeads = document.getElementById('btn-cartera-subtab-leads');
+
+            if (subtab === 'leads' || subtab === 'monetizacion') {
+                if (subAvisos) subAvisos.classList.add('hidden');
+                if (subLeads) subLeads.classList.remove('hidden');
+                if (btnAvisos) btnAvisos.className = 'cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all';
+                if (btnLeads) btnLeads.className = 'cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all';
+                if (window.HabitatLeadModule && typeof window.HabitatLeadModule.renderLeadsMainSection === 'function') {
+                    window.HabitatLeadModule.renderLeadsMainSection();
+                }
+            } else {
+                if (subAvisos) subAvisos.classList.remove('hidden');
+                if (subLeads) subLeads.classList.add('hidden');
+                if (btnAvisos) btnAvisos.className = 'cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all';
+                if (btnLeads) btnLeads.className = 'cartera-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all';
+            }
+        }
+
+        // Sub-tabs para Candidatos & Visitas
+        function switchCandidatosSubtab(subtab = 'contactos') {
+            const subContactos = document.getElementById('candidatos-subcontent-contactos');
+            const subOperaciones = document.getElementById('candidatos-subcontent-operaciones');
+            const btnContactos = document.getElementById('btn-candidatos-subtab-contactos');
+            const btnOperaciones = document.getElementById('btn-candidatos-subtab-operaciones');
+
+            if (subtab === 'operaciones' || subtab === 'visitas' || subtab === 'calculadora' || subtab === 'tasaciones' || subtab === 'mls') {
+                if (subContactos) subContactos.classList.add('hidden');
+                if (subOperaciones) subOperaciones.classList.remove('hidden');
+                if (btnContactos) btnContactos.className = 'candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all';
+                if (btnOperaciones) btnOperaciones.className = 'candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all';
+            } else {
+                if (subContactos) subContactos.classList.remove('hidden');
+                if (subOperaciones) subOperaciones.classList.add('hidden');
+                if (btnContactos) btnContactos.className = 'candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold bg-primary text-white shadow-sm flex items-center gap-2 cursor-pointer transition-all';
+                if (btnOperaciones) btnOperaciones.className = 'candidatos-subtab-btn py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer transition-all';
+            }
+        }
+
         function mapTabName(tab) {
-            if (['general', 'leads', 'avisos', 'contactos', 'alquileres', 'operaciones'].includes(tab)) return tab;
-            if (['monetizacion', 'tienda-leads', 'prospectos'].includes(tab)) return 'leads';
-            if (['propiedades'].includes(tab)) return 'avisos';
-            if (['candidatos', 'postulaciones', 'visitas', 'inquilinos', 'propietarios'].includes(tab)) return 'contactos';
+            if (['general', 'cartera', 'candidatos', 'alquileres', 'chat-negociacion'].includes(tab)) return tab;
+            if (['chat', 'mensajes', 'negociacion'].includes(tab)) return 'chat-negociacion';
+            if (['avisos', 'leads', 'monetizacion', 'tienda-leads', 'prospectos', 'propiedades'].includes(tab)) return 'cartera';
+            if (['contactos', 'candidatos-visitas', 'postulaciones', 'visitas', 'operaciones', 'inquilinos', 'propietarios', 'herramientas', 'kanban', 'tasaciones', 'mls', 'calculadora'].includes(tab)) return 'candidatos';
             if (['contratos', 'alquiler-activo', 'mantenimiento'].includes(tab)) return 'alquileres';
-            if (['herramientas', 'kanban', 'tasaciones', 'mls', 'calculadora'].includes(tab)) return 'operaciones';
             return 'general';
         }
 
@@ -1643,17 +1689,28 @@
             }, 100);
         }
 
-        // Tab Switching Function (6 Consolidate Tabs)
+        // Tab Switching Function (5 Secciones Consolidadas)
         function switchBrokerTab(targetTab) {
-            const normalizedTab = mapTabName(targetTab);
+            const rawTab = targetTab ? targetTab.toLowerCase().trim() : 'general';
+            const normalizedTab = mapTabName(rawTab);
+
+            // Manejo de sub-pestañas si se invoca una sub-sección directamente
+            if (['leads', 'monetizacion', 'tienda-leads'].includes(rawTab)) {
+                switchCarteraSubtab('leads');
+            } else if (['avisos', 'propiedades'].includes(rawTab)) {
+                switchCarteraSubtab('avisos');
+            } else if (['operaciones', 'visitas', 'calculadora', 'tasaciones', 'mls'].includes(rawTab)) {
+                switchCandidatosSubtab('operaciones');
+            } else if (['contactos', 'postulaciones'].includes(rawTab)) {
+                switchCandidatosSubtab('contactos');
+            }
 
             const contents = {
                 'general': document.getElementById('panel-content-general'),
-                'leads': document.getElementById('panel-content-leads'),
-                'avisos': document.getElementById('panel-content-avisos'),
-                'contactos': document.getElementById('panel-content-contactos'),
+                'cartera': document.getElementById('panel-content-cartera'),
+                'candidatos': document.getElementById('panel-content-candidatos'),
                 'alquileres': document.getElementById('panel-content-alquileres'),
-                'operaciones': document.getElementById('panel-content-operaciones')
+                'chat-negociacion': document.getElementById('panel-content-chat-negociacion')
             };
 
             // Update Top Pills
@@ -1692,6 +1749,19 @@
 
             if (normalizedTab === 'general') {
                 setTimeout(initBrokerCharts, 50);
+            } else if (normalizedTab === 'cartera') {
+                if (typeof renderBrokerProperties === 'function') renderBrokerProperties();
+            } else if (normalizedTab === 'candidatos') {
+                if (typeof renderBrokerApplications === 'function') renderBrokerApplications();
+                if (typeof renderBrokerCalendar === 'function') renderBrokerCalendar();
+                if (typeof renderBrokerValuations === 'function') renderBrokerValuations();
+                if (typeof initMlsInteractiveMap === 'function') setTimeout(initMlsInteractiveMap, 50);
+            } else if (normalizedTab === 'alquileres') {
+                if (typeof renderBrokerActiveRental === 'function') renderBrokerActiveRental();
+            } else if (normalizedTab === 'chat-negociacion') {
+                if (window.ContractsManager && typeof window.ContractsManager.renderEmbeddedChat === 'function') {
+                    window.ContractsManager.renderEmbeddedChat('broker-chat-section-container', { role: 'BROKER' });
+                }
             }
 
             window.location.hash = normalizedTab;
@@ -2244,11 +2314,16 @@
             const activeCandidates = filtered.filter(a => a.status !== 'rechazada');
             const rejectedCandidates = filtered.filter(a => a.status === 'rechazada');
 
+            const badgeSubtab = document.getElementById('broker-badge-subtab-apps');
+            const totalActive = brokerAppsState.filter(a => a.status !== 'rechazada').length;
             if (countBadge) {
                 countBadge.textContent = `${activeCandidates.length}`;
             }
             if (badgeTop) {
-                badgeTop.textContent = `${brokerAppsState.filter(a => a.status !== 'rechazada').length}`;
+                badgeTop.textContent = `${totalActive}`;
+            }
+            if (badgeSubtab) {
+                badgeSubtab.textContent = `${totalActive}`;
             }
             if (badgeDock) {
                 const totalActive = brokerAppsState.filter(a => a.status !== 'rechazada').length;
@@ -3362,8 +3437,12 @@
                                 </div>
                             </div>
 
-                            <!-- Módulo de Firma Electrónica y Audit Trail -->
+                            <!-- Módulo de Firma Electrónica, Chat y Audit Trail -->
                             <div class="flex flex-wrap items-center gap-2 pt-2">
+                                <button type="button" onclick="ContractsManager.openContractFullscreen('CTR-2026-0518', 'chat')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir canal de negociación en vivo">
+                                    <span class="material-symbols-outlined text-sm">chat</span>
+                                    <span>Chat & Negociación</span>
+                                </button>
                                 <button type="button" onclick="ContractsManager.openContractViewer('CTR-2026-0518', 'BROKER')" class="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                                     <span class="material-symbols-outlined text-sm text-emerald-400">verified</span>
                                     <span>Supervisar Firma y Evidencia Legal (Audit Trail)</span>
@@ -5340,21 +5419,11 @@
         function goToCalculatorWithAnimation() {
             switchBrokerTab('operaciones');
             setTimeout(() => {
-                const section = document.getElementById('section-calculadora');
-                if (section) {
-                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    const card = section.querySelector('.glass-card');
-                    if (card) {
-                        card.classList.remove('animate-highlight-calculator');
-                        void card.offsetWidth; // Reflow
-                        card.classList.add('animate-highlight-calculator');
-                        setTimeout(() => card.classList.remove('animate-highlight-calculator'), 1400);
-                    }
-                    const input = document.getElementById('calc-rent-price');
-                    if (input) {
-                        input.focus();
-                        input.select();
-                    }
+                const input = document.getElementById('calc-rent-amount') || document.getElementById('calc-rent-price');
+                if (input) {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    input.focus();
+                    input.select();
                 }
             }, 120);
         }

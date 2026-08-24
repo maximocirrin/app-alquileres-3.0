@@ -1030,30 +1030,52 @@
             <!-- Marketplace Featured Properties Section -->
             <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 pb-6 animate-on-scroll"
                 id="landing-featured-properties-section">
-                <div class="mb-8">
-                    <h2
-                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
-                        Destacadas
-                    </h2>
+                <!-- Header con Título y Flechas de Navegación para Escritorio -->
+                <div class="flex items-end justify-between mb-8 gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-red-950/40 text-primary dark:text-red-400 text-xs font-headline font-bold mb-2">
+                            <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                            <span>Oportunidades Seleccionadas</span>
+                        </div>
+                        <h2
+                            class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
+                            Destacadas
+                        </h2>
+                    </div>
+
+                    <!-- Botones de Navegación Flechas para Escritorio -->
+                    <div class="hidden sm:flex items-center gap-2 shrink-0">
+                        <button type="button" id="marketplace-scroll-prev-btn" onclick="window.scrollFeaturedMarketplace(-1)"
+                            aria-label="Ver anteriores propiedades destacadas"
+                            class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
+                            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                        </button>
+                        <button type="button" id="marketplace-scroll-next-btn" onclick="window.scrollFeaturedMarketplace(1)"
+                            aria-label="Ver siguientes propiedades destacadas"
+                            class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
+                            <span class="material-symbols-outlined text-2xl">arrow_forward</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Horizontal scrolling row of property cards -->
                 <div class="relative group/carousel">
-                    <!-- Carousel Controls for Desktop -->
-                    <button type="button" id="marketplace-scroll-left"
-                        class="hidden sm:flex absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 shadow-xl items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover/carousel:opacity-100 disabled:opacity-0"
+                    <!-- Flecha Flotante Izquierda -->
+                    <button type="button" id="marketplace-scroll-left" onclick="window.scrollFeaturedMarketplace(-1)"
+                        class="hidden md:flex absolute -left-4 lg:-left-6 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100 shadow-xl items-center justify-center hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
                         aria-label="Anterior">
-                        <span class="material-symbols-outlined">chevron_left</span>
+                        <span class="material-symbols-outlined text-2xl">chevron_left</span>
                     </button>
-                    <button type="button" id="marketplace-scroll-right"
-                        class="hidden sm:flex absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 shadow-xl items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover/carousel:opacity-100"
+                    <!-- Flecha Flotante Derecha -->
+                    <button type="button" id="marketplace-scroll-right" onclick="window.scrollFeaturedMarketplace(1)"
+                        class="hidden md:flex absolute -right-4 lg:-right-6 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100 shadow-xl items-center justify-center hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
                         aria-label="Siguiente">
-                        <span class="material-symbols-outlined">chevron_right</span>
+                        <span class="material-symbols-outlined text-2xl">chevron_right</span>
                     </button>
 
                     <!-- Scroll container -->
                     <div id="landing-featured-properties-grid"
-                        class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth">
+                        class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth cursor-grab active:cursor-grabbing select-none">
                         <!-- Populated dynamically -->
                     </div>
                 </div>
@@ -1069,6 +1091,94 @@
             </section>
 
             <script>
+                // Función global para desplazar el carrusel de destacadas
+                window.scrollFeaturedMarketplace = function (direction) {
+                    const grid = document.getElementById('landing-featured-properties-grid');
+                    if (!grid) return;
+                    const card = grid.querySelector('article');
+                    const step = card ? (card.offsetWidth + 24) * (window.innerWidth > 1024 ? 2 : 1) : 360;
+                    grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+                };
+
+                function updateFeaturedArrowsState() {
+                    const grid = document.getElementById('landing-featured-properties-grid');
+                    if (!grid) return;
+                    const prevBtn = document.getElementById('marketplace-scroll-prev-btn');
+                    const nextBtn = document.getElementById('marketplace-scroll-next-btn');
+                    const leftFloatBtn = document.getElementById('marketplace-scroll-left');
+                    const rightFloatBtn = document.getElementById('marketplace-scroll-right');
+
+                    const isAtStart = grid.scrollLeft <= 8;
+                    const isAtEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 12;
+
+                    [prevBtn, leftFloatBtn].forEach(btn => {
+                        if (btn) {
+                            btn.disabled = isAtStart;
+                            if (btn === leftFloatBtn) {
+                                btn.style.opacity = isAtStart ? '0' : '1';
+                                btn.style.pointerEvents = isAtStart ? 'none' : 'auto';
+                            }
+                        }
+                    });
+
+                    [nextBtn, rightFloatBtn].forEach(btn => {
+                        if (btn) {
+                            btn.disabled = isAtEnd;
+                            if (btn === rightFloatBtn) {
+                                btn.style.opacity = isAtEnd ? '0' : '1';
+                                btn.style.pointerEvents = isAtEnd ? 'none' : 'auto';
+                            }
+                        }
+                    });
+                }
+
+                function setupFeaturedMouseDrag() {
+                    const grid = document.getElementById('landing-featured-properties-grid');
+                    if (!grid || grid._dragInitialized) return;
+                    grid._dragInitialized = true;
+
+                    let isDown = false;
+                    let startX = 0;
+                    let scrollLeftVal = 0;
+                    let hasMoved = false;
+
+                    grid.addEventListener('mousedown', (e) => {
+                        if (e.target.closest('button, a, .btn-favorite')) return;
+                        isDown = true;
+                        hasMoved = false;
+                        startX = e.pageX - grid.offsetLeft;
+                        scrollLeftVal = grid.scrollLeft;
+                        grid.classList.remove('scroll-smooth', 'snap-x', 'snap-mandatory');
+                    });
+
+                    window.addEventListener('mouseup', () => {
+                        if (!isDown) return;
+                        isDown = false;
+                        grid.classList.add('scroll-smooth', 'snap-x', 'snap-mandatory');
+                        updateFeaturedArrowsState();
+                    });
+
+                    grid.addEventListener('mousemove', (e) => {
+                        if (!isDown) return;
+                        e.preventDefault();
+                        const x = e.pageX - grid.offsetLeft;
+                        const walk = (x - startX) * 1.4;
+                        if (Math.abs(walk) > 5) hasMoved = true;
+                        grid.scrollLeft = scrollLeftVal - walk;
+                    });
+
+                    // Evitar clicks accidentales al arrastrar
+                    grid.addEventListener('click', (e) => {
+                        if (hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            hasMoved = false;
+                        }
+                    }, true);
+
+                    grid.addEventListener('scroll', updateFeaturedArrowsState, { passive: true });
+                }
+
                 async function renderLandingFeaturedProperties() {
                     const grid = document.getElementById('landing-featured-properties-grid');
                     if (!grid) return;
@@ -1174,17 +1284,8 @@
                         grid.appendChild(card);
                     });
 
-                    const leftBtn = document.getElementById('marketplace-scroll-left');
-                    const rightBtn = document.getElementById('marketplace-scroll-right');
-                    if (leftBtn && rightBtn && grid) {
-                        leftBtn.addEventListener('click', () => {
-                            grid.scrollBy({ left: -340, behavior: 'smooth' });
-                        });
-                        rightBtn.addEventListener('click', () => {
-                            grid.scrollBy({ left: 340, behavior: 'smooth' });
-                        });
-                    }
-
+                    setupFeaturedMouseDrag();
+                    setTimeout(updateFeaturedArrowsState, 150);
                 }
                 document.addEventListener('DOMContentLoaded', renderLandingFeaturedProperties);
                 window.addEventListener('load', renderLandingFeaturedProperties);

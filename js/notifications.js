@@ -106,9 +106,8 @@
         _realtimeInitialized: false,
         _processedNotifIds: new Set(),
 
-        // Obtener notificaciones filtradas para el rol del usuario logueado
-        getAll: function (roleFilter = null) {
-            const activeRole = roleFilter || getActiveUserRole();
+        // Obtener todas las notificaciones del usuario de manera global y consistente
+        getAll: function () {
             let storedList = [];
             try {
                 const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
@@ -124,12 +123,7 @@
                 return [...DEFAULT_NOTIFICATIONS];
             }
 
-            // Filtrado estricto por rol para que el Propietario no reciba notificaciones del Inquilino y viceversa
-            return storedList.filter(n => {
-                if (!n || !n.title) return false;
-                if (!n.role || n.role === 'ALL') return true;
-                return n.role === activeRole;
-            });
+            return storedList;
         },
 
         // Guardar lista completa en almacenamiento
@@ -141,18 +135,17 @@
             this.renderDropdown();
         },
 
-        getByRole: function (role) {
-            return this.getAll(role);
+        getByRole: function () {
+            return this.getAll();
         },
 
-        getUnreadCount: function (role = null) {
-            const list = this.getAll(role);
+        getUnreadCount: function () {
+            const list = this.getAll();
             return list.filter(n => !n.read).length;
         },
 
         createNotification: function ({ id = null, title, message, type = 'contract', link = '#', role = 'ALL', icon = null }) {
-            const activeRole = getActiveUserRole();
-            const notifId = id || ('notif_' + (type || 'gen') + '_' + (role || 'all') + '_' + title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + '_' + new Date().toISOString().slice(0, 10));
+            const notifId = id || ('notif_' + (type || 'gen') + '_' + title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + '_' + Date.now());
 
             // Leer almacenamiento completo
             let allStored = [];
@@ -164,10 +157,10 @@
                 }
             } catch (e) { }
 
-            // Deduplicación estricta: evitar crear la misma notificación si ya existe (en los últimos 2 minutos)
+            // Deduplicación: evitar crear la misma notificación si ya existe (en los últimos 30 segundos)
             const isDuplicate = allStored.some(n => 
                 n.id === notifId || 
-                (n.title === title && n.role === role && (Date.now() - new Date(n.createdAt).getTime()) < 120000)
+                (n.title === title && n.message === message && (Date.now() - new Date(n.createdAt).getTime()) < 30000)
             );
 
             if (isDuplicate) {
@@ -176,7 +169,9 @@
 
             let resolvedIcon = icon;
             if (!resolvedIcon) {
-                if (type === 'contract' || message.toLowerCase().includes('firm') || title.toLowerCase().includes('firm')) {
+                if (type === 'chat' || type === 'message') {
+                    resolvedIcon = 'forum';
+                } else if (type === 'contract' || message.toLowerCase().includes('firm') || title.toLowerCase().includes('firm')) {
                     resolvedIcon = 'draw';
                 } else if (type === 'acceptance' || title.toLowerCase().includes('aprob') || title.toLowerCase().includes('aceptad')) {
                     resolvedIcon = 'check_circle';
@@ -196,14 +191,14 @@
                 type,
                 icon: resolvedIcon,
                 link,
-                role,
+                role: 'ALL',
                 read: false,
                 createdAt: new Date().toISOString(),
                 senderTabId: TAB_ID
             };
 
             allStored.unshift(newNotif);
-            if (allStored.length > 30) allStored = allStored.slice(0, 30);
+            if (allStored.length > 40) allStored = allStored.slice(0, 40);
 
             try {
                 localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
@@ -212,12 +207,8 @@
             this._processedNotifIds.add(newNotif.id);
             this.updateBadge();
             this.renderDropdown();
-
-            // Solo mostrar Toast si la notificación corresponde al rol activo
-            if (role === 'ALL' || role === activeRole) {
-                this.showToast(newNotif);
-                playNotificationChime();
-            }
+            this.showToast(newNotif);
+            playNotificationChime();
 
             // 1. Enviar vía BroadcastChannel para otras pestañas abiertas
             if (broadcastChannel) {
@@ -251,6 +242,15 @@
             if (this._processedNotifIds.has(notif.id)) return;
             this._processedNotifIds.add(notif.id);
 
+            // Si es un mensaje enviado por mí mismo (verificado por email / profileId), ignorar
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+                if (payload.senderEmail && myEmail && payload.senderEmail.toLowerCase().trim() === myEmail) return;
+                if (payload.senderProfileId && myProfileId && String(payload.senderProfileId) === String(myProfileId)) return;
+            } catch (e) {}
+
             let allStored = [];
             try {
                 const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
@@ -262,12 +262,12 @@
 
             const exists = allStored.some(n => 
                 n.id === notif.id || 
-                (n.title === notif.title && n.role === notif.role && Math.abs(new Date(n.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 60000)
+                (n.title === notif.title && n.message === notif.message && Math.abs(new Date(n.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 30000)
             );
 
             if (!exists) {
                 allStored.unshift(notif);
-                if (allStored.length > 30) allStored = allStored.slice(0, 30);
+                if (allStored.length > 40) allStored = allStored.slice(0, 40);
                 try {
                     localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
                 } catch (e) { }
@@ -275,13 +275,8 @@
 
             this.updateBadge();
             this.renderDropdown();
-
-            const activeRole = getActiveUserRole();
-            // Solo mostrar Toast si la notificación corresponde al rol actual
-            if (notif.role === 'ALL' || notif.role === activeRole) {
-                this.showToast(notif);
-                playNotificationChime();
-            }
+            this.showToast(notif);
+            playNotificationChime();
 
             window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: notif }));
             window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: notif }));
@@ -385,7 +380,7 @@
                                 type: 'application',
                                 icon: 'person_add',
                                 link: 'administrador.html#postulaciones',
-                                role: 'OWNER'
+                                role: 'ALL'
                             });
                         })
                         // 3. Postgres Changes: Firmas de Contrato
@@ -410,7 +405,7 @@
                                     type: 'contract',
                                     icon: 'draw',
                                     link: `contratos.html?contract=${ctrCode}&sign=1&role=OWNER`,
-                                    role: 'OWNER'
+                                    role: 'ALL'
                                 });
                             } else {
                                 NotificationManager.receiveIncomingNotification({
@@ -420,13 +415,65 @@
                                     type: 'contract',
                                     icon: 'verified_user',
                                     link: `contratos.html?contract=${ctrCode}&role=TENANT`,
-                                    role: 'TENANT'
+                                    role: 'ALL'
                                 });
                             }
                         })
                         // 4. Postgres Changes: Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, (payload) => {
                             window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: payload.new }));
+                        })
+                        // 5. Postgres Changes: Mensajes de Chat en Negociación de Contratos
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Mensaje_Contrato' }, async (payload) => {
+                            const newMsg = payload.new;
+                            if (!newMsg) return;
+
+                            // Comprobar si el mensaje fue enviado por el usuario actual
+                            let isMe = false;
+                            try {
+                                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                                const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+
+                                if (myEmail && newMsg.remitente_email && myEmail === newMsg.remitente_email.toLowerCase().trim()) {
+                                    isMe = true;
+                                }
+                                if (myProfileId && newMsg.id_perfil && String(myProfileId) === String(newMsg.id_perfil)) {
+                                    isMe = true;
+                                }
+                                if (window.supabaseClient) {
+                                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                                    if (session?.user?.email && newMsg.remitente_email && session.user.email.toLowerCase().trim() === newMsg.remitente_email.toLowerCase().trim()) {
+                                        isMe = true;
+                                    }
+                                }
+                            } catch (e) {}
+
+                            if (isMe) return; // No generar notificación de mi propio mensaje
+
+                            const senderName = newMsg.remitente_nombre || (newMsg.remitente_rol ? `Usuario (${newMsg.remitente_rol})` : 'Nuevo mensaje');
+                            const msgSnippet = newMsg.mensaje ? (newMsg.mensaje.length > 80 ? newMsg.mensaje.substring(0, 80) + '...' : newMsg.mensaje) : 'Nueva propuesta en el contrato';
+
+                            let chatLink = 'administrador.html#chat-negociacion';
+                            if (window.location.pathname.includes('panel-corredor')) {
+                                chatLink = 'panel-corredor.html#chat-negociacion';
+                            } else if (window.location.pathname.includes('tu-alquiler')) {
+                                chatLink = 'tu-alquiler.html#chat-negociacion';
+                            } else if (window.location.pathname.includes('administrador')) {
+                                chatLink = 'administrador.html#chat-negociacion';
+                            } else if (newMsg.contract_ref_id) {
+                                chatLink = `contratos.html?id=${newMsg.contract_ref_id}&tab=chat`;
+                            }
+
+                            NotificationManager.receiveIncomingNotification({
+                                id: `notif_msg_${newMsg.id_mensaje || Date.now()}`,
+                                title: `💬 Mensaje de ${senderName}`,
+                                message: msgSnippet,
+                                type: 'chat',
+                                icon: 'forum',
+                                link: chatLink,
+                                role: 'ALL'
+                            });
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
@@ -437,7 +484,6 @@
                     console.warn('[Supabase Realtime Sub Error]:', e);
                 }
             } else {
-                // Reintentar si supabaseClient aún no está listo
                 setTimeout(() => {
                     if (window.supabaseClient && !this._supabaseChannel) {
                         this.initRealtimeWebSockets();
