@@ -6704,17 +6704,45 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         }
     }
 
-    // Collect photos
-    let photos = [];
-    if (prop.propiedad_imagenes && prop.propiedad_imagenes.length > 0) {
-        photos = prop.propiedad_imagenes.sort((a, b) => (a.orden || 0) - (b.orden || 0)).map(i => i.url);
+    // Collect photos from all possible properties and formats
+    let rawPhotos = [];
+    if (Array.isArray(prop.Multimedia) && prop.Multimedia.length > 0) {
+        rawPhotos = prop.Multimedia;
+    } else if (Array.isArray(prop.propiedad_imagenes) && prop.propiedad_imagenes.length > 0) {
+        rawPhotos = prop.propiedad_imagenes;
     } else if (Array.isArray(prop.images) && prop.images.length > 0) {
-        photos = prop.images;
+        rawPhotos = prop.images;
+    } else if (Array.isArray(prop.photos) && prop.photos.length > 0) {
+        rawPhotos = prop.photos;
+    } else if (prop.multimedia && Array.isArray(prop.multimedia.fotos) && prop.multimedia.fotos.length > 0) {
+        rawPhotos = prop.multimedia.fotos;
+    } else if (extraInfo && Array.isArray(extraInfo.photos) && extraInfo.photos.length > 0) {
+        rawPhotos = extraInfo.photos;
+    } else if (extraInfo && Array.isArray(extraInfo.images) && extraInfo.images.length > 0) {
+        rawPhotos = extraInfo.images;
     } else if (prop.image) {
-        photos = [prop.image];
+        rawPhotos = [prop.image];
     } else if (prop.photoUrl) {
-        photos = [prop.photoUrl];
+        rawPhotos = [prop.photoUrl];
+    } else if (prop.imagen) {
+        rawPhotos = [prop.imagen];
     }
+
+    // Sort if items have orden / orden_visualizacion
+    if (rawPhotos.length > 0 && typeof rawPhotos[0] === 'object') {
+        rawPhotos.sort((a, b) => (a.orden_visualizacion || a.orden || 0) - (b.orden_visualizacion || b.orden || 0));
+    }
+
+    // Extract clean URL strings
+    let photos = rawPhotos.map(item => {
+        if (!item) return null;
+        if (typeof item === 'string') return item.trim();
+        if (typeof item === 'object') {
+            return item.url_archivo || item.url || item.url_foto || item.src || item.dataUrl || item.previewUrl || null;
+        }
+        return null;
+    }).filter(url => typeof url === 'string' && url.length > 0);
+
     if (!photos || photos.length === 0) {
         photos = ['img/hero-marketplace.jpg'];
     }
@@ -6768,7 +6796,28 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const disposicion = prop.disposicion || extraInfo.disposicion || 'Frente';
     const orientacion = prop.orientacion || extraInfo.orientacion || 'Norte';
     const barrio = prop.barrio || extraInfo.barrio || '';
-    const status = prop.status || extraInfo.status || 'disponible';
+    const status = (prop.status || extraInfo.status || prop.estado_publicacion || '').toLowerCase() || 'disponible';
+    const isAlquilada = Boolean(
+        status === 'alquilada' ||
+        status === 'alquilado' ||
+        prop.alquilada === true ||
+        prop.isAlquilada === true ||
+        prop.id_estado_publicacion === 2 ||
+        (prop.tags && Array.isArray(prop.tags) && prop.tags.some(t => typeof t === 'string' && t.toLowerCase().includes('alquilad'))) ||
+        (extraInfo && (extraInfo.status === 'alquilada' || extraInfo.status === 'alquilado' || extraInfo.alquilada === true))
+    );
+
+    let formattedEndDate = '';
+    const rawEndDate = prop.contractEndDate || prop.fecha_fin_contrato || (extraInfo && (extraInfo.contractEndDate || extraInfo.fecha_fin_contrato));
+    if (rawEndDate) {
+        try {
+            const d = new Date(rawEndDate);
+            if (!isNaN(d.getTime())) {
+                formattedEndDate = d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+            }
+        } catch (e) {}
+    }
+
     const viewsCount = prop.cantidad_visualizaciones_total ?? prop.views_count ?? prop.views ?? 0;
 
     const petFriendly = extraInfo.mascotas || prop.pet || (prop.tags && prop.tags.some(t => t.toLowerCase().includes('mascota')));
@@ -6838,62 +6887,131 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     modal.style.maxHeight = '100dvh';
 
     // Build Zillow-style Photo Mosaic Layout
-    let photoMosaicHtml = '';
+    // Helper functions for mobile carousel in hero showcase
+    window.__slideMobileCarousel = function (dir) {
+        const c = document.getElementById('mp-mobile-carousel');
+        if (!c) return;
+        c.scrollBy({ left: dir * c.clientWidth, behavior: 'smooth' });
+    };
+
+    window.__updateMobileCarouselCounter = function (el) {
+        if (!el) return;
+        const idx = Math.round(el.scrollLeft / el.clientWidth);
+        const counterEl = document.getElementById('mp-mobile-slide-num');
+        if (counterEl) {
+            counterEl.textContent = Math.min(photos.length, Math.max(1, idx + 1));
+        }
+    };
+
+    // Build Desktop Showcase Layout (Photo 1 Look: 1 Large Left + 4 Small 2x2 Right)
+    let desktopShowcaseHtml = '';
+    const badgeHtml = `
+        <div class="absolute top-4 left-4 z-20 flex items-center gap-2 flex-wrap pointer-events-none">
+            ${isAlquilada ? `
+                <div class="inline-flex items-center gap-1.5 bg-amber-500/95 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-amber-400/40">
+                    <span class="material-symbols-outlined text-sm">key</span> Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}
+                </div>
+            ` : ''}
+            ${verified ? `
+                <div class="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40">
+                    <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    const viewAllBtnHtml = (count) => `
+        <button type="button" onclick="window.__openGalleryMosaicModal(0)" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+            <span class="material-symbols-outlined text-base sm:text-lg">grid_view</span>
+            <span>Ver todas las fotos (${count})</span>
+        </button>
+    `;
+
     if (photos.length >= 5) {
-        photoMosaicHtml = `
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
-                ${verified ? `
-                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
-                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
-                    </div>
-                ` : ''}
-                <div class="md:col-span-2 relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
-                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+        desktopShowcaseHtml = `
+            <div class="mp-hero-desktop-showcase grid grid-cols-4 gap-2 rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[400px] lg:h-[440px] xl:h-[460px] bg-zinc-900 shadow-lg relative group select-none" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); height: 440px; gap: 8px;">
+                ${badgeHtml}
+                <!-- Left Hero Photo (Span 2 cols, 100% height) -->
+                <div class="col-span-2 relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="grid-column: span 2; height: 100%; min-height: 0;" onclick="window.__openGalleryMosaicModal(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
                     <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
                 </div>
-                <div class="hidden md:grid md:col-span-2 grid-cols-2 gap-2.5 h-full">
+                <!-- Right 4 Photos (Span 2 cols, 2x2 Grid with equal 50% rows) -->
+                <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-2 w-full h-full min-h-0" style="grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; height: 100%; min-height: 0;">
                     ${photos.slice(1, 5).map((p, idx) => `
-                        <div class="relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(${idx + 1})">
-                            <img src="${p}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(${idx + 1})">
+                            <img src="${p}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
                             <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
                         </div>
                     `).join('')}
                 </div>
-                <button type="button" onclick="window.__openDetailLightbox(0)" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-                    <span class="material-symbols-outlined text-base sm:text-lg">photo_camera</span>
-                    <span>Ver todas las fotos (${photos.length})</span>
-                </button>
+                ${viewAllBtnHtml(photos.length)}
             </div>
         `;
-    } else if (photos.length >= 2) {
-        photoMosaicHtml = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg relative group">
-                ${verified ? `
-                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
-                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+    } else if (photos.length === 4) {
+        desktopShowcaseHtml = `
+            <div class="mp-hero-desktop-showcase grid grid-cols-4 gap-2 rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[400px] lg:h-[440px] xl:h-[460px] bg-zinc-900 shadow-lg relative group select-none" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); height: 440px; gap: 8px;">
+                ${badgeHtml}
+                <div class="col-span-2 relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="grid-column: span 2; height: 100%; min-height: 0;" onclick="window.__openGalleryMosaicModal(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                    <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                </div>
+                <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-2 w-full h-full min-h-0" style="grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; height: 100%; min-height: 0;">
+                    <div class="col-span-2 relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="grid-column: span 2; width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(1)">
+                        <img src="${photos[1]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
                     </div>
-                ` : ''}
-                <div class="relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(0)">
-                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                    <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(2)">
+                        <img src="${photos[2]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                    </div>
+                    <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(3)">
+                        <img src="${photos[3]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                    </div>
                 </div>
-                <div class="hidden md:block relative overflow-hidden h-full cursor-pointer group/item" onclick="window.__openDetailLightbox(1)">
-                    <img src="${photos[1]}" alt="${title}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                ${viewAllBtnHtml(photos.length)}
+            </div>
+        `;
+    } else if (photos.length === 3) {
+        desktopShowcaseHtml = `
+            <div class="mp-hero-desktop-showcase grid grid-cols-4 gap-2 rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[400px] lg:h-[440px] xl:h-[460px] bg-zinc-900 shadow-lg relative group select-none" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); height: 440px; gap: 8px;">
+                ${badgeHtml}
+                <div class="col-span-2 relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="grid-column: span 2; height: 100%; min-height: 0;" onclick="window.__openGalleryMosaicModal(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                    <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
                 </div>
-                <button type="button" onclick="window.__openDetailLightbox(0)" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-                    <span class="material-symbols-outlined text-base sm:text-lg">photo_camera</span>
-                    <span>Ver fotos (${photos.length})</span>
-                </button>
+                <div class="col-span-2 grid grid-cols-1 grid-rows-2 gap-2 w-full h-full min-h-0" style="grid-column: span 2; display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; height: 100%; min-height: 0;">
+                    <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(1)">
+                        <img src="${photos[1]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                    </div>
+                    <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(2)">
+                        <img src="${photos[2]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-colors"></div>
+                    </div>
+                </div>
+                ${viewAllBtnHtml(photos.length)}
+            </div>
+        `;
+    } else if (photos.length === 2) {
+        desktopShowcaseHtml = `
+            <div class="mp-hero-desktop-showcase grid grid-cols-2 gap-2 rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[400px] lg:h-[440px] xl:h-[460px] bg-zinc-900 shadow-lg relative group select-none" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); height: 440px; gap: 8px;">
+                ${badgeHtml}
+                <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(0)">
+                    <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                <div class="relative overflow-hidden w-full h-full min-h-0 cursor-pointer group/item" style="width: 100%; height: 100%; min-width: 0; min-height: 0;" onclick="window.__openGalleryMosaicModal(1)">
+                    <img src="${photos[1]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover/item:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                </div>
+                ${viewAllBtnHtml(photos.length)}
             </div>
         `;
     } else {
-        photoMosaicHtml = `
-            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] bg-zinc-900 shadow-lg group cursor-pointer" onclick="window.__openDetailLightbox(0)">
-                ${verified ? `
-                    <div class="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40 pointer-events-none">
-                        <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
-                    </div>
-                ` : ''}
-                <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+        desktopShowcaseHtml = `
+            <div class="mp-hero-desktop-showcase rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[400px] lg:h-[440px] xl:h-[460px] bg-zinc-900 shadow-lg relative group cursor-pointer select-none" style="height: 440px;" onclick="window.__openGalleryMosaicModal(0)">
+                ${badgeHtml}
+                <img src="${photos[0]}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
                 <button type="button" class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xl backdrop-blur-md border border-zinc-200/60 dark:border-zinc-700/60 transition-all hover:scale-105 active:scale-95 cursor-pointer">
                     <span class="material-symbols-outlined text-base sm:text-lg">fullscreen</span>
                     <span>Ver pantalla completa</span>
@@ -6901,6 +7019,60 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             </div>
         `;
     }
+
+    // Build Mobile Showcase Layout (Swipeable Carousel + Navigation Arrows + Counter)
+    const mobileShowcaseHtml = `
+        <div class="mp-hero-mobile-showcase relative rounded-2xl sm:rounded-3xl overflow-hidden w-full h-[280px] sm:h-[340px] bg-zinc-900 shadow-lg group select-none">
+            <!-- Mobile Top Badges -->
+            <div class="absolute top-3.5 left-3.5 z-20 flex items-center gap-1.5 flex-wrap pointer-events-none">
+                ${isAlquilada ? `
+                    <div class="inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-headline font-black shadow-md border border-amber-400/40">
+                        <span class="material-symbols-outlined text-xs">key</span> Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}
+                    </div>
+                ` : ''}
+                ${verified ? `
+                    <div class="inline-flex items-center gap-1 bg-emerald-600/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-headline font-black shadow-md border border-emerald-400/40">
+                        <span class="material-symbols-outlined text-xs">verified</span> Verificado
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- Horizontal Scroll Swipe Container -->
+            <div id="mp-mobile-carousel" class="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth select-none touch-pan-x" onscroll="window.__updateMobileCarouselCounter(this)">
+                ${photos.map((p, idx) => `
+                    <div class="snap-center w-full h-full shrink-0 relative cursor-pointer" onclick="window.__openGalleryMosaicModal(${idx})">
+                        <img src="${p}" alt="${title}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
+                    </div>
+                `).join('')}
+            </div>
+
+            <!-- Left / Right Nav Arrows (Mobile) -->
+            ${photos.length > 1 ? `
+                <button type="button" onclick="event.stopPropagation(); window.__slideMobileCarousel(-1);" aria-label="Foto anterior" class="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center shadow-lg active:scale-90 cursor-pointer border border-white/15">
+                    <span class="material-symbols-outlined text-lg pointer-events-none">chevron_left</span>
+                </button>
+                <button type="button" onclick="event.stopPropagation(); window.__slideMobileCarousel(1);" aria-label="Foto siguiente" class="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center shadow-lg active:scale-90 cursor-pointer border border-white/15">
+                    <span class="material-symbols-outlined text-lg pointer-events-none">chevron_right</span>
+                </button>
+            ` : ''}
+
+            <!-- Bottom Counter Pill (Mobile) -->
+            <div class="absolute bottom-3 right-3 z-20 pointer-events-none">
+                <div class="bg-black/70 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">photo_camera</span>
+                    <span id="mp-mobile-slide-num">1</span> / ${photos.length}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Unified Photo Showcase Section
+    photoMosaicHtml = `
+        <div class="w-full relative">
+            ${desktopShowcaseHtml}
+            ${mobileShowcaseHtml}
+        </div>
+    `;
 
     modal.innerHTML = `
         <!-- Top Zillow Sub-Nav Sticky Bar -->
@@ -6972,7 +7144,33 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             
             <!-- In-View Scroll Reveal Styles & Sub-Nav Hover Magic -->
             <style id="mp-fullscreen-styles">
-                /* Desktop/Tablet vs Mobile Display */
+                /* Showcase Display Rules (Desktop vs Mobile) */
+                .mp-hero-desktop-showcase {
+                    display: none !important;
+                }
+                .mp-hero-mobile-showcase {
+                    display: block !important;
+                }
+                @media (min-width: 768px) {
+                    .mp-hero-desktop-showcase {
+                        display: grid !important;
+                        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                        grid-template-rows: minmax(0, 1fr) !important;
+                        height: 440px !important;
+                        gap: 8px !important;
+                    }
+                    .mp-hero-desktop-showcase img {
+                        width: 100% !important;
+                        height: 100% !important;
+                        object-fit: cover !important;
+                        object-position: center center !important;
+                        display: block !important;
+                    }
+                    .mp-hero-mobile-showcase {
+                        display: none !important;
+                    }
+                }
+                /* Desktop/Tablet vs Mobile Subnav Display */
                 .mp-subnav-desktop-only {
                     display: none;
                 }
@@ -7082,10 +7280,17 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <div class="space-y-4 border-b border-zinc-200 dark:border-zinc-800/80 pb-6">
                         <!-- Luxury Minimalist Badges (Monochrome & Subtle Accents) -->
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-black tracking-wider rounded-full uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                ${operacion}
-                            </span>
+                            ${isAlquilada ? `
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-black tracking-wide rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 shadow-2xs">
+                                    <span class="material-symbols-outlined text-sm text-amber-600 dark:text-amber-400">key</span>
+                                    Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}
+                                </span>
+                            ` : `
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-black tracking-wider rounded-full uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    ${operacion}
+                                </span>
+                            `}
                             ${verified ? `
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
                                     <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Propietario Verificado
@@ -7758,14 +7963,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <!-- Activity & Engagement Live Tracker (Inspiración Zillow) -->
                     <section class="mp-inview-item bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs space-y-2.5">
                         <div class="flex items-center gap-2 text-sm text-zinc-900 dark:text-white font-extrabold flex-wrap">
-                            <span class="text-base font-black">${viewsCount > 20 ? 'Popular en Hábitat' : 'Disponible en Hábitat'}</span>
+                            <span class="text-base font-black">${isAlquilada ? 'Alquilada en Hábitat' : (viewsCount > 20 ? 'Popular en Hábitat' : 'Disponible en Hábitat')}</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
                             <span class="text-base font-black text-primary dark:text-red-400">${viewsCount > 0 ? viewsCount : 1} visualizaciones</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
                             <span class="text-emerald-600 dark:text-emerald-400 font-bold">${Math.max(1, Math.floor((viewsCount || 1) * 0.35))} interesados contactaron</span>
                         </div>
                         <div class="space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p>Disponibilidad verificada por Hábitat: <strong class="text-zinc-700 dark:text-zinc-300">hoy</strong></p>
+                            <p>Disponibilidad verificada por Hábitat: <strong class="text-zinc-700 dark:text-zinc-300">${isAlquilada ? 'Alquilada con contrato vigente' : 'hoy'}</strong></p>
                             <p>Sincronización de publicación: <strong class="text-zinc-700 dark:text-zinc-300">actualizada recientemente</strong></p>
                         </div>
                     </section>
@@ -7823,9 +8028,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-2">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold uppercase text-zinc-500 tracking-wider">Estado de publicación</span>
-                                        <span id="mp-modal-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full ${status === 'paused' || status === 'pausado' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}">
-                                            <span class="material-symbols-outlined text-xs">${status === 'paused' || status === 'pausado' ? 'pause_circle' : 'check_circle'}</span>
-                                            ${status === 'paused' || status === 'pausado' ? 'Pausada' : 'Publicada'}
+                                        <span id="mp-modal-status-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold rounded-full ${status === 'paused' || status === 'pausado' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : (isAlquilada ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300')}">
+                                            <span class="material-symbols-outlined text-xs">${status === 'paused' || status === 'pausado' ? 'pause_circle' : (isAlquilada ? 'key' : 'check_circle')}</span>
+                                            ${status === 'paused' || status === 'pausado' ? 'Pausada' : (isAlquilada ? 'Alquilada' : 'Publicada')}
                                         </span>
                                     </div>
                                     <div class="text-xs text-zinc-500 flex items-center gap-1">
@@ -7852,20 +8057,20 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         ` : `
                             <!-- Tenant Actions (Zillow Style CTAs) -->
                             <div class="space-y-3">
-                                ${(status === 'alquilada' || status === 'alquilado') ? `
+                                ${isAlquilada ? `
                                     <div class="bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 rounded-2xl p-4 space-y-1.5 text-amber-800 dark:text-amber-200">
                                         <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
                                             <span class="material-symbols-outlined text-base">key</span>
                                             <span>Propiedad Actualmente Alquilada</span>
                                         </div>
                                         <p class="text-xs leading-relaxed font-medium">
-                                            ${prop.contractEndDate ? `Esta propiedad tiene un contrato vigente hasta el <strong>${new Date(prop.contractEndDate).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</strong>.` : 'Esta propiedad se encuentra actualmente alquilada con contrato vigente.'}
+                                            ${rawEndDate ? `Esta propiedad tiene un contrato vigente hasta el <strong>${new Date(rawEndDate).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</strong>.` : 'Esta propiedad se encuentra actualmente alquilada con contrato vigente.'}
                                         </p>
                                     </div>
 
                                     <button type="button" disabled class="w-full inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-400 dark:text-zinc-500 font-bold py-3.5 px-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 cursor-not-allowed text-sm">
                                         <span class="material-symbols-outlined text-base">lock</span>
-                                        <span>Alquilada ${prop.contractEndDate ? `(Hasta ${new Date(prop.contractEndDate).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })})` : ''}</span>
+                                        <span>Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}</span>
                                     </button>
                                 ` : `
                                     <button id="mp-modal-apply-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-98 cursor-pointer text-base">
@@ -7898,18 +8103,6 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         `}
 
                     </div>
-
-                    <!-- Trust & Security Box -->
-                    <div class="bg-zinc-50 dark:bg-zinc-900/60 p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 space-y-2">
-                        <div class="flex items-center gap-2 font-bold text-zinc-800 dark:text-zinc-200">
-                            <span class="material-symbols-outlined text-primary text-base">gavel</span>
-                            <span>Marco Legal & Seguridad</span>
-                        </div>
-                        <p class="leading-relaxed">
-                            Contratos homologados según el Código Civil y Comercial de la Nación. Todas las postulaciones se auditan con prueba de vida y validación de identidad.
-                        </p>
-                    </div>
-
                 </aside>
 
             </div>
@@ -7927,6 +8120,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <button type="button" onclick="document.getElementById('mp-modal-edit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">edit</span> Editar
                     </button>
+                ` : (isAlquilada ? `
+                    <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">calendar_month</span> Visita
+                    </button>
+                    <div class="inline-flex items-center gap-1 bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm">
+                        <span class="material-symbols-outlined text-base">key</span> Alquilada
+                    </div>
                 ` : `
                     <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">calendar_month</span> Visita
@@ -7934,7 +8134,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <button type="button" onclick="document.getElementById('mp-modal-apply-btn')?.click()" class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">how_to_reg</span> Postularme
                     </button>
-                `}
+                `)}
             </div>
         </div>
     `;
@@ -8152,8 +8352,141 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         };
     }
 
-    // High-Resolution Lightbox implementation
-    window.__openDetailLightbox = function (startIdx = 0) {
+    // ============================================================
+    // Full Gallery Mosaic Modal (Photo 2 look on Desktop, Uniform Cards on Mobile)
+    // ============================================================
+    window.__openGalleryMosaicModal = function (startIdx = 0) {
+        let mosaicModal = document.getElementById('mp-gallery-mosaic-modal');
+        if (!mosaicModal) {
+            mosaicModal = document.createElement('div');
+            mosaicModal.id = 'mp-gallery-mosaic-modal';
+            document.body.appendChild(mosaicModal);
+        }
+
+        mosaicModal.className = 'fixed inset-0 z-[100000] flex flex-col bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 overflow-y-auto overscroll-contain transition-opacity duration-300 font-body';
+        mosaicModal.style.display = 'flex';
+        mosaicModal.style.opacity = '0';
+        mosaicModal.scrollTop = 0;
+
+        // Build Desktop Mosaic (Alternating 1 wide, 2 half, 1 wide, 2 half... matching Photo 2)
+        let desktopMosaicHtml = '';
+        let i = 0;
+        let isWideRow = true;
+        while (i < photos.length) {
+            if (isWideRow || i === photos.length - 1) {
+                const p = photos[i];
+                const idx = i;
+                desktopMosaicHtml += `
+                    <div class="w-full h-[380px] sm:h-[460px] lg:h-[500px] rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-md hover:shadow-xl transition-all cursor-pointer group bg-zinc-900 select-none" style="height: 480px;" onclick="window.__openLightboxPhoto(${idx})">
+                        <img src="${p}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                        <div class="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-3.5 py-1.5 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 shadow-lg">
+                            <span class="material-symbols-outlined text-sm">fullscreen</span>
+                            <span>Ver foto grande</span>
+                        </div>
+                    </div>
+                `;
+                i += 1;
+                isWideRow = false;
+            } else {
+                const p1 = photos[i];
+                const idx1 = i;
+                const p2 = photos[i + 1];
+                const idx2 = i + 1;
+                desktopMosaicHtml += `
+                    <div class="grid grid-cols-2 gap-4 w-full h-[280px] sm:h-[340px] lg:h-[380px]" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; height: 360px;">
+                        <div class="w-full h-full min-w-0 min-h-0 rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-md hover:shadow-xl transition-all cursor-pointer group bg-zinc-900 select-none" style="width: 100%; height: 100%;" onclick="window.__openLightboxPhoto(${idx1})">
+                            <img src="${p1}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                            <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                            <div class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-lg">
+                                <span class="material-symbols-outlined text-sm">fullscreen</span>
+                                <span>Ver foto</span>
+                            </div>
+                        </div>
+                        <div class="w-full h-full min-w-0 min-h-0 rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-md hover:shadow-xl transition-all cursor-pointer group bg-zinc-900 select-none" style="width: 100%; height: 100%;" onclick="window.__openLightboxPhoto(${idx2})">
+                            <img src="${p2}" alt="${title}" class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                            <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                            <div class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-lg">
+                                <span class="material-symbols-outlined text-sm">fullscreen</span>
+                                <span>Ver foto</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                i += 2;
+                isWideRow = true;
+            }
+        }
+
+        // Build Mobile Mosaic (Uniform Same-Size Cards)
+        let mobileMosaicHtml = `
+            <div class="mp-mosaic-mobile-layout">
+                ${photos.map((p, idx) => `
+                    <div class="w-full h-[260px] sm:h-[300px] rounded-2xl overflow-hidden relative shadow-md cursor-pointer active:scale-98 transition-transform bg-zinc-900 select-none" style="height: 260px;" onclick="window.__openLightboxPhoto(${idx})">
+                        <img src="${p}" alt="${title}" class="w-full h-full object-cover object-center" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-full border border-white/20 shadow-md">
+                            ${idx + 1} / ${photos.length}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        mosaicModal.innerHTML = `
+            <!-- Sticky Header -->
+            <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xs">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="min-w-0">
+                        <h2 class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white truncate">${title}</h2>
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400 font-semibold">${photos.length} fotos de la propiedad</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <button id="mp-mosaic-close-x-btn" type="button" aria-label="Cerrar mosaico" class="w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer transition-colors text-zinc-700 dark:text-zinc-200 shadow-xs">
+                        <span class="material-symbols-outlined text-xl pointer-events-none">close</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-6 py-6 space-y-6">
+                <div class="mp-mosaic-desktop-layout">
+                    ${desktopMosaicHtml}
+                </div>
+                <div class="mp-mosaic-mobile-layout">
+                    ${mobileMosaicHtml}
+                </div>
+            </main>
+        `;
+
+        requestAnimationFrame(() => {
+            mosaicModal.style.opacity = '1';
+        });
+
+        const closeMosaic = () => {
+            mosaicModal.style.opacity = '0';
+            window.removeEventListener('keydown', handleMosaicKey);
+            setTimeout(() => {
+                mosaicModal.style.display = 'none';
+            }, 250);
+        };
+
+        const handleMosaicKey = (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                closeMosaic();
+            }
+        };
+        window.addEventListener('keydown', handleMosaicKey);
+
+        const closeXBtn = document.getElementById('mp-mosaic-close-x-btn');
+        if (closeXBtn) closeXBtn.onclick = closeMosaic;
+    };
+
+    // ============================================================
+    // High-Resolution Single Photo Fullscreen Lightbox
+    // ============================================================
+    window.__openLightboxPhoto = function (startIdx = 0) {
         let lightbox = document.getElementById('mp-lightbox-modal');
         if (!lightbox) {
             lightbox = document.createElement('div');
@@ -8161,38 +8494,32 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             document.body.appendChild(lightbox);
         }
 
-        lightbox.className = 'fixed inset-0 z-[100000] flex flex-col items-center justify-between bg-black/95 backdrop-blur-2xl transition-opacity duration-300 p-4 font-body';
+        lightbox.className = 'fixed inset-0 z-[100005] flex flex-col items-center justify-between bg-black/98 backdrop-blur-2xl transition-opacity duration-250 p-3 sm:p-4 font-body select-none';
         lightbox.style.display = 'flex';
         lightbox.style.opacity = '0';
 
-        let currentLbIdx = startIdx;
+        let currentLbIdx = Math.max(0, Math.min(photos.length - 1, Number(startIdx) || 0));
 
         lightbox.innerHTML = `
             <!-- Lightbox Header -->
-            <div class="w-full flex items-center justify-between px-2 sm:px-6 py-3 z-20 shrink-0">
-                <div class="text-white text-sm font-bold flex items-center gap-2 max-w-[70%] truncate">
-                    <span class="material-symbols-outlined text-red-500">photo_camera</span>
-                    <span class="truncate">${title}</span>
-                </div>
-                <div class="flex items-center gap-3 shrink-0">
-                    <span id="lb-counter" class="text-white text-xs font-bold bg-white/10 px-3.5 py-1.5 rounded-full border border-white/20">
-                        ${currentLbIdx + 1} / ${photos.length}
-                    </span>
-                    <button id="lb-close-btn" type="button" aria-label="Cerrar vista completa" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer">
-                        <span class="material-symbols-outlined pointer-events-none">close</span>
-                    </button>
-                </div>
+            <div class="w-full flex items-center justify-between px-3 sm:px-8 py-4 z-30 shrink-0">
+                <span id="lb-counter" class="inline-flex items-center justify-center font-headline font-black text-xs sm:text-sm bg-white text-zinc-950 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-2xl border-2 border-white select-none">
+                    ${currentLbIdx + 1} / ${photos.length}
+                </span>
+                <button id="lb-close-btn" type="button" aria-label="Cerrar visor" title="Cerrar (Esc)" class="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer border-2 border-white">
+                    <span class="material-symbols-outlined text-2xl font-bold pointer-events-none">close</span>
+                </button>
             </div>
 
             <!-- Main Fullscreen Image Container -->
             <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-auto p-2 sm:p-6">
-                <img id="lb-main-img" src="${photos[currentLbIdx]}" alt="${title}" class="max-w-full max-h-[78vh] sm:max-h-[82vh] object-contain transition-all duration-300 rounded-2xl shadow-2xl" onerror="this.src='img/hero-marketplace.jpg'">
+                <img id="lb-main-img" src="${photos[currentLbIdx]}" alt="${title}" class="max-w-full max-h-[76vh] sm:max-h-[82vh] object-contain transition-all duration-300 rounded-2xl shadow-2xl" onerror="this.src='img/hero-marketplace.jpg'">
 
                 ${photos.length > 1 ? `
-                    <button id="lb-prev-btn" type="button" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/20 cursor-pointer">
+                    <button id="lb-prev-btn" type="button" aria-label="Anterior" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-black text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/30 backdrop-blur-md cursor-pointer">
                         <span class="material-symbols-outlined pointer-events-none text-2xl">chevron_left</span>
                     </button>
-                    <button id="lb-next-btn" type="button" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/20 cursor-pointer">
+                    <button id="lb-next-btn" type="button" aria-label="Siguiente" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-black text-white flex items-center justify-center transition-all hover:scale-110 shadow-2xl border border-white/30 backdrop-blur-md cursor-pointer">
                         <span class="material-symbols-outlined pointer-events-none text-2xl">chevron_right</span>
                     </button>
                 ` : ''}
@@ -8202,7 +8529,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             ${photos.length > 1 ? `
                 <div class="w-full flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-2 z-20 scrollbar-thin shrink-0">
                     ${photos.map((url, i) => `
-                        <button type="button" data-lb-idx="${i}" class="lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === currentLbIdx ? 'border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'}">
+                        <button type="button" data-lb-idx="${i}" class="lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${i === currentLbIdx ? 'border-primary ring-2 ring-primary/50 opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-100'}">
                             <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='img/hero-marketplace.jpg'">
                         </button>
                     `).join('')}
@@ -8235,7 +8562,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const thumbs = lightbox.querySelectorAll('.lb-thumb');
             thumbs.forEach((th, i) => {
                 if (i === currentLbIdx) {
-                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-red-500 ring-2 ring-red-500/50 opacity-100 scale-105 cursor-pointer';
+                    th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-primary ring-2 ring-primary/50 opacity-100 scale-105 cursor-pointer';
+                    th.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 } else {
                     th.className = 'lb-thumb relative w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 shrink-0 transition-all border-transparent opacity-50 hover:opacity-100 cursor-pointer';
                 }
@@ -8259,7 +8587,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         }
 
         lightbox.onclick = (e) => {
-            if (e.target === lightbox || e.target.id === 'lb-main-img') {
+            if (e.target === lightbox) {
                 closeLb();
             }
         };
@@ -8293,6 +8621,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         };
         window.addEventListener('keydown', handleLbKey);
     };
+
+    // Global alias for compatibility
+    window.__openDetailLightbox = window.__openGalleryMosaicModal;
 
     // Reliable Fullscreen Close handler
     const closeModal = () => {
@@ -8489,7 +8820,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 };
 
 // ============================================================
-// Cost Calculator Pop-up Modal (Inspiración Zillow Image 2)
+// Cost Calculator Pop-up Modal (Pantalla Completa)
 // ============================================================
 window.openCostCalculatorModal = function (propData = {}) {
     let modal = document.getElementById('cost-calculator-modal');
@@ -8509,175 +8840,189 @@ window.openCostCalculatorModal = function (propData = {}) {
     const totalMensual = priceNum + expensasNum;
     const totalMensualFormatted = `${moneda} ${totalMensual.toLocaleString('es-AR')}`;
 
-    // Base Move-in Required Costs: 1 month rent + 1 month security deposit
+    // Base Move-in Required Costs: 1 month rent + 1 month security deposit + Credit Check Fee (Pasaporte)
+    const creditCheckFee = 20000;
+    const creditCheckFeeFormatted = `${moneda} ${creditCheckFee.toLocaleString('es-AR')}`;
     const firstMonthRent = priceNum;
     const securityDeposit = priceNum;
     const adminFee = 0;
-    const appFee = 0;
+    const appFee = creditCheckFee;
     const baseMoveInTotal = firstMonthRent + securityDeposit + adminFee + appFee;
 
     // Optional Add-ons
     const petDepositAmount = Math.round(priceNum * 0.15) || 35000;
     const insuranceAmount = 15000;
 
-    modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-opacity duration-200 font-body';
+    modal.scrollTop = 0;
+    modal.className = 'fixed inset-0 z-[100000] w-full max-w-full h-full h-[100dvh] max-h-[100dvh] bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-y-auto overscroll-contain transition-opacity duration-200 font-body';
     modal.style.display = 'flex';
     modal.style.opacity = '0';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.right = '0';
+    modal.style.bottom = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100dvh';
+    modal.style.maxHeight = '100dvh';
 
     modal.innerHTML = `
-        <div class="relative w-full max-w-2xl bg-white dark:bg-[#111318] rounded-3xl shadow-2xl border border-zinc-200/90 dark:border-zinc-800/90 overflow-hidden flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center font-bold">
-                        <span class="material-symbols-outlined text-lg">calculate</span>
-                    </div>
-                    <div>
-                        <h3 class="font-headline text-lg font-black text-zinc-900 dark:text-white">Calculadora de costos</h3>
-                        <p class="text-[11px] text-zinc-500 truncate max-w-[280px] sm:max-w-md">${title}</p>
+        <!-- Header Superior Fijo/Sticky -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#111318]/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 shrink-0">
+            <div class="max-w-4xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <button type="button" id="close-cost-calc-back-btn" aria-label="Volver" class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-3 py-2 sm:px-3.5 sm:py-2 rounded-xl transition-all active:scale-95 shrink-0 cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-lg">arrow_back</span>
+                        <span class="hidden sm:inline">Volver</span>
+                    </button>
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center font-bold shrink-0 shadow-xs">
+                            <span class="material-symbols-outlined text-lg">calculate</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white truncate">Calculadora de costos</h3>
+                            <p class="text-[11px] text-zinc-500 truncate max-w-[200px] sm:max-w-md">${title}</p>
+                        </div>
                     </div>
                 </div>
-                <button type="button" id="close-cost-calc-btn" class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center transition-colors cursor-pointer" aria-label="Cerrar">
+                <button type="button" id="close-cost-calc-btn" class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors flex items-center justify-center cursor-pointer shrink-0" aria-label="Cerrar (ESC)" title="Cerrar (ESC)">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
+        </header>
 
-            <!-- Content Body (Scrollable) -->
-            <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
+        <!-- Main Full-Screen Body Content -->
+        <main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-6 space-y-6">
+            
+            <!-- Sección 1: Costos mensuales -->
+            <div class="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#111318] shadow-xs">
+                <div class="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+                        <span class="material-symbols-outlined text-base text-zinc-500">calendar_month</span>
+                        <span>Costos mensuales</span>
+                    </div>
+                </div>
                 
-                <!-- Sección 1: Costos mensuales -->
-                <div class="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#151820]">
-                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                        <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
-                            <span class="material-symbols-outlined text-base text-zinc-500">expand_less</span>
-                            <span>Costos mensuales</span>
+                <div class="p-5 sm:p-6 space-y-4">
+                    <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800/50">
+                            <div>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Alquiler mensual base</span>
+                                <span class="block text-xs text-zinc-400">Ver características para más detalles</span>
+                            </div>
+                            <span class="font-extrabold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                        </div>
+
+                        <div class="flex items-center justify-between py-1.5">
+                            <div>
+                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Expensas ordinarias</span>
+                                <span class="block text-xs text-zinc-400">Estimación mensual</span>
+                            </div>
+                            <span class="font-semibold text-zinc-800 dark:text-zinc-200">${expensasFormatted}</span>
                         </div>
                     </div>
-                    
-                    <div class="p-4 sm:p-5 space-y-4">
-                        <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
-                        
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
-                                <div>
-                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Alquiler mensual base</span>
-                                    <span class="block text-xs text-zinc-400">Ver contrato para detalles</span>
-                                </div>
-                                <span class="font-extrabold text-zinc-900 dark:text-white">${priceFormatted}</span>
-                            </div>
 
-                            <div class="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
-                                <div>
-                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Expensas ordinarias</span>
-                                    <span class="block text-xs text-zinc-400">Estimación mensual</span>
-                                </div>
-                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">${expensasFormatted}</span>
-                            </div>
-
-                            <div class="flex items-center justify-between py-1">
-                                <div>
-                                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">Tarifa de Servicio Tecnológico Hábitat</span>
-                                    <span class="block text-xs text-emerald-500">100% Bonificado para inquilinos</span>
-                                </div>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
-                            </div>
-                        </div>
-
-                        <!-- Barra destacada Total Mensual -->
-                        <div class="pt-3 flex items-center justify-between bg-zinc-100/70 dark:bg-zinc-800/60 p-3.5 rounded-xl">
+                    <!-- Barra destacada Total Mensual -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-between bg-zinc-100/80 dark:bg-zinc-800/70 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
                             <span class="font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">Costo mensual total estimado</span>
-                            <span class="font-headline font-black text-lg sm:text-xl text-zinc-900 dark:text-white">${totalMensualFormatted}</span>
+                            <span class="font-headline font-black text-xl sm:text-2xl text-zinc-900 dark:text-white">${totalMensualFormatted}</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Sección 2: Costos de ingreso inicial -->
-                <div class="rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#151820]">
-                    <div class="p-4 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                        <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
-                            <span class="material-symbols-outlined text-base text-zinc-500">expand_less</span>
-                            <span>Costos de ingreso inicial (Mudanza)</span>
+            <!-- Sección 2: Costos de ingreso inicial -->
+            <div class="rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden bg-white dark:bg-[#111318] shadow-xs">
+                <div class="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">
+                        <span class="material-symbols-outlined text-base text-zinc-500">key</span>
+                        <span>Costos de ingreso inicial (Mudanza)</span>
+                    </div>
+                </div>
+
+                <div class="p-5 sm:p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Columna 1: Obligatorios -->
+                        <div class="space-y-3">
+                            <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
+                            
+                            <div class="space-y-3 text-xs sm:text-sm">
+                                <div class="flex justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800/50">
+                                    <span class="text-zinc-600 dark:text-zinc-300">Primer mes de alquiler</span>
+                                    <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                </div>
+                                <div class="flex justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800/50">
+                                    <div>
+                                        <span class="text-zinc-600 dark:text-zinc-300">Depósito en garantía</span>
+                                        <span class="block text-[10px] text-zinc-400">Reembolsable al finalizar</span>
+                                    </div>
+                                    <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                </div>
+                                <div class="flex justify-between py-1.5 border-b border-zinc-100 dark:border-zinc-800/50">
+                                    <span class="text-zinc-600 dark:text-zinc-300">Gastos administrativos</span>
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
+                                </div>
+                                <div class="flex justify-between py-1.5">
+                                    <div>
+                                        <span class="text-zinc-600 dark:text-zinc-300">Verificación crediticia (Pasaporte)</span>
+                                        <span class="block text-[10px] text-zinc-400">Tasa de postulación única</span>
+                                    </div>
+                                    <span class="font-bold text-zinc-900 dark:text-white">${creditCheckFeeFormatted}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna 2: Opcionales con Checkboxes -->
+                        <div class="space-y-3">
+                            <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Opcionales</div>
+                            
+                            <div class="space-y-3 text-xs sm:text-sm">
+                                <label class="flex items-start justify-between gap-2 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700">
+                                    <div class="flex items-start gap-2.5">
+                                        <input type="checkbox" id="calc-pet-deposit-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
+                                        <div>
+                                            <span class="font-semibold text-zinc-800 dark:text-zinc-200">Depósito por mascota (${moneda} ${petDepositAmount.toLocaleString('es-AR')})</span>
+                                            <span class="block text-[11px] text-zinc-400">Reembolsable al finalizar</span>
+                                        </div>
+                                    </div>
+                                    <span id="calc-pet-deposit-val" class="font-bold text-zinc-500">${moneda} 0</span>
+                                </label>
+
+                                <label class="flex items-start justify-between gap-2 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700">
+                                    <div class="flex items-start gap-2.5">
+                                        <input type="checkbox" id="calc-insurance-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
+                                        <div>
+                                            <span class="font-semibold text-zinc-800 dark:text-zinc-200">Seguro de caución / Hogar (${moneda} ${insuranceAmount.toLocaleString('es-AR')})</span>
+                                            <span class="block text-[11px] text-zinc-400">Cobertura integral opcional</span>
+                                        </div>
+                                    </div>
+                                    <span id="calc-insurance-val" class="font-bold text-zinc-500">${moneda} 0</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="p-4 sm:p-5 space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            <!-- Columna 1: Obligatorios -->
-                            <div class="space-y-3">
-                                <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Obligatorios</div>
-                                
-                                <div class="space-y-2.5 text-xs sm:text-sm">
-                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
-                                        <span class="text-zinc-600 dark:text-zinc-300">Primer mes de alquiler</span>
-                                        <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
-                                    </div>
-                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
-                                        <div>
-                                            <span class="text-zinc-600 dark:text-zinc-300">Depósito en garantía</span>
-                                            <span class="block text-[10px] text-zinc-400">Reembolsable al finalizar</span>
-                                        </div>
-                                        <span class="font-bold text-zinc-900 dark:text-white">${priceFormatted}</span>
-                                    </div>
-                                    <div class="flex justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
-                                        <span class="text-zinc-600 dark:text-zinc-300">Gastos administrativos</span>
-                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
-                                    </div>
-                                    <div class="flex justify-between py-1">
-                                        <span class="text-zinc-600 dark:text-zinc-300">Tasa de postulación</span>
-                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">$0</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Columna 2: Opcionales con Checkboxes -->
-                            <div class="space-y-3">
-                                <div class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Opcionales</div>
-                                
-                                <div class="space-y-3 text-xs sm:text-sm">
-                                    <label class="flex items-start justify-between gap-2 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
-                                        <div class="flex items-start gap-2.5">
-                                            <input type="checkbox" id="calc-pet-deposit-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
-                                            <div>
-                                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Depósito por mascota (${moneda} ${petDepositAmount.toLocaleString('es-AR')})</span>
-                                                <span class="block text-[11px] text-zinc-400">Reembolsable al finalizar</span>
-                                            </div>
-                                        </div>
-                                        <span id="calc-pet-deposit-val" class="font-bold text-zinc-500">${moneda} 0</span>
-                                    </label>
-
-                                    <label class="flex items-start justify-between gap-2 p-2.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/40 cursor-pointer transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
-                                        <div class="flex items-start gap-2.5">
-                                            <input type="checkbox" id="calc-insurance-cb" class="mt-0.5 w-4 h-4 rounded text-primary focus:ring-primary">
-                                            <div>
-                                                <span class="font-semibold text-zinc-800 dark:text-zinc-200">Seguro de caución / Hogar (${moneda} ${insuranceAmount.toLocaleString('es-AR')})</span>
-                                                <span class="block text-[11px] text-zinc-400">Cobertura integral opcional</span>
-                                            </div>
-                                        </div>
-                                        <span id="calc-insurance-val" class="font-bold text-zinc-500">${moneda} 0</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Barra destacada Total Ingreso -->
-                        <div class="pt-3 flex items-center justify-between bg-zinc-100/70 dark:bg-zinc-800/60 p-3.5 rounded-xl">
+                    <!-- Barra destacada Total Ingreso -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-between bg-zinc-100/80 dark:bg-zinc-800/70 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
                             <div>
                                 <span class="font-bold text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">Costo total de ingreso estimado</span>
-                                <span class="block text-[10px] text-zinc-400">Primer mes + depósito + opcionales</span>
+                                <span class="block text-[10px] text-zinc-400">Primer mes + depósito + verificación + opcionales</span>
                             </div>
                             <span id="calc-move-in-total-display" class="font-headline font-black text-xl sm:text-2xl text-zinc-900 dark:text-white">${moneda} ${baseMoveInTotal.toLocaleString('es-AR')}</span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Nota al pie -->
-                <p class="text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed text-center">
-                    Toda la información y valores son suministrados por la parte locadora y están sujetos a los términos y condiciones finales del contrato.
-                </p>
             </div>
-        </div>
+
+            <!-- Nota al pie -->
+            <p class="text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed text-center pb-8">
+                Toda la información y valores son suministrados por la parte locadora y están sujetos a los términos y condiciones finales del contrato.
+            </p>
+        </main>
     `;
 
     requestAnimationFrame(() => {
@@ -8686,14 +9031,19 @@ window.openCostCalculatorModal = function (propData = {}) {
 
     const closeCalc = () => {
         modal.style.opacity = '0';
+        document.removeEventListener('keydown', handleCalcEsc);
         setTimeout(() => { modal.style.display = 'none'; }, 200);
     };
 
+    const handleCalcEsc = (e) => {
+        if (e.key === 'Escape') closeCalc();
+    };
+    document.addEventListener('keydown', handleCalcEsc);
+
     const closeBtn = document.getElementById('close-cost-calc-btn');
     if (closeBtn) closeBtn.onclick = closeCalc;
-    modal.onclick = (e) => {
-        if (e.target === modal) closeCalc();
-    };
+    const backBtn = document.getElementById('close-cost-calc-back-btn');
+    if (backBtn) backBtn.onclick = closeCalc;
 
     // Live dynamic Move-in calculation on checkbox toggle
     const petCb = document.getElementById('calc-pet-deposit-cb');
@@ -8789,6 +9139,23 @@ window.checkMarketplaceUrlParam = async function () {
                 }
                 const cleanTitle = pub.descripcion ? pub.descripcion.split(' | Detalles: ')[0].substring(0, 70) : `Propiedad en ${prop.calle || 'Mendoza'}`;
                 
+                // Resolve status from Historial_Estado_Publicacion
+                let currentStatus = 'disponible';
+                if (pub.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
+                    const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at || 0) - new Date(a.fecha_inicio || a.created_at || 0));
+                    const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
+                    const estadoNombre = (activeHist?.Estado_Publicacion?.nombre || '').toLowerCase();
+                    if (estadoNombre === 'pausada' || estadoNombre === 'pausado' || activeHist?.id_estado_publicacion === 4) {
+                        currentStatus = 'paused';
+                    } else if (estadoNombre === 'alquilada' || estadoNombre === 'alquilado' || activeHist?.id_estado_publicacion === 2) {
+                        currentStatus = 'alquilada';
+                    }
+                } else if (pub.status || pub.estado) {
+                    const st = (pub.status || pub.estado).toLowerCase();
+                    if (st.includes('paus')) currentStatus = 'paused';
+                    else if (st.includes('alquil')) currentStatus = 'alquilada';
+                }
+
                 window.openMarketplacePropertyDetailModal({
                     id: pub.id_publicacion,
                     id_publicacion: pub.id_publicacion,
@@ -8812,6 +9179,8 @@ window.checkMarketplaceUrlParam = async function () {
                     province: prop.Barrio?.Departamento?.Provincia?.nombre || extraInfo.provincia || '',
                     caracteristicas: extraInfo.caracteristicas || [],
                     extraInfo: extraInfo,
+                    status: currentStatus,
+                    contractEndDate: extraInfo.contractEndDate || extraInfo.fecha_fin_contrato || null,
                     views_count: pub.cantidad_visualizaciones_total || 0,
                     created_at: pub.created_at
                 });
@@ -9958,6 +10327,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="index.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary text-xl">home</span>
                                 <span>Inicio</span>
+                            </a>
+                            <a href="buscar.html" class="menu-item-clean">
+                                <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">search</span>
+                                <span>Buscar</span>
                             </a>
                             <a href="como-funciona.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>

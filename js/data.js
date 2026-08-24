@@ -177,7 +177,9 @@ var DataManager = {
                 const media = pub?.Multimedia || [];
                 const contract = Array.isArray(p.Contrato) ? p.Contrato[0] : p.Contrato;
 
-                const photoUrls = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                const photoUrls = media.length > 0
+                    ? Array.from(new Set(media.map(m => (typeof m === 'string' ? m : (m.url_archivo || m.url || m.url_foto || m.url_multimedia))).filter(Boolean)))
+                    : ['img/hero-marketplace.jpg'];
                 if (photoUrls.length === 0) photoUrls.push('img/hero-marketplace.jpg');
                 const title = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `${p.calle || 'Propiedad'} ${p.numero || ''}`.trim();
                 const address = `${p.calle || 'Sin calle'} ${p.numero || ''}, ${p.piso_dpto || ''}`.trim();
@@ -247,7 +249,9 @@ var DataManager = {
             return (publications || []).map(pub => {
                 const prop = pub.Propiedad || {};
                 const media = pub.Multimedia || [];
-                const imageUrls = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                const imageUrls = media.length > 0
+                    ? Array.from(new Set(media.map(m => (typeof m === 'string' ? m : (m.url_archivo || m.url || m.url_foto || m.url_multimedia))).filter(Boolean)))
+                    : ['img/hero-marketplace.jpg'];
                 if (imageUrls.length === 0) imageUrls.push('img/hero-marketplace.jpg');
                 const firstImage = imageUrls[0];
                 const address = `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim();

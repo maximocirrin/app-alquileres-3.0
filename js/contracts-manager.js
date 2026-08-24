@@ -247,6 +247,11 @@
         searchTerm: '',
         currentUserRole: detectActiveUserRole(),
         selectedContractId: null,
+        _activeFullscreenContractId: null,
+        _activeFullscreenTab: 'document', // 'document' | 'chat'
+        _chatChannel: null,
+        _chatMessages: {},
+        _isChatLoading: false,
 
         getContracts: function () {
             return contracts;
@@ -289,18 +294,11 @@
             this.renderDashboard('contracts-dashboard-container');
         },
 
-        selectContract: function (contractId, shouldScroll = true) {
-            this.selectedContractId = contractId;
-            this.renderDashboard('contracts-dashboard-container');
-            if (shouldScroll) {
-                const viewerEl = document.getElementById('contract-live-viewer-section');
-                if (viewerEl) {
-                    viewerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }
+        selectContract: function (contractId) {
+            this.openContractFullscreen(contractId, 'document');
         },
 
-        // Render In-Page Contract Hub & Full Interactive Document Viewer
+        // Render Clean Contracts Hub Dashboard Cards
         renderDashboard: function (containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -349,7 +347,7 @@
                                 No hay contratos de locación activos
                             </h3>
                             <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-                                Al aceptar una postulación o generar un contrato para una de tus propiedades, aparecerá en este panel con firma electrónica y validación biométrica Didit.
+                                Al aceptar una postulación o generar un contrato para una de tus propiedades, aparecerá en este panel con negociación en vivo, firma electrónica y validación biométrica Didit.
                             </p>
                             <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                                 <a href="${role === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-md">
@@ -396,45 +394,26 @@
             const countInProgress = contracts.filter(c => !isFullySigned(c) && (c.tenant?.hasSigned || c.owner?.hasSigned)).length;
             const countCompleted = contracts.filter(c => isFullySigned(c) || isPartiallySigned(c)).length;
 
-            let currentContract = (this.selectedContractId ? contracts.find(c => String(c.id) === String(this.selectedContractId) || String(c.contractNumber) === String(this.selectedContractId) || String(c.dbContractId) === String(this.selectedContractId)) : null) || list[0] || contracts[0];
-
-            let effectiveRole = role;
-            try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-                if (currentContract && userEmail) {
-                    if (currentContract.tenant?.email?.toLowerCase().trim() === userEmail) {
-                        effectiveRole = 'TENANT';
-                    } else if (currentContract.owner?.email?.toLowerCase().trim() === userEmail) {
-                        effectiveRole = 'OWNER';
-                    }
-                }
-            } catch (e) {}
-
-            const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
-            const signerObj = effectiveRole === 'TENANT' ? currentContract?.tenant : currentContract?.owner;
-            const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
-
             let html = `
                 <div class="w-full space-y-8 font-body">
                     
                     <!-- Top Navigation & Role Bar -->
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
                         <div class="flex items-center gap-2">
-                            ${effectiveRole === 'TENANT' ? `
+                            ${role === 'TENANT' ? `
                                 <span class="px-3.5 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700/60 shadow-2xs">
                                     <span class="material-symbols-outlined text-sm">person</span>
-                                    <span>Inquilino Postulante</span>
+                                    <span>Panel Inquilino • Firma Electrónica & Negociación</span>
                                 </span>
-                            ` : effectiveRole === 'OWNER' ? `
+                            ` : role === 'OWNER' ? `
                                 <span class="px-3.5 py-1.5 rounded-xl bg-red-100 dark:bg-red-950/80 text-primary dark:text-red-400 font-headline font-bold text-xs flex items-center gap-1.5 border border-red-300 dark:border-red-700/60 shadow-2xs">
                                     <span class="material-symbols-outlined text-sm">home</span>
-                                    <span>Propietario del Inmueble</span>
+                                    <span>Panel Propietario • Firma Digital & Gestión</span>
                                 </span>
                             ` : `
                                 <span class="px-3.5 py-1.5 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 font-headline font-bold text-xs flex items-center gap-1.5 border border-blue-300 dark:border-blue-700/60 shadow-2xs">
                                     <span class="material-symbols-outlined text-sm">real_estate_agent</span>
-                                    <span>Corredor Matriculado</span>
+                                    <span>Panel Corredor Inmobiliario</span>
                                 </span>
                             `}
                         </div>
@@ -444,7 +423,7 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Didit Liveness Ready
                             </span>
-                            <a href="${effectiveRole === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-primary font-semibold transition-colors flex items-center gap-1">
+                            <a href="${role === 'TENANT' ? 'tu-alquiler.html' : 'administrador.html'}" class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:text-primary font-semibold transition-colors flex items-center gap-1">
                                 <span class="material-symbols-outlined text-sm">arrow_back</span>
                                 <span>Volver</span>
                             </a>
@@ -454,10 +433,10 @@
                     <!-- Header Banner -->
                     <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-zinc-800">
                         <div class="space-y-2">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <span class="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[11px] uppercase tracking-wider border border-emerald-500/30 flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                    Didit Liveness Check Integrado
+                                    Didit Liveness Check & Realtime Chat
                                 </span>
                                 <span class="text-zinc-400 text-xs font-semibold">Ley Nacional N° 25.506</span>
                             </div>
@@ -465,7 +444,7 @@
                                 Centro de Contratos y Firma Digital
                             </h1>
                             <p class="text-xs sm:text-sm text-zinc-300 max-w-xl leading-relaxed">
-                                Visualice el contrato oficial, valide su identidad con biometría facial en vivo y descargue el PDF con sellado de tiempo TSA.
+                                Haga clic en cualquier alquiler para abrir a pantalla completa el contrato oficial, negociar condiciones en vivo mediante chat seguro y sellar con biometría facial Didit.
                             </p>
                         </div>
 
@@ -513,18 +492,19 @@
                         </div>
                     </div>
 
-                    <!-- Contracts Horizontal / Grid Selector -->
-                    <div class="space-y-3">
+                    <!-- Contracts Cards Grid -->
+                    <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-sm font-headline font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
-                                ${this.activeFilter === 'completed' ? 'Historial de Contratos Firmados' : 'Contratos de la Propiedad'}
+                            <h2 class="text-sm font-headline font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-base">real_estate_agent</span>
+                                <span>${this.activeFilter === 'completed' ? 'Historial de Contratos Firmados' : 'Propiedades y Contratos en Curso'}</span>
                             </h2>
-                            <span class="text-xs text-zinc-400 font-medium">${list.length} contrato(s)</span>
+                            <span class="text-xs text-zinc-400 font-medium">${list.length} propiedad(es)</span>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             ${list.length === 0 ? `
-                                <div class="col-span-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 sm:p-10 text-center space-y-3 shadow-xs">
+                                <div class="col-span-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 sm:p-12 text-center space-y-3 shadow-xs">
                                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                                         <span class="material-symbols-outlined text-3xl">verified</span>
                                     </div>
@@ -534,185 +514,320 @@
                                     </p>
                                 </div>
                             ` : list.map(c => {
-                                const isSelected = currentContract && String(c.id) === String(currentContract.id);
                                 let statusBadge = '';
                                 if (c.status === 'WAITING_TENANT') {
-                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Firma Inquilino</span>';
+                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Firma Inquilino</span>';
                                 } else if (c.status === 'WAITING_OWNER') {
-                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Firma Propietario</span>';
+                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Firma Propietario</span>';
                                 } else if (c.status === 'SIGNED_AND_SEALED' || (c.tenant?.hasSigned && c.owner?.hasSigned)) {
-                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200"><span class="material-symbols-outlined text-xs">verified</span>Firmado y Sellado</span>';
+                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"><span class="material-symbols-outlined text-xs">verified</span>Firmado y Sellado</span>';
                                 } else {
-                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-700">Borrador</span>';
+                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">Borrador</span>';
                                 }
 
                                 return `
-                                    <div onclick="ContractsManager.selectContract('${c.id}')" class="p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${isSelected ? 'bg-primary/5 dark:bg-primary/10 border-primary shadow-md ring-2 ring-primary/30' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700'}">
-                                        <div class="space-y-2">
+                                    <div onclick="ContractsManager.openContractFullscreen('${c.id}', 'document')" class="group p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4">
+                                        <div class="space-y-3">
                                             <div class="flex items-center justify-between gap-2">
-                                                <span class="text-[11px] font-mono font-bold text-zinc-500">${c.contractNumber}</span>
+                                                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">${c.contractNumber}</span>
                                                 ${statusBadge}
                                             </div>
-                                            <h4 class="font-headline font-bold text-zinc-900 dark:text-white text-sm truncate">${c.title}</h4>
-                                            <p class="text-xs text-zinc-500 truncate flex items-center gap-1">
-                                                <span class="material-symbols-outlined text-xs text-primary">location_on</span> ${c.propertyAddress}
-                                            </p>
+                                            
+                                            <div>
+                                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-base group-hover:text-primary transition-colors line-clamp-1">${c.title}</h3>
+                                                <p class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 flex items-center gap-1 mt-0.5">
+                                                    <span class="material-symbols-outlined text-xs text-primary shrink-0">location_on</span>
+                                                    <span>${c.propertyAddress}</span>
+                                                </p>
+                                            </div>
+
+                                            <div class="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 space-y-1.5 text-xs">
+                                                <div class="flex items-center justify-between text-zinc-500">
+                                                    <span>Canon acordado:</span>
+                                                    <span class="font-black text-zinc-900 dark:text-white">${formatMoney(c.monthlyRent)} ${c.currency || 'ARS'}/mes</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-zinc-500 text-[11px]">
+                                                    <span>Ajuste:</span>
+                                                    <span class="font-semibold text-zinc-700 dark:text-zinc-300">Índice ${c.adjustmentIndex || 'ICL'} cada ${c.adjustmentFrequencyMonths || 6}m</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Parties mini badges -->
+                                            <div class="grid grid-cols-2 gap-2 text-[11px]">
+                                                <div class="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100 dark:border-zinc-800 truncate">
+                                                    <span class="text-[9px] font-bold text-zinc-400 uppercase block">Inquilino</span>
+                                                    <span class="font-bold text-zinc-800 dark:text-zinc-200 truncate block">${c.tenant?.name || 'Locatario'}</span>
+                                                </div>
+                                                <div class="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100 dark:border-zinc-800 truncate">
+                                                    <span class="text-[9px] font-bold text-zinc-400 uppercase block">Propietario</span>
+                                                    <span class="font-bold text-zinc-800 dark:text-zinc-200 truncate block">${c.owner?.name || 'Locador'}</span>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                                            <span class="font-extrabold text-zinc-900 dark:text-white">${formatMoney(c.monthlyRent)}/mes</span>
-                                            <span class="font-bold text-primary flex items-center gap-1 text-[11px]">
-                                                ${isSelected ? '✓ Viendo Ahora' : 'Ver Documento →'}
-                                            </span>
+                                        <!-- Action Buttons Grid inside card -->
+                                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2" onclick="event.stopPropagation()">
+                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${c.id}', 'document')" class="flex-1 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+                                                <span class="material-symbols-outlined text-sm">description</span>
+                                                <span>Ver y Firmar</span>
+                                            </button>
+                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${c.id}', 'chat')" class="flex-1 py-2.5 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+                                                <span class="material-symbols-outlined text-sm text-emerald-500">chat</span>
+                                                <span>Chat</span>
+                                            </button>
+                                            ${(!isFullySigned(c)) ? `
+                                            <button type="button" onclick="ContractsManager.editContractConditions('${c.id}')" class="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Editar Borrador de Contrato">
+                                                <span class="material-symbols-outlined text-sm">tune</span>
+                                                <span class="hidden sm:inline">Editar</span>
+                                            </button>
+                                            ` : ''}
                                         </div>
                                     </div>
                                 `;
                             }).join('')}
                         </div>
                     </div>
+                </div>
+            `;
 
-                    ${currentContract ? `
-                    <!-- ======================================================== -->
-                    <!-- FULL IN-PAGE CONTRACT VIEWER & LEGAL SIGNING DOCUMENT -->
-                    <!-- ======================================================== -->
-                    <section id="contract-live-viewer-section" class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden">
-                        
-                        <!-- Document Top Action Header -->
-                        <div class="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-700/60 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-md">
-                                    <span class="material-symbols-outlined text-2xl">description</span>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400">${currentContract.contractNumber}</span>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Oficial Hábitat</span>
-                                    </div>
-                                    <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white truncate">
-                                        ${currentContract.title}
-                                    </h3>
-                                    <p class="text-xs text-zinc-500 truncate">📍 ${currentContract.propertyAddress}</p>
-                                </div>
-                            </div>
+            container.innerHTML = html;
+        },
 
-                            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                                ${(!currentContract.tenant?.hasSigned && !currentContract.owner?.hasSigned && currentContract.status !== 'SIGNED_AND_SEALED' && (effectiveRole === 'OWNER' || effectiveRole === 'BROKER')) ? `
-                                <button type="button" onclick="ContractsManager.editContractConditions('${currentContract.id}')" class="px-4 py-2.5 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                                    <span class="material-symbols-outlined text-base">tune</span>
-                                    <span>Personalizar / Editar Borrador</span>
-                                </button>
-                                ` : isFullySigned(currentContract) ? `
-                                <div class="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 font-headline font-bold text-xs flex items-center gap-1.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-base text-emerald-600 dark:text-emerald-400">lock</span>
-                                    <span>Contrato Sellado e Inmutable (Ley 25.506)</span>
+        // ========================================================
+        // FULL-SCREEN CONTRACT MODAL & REALTIME NEGOTIATION CHAT
+        // ========================================================
+        openContractFullscreen: function (contractId, activeTab = 'document') {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            this.selectedContractId = contract.id;
+            this._activeFullscreenContractId = contract.id;
+            this._activeFullscreenTab = activeTab;
+
+            // Remove existing modal if open
+            const existing = document.getElementById('fullscreen-contract-modal');
+            if (existing) existing.remove();
+
+            const role = detectActiveUserRole(contract);
+            this.currentUserRole = role;
+
+            let effectiveRole = role;
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                if (contract && userEmail) {
+                    if (contract.tenant?.email?.toLowerCase().trim() === userEmail) {
+                        effectiveRole = 'TENANT';
+                    } else if (contract.owner?.email?.toLowerCase().trim() === userEmail) {
+                        effectiveRole = 'OWNER';
+                    }
+                }
+            } catch (e) {}
+
+            const isFullySigned = (c) => c.status === 'SIGNED_AND_SEALED' || (c.tenant?.hasSigned && c.owner?.hasSigned);
+            const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
+            const signerObj = effectiveRole === 'TENANT' ? contract?.tenant : contract?.owner;
+            const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
+            const formatMoney = (n) => '$ ' + Number(n).toLocaleString('es-AR');
+
+            // Pre-formatted WhatsApp text for fast negotiation
+            const targetPhone = (effectiveRole === 'TENANT' ? (contract.owner?.phone || contract.ownerPhone || '') : (contract.tenant?.phone || contract.tenantPhone || '')).replace(/[^0-9]/g, '');
+            const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber} (${contract.title}) ubicado en ${contract.propertyAddress} a través de Hábitat.`);
+            const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
+
+            const modalHtml = `
+                <div id="fullscreen-contract-modal" class="fixed inset-0 z-[100000] w-full max-w-full h-full h-[100dvh] max-h-[100dvh] bg-[#f8fafc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden font-body animate-fadeIn">
+                    
+                    <!-- Sticky Top Header Bar -->
+                    <header class="sticky top-0 z-30 shrink-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-xs">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer shrink-0" title="Cerrar (Esc)">
+                                <span class="material-symbols-outlined text-base">arrow_back</span>
+                                <span class="hidden sm:inline">Volver</span>
+                            </button>
+                            
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-mono font-bold text-primary dark:text-red-400">${contract.contractNumber}</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Oficial Hábitat</span>
                                 </div>
-                                ` : (currentContract.tenant?.hasSigned || currentContract.owner?.hasSigned) ? `
-                                <div class="px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 font-headline font-bold text-xs flex items-center gap-1.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-base text-amber-600 dark:text-amber-400">lock_clock</span>
-                                    <span>Bloqueado por Firma en Curso</span>
-                                </div>
-                                ` : ''}
-                                <button type="button" onclick="ContractsManager.downloadSignedContract('${currentContract.id}')" class="px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                                    <span class="material-symbols-outlined text-base text-primary">download</span>
-                                    <span>Descargar Contrato (PDF)</span>
-                                </button>
-                                <button type="button" onclick="ContractsManager.downloadAuditTrail('${currentContract.id}')" class="px-4 py-2.5 bg-zinc-900 hover:bg-black text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                                    <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
-                                    <span>Audit Trail TSA</span>
-                                </button>
+                                <h2 class="font-headline font-black text-sm sm:text-base text-zinc-900 dark:text-white truncate">
+                                    ${contract.title}
+                                </h2>
+                                <p class="text-[11px] text-zinc-500 truncate hidden sm:block">📍 ${contract.propertyAddress}</p>
                             </div>
                         </div>
 
-                        <!-- Main Document Content Body -->
-                        <div class="p-6 sm:p-8 space-y-6">
+                        <!-- Central Tabs Switcher -->
+                        <div class="flex items-center justify-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 shrink-0 self-center md:self-auto">
+                            <button id="fs-tab-btn-document" type="button" onclick="ContractsManager.switchFullscreenTab('document')" class="px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${this._activeFullscreenTab === 'document' ? 'bg-primary text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                <span class="material-symbols-outlined text-sm">description</span>
+                                <span>Documento & Firma</span>
+                            </button>
+                            <button id="fs-tab-btn-chat" type="button" onclick="ContractsManager.switchFullscreenTab('chat')" class="px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${this._activeFullscreenTab === 'chat' ? 'bg-primary text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
+                                <span class="material-symbols-outlined text-sm">chat</span>
+                                <span>Chat de Negociación</span>
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5"></span>
+                            </button>
+                        </div>
+
+                        <!-- Right Quick Action Bar -->
+                        <div class="flex items-center justify-end gap-2 shrink-0 flex-wrap">
+                            ${(!isFullySigned(contract)) ? `
+                            <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="h-9 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Modificar Condiciones y Cláusulas del Contrato">
+                                <span class="material-symbols-outlined text-base">tune</span>
+                                <span>Editar Contrato</span>
+                            </button>
+                            ` : ''}
+
+                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="h-9 px-3.5 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Negociar por WhatsApp">
+                                <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                </svg>
+                                <span class="hidden sm:inline">WhatsApp</span>
+                            </a>
+                            
+                            <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="h-9 px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Descargar PDF">
+                                <span class="material-symbols-outlined text-base text-primary">download</span>
+                                <span class="hidden sm:inline">PDF</span>
+                            </button>
+
+                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-3 py-2 bg-zinc-900 hover:bg-black text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Audit Trail TSA">
+                                <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
+                                <span class="hidden sm:inline">Audit Trail</span>
+                            </button>
+
+                            <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="h-9 w-9 p-0 rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center cursor-pointer shrink-0" title="Cerrar modal">
+                                <span class="material-symbols-outlined text-xl">close</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Tab 1: Full Document & Legal Signer -->
+                    <main id="fs-tab-document-content" class="flex-1 overflow-y-auto ${this._activeFullscreenTab === 'document' ? 'block' : 'hidden'}">
+                        <div class="max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
                             
                             <!-- Financial & Contract Specs Bar -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-medium">
-                                <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1 shadow-xs">
                                     <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Canon Mensual Acordado</span>
-                                    <div class="text-base font-black text-primary dark:text-red-400">${formatMoney(currentContract.monthlyRent)} ${currentContract.currency}</div>
-                                    <div class="text-zinc-500">Vencimiento día ${currentContract.paymentDueDay}</div>
+                                    <div class="text-lg font-black text-primary dark:text-red-400">${formatMoney(contract.monthlyRent)} ${contract.currency || 'ARS'}</div>
+                                    <div class="text-zinc-500">Vencimiento día ${contract.paymentDueDay || '10'}</div>
                                 </div>
 
-                                <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1 shadow-xs">
                                     <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Ajuste Periódico</span>
-                                    <div class="font-bold text-zinc-900 dark:text-white text-sm">Índice ${currentContract.adjustmentIndex}</div>
-                                    <div class="text-zinc-500">Cada ${currentContract.adjustmentFrequencyMonths} meses corridos</div>
+                                    <div class="font-bold text-zinc-900 dark:text-white text-base">Índice ${contract.adjustmentIndex || 'ICL'}</div>
+                                    <div class="text-zinc-500">Cada ${contract.adjustmentFrequencyMonths || 6} meses corridos</div>
                                 </div>
 
-                                <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1 shadow-xs">
                                     <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Plazo de Locación</span>
-                                    <div class="font-bold text-zinc-900 dark:text-white text-sm">${currentContract.durationMonths} Meses</div>
-                                    <div class="text-zinc-500">${currentContract.startDate} al ${currentContract.endDate}</div>
+                                    <div class="font-bold text-zinc-900 dark:text-white text-base">${contract.durationMonths || 24} Meses</div>
+                                    <div class="text-zinc-500">${contract.startDate || '01/09/2026'} al ${contract.endDate || '31/08/2028'}</div>
                                 </div>
                             </div>
 
                             <!-- Parties Comparison Box -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 space-y-2">
-                                    <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700/60 pb-2">
+                                <div class="p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2 shadow-xs">
+                                    <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                         <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400">Locatario (Inquilino)</span>
-                                        <span class="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">verified</span> Didit KYC Validado
                                         </span>
                                     </div>
-                                    <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${currentContract.tenant.name}</h3>
-                                    <p class="text-zinc-600 dark:text-zinc-300"><b>DNI:</b> ${currentContract.tenant.dni} • <b>CUIL:</b> ${currentContract.tenant.cuil}</p>
-                                    <p class="text-zinc-500"><b>Email:</b> ${currentContract.tenant.email}</p>
+                                    <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${contract.tenant.name}</h3>
+                                    <p class="text-zinc-600 dark:text-zinc-300"><b>DNI:</b> ${contract.tenant.dni} • <b>CUIL:</b> ${contract.tenant.cuil}</p>
+                                    <p class="text-zinc-500"><b>Email:</b> ${contract.tenant.email}</p>
                                     <div class="pt-2">
-                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${currentContract.tenant.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
-                                            ${currentContract.tenant.hasSigned ? '✓ Firmado Digitalmente con Didit Liveness' : '⏳ Firma Pendiente'}
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${contract.tenant.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
+                                            ${contract.tenant.hasSigned ? '✓ Firmado Digitalmente con Didit Liveness' : '⏳ Firma Pendiente'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 space-y-2">
-                                    <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700/60 pb-2">
+                                <div class="p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2 shadow-xs">
+                                    <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                         <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400">Locador (Propietario)</span>
-                                        <span class="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">verified</span> Didit KYC Validado
                                         </span>
                                     </div>
-                                    <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${currentContract.owner.name}</h3>
-                                    <p class="text-zinc-600 dark:text-zinc-300"><b>DNI:</b> ${currentContract.owner.dni} • <b>CUIL:</b> ${currentContract.owner.cuil}</p>
-                                    <p class="text-zinc-500"><b>Email:</b> ${currentContract.owner.email}</p>
+                                    <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${contract.owner.name}</h3>
+                                    <p class="text-zinc-600 dark:text-zinc-300"><b>DNI:</b> ${contract.owner.dni} • <b>CUIL:</b> ${contract.owner.cuil}</p>
+                                    <p class="text-zinc-500"><b>Email:</b> ${contract.owner.email}</p>
                                     <div class="pt-2">
-                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${currentContract.owner.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
-                                            ${currentContract.owner.hasSigned ? '✓ Firmado Digitalmente con Didit Liveness' : '⏳ Firma Pendiente'}
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${contract.owner.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
+                                            ${contract.owner.hasSigned ? '✓ Firmado Digitalmente con Didit Liveness' : '⏳ Firma Pendiente'}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Prominent Contract Terms Editor Callout Card -->
+                            ${(!isFullySigned(contract)) ? `
+                            <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-amber-950/20 border-2 border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+                                    <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+                                        <span class="material-symbols-outlined text-2xl">edit_document</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="font-headline font-black text-sm sm:text-base text-zinc-900 dark:text-white">
+                                                Modificar Condiciones y Cláusulas del Contrato
+                                            </h4>
+                                            <span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] font-black uppercase tracking-wider">Borrador Editable</span>
+                                        </div>
+                                        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                                            Ajuste el valor del canon locativo mensual, índice de actualización (ICL / IPC / Casa Propia), periodicidad, fecha límite de pago o agregue cláusulas legales personalizadas antes de firmar.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="w-full sm:w-auto px-5 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-extrabold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-lg">tune</span>
+                                    <span>Abrir Editor de Contrato</span>
+                                </button>
+                            </div>
+                            ` : ''}
+
                             <!-- Full Legal Contract Document Sheet -->
-                            <div class="p-6 sm:p-8 bg-zinc-50 dark:bg-zinc-950 rounded-3xl border border-zinc-300 dark:border-zinc-800 font-mono text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed space-y-4 shadow-inner">
-                                <div class="text-center pb-4 border-b border-zinc-200 dark:border-zinc-800 space-y-1">
-                                    <h3 class="font-bold text-sm text-zinc-900 dark:text-white uppercase tracking-widest">
-                                        CONTRATO DE LOCACIÓN INMOBILIARIA CON FIRMA ELECTRÓNICA
-                                    </h3>
-                                    <p class="text-[11px] text-zinc-500">
-                                        Conforme a la Ley Nacional N° 25.506 de Firma Digital y Arts. 1187 y concordantes del Código Civil y Comercial de la Nación
-                                    </p>
+                            <div class="p-6 sm:p-8 bg-white dark:bg-zinc-950 rounded-3xl border border-zinc-200 dark:border-zinc-800 font-mono text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed space-y-4 shadow-sm">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                                    <div class="text-left space-y-1">
+                                        <h3 class="font-bold text-sm text-zinc-900 dark:text-white uppercase tracking-widest">
+                                            CONTRATO DE LOCACIÓN INMOBILIARIA CON FIRMA ELECTRÓNICA
+                                        </h3>
+                                        <p class="text-[11px] text-zinc-500">
+                                            Conforme a la Ley Nacional N° 25.506 de Firma Digital y Arts. 1187 y concordantes del Código Civil y Comercial de la Nación
+                                        </p>
+                                    </div>
+                                    ${!isFullySigned(contract) ? `
+                                    <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                        <span>Editar Cláusulas</span>
+                                    </button>
+                                    ` : ''}
                                 </div>
 
                                 <p>
-                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${currentContract.owner.name}</b> (DNI ${currentContract.owner.dni}, CUIL ${currentContract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${currentContract.tenant.name}</b> (DNI ${currentContract.tenant.dni}, CUIL ${currentContract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas:
+                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas:
                                 </p>
 
                                 <p>
-                                    <b>PRIMERA (OBJETO):</b> EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${currentContract.propertyAddress}</b>, el cual se destinará exclusivamente a vivienda familiar y permanente.
+                                    <b>PRIMERA (OBJETO):</b> EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress}</b>, el cual se destinará exclusivamente a vivienda familiar y permanente.
                                 </p>
 
                                 <p>
-                                    <b>SEGUNDA (PLAZO):</b> El plazo contractual se estipula en <b>${currentContract.durationMonths} meses</b> corridos, con inicio el día <b>${currentContract.startDate}</b> y finalización indefectible el día <b>${currentContract.endDate}</b>.
+                                    <b>SEGUNDA (PLAZO):</b> El plazo contractual se estipula en <b>${contract.durationMonths || 24} meses</b> corridos, con inicio el día <b>${contract.startDate}</b> y finalización indefectible el día <b>${contract.endDate}</b>.
                                 </p>
 
                                 <p>
-                                    <b>TERCERA (CANON LOCATIVO Y ACTUALIZACIÓN):</b> El precio inicial del alquiler mensual se fija en la suma de <b>${formatMoney(currentContract.monthlyRent)} (${currentContract.currency})</b>. Dicho valor se actualizará cada <b>${currentContract.adjustmentFrequencyMonths} meses</b> aplicando la variación del índice <b>${currentContract.adjustmentIndex}</b> publicado oficialmente.
+                                    <b>TERCERA (CANON LOCATIVO Y ACTUALIZACIÓN):</b> El precio inicial del alquiler mensual se fija en la suma de <b>${formatMoney(contract.monthlyRent)} (${contract.currency || 'ARS'})</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.
                                 </p>
 
                                 <p>
-                                    <b>CUARTA (PAGOS):</b> El canon locativo deberá abonarse del 1 al ${currentContract.paymentDueDay} de cada mes mediante transferencia bancaria al Alias CBU: <b>${currentContract.aliasCbu}</b>.
+                                    <b>CUARTA (PAGOS):</b> El canon locativo deberá abonarse del 1 al ${contract.paymentDueDay || 10} de cada mes mediante transferencia bancaria al Alias CBU: <b>${contract.aliasCbu || 'HABITAT.CONTRATO.MP'}</b>.
                                 </p>
 
                                 <p>
@@ -720,12 +835,12 @@
                                 </p>
 
                                 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
-                                    <b>Hash SHA-256 del Documento:</b> <span class="font-mono text-emerald-600 dark:text-emerald-400 break-all">${currentContract.sha256Hash}</span>
+                                    <b>Hash SHA-256 del Documento:</b> <span class="font-mono text-emerald-600 dark:text-emerald-400 break-all">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span>
                                 </div>
                             </div>
 
                             <!-- Interactive Signature Action Zone -->
-                            <div class="p-6 sm:p-8 rounded-3xl bg-zinc-50 dark:bg-zinc-800/50 border-2 border-primary/30 space-y-5">
+                            <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-primary/30 space-y-5 shadow-lg">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">face</span>
@@ -740,7 +855,7 @@
                                     </div>
                                 </div>
 
-                                ${isFullySigned(currentContract) ? `
+                                ${isFullySigned(contract) ? `
                                     <div class="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/40 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -752,18 +867,18 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-2 shrink-0">
-                                            <button onclick="ContractsManager.downloadSignedContract('${currentContract.id}')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                            <button onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                                 Descargar PDF
                                             </button>
-                                            <button onclick="ContractsManager.downloadAuditTrail('${currentContract.id}')" class="px-4 py-2.5 bg-zinc-900 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                            <button onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="px-4 py-2.5 bg-zinc-900 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                                 Audit Trail TSA
                                             </button>
                                         </div>
                                     </div>
                                 ` : isContractPendingForMe ? `
                                     <div class="space-y-4">
-                                        <div class="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
-                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800 text-xs">
+                                        <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-700/60 text-xs">
                                                 <span class="text-zinc-500 font-medium">Firmando como: <b class="text-zinc-900 dark:text-white">${signerObj.name}</b> (${effectiveRole === 'TENANT' ? 'Locatario' : 'Locador'})</span>
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="text-[11px] text-zinc-400">Email Didit:</span>
@@ -771,7 +886,7 @@
                                                         type="email" 
                                                         id="signer-didit-email" 
                                                         value="${signerObj.email || ''}" 
-                                                        class="px-2.5 py-1 text-xs font-mono font-bold bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:ring-1 focus:ring-primary outline-none"
+                                                        class="px-2.5 py-1 text-xs font-mono font-bold bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:ring-1 focus:ring-primary outline-none"
                                                         placeholder="tu.email@ejemplo.com"
                                                     >
                                                 </div>
@@ -786,7 +901,7 @@
                                             </label>
                                         </div>
 
-                                        <button id="inpage-sign-action-btn" disabled onclick="ContractsManager.executeSignatureWithDidit('${currentContract.id}', '${effectiveRole}')" class="w-full py-4 px-6 bg-primary hover:bg-primary-container disabled:bg-zinc-300 dark:disabled:bg-zinc-800 text-white disabled:text-zinc-500 font-headline font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                                        <button id="inpage-sign-action-btn" disabled onclick="ContractsManager.executeSignatureWithDidit('${contract.id}', '${effectiveRole}')" class="w-full py-4 px-6 bg-primary hover:bg-primary-container disabled:bg-zinc-300 dark:disabled:bg-zinc-800 text-white disabled:text-zinc-500 font-headline font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed">
                                             <span class="material-symbols-outlined text-xl">face</span>
                                             <span>Iniciar Didit Liveness Check y Firmar Contrato</span>
                                         </button>
@@ -797,7 +912,7 @@
                                             <span class="material-symbols-outlined text-lg text-emerald-600">verified</span>
                                             <span>Tu firma se encuentra registrada y certificada en este contrato. Aguardando firma de la otra parte.</span>
                                         </div>
-                                        <button onclick="ContractsManager.downloadSignedContract('${currentContract.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                        <button onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                             Descargar Copia Certificada
                                         </button>
                                     </div>
@@ -805,12 +920,481 @@
                             </div>
 
                         </div>
+                    </main>
+
+                    <!-- Tab 2: Real-time Negotiation Chat with Supabase Realtime -->
+                    <section id="fs-tab-chat-content" class="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50/50 dark:bg-[#0c0d14] ${this._activeFullscreenTab === 'chat' ? 'flex' : 'hidden'}">
+                        
+                        <div class="max-w-4xl mx-auto w-full h-full flex flex-col p-3 sm:p-6 flex-1 overflow-hidden space-y-3">
+                            
+                            <!-- Chat Subheader & Info Banner -->
+                            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3 shadow-xs shrink-0">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                        <span class="material-symbols-outlined text-xl">forum</span>
+                                    </div>
+                                    <div class="min-w-0 text-xs">
+                                        <div class="font-headline font-bold text-zinc-900 dark:text-white flex items-center gap-2 truncate">
+                                            <span>Negociación Oficial: ${contract.title}</span>
+                                        </div>
+                                        <div class="text-zinc-400 text-[11px] truncate flex items-center gap-2 mt-0.5">
+                                            <span>Inquilino: <b class="text-zinc-700 dark:text-zinc-300">${contract.tenant.name}</b></span>
+                                            <span>•</span>
+                                            <span>Propietario: <b class="text-zinc-700 dark:text-zinc-300">${contract.owner.name}</b></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <div id="chat-realtime-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>Tiempo Real Conectado</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Messages History Stream -->
+                            <div id="fs-chat-messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-inner flex flex-col">
+                                <div class="p-8 text-center text-zinc-400 space-y-2 my-auto">
+                                    <span class="material-symbols-outlined text-3xl animate-spin text-primary">sync</span>
+                                    <p class="text-xs font-bold">Conectando canal de negociación en tiempo real...</p>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input Box -->
+                            <div class="p-2 sm:p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg shrink-0 flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    id="fs-chat-input" 
+                                    placeholder="Escribe un mensaje para acordar términos o condiciones..." 
+                                    onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${contract.id}')"
+                                    class="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
+                                >
+                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="h-10 px-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Contactar por WhatsApp">
+                                    <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">WhatsApp</span>
+                                </a>
+                                <button type="button" onclick="ContractsManager.sendContractMessage('${contract.id}')" class="h-10 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-base">send</span>
+                                    <span class="hidden sm:inline">Enviar</span>
+                                </button>
+                            </div>
+
+                        </div>
                     </section>
-                    ` : ''}
+
                 </div>
             `;
 
-            container.innerHTML = html;
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = modalHtml;
+            document.body.appendChild(wrapper.firstElementChild);
+
+            // Close with Escape key
+            const escListener = (e) => {
+                if (e.key === 'Escape') {
+                    ContractsManager.closeContractFullscreen();
+                    document.removeEventListener('keydown', escListener);
+                }
+            };
+            document.addEventListener('keydown', escListener);
+
+            // If active tab is chat, load chat messages immediately
+            if (activeTab === 'chat') {
+                this.initChatForContract(contract.id);
+            }
+        },
+
+        closeContractFullscreen: function () {
+            const modal = document.getElementById('fullscreen-contract-modal');
+            if (modal) modal.remove();
+
+            // Unsubscribe from real-time channel
+            if (this._chatChannel && window.supabaseClient) {
+                try {
+                    window.supabaseClient.removeChannel(this._chatChannel);
+                } catch (e) {}
+                this._chatChannel = null;
+            }
+            this._activeFullscreenContractId = null;
+        },
+
+        switchFullscreenTab: function (tabName) {
+            this._activeFullscreenTab = tabName;
+            const docTab = document.getElementById('fs-tab-document-content');
+            const chatTab = document.getElementById('fs-tab-chat-content');
+            const btnDoc = document.getElementById('fs-tab-btn-document');
+            const btnChat = document.getElementById('fs-tab-btn-chat');
+
+            if (tabName === 'document') {
+                if (docTab) docTab.classList.remove('hidden');
+                if (chatTab) {
+                    chatTab.classList.add('hidden');
+                    chatTab.classList.remove('flex');
+                }
+                if (btnDoc) {
+                    btnDoc.className = 'px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer bg-primary text-white shadow-md';
+                }
+                if (btnChat) {
+                    btnChat.className = 'px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900';
+                }
+            } else {
+                if (docTab) docTab.classList.add('hidden');
+                if (chatTab) {
+                    chatTab.classList.remove('hidden');
+                    chatTab.classList.add('flex');
+                }
+                if (btnDoc) {
+                    btnDoc.className = 'px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900';
+                }
+                if (btnChat) {
+                    btnChat.className = 'px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer bg-primary text-white shadow-md';
+                }
+
+                if (this._activeFullscreenContractId) {
+                    this.initChatForContract(this._activeFullscreenContractId);
+                }
+            }
+        },
+
+        // ========================================================
+        // REAL-TIME SUPABASE CHAT LOGIC & PERSISTENCE
+        // ========================================================
+        _generateUUID: function () {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        },
+
+        _deduplicateMessages: function (list) {
+            if (!Array.isArray(list)) return [];
+            const seenIds = new Set();
+            const result = [];
+            for (const m of list) {
+                if (!m || !m.mensaje) continue;
+                const id = m.id_mensaje ? String(m.id_mensaje) : null;
+                if (id && seenIds.has(id)) continue;
+
+                const mTime = new Date(m.created_at || 0).getTime();
+                const isEcho = result.some(r => {
+                    if (r.mensaje !== m.mensaje) return false;
+                    if (r.remitente_rol !== m.remitente_rol) return false;
+                    const rTime = new Date(r.created_at || 0).getTime();
+                    return Math.abs(rTime - mTime) < 8000;
+                });
+
+                if (isEcho) continue;
+
+                if (id) seenIds.add(id);
+                result.push(m);
+            }
+            return result;
+        },
+
+        initChatForContract: async function (contractId) {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            const storageKey = `habitat_chat_messages_${contractId}`;
+            let cached = [];
+            try {
+                cached = JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (e) {}
+
+            this._chatMessages[contractId] = this._deduplicateMessages(cached);
+            this.renderChatMessages(contractId);
+
+            // Fetch from Supabase Mensaje_Contrato table
+            if (window.supabaseClient) {
+                try {
+                    let dbContractId = contract.dbContractId ? Number(contract.dbContractId) : null;
+                    let query = window.supabaseClient
+                        .from('Mensaje_Contrato')
+                        .select('*')
+                        .order('created_at', { ascending: true });
+
+                    if (dbContractId) {
+                        query = query.or(`contract_ref_id.eq.${contractId},id_contrato.eq.${dbContractId}`);
+                    } else {
+                        query = query.eq('contract_ref_id', String(contractId));
+                    }
+
+                    const { data: dbMsgs, error } = await query;
+                    if (!error && dbMsgs && dbMsgs.length > 0) {
+                        this._chatMessages[contractId] = this._deduplicateMessages(dbMsgs);
+                        localStorage.setItem(storageKey, JSON.stringify(this._chatMessages[contractId]));
+                        this.renderChatMessages(contractId);
+                    } else if (this._chatMessages[contractId].length === 0) {
+                        // Create initial welcome message
+                        const welcomeMsg = {
+                            id_mensaje: this._generateUUID(),
+                            id_contrato: dbContractId,
+                            contract_ref_id: String(contractId),
+                            remitente_nombre: 'Sistema Hábitat',
+                            remitente_rol: 'SISTEMA',
+                            mensaje: `💬 Canal de negociación oficial abierto para ${contract.title}. Las partes pueden proponer ajustes a los términos, fecha de entrega y canon locativo.`,
+                            created_at: contract.createdAt || new Date().toISOString()
+                        };
+                        this._chatMessages[contractId] = [welcomeMsg];
+                        localStorage.setItem(storageKey, JSON.stringify(this._chatMessages[contractId]));
+                        this.renderChatMessages(contractId);
+                    }
+                } catch (err) {
+                    console.warn("[Chat] Error al cargar mensajes desde Supabase:", err);
+                }
+
+                // Subscribe to Supabase Realtime Channel
+                if (this._chatChannel) {
+                    try {
+                        window.supabaseClient.removeChannel(this._chatChannel);
+                    } catch (e) {}
+                }
+
+                const channelName = `contract_chat_${contractId}`;
+                this._chatChannel = window.supabaseClient
+                    .channel(channelName)
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'Mensaje_Contrato'
+                    }, (payload) => {
+                        if (payload.new && (payload.new.contract_ref_id === String(contractId) || String(payload.new.id_contrato) === String(contract.dbContractId))) {
+                            ContractsManager.appendIncomingMessage(contractId, payload.new);
+                        }
+                    })
+                    .subscribe((status) => {
+                        const statusBadge = document.getElementById('chat-realtime-status-badge');
+                        if (statusBadge) {
+                            if (status === 'SUBSCRIBED') {
+                                statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Tiempo Real Conectado</span>';
+                                statusBadge.className = 'px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5';
+                            }
+                        }
+                    });
+            }
+        },
+
+        renderChatMessages: function (contractId) {
+            const container = document.getElementById('fs-chat-messages-container');
+            if (!container) return;
+
+            const msgs = this._chatMessages[contractId] || [];
+            const role = this.currentUserRole;
+
+            if (msgs.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-zinc-400 space-y-2 my-auto">
+                        <span class="material-symbols-outlined text-4xl text-zinc-300 dark:text-zinc-700">forum</span>
+                        <h4 class="font-headline font-bold text-sm text-zinc-700 dark:text-zinc-300">Canal de negociación iniciado</h4>
+                        <p class="text-xs max-w-sm mx-auto">Envía un mensaje o una propuesta rápida para negociar los términos del contrato de locación.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let uEmail = '';
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                uEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+            } catch (e) {}
+
+            container.innerHTML = msgs.map(m => {
+                const isSystem = m.remitente_rol === 'SISTEMA';
+                const isMe = !isSystem && ((m.remitente_email && m.remitente_email.toLowerCase() === uEmail) || (m.remitente_rol === role));
+
+                const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                if (isSystem) {
+                    return `
+                        <div class="my-2 p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-center text-xs text-zinc-600 dark:text-zinc-300 space-y-1">
+                            <div class="font-bold flex items-center justify-center gap-1 text-[11px] uppercase tracking-wider text-primary dark:text-red-400">
+                                <span class="material-symbols-outlined text-sm">shield</span>
+                                <span>Mensaje del Sistema Hábitat</span>
+                            </div>
+                            <p>${m.mensaje}</p>
+                            <span class="text-[10px] text-zinc-400 block">${timeStr}</span>
+                        </div>
+                    `;
+                }
+
+                let roleBadge = '';
+                if (m.remitente_rol === 'TENANT' || m.remitente_rol === 'INQUILINO') {
+                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase">Inquilino</span>';
+                } else if (m.remitente_rol === 'OWNER' || m.remitente_rol === 'PROPIETARIO') {
+                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-red-100 dark:bg-red-950 text-primary dark:text-red-300 text-[10px] font-extrabold uppercase">Propietario</span>';
+                } else {
+                    roleBadge = '<span class="px-2 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-extrabold uppercase">Corredor</span>';
+                }
+
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 max-w-[85%] ${isMe ? 'self-end' : 'self-start'} animate-fadeIn">
+                        <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                            <span class="font-bold text-zinc-700 dark:text-zinc-300">${isMe ? 'Tú' : m.remitente_nombre}</span>
+                            ${roleBadge}
+                            <span class="text-[10px]">${timeStr}</span>
+                        </div>
+                        
+                        <div class="p-3.5 rounded-2xl text-xs leading-relaxed shadow-xs ${isMe ? 'bg-primary text-white rounded-br-xs' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-bl-xs border border-zinc-200/60 dark:border-zinc-700/60'}">
+                            ${m.propuesta_json ? `
+                                <div class="mb-2 p-2.5 rounded-xl ${isMe ? 'bg-black/20 text-white' : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white'} border border-white/20 font-sans space-y-1">
+                                    <div class="flex items-center gap-1 font-bold text-[11px] text-amber-300">
+                                        <span class="material-symbols-outlined text-sm">handshake</span>
+                                        <span>${m.propuesta_json.titulo || 'Propuesta de Términos'}</span>
+                                    </div>
+                                    <div class="text-xs font-semibold">${m.propuesta_json.detalle || ''}</div>
+                                </div>
+                            ` : ''}
+                            <p class="whitespace-pre-wrap">${m.mensaje}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        },
+
+        appendIncomingMessage: function (contractId, msgObj) {
+            if (!msgObj || !msgObj.mensaje) return;
+            if (!this._chatMessages[contractId]) this._chatMessages[contractId] = [];
+
+            const list = this._chatMessages[contractId];
+
+            // 1. Direct ID match
+            if (msgObj.id_mensaje) {
+                const indexById = list.findIndex(m => m.id_mensaje && String(m.id_mensaje) === String(msgObj.id_mensaje));
+                if (indexById !== -1) {
+                    list[indexById] = { ...list[indexById], ...msgObj };
+                    this.renderChatMessages(contractId);
+                    return;
+                }
+            }
+
+            // 2. Fuzzy match to prevent echoes (same text + same sender role within 10s)
+            const nowTime = new Date(msgObj.created_at || Date.now()).getTime();
+            const duplicateIndex = list.findIndex(m => {
+                if (m.mensaje !== msgObj.mensaje) return false;
+                if (m.remitente_rol !== msgObj.remitente_rol) return false;
+                const mTime = new Date(m.created_at || 0).getTime();
+                return Math.abs(nowTime - mTime) < 10000;
+            });
+
+            if (duplicateIndex !== -1) {
+                list[duplicateIndex] = { ...list[duplicateIndex], ...msgObj };
+                const storageKey = `habitat_chat_messages_${contractId}`;
+                localStorage.setItem(storageKey, JSON.stringify(list));
+                this.renderChatMessages(contractId);
+                return;
+            }
+
+            // 3. Add new message
+            list.push(msgObj);
+            const storageKey = `habitat_chat_messages_${contractId}`;
+            localStorage.setItem(storageKey, JSON.stringify(list));
+            this.renderChatMessages(contractId);
+        },
+
+        sendContractMessage: async function (contractId, customText = null, proposalData = null) {
+            const input = document.getElementById('fs-chat-input');
+            const text = (customText || (input ? input.value : '')).trim();
+            if (!text && !proposalData) return;
+
+            if (input && !customText) input.value = '';
+
+            const contract = this.getContractById(contractId);
+            const role = this.currentUserRole;
+
+            let myName = 'Usuario';
+            let myEmail = 'usuario@habitat.ar';
+
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                myName = uLocal.name || uLocal.nombre || (role === 'TENANT' ? contract?.tenant?.name : contract?.owner?.name) || 'Usuario';
+                myEmail = (uLocal.email || uLocal.mail || (role === 'TENANT' ? contract?.tenant?.email : contract?.owner?.email) || 'usuario@habitat.ar').toLowerCase().trim();
+            } catch (e) {}
+
+            const messageId = this._generateUUID();
+            const nowIso = new Date().toISOString();
+
+            const msgObj = {
+                id_mensaje: messageId,
+                id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
+                contract_ref_id: String(contractId),
+                remitente_nombre: myName,
+                remitente_rol: role,
+                remitente_email: myEmail,
+                mensaje: text,
+                propuesta_json: proposalData || null,
+                created_at: nowIso
+            };
+
+            // Immediate optimistic UI update
+            this.appendIncomingMessage(contractId, msgObj);
+
+            // Save to Supabase Mensaje_Contrato table with the exact same UUID
+            if (window.supabaseClient) {
+                try {
+                    const dbPayload = {
+                        id_mensaje: messageId,
+                        id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
+                        contract_ref_id: String(contractId),
+                        remitente_nombre: myName,
+                        remitente_rol: role,
+                        remitente_email: myEmail,
+                        mensaje: text,
+                        propuesta_json: proposalData || null,
+                        created_at: nowIso
+                    };
+
+                    await window.supabaseClient
+                        .from('Mensaje_Contrato')
+                        .insert([dbPayload]);
+                } catch (err) {
+                    console.warn("[Chat] Fallback guardando en Supabase:", err);
+                }
+            }
+        },
+
+        sendQuickProposal: function (contractId, proposalType) {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            if (proposalType === 'canon') {
+                const currentRent = contract.monthlyRent || 450000;
+                const prop = prompt(`Proponer nuevo canon de alquiler mensual (actual: $ ${Number(currentRent).toLocaleString('es-AR')}):`, currentRent);
+                if (prop && !isNaN(Number(prop.replace(/\D/g, '')))) {
+                    const numVal = Number(prop.replace(/\D/g, ''));
+                    const formatted = '$ ' + numVal.toLocaleString('es-AR');
+                    this.sendContractMessage(contractId, `Propongo acordar un canon locativo de ${formatted} mensuales.`, {
+                        titulo: 'Propuesta de Canon Locativo',
+                        detalle: `Monto propuesto: ${formatted} / mes`
+                    });
+                }
+            } else if (proposalType === 'ajuste') {
+                this.sendContractMessage(contractId, `Propongo fijar la periodicidad de actualización cada 6 meses por Índice de Contratos de Locación (ICL) oficial.`, {
+                    titulo: 'Propuesta de Mecanismo de Ajuste',
+                    detalle: 'Frecuencia: Semestral (6 meses) • Índice: ICL'
+                });
+            } else if (proposalType === 'llaves') {
+                const fecha = prompt('Indique la fecha y horario propuesto para la entrega de llaves e inventario inicial:', '01/09/2026 a las 11:00 hs');
+                if (fecha) {
+                    this.sendContractMessage(contractId, `Propongo realizar la entrega de llaves y firma del acta de inventario inicial el día ${fecha}.`, {
+                        titulo: 'Fecha de Entrega de Llaves',
+                        detalle: `Coordinación: ${fecha}`
+                    });
+                }
+            } else if (proposalType === 'acuerdo') {
+                this.sendContractMessage(contractId, `✓ He revisado todas las cláusulas y condiciones del contrato de locación y confirmo mi total acuerdo para proceder a la firma digital.`, {
+                    titulo: 'Conformidad de Cláusulas',
+                    detalle: 'Términos aprobados por la parte para firma inmediata.'
+                });
+            }
         },
 
         executeSignatureWithDidit: function (contractId, explicitRole) {
@@ -1742,6 +2326,10 @@
             }
 
             ContractsManager.renderDashboard('contracts-dashboard-container');
+
+            if (contractParam && !statusParam) {
+                ContractsManager.openContractFullscreen(contractParam, 'document');
+            }
 
             // Detectar retorno de redirección desde Didit con validación aprobada
             if (contractParam && (statusParam === 'Approved' || statusParam === 'COMPLETED' || statusParam === 'approved' || (sessionParam && !sessionParam.includes('mock')))) {

@@ -968,6 +968,8 @@
                     id: contract.property_id || contract.id || 1,
                     title: contract.property_title || `Propiedad en ${contract.property_address || 'Alquiler'}`,
                     address: contract.property_address || 'Mendoza, Argentina',
+                    status: 'alquilada',
+                    contractEndDate: contract.end_date || contract.fecha_fin || contract.fecha_fin_contrato || null,
                     price: contract.monthly_rent || 380000,
                     expenses: contract.expenses || 48000,
                     m2_cubiertos: contract.m2_cubiertos || 75,
