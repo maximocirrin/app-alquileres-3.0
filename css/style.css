@@ -1980,6 +1980,55 @@ body.no-scroll {
     background-color: rgba(17, 19, 24, 0.98) !important;
 }
 
+/* Marketplace Property Detail Hero Showcase */
+.mp-hero-desktop-showcase {
+    display: none !important;
+}
+.mp-hero-mobile-showcase {
+    display: block !important;
+}
+@media (min-width: 768px) {
+    .mp-hero-desktop-showcase {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        height: 440px !important;
+        gap: 8px !important;
+    }
+    .mp-hero-desktop-showcase img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        display: block !important;
+    }
+    .mp-hero-mobile-showcase {
+        display: none !important;
+    }
+}
+
+/* Gallery Mosaic Modal Layout (Desktop Editorial vs Mobile Uniform) */
+.mp-mosaic-desktop-layout {
+    display: none !important;
+}
+.mp-mosaic-mobile-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+}
+@media (min-width: 768px) {
+    .mp-mosaic-desktop-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+    .mp-mosaic-mobile-layout {
+        display: none !important;
+    }
+}
+
 /* Form Switch */
 .form-switch {
     display: flex;
