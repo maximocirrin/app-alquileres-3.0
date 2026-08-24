@@ -32,8 +32,7 @@ export default async function sellarHandler(req, res) {
       user_agent = req.headers['user-agent'],
       ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       signer_name,
-      signer_dni,
-      geolocalizacion
+      signer_dni
     } = params;
 
     if (!id_firma && !id_contrato) {
@@ -115,8 +114,7 @@ export default async function sellarHandler(req, res) {
           didit_status: 'Approved',
           didit_scores: didit_scores || { face_match_score: 98.4, liveness: 'PASSED' },
           ip_origen: ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1',
-          user_agent: user_agent || req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          geolocalizacion: geolocalizacion || null
+          user_agent: user_agent || req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
         }).select(`
           *,
           Perfil:id_perfil_firmante (*),
@@ -175,9 +173,8 @@ export default async function sellarHandler(req, res) {
       signerName: signer_name || firmante.nombre_completo || 'Titular Validado',
       signerDni: signer_dni || firmante.dni || 'Validado por Didit KYC',
       email: email || firmante.mail || '-',
-      ip: firma.ip_origen || ip || '127.0.0.1',
+      ip: firma.ip_origen || ip || req.headers['x-forwarded-for'] || '127.0.0.1',
       userAgent: firma.user_agent || user_agent || 'Mozilla/5.0',
-      geo: firma.geolocalizacion || geolocalizacion,
       diditSessionId: firma.didit_session_id || didit_session_id || 'didit_sess_live',
       diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' },
       propiedad,

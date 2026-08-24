@@ -1920,25 +1920,10 @@
                         profileId = isTenantRole ? 15 : 6;
                     }
 
-                    // 2.1. Obtener IP y Geolocalización del cliente
-                    let clientIp = '127.0.0.1';
+                    // La IP y Geolocalización ahora se capturan exclusivamente en el backend (servidor)
+                    // para evitar bloqueos por AdBlockers y asegurar el registro.
+                    let clientIp = '';
                     let clientGeo = null;
-                    try {
-                        const geoResponse = await fetch('https://get.geojs.io/v1/ip/geo.json');
-                        if (geoResponse.ok) {
-                            const geoData = await geoResponse.json();
-                            clientIp = geoData.ip;
-                            clientGeo = {
-                                latitude: geoData.latitude,
-                                longitude: geoData.longitude,
-                                city: geoData.city,
-                                region: geoData.region,
-                                country: geoData.country
-                            };
-                        }
-                    } catch (e) {
-                        console.warn("[ContractsManager] No se pudo obtener la IP/Geo:", e);
-                    }
 
                     let backendSellar = null;
                     try {
@@ -1950,8 +1935,6 @@
                                 id_contrato: dbContractId,
                                 rol: dbRole,
                                 didit_session_id: currentSessionId,
-                                ip: clientIp,
-                                geolocalizacion: clientGeo,
                                 user_agent: navigator.userAgent
                             })
                         });
@@ -1963,59 +1946,11 @@
                         console.warn("[ContractsManager] Fallo al contactar el backend de sellado", e);
                     }
 
-                    const signatureData = {
-                        id_contrato: dbContractId,
-                        id_perfil_firmante: profileId,
-                        rol_firmante: dbRole,
-                        estado_firma: 'sellada',
-                        didit_session_id: currentSessionId,
-                        didit_status: 'APPROVED',
-                        hash_contrato_sha256: backendSellar?.hash_contrato_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
-                        hash_audit_trail_sha256: backendSellar?.hash_audit_trail_sha256 || '9f8e7d6c5b4a3928170efdcba0987654321fedcba0987654321fedcba0987654',
-                        tsa_sello_tiempo: backendSellar?.tsa_sello_tiempo || {
-                            serialNumber: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-                            timestamp: new Date().toISOString(),
-                            authority: 'ONTI-AR-TSA-ROOT-CA',
-                            algorithm: 'SHA256withRSA-4096'
-                        },
-                        url_audit_trail_pdf: backendSellar?.url_audit_trail_pdf || `contrato_${dbContractId}/audit_trail_${dbRole}.pdf`,
-                        url_contrato_final_pdf: backendSellar?.url_contrato_final_pdf || `contrato_${dbContractId}/contrato_definitivo.pdf`,
-                        fecha_firma: new Date().toISOString(),
-                        ip_origen: clientIp,
-                        geolocalizacion: clientGeo,
-                        user_agent: navigator.userAgent
-
-                    };
-
-                    const { data: allSignatures } = await window.supabaseClient
-                        .from('Firma_contrato')
-                        .select('*')
-                        .eq('id_contrato', dbContractId);
-
-                    const existingFirma = (allSignatures || []).find(f => 
-                        isTenantRole 
-                            ? ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(f.rol_firmante)
-                            : ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante)
-                    );
-
                     let insertedFirma = backendSellar;
-                    if (existingFirma && existingFirma.id_firma) {
-                        const { data: updatedF, error: upErr } = await window.supabaseClient
-                            .from('Firma_contrato')
-                            .update(signatureData)
-                            .eq('id_firma', existingFirma.id_firma)
-                            .select()
-                            .maybeSingle();
-                        if (upErr) console.error("[ContractsManager] Error actualizando Firma_contrato:", upErr);
-                        insertedFirma = updatedF || insertedFirma;
-                    } else {
-                        const { data: newF, error: insErr } = await window.supabaseClient
-                            .from('Firma_contrato')
-                            .insert([signatureData])
-                            .select()
-                            .maybeSingle();
-                        if (insErr) console.error("[ContractsManager] Error insertando Firma_contrato:", insErr);
-                        insertedFirma = newF || insertedFirma;
+
+                    if (!insertedFirma) {
+                        console.error("[ContractsManager] El backend no devolvió la firma sellada. Falló el proceso criptográfico.");
+                        // Handle error gracefully if needed
                     }
 
                     const { data: freshSignatures } = await window.supabaseClient

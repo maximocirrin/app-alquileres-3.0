@@ -13,7 +13,6 @@ export async function generateAuditTrailPdf({
   email,
   ip,
   userAgent,
-  geo,
   diditSessionId,
   diditScores = {},
   propiedad = {},
@@ -115,9 +114,6 @@ export async function generateAuditTrailPdf({
   drawRow('Direccion IP de Origen:', ip || '127.0.0.1');
   drawRow('User-Agent:', (userAgent || 'Mozilla/5.0').substring(0, 52) + '...');
   drawRow('Zona Horaria Registrada:', 'America/Argentina/Buenos_Aires (UTC-3)');
-  if (geo) {
-    drawRow('Geolocalizacion GPS:', typeof geo === 'string' ? geo : JSON.stringify(geo));
-  }
 
   currentY -= 12;
 
