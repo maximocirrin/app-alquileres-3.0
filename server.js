@@ -18,11 +18,54 @@ const app = express();
 const port = 3000;
 
 app.use(cors());
+
+// Security Headers Middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+});
+
+// Protect Sensitive Files from Static Serving
+app.use((req, res, next) => {
+    // Permitir llamadas normales a rutas API (que no terminen en .js)
+    if (req.path.startsWith('/api/') && !req.path.endsWith('.js')) {
+        return next();
+    }
+
+    const blockedPatterns = [
+        /^\/\.env/i,
+        /\.env(\..+)?$/i,
+        /\.key$/i,
+        /\.csr$/i,
+        /\.sql$/i,
+        /^\/\.git/i,
+        /^\/\.agents/i,
+        /^\/api\/.*\.js$/i,
+        /^\/services\//i,
+        /^\/supabase\//i,
+        /^\/scripts\//i,
+        /^\/types\//i,
+        /^\/hooks\//i,
+        /^\/server\.js$/i,
+        /^\/package\.json$/i,
+        /^\/package-lock\.json$/i,
+        /^\/build-components/i
+    ];
+    if (blockedPatterns.some(pattern => pattern.test(req.path))) {
+        return res.status(403).json({ error: 'Forbidden', message: 'Acceso restringido a este recurso.' });
+    }
+    next();
+});
+
 app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve Static Files
 app.use(express.static(path.join(__dirname)));
+
 
 // API Endpoints - Supabase Status & Health
 app.get('/api/status', async (req, res) => {
@@ -358,7 +401,8 @@ function saveBase64(base64String, prefix) {
     if (type.includes('png')) ext = 'png';
     if (type.includes('pdf')) ext = 'pdf';
     
-    const filename = `${prefix}-${Date.now()}.${ext}`;
+    const safePrefix = String(prefix || 'upload').replace(/[^a-zA-Z0-9_-]/g, '');
+    const filename = `${safePrefix}-${Date.now()}.${ext}`;
     const filePath = path.join(uploadsDir, filename);
     
     fs.writeFileSync(filePath, buffer);

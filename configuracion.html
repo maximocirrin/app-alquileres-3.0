@@ -27,17 +27,14 @@
             } catch (e) {}
         })();
     </script>
-        <title>Configuración de cuenta | Hábitat</title>
+    <title>Configuración de cuenta | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap"
-        rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=13">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=16">
+    
     <script>
         const originalWarn = console.warn;
         console.warn = function () {
@@ -68,12 +65,14 @@
                         DEFAULT: "0.25rem",
                         lg: "0.5rem",
                         xl: "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
                         full: "9999px"
                     },
                     fontFamily: {
-                        headline: ["Manrope"],
-                        body: ["Inter"],
-                        label: ["Inter"]
+                        headline: ["Manrope", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Inter", "sans-serif"]
                     }
                 }
             }
@@ -115,16 +114,73 @@
             -webkit-font-smoothing: antialiased;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        /* Custom toggle switch */
+        .ios-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .ios-switch input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ios-switch-slider {
+            width: 44px;
+            height: 24px;
+            background-color: #e4e4e7;
+            border-radius: 9999px;
+            transition: all 0.25s ease-in-out;
+            position: relative;
+        }
+        .dark .ios-switch-slider {
+            background-color: #3f3f46;
+        }
+        .ios-switch-slider::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: #ffffff;
+            border-radius: 9999px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .ios-switch input:checked + .ios-switch-slider {
+            background-color: #811b1e;
+        }
+        .ios-switch input:checked + .ios-switch-slider::after {
+            transform: translateX(20px);
+        }
+
+        /* Hide scrollbars for horizontal tab bar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
-    <script>
-        (function () {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
+
+    <!-- Supabase Client Early Load -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
 
     <!-- Vercel Analytics -->
     <script>
@@ -140,223 +196,945 @@
 
 <body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- TopNavBar Component -->
-    <script src="js/navbar.js?v=4"></script>
+    <script src="js/navbar.js?v=6"></script>
 
-    <main class="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-[1000px] mx-auto w-full flex flex-col">
-        <!-- Título superior -->
-        <div class="mb-8 md:mb-10">
-            <h1 class="font-headline text-3xl md:text-[36px] font-extrabold text-zinc-900 dark:text-white">
-                Configuración de cuenta
-            </h1>
+    <main class="flex-grow pt-24 pb-20 px-3 sm:px-6 md:px-8 max-w-[1240px] mx-auto w-full flex flex-col space-y-6 sm:space-y-8">
+        
+        <!-- Breadcrumb & Navigation Bar -->
+        <div class="flex items-center justify-between gap-3">
+            <nav class="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+                <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-base">home</span>
+                    <span>Inicio</span>
+                </a>
+                <span>/</span>
+                <span class="text-zinc-900 dark:text-white font-bold">Configuración de cuenta</span>
+            </nav>
+
+            <a href="index.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all border border-zinc-200 dark:border-zinc-700/80 shadow-xs">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                <span class="hidden sm:inline">Volver</span>
+            </a>
         </div>
 
-        <!-- Lista de tarjetas de configuración -->
-        <div class="flex flex-col gap-4 md:gap-5">
+        <!-- HERO BANNER: Resumen del Usuario y Estado de Verificación -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-zinc-50 to-zinc-100/70 dark:from-zinc-900 dark:via-zinc-900/90 dark:to-zinc-950 border border-zinc-200/80 dark:border-zinc-800 p-5 sm:p-7 md:p-8 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+                
+                <!-- Avatar + Datos Principales -->
+                <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+                    <!-- Avatar Circular -->
+                    <div class="relative shrink-0">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-primary dark:bg-red-800 text-white flex items-center justify-center font-headline font-black text-2xl sm:text-3xl shadow-lg border-2 border-white dark:border-zinc-800">
+                            <span id="user-hero-avatar-initial">U</span>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-white" title="Cuenta Activa">
+                            <span class="material-symbols-outlined text-[11px] font-bold">check</span>
+                        </div>
+                    </div>
+
+                    <!-- Nombres y Badges -->
+                    <div class="min-w-0 space-y-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="user-hero-name" class="font-headline font-black text-lg sm:text-2xl text-zinc-900 dark:text-white truncate">
+                                Usuario Hábitat
+                            </h2>
+                            <span id="user-hero-role-badge" class="px-3 py-1 rounded-full text-xs font-headline font-extrabold border inline-flex items-center gap-1.5 bg-primary/10 text-primary dark:text-red-400 border-primary/20">
+                                Inquilino / Particular
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 sm:gap-3 text-xs text-zinc-500 dark:text-zinc-400 flex-wrap">
+                            <span id="user-hero-email" class="font-medium truncate">usuario@habitat.com.ar</span>
+                            <span class="hidden sm:inline">•</span>
+                            <span id="user-hero-username" class="font-mono text-zinc-600 dark:text-zinc-400">@usuario</span>
+                            <span class="hidden sm:inline">•</span>
+                            <span id="user-hero-id" class="font-mono text-[11px] text-zinc-400">ID: HBT-USER</span>
+                        </div>
+
+                        <!-- Badge KYC -->
+                        <div class="pt-1">
+                            <div id="user-hero-kyc-badge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] bg-emerald-500/10 border border-emerald-500/25">
+                                <span class="material-symbols-outlined text-xs text-emerald-500">verified</span>
+                                <span class="text-emerald-700 dark:text-emerald-400 font-bold">Identidad Verificada Didit KYC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones Rápidos de Acción -->
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-zinc-200/70 dark:border-zinc-800">
+                    <a href="contratos.html" class="flex-1 md:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs sm:text-sm border border-zinc-200 dark:border-zinc-700 shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span class="material-symbols-outlined text-base sm:text-lg text-primary dark:text-red-400">draw</span>
+                        <span>Mis Contratos</span>
+                    </a>
+                    <a href="pasaporte-habitat.html" class="flex-1 md:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span class="material-symbols-outlined text-base sm:text-lg">badge</span>
+                        <span>Mi Pasaporte</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- HORIZONTAL TABS BAR: Barra de pestañas deslizable -->
+        <div class="overflow-x-auto no-scrollbar pb-1">
+            <div class="flex items-center gap-2 p-1.5 bg-zinc-100/90 dark:bg-zinc-900/80 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 w-max min-w-full">
+                
+                <button type="button" data-section="perfil" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-primary text-white font-headline font-bold text-xs sm:text-sm shadow-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">person</span>
+                    <span>Perfil y Datos</span>
+                </button>
+
+                <button type="button" data-section="notificaciones" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-primary/40 font-headline font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">notifications</span>
+                    <span>Notificaciones</span>
+                </button>
+
+                <button type="button" data-section="pagos" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-primary/40 font-headline font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">account_balance</span>
+                    <span>Cobros y Facturación</span>
+                </button>
+
+                <button type="button" data-section="seguridad" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-primary/40 font-headline font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">lock</span>
+                    <span>Seguridad</span>
+                </button>
+
+                <button type="button" data-section="apariencia" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-primary/40 font-headline font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">palette</span>
+                    <span>Apariencia</span>
+                </button>
+
+                <button type="button" data-section="cuenta" class="settings-top-tab-btn px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-primary/40 font-headline font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-2 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">manage_accounts</span>
+                    <span>Cuenta</span>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Loading Skeleton Indicator (Oculto por defecto) -->
+        <div id="settings-loading-skeleton" class="hidden space-y-4 animate-pulse">
+            <div class="h-12 bg-zinc-200 dark:bg-zinc-800 rounded-2xl w-full"></div>
+            <div class="h-64 bg-zinc-200 dark:bg-zinc-800 rounded-3xl w-full"></div>
+        </div>
+
+        <!-- MAIN LAYOUT: Master-Detail Grid -->
+        <div id="settings-main-container" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <!-- Tarjeta 1: Perfil -->
-            <a href="#" class="group flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 md:p-6 shadow-sm hover:shadow hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer">
-                <!-- Icono -->
-                <div class="w-12 h-12 flex items-center justify-center flex-shrink-0 text-primary dark:text-red-500 mr-4 md:mr-6 relative">
-                    <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'wght' 300;">person</span>
-                    <!-- Sparkle detail -->
-                    <span class="material-symbols-outlined text-yellow-500 text-sm absolute top-0 right-0">magic_button</span>
-                </div>
-                <!-- Textos -->
-                <div class="flex-grow">
-                    <h3 class="font-headline text-base md:text-lg font-extrabold text-zinc-900 dark:text-white mb-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                        Perfil
-                    </h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                        Personaliza tu cuenta y actualiza tus preferencias de inicio de sesión.
-                    </p>
-                </div>
-                <!-- Flecha -->
-                <div class="flex-shrink-0 ml-4 text-primary dark:text-red-500 group-hover:translate-x-1 transition-transform">
-                    <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'wght' 500;">chevron_right</span>
-                </div>
-            </a>
+            <!-- LEFT COLUMN: Desktop Sidebar Navigation (4 cols en lg) -->
+            <aside class="hidden lg:block lg:col-span-4 space-y-4 sticky top-24">
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-3 sm:p-4 shadow-sm space-y-1">
+                    
+                    <button type="button" data-section="perfil" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl bg-primary text-white font-headline font-bold text-xs sm:text-sm shadow-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">person</span>
+                            <span>Perfil y Datos</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
 
-            <!-- Tarjeta 2: Notificaciones -->
-            <a href="#" class="group flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 md:p-6 shadow-sm hover:shadow hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer">
-                <!-- Icono -->
-                <div class="w-12 h-12 flex items-center justify-center flex-shrink-0 text-primary dark:text-red-500 mr-4 md:mr-6 relative">
-                    <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'wght' 300;">mail</span>
-                    <!-- Sparkle detail -->
-                    <span class="material-symbols-outlined text-yellow-500 text-sm absolute top-0 right-0">magic_button</span>
-                </div>
-                <!-- Textos -->
-                <div class="flex-grow">
-                    <h3 class="font-headline text-base md:text-lg font-extrabold text-zinc-900 dark:text-white mb-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                        Notificaciones
-                    </h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                        Administra el contenido y la frecuencia de tus correos de Hábitat.
-                    </p>
-                </div>
-                <!-- Flecha -->
-                <div class="flex-shrink-0 ml-4 text-primary dark:text-red-500 group-hover:translate-x-1 transition-transform">
-                    <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'wght' 500;">chevron_right</span>
-                </div>
-            </a>
+                    <button type="button" data-section="notificaciones" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-headline font-bold text-xs sm:text-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">notifications</span>
+                            <span>Notificaciones</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
 
-            <!-- Tarjeta 3: Preferencias de documentos -->
-            <a href="#" class="group flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 md:p-6 shadow-sm hover:shadow hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer">
-                <!-- Icono -->
-                <div class="w-12 h-12 flex items-center justify-center flex-shrink-0 text-primary dark:text-red-500 mr-4 md:mr-6 relative">
-                    <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'wght' 300;">folder_open</span>
-                    <!-- Paperclip detail -->
-                    <span class="material-symbols-outlined text-yellow-500 text-sm absolute bottom-1 right-0">attach_file</span>
+                    <button type="button" data-section="pagos" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-headline font-bold text-xs sm:text-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">account_balance</span>
+                            <span>Datos de Cobro y Pagos</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
+
+                    <button type="button" data-section="seguridad" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-headline font-bold text-xs sm:text-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">lock</span>
+                            <span>Seguridad y Acceso</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
+
+                    <button type="button" data-section="apariencia" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-headline font-bold text-xs sm:text-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">palette</span>
+                            <span>Apariencia y Sistema</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
+
+                    <button type="button" data-section="cuenta" class="settings-nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-headline font-bold text-xs sm:text-sm transition-all text-left cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-xl">manage_accounts</span>
+                            <span>Zona de Cuenta</span>
+                        </div>
+                        <span class="material-symbols-outlined text-base opacity-70">chevron_right</span>
+                    </button>
+
                 </div>
-                <!-- Textos -->
-                <div class="flex-grow">
-                    <h3 class="font-headline text-base md:text-lg font-extrabold text-zinc-900 dark:text-white mb-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                        Preferencias de documentos
-                    </h3>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                        Consulta tus documentos legales y administra tus preferencias para recibir y firmar documentos.
+
+                <!-- Info Card Base de Datos & Seguridad -->
+                <div class="p-4 rounded-3xl bg-zinc-100/80 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 text-xs space-y-2 text-zinc-600 dark:text-zinc-400 font-medium">
+                    <div class="flex items-center gap-2 text-zinc-900 dark:text-white font-headline font-bold">
+                        <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg">database</span>
+                        <span>Sincronización Supabase</span>
+                    </div>
+                    <p class="text-[11px] leading-relaxed">
+                        Tus modificaciones se guardan y cifran de forma instantánea en tu perfil de la base de datos PostgreSQL de Supabase.
                     </p>
                 </div>
-                <!-- Flecha -->
-                <div class="flex-shrink-0 ml-4 text-primary dark:text-red-500 group-hover:translate-x-1 transition-transform">
-                    <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'wght' 500;">chevron_right</span>
+            </aside>
+
+            <!-- RIGHT COLUMN / CONTENT PANELS CONTAINER (8 cols en lg, 12 cols en mobile) -->
+            <div id="settings-content-wrapper" class="col-span-1 lg:col-span-8 space-y-6">
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 1: PERFIL Y DATOS PERSONALES      -->
+                <!-- ========================================== -->
+                <div id="section-panel-perfil" class="settings-section-panel animate-fadeIn space-y-6">
+                    
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+                        
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Perfil y Datos Personales
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Actualizá tu información personal y datos de contacto en la plataforma.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">person</span>
+                            </div>
+                        </div>
+
+                        <!-- Estado KYC Detallado -->
+                        <div id="kyc-detailed-status-box">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+
+                        <form id="form-profile-settings" class="space-y-4">
+                            
+                            <!-- Nombre completo & Nombre de usuario -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="input-profile-fullname" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                                        <span>Nombre y Apellido</span>
+                                        <span class="text-primary">*</span>
+                                    </label>
+                                    <input type="text" id="input-profile-fullname" required placeholder="Ej: Maximo Cirrincione" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="input-profile-username" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                                        <span>Nombre de Usuario</span>
+                                    </label>
+                                    <div class="relative flex items-center">
+                                        <span class="absolute left-3.5 text-zinc-400 font-mono font-bold text-xs select-none">@</span>
+                                        <input type="text" id="input-profile-username" placeholder="usuario" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 pl-8 pr-3.5 text-xs sm:text-sm font-mono text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email & Teléfono -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="input-profile-email" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                                        <span>Correo Electrónico</span>
+                                        <span class="text-[10px] text-zinc-400 font-normal">Autenticación Supabase</span>
+                                    </label>
+                                    <input type="email" id="input-profile-email" readonly placeholder="tu@email.com" class="w-full bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 cursor-not-allowed outline-none">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="input-profile-phone" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                                        <span>Teléfono / WhatsApp</span>
+                                    </label>
+                                    <input type="tel" id="input-profile-phone" placeholder="+54 9 11 4589-2231" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Breve Presentación -->
+                            <div class="space-y-1.5">
+                                <label for="input-profile-bio" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                    Breve Presentación / Acerca de mí
+                                </label>
+                                <textarea id="input-profile-bio" rows="3" placeholder="Contanos brevemente sobre vos..." class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl p-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"></textarea>
+                            </div>
+
+                            <!-- Botón Guardar -->
+                            <div class="pt-4 flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
+                                <button type="button" onclick="AccountSettings._populateUI()" class="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 font-headline font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                                    Restablecer
+                                </button>
+                                <button type="button" id="btn-save-profile" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">save</span>
+                                    <span>Guardar Cambios</span>
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
                 </div>
-            </a>
+
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 2: NOTIFICACIONES Y ALERTAS       -->
+                <!-- ========================================== -->
+                <div id="section-panel-notificaciones" class="settings-section-panel hidden animate-fadeIn space-y-6">
+                    
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+                        
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Preferencias de Notificaciones
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Elegí qué alertas querés recibir, con qué frecuencia y por qué canales de comunicación.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">notifications_active</span>
+                            </div>
+                        </div>
+
+                        <!-- Canales de Envío -->
+                        <div class="space-y-3">
+                            <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-zinc-400">
+                                Canales de Envío
+                            </h4>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="flex items-center gap-3 pr-2">
+                                        <span class="material-symbols-outlined text-xl text-primary dark:text-red-400">mail</span>
+                                        <div>
+                                            <p class="font-bold text-xs text-zinc-900 dark:text-white">Correo Electrónico</p>
+                                            <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Resúmenes, comprobantes de pago y contratos firmados</p>
+                                        </div>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="channel_email" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="flex items-center gap-3 pr-2">
+                                        <span class="material-symbols-outlined text-xl text-primary dark:text-red-400">notifications</span>
+                                        <div>
+                                            <p class="font-bold text-xs text-zinc-900 dark:text-white">Notificaciones en la App (Campanita)</p>
+                                            <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Alertas en tiempo real mientras navegás por Hábitat</p>
+                                        </div>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="channel_push" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="flex items-center gap-3 pr-2">
+                                        <span class="material-symbols-outlined text-xl text-emerald-600 dark:text-emerald-400">chat</span>
+                                        <div>
+                                            <p class="font-bold text-xs text-zinc-900 dark:text-white">Avisos por WhatsApp</p>
+                                            <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Alertas críticas y links directos para firmar o pagar</p>
+                                        </div>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="channel_whatsapp">
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Frecuencia de Correo -->
+                        <div class="space-y-2 pt-1">
+                            <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-zinc-400">
+                                Frecuencia de Emails
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <label class="p-3 rounded-2xl border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 flex items-center gap-2.5 cursor-pointer hover:border-primary/40">
+                                    <input type="radio" name="email_frequency" value="instant" checked class="text-primary focus:ring-primary">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Instantáneo</p>
+                                        <p class="text-[10px] text-zinc-400">Al ocurrir el evento</p>
+                                    </div>
+                                </label>
+                                <label class="p-3 rounded-2xl border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 flex items-center gap-2.5 cursor-pointer hover:border-primary/40">
+                                    <input type="radio" name="email_frequency" value="daily" class="text-primary focus:ring-primary">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Resumen Diario</p>
+                                        <p class="text-[10px] text-zinc-400">1 email a las 09:00 hs</p>
+                                    </div>
+                                </label>
+                                <label class="p-3 rounded-2xl border border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 flex items-center gap-2.5 cursor-pointer hover:border-primary/40">
+                                    <input type="radio" name="email_frequency" value="weekly" class="text-primary focus:ring-primary">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Resumen Semanal</p>
+                                        <p class="text-[10px] text-zinc-400">Cada lunes por la mañana</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Eventos y Tipos de Notificación -->
+                        <div class="space-y-3 pt-2">
+                            <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-zinc-400">
+                                Eventos Operativos
+                            </h4>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Vencimientos de Alquiler y Recordatorios de Pago</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Avisos 5 días antes y el día de vencimiento de pago mensual</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_vencimientos" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Confirmación de Acreditación de Pagos</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Comprobante digital inmediato cuando se registra una transferencia</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_pagos_confirm" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Contratos Listos para Firma Electrónica</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Avisos cuando el locador o locatario genera un contrato nuevo</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_contratos_firma" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Contratos Sellados y Resguardados (TSA RFC 3161)</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Aviso con copia PDF cuando ambas partes terminaron de firmar</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_contratos_sellado" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Agenda de Visitas y Postulaciones</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Respuestas y solicitudes de visita recibidas o agendadas</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_visitas_agenda" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                    <div class="pr-2">
+                                        <p class="font-bold text-xs text-zinc-900 dark:text-white">Alertas de Pasaporte Hábitat y Scoring</p>
+                                        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Actualizaciones de tu límite crediticio y aprobación de garantía</p>
+                                    </div>
+                                    <label class="ios-switch">
+                                        <input type="checkbox" id="notif_pasaporte_scoring" checked>
+                                        <span class="ios-switch-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comunicaciones Comerciales -->
+                        <div class="space-y-3 pt-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-zinc-400">
+                                    Comunicaciones Informativas y Mercado
+                                </h4>
+                                <button type="button" id="btn-mute-marketing" class="text-[11px] font-bold text-primary dark:text-red-400 hover:underline cursor-pointer">
+                                    Desactivar todas
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80">
+                                <div class="pr-2">
+                                    <p class="font-bold text-xs text-zinc-900 dark:text-white">Variación de Índices y Reportes Inmobiliarios</p>
+                                    <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Evolución mensual de IPC, ICL y CAC para ajustes de canon</p>
+                                </div>
+                                <label class="ios-switch">
+                                    <input type="checkbox" id="notif_marketing_precios">
+                                    <span class="ios-switch-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Guardar Notificaciones -->
+                        <div class="pt-3 flex justify-end">
+                            <button type="button" id="btn-save-notifications" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">save</span>
+                                <span>Guardar Preferencias de Notificación</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 3: DATOS DE COBRO Y PAGOS         -->
+                <!-- ========================================== -->
+                <div id="section-panel-pagos" class="settings-section-panel hidden animate-fadeIn space-y-6">
+                    
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+                        
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Datos Bancarios, Cobros y Facturación
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Configurá la cuenta donde recibís los pagos de alquiler y tus datos fiscales para recibos.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">account_balance</span>
+                            </div>
+                        </div>
+
+                        <form id="form-bank-settings" class="space-y-4">
+                            
+                            <!-- Alias & CBU -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="input-bank-alias" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                                        <span>Alias CBU / CVU de Cobro</span>
+                                        <span class="text-primary">*</span>
+                                    </label>
+                                    <input type="text" id="input-bank-alias" required autocapitalize="characters" placeholder="HABITAT.ALQUILER.MP" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm font-mono font-bold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all uppercase">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="input-bank-cbu" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        CBU / CVU Numérico (22 dígitos)
+                                    </label>
+                                    <input type="text" id="input-bank-cbu" maxlength="22" inputmode="numeric" placeholder="0000003100098765432101" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm font-mono text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Entidad Bancaria & Titular -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="select-bank-entity" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        Banco / Billetera Virtual
+                                    </label>
+                                    <select id="select-bank-entity" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer">
+                                        <option value="Mercado Pago (CVU)">Mercado Pago (CVU)</option>
+                                        <option value="Banco Santander">Banco Santander</option>
+                                        <option value="Banco Galicia">Banco Galicia</option>
+                                        <option value="BBVA Argentina">BBVA Argentina</option>
+                                        <option value="Banco Macro">Banco Macro</option>
+                                        <option value="Banco Nación">Banco de la Nación Argentina</option>
+                                        <option value="Brubank">Brubank</option>
+                                        <option value="Ualá">Ualá</option>
+                                        <option value="Otra Entidad">Otra Entidad Financiera</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="input-bank-holder" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        Titular de la Cuenta
+                                    </label>
+                                    <input type="text" id="input-bank-holder" placeholder="Ej: Maximo Cirrincione" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <!-- CUIT & Condición Fiscal -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="input-bank-cuit" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        CUIT / CUIL del Titular
+                                    </label>
+                                    <input type="text" id="input-bank-cuit" placeholder="20-44662043-7" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm font-mono font-bold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="select-fiscal-condition" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        Condición Fiscal (ARCA / AFIP)
+                                    </label>
+                                    <select id="select-fiscal-condition" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer">
+                                        <option value="MONOTRIBUTO">Monotributo</option>
+                                        <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
+                                        <option value="RESPONSABLE_INSCRIPTO">Responsable Inscripto</option>
+                                        <option value="EXENTO">Exento</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Switch Recibo Automático -->
+                            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 mt-2">
+                                <div class="pr-2">
+                                    <p class="font-bold text-xs text-zinc-900 dark:text-white">Generar recibo de pago digital automáticamente</p>
+                                    <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">Emite y envía el comprobante firmado digitalmente tras cada cobro</p>
+                                </div>
+                                <label class="ios-switch">
+                                    <input type="checkbox" id="bank_auto_receipt" checked>
+                                    <span class="ios-switch-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Botón Guardar -->
+                            <div class="pt-3 flex justify-end">
+                                <button type="button" id="btn-save-bank-prefs" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">save</span>
+                                    <span>Guardar Datos de Cobro</span>
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 4: SEGURIDAD Y ACCESO             -->
+                <!-- ========================================== -->
+                <div id="section-panel-seguridad" class="settings-section-panel hidden animate-fadeIn space-y-6">
+                    
+                    <!-- Card Cambio de Contraseña -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-5">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Contraseña y Autenticación
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Mantené tu cuenta protegida actualizando tu clave de acceso periódicamente en Supabase Auth.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">key</span>
+                            </div>
+                        </div>
+
+                        <form id="form-password-settings" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label for="input-new-password" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        Nueva Contraseña
+                                    </label>
+                                    <div class="relative flex items-center">
+                                        <input type="password" id="input-new-password" placeholder="Mínimo 6 caracteres" minlength="6" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 pl-3.5 pr-10 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                        <button type="button" data-target-input="input-new-password" class="btn-toggle-pwd absolute right-3 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 p-1 cursor-pointer">
+                                            <span class="material-symbols-outlined text-lg">visibility</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label for="input-confirm-password" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                        Confirmar Nueva Contraseña
+                                    </label>
+                                    <div class="relative flex items-center">
+                                        <input type="password" id="input-confirm-password" placeholder="Repetí tu nueva contraseña" minlength="6" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 pl-3.5 pr-10 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                        <button type="button" data-target-input="input-confirm-password" class="btn-toggle-pwd absolute right-3 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 p-1 cursor-pointer">
+                                            <span class="material-symbols-outlined text-lg">visibility</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medidor de Fortaleza de Contraseña -->
+                            <div class="space-y-1 pt-1">
+                                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                                    <div id="password-strength-bar" class="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 transition-all duration-300" style="width: 0%;"></div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] text-zinc-400">Usá mayúsculas, números y símbolos</span>
+                                    <span id="password-strength-label" class="text-[10px] font-bold text-zinc-400"></span>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 flex justify-end">
+                                <button type="button" id="btn-save-password" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">lock_reset</span>
+                                    <span>Actualizar Contraseña</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Card Sesiones Activas -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-headline font-bold text-sm sm:text-base text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">devices</span>
+                                <span>Sesión Activa & Dispositivos</span>
+                            </h4>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Este Dispositivo</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 text-xs">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-2xl text-zinc-600 dark:text-zinc-300">laptop_mac</span>
+                                <div>
+                                    <p class="font-bold text-zinc-900 dark:text-white">Navegador Web Actual</p>
+                                    <p class="text-[10px] text-zinc-400">Sesión cifrada con Token JWT Supabase Auth</p>
+                                </div>
+                            </div>
+                            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">Online</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-2">
+                            <button type="button" id="btn-logout-current" class="w-full sm:w-auto px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">logout</span>
+                                <span>Cerrar sesión aquí</span>
+                            </button>
+                            <button type="button" id="btn-logout-all" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-600/10 hover:bg-rose-600/20 text-rose-600 dark:text-rose-400 font-bold text-xs border border-rose-500/20 transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">power_settings_new</span>
+                                <span>Cerrar todas las sesiones</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 5: APARIENCIA Y SISTEMA           -->
+                <!-- ========================================== -->
+                <div id="section-panel-apariencia" class="settings-section-panel hidden animate-fadeIn space-y-6">
+                    
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+                        
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Apariencia y Preferencias del Sistema
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Personalizá el tema visual y la moneda predeterminada de la plataforma.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">palette</span>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Tema Visual -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                Tema de la Interfaz
+                            </label>
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                                <button type="button" data-theme-value="light" class="theme-selector-btn p-3.5 rounded-2xl border text-center font-headline font-bold text-xs transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-2xl text-amber-500">light_mode</span>
+                                    <span>Modo Claro</span>
+                                </button>
+                                <button type="button" data-theme-value="dark" class="theme-selector-btn p-3.5 rounded-2xl border text-center font-headline font-bold text-xs transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-2xl text-indigo-400">dark_mode</span>
+                                    <span>Modo Oscuro</span>
+                                </button>
+                                <button type="button" data-theme-value="system" class="theme-selector-btn p-3.5 rounded-2xl border text-center font-headline font-bold text-xs transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-2xl text-zinc-400">devices</span>
+                                    <span>Automático</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Moneda Predeterminada -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            <div class="space-y-1.5">
+                                <label for="select-system-currency" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                    Moneda Predeterminada
+                                </label>
+                                <select id="select-system-currency" class="w-full bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer">
+                                    <option value="ARS">ARS ($) - Pesos Argentinos</option>
+                                    <option value="USD">USD (U$S) - Dólares Estadounidenses</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label for="select-system-lang" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                                    Idioma
+                                </label>
+                                <select id="select-system-lang" disabled class="w-full bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 rounded-2xl h-11 px-3.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 cursor-not-allowed outline-none">
+                                    <option value="es">Español (Argentina)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Guardar Sistema -->
+                        <div class="pt-3 flex justify-end">
+                            <button type="button" id="btn-save-system-prefs" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.98] text-white font-headline font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">save</span>
+                                <span>Guardar Preferencias</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- SECCIÓN 6: ZONA DE CUENTA Y DATOS         -->
+                <!-- ========================================== -->
+                <div id="section-panel-cuenta" class="settings-section-panel hidden animate-fadeIn space-y-6">
+                    
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+                        
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
+                                    Gestión de Cuenta y Exportación de Datos
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Descargá una copia de tus datos o gestioná el estado activo de tu cuenta.
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-xl">manage_accounts</span>
+                            </div>
+                        </div>
+
+                        <!-- Descargar Datos -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 gap-3">
+                            <div>
+                                <p class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white">Descargar archivo de datos personales</p>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Obtené una copia completa en formato JSON con tu perfil, datos bancarios y preferencias.</p>
+                            </div>
+                            <button type="button" id="btn-export-data" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-800 hover:bg-black text-white font-headline font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                <span>Exportar Datos</span>
+                            </button>
+                        </div>
+
+                        <!-- Danger Zone: Pausar Cuenta -->
+                        <div class="space-y-3 pt-2">
+                            <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                <span>Zona Crítica</span>
+                            </h4>
+
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20 gap-3">
+                                <div>
+                                    <p class="font-headline font-bold text-xs sm:text-sm text-rose-950 dark:text-rose-200">Pausar o desactivar cuenta</p>
+                                    <p class="text-[11px] text-rose-800/80 dark:text-rose-300/80 mt-0.5">Oculta tus publicaciones activas. Tus contratos vigentes se mantendrán resguardados legalmente en Supabase.</p>
+                                </div>
+                                <button type="button" id="btn-deactivate-account" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-headline font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-base">pause_circle</span>
+                                    <span>Pausar Cuenta</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
 
         </div>
+
     </main>
 
-    <footer id="footer"
-        class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body mt-auto">
+    <!-- Footer Component -->
+    <footer id="footer" class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body mt-auto">
         <div class="max-w-[1580px] mx-auto">
-            <div
-                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Hábitat</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Hábitat
+                    </h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="como-funciona.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                        <a href="como-funciona.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
                         <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
                     </nav>
                 </div>
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Inquilinos</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Inquilinos
+                    </h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="index.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
-                        <a href="como-funciona.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                        <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
+                        <a href="pasaporte-habitat.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Pasaporte Hábitat</a>
                     </nav>
                 </div>
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Propietarios</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Propietarios
+                    </h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="propietarios.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
-                        <a href="como-funciona.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                        <a href="propietarios.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
+                        <a href="administrador.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Panel del Propietario</a>
                     </nav>
                 </div>
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Legal</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Legal
+                    </h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="#"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de privacidad</a>
-                        <a href="#"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de cookies</a>
-                        <a href="terminos.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y condiciones</a>
+                        <a href="terminos.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y condiciones</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de privacidad</a>
                     </nav>
                 </div>
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Soporte</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Soporte
+                    </h3>
                     <div class="flex flex-col items-start gap-4">
-                        <a href="#faq"
-                            class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
-                            <div class="flex -space-x-2.5">
-                                <img src="img/tenant-profile-1.jpg" alt="Avatar 1"
-                                    class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900">
-                                <img src="img/tenant-profile-2.jpg" alt="Avatar 2"
-                                    class="w-7 h-7 rounded-full object-cover border border-white dark:border-zinc-900">
-                            </div>
-                            <span
-                                class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro
-                                de ayuda</span>
+                        <a href="#" class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
+                            <span class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro de ayuda</span>
                         </a>
-                        <a href="#"
-                            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
+                        <a href="#" class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
                     </div>
                 </div>
                 <div>
-                    <h3
-                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Síguenos</h3>
+                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Síguenos
+                    </h3>
                     <div class="flex flex-wrap gap-2">
-                        <a href="#" aria-label="Instagram"
-                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">IG</a>
-                        <a href="#" aria-label="X"
-                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">X</a>
-                        <a href="#" aria-label="LinkedIn"
-                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">in</a>
-                        <a href="#" aria-label="YouTube"
-                            class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">YT</a>
+                        <a href="#" aria-label="Instagram" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">IG</a>
+                        <a href="#" aria-label="X" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">X</a>
+                        <a href="#" aria-label="LinkedIn" class="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-primary hover:text-white hover:border-primary transition-all">in</a>
                     </div>
                 </div>
             </div>
 
             <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                 <div class="flex items-center gap-3.5 flex-wrap">
-                    <img src="img/logo-lite.png" alt="Habitat Logo"
-                        class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 Hábitat - Todos los derechos reservados</span>
-                </div>
-                <div
-                    class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
-                    <span
-                        class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Métodos de pago</span>
-                    <div
-                        class="flex flex-wrap items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
-                        <span
-                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">PayPal</span>
-                        <span
-                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">VISA</span>
-                        <span
-                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">Mastercard</span>
-                        <span
-                            class="whitespace-nowrap bg-zinc-200/50 dark:bg-zinc-800/80 px-2.5 py-1 rounded border border-zinc-300/40 dark:border-zinc-700/40">AMEX</span>
-                    </div>
+                    <img src="img/logo-lite.png" alt="Habitat Logo" class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy; 2026 Hábitat - Todos los derechos reservados</span>
                 </div>
                 <div class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-bold text-sm">
                     <span class="material-symbols-outlined text-lg">language</span>
-                    <span>Español</span>
-                    <span class="material-symbols-outlined text-base">expand_more</span>
+                    <span>Español (Argentina)</span>
                 </div>
             </div>
         </div>
     </footer>
     
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- App Scripts -->
-    <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
-    <script src="js/app.js?v=8"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.App) {
-                App.setupTheme();
-            }
-        });
-    </script>
+    <script src="js/notifications.js"></script>
+    <script src="js/didit-kyc.js"></script>
+    <script src="js/account-settings.js?v=16"></script>
+    <script src="js/app.js?v=9"></script>
 </body>
 
 </html>

@@ -113,13 +113,26 @@
                 try {
                     let pasaporteId = window.currentPasaporteId || null;
                     if (!pasaporteId) {
-                        const { data: pasaportes } = await window.supabaseClient
-                            .from('Pasaporte_habitat')
-                            .select('id_pasaporte')
-                            .order('created_at', { ascending: false })
-                            .limit(1);
-                        if (pasaportes && pasaportes.length > 0) {
-                            pasaporteId = pasaportes[0].id_pasaporte;
+                        const { data: { user } } = await window.supabaseClient.auth.getUser();
+                        if (user) {
+                            const { data: perf } = await window.supabaseClient
+                                .from('Perfil')
+                                .select('id_perfil')
+                                .eq('user_id', user.id)
+                                .maybeSingle();
+
+                            if (perf) {
+                                const { data: pasaportes } = await window.supabaseClient
+                                    .from('Pasaporte_habitat')
+                                    .select('id_pasaporte')
+                                    .eq('id_perfil', perf.id_perfil)
+                                    .order('created_at', { ascending: false })
+                                    .limit(1);
+
+                                if (pasaportes && pasaportes.length > 0) {
+                                    pasaporteId = pasaportes[0].id_pasaporte;
+                                }
+                            }
                         }
                     }
 
@@ -340,39 +353,46 @@
                                 stateBadge = `<span class="inline-flex items-center gap-1 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/30 px-3 py-1 rounded-full text-xs font-bold"><span class="material-symbols-outlined text-sm">schedule</span> Pendiente de envío</span>`;
                             }
 
-                            const inviteUrl = this.getInviteUrl(g.token);
+                            const esc = window.escapeHtml || (s => s);
+                            const safeGId = esc(g.id);
+                            const safeGName = esc(g.nombre);
+                            const safeGEmail = esc(g.email);
+                            const safeGPhone = g.telefono ? esc(g.telefono) : '';
+                            const safeGRel = esc(g.relacion || 'Familiar');
+                            const safeGToken = esc(g.token);
+                            const firstInitial = (g.nombre || 'G').trim().charAt(0).toUpperCase();
 
                             return `
                                 <div class="bg-zinc-50/70 dark:bg-zinc-800/40 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
                                     <div class="flex items-center gap-3.5">
                                         <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-headline font-black text-lg shrink-0">
-                                            ${g.nombre.charAt(0).toUpperCase()}
+                                            ${esc(firstInitial)}
                                         </div>
                                         <div>
                                             <div class="flex items-center gap-2.5 flex-wrap">
-                                                <h4 class="font-headline font-black text-zinc-900 dark:text-white text-base">${g.nombre}</h4>
+                                                <h4 class="font-headline font-black text-zinc-900 dark:text-white text-base">${safeGName}</h4>
                                                 ${stateBadge}
                                                 <span class="inline-flex items-center gap-1 bg-primary/10 text-primary dark:text-red-400 border border-primary/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-                                                    ${g.relacion || 'Familiar'}
+                                                    ${safeGRel}
                                                 </span>
                                             </div>
                                             <p class="font-body text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-3 flex-wrap">
-                                                <span>${g.email}</span>
-                                                ${g.telefono ? `<span>• ${g.telefono}</span>` : ''}
+                                                <span>${safeGEmail}</span>
+                                                ${safeGPhone ? `<span>• ${safeGPhone}</span>` : ''}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div class="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-zinc-200 dark:border-zinc-800">
-                                        <button type="button" onclick="GarantesManager.copyInviteLink('${g.token}')" class="inline-flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
+                                        <button type="button" onclick="GarantesManager.copyInviteLink('${safeGToken}')" class="inline-flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
                                             <span class="material-symbols-outlined text-sm text-primary">link</span>
                                             Copiar Link
                                         </button>
-                                        <button type="button" onclick="GarantesManager.shareWhatsApp('${g.token}', '${g.nombre.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
+                                        <button type="button" onclick="GarantesManager.shareWhatsApp('${safeGToken}', '${safeGName.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
                                             <span class="material-symbols-outlined text-sm">chat</span>
                                             WhatsApp
                                         </button>
-                                        <button type="button" onclick="GarantesManager.deleteGarante('${g.id}')" class="p-2 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer" title="Eliminar garante">
+                                        <button type="button" onclick="GarantesManager.deleteGarante('${safeGId}')" class="p-2 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer" title="Eliminar garante">
                                             <span class="material-symbols-outlined text-lg">delete</span>
                                         </button>
                                     </div>

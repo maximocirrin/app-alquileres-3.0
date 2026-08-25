@@ -1,21 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { generateContractPdf } from './pdf-generator.js';
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 dotenv.config();
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 /**
  * FASE 4: Cierre, Verificación Bilateral, Activación del Contrato y Disponibilidad de Documentos
  */
 export default async function finalizarHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // 1. Validar autenticación
+  const { user, profile, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, `Autenticación requerida para finalizar/consultar el contrato: ${authError || 'Sesión no válida'}`);
   }
 
   try {
@@ -34,12 +35,16 @@ export default async function finalizarHandler(req, res) {
     let numericContractId = Number(idContrato);
     if (isNaN(numericContractId)) {
       const parsed = parseInt(String(idContrato).replace(/\D/g, ''), 10);
-      numericContractId = !isNaN(parsed) && parsed > 0 ? parsed : 43;
+      numericContractId = !isNaN(parsed) && parsed > 0 ? parsed : null;
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (!numericContractId) {
+      return res.status(400).json({ ok: false, error: 'ID de contrato inválido.' });
+    }
 
-    // 1. Obtener el Contrato con sus partes
+    const supabase = getSupabaseAdmin();
+
+    // 2. Obtener el Contrato con sus partes
     const { data: contrato, error: errContrato } = await supabase
       .from('Contrato')
       .select(`
@@ -59,7 +64,16 @@ export default async function finalizarHandler(req, res) {
       });
     }
 
-    // 2. Obtener todas las firmas registradas para este contrato
+    // 3. Validar que el usuario autenticado sea parte del contrato
+    const userProfileId = profile ? profile.id_perfil : null;
+    const isOwner = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_propietario);
+    const isTenant = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_inquilino);
+
+    if (!isOwner && !isTenant) {
+      return sendForbidden(res, 'No tienes autorización para acceder a los documentos de este contrato.');
+    }
+
+    // 4. Obtener todas las firmas registradas para este contrato
     const { data: firmas, error: errFirmas } = await supabase
       .from('Firma_contrato')
       .select('*')
@@ -92,7 +106,7 @@ export default async function finalizarHandler(req, res) {
       timeZone: 'America/Argentina/Buenos_Aires'
     });
 
-    // 3. Si ambas partes firmaron, activar el Contrato
+    // 5. Si ambas partes firmaron, activar el Contrato
     if (ambasPartesFirmaron) {
       await supabase
         .from('Firma_contrato')
@@ -126,7 +140,7 @@ export default async function finalizarHandler(req, res) {
             .from('Historial_Estado_Contrato')
             .insert([{
               id_contrato: numericContractId,
-              id_estado_contrato: 1, // activo
+              id_estado_contrato: 1,
               fecha_inicio: new Date().toISOString()
             }]);
         }
@@ -135,7 +149,7 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    // 4. Asegurar existencia del Contrato Definitivo PDF en Storage
+    // 6. Asegurar existencia del Contrato Definitivo PDF en Storage
     const rutaContratoPdf = `contrato_${numericContractId}/contrato_definitivo.pdf`;
     try {
       const contractPdfBytes = await generateContractPdf({
@@ -158,7 +172,7 @@ export default async function finalizarHandler(req, res) {
       console.warn('[Warning generando contrato definitivo en finalizar]:', e);
     }
 
-    // 5. Generar URLs firmadas de descarga para los documentos
+    // 7. Generar URLs firmadas de descarga (vigencia reducida a 24 horas por seguridad)
     const documentosDescarga = {};
 
     async function obtenerUrlFirmada(bucket, ruta) {
@@ -175,7 +189,7 @@ export default async function finalizarHandler(req, res) {
       try {
         const { data, error } = await supabase.storage
           .from(bucket)
-          .createSignedUrl(cleanPath, 60 * 60 * 24 * 7); // 7 días
+          .createSignedUrl(cleanPath, 60 * 60 * 24); // 24 horas
         return error ? null : data.signedUrl;
       } catch (e) {
         return null;
@@ -222,7 +236,7 @@ export default async function finalizarHandler(req, res) {
         },
         documentos: documentosDescarga,
         mensaje: ambasPartesFirmaron
-          ? '¡Contrato perfeccionado y activado exitosamente! Todos los certificados legales están disponibles para descarga en Supabase Storage.'
+          ? '¡Contrato perfeccionado y activado exitosamente! Todos los certificados legales están disponibles para descarga.'
           : (inquilinoFirmo
               ? 'Firma del inquilino completada y sellada. Esperando firma del propietario para activar el contrato.'
               : 'Firma del propietario completada y sellada. Esperando firma del inquilino para activar el contrato.')

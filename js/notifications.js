@@ -560,21 +560,27 @@
             if (notif.id) toast.setAttribute('data-toast-id', notif.id);
             toast.className = 'pointer-events-auto transform transition-all duration-300 ease-out translate-y-[-20px] opacity-0 scale-95 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 flex gap-3.5 items-start text-zinc-900 dark:text-white border-l-4 border-l-primary dark:border-l-red-500';
 
+            const esc = window.escapeHtml || (s => s);
+            const safeTitle = esc(notif.title);
+            const safeMsg = esc(notif.message);
+            const safeIcon = esc(notif.icon || 'notifications');
+            const safeLink = notif.link ? esc(notif.link) : '';
+
             toast.innerHTML = `
                 <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <span class="material-symbols-outlined text-lg">${notif.icon || 'notifications'}</span>
+                    <span class="material-symbols-outlined text-lg">${safeIcon}</span>
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
-                        <h4 class="font-headline font-bold text-xs leading-snug text-zinc-900 dark:text-white">${notif.title}</h4>
+                        <h4 class="font-headline font-bold text-xs leading-snug text-zinc-900 dark:text-white">${safeTitle}</h4>
                         <button type="button" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs p-1 close-toast-btn cursor-pointer">
                             <span class="material-symbols-outlined text-sm">close</span>
                         </button>
                     </div>
-                    <p class="text-[11px] text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">${notif.message}</p>
-                    ${notif.link && notif.link !== '#' ? `
+                    <p class="text-[11px] text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">${safeMsg}</p>
+                    ${safeLink && safeLink !== '#' ? `
                         <div class="mt-2.5">
-                            <a href="${notif.link}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer">
+                            <a href="${safeLink}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer">
                                 <span>Ver y Firmar</span>
                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
                             </a>
@@ -675,19 +681,25 @@
                     </div>
                     <div class="max-h-[380px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
                         ${list.map(n => {
+                            const esc = window.escapeHtml || (s => s);
+                            const safeNId = esc(n.id);
+                            const safeNTitle = esc(n.title);
+                            const safeNMsg = esc(n.message);
+                            const safeNIcon = esc(n.icon || 'notifications');
+                            const safeNLink = n.link ? esc(n.link) : '';
                             const dateStr = new Date(n.createdAt).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
                             return `
-                                <div onclick="window.NotificationManager.markAsRead('${n.id}'); if('${n.link}' && '${n.link}' !== '#') window.location.href='${n.link}';" class="p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-red-50/40 dark:bg-red-950/20' : ''}">
+                                <div onclick="window.NotificationManager.markAsRead('${safeNId}'); if('${safeNLink}' && '${safeNLink}' !== '#') window.location.href='${safeNLink}';" class="p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-red-50/40 dark:bg-red-950/20' : ''}">
                                     <div class="w-8 h-8 rounded-xl ${!n.read ? 'bg-primary text-white shadow-xs' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'} flex items-center justify-center shrink-0 mt-0.5">
-                                        <span class="material-symbols-outlined text-base">${n.icon || 'notifications'}</span>
+                                        <span class="material-symbols-outlined text-base">${safeNIcon}</span>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between gap-1">
-                                            <h5 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${!n.read ? 'font-extrabold' : ''}">${n.title}</h5>
+                                            <h5 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${!n.read ? 'font-extrabold' : ''}">${safeNTitle}</h5>
                                             <span class="text-[10px] text-zinc-400 shrink-0 font-medium">${dateStr}</span>
                                         </div>
-                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2 mt-0.5 leading-relaxed">${n.message}</p>
-                                        ${n.link && n.link !== '#' ? `
+                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2 mt-0.5 leading-relaxed">${safeNMsg}</p>
+                                        ${safeNLink && safeNLink !== '#' ? `
                                             <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary dark:text-red-400 mt-1.5 hover:underline">
                                                 <span>Acceder</span>
                                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>

@@ -6,6 +6,17 @@
     let initialUrl = window.SUPABASE_URL || DEFAULT_SUPABASE_URL;
     let initialKey = window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
 
+    // Global HTML Escape Utility for XSS Prevention
+    window.escapeHtml = function (str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
     if (typeof supabase !== 'undefined' && supabase.createClient) {
         window.supabaseClient = supabase.createClient(initialUrl, initialKey);
         console.log("Supabase Client Initialized (Global)");

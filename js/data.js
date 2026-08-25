@@ -52,23 +52,6 @@ var DataManager = {
             }
 
             if (!authUser) {
-                // Check local storage for authenticated user metadata
-                try {
-                    const localUser = JSON.parse(localStorage.getItem('habitat_user') || localStorage.getItem('currentUser') || 'null');
-                    if (localUser) {
-                        if (localUser.id_perfil || localUser.profileId) {
-                            return Number(localUser.id_perfil || localUser.profileId);
-                        }
-                        if (localUser.email) {
-                            const { data: matched } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil')
-                                .eq('mail', localUser.email)
-                                .maybeSingle();
-                            if (matched) return matched.id_perfil;
-                        }
-                    }
-                } catch (e) {}
                 return null;
             }
 
