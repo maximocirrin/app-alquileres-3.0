@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import https from 'https';
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from './_auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
 
 // Memory cache for WSAA Token & Sign (valid for ~12 hours)
 let cachedWsaaToken = null;
@@ -15,9 +15,7 @@ let cachedWsaaExpiration = 0;
  * Endpoint: /api/arca-padron
  */
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -30,9 +28,15 @@ export default async function handler(req, res) {
     });
   }
 
+  // 1. Validar autenticación de usuario
+  const { user, profile, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, `Autenticación requerida para consultar ARCA: ${authError || 'Sesión no válida'}`);
+  }
+
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    let { cuit, pasaporteId, userId } = body;
+    let { cuit, pasaporteId } = body;
 
     if (!cuit) {
       return res.status(400).json({
@@ -50,19 +54,42 @@ export default async function handler(req, res) {
       });
     }
 
-    // Inicializar cliente Supabase
-    let supabase = null;
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = getSupabaseAdmin();
+
+    // 2. Verificar que si se envía pasaporteId, pertenezca al usuario autenticado
+    let targetPasaporteId = pasaporteId;
+    if (targetPasaporteId) {
+      const { data: passCheck } = await supabase
+        .from('Pasaporte_habitat')
+        .select('id_pasaporte, id_perfil')
+        .eq('id_pasaporte', targetPasaporteId)
+        .maybeSingle();
+
+      if (passCheck && profile && passCheck.id_perfil !== profile.id_perfil) {
+        return sendForbidden(res, 'No tienes permiso para actualizar este pasaporte.');
+      }
+    } else if (profile) {
+      // Buscar pasaporte activo del usuario autenticado
+      const { data: passOwn } = await supabase
+        .from('Pasaporte_habitat')
+        .select('id_pasaporte')
+        .eq('id_perfil', profile.id_perfil)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (passOwn) {
+        targetPasaporteId = passOwn.id_pasaporte;
+      }
     }
 
-    // Obtener variables de entorno de ARCA / AFIP
+    // 3. Obtener variables de entorno de ARCA / AFIP
     const arcaCuitRepresentada = (process.env.ARCA_CUIT_REPRESENTADA || process.env.AFIP_CUIT || '').replace(/\D/g, '');
     let arcaCert = process.env.ARCA_CERT || process.env.AFIP_CERT || process.env.ARCA_CERT_B64;
     let arcaPrivateKey = process.env.ARCA_PRIVATE_KEY || process.env.AFIP_PRIVATE_KEY || process.env.ARCA_PRIVATE_KEY_B64;
     const arcaEnv = (process.env.ARCA_ENV || 'homologacion').toLowerCase();
 
-    // Si viene en Base64 (para evitar problemas de saltos de línea en Vercel)
+    // Si viene en Base64
     if (arcaCert && !arcaCert.includes('-----BEGIN')) {
       try { arcaCert = Buffer.from(arcaCert, 'base64').toString('utf-8'); } catch (e) {}
     }
@@ -70,8 +97,8 @@ export default async function handler(req, res) {
       try { arcaPrivateKey = Buffer.from(arcaPrivateKey, 'base64').toString('utf-8'); } catch (e) {}
     }
 
-    if (arcaCert) arcaCert = arcaCert.replace(/\\n/g, '\n');
-    if (arcaPrivateKey) arcaPrivateKey = arcaPrivateKey.replace(/\\n/g, '\n');
+    if (arcaCert) arcaCert = arcaCert.replace(/\\n/g, '\n').trim();
+    if (arcaPrivateKey) arcaPrivateKey = arcaPrivateKey.replace(/\\n/g, '\n').trim();
 
     let arcaResult = null;
     let modoProduccionReal = false;
@@ -99,69 +126,42 @@ export default async function handler(req, res) {
 
         modoProduccionReal = true;
       } catch (errWs) {
-        console.warn(`[ARCA WS Error] Fallo en servicio web de ARCA (${errWs.message}). Usando fallback...`);
+        console.warn(`[ARCA WS Error] Fallo en servicio web de ARCA (${errWs.message}). Usando contingencia...`);
       }
     }
 
-    // Si las credenciales aún no fueron cargadas en Vercel, generar respuesta informativa estructurada
     if (!arcaResult) {
-      console.log(`[ARCA WS] Generando respuesta estructurada para CUIT: ${cleanCuit} (Credenciales pendientes en .env)`);
       arcaResult = generarRespuestaContingenciaArca(cleanCuit);
     }
 
-    // 3. Si se especificó o detectó pasaporteId / userId, actualizar en Supabase
+    // 4. Actualizar Pasaporte_habitat validado en Supabase
     let pasaporteActualizado = false;
 
-    if (supabase) {
-      // Buscar pasaporte activo si no se envió pasaporteId explícito
-      if (!pasaporteId && userId) {
-        const { data: perfil } = await supabase
-          .from('Perfil')
-          .select('id_perfil')
-          .eq('user_id', userId)
-          .maybeSingle();
+    if (supabase && targetPasaporteId) {
+      const updateData = {
+        cuit: cleanCuit,
+        condicion_fiscal: arcaResult.condicionFiscal,
+        razon_social: arcaResult.razonSocial,
+        datos_arca: arcaResult,
+        updated_at: new Date().toISOString()
+      };
 
-        if (perfil) {
-          const { data: pasaporte } = await supabase
-            .from('Pasaporte_habitat')
-            .select('id_pasaporte')
-            .eq('id_perfil', perfil.id_perfil)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      const { error: errUpdate } = await supabase
+        .from('Pasaporte_habitat')
+        .update(updateData)
+        .eq('id_pasaporte', targetPasaporteId);
 
-          if (pasaporte) {
-            pasaporteId = pasaporte.id_pasaporte;
-          }
-        }
-      }
+      if (!errUpdate) {
+        pasaporteActualizado = true;
 
-      if (pasaporteId) {
-        const updateData = {
-          cuit: cleanCuit,
-          condicion_fiscal: arcaResult.condicionFiscal,
-          razon_social: arcaResult.razonSocial,
-          datos_arca: arcaResult,
-          updated_at: new Date().toISOString()
-        };
-
-        const { error: errUpdate } = await supabase
-          .from('Pasaporte_habitat')
-          .update(updateData)
-          .eq('id_pasaporte', pasaporteId);
-
-        if (!errUpdate) {
-          pasaporteActualizado = true;
-
-          // Registrar evento en Historial_estado_pasaporte
-          await supabase
-            .from('Historial_estado_pasaporte')
-            .insert([{
-              id_pasaporte: pasaporteId,
-              id_estado_pasaporte: 3, // Activo
-              observacion: `Datos impositivos verificados con ARCA (Padrón). Condición Fiscal: ${arcaResult.condicionFiscal}`
-            }]);
-        }
+        // Registrar evento en Historial_estado_pasaporte
+        await supabase
+          .from('Historial_estado_pasaporte')
+          .insert([{
+            id_pasaporte: targetPasaporteId,
+            id_estado_pasaporte: 3, // Activo
+            observacion: `Datos impositivos verificados con ARCA (Padrón). Condición Fiscal: ${arcaResult.condicionFiscal}`
+          }]);
       }
     }
 
@@ -176,7 +176,7 @@ export default async function handler(req, res) {
       categoriaMonotributo: arcaResult.categoriaMonotributo || null,
       domicilioFiscal: arcaResult.domicilioFiscal || null,
       pasaporteActualizado: pasaporteActualizado,
-      pasaporteId: pasaporteId || null,
+      pasaporteId: targetPasaporteId || null,
       arcaData: arcaResult,
       mensajeCredenciales: modoProduccionReal 
         ? 'Consulta a servicio web de ARCA procesada exitosamente.'
@@ -205,6 +205,10 @@ async function obtenerTokenSignWsaa({ cert, key, env }) {
     ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms'
     : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms';
 
+  const wsaaDestination = env === 'production'
+    ? 'cn=wsaa,o=afip,c=ar,serialNumber=CUIT 33693450239'
+    : 'cn=wsaahomo,o=afip,c=ar,serialNumber=CUIT 33693450239';
+
   const genTime = new Date(now - 120000).toISOString();
   const expTime = new Date(now + 43200000).toISOString();
 
@@ -212,7 +216,7 @@ async function obtenerTokenSignWsaa({ cert, key, env }) {
 <loginTicketRequest version="1.0">
   <header>
     <source>CN=habitat</source>
-    <destination>cn=wsaa,o=afip,c=ar,serialNumber=CUIT 33693450239</destination>
+    <destination>${wsaaDestination}</destination>
     <uniqueId>${Math.floor(now / 1000)}</uniqueId>
     <generationTime>${genTime}</generationTime>
     <expirationTime>${expTime}</expirationTime>
@@ -220,7 +224,6 @@ async function obtenerTokenSignWsaa({ cert, key, env }) {
   <service>ws_sr_constancia_inscripcion</service>
 </loginTicketRequest>`;
 
-  // En un entorno de producción con OpenSSL / Node crypto, firmar el CMS TRA XML
   let cmsBase64 = '';
   try {
     const signer = crypto.createSign('SHA256');
@@ -263,11 +266,11 @@ async function obtenerTokenSignWsaa({ cert, key, env }) {
  */
 async function consultarPadronA5({ token, sign, cuitRepresentada, cuitTarget, env }) {
   const padronUrl = env === 'production'
-    ? 'https://awsh.afip.gov.ar/sr-padron/webservices/personaServiceA5'
+    ? 'https://aws.afip.gov.ar/sr-padron/webservices/personaServiceA5'
     : 'https://awshomo.afip.gov.ar/sr-padron/webservices/personaServiceA5';
 
   const soapEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:a5="http://a5.soap.ws.persona.afip.gov.ar/">
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:a5="http://a5.soap.ws.server.puc.sr/">
    <soapenv:Header/>
    <soapenv:Body>
       <a5:getPersona>
@@ -353,10 +356,9 @@ function parsePadronA5Xml(xml, cuitTarget) {
 }
 
 /**
- * Fallback informativo cuando no hay cert/key configurados en Vercel .env
+ * Fallback informativo de contingencia
  */
 function generarRespuestaContingenciaArca(cuit) {
-  // Determinar prefijo del CUIT (20, 27, 30, etc.)
   const prefijo = cuit.substring(0, 2);
   let condicion = 'Monotributo Categoría H';
   let actividad = 'Servicios Inmobiliarios y Alquileres';

@@ -1,34 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from './_auth.js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-const BCRA_API_URL = process.env.BCRA_API_URL || 'https://api.bcra.gob.ar/centraldedeudores/v1.0/Deudores';
+const BCRA_API_URL = (process.env.BCRA_API_URL || 'https://api.bcra.gob.ar/centraldedeudores/v1.0/Deudas').replace(/\/+$/, '');
 
 /**
  * Handler Serverless para la integración con la API de la Central de Deudores del BCRA
  * Endpoint: POST /api/bcra-deudores
  */
 export default async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed', message: 'Usar método POST' });
   }
 
+  // 1. Validar autenticación
+  const { user, profile, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, `Autenticación requerida para consultar BCRA: ${authError || 'Sesión no válida'}`);
+  }
+
   try {
-    const { cuit, pasaporteId, userId } = req.body || {};
+    const { cuit, pasaporteId } = req.body || {};
 
     if (!cuit) {
       return res.status(400).json({ error: 'Debe proporcionar un CUIT o CUIL válido.' });
@@ -39,14 +35,45 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'El CUIT ingresado debe tener 11 dígitos numéricos.' });
     }
 
+    const supabase = getSupabaseAdmin();
+
+    // 2. Validar que el pasaporte a actualizar pertenezca al usuario autenticado
+    let targetPasaporteId = pasaporteId;
+    if (targetPasaporteId) {
+      const { data: passCheck } = await supabase
+        .from('Pasaporte_habitat')
+        .select('id_pasaporte, id_perfil')
+        .eq('id_pasaporte', targetPasaporteId)
+        .maybeSingle();
+
+      if (passCheck && profile && passCheck.id_perfil !== profile.id_perfil) {
+        return sendForbidden(res, 'No tienes permiso para actualizar este pasaporte.');
+      }
+    } else if (profile) {
+      const { data: passOwn } = await supabase
+        .from('Pasaporte_habitat')
+        .select('id_pasaporte')
+        .eq('id_perfil', profile.id_perfil)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (passOwn) targetPasaporteId = passOwn.id_pasaporte;
+    }
+
     console.log(`[BCRA WS] Consultando Central de Deudores BCRA para CUIT: ${cleanCuit}...`);
 
     let bcraResult = null;
 
     try {
-      // 1. Consultar Situación Crediticia en BCRA
-      const urlDeudores = `${BCRA_API_URL}/${cleanCuit}`;
-      const urlCheques = `${BCRA_API_URL}/ChequesRechazados/${cleanCuit}`;
+      // Normalizar URL base para soportar /Deudas o /Deudores
+      const baseUrl = BCRA_API_URL.endsWith('/Deudas') || BCRA_API_URL.endsWith('/Deudores') 
+        ? BCRA_API_URL 
+        : `${BCRA_API_URL}/Deudas`;
+
+      // Consultar Situación Crediticia y Cheques en BCRA
+      const urlDeudores = `${baseUrl}/${cleanCuit}`;
+      const urlCheques = `${baseUrl}/ChequesRechazados/${cleanCuit}`;
 
       const [resDeudores, resCheques] = await Promise.allSettled([
         fetch(urlDeudores, { headers: { 'Accept': 'application/json' } }),
@@ -75,44 +102,19 @@ export default async function handler(req, res) {
       bcraResult = generarRespuestaContingenciaBCRA(cleanCuit);
     }
 
-    // 2. Si hay conexión a Supabase y pasaporteId, guardar en la base de datos
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && (pasaporteId || userId)) {
+    // 3. Guardar en Supabase para el pasaporte validado
+    if (supabase && targetPasaporteId) {
       try {
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        await supabase
+          .from('Pasaporte_habitat')
+          .update({
+            situacion_crediticia: bcraResult.situacionCrediticia,
+            datos_bcra: bcraResult,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id_pasaporte', targetPasaporteId);
 
-        let targetPasaporteId = pasaporteId;
-
-        if (!targetPasaporteId && userId) {
-          const { data: perfil } = await supabase
-            .from('Perfil')
-            .select('id_perfil')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-          if (perfil) {
-            const { data: pasaporte } = await supabase
-              .from('Pasaporte_habitat')
-              .select('id_pasaporte')
-              .eq('id_perfil', perfil.id_perfil)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-
-            if (pasaporte) targetPasaporteId = pasaporte.id_pasaporte;
-          }
-        }
-
-        if (targetPasaporteId) {
-          await supabase
-            .from('Pasaporte_habitat')
-            .update({
-              situacion_crediticia: bcraResult.situacionCrediticia,
-              datos_bcra: bcraResult
-            })
-            .eq('id_pasaporte', targetPasaporteId);
-
-          console.log(`[BCRA WS] Audit en Supabase exitoso para Pasaporte ID: ${targetPasaporteId}`);
-        }
+        console.log(`[BCRA WS] Audit en Supabase exitoso para Pasaporte ID: ${targetPasaporteId}`);
       } catch (dbErr) {
         console.warn('[BCRA WS] Aviso al guardar en Supabase:', dbErr.message);
       }
@@ -152,7 +154,6 @@ function parsearRespuestaBCRA(cuit, dataDeudores, dataCheques) {
     if (res.denominacion) denominacion = res.denominacion;
 
     if (Array.isArray(res.periodos) && res.periodos.length > 0) {
-      // Tomar el último período reportado
       const ultimoPeriodo = res.periodos[0];
       if (Array.isArray(ultimoPeriodo.entidades)) {
         entidadesList = ultimoPeriodo.entidades.map(e => {
@@ -173,7 +174,6 @@ function parsearRespuestaBCRA(cuit, dataDeudores, dataCheques) {
     }
   }
 
-  // Parsear Cheques Rechazados
   let totalChequesRechazados = 0;
   let chequesList = [];
   if (dataCheques && dataCheques.results && Array.isArray(dataCheques.results.chequesRechazados)) {

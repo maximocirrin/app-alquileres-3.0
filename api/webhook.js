@@ -1,10 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+import { getSupabaseAdmin } from './_auth.js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
+const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET || '';
+
+// Validar firma HMAC de Didit
+function verifyDiditSignature(req, rawPayload) {
+  if (!DIDIT_WEBHOOK_SECRET) {
+    console.warn('[Didit Webhook] DIDIT_WEBHOOK_SECRET no configurada. Configure la variable en Vercel para seguridad total.');
+    return process.env.NODE_ENV !== 'production';
+  }
+  const signature = req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'];
+  if (!signature) return false;
+
+  try {
+    const stringBody = typeof rawPayload === 'string' ? rawPayload : JSON.stringify(rawPayload);
+    const expected = crypto.createHmac('sha256', DIDIT_WEBHOOK_SECRET).update(stringBody).digest('hex');
+    const signatureClean = String(signature).replace(/^sha256=/, '').trim();
+
+    if (signatureClean.length !== expected.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(signatureClean, 'utf8'), Buffer.from(expected, 'utf8'));
+  } catch (e) {
+    return false;
+  }
+}
 
 export default async function handler(req, res) {
-  // Configuración de cabeceras CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Didit-Signature');
@@ -22,7 +42,16 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    
+
+    // Validación de firma criptográfica
+    if (!verifyDiditSignature(req, req.body)) {
+      console.warn('[Didit Webhook] Firma HMAC no válida o ausente.');
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Firma de autenticación de webhook inválida.'
+      });
+    }
+
     const {
       event,
       type,
@@ -30,8 +59,7 @@ export default async function handler(req, res) {
       vendor_data,
       status,
       decision,
-      workflow_id,
-      created_at
+      workflow_id
     } = body;
 
     const eventType = event || type || 'status.updated';
@@ -40,17 +68,12 @@ export default async function handler(req, res) {
 
     console.log(`[Didit Webhook] Evento: ${eventType} | Usuario: ${userId} | Sesión: ${session_id} | Estado: ${currentStatus}`);
 
-    // Inicializar Supabase Client si las credenciales están presentes
-    let supabase = null;
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    }
+    const supabase = getSupabaseAdmin();
 
     if (supabase && userId) {
       // Caso A: Evento de Firma de Contrato
       if (String(userId).startsWith('ctr_') || String(userId).startsWith('contract_') || (workflow_id && workflow_id === process.env.DIDIT_WORKFLOW_ID_SIGNATURE)) {
         console.log(`[Didit Webhook] Procesando firma de contrato para: ${userId}`);
-        // Registrar auditoría de firma si aplica en Supabase
         try {
           await supabase.from('Auditoria_firma_didit').insert([{
             identificador: userId,
@@ -66,15 +89,17 @@ export default async function handler(req, res) {
       } 
       // Caso B: Evento de Pasaporte Hábitat KYC
       else {
-        // 1. Obtener el Perfil del usuario
-        const { data: perfil } = await supabase
-          .from('Perfil')
-          .select('id_perfil')
-          .eq('user_id', userId)
-          .maybeSingle();
+        // Buscar perfil por id_perfil (numérico) o por user_id (UUID)
+        let perfilQuery = supabase.from('Perfil').select('id_perfil');
+        if (!isNaN(Number(userId)) && Number(userId) > 0) {
+          perfilQuery = perfilQuery.eq('id_perfil', Number(userId));
+        } else {
+          perfilQuery = perfilQuery.eq('user_id', String(userId));
+        }
+        
+        const { data: perfil } = await perfilQuery.maybeSingle();
 
         if (perfil) {
-          // 2. Obtener el último Pasaporte_habitat
           const { data: pasaporte } = await supabase
             .from('Pasaporte_habitat')
             .select('id_pasaporte')
@@ -84,7 +109,6 @@ export default async function handler(req, res) {
             .maybeSingle();
 
           if (pasaporte) {
-            // 3. Registrar el intento en Verificacion_kyc
             await supabase
               .from('Verificacion_kyc')
               .insert([{
@@ -98,7 +122,6 @@ export default async function handler(req, res) {
             let nuevoEstadoPasaporte = null;
             let observacionHistorial = '';
 
-            // Extraer datos OCR del documento escaneado por Didit
             const ocr = body.extracted_data || body.document || body.ocr || (body.decision && body.decision.document) || {};
             const ocrFirst = ocr.first_name || ocr.firstName || body.first_name || '';
             const ocrLast = ocr.last_name || ocr.lastName || body.last_name || '';
@@ -156,7 +179,6 @@ export default async function handler(req, res) {
               case 'approved':
                 nuevoEstadoPasaporte = 3; // Activo
                 observacionHistorial = 'Verificación biométrica Didit KYC Aprobada exitosamente.';
-                // Marcar cuenta como verificada en Perfil y actualizar nombre/DNI/edad de Didit OCR
                 const perfilUpdate = { 
                   cuenta_verificada: true, 
                   fecha_verificacion: new Date().toISOString() 
@@ -186,7 +208,6 @@ export default async function handler(req, res) {
             }
 
             if (nuevoEstadoPasaporte) {
-              // Actualizar estado en Pasaporte_habitat con datos OCR de Didit
               const pasaporteUpdate = { 
                 id_estado_pasaporte: nuevoEstadoPasaporte, 
                 updated_at: new Date().toISOString() 
@@ -201,7 +222,6 @@ export default async function handler(req, res) {
                 .update(pasaporteUpdate)
                 .eq('id_pasaporte', pasaporte.id_pasaporte);
 
-              // Registrar en Historial_estado_pasaporte
               await supabase
                 .from('Historial_estado_pasaporte')
                 .insert([{

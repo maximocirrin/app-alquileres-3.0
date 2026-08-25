@@ -1,3 +1,5 @@
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized } from '../../api/_auth.js';
+
 /**
  * Contract Signature Initiation Service
  */
@@ -11,9 +13,7 @@ function isConfiguredWorkflowId(wfId) {
 }
 
 export default async function startSignatureHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -23,10 +23,15 @@ export default async function startSignatureHandler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  const { user, profile, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, 'Autenticación requerida para iniciar firma.');
+  }
+
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const contractId = req.query?.contractId || req.query?.id || body.contractId || 'CTR-2026-0891';
-    const { role = 'TENANT', signerName = 'Inquilino', signerCuil = '', consentGiven = false, deviceMetadata = {} } = body;
+    const { role = 'TENANT', consentGiven = false, deviceMetadata = {} } = body;
 
     if (!consentGiven) {
       return res.status(400).json({ error: 'Consentimiento legal obligatorio no otorgado.' });
@@ -39,6 +44,8 @@ export default async function startSignatureHandler(req, res) {
     let sessionId = `sess_${contractId}_${role}_${Date.now()}`;
     let isMock = true;
 
+    const signerId = profile ? profile.id_perfil : user.id;
+
     if (diditApiKey && isConfiguredWorkflowId(diditSignatureWorkflowId)) {
       try {
         let diditRes = await fetch('https://verification.didit.me/v3/session/', {
@@ -50,7 +57,7 @@ export default async function startSignatureHandler(req, res) {
           },
           body: JSON.stringify({
             workflow_id: diditSignatureWorkflowId,
-            vendor_data: `${contractId}_${role}_${signerCuil}`
+            vendor_data: `${contractId}_${role}_${signerId}`
           })
         });
 
@@ -64,7 +71,7 @@ export default async function startSignatureHandler(req, res) {
             },
             body: JSON.stringify({
               workflow_id: diditSignatureWorkflowId,
-              vendor_data: `${contractId}_${role}_${signerCuil}`
+              vendor_data: `${contractId}_${role}_${signerId}`
             })
           });
         }

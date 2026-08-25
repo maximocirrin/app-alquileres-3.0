@@ -1,13 +1,18 @@
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized } from '../../api/_auth.js';
+
 /**
  * Contract Signature Status Service
  */
 export default async function signatureStatusHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  const { user, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, 'Autenticación requerida para consultar estado de firma.');
   }
 
   const { contractId = req.query?.id || 'CTR-2026-0891', role = 'TENANT' } = req.query || {};

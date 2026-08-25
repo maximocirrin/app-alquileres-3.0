@@ -35,6 +35,7 @@
       if (hasEviction) {
         let causesListHtml = '';
         if (causes.length > 0) {
+          const esc = window.escapeHtml || (s => s);
           causesListHtml = `
             <div class="space-y-2 mt-3 pt-3 border-t border-white/20 text-xs">
               <p class="font-headline font-bold text-white/95 uppercase text-[11px]">
@@ -42,11 +43,11 @@
               </p>
               ${causes.map(c => `
                 <div class="bg-black/20 backdrop-blur-sm p-2.5 rounded-xl border border-white/10">
-                  <p class="font-headline font-bold">${c.caratula || 'Causa Judicial de Desalojo / Cobro de Alquileres'}</p>
+                  <p class="font-headline font-bold">${esc(c.caratula || 'Causa Judicial de Desalojo / Cobro de Alquileres')}</p>
                   <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/80 mt-1">
-                    <span>Expediente: ${c.numero_expediente || 'N/D'}</span>
-                    <span>Tribunal: ${c.tribunal || 'Poder Judicial de Mendoza'}</span>
-                    ${c.fecha ? `<span>Fecha: ${c.fecha}</span>` : ''}
+                    <span>Expediente: ${esc(c.numero_expediente || 'N/D')}</span>
+                    <span>Tribunal: ${esc(c.tribunal || 'Poder Judicial de Mendoza')}</span>
+                    ${c.fecha ? `<span>Fecha: ${esc(c.fecha)}</span>` : ''}
                   </div>
                 </div>
               `).join('')}
@@ -110,14 +111,14 @@
               <span class="material-symbols-outlined text-3xl shrink-0 ${hasEviction ? 'text-red-600 dark:text-red-400' : isPending ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">${hasEviction ? 'gavel' : isPending ? 'hourglass_top' : 'verified_user'}</span>
               <div>
                 <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg tracking-tight">Antecedentes Judiciales</h3>
-                <p class="text-xs text-zinc-500 font-headline font-semibold">Poder Judicial Mendoza (Render Microservice)</p>
+                <p class="text-xs text-zinc-500 font-headline font-semibold">Poder Judicial de Mendoza</p>
               </div>
             </div>
             ${badgeHtml}
           </div>
           ${contentHtml}
           <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400 font-headline font-semibold">
-            <span>Fuente: Scraper Judicial Render</span>
+            <span>Fuente: Poder Judicial</span>
             <span>Verificado: ${checkedAtText}</span>
           </div>
         </div>`;
@@ -248,7 +249,7 @@
             </div>
             <div class="bg-amber-500/10 border border-amber-300/50 p-4 rounded-2xl flex items-center gap-3">
               <span class="material-symbols-outlined text-amber-600 text-2xl animate-spin">sync</span>
-              <span class="text-xs font-headline font-bold text-amber-900 dark:text-amber-200">Consultando Poder Judicial de Mendoza & Microservicio Render...</span>
+              <span class="text-xs font-headline font-bold text-amber-900 dark:text-amber-200">Consultando registros oficiales del Poder Judicial...</span>
             </div>
           </div>
 
@@ -287,34 +288,10 @@
     },
 
     ejecutarVerificacionLegal: async function (options = {}) {
-      console.log('[PassportCards] Ejecutando verificación legal...');
       const container = document.getElementById('passport-cards-container');
-      if (container) {
-        container.innerHTML = this.renderSkeletonLoaders();
-      }
-
-      try {
-        const res = await fetch('/api/passport/verify-legal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            participant_id: options.participant_id || window.currentParticipantId || 6,
-            cuit_cuil: options.cuit_cuil || window.currentCuit || '20446620437',
-            full_name: options.full_name || window.currentFullName || 'San Martín José'
-          })
-        });
-
-        if (res.status === 405) {
-          throw new Error('Servidor estático (HTTP 405 Method Not Allowed)');
-        }
-
-        const data = await res.json();
-        console.log('[PassportCards] Resultado verificación:', data);
-        if (window.currentParticipantId) {
-          this.loadAndRenderCards(window.currentParticipantId);
-        }
-      } catch (e) {
-        console.warn('[PassportCards] Fallback de verificación:', e.message);
+      if (window.currentParticipantId) {
+        await this.loadAndRenderCards(window.currentParticipantId);
+      } else if (container) {
         const mockRecord = options.mockRecord || {
           participant_id: window.currentParticipantId || 6,
           has_legal_issues: false,
@@ -322,14 +299,12 @@
           summary: { status: 'completed', total_causes: 0, eviction_causes_count: 0, details: [] },
           checked_at: new Date().toISOString()
         };
-        if (container) {
-          container.innerHTML = `
-            <div class="grid grid-cols-1 gap-6">
-              ${this.renderLegalCard(mockRecord)}
-              ${this.renderAtmCard(null)}
-              ${this.renderEmploymentCard(null)}
-            </div>`;
-        }
+        container.innerHTML = `
+          <div class="grid grid-cols-1 gap-6">
+            ${this.renderLegalCard(mockRecord)}
+            ${this.renderAtmCard(null)}
+            ${this.renderEmploymentCard(null)}
+          </div>`;
       }
     },
 

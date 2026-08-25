@@ -1,15 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 
 /**
  * FASE 1: Inicio y Preparación de Transacción de Firma Electrónica
  */
 export default async function iniciarHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -23,9 +18,15 @@ export default async function iniciarHandler(req, res) {
     });
   }
 
+  // 1. Validar autenticación
+  const { user, profile, error: authError } = await getAuthenticatedUser(req);
+  if (authError || !user) {
+    return sendUnauthorized(res, `Autenticación requerida para iniciar firma: ${authError || 'Sesión no válida'}`);
+  }
+
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { id_contrato, id_perfil, rol, metadata = {}, callbackUrl } = body;
+    const { id_contrato, rol, metadata = {}, callbackUrl } = body;
 
     if (!id_contrato) {
       return res.status(400).json({
@@ -35,9 +36,9 @@ export default async function iniciarHandler(req, res) {
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = getSupabaseAdmin();
 
-    // 1. Obtener datos del Contrato y validar partes
+    // 2. Obtener datos del Contrato y validar partes
     const { data: contrato, error: errContrato } = await supabase
       .from('Contrato')
       .select(`
@@ -57,33 +58,23 @@ export default async function iniciarHandler(req, res) {
       });
     }
 
-    // 2. Determinar perfil y rol del firmante
-    let perfilFirmanteId = id_perfil;
-    let rolFirmante = rol;
+    // 3. Verificar que el usuario autenticado sea parte del contrato
+    const userProfileId = profile ? profile.id_perfil : null;
+    const isLandlord = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_propietario);
+    const isTenant = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_inquilino);
 
-    if (!perfilFirmanteId) {
-      if (rol === 'propietario') {
-        perfilFirmanteId = contrato.id_perfil_propietario;
-        rolFirmante = 'propietario';
-      } else {
-        perfilFirmanteId = contrato.id_perfil_inquilino;
-        rolFirmante = 'inquilino';
-      }
-    } else {
-      if (Number(perfilFirmanteId) === Number(contrato.id_perfil_propietario)) {
-        rolFirmante = 'propietario';
-      } else if (Number(perfilFirmanteId) === Number(contrato.id_perfil_inquilino)) {
-        rolFirmante = 'inquilino';
-      } else {
-        rolFirmante = rol || 'inquilino';
-      }
+    if (!isLandlord && !isTenant) {
+      return sendForbidden(res, 'No eres parte de este contrato de locación.');
     }
 
-    // 3. Captura de metadatos técnicos de contexto (IP, User-Agent)
+    const rolFirmante = isLandlord ? 'propietario' : 'inquilino';
+    const perfilFirmanteId = userProfileId;
+
+    // 4. Captura de metadatos técnicos de contexto (IP, User-Agent)
     const clientIp = metadata.ip || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket?.remoteAddress || '127.0.0.1';
     const clientUserAgent = metadata.userAgent || req.headers['user-agent'] || 'Desconocido';
 
-    // 4. Integración con Didit (Crear sesión de validación de identidad)
+    // 5. Integración con Didit
     const diditApiKey = (process.env.DIDIT_API_KEY || '').trim();
     const diditWorkflowId = (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || process.env.DIDIT_WORKFLOW_ID || '').trim();
     const isWfValid = diditWorkflowId && !diditWorkflowId.startsWith('TU_WORKFLOW') && diditWorkflowId !== 'TU_WORKFLOW_ID_DE_DIDIT' && diditWorkflowId.length >= 6;
@@ -143,21 +134,18 @@ export default async function iniciarHandler(req, res) {
           const diditData = await diditRes.json();
           diditSessionId = diditData.session_id || diditData.id || diditData.sessionId;
           diditSessionUrl = diditData.url || diditData.session_url || diditData.sessionUrl;
-        } else {
-          console.warn('[Didit Session API Warning] Didit devolvió status:', diditRes.status);
         }
       } catch (diditErr) {
         console.warn('[Didit Session API Error]:', diditErr);
       }
     }
 
-    // Fallback sandbox session si no hay API Key real configurada aún
     if (!diditSessionId) {
       diditSessionId = `didit_sandbox_${id_contrato}_${perfilFirmanteId}_${Date.now()}`;
       diditSessionUrl = `https://verify.didit.me/sandbox?session=${diditSessionId}`;
     }
 
-    // 5. Registrar transacción en la base de datos (public.Firma_contrato)
+    // 6. Registrar transacción en la base de datos (public.Firma_contrato)
     const { data: firmaCreada, error: errFirma } = await supabase
       .from('Firma_contrato')
       .insert([{
@@ -180,19 +168,6 @@ export default async function iniciarHandler(req, res) {
         error: 'Database Error',
         message: 'No se pudo registrar la transacción de firma en la base de datos.'
       });
-    }
-
-    // 6. Si el contrato estaba en borrador, actualizar a 'pendiente_firma'
-    try {
-      await supabase
-        .from('Historial_Estado_Contrato')
-        .insert([{
-          id_contrato: id_contrato,
-          id_estado_contrato: 5, // pendiente_firma
-          fecha_inicio: new Date().toISOString()
-        }]);
-    } catch (e) {
-      // No bloqueante
     }
 
     return res.status(200).json({

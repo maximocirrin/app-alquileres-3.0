@@ -23,74 +23,141 @@
         localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
     }
 
-    function isUserOwnerOfContract(contract) {
-        if (!contract) return false;
+    async function ensureUserProfileResolved() {
+        if (window._currentUserProfileId) return window._currentUserProfileId;
 
+        // 1. Verificar localStorage
+        try {
+            const stored = localStorage.getItem('habitat_profile_id');
+            if (stored && !isNaN(Number(stored))) {
+                window._currentUserProfileId = Number(stored);
+                if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
+                return window._currentUserProfileId;
+            }
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
+            if (pId && !isNaN(Number(pId))) {
+                window._currentUserProfileId = Number(pId);
+                if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
+                localStorage.setItem('habitat_profile_id', String(pId));
+                return window._currentUserProfileId;
+            }
+        } catch (e) {}
+
+        // 2. Consultar Supabase Auth & Perfil
+        if (window.supabaseClient) {
+            try {
+                let authUser = null;
+                const { data: uData } = await window.supabaseClient.auth.getUser();
+                authUser = uData?.user;
+                if (!authUser) {
+                    const { data: sData } = await window.supabaseClient.auth.getSession();
+                    authUser = sData?.session?.user;
+                }
+
+                if (authUser) {
+                    const { data: profiles } = await window.supabaseClient
+                        .from('Perfil')
+                        .select('id_perfil, mail, dni, nombre_completo, user_id')
+                        .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
+                        .limit(1);
+
+                    if (profiles && profiles.length > 0) {
+                        const p = profiles[0];
+                        window._currentUserProfileId = Number(p.id_perfil);
+                        if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
+                        localStorage.setItem('habitat_profile_id', String(p.id_perfil));
+                        
+                        try {
+                            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            uLocal.id_perfil = p.id_perfil;
+                            uLocal.email = p.mail || authUser.email;
+                            uLocal.dni = p.dni || uLocal.dni;
+                            uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
+                            uLocal.user_id = authUser.id || p.user_id;
+                            localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                        } catch (e) {}
+
+                        return window._currentUserProfileId;
+                    }
+                }
+            } catch (e) {
+                console.warn("Aviso resolviendo perfil en Supabase:", e);
+            }
+        }
+
+        return null;
+    }
+    window.ensureUserProfileResolved = ensureUserProfileResolved;
+
+    function getContractOwnerProfileId(contract, options = {}) {
+        if (!contract && !options) return null;
+        const c = contract || options.contract || {};
+        const prop = options.property || {};
+
+        const raw = c.id_perfil_propietario ||
+                    c.owner?.profileId ||
+                    c.owner?.id_perfil ||
+                    c.owner_profile_id ||
+                    prop.id_perfil_propietario ||
+                    prop.id_propietario ||
+                    (typeof c.owner?.id === 'number' ? c.owner.id : null) ||
+                    c.id_propietario;
+
+        if (raw !== undefined && raw !== null && !isNaN(Number(raw))) {
+            return Number(raw);
+        }
+        return null;
+    }
+    window.getContractOwnerProfileId = getContractOwnerProfileId;
+
+    function isUserOwnerOfContract(contract, options = {}) {
+        if (!contract && !options) return false;
+        const c = contract || options.contract || {};
+        const prop = options.property || {};
+
+        const contractOwnerProfileId = getContractOwnerProfileId(c, options);
+
+        // Obtener el id_perfil del usuario actual en Supabase
+        let userProfileId = window._currentUserProfileId ||
+                            window.ContractsManager?._currentProfileId ||
+                            null;
+
+        if (userProfileId === null) {
+            try {
+                const storedProfileId = localStorage.getItem('habitat_profile_id');
+                if (storedProfileId && !isNaN(Number(storedProfileId))) {
+                    userProfileId = Number(storedProfileId);
+                } else {
+                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
+                    if (pId && !isNaN(Number(pId))) {
+                        userProfileId = Number(pId);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // Regla estricta solicitada:
+        // Solo el usuario cuyo id_perfil_propietario sea igual a su id de perfil en Supabase
+        if (userProfileId !== null && contractOwnerProfileId !== null && contractOwnerProfileId > 0) {
+            return Number(userProfileId) === Number(contractOwnerProfileId);
+        }
+
+        // Respaldo por email autenticado si los IDs numéricos aún están resolviéndose
         let userEmail = '';
-        let userDni = '';
-        let userId = '';
-        let userRole = '';
-
         try {
             const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
             userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-            userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
-            userId = String(uLocal.id || uLocal.id_perfil || uLocal.user_id || '');
-            userRole = (uLocal.role || uLocal.tipo_usuario || uLocal.user_type || '').toUpperCase();
         } catch (e) {}
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlRole = (urlParams.get('role') || '').toUpperCase();
+        const ownerEmail = (c.owner?.email || c.owner_email || prop.owner_email || '').toLowerCase().trim();
+        const tenantEmail = (c.tenant?.email || c.tenant_email || options.applicant?.tenant_email || options.applicant?.email || '').toLowerCase().trim();
 
-        const ownerEmail = (contract.owner?.email || contract.owner_email || '').toLowerCase().trim();
-        const ownerDni = (contract.owner?.dni || '').replace(/\D/g, '');
-        const ownerId = String(contract.owner?.id || contract.id_propietario || contract.owner_id || '');
-
-        const tenantEmail = (contract.tenant?.email || contract.tenant_email || '').toLowerCase().trim();
-        const tenantDni = (contract.tenant?.dni || '').replace(/\D/g, '');
-        const tenantId = String(contract.tenant?.id || contract.id_inquilino || contract.tenant_id || '');
-
-        // Si el usuario actual es explícitamente el inquilino del contrato:
         if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
             return false;
         }
-        if (userDni && tenantDni && userDni === tenantDni && userDni !== ownerDni) {
-            return false;
-        }
-        if (userId && tenantId && userId === tenantId && userId !== ownerId) {
-            return false;
-        }
-        if (urlRole === 'TENANT' || urlRole === 'INQUILINO') {
-            return false;
-        }
-        if (window.location.pathname.includes('tu-alquiler')) {
-            return false;
-        }
-
-        // Si el usuario actual coincide con el propietario del contrato:
         if (userEmail && ownerEmail && userEmail === ownerEmail) {
-            return true;
-        }
-        if (userDni && ownerDni && userDni === ownerDni) {
-            return true;
-        }
-        if (userId && ownerId && userId === ownerId) {
-            return true;
-        }
-
-        // Si tiene rol explícito de propietario o corredor en la URL o sesión:
-        if (urlRole === 'OWNER' || urlRole === 'PROPIETARIO' || urlRole === 'BROKER' || urlRole === 'CORREDOR') {
-            return true;
-        }
-        if (window.location.pathname.includes('administrador') || window.location.pathname.includes('panel-corredor')) {
-            return true;
-        }
-        if (userRole === 'OWNER' || userRole === 'PROPIETARIO' || userRole === 'BROKER' || userRole === 'CORREDOR' || userRole === 'ADMIN') {
-            return true;
-        }
-
-        const storedRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
-        if (storedRole === 'OWNER' || storedRole === 'PROPIETARIO' || storedRole === 'BROKER' || storedRole === 'CORREDOR') {
             return true;
         }
 
@@ -106,6 +173,27 @@
             if (up === 'PROPIETARIO') return 'OWNER';
             if (up === 'CORREDOR') return 'BROKER';
             return up;
+        }
+
+        // Detección automática por id_perfil de Supabase contra contrato
+        let userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
+        try {
+            if (!userProfileId) {
+                const storedProfileId = localStorage.getItem('habitat_profile_id');
+                if (storedProfileId && !isNaN(Number(storedProfileId))) {
+                    userProfileId = Number(storedProfileId);
+                } else {
+                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    userProfileId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
+                }
+            }
+        } catch (e) {}
+
+        if (contract && userProfileId) {
+            const ownerPId = getContractOwnerProfileId(contract);
+            const tenantPId = Number(contract.id_perfil_inquilino || contract.tenant?.profileId || contract.tenant?.id_perfil || 0);
+            if (ownerPId && Number(userProfileId) === Number(ownerPId)) return 'OWNER';
+            if (tenantPId && Number(userProfileId) === Number(tenantPId)) return 'TENANT';
         }
 
         // Auto-detect based on logged-in user email / profile against contract
@@ -288,24 +376,39 @@
     async function syncContractsFromSupabase() {
         if (!window.supabaseClient) return;
         try {
+            await ensureUserProfileResolved();
+
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             const currentUserId = session?.user?.id;
             const currentUserEmail = (session?.user?.email || '').toLowerCase().trim();
 
-            let myProfileId = null;
+            let myProfileId = window._currentUserProfileId || null;
             let myProfileName = null;
             let myProfileDni = null;
 
-            if (currentUserId) {
-                const { data: p } = await window.supabaseClient
+            if (currentUserId || currentUserEmail) {
+                const { data: pList } = await window.supabaseClient
                     .from('Perfil')
-                    .select('id_perfil, nombre_completo, dni, mail')
-                    .eq('user_id', currentUserId)
-                    .maybeSingle();
+                    .select('id_perfil, nombre_completo, dni, mail, user_id')
+                    .or(`user_id.eq.${currentUserId || '00000000-0000-0000-0000-000000000000'},mail.eq.${currentUserEmail || 'none@example.com'}`)
+                    .limit(1);
+                const p = pList && pList.length > 0 ? pList[0] : null;
                 if (p) {
-                    myProfileId = p.id_perfil;
+                    myProfileId = Number(p.id_perfil);
                     myProfileName = p.nombre_completo;
                     myProfileDni = p.dni;
+                    window._currentUserProfileId = myProfileId;
+                    if (ContractsManager) ContractsManager._currentProfileId = myProfileId;
+                    localStorage.setItem('habitat_profile_id', String(myProfileId));
+                    try {
+                        const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        uLocal.id_perfil = myProfileId;
+                        uLocal.email = p.mail || currentUserEmail;
+                        uLocal.dni = p.dni || uLocal.dni;
+                        uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
+                        uLocal.user_id = currentUserId || p.user_id;
+                        localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                    } catch (e) {}
                 }
             }
 
@@ -382,11 +485,16 @@
                     const cleanTitle = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : (prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : `Propiedad #${dbC.id_propiedad}`);
                     const cleanAddress = prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : 'Buenos Aires';
 
+                    const finalOwnerProfileId = Number(dbC.id_perfil_propietario || propOwnerId || ownerPerfil.id_perfil || 6);
+                    const finalTenantProfileId = Number(dbC.id_perfil_inquilino || inqPerfil.id_perfil || 15);
+
                     loadedContracts.push({
                         id: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
                         dbContractId: dbC.id_contrato,
                         propertyId: String(dbC.id_propiedad),
+                        id_perfil_propietario: finalOwnerProfileId,
+                        id_perfil_inquilino: finalTenantProfileId,
                         publicationId: String(dbC.id_publicacion || pub?.id_publicacion || ''),
                         title: `Contrato de Locación - ${cleanTitle}`,
                         propertyAddress: cleanAddress,
@@ -406,7 +514,9 @@
                         aliasCbu: dbC.alias_cbu || 'HABITAT.ALQUILER.MP',
                         tenant: {
                             role: 'TENANT',
-                            profileId: dbC.id_perfil_inquilino || inqPerfil.id_perfil || 15,
+                            profileId: finalTenantProfileId,
+                            id_perfil: finalTenantProfileId,
+                            id: finalTenantProfileId,
                             name: tenantName,
                             email: tenantEmail,
                             phone: inqPerfil.telefono || sol?.telefono || '+54 9 11',
@@ -417,7 +527,9 @@
                         },
                         owner: {
                             role: 'OWNER',
-                            profileId: dbC.id_perfil_propietario || ownerPerfil.id_perfil || 6,
+                            profileId: finalOwnerProfileId,
+                            id_perfil: finalOwnerProfileId,
+                            id: finalOwnerProfileId,
                             name: ownerName,
                             email: ownerEmail,
                             cuil: ownerCuil,
@@ -1500,6 +1612,10 @@
 
                 const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '';
 
+                const esc = window.escapeHtml || (s => s);
+                const safeMsg = esc(m.mensaje);
+                const safeName = esc(displayName);
+
                 if (isSystem) {
                     return `
                         <div class="my-2 p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-center text-xs text-zinc-600 dark:text-zinc-300 space-y-1">
@@ -1507,7 +1623,7 @@
                                 <span class="material-symbols-outlined text-sm">shield</span>
                                 <span>Mensaje del Sistema Hábitat</span>
                             </div>
-                            <p>${m.mensaje}</p>
+                            <p>${safeMsg}</p>
                             <span class="text-[10px] text-zinc-400 block">${timeStr}</span>
                         </div>
                     `;
@@ -1522,12 +1638,10 @@
                     roleBadge = '<span class="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-extrabold uppercase">Corredor</span>';
                 }
 
-                const displayName = isMe ? 'Tú' : (m.remitente_nombre || 'Usuario');
-
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 max-w-[85%] ${isMe ? 'self-end' : 'self-start'} animate-fadeIn">
                         <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                            <span class="font-bold text-zinc-700 dark:text-zinc-300">${displayName}</span>
+                            <span class="font-bold text-zinc-700 dark:text-zinc-300">${safeName}</span>
                             ${roleBadge}
                             <span class="text-[10px]">${timeStr}</span>
                         </div>
@@ -1537,12 +1651,12 @@
                                 <div class="mb-2 p-2.5 rounded-xl ${isMe ? 'bg-black/20 text-white' : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white'} border border-white/20 font-sans space-y-1">
                                     <div class="flex items-center gap-1 font-bold text-[11px] text-amber-300">
                                         <span class="material-symbols-outlined text-sm">handshake</span>
-                                        <span>${m.propuesta_json.titulo || 'Propuesta de Términos'}</span>
+                                        <span>${esc(m.propuesta_json.titulo || 'Propuesta de Términos')}</span>
                                     </div>
-                                    <div class="text-xs font-semibold">${m.propuesta_json.detalle || ''}</div>
+                                    <div class="text-xs font-semibold">${esc(m.propuesta_json.detalle || '')}</div>
                                 </div>
                             ` : ''}
-                            <p class="whitespace-pre-wrap">${m.mensaje}</p>
+                            <p class="whitespace-pre-wrap">${safeMsg}</p>
                         </div>
                     </div>
                 `;
@@ -2427,20 +2541,40 @@
             this.selectContract(contractId, true);
         },
 
-        editContractConditions: function (contractId) {
-            const contract = this.getContractById(contractId);
+        editContractConditions: async function (contractId) {
+            let contract = this.getContractById(contractId);
             if (!contract) return;
 
-            // Restricción estricta: Solo si el usuario actual es el propietario/locador del contrato
+            // Asegurar resolución del id_perfil del usuario en Supabase antes de validar
+            await ensureUserProfileResolved();
+
+            // Si el contrato no tiene id_perfil_propietario o es un objeto parcial, intentar resolverlo desde Supabase
+            if (!contract.id_perfil_propietario && contract.dbContractId && window.supabaseClient) {
+                try {
+                    const { data: dbC } = await window.supabaseClient
+                        .from('Contrato')
+                        .select('id_perfil_propietario, id_propiedad')
+                        .eq('id_contrato', contract.dbContractId)
+                        .maybeSingle();
+                    if (dbC && dbC.id_perfil_propietario) {
+                        contract.id_perfil_propietario = Number(dbC.id_perfil_propietario);
+                        if (contract.owner) contract.owner.profileId = Number(dbC.id_perfil_propietario);
+                    }
+                } catch (e) {}
+            }
+
+            // Restricción estricta: Solo si el usuario actual es el propietario/locador titular del contrato (id_perfil === id_perfil_propietario)
             if (!isUserOwnerOfContract(contract)) {
+                const ownerIdText = contract.id_perfil_propietario || contract.owner?.profileId || '';
+                const msg = 'Únicamente el propietario titular' + (ownerIdText ? ` (id_perfil_propietario: ${ownerIdText})` : '') + ' tiene permisos para editar las condiciones y cláusulas del contrato.';
                 if (window.ToastManager) {
                     window.ToastManager.show({
                         title: '🔒 Acceso Restringido',
-                        message: 'Únicamente el propietario / locador tiene permisos para editar las condiciones y cláusulas del contrato.',
+                        message: msg,
                         type: 'warning'
                     });
                 } else {
-                    alert('Únicamente el propietario / locador tiene permisos para editar las condiciones y cláusulas del contrato.');
+                    alert(msg);
                 }
                 return;
             }
@@ -2469,7 +2603,8 @@
                     property: {
                         title: contract.title,
                         address: contract.propertyAddress,
-                        price: contract.monthlyRent
+                        price: contract.monthlyRent,
+                        id_perfil_propietario: contract.id_perfil_propietario || contract.owner?.profileId
                     },
                     contract: contract,
                     onConfirm: async (terms) => {
@@ -2480,6 +2615,7 @@
                         contract.paymentDueDay = terms.paymentDueDay || contract.paymentDueDay;
                         contract.aliasCbu = terms.aliasCbu || contract.aliasCbu;
                         contract.clauses = terms.clauses || contract.clauses;
+                        contract.customClauses = terms.customClauses || contract.customClauses;
 
                         const dbId = contract.dbContractId || parseInt(String(contract.id).replace(/\D/g, ''), 10);
                         if (window.supabaseClient && dbId) {
@@ -2488,7 +2624,9 @@
                                     monto_cierre: contract.monthlyRent,
                                     periodo_aumento_meses: contract.adjustmentFrequencyMonths,
                                     dia_vencimiento_mensual: contract.paymentDueDay,
-                                    alias_cbu: contract.aliasCbu
+                                    alias_cbu: contract.aliasCbu,
+                                    "id_Indice": terms.adjustmentIndex === 'ICL' ? 2 : 1,
+                                    id_moneda: terms.currency === 'USD' ? 2 : 1
                                 }).eq('id_contrato', dbId);
                             } catch (e) {
                                 console.warn("Aviso actualizando contrato en Supabase:", e);
@@ -2508,6 +2646,8 @@
                         }
                     }
                 });
+            } else {
+                console.error("ContractEditorModal no está cargado.");
             }
         },
 

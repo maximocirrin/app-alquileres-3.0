@@ -1,5 +1,5 @@
 /**
- * TypeScript Interfaces for Pasaporte Hábitat Records & Scraper Integration
+ * TypeScript Interfaces for Pasaporte Hábitat Records
  */
 
 export interface LegalRecordSummary {
@@ -42,18 +42,4 @@ export interface EmploymentRecord {
   seniority_months: number;
   net_income: number;
   checked_at: string;
-}
-
-export interface VerifyLegalRequest {
-  participant_id: number | string;
-  cuit_cuil: string;
-  full_name: string;
-}
-
-export interface VerifyLegalResponse {
-  success: boolean;
-  status: 'completed' | 'pending_manual_review' | 'failed';
-  data?: LegalRecord;
-  message?: string;
-  error?: string;
 }

@@ -1,7 +1,28 @@
-import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+import { getSupabaseAdmin } from '../../api/_auth.js';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
+const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET || '';
+
+// Validar firma HMAC de Didit
+function verifyDiditSignature(req, rawPayload) {
+  if (!DIDIT_WEBHOOK_SECRET) {
+    console.warn('[Didit Signature Webhook] DIDIT_WEBHOOK_SECRET no configurada.');
+    return process.env.NODE_ENV !== 'production';
+  }
+  const signature = req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'];
+  if (!signature) return false;
+
+  try {
+    const stringBody = typeof rawPayload === 'string' ? rawPayload : JSON.stringify(rawPayload);
+    const expected = crypto.createHmac('sha256', DIDIT_WEBHOOK_SECRET).update(stringBody).digest('hex');
+    const signatureClean = String(signature).replace(/^sha256=/, '').trim();
+
+    if (signatureClean.length !== expected.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(signatureClean, 'utf8'), Buffer.from(expected, 'utf8'));
+  } catch (e) {
+    return false;
+  }
+}
 
 /**
  * FASE 2: Validación Biométrica y Bóveda Segura de Evidencias
@@ -25,6 +46,17 @@ export default async function webhookDiditHandler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+
+    // Validación de firma criptográfica
+    if (!verifyDiditSignature(req, req.body)) {
+      console.warn('[Didit Signature Webhook] Firma HMAC no válida o ausente.');
+      return res.status(401).json({
+        ok: false,
+        error: 'Unauthorized',
+        message: 'Firma de autenticación de webhook inválida.'
+      });
+    }
+
     console.log('[Didit Signature Webhook Received]:', JSON.stringify(body));
 
     const {
@@ -46,7 +78,7 @@ export default async function webhookDiditHandler(req, res) {
     const isApproved = rawStatus === 'approved' || rawStatus === 'success' || rawStatus === 'passed';
     const isDeclined = rawStatus === 'declined' || rawStatus === 'rejected' || rawStatus === 'failed';
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = getSupabaseAdmin();
 
     let parsedVendorData = {};
     if (vendor_data) {
@@ -184,7 +216,6 @@ export default async function webhookDiditHandler(req, res) {
 
         await supabase.from('Perfil').update(perfUpdate).eq('id_perfil', firma.id_perfil_firmante);
 
-        // Actualizar Pasaporte_habitat si el firmante tiene uno
         const { data: passSigner } = await supabase
           .from('Pasaporte_habitat')
           .select('id_pasaporte')
@@ -207,8 +238,6 @@ export default async function webhookDiditHandler(req, res) {
         console.warn('[Didit Webhook Signature] Aviso actualizando Perfil/Pasaporte del firmante:', ePerf.message);
       }
     }
-
-    console.log(`[Didit Signature Webhook Success] Firma ID ${firmaId} actualizada a: ${nuevoEstadoFirma}`);
 
     return res.status(200).json({
       ok: true,
