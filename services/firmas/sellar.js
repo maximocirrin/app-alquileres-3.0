@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { generateAuditTrailPdf, generateContractPdf } from './pdf-generator.js';
+import { generateConsolidatedPdf } from './pdf-generator.js';
 import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 dotenv.config();
 
@@ -118,11 +118,31 @@ export default async function sellarHandler(req, res) {
       return sendForbidden(res, 'No tienes autorización para firmar o sellar este contrato.');
     }
 
-    // 4. Calcular Hash SHA-256 canónico del contrato
-    const contractCanonicalString = `CONTRATO:${contractId}|PROP:${propiedad.id_propiedad || ''}|INQ:${contrato.id_perfil_inquilino || ''}|PROP_ID:${contrato.id_perfil_propietario || ''}|MONTO:${contrato.monto_cierre || ''}|VENC:${contrato.dia_vencimiento_mensual || ''}`;
-    const hashContratoSha256 = firma.hash_contrato_sha256 || crypto.createHash('sha256').update(contractCanonicalString).digest('hex');
+    // 4. Generar el PDF Consolidado (Contrato + Audit Trail) con pdf-lib
+    const contractPdfBytes = await generateConsolidatedPdf({
+      contractId,
+      firmaId,
+      contrato,
+      propiedad,
+      inquilino: contrato.Inquilino || {},
+      propietario: contrato.Propietario || {},
+      rol: firma.rol_firmante || rol,
+      signerName: signer_name || firmante.nombre_completo || 'Titular Validado',
+      signerDni: signer_dni || firmante.dni || 'Validado por Didit KYC',
+      email: firmante.mail || '-',
+      ip: firma.ip_origen || req.headers['x-forwarded-for'] || '127.0.0.1',
+      userAgent: firma.user_agent || req.headers['user-agent'] || 'Mozilla/5.0',
+      diditSessionId: firma.didit_session_id || didit_session_id || 'didit_sess_live',
+      diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' }
+    });
 
-    // 5. Generar token de Sello de Tiempo TSA (RFC 3161)
+    // 5. Calcular Hash SHA-256 definitivo del PDF final
+    const finalPdfHashSha256 = crypto
+      .createHash('sha256')
+      .update(Buffer.from(contractPdfBytes))
+      .digest('hex');
+
+    // 6. Generar token de Sello de Tiempo TSA (RFC 3161)
     const tsaSerialNumber = `TSA-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     const tsaProvider = process.env.TSA_SERVER_NAME || 'Autoridad de Sellado de Tiempo (TSA RFC 3161 Argentina)';
     const tsaTokenPayload = {
@@ -131,68 +151,22 @@ export default async function sellarHandler(req, res) {
       policy: '1.3.6.1.4.1.50000.1.1.RFC3161',
       serialNumber: tsaSerialNumber,
       hashAlgorithm: 'SHA-256',
-      hashedMessage: hashContratoSha256,
+      hashedMessage: finalPdfHashSha256,
       genTimeUTC: new Date().toISOString(),
       timeZone: 'America/Argentina/Buenos_Aires (UTC-3)'
     };
 
-    // 6. Generar el PDF del Audit Trail (Certificado de Evidencia) con pdf-lib
-    const auditPdfBytes = await generateAuditTrailPdf({
-      contractId,
-      firmaId,
-      rol: firma.rol_firmante || rol,
-      signerName: signer_name || firmante.nombre_completo || 'Titular Validado',
-      signerDni: signer_dni || firmante.dni || 'Validado por Didit KYC',
-      email: firmante.mail || '-',
-      ip: firma.ip_origen || req.headers['x-forwarded-for'] || '127.0.0.1',
-      userAgent: firma.user_agent || req.headers['user-agent'] || 'Mozilla/5.0',
-      diditSessionId: firma.didit_session_id || didit_session_id || 'didit_sess_live',
-      diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' },
-      propiedad,
-      hashContratoSha256,
-      tsaSerialNumber,
-      tsaProvider
-    });
-
-    const hashAuditTrailSha256 = crypto
-      .createHash('sha256')
-      .update(Buffer.from(auditPdfBytes))
-      .digest('hex');
-
-    // 7. Subir el Audit Trail a Supabase Storage
-    const auditTrailPath = `contrato_${contractId}/audit_trail_firma_${firmaId}.pdf`;
+    // 7. Subir el Contrato Consolidado a Supabase Storage
+    const contractPdfPath = `contrato_${contractId}/contrato_definitivo_firmado_${firmaId}.pdf`;
     const { error: uploadErr } = await supabase.storage
       .from('contratos_firmados')
-      .upload(auditTrailPath, Buffer.from(auditPdfBytes), {
+      .upload(contractPdfPath, Buffer.from(contractPdfBytes), {
         contentType: 'application/pdf',
         upsert: true
       });
 
     if (uploadErr) {
-      console.error('[Error subiendo Audit Trail a Supabase Storage]:', uploadErr);
-    }
-
-    // 8. Generar y Subir también el Contrato Definitivo PDF
-    const contractPdfPath = `contrato_${contractId}/contrato_definitivo.pdf`;
-    try {
-      const contractPdfBytes = await generateContractPdf({
-        contractId,
-        contrato,
-        propiedad,
-        inquilino: contrato.Inquilino || {},
-        propietario: contrato.Propietario || {},
-        hashContratoSha256,
-        tsaTimestamp: new Date().toISOString()
-      });
-
-      await supabase.storage
-        .from('contratos_firmados')
-        .upload(contractPdfPath, Buffer.from(contractPdfBytes), {
-          contentType: 'application/pdf',
-          upsert: true
-        });
-    } catch (cPdfErr) {
-      console.warn('[Error generando Contrato Definitivo PDF]:', cPdfErr);
+      console.error('[Error subiendo Contrato Consolidado a Supabase Storage]:', uploadErr);
     }
 
     // 9. Actualizar Firma_contrato en la base de datos
@@ -200,10 +174,10 @@ export default async function sellarHandler(req, res) {
       .from('Firma_contrato')
       .update({
         estado_firma: 'sellada',
-        hash_contrato_sha256: hashContratoSha256,
-        hash_audit_trail_sha256: hashAuditTrailSha256,
+        hash_contrato_sha256: finalPdfHashSha256,
+        hash_audit_trail_sha256: null,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: auditTrailPath,
+        url_audit_trail_pdf: null,
         url_contrato_final_pdf: contractPdfPath,
         fecha_firma: new Date().toISOString()
       })
@@ -222,10 +196,10 @@ export default async function sellarHandler(req, res) {
         id_firma: firmaId,
         id_contrato: contractId,
         estado_firma: 'sellada',
-        hash_contrato_sha256: hashContratoSha256,
-        hash_audit_trail_sha256: hashAuditTrailSha256,
+        hash_contrato_sha256: finalPdfHashSha256,
+        hash_audit_trail_sha256: null,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: auditTrailPath,
+        url_audit_trail_pdf: null,
         url_contrato_final_pdf: contractPdfPath,
         fecha_firma: (firmaActualizada && firmaActualizada.fecha_firma) || new Date().toISOString()
       }
