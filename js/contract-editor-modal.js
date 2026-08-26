@@ -228,8 +228,10 @@
     }
 
     function isUserOwnerOfContract(contract, options = {}) {
+        if (!contract && !options) return false;
         const c = contract || options.contract || {};
-        const prop = options.property || {};
+        const prop = options.property || c.property || {};
+        const applicant = options.applicant || {};
 
         const contractOwnerProfileId = getContractOwnerProfileId(c, options);
 
@@ -253,26 +255,41 @@
             } catch (e) {}
         }
 
-        // Regla estricta:
-        // Solo el usuario cuyo id_perfil_propietario sea igual a su id de perfil en Supabase
+        // Si el id_perfil numérico coincide
         if (userProfileId !== null && contractOwnerProfileId !== null && contractOwnerProfileId > 0) {
-            return Number(userProfileId) === Number(contractOwnerProfileId);
+            if (Number(userProfileId) === Number(contractOwnerProfileId)) {
+                return true;
+            }
         }
 
-        // Respaldo por email autenticado si los IDs numéricos aún están resolviéndose
+        // Respaldo por email autenticado
         let userEmail = '';
         try {
             const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
             userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
         } catch (e) {}
 
-        const ownerEmail = (c.owner?.email || c.owner_email || prop.owner_email || '').toLowerCase().trim();
-        const tenantEmail = (c.tenant?.email || c.tenant_email || options.applicant?.tenant_email || options.applicant?.email || '').toLowerCase().trim();
+        const ownerEmail = (c.owner?.email || c.owner_email || prop.owner_email || prop.ownerEmail || prop.mail || '').toLowerCase().trim();
+        const tenantEmail = (c.tenant?.email || c.tenant_email || applicant.tenant_email || applicant.email || '').toLowerCase().trim();
 
         if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
             return false;
         }
         if (userEmail && ownerEmail && userEmail === ownerEmail) {
+            return true;
+        }
+
+        // Si se está editando / generando desde el panel del propietario o corredor para una postulación
+        const isOwnerPanel = window.location.pathname.includes('administrador') ||
+                             window.location.pathname.includes('panel-corredor') ||
+                             (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR'].includes(options.role.toUpperCase()));
+
+        if (isOwnerPanel && (applicant.id || options.applicant || !c.id_contrato)) {
+            return true;
+        }
+
+        const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        if ((activeRole === 'OWNER' || activeRole === 'PROPIETARIO' || activeRole === 'CORREDOR' || activeRole === 'BROKER') && (!tenantEmail || userEmail !== tenantEmail)) {
             return true;
         }
 
