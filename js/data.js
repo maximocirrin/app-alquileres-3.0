@@ -432,6 +432,11 @@ var DataManager = {
                     id: pub.id_publicacion,
                     id_propiedad: pub.id_propiedad,
                     id_publicacion: pub.id_publicacion,
+                    id_perfil_propietario: prop.id_perfil_propietario || pub.id_perfil || null,
+                    owner_profile_id: prop.id_perfil_propietario || pub.id_perfil || null,
+                    id_perfil: pub.id_perfil || prop.id_perfil_propietario || null,
+                    owner_email: extraInfo.ownerEmail || extraInfo.owner_email || '',
+                    owner_name: extraInfo.ownerName || extraInfo.owner_name || '',
                     title: cleanTitle,
                     description: pub.descripcion || '',
                     address: address,
@@ -1218,6 +1223,10 @@ var DataManager = {
                                 publication_id: pubId,
                                 publicationId: pubId,
                                 id_publicacion: pubId,
+                                id_perfil_propietario: prop.id_perfil_propietario || pub.id_perfil || null,
+                                owner_profile_id: prop.id_perfil_propietario || pub.id_perfil || null,
+                                owner_email: pub?.Perfil?.mail || '',
+                                owner_name: pub?.Perfil?.nombre_completo || '',
                                 property_title: title,
                                 property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`.trim(),
                                 property_price: pub?.precio || prop.expensas_mensuales || 450000,
@@ -1773,9 +1782,12 @@ var DataManager = {
             adjustmentFrequencyMonths: 3,
             depositAmount: monthlyRent,
             aliasCbu: 'HABITAT.ALQUILER.MP',
+            id_perfil_propietario: Number(prop?.id_perfil_propietario || profileId || 6),
+            id_perfil_inquilino: solPerfilId,
             tenant: {
                 role: 'TENANT',
                 profileId: solPerfilId,
+                id_perfil: solPerfilId,
                 name: tenantName,
                 email: tenantEmail,
                 phone: tenantPhone,
@@ -1786,7 +1798,8 @@ var DataManager = {
             },
             owner: {
                 role: 'OWNER',
-                profileId: 6,
+                profileId: Number(prop?.id_perfil_propietario || profileId || 6),
+                id_perfil: Number(prop?.id_perfil_propietario || profileId || 6),
                 name: ownerName,
                 email: ownerEmail,
                 cuil: ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7',
@@ -2033,7 +2046,7 @@ var DataManager = {
         }
     },
 
-    getOwnerContracts: async function() {
+    getOwnerContracts: async function(targetProfileId = null) {
         let contractsList = [];
         try {
             const raw = localStorage.getItem('habitat_contracts');
@@ -2050,7 +2063,12 @@ var DataManager = {
         }
 
         try {
-            const { data, error } = await window.supabaseClient
+            let profileId = targetProfileId;
+            if (!profileId && window.DataManager._getOrCreateProfile) {
+                profileId = await window.DataManager._getOrCreateProfile();
+            }
+
+            let query = window.supabaseClient
                 .from('Contrato')
                 .select(`
                     *,
@@ -2066,6 +2084,12 @@ var DataManager = {
                     Firma_contrato (*)
                 `)
                 .order('id_contrato', { ascending: false });
+
+            if (profileId) {
+                query = query.or(`id_perfil_propietario.eq.${profileId},Propiedad.id_perfil_propietario.eq.${profileId}`);
+            }
+
+            const { data, error } = await query;
 
             if (!error && Array.isArray(data) && data.length > 0) {
                 const dbContracts = data.map(item => {
@@ -2087,24 +2111,45 @@ var DataManager = {
                     const inqName = inq.nombre_completo || 'Bruno Cirrincione';
                     const inqEmail = inq.mail || 'nunimamu@gmail.com';
                     const inqPhone = inq.telefono || '+54 9 11';
+                    const inqDni = inq.dni || '46.665.957';
 
-                    const tenantFirmado = (item.Firma_contrato || []).some(f => f.rol_firmante === 'TENANT' && f.estado_firma === 'sellada');
-                    const ownerFirmado = (item.Firma_contrato || []).some(f => f.rol_firmante === 'OWNER' && f.estado_firma === 'sellada');
+                    const ownerName = propOwner.nombre_completo || 'Maximo Cirrincione Ornstein';
+                    const ownerEmail = propOwner.mail || 'maximocirrin@gmail.com';
+                    const ownerPhone = propOwner.telefono || '+54 9 261';
+                    const ownerDni = propOwner.dni || '44.662.043';
+
+                    const tenantFirmado = (item.Firma_contrato || []).some(f => 
+                        ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) &&
+                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
+                    );
+                    const ownerFirmado = (item.Firma_contrato || []).some(f => 
+                        ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) &&
+                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
+                    );
 
                     let status = 'WAITING_TENANT';
                     if (tenantFirmado && ownerFirmado) status = 'SIGNED_AND_SEALED';
                     else if (tenantFirmado) status = 'WAITING_OWNER';
                     else if (ownerFirmado) status = 'WAITING_TENANT';
 
+                    const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || profileId || 6);
+                    const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil || 14);
+
                     return {
                         id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
+                        contractNumber: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                         dbContractId: item.id_contrato,
+                        id_contrato: item.id_contrato,
                         property_id: item.id_propiedad,
+                        propertyId: String(item.id_propiedad),
+                        id_perfil_propietario: finalOwnerProfileId,
+                        id_perfil_inquilino: finalTenantProfileId,
                         property_title: cleanTitle,
                         property_address: cleanAddress,
                         property_image: photos[0] || 'img/hero-marketplace.jpg',
                         photos: photos,
-                        monthly_rent: Number(item.monto_cierre || pub?.precio || 555),
+                        monthly_rent: Number(item.monto_cierre || pub?.precio || 450000),
+                        monthlyRent: Number(item.monto_cierre || pub?.precio || 450000),
                         expenses_amount: Number(prop.expensas_mensuales || 0),
                         payment_due_day: item.dia_vencimiento_mensual || 10,
                         punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
@@ -2116,8 +2161,35 @@ var DataManager = {
                         tenant_name: inqName,
                         tenant_email: inqEmail,
                         tenant_phone: inqPhone,
+                        tenant_dni: inqDni,
+                        owner_name: ownerName,
+                        owner_email: ownerEmail,
+                        owner_phone: ownerPhone,
+                        owner_dni: ownerDni,
+                        tenant_has_signed: tenantFirmado,
+                        owner_has_signed: ownerFirmado,
                         cbu_alias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
-                        status: status
+                        status: status,
+                        tenant: {
+                            role: 'TENANT',
+                            profileId: finalTenantProfileId,
+                            id_perfil: finalTenantProfileId,
+                            name: inqName,
+                            email: inqEmail,
+                            phone: inqPhone,
+                            dni: inqDni,
+                            hasSigned: tenantFirmado
+                        },
+                        owner: {
+                            role: 'OWNER',
+                            profileId: finalOwnerProfileId,
+                            id_perfil: finalOwnerProfileId,
+                            name: ownerName,
+                            email: ownerEmail,
+                            phone: ownerPhone,
+                            dni: ownerDni,
+                            hasSigned: ownerFirmado
+                        }
                     };
                 });
 

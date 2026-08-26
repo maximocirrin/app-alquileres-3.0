@@ -2185,10 +2185,12 @@
                             applicant: app,
                             property: {
                                 ...prop,
+                                id_perfil_propietario: prop.id_perfil_propietario || app.id_perfil_propietario || window._currentUserProfileId,
                                 title: app.property_title || prop.title,
                                 address: app.property_address || prop.address,
                                 price: prop.price || prop.precio || app.property_price || app.propertyPrice
                             },
+                            role: 'OWNER',
                             onConfirm: async (customTerms) => {
                                 b.disabled = true;
                                 b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
@@ -2200,7 +2202,7 @@
                                 } catch (e) {
                                     console.warn("Aviso local postulación:", e);
                                 }
-                                const targetContractId = res?.contractId || 'CTR-2026-0043';
+                                const targetContractId = res?.contractId || (res?.id ? (String(res.id).startsWith('CTR') ? res.id : `CTR-2026-${String(res.id).padStart(4, '0')}`) : 'CTR-2026-0043');
                                 if (window.ContractEditorModal) window.ContractEditorModal.close();
                                 window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
                             }
