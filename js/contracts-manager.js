@@ -2479,7 +2479,7 @@
                     c.sha256Hash = backendSellarData.hash_contrato_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
                     c.tsaTimestamp = backendSellarData.fecha_firma || new Date().toISOString();
                     c.tsaCertificateId = backendSellarData.tsa_sello_tiempo?.serialNumber || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-                    c.auditTrailUrl = backendSellarData.url_audit_trail_pdf;
+                    c.auditTrailUrl = backendSellarData.url_contrato_final_pdf;
                     c.downloadUrls = backendDocs;
 
                     c.auditTrailEvents = c.auditTrailEvents || [];
@@ -2780,7 +2780,7 @@
 
                     const { data: fList } = await window.supabaseClient
                         .from('Firma_contrato')
-                        .select('url_audit_trail_pdf, rol_firmante, id_firma')
+                        .select('url_contrato_final_pdf, rol_firmante, id_firma')
                         .eq('id_contrato', dbId);
 
                     if (fList && fList.length > 0) {
@@ -2788,8 +2788,8 @@
                             ? ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante) 
                             : ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(f.rol_firmante)) || fList[0];
                         if (targetFirma) {
-                            auditPath = (targetFirma.url_audit_trail_pdf && !targetFirma.url_audit_trail_pdf.startsWith('http')) 
-                                ? targetFirma.url_audit_trail_pdf 
+                            auditPath = (targetFirma.url_contrato_final_pdf && !targetFirma.url_contrato_final_pdf.startsWith('http')) 
+                                ? targetFirma.url_contrato_final_pdf 
                                 : `contrato_${dbId}/audit_trail_firma_${targetFirma.id_firma}.pdf`;
                         }
                     }

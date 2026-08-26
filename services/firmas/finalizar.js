@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { generateContractPdf } from './pdf-generator.js';
+// import removed as generation is now fully handled in sellar.js
 import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 dotenv.config();
 
@@ -149,28 +149,7 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    // 6. Asegurar existencia del Contrato Definitivo PDF en Storage
-    const rutaContratoPdf = `contrato_${numericContractId}/contrato_definitivo.pdf`;
-    try {
-      const contractPdfBytes = await generateContractPdf({
-        contractId: numericContractId,
-        contrato,
-        propiedad: contrato.Propiedad || {},
-        inquilino: contrato.Inquilino || {},
-        propietario: contrato.Propietario || {},
-        hashContratoSha256: firmaInquilino?.hash_contrato_sha256 || firmaPropietario?.hash_contrato_sha256,
-        tsaTimestamp: new Date().toISOString()
-      });
-
-      await supabase.storage
-        .from('contratos_firmados')
-        .upload(rutaContratoPdf, Buffer.from(contractPdfBytes), {
-          contentType: 'application/pdf',
-          upsert: true
-        });
-    } catch (e) {
-      console.warn('[Warning generando contrato definitivo en finalizar]:', e);
-    }
+    // 6. El contrato PDF fue generado y almacenado durante la fase de sellado en sellar.js
 
     // 7. Generar URLs firmadas de descarga (vigencia reducida a 24 horas por seguridad)
     const documentosDescarga = {};
@@ -196,23 +175,16 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    const inqAuditPath = (firmaInquilino && firmaInquilino.url_audit_trail_pdf && !firmaInquilino.url_audit_trail_pdf.startsWith('http'))
-      ? firmaInquilino.url_audit_trail_pdf
-      : (firmaInquilino ? `contrato_${numericContractId}/audit_trail_firma_${firmaInquilino.id_firma}.pdf` : null);
+    const inqContractPath = firmaInquilino ? firmaInquilino.url_contrato_final_pdf : null;
+    const propContractPath = firmaPropietario ? firmaPropietario.url_contrato_final_pdf : null;
 
-    const propAuditPath = (firmaPropietario && firmaPropietario.url_audit_trail_pdf && !firmaPropietario.url_audit_trail_pdf.startsWith('http'))
-      ? firmaPropietario.url_audit_trail_pdf
-      : (firmaPropietario ? `contrato_${numericContractId}/audit_trail_firma_${firmaPropietario.id_firma}.pdf` : null);
-
-    if (inqAuditPath) {
-      documentosDescarga.audit_trail_inquilino = await obtenerUrlFirmada('contratos_firmados', inqAuditPath);
+    if (inqContractPath) {
+      documentosDescarga.contrato_inquilino = await obtenerUrlFirmada('contratos_firmados', inqContractPath);
     }
 
-    if (propAuditPath) {
-      documentosDescarga.audit_trail_propietario = await obtenerUrlFirmada('contratos_firmados', propAuditPath);
+    if (propContractPath) {
+      documentosDescarga.contrato_propietario = await obtenerUrlFirmada('contratos_firmados', propContractPath);
     }
-
-    documentosDescarga.contrato_pdf = await obtenerUrlFirmada('contratos_firmados', rutaContratoPdf);
 
     return res.status(200).json({
       ok: true,
