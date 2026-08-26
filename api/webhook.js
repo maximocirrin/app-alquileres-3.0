@@ -87,7 +87,98 @@ export default async function handler(req, res) {
           console.warn('[Didit Webhook] Tabla Auditoria_firma_didit opcional:', auditErr.message);
         }
       } 
-      // Caso B: Evento de Pasaporte Hábitat KYC
+      // Caso B: Evento de Garante KYC (vendor_data: 'garante_123')
+      else if (String(userId).startsWith('garante_')) {
+        const idGarante = Number(String(userId).replace('garante_', ''));
+        console.log(`[Didit Webhook] Procesando KYC para Garante ID: ${idGarante}`);
+
+        const { data: garante } = await supabase
+          .from('Garante')
+          .select('*')
+          .eq('id_garante', idGarante)
+          .maybeSingle();
+
+        if (garante) {
+          const ocr = body.extracted_data || body.document || body.ocr || (body.decision && body.decision.document) || {};
+          const ocrFirst = ocr.first_name || ocr.firstName || body.first_name || '';
+          const ocrLast = ocr.last_name || ocr.lastName || body.last_name || '';
+          const ocrFullName = ocr.full_name || ocr.fullName || (ocrFirst && ocrLast ? `${ocrFirst} ${ocrLast}`.trim() : (ocrFirst || ocrLast || null));
+          const ocrDni = ocr.document_number || ocr.documentNumber || ocr.id_number || body.document_number || null;
+
+          const isApproved = currentStatus.toLowerCase() === 'approved' || currentStatus.toLowerCase() === 'success';
+          const isDeclined = currentStatus.toLowerCase() === 'declined' || currentStatus.toLowerCase() === 'failed' || currentStatus.toLowerCase() === 'rejected';
+
+          const updateGarante = {
+            kyc_verificado: isApproved,
+            didit_session_id: session_id,
+            updated_at: new Date().toISOString()
+          };
+
+          if (ocrFullName) updateGarante.nombre_completo = ocrFullName;
+          if (ocrDni) updateGarante.dni = ocrDni;
+
+          if (isApproved) {
+            if (garante.id_estado_garante < 4) {
+              updateGarante.id_estado_garante = 4; // Documentación Subida / KYC Aprobado
+            }
+
+            // Generar o vincular Pasaporte Hábitat para el Garante
+            if (!garante.id_pasaporte_garante) {
+              const passCode = 'HBT-GAR-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+              const now = new Date();
+              const exp = new Date(now.getTime() + (60 * 24 * 60 * 60 * 1000));
+
+              let profileIdToUse = garante.id_perfil;
+              if (!profileIdToUse) {
+                const { data: tenantPass } = await supabase
+                  .from('Pasaporte_habitat')
+                  .select('id_perfil')
+                  .eq('id_pasaporte', garante.id_pasaporte)
+                  .maybeSingle();
+                profileIdToUse = tenantPass?.id_perfil || 1;
+              }
+
+              const { data: newPass } = await supabase
+                .from('Pasaporte_habitat')
+                .insert([{
+                  id_perfil: profileIdToUse,
+                  id_estado_pasaporte: 3, // Activo
+                  codigo_pasaporte: passCode,
+                  monto_pagado: 0.00,
+                  fecha_emision: now.toISOString(),
+                  fecha_vencimiento: exp.toISOString(),
+                  dni: ocrDni || garante.dni,
+                  razon_social: ocrFullName || garante.nombre_completo,
+                  condicion_fiscal: 'Garante Verificado',
+                  situacion_crediticia: 'Situación 1 (Normal)',
+                  antecedentes_legales: true
+                }])
+                .select()
+                .single();
+
+              if (newPass) {
+                updateGarante.id_pasaporte_garante = newPass.id_pasaporte;
+              }
+            }
+          } else if (isDeclined) {
+            updateGarante.id_estado_garante = 7; // Rechazado
+            updateGarante.motivo_rechazo = 'Verificación biométrica Didit KYC rechazada.';
+          }
+
+          await supabase.from('Garante').update(updateGarante).eq('id_garante', idGarante);
+
+          // Registrar en Verificacion_kyc
+          await supabase.from('Verificacion_kyc').insert([{
+            id_garante: idGarante,
+            id_pasaporte: garante.id_pasaporte_garante || garante.id_pasaporte,
+            proveedor: 'didit',
+            session_id: session_id || 'sess_' + Date.now(),
+            status: currentStatus,
+            payload_raw: body
+          }]);
+        }
+      }
+      // Caso C: Evento de Pasaporte Hábitat KYC (Inquilino)
       else {
         // Buscar perfil por id_perfil (numérico) o por user_id (UUID)
         let perfilQuery = supabase.from('Perfil').select('id_perfil');

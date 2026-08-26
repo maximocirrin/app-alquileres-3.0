@@ -312,8 +312,8 @@
                                 <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
                                     <span class="material-symbols-outlined text-base sm:text-lg">gavel</span> Sin Historial Judicial
                                 </span>
-                                <span class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
-                                    <span class="material-symbols-outlined text-base sm:text-lg">shield_person</span> 2 Garantes Verificados
+                                <span id="passport-header-garantes-badge" class="text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-headline font-bold flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="material-symbols-outlined text-base sm:text-lg">shield_person</span> <span id="passport-header-garantes-text">Garantías Verificadas</span>
                                 </span>
                             </div>
                         </div>
@@ -342,8 +342,8 @@
                             </div>
                             <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 col-span-2 sm:col-span-1">
                                 <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Garantías / Garantes</p>
-                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm sm:text-base">shield_person</span> 2 Presentados
+                                <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-0.5 sm:mt-1 flex items-center gap-1" id="passport-garantes-overview-count">
+                                    <span class="material-symbols-outlined text-sm sm:text-base">shield_person</span> <span id="passport-garantes-count-label">2 Presentados</span>
                                 </p>
                             </div>
                         </div>
@@ -420,25 +420,18 @@
 
                                 <!-- Garantes Attached Card Breakdown -->
                                 <div class="bg-zinc-50/70 dark:bg-zinc-800/30 p-3.5 sm:p-5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 md:col-span-2">
-                                    <h4 class="font-headline font-black text-zinc-900 dark:text-white mb-3 flex items-center gap-2 text-xs sm:text-sm">
-                                        <span class="material-symbols-outlined text-base sm:text-lg text-primary shrink-0">shield_person</span>
-                                        <span>Garantes Presentados & Respaldo Crediticio</span>
-                                    </h4>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
-                                            <div>
-                                                <p class="font-headline font-extrabold text-zinc-900 dark:text-white">Carlos E. San Martín</p>
-                                                <p class="text-[11px] text-zinc-500 font-body mt-0.5">Recibo de Sueldo • 3 Recibos Aprobados</p>
-                                            </div>
-                                            <span class="self-start sm:self-center text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 shrink-0">Verificado</span>
-                                        </div>
-                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
-                                            <div>
-                                                <p class="font-headline font-extrabold text-zinc-900 dark:text-white">María L. Olazábal</p>
-                                                <p class="text-[11px] text-zinc-500 font-body mt-0.5">Garantía Propietaria • Dominio Ok</p>
-                                            </div>
-                                            <span class="self-start sm:self-center text-[11px] font-headline font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50 shrink-0">Verificado</span>
-                                        </div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="font-headline font-black text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
+                                            <span class="material-symbols-outlined text-base sm:text-lg text-primary shrink-0">shield_person</span>
+                                            <span>Garantes Presentados & Respaldo Crediticio</span>
+                                        </h4>
+                                        <a href="tu-alquiler.html#garantes-tenant-container" class="text-[11px] font-headline font-bold text-primary hover:underline flex items-center gap-1">
+                                            <span>Gestionar Garantes</span>
+                                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" id="passport-guarantors-audit-list">
+                                        <!-- Inyectado dinámicamente por actualizarGarantesPasaporteUI -->
                                     </div>
                                 </div>
                             </div>
@@ -631,7 +624,73 @@
                 window.App.setupTheme();
             }
             checkExistingPassport();
+            actualizarGarantesPasaporteUI();
         });
+
+        window.addEventListener('habitat:garantes_updated', () => {
+            actualizarGarantesPasaporteUI();
+        });
+
+        function actualizarGarantesPasaporteUI() {
+            if (!window.GarantesManager) return;
+            const garantes = window.GarantesManager.getState() || [];
+
+            // 1. Badge en el encabezado
+            const headerText = document.getElementById('passport-header-garantes-text');
+            if (headerText) {
+                if (garantes.length === 0) {
+                    headerText.textContent = 'Sin Garantes Cargados';
+                } else {
+                    const aprobados = garantes.filter(g => g.id_estado_garante === 6).length;
+                    headerText.textContent = `${aprobados > 0 ? aprobados : garantes.length} Garante${garantes.length > 1 ? 's' : ''} ${aprobados === garantes.length && aprobados > 0 ? 'Verificados' : 'Presentados'}`;
+                }
+            }
+
+            // 2. Conteo en la cuadrícula de resumen
+            const countLabel = document.getElementById('passport-garantes-count-label');
+            if (countLabel) {
+                countLabel.textContent = `${garantes.length} Presentado${garantes.length === 1 ? '' : 's'}`;
+            }
+
+            // 3. Lista detallada en el desglose de auditoría
+            const auditList = document.getElementById('passport-guarantors-audit-list');
+            if (auditList) {
+                if (garantes.length === 0) {
+                    auditList.innerHTML = `
+                        <div class="col-span-2 p-4 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-center">
+                            <p class="text-xs text-zinc-500">Aún no se han presentado garantes para este pasaporte.</p>
+                        </div>
+                    `;
+                } else {
+                    auditList.innerHTML = garantes.map(g => {
+                        const estadoObj = window.GarantesManager.ESTADOS[g.id_estado_garante] || { label: 'En Proceso' };
+                        const safeName = g.nombre_completo || g.nombre || 'Garante';
+                        const isAprobado = g.id_estado_garante === 6;
+
+                        let subtitle = '';
+                        if (g.id_tipo_garantia === 1) {
+                            subtitle = `Garantía Propietaria • ${g.datos_garantia?.provincia || 'Dominio Ok'}`;
+                        } else if (g.id_tipo_garantia === 2) {
+                            subtitle = `Seguro de Caución • ${g.datos_garantia?.aseguradora_nombre || 'Póliza Aprobada'}`;
+                        } else {
+                            subtitle = `Recibo de Sueldo • ${g.documentos?.length || 3} Recibos Adjuntos`;
+                        }
+
+                        return `
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+                                <div>
+                                    <p class="font-headline font-extrabold text-zinc-900 dark:text-white">${safeName}</p>
+                                    <p class="text-[11px] text-zinc-500 font-body mt-0.5">${subtitle}</p>
+                                </div>
+                                <span class="self-start sm:self-center text-[11px] font-headline font-extrabold ${isAprobado ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 border-emerald-200 dark:border-emerald-800/50' : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border-amber-200 dark:border-amber-800/50'} px-2.5 py-1 rounded-lg border shrink-0">
+                                    ${estadoObj.label}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        }
 
         function calculateAgeFromBirthDate(dob) {
             if (!dob) return null;
