@@ -461,7 +461,7 @@ window.FavoritesManager = {
     }
 };
 
-const App = {
+var App = window.App || {
     state: {
         currentUser: null,
         currentView: 'home-view'

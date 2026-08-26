@@ -23,12 +23,20 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
 
     try {
         let data = null;
+        let headers = { 'Content-Type': 'application/json' };
+        if (window.supabaseClient) {
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session?.access_token) {
+                    headers['Authorization'] = `Bearer ${session.access_token}`;
+                }
+            } catch (e) {}
+        }
+
         try {
             const response = await fetch('/api/arca-padron', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify({
                     cuit: cleanCuit,
                     pasaporteId: pasaporteId || window.currentPasaporteId || null,

@@ -43,3 +43,20 @@ export interface EmploymentRecord {
   net_income: number;
   checked_at: string;
 }
+
+export interface BonoSueldoArchivo {
+  id?: string;
+  nombre: string;
+  tamano: number; // Bytes
+  tipo: string;   // 'application/pdf' | 'image/png' | 'image/jpeg'
+  url?: string;
+  data?: string;  // Data URL / Base64 for offline/preview
+  uploaded_at: string;
+}
+
+export interface DatosIngresosPassport {
+  ingreso_mensual?: number;
+  condicion_fiscal?: string;
+  empresa?: string;
+  bono_sueldo?: BonoSueldoArchivo | null;
+}

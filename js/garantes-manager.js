@@ -99,6 +99,67 @@
             return garantes.find(g => g.token === token) || null;
         },
 
+        syncWithSupabase: async function (pasaporteId) {
+            if (!window.supabaseClient) return loadState();
+            try {
+                let pId = pasaporteId || window.currentPasaporteId || null;
+                if (!pId) {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (session && session.user) {
+                        const { data: perf } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil')
+                            .eq('user_id', session.user.id)
+                            .maybeSingle();
+
+                        if (perf) {
+                            const { data: pass } = await window.supabaseClient
+                                .from('Pasaporte_habitat')
+                                .select('id_pasaporte')
+                                .eq('id_perfil', perf.id_perfil)
+                                .order('created_at', { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+                            if (pass) pId = pass.id_pasaporte;
+                        }
+                    }
+                }
+
+                if (pId) {
+                    const { data: garData, error } = await window.supabaseClient
+                        .from('Garante')
+                        .select('*, Documento_garante(*)')
+                        .eq('id_pasaporte', pId);
+
+                    if (!error && garData && garData.length > 0) {
+                        const mapped = garData.map(g => ({
+                            id: String(g.id_garante),
+                            nombre: g.nombre_completo || 'Garante',
+                            email: g.email || '',
+                            telefono: g.telefono || '',
+                            relacion: g.relacion_inquilino || 'Familiar',
+                            token: g.token_invitacion,
+                            estado: (g.id_estado_garante === 3 || g.estado === 'cargado') ? 'cargado' : (g.id_estado_garante === 1 || g.estado === 'invitado' ? 'invitado' : 'pendiente'),
+                            recibos: (g.Documento_garante || []).map(d => ({
+                                id: String(d.id_documento),
+                                nombre: d.nombre_archivo || 'Recibo.pdf',
+                                tamano: d.tamano_bytes || 1200000,
+                                tipo: d.tipo_documento || 'application/pdf',
+                                url: d.archivo_url || '#'
+                            })),
+                            createdAt: g.created_at ? g.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
+                        }));
+                        saveState(mapped);
+                        this.renderTenantSection();
+                        return mapped;
+                    }
+                }
+            } catch (e) {
+                console.warn('[GarantesManager] Error syncing with Supabase:', e);
+            }
+            return loadState();
+        },
+
         /**
          * Handler: Agregar/Invitar nuevo garante (Supabase + LocalStorage Fallback)
          */
@@ -146,8 +207,7 @@
                                 email: data.email.trim(),
                                 telefono: data.telefono ? data.telefono.trim() : null,
                                 relacion_inquilino: data.relacion ? data.relacion.trim() : 'Familiar',
-                                token_invitacion: newToken,
-                                estado: 'invitado'
+                                token_invitacion: newToken
                             }])
                             .select()
                             .single();
@@ -178,6 +238,10 @@
             garantes.push(newGarante);
             saveState(garantes);
             this.renderTenantSection();
+            if (typeof window.loadTenantPassport === 'function') {
+                window.loadTenantPassport();
+            }
+            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
             return newGarante;
         },
 
@@ -202,6 +266,16 @@
             garantes = garantes.filter(g => g.id !== id);
             saveState(garantes);
             this.renderTenantSection();
+            if (typeof window.loadTenantPassport === 'function') {
+                window.loadTenantPassport();
+            }
+            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+        },
+
+        deleteGarante: async function (id) {
+            if (confirm('¿Estás seguro de que deseas desvincular a este garante de tu Pasaporte Hábitat?')) {
+                await this.onDeleteGarante(id);
+            }
         },
 
         /**
@@ -266,17 +340,30 @@
                     id: 'rec_' + Date.now() + '_' + i,
                     nombre: f.name,
                     tamano: f.size,
-                    tipo: f.type,
+                    tipo: f.type || 'application/pdf',
                     url: '#'
                 }));
                 saveState(garantes);
             }
+
+            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
             return true;
         },
 
-        getInviteUrl: function (token) {
-            const baseUrl = window.location.origin + window.location.pathname;
-            return `${baseUrl}?view=garante-invitacion&token=${encodeURIComponent(token)}`;
+        copyInviteLink: function (token) {
+            const url = `${window.location.origin}/pasaporte-habitat.html?view=garante-invitacion&token=${token}`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url);
+                alert("¡Enlace copiado al portapapeles!\n\n" + url);
+            } else {
+                alert("Enlace para el garante: " + url);
+            }
+        },
+
+        shareWhatsApp: function (token, name) {
+            const url = `${window.location.origin}/pasaporte-habitat.html?view=garante-invitacion&token=${token}`;
+            const msg = encodeURIComponent(`Hola ${name}, te comparto el link de Hábitat para que puedas subir tus recibos de sueldo y validar tu garantía de alquiler de forma 100% digital: ${url}`);
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
         },
 
         // Render Functions
@@ -290,67 +377,69 @@
             let statusBadgeHtml = '';
             if (statusInfo.color === 'emerald') {
                 statusBadgeHtml = `
-                    <span class="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-headline font-black uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-1.5 self-start sm:self-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-headline font-black uppercase tracking-wider">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         Garantías Verificadas
                     </span>`;
             } else if (statusInfo.color === 'amber') {
                 statusBadgeHtml = `
-                    <span class="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-headline font-black uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-1.5 self-start sm:self-center bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-headline font-black uppercase tracking-wider">
                         <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        Garantías Incompletas (Recibos Pendientes)
+                        Garantías Incompletas
                     </span>`;
             } else {
                 statusBadgeHtml = `
-                    <span class="inline-flex items-center gap-1.5 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border border-zinc-500/30 px-3 py-1 rounded-full text-xs font-headline font-extrabold uppercase tracking-wider">
+                    <span class="inline-flex items-center gap-1.5 self-start sm:self-center bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border border-zinc-500/30 px-3 py-1 rounded-full text-xs font-headline font-extrabold uppercase tracking-wider">
                         Sin Garantes Registrados
                     </span>`;
             }
 
             container.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 shadow-xl transition-all">
+                <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xl transition-all space-y-4">
                     <!-- Header -->
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800">
                         <div>
-                            <div class="flex items-center gap-3">
-                                <h3 class="font-headline text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-2xl">verified_user</span>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold border border-primary/20 shadow-xs shrink-0">
+                                    <span class="material-symbols-outlined text-xl">shield_person</span>
+                                </div>
+                                <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight">
                                     Garantías y Garantes
                                 </h3>
                                 ${statusBadgeHtml}
                             </div>
-                            <p class="font-body text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                                Gestioná tus garantes de alquiler. Al enviarles la invitación, podrán subir digitalmente sus últimos 3 recibos de sueldo.
+                            <p class="font-body text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                Gestioná tus garantes de alquiler. Al enviarles la invitación, podrán subir sus recibos de sueldo digitales.
                             </p>
                         </div>
 
-                        <button type="button" onclick="GarantesManager.openAddModal()" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-5 py-3 rounded-2xl font-headline font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0">
+                        <button type="button" onclick="GarantesManager.openAddModal()" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-headline font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-base">person_add</span>
-                            + Agregar Garante
+                            <span>+ Agregar Garante</span>
                         </button>
                     </div>
 
                     <!-- Garantes List -->
-                    <div class="mt-6 space-y-4">
+                    <div class="space-y-3">
                         ${garantes.length === 0 ? `
-                            <div class="text-center py-10 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl p-6">
-                                <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">contacts</span>
-                                <h4 class="font-headline font-bold text-zinc-800 dark:text-zinc-200 text-base">Aún no cargaste ningún garante</h4>
-                                <p class="font-body text-xs text-zinc-500 max-w-sm mx-auto mt-1 mb-4">
-                                    Agregá un garante para mandarle el link de carga de sus recibos de sueldo.
+                            <div class="text-center py-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl p-6 bg-zinc-50/50 dark:bg-zinc-800/20">
+                                <span class="material-symbols-outlined text-3xl text-zinc-400 mb-1.5">contacts</span>
+                                <h4 class="font-headline font-bold text-zinc-800 dark:text-zinc-200 text-sm">Aún no vinculaste ningún garante</h4>
+                                <p class="font-body text-xs text-zinc-500 max-w-sm mx-auto mt-0.5 mb-3">
+                                    Agregá un garante para mandarle el link de carga digital de sus recibos de sueldo.
                                 </p>
-                                <button type="button" onclick="GarantesManager.openAddModal()" class="inline-flex items-center gap-2 text-primary dark:text-red-400 font-headline font-extrabold text-xs hover:underline cursor-pointer">
-                                    + Agregar primer garante
+                                <button type="button" onclick="GarantesManager.openAddModal()" class="inline-flex items-center gap-1.5 text-primary dark:text-red-400 font-headline font-extrabold text-xs hover:underline cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">add_circle</span> + Agregar primer garante
                                 </button>
                             </div>
                         ` : garantes.map(g => {
                             let stateBadge = '';
                             if (g.estado === 'cargado') {
-                                stateBadge = `<span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold"><span class="material-symbols-outlined text-sm">check_circle</span> Recibos cargados (${g.recibos.length})</span>`;
+                                stateBadge = `<span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold"><span class="material-symbols-outlined text-xs">check_circle</span> Recibos cargados (${g.recibos ? g.recibos.length : 0})</span>`;
                             } else if (g.estado === 'invitado') {
-                                stateBadge = `<span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold"><span class="material-symbols-outlined text-sm">mark_email_read</span> Invitación enviada</span>`;
+                                stateBadge = `<span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold"><span class="material-symbols-outlined text-xs">mark_email_read</span> Invitación enviada</span>`;
                             } else {
-                                stateBadge = `<span class="inline-flex items-center gap-1 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/30 px-3 py-1 rounded-full text-xs font-bold"><span class="material-symbols-outlined text-sm">schedule</span> Pendiente de envío</span>`;
+                                stateBadge = `<span class="inline-flex items-center gap-1 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold"><span class="material-symbols-outlined text-xs">schedule</span> Pendiente de envío</span>`;
                             }
 
                             const esc = window.escapeHtml || (s => s);
@@ -363,37 +452,37 @@
                             const firstInitial = (g.nombre || 'G').trim().charAt(0).toUpperCase();
 
                             return `
-                                <div class="bg-zinc-50/70 dark:bg-zinc-800/40 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
-                                    <div class="flex items-center gap-3.5">
-                                        <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-headline font-black text-lg shrink-0">
+                                <div class="bg-zinc-50/70 dark:bg-zinc-800/40 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-headline font-black text-base shrink-0 border border-primary/20">
                                             ${esc(firstInitial)}
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-2.5 flex-wrap">
-                                                <h4 class="font-headline font-black text-zinc-900 dark:text-white text-base">${safeGName}</h4>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h4 class="font-headline font-black text-zinc-900 dark:text-white text-sm truncate">${safeGName}</h4>
                                                 ${stateBadge}
-                                                <span class="inline-flex items-center gap-1 bg-primary/10 text-primary dark:text-red-400 border border-primary/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                                                <span class="inline-flex items-center gap-1 bg-primary/10 text-primary dark:text-red-400 border border-primary/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
                                                     ${safeGRel}
                                                 </span>
                                             </div>
-                                            <p class="font-body text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-3 flex-wrap">
+                                            <p class="font-body text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2 flex-wrap truncate">
                                                 <span>${safeGEmail}</span>
                                                 ${safeGPhone ? `<span>• ${safeGPhone}</span>` : ''}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-zinc-200 dark:border-zinc-800">
-                                        <button type="button" onclick="GarantesManager.copyInviteLink('${safeGToken}')" class="inline-flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
+                                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-2.5 sm:pt-0 border-zinc-200 dark:border-zinc-800 shrink-0">
+                                        <button type="button" onclick="GarantesManager.copyInviteLink('${safeGToken}')" class="inline-flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-3 py-1.5 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-2xs">
                                             <span class="material-symbols-outlined text-sm text-primary">link</span>
                                             Copiar Link
                                         </button>
-                                        <button type="button" onclick="GarantesManager.shareWhatsApp('${safeGToken}', '${safeGName.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-sm">
+                                        <button type="button" onclick="GarantesManager.shareWhatsApp('${safeGToken}', '${safeGName.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-headline font-extrabold transition-all cursor-pointer shadow-2xs">
                                             <span class="material-symbols-outlined text-sm">chat</span>
                                             WhatsApp
                                         </button>
-                                        <button type="button" onclick="GarantesManager.deleteGarante('${safeGId}')" class="p-2 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer" title="Eliminar garante">
-                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                        <button type="button" onclick="GarantesManager.deleteGarante('${safeGId}')" class="p-1.5 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer" title="Eliminar garante">
+                                            <span class="material-symbols-outlined text-base">delete</span>
                                         </button>
                                     </div>
                                 </div>
@@ -854,7 +943,7 @@
         },
 
         // Auto Router Initialization
-        init: function () {
+        init: async function () {
             const urlParams = new URLSearchParams(window.location.search);
             const view = urlParams.get('view');
             const token = urlParams.get('token');
@@ -862,7 +951,11 @@
             if (view === 'garante-invitacion' && token) {
                 this.renderPublicGuarantorView(token);
             } else {
-                this.renderTenantSection();
+                const container = document.getElementById('garantes-tenant-container');
+                if (container) {
+                    await this.syncWithSupabase();
+                    this.renderTenantSection();
+                }
             }
         }
     };

@@ -571,6 +571,10 @@
                                             <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Estado ARCA:</span>
                                             <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right" id="audit-cuit-estado">Clave Activa Sin Bloqueos</strong>
                                         </li>
+                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Bono de Sueldo:</span>
+                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-bono-sueldo-estado">Opcional (Sin adjuntar)</strong>
+                                        </li>
                                         <li class="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 gap-0.5 sm:gap-3">
                                             <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Actividad Registrada:</span>
                                             <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-bold sm:text-right" id="audit-actividad-arca">Servicios Profesionales / Comerciales</strong>
@@ -603,38 +607,36 @@
                                         </li>
                                     </ul>
                                 </div>
-
-                                <!-- Bloque 3: Garantes Presentados -->
-                                <div class="bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 md:col-span-2 space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
-                                            <span class="material-symbols-outlined text-primary text-base">shield_person</span>
-                                            <span>Garantes y Respaldos Presentados</span>
-                                        </h4>
-                                        <button type="button" onclick="toggleEditGarantesMode()" id="btn-toggle-edit-garantes" class="text-[11px] font-headline font-bold text-primary dark:text-red-400 hover:underline flex items-center gap-1.5 cursor-pointer py-1 px-2.5 rounded-lg hover:bg-primary/5 dark:hover:bg-red-900/20 transition-all">
-                                            <span class="material-symbols-outlined text-sm" id="icon-edit-garantes">edit</span>
-                                            <span id="text-edit-garantes">Editar garantes</span>
-                                        </button>
-                                    </div>
-                                    <div id="audit-garantes-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div class="p-4 text-center text-zinc-400 col-span-2 font-body text-xs">Cargando garantes del usuario...</div>
-                                    </div>
-                                </div>
                             </div>
                         </details>
+                    </div>
+
+                    <!-- Footer Oficial de la Credencial: Validez & Acciones -->
+                    <div class="mt-4 pt-5 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-2 text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400">
+                            <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
+                            <span id="passport-validity-footer">Validez: 60 días restantes • Emitido por Red Hábitat</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                            <button type="button" onclick="sharePassportLink()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-all cursor-pointer shadow-2xs">
+                                <span class="material-symbols-outlined text-base">share</span>
+                                <span>Compartir</span>
+                            </button>
+                            <button type="button" id="btn-download-passport-pdf" onclick="downloadPassportPDF()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-black text-xs shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                <span>Descargar PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <!-- Botones de Acción: Compartir y Descargar PDF (Debajo del Pasaporte) -->
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="sharePassportLink()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-2xs">
-                    <span class="material-symbols-outlined text-base sm:text-lg">share</span>
-                    <span>Compartir</span>
-                </button>
-                <button type="button" id="btn-download-passport-pdf" onclick="downloadPassportPDF()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary-container text-white font-headline font-black text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-base sm:text-lg">download</span>
-                    <span>Descargar PDF</span>
-                </button>
-            </div>
+            <!-- SECCIÓN: BONO DE SUELDO DEL INQUILINO (OPCIONAL) -->
+            <div id="tenant-bono-sueldo-container" class="w-full"></div>
+
+            <!-- SECCIÓN: GARANTÍAS Y GARANTES DEL INQUILINO -->
+            <div id="garantes-tenant-container" class="w-full"></div>
         </section>
 
         <!-- ========================================================================= -->
@@ -2462,6 +2464,37 @@
                 const elCapacidad = document.getElementById('passport-capacidad-pago');
                 if (elCapacidad) elCapacidad.textContent = capacidadPago;
 
+                // Bono de Sueldo Info & Audit
+                let bonoInfo = null;
+                if (pasaporte && pasaporte.datos_ingresos && pasaporte.datos_ingresos.bono_sueldo) {
+                    bonoInfo = pasaporte.datos_ingresos.bono_sueldo;
+                } else {
+                    try {
+                        const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                        const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        bonoInfo = pLocal.bono_sueldo || (pLocal.datos_ingresos ? pLocal.datos_ingresos.bono_sueldo : null) || uLocal.bono_sueldo || null;
+                    } catch (eB) {}
+                }
+
+                const elAuditBono = document.getElementById('audit-bono-sueldo-estado');
+                if (elAuditBono) {
+                    if (bonoInfo && (bonoInfo.nombre || bonoInfo.url || bonoInfo.data)) {
+                        elAuditBono.className = 'font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate flex items-center gap-1 justify-end';
+                        elAuditBono.innerHTML = `<span class="material-symbols-outlined text-sm">task_alt</span> Adjuntado (${bonoInfo.nombre || 'Bono de Sueldo'})`;
+                    } else {
+                        elAuditBono.className = 'font-headline text-zinc-500 dark:text-zinc-400 font-extrabold text-right truncate';
+                        elAuditBono.textContent = 'Opcional (Sin adjuntar)';
+                    }
+                }
+
+                // Renderizar Widget interactivo de Bono de Sueldo
+                renderTenantBonoSection(bonoInfo);
+
+                // Sincronizar y Renderizar Gestor de Garantes
+                if (window.GarantesManager) {
+                    window.GarantesManager.syncWithSupabase(pasaporte ? pasaporte.id_pasaporte : null);
+                }
+
                 const elGarantesKpi = document.getElementById('passport-garantes-kpi');
                 if (elGarantesKpi) {
                     elGarantesKpi.innerHTML = `<span class="material-symbols-outlined text-base text-primary">shield_person</span> ${garantes.length} ${garantes.length === 1 ? 'Aprobado' : 'Aprobados'}`;
@@ -2472,7 +2505,7 @@
                     elBadgeGarantes.innerHTML = `<span class="material-symbols-outlined text-xs sm:text-sm shrink-0">shield_person</span> <span class="truncate">${garantes.length} ${garantes.length === 1 ? 'Garante Verificado' : 'Garantes Validados'}</span>`;
                 }
 
-                // 7. Renderizar lista de Garantes
+                // 7. Renderizar lista de Garantes dentro de la auditoría
                 const elGarantesList = document.getElementById('audit-garantes-list');
                 if (elGarantesList) {
                     if (garantes && garantes.length > 0) {
@@ -2503,7 +2536,7 @@
                         elGarantesList.innerHTML = `
                             <div class="col-span-2 p-5 text-center bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700">
                                 <p class="text-xs font-body text-zinc-500 dark:text-zinc-400">No posees garantes registrados actualmente.</p>
-                                <a href="pasaporte-habitat.html" class="inline-flex items-center gap-1.5 text-xs font-headline font-bold text-primary dark:text-red-400 hover:underline mt-2">
+                                <a href="#garantes-tenant-container" onclick="if(window.GarantesManager) window.GarantesManager.openAddModal();" class="inline-flex items-center gap-1.5 text-xs font-headline font-bold text-primary dark:text-red-400 hover:underline mt-2 cursor-pointer">
                                     <span class="material-symbols-outlined text-sm">person_add</span> Invitar o Vincular Garante
                                 </a>
                             </div>
@@ -2515,6 +2548,250 @@
                 console.error("Error cargando pasaporte real del usuario:", err);
             }
         }
+
+        // =============================================================
+        // RENDERIZADO Y CONTROL DE BONO DE SUELDO DEL INQUILINO
+        // =============================================================
+        window.renderTenantBonoSection = function(bonoInfo) {
+            const container = document.getElementById('tenant-bono-sueldo-container');
+            if (!container) return;
+
+            if (bonoInfo && (bonoInfo.nombre || bonoInfo.url || bonoInfo.data)) {
+                const isPdf = (bonoInfo.tipo && bonoInfo.tipo.includes('pdf')) || (bonoInfo.nombre && bonoInfo.nombre.toLowerCase().endsWith('.pdf'));
+                const sizeMb = bonoInfo.tamano ? (bonoInfo.tamano / (1024 * 1024)).toFixed(2) + ' MB' : 'Comprobante digital';
+                const dateStr = bonoInfo.uploaded_at ? new Date(bonoInfo.uploaded_at).toLocaleDateString('es-AR') : 'Reciente';
+
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold border border-emerald-500/20 shadow-xs shrink-0">
+                                    <span class="material-symbols-outlined text-xl">payments</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-black text-zinc-900 dark:text-white text-base sm:text-lg leading-tight">Bono de Sueldo / Recibo de Haberes</h3>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Comprobante de ingresos para respaldo de solvencia crediticia</p>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 self-start sm:self-center px-3 py-1 text-xs font-headline font-extrabold rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+                                <span class="material-symbols-outlined text-sm">verified</span>
+                                <span>Comprobante Adjuntado</span>
+                            </span>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                    <span class="material-symbols-outlined text-2xl">${isPdf ? 'picture_as_pdf' : 'description'}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-headline font-black text-zinc-900 dark:text-white text-xs sm:text-sm truncate">${bonoInfo.nombre || 'Bono_de_Sueldo.pdf'}</p>
+                                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">${sizeMb} • Subido el ${dateStr}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                                <button type="button" onclick="handleTenantBonoDownload()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-headline font-bold text-xs transition-colors cursor-pointer shadow-2xs">
+                                    <span class="material-symbols-outlined text-base">visibility</span>
+                                    <span>Ver / Descargar</span>
+                                </button>
+                                <button type="button" onclick="document.getElementById('input-tenant-bono-replace').click()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs transition-all cursor-pointer shadow-xs">
+                                    <span class="material-symbols-outlined text-base">sync</span>
+                                    <span>Actualizar</span>
+                                </button>
+                                <input type="file" id="input-tenant-bono-replace" accept=".pdf,.png,.jpg,.jpeg" class="hidden" onchange="handleTenantBonoUpload(event)">
+                                <button type="button" onclick="handleTenantBonoDelete()" class="inline-flex items-center justify-center p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer" title="Eliminar comprobante">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xl space-y-3.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center justify-center font-bold border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs shrink-0">
+                                    <span class="material-symbols-outlined text-xl">payments</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-black text-zinc-900 dark:text-white text-base sm:text-lg leading-tight">Bono de Sueldo / Recibo de Haberes</h3>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Adjuntá opcionalmente tu recibo de sueldo para potenciar tu scoring financiero</p>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1 self-start sm:self-center px-2.5 py-0.5 text-xs font-headline font-extrabold rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/80">
+                                Opcional
+                            </span>
+                        </div>
+
+                        <div onclick="document.getElementById('input-tenant-bono-upload').click()"
+                             class="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-primary dark:hover:border-red-500 bg-zinc-50/60 dark:bg-zinc-800/20 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50 rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition-all flex flex-col sm:flex-row items-center justify-between gap-3 group">
+                            <input type="file" id="input-tenant-bono-upload" accept=".pdf,.png,.jpg,.jpeg" class="hidden" onchange="handleTenantBonoUpload(event)">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <span class="material-symbols-outlined text-xl">upload_file</span>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white">
+                                        Hacé clic para <span class="text-primary dark:text-red-400 underline">adjuntar tu bono de sueldo</span>
+                                    </p>
+                                    <p class="text-[11px] font-body text-zinc-500 dark:text-zinc-400">Archivos PDF, PNG o JPG (máx. 10 MB)</p>
+                                </div>
+                            </div>
+                            <button type="button" class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-bold text-xs transition-colors pointer-events-none shadow-xs shrink-0">
+                                Examinar archivo
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        window.handleTenantBonoUpload = async function(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) {
+                alert('El archivo no puede superar 10 MB.');
+                return;
+            }
+
+            try {
+                const base64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(file);
+                });
+
+                const bonoObj = {
+                    id: 'bono_' + Date.now(),
+                    nombre: file.name,
+                    tamano: file.size,
+                    tipo: file.type || 'application/pdf',
+                    data: base64,
+                    url: base64 ? '#' : null,
+                    uploaded_at: new Date().toISOString()
+                };
+
+                // Guardar en Supabase si hay pasaporte activo
+                if (window.supabaseClient && window.currentPasaporteId) {
+                    try {
+                        const { data: pass } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('datos_ingresos')
+                            .eq('id_pasaporte', window.currentPasaporteId)
+                            .maybeSingle();
+
+                        const updatedDatosIngresos = {
+                            ...(pass?.datos_ingresos || {}),
+                            bono_sueldo: bonoObj
+                        };
+
+                        await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .update({
+                                datos_ingresos: updatedDatosIngresos,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id_pasaporte', window.currentPasaporteId);
+                    } catch (eDb) {
+                        console.warn("Aviso al guardar bono en Supabase:", eDb);
+                    }
+                }
+
+                // Guardar en localStorage
+                try {
+                    const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    pLocal.bono_sueldo = bonoObj;
+                    if (!pLocal.datos_ingresos) pLocal.datos_ingresos = {};
+                    pLocal.datos_ingresos.bono_sueldo = bonoObj;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pLocal));
+
+                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    uLocal.bono_sueldo = bonoObj;
+                    localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                } catch (eLoc) {}
+
+                alert('¡Bono de sueldo adjuntado y respaldado con éxito en tu Pasaporte Hábitat!');
+                await loadTenantPassport();
+
+            } catch (err) {
+                console.error("Error al subir bono de sueldo:", err);
+                alert("Ocurrió un error al procesar el archivo: " + err.message);
+            }
+        };
+
+        window.handleTenantBonoDelete = async function() {
+            if (!confirm('¿Estás seguro de que deseas quitar tu bono de sueldo del pasaporte?')) return;
+
+            try {
+                if (window.supabaseClient && window.currentPasaporteId) {
+                    try {
+                        const { data: pass } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('datos_ingresos')
+                            .eq('id_pasaporte', window.currentPasaporteId)
+                            .maybeSingle();
+
+                        const updatedDatosIngresos = {
+                            ...(pass?.datos_ingresos || {})
+                        };
+                        delete updatedDatosIngresos.bono_sueldo;
+
+                        await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .update({
+                                datos_ingresos: updatedDatosIngresos,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id_pasaporte', window.currentPasaporteId);
+                    } catch (eDb) {
+                        console.warn("Aviso al remover bono en Supabase:", eDb);
+                    }
+                }
+
+                // Remover de localStorage
+                try {
+                    const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    delete pLocal.bono_sueldo;
+                    if (pLocal.datos_ingresos) delete pLocal.datos_ingresos.bono_sueldo;
+                    localStorage.setItem('habitat_passport_data', JSON.stringify(pLocal));
+
+                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    delete uLocal.bono_sueldo;
+                    localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                } catch (eLoc) {}
+
+                alert('Bono de sueldo eliminado correctamente.');
+                await loadTenantPassport();
+
+            } catch (err) {
+                console.error("Error al eliminar bono de sueldo:", err);
+                alert("Ocurrió un error al eliminar el archivo: " + err.message);
+            }
+        };
+
+        window.handleTenantBonoDownload = function() {
+            let bonoInfo = null;
+            try {
+                const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                bonoInfo = pLocal.bono_sueldo || (pLocal.datos_ingresos ? pLocal.datos_ingresos.bono_sueldo : null);
+            } catch (e) {}
+
+            if (bonoInfo && bonoInfo.data) {
+                const link = document.createElement('a');
+                link.href = bonoInfo.data;
+                link.download = bonoInfo.nombre || 'Bono_Sueldo.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else if (bonoInfo && bonoInfo.url && bonoInfo.url !== '#') {
+                window.open(bonoInfo.url, '_blank');
+            } else {
+                alert('Visualizando comprobante de sueldo registrado.');
+            }
+        };
 
         // Estado y lógica para modo 'Editar garantes'
         window.isEditingGarantes = false;
@@ -2659,6 +2936,11 @@
                 renderTenantDashboard();
             }
         });
+        window.addEventListener('habitat:garantes_updated', () => {
+            if (typeof loadTenantPassport === 'function') {
+                loadTenantPassport();
+            }
+        });
     </script>
 
     <!-- Modal Moderno de Confirmación para Eliminar Garante -->
@@ -2689,6 +2971,8 @@
         </div>
     </div>
 
+    <!-- Garantes Manager Engine -->
+    <script src="js/garantes-manager.js"></script>
     <!-- Notifications & Contracts Electronic Signature Module Engine -->
     <script src="js/notifications.js"></script>
     <script src="js/contracts-manager.js"></script>

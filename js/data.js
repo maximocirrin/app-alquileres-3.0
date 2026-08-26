@@ -35,7 +35,7 @@ function base64ToBlob(base64Data, contentType = 'image/jpeg') {
 
 var DataManager = {
     // Helper: Get or Create Profile ID for current user
-    _getOrCreateProfile: async function () {
+    _getOrCreateProfile: async function (userHint = null) {
         if (!window.supabaseClient) return null;
         try {
             let authUser = null;
@@ -51,37 +51,83 @@ var DataManager = {
                 } catch (e) {}
             }
 
-            if (!authUser) {
-                return null;
+            if (authUser) {
+                const { data: existing } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
+                    .limit(1);
+
+                if (existing && existing.length > 0) {
+                    return existing[0].id_perfil;
+                }
+
+                const { data: newProfile, error } = await window.supabaseClient
+                    .from('Perfil')
+                    .insert([{
+                        user_id: authUser.id,
+                        mail: authUser.email,
+                        nombre_completo: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
+                        id_tipo_perfil: 1,
+                        cuenta_verificada: true
+                    }])
+                    .select('id_perfil')
+                    .single();
+
+                if (!error && newProfile) {
+                    return newProfile.id_perfil;
+                }
             }
 
-            const { data: existing } = await window.supabaseClient
-                .from('Perfil')
-                .select('id_perfil')
-                .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
-                .limit(1);
+            // Fallback for local storage user or hint
+            try {
+                let localEmail = null;
+                let localName = 'Usuario Habitat';
+                if (userHint && typeof userHint === 'object') {
+                    localEmail = userHint.email || userHint.mail || userHint.contactEmail;
+                    localName = userHint.nombre || userHint.contactNombre || localName;
+                } else if (typeof userHint === 'string' && userHint.includes('@')) {
+                    localEmail = userHint;
+                }
 
-            if (existing && existing.length > 0) {
-                return existing[0].id_perfil;
+                if (!localEmail) {
+                    const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    localEmail = localUser.email || localUser.mail;
+                    localName = localUser.nombre_completo || localUser.name || localName;
+                }
+
+                if (localEmail) {
+                    localEmail = localEmail.trim().toLowerCase();
+                    const { data: matched } = await window.supabaseClient
+                        .from('Perfil')
+                        .select('id_perfil')
+                        .ilike('mail', localEmail)
+                        .limit(1);
+
+                    if (matched && matched.length > 0) {
+                        return matched[0].id_perfil;
+                    }
+
+                    const { data: createdProf, error: createErr } = await window.supabaseClient
+                        .from('Perfil')
+                        .insert([{
+                            mail: localEmail,
+                            nombre_completo: localName,
+                            id_tipo_perfil: 1,
+                            cuenta_verificada: false
+                        }])
+                        .select('id_perfil')
+                        .single();
+
+                    if (!createErr && createdProf) {
+                        return createdProf.id_perfil;
+                    }
+                }
+            } catch (localErr) {
+                console.warn("Fallback profile lookup error:", localErr);
             }
 
-            const { data: newProfile, error } = await window.supabaseClient
-                .from('Perfil')
-                .insert([{
-                    user_id: authUser.id,
-                    mail: authUser.email,
-                    nombre_completo: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
-                    id_tipo_perfil: 1,
-                    cuenta_verificada: true
-                }])
-                .select('id_perfil')
-                .single();
-
-            if (error) {
-                console.warn("Could not insert Perfil:", error);
-                return null;
-            }
-            return newProfile.id_perfil;
+            return null;
         } catch (e) {
             console.error("Error in _getOrCreateProfile:", e);
             return null;
@@ -494,7 +540,10 @@ var DataManager = {
     addMarketplaceProperty: async (propertyData) => {
         if (!window.supabaseClient) throw new Error("Supabase client not available");
 
-        const profileId = await DataManager._getOrCreateProfile();
+        const profileId = await DataManager._getOrCreateProfile({
+            email: propertyData.contactEmail || propertyData.email,
+            nombre: `${propertyData.contactNombre || ''} ${propertyData.contactApellido || ''}`.trim()
+        });
 
         // 1. Parse address & street number accurately
         let fullCalle = propertyData.calleAltura || propertyData.address || 'Calle Principal';
@@ -659,6 +708,7 @@ var DataManager = {
                 id_barrio: idBarrio,
                 id_antiguedad: idAntiguedad,
                 id_unidad_medida: 1,
+                id_perfil_propietario: profileId,
                 calle: fullCalle,
                 numero: numero || null,
                 piso_dpto: propertyData.piso ? `${propertyData.piso} ${propertyData.depto || ''}`.trim() : null,

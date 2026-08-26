@@ -193,6 +193,16 @@
       const seniorityText = years > 0 ? `${years} año${years > 1 ? 's' : ''} ${remMonths > 0 ? `y ${remMonths}m` : ''}` : `${months} meses`;
 
       const checkedAtText = record?.checked_at ? new Date(record.checked_at).toLocaleDateString('es-AR') : 'Validado';
+      const bono = record?.bono_sueldo || record?.datos_ingresos?.bono_sueldo || null;
+      const bonoBadgeHtml = bono ? `
+        <div class="mt-3 p-3 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/20 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg shrink-0">receipt_long</span>
+            <span class="text-xs font-headline font-bold text-zinc-900 dark:text-white truncate">Bono de Sueldo: ${bono.nombre || 'Recibo de Haberes'}</span>
+          </div>
+          <span class="text-[10px] font-headline font-extrabold uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md shrink-0">Adjuntado</span>
+        </div>
+      ` : '';
 
       return `
         <div class="employment-card bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl">
@@ -225,6 +235,7 @@
               <p class="text-base font-headline font-black text-emerald-700 dark:text-emerald-300 mt-1">${formattedIncome}</p>
             </div>
           </div>
+          ${bonoBadgeHtml}
 
           <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400 font-headline font-semibold">
             <span>Respaldo Documental Validado</span>
