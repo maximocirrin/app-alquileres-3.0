@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized } from './_auth.js';
+import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, getSupabaseAdmin } from './_auth.js';
 dotenv.config();
 
 /**
@@ -30,19 +30,53 @@ export default async function handler(req, res) {
     });
   }
 
-  // 1. Validar autenticación
-  const { user, profile, error: authError } = await getAuthenticatedUser(req);
-  if (authError || !user) {
-    return sendUnauthorized(res, `Autenticación requerida para crear sesión de verificación: ${authError || 'Sesión no válida'}`);
+  let body = {};
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  } catch (e) {
+    body = req.body || {};
+  }
+
+  const { callbackUrl, workflowId, isLivenessOnly, flow } = body;
+  const garanteToken = body.garanteToken || body.token || (req.query && (req.query.garanteToken || req.query.token));
+
+  let verifiedUserId = null;
+  let guarantorRecord = null;
+
+  if (garanteToken) {
+    // 1.a Validar garante por token de invitación en Supabase
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data: gFound, error: gErr } = await supabase
+        .from('Garante')
+        .select('id_garante, nombre_completo, email, id_estado_garante')
+        .eq('token_invitacion', String(garanteToken).trim())
+        .maybeSingle();
+
+      if (gErr || !gFound) {
+        return res.status(404).json({
+          error: 'Guarantor Not Found',
+          message: 'El enlace o token de invitación del garante no es válido o ha expirado.'
+        });
+      }
+      guarantorRecord = gFound;
+      verifiedUserId = `garante_${gFound.id_garante}`;
+    } catch (eGaranteAuth) {
+      return res.status(500).json({
+        error: 'Database Error',
+        message: 'Error al verificar token de garante: ' + eGaranteAuth.message
+      });
+    }
+  } else {
+    // 1.b Validar autenticación normal del usuario/inquilino
+    const { user, profile, error: authError } = await getAuthenticatedUser(req);
+    if (authError || !user) {
+      return sendUnauthorized(res, `Autenticación requerida para crear sesión de verificación: ${authError || 'Sesión no válida'}`);
+    }
+    verifiedUserId = (profile && profile.id_perfil) ? String(profile.id_perfil) : user.id;
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { callbackUrl, workflowId, isLivenessOnly, flow } = body;
-
-    // Vincular vendor_data al usuario autenticado verificado
-    const verifiedUserId = (profile && profile.id_perfil) ? String(profile.id_perfil) : user.id;
-
     const isSignatureFlow = isLivenessOnly || flow === 'signature' || flow === 'contract_signature';
 
     const apiKey = (process.env.DIDIT_API_KEY || '').trim();
@@ -162,10 +196,28 @@ export default async function handler(req, res) {
       });
     }
 
+    const createdSessionId = data.session_id || data.id;
+
+    if (guarantorRecord && createdSessionId) {
+      try {
+        const supabase = getSupabaseAdmin();
+        await supabase
+          .from('Garante')
+          .update({
+            id_estado_garante: 3, // 3: KYC Pendiente
+            didit_session_id: createdSessionId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id_garante', guarantorRecord.id_garante);
+      } catch (eUpGar) {
+        console.warn('[Create-Session] Aviso actualizando Garante:', eUpGar.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       url: sessionUrl,
-      sessionId: data.session_id || data.id,
+      sessionId: createdSessionId,
       workflowType: isSignatureFlow ? 'liveness_biometrics' : 'passport_full',
       diditResponse: data
     });

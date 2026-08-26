@@ -3776,7 +3776,7 @@
             }
         };
 
-        function openGuarantorsModal(appId) {
+        async function openGuarantorsModal(appId) {
             let app = ownerAppsState.find(a => String(a.id) === String(appId));
             if (!app && window.DataManager && window.DataManager._mockApplications) {
                 app = window.DataManager._mockApplications.find(a => String(a.id) === String(appId));
@@ -3784,30 +3784,115 @@
             const pData = getApplicantPassportData(app);
             let candidateName = pData.name;
 
-            const guarantors = [
-                {
-                    name: 'Roberto Fernández (Padre)',
-                    type: 'Garantía Propietaria CABA',
-                    dni: '20-14892341-9',
-                    income: '$ 1.850.000 / mes',
-                    details: 'Inmueble en Av. Libertador 2450 6°B, CABA (Sin embargos ni hipotecas. Verificado RPI N° 84920/2025)',
-                    phone: '+54 9 11 4455-8899',
-                    email: 'roberto.f@gmail.com',
-                    score: 'Excelente (Dominio Libre)',
-                    proofName: 'Escritura_Propiedad_Dominio.pdf'
-                },
-                {
-                    name: 'Finaer Seguro de Caución SA',
-                    type: 'Caución Privada Preaprobada',
-                    dni: 'CUIT 30-71239841-2',
-                    income: 'Cobertura Total $ 15.000.000 (Canon + Expensas)',
-                    details: 'Póliza N° FIN-2026-9942 • Aprobado sin observaciones por Scoring Financiero',
-                    phone: '+54 11 5277-7000',
-                    email: 'garantias@finaer.com.ar',
-                    score: 'Score 10/10 (Fianza Otorgada)',
-                    proofName: 'Poliza_Caucion_Preaprobada.pdf'
+            let guarantors = [];
+
+            // 1. Intentar consultar garantes reales en Supabase
+            if (window.supabaseClient && pData.passportId) {
+                try {
+                    const { data: garData } = await window.supabaseClient
+                        .from('Garante')
+                        .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*)')
+                        .eq('id_pasaporte', pData.passportId);
+
+                    if (garData && garData.length > 0) {
+                        guarantors = garData.map(g => {
+                            const tipo = g.Tipo_garantia?.nombre || (g.id_tipo_garantia === 1 ? 'Garantía Propietaria' : (g.id_tipo_garantia === 2 ? 'Seguro de Caución' : 'Recibo de Sueldo'));
+                            const estado = g.Estado_garante?.nombre || (g.id_estado_garante === 6 ? 'Aprobado' : (g.id_estado_garante === 7 ? 'Rechazado' : 'En Revisión'));
+                            const datos = g.datos_garantia || {};
+                            let detailStr = '';
+                            if (g.id_tipo_garantia === 1) {
+                                detailStr = `Inmueble en ${datos.direccion_inmueble || 'Mendoza'} (${datos.provincia || 'Mendoza'}) • Matrícula: ${datos.matricula_registro || 'N/A'} • Titularidad: ${datos.titularidad_porcentaje || 100}%`;
+                            } else if (g.id_tipo_garantia === 2) {
+                                detailStr = `Aseguradora: ${datos.aseguradora_nombre || 'Finaer'} • Póliza N° ${datos.numero_poliza || 'N/A'} • Cobertura: ${datos.monto_cobertura || 'Total'}`;
+                            } else {
+                                detailStr = `Empleador: ${datos.empleador_nombre || 'Sin registrar'} (CUIT: ${datos.empleador_cuit || 'N/A'}) • Antigüedad: ${datos.antiguedad_meses || 'N/A'} • Sueldo Neto: $ ${(Number(datos.ingreso_neto_mensual) || 0).toLocaleString('es-AR')}`;
+                            }
+
+                            return {
+                                id: g.id_garante,
+                                name: g.nombre_completo,
+                                type: tipo,
+                                dni: g.dni || g.cuit || 'Verificado Didit',
+                                income: datos.ingreso_neto_mensual ? `$ ${(Number(datos.ingreso_neto_mensual)).toLocaleString('es-AR')}` : (datos.monto_cobertura || 'Apto 100%'),
+                                details: detailStr,
+                                phone: g.telefono || 'Sin teléfono',
+                                email: g.email || 'Sin correo',
+                                score: g.kyc_verificado ? 'Didit KYC Verificado (10/10)' : 'Biometría Pendiente',
+                                status: estado,
+                                id_estado_garante: g.id_estado_garante || 4,
+                                proofName: (g.Documento_garante && g.Documento_garante.length > 0) ? g.Documento_garante[0].nombre_archivo : 'Documentacion_Garante.pdf',
+                                docsCount: (g.Documento_garante || []).length
+                            };
+                        });
+                    }
+                } catch (e) {
+                    console.warn('[Admin] Error consultando garantes reales:', e);
                 }
-            ];
+            }
+
+            // 2. Fallback a estado local o garantes por defecto
+            if (guarantors.length === 0) {
+                if (window.GarantesManager) {
+                    const localGars = window.GarantesManager.getState();
+                    if (localGars && localGars.length > 0) {
+                        guarantors = localGars.map(g => {
+                            const tipoObj = window.GarantesManager.TIPOS_GARANTIA[g.id_tipo_garantia] || { nombre: 'Garantía' };
+                            const estadoObj = window.GarantesManager.ESTADOS[g.id_estado_garante] || { label: 'En Revisión' };
+                            const datos = g.datos_garantia || {};
+                            return {
+                                id: g.id || g.id_garante,
+                                name: g.nombre_completo || g.nombre,
+                                type: tipoObj.nombre,
+                                dni: g.dni || 'CUIL 20-18492014-4',
+                                income: datos.ingreso_neto_mensual ? `$ ${Number(datos.ingreso_neto_mensual).toLocaleString('es-AR')}` : '$ 1.850.000 / mes',
+                                details: datos.direccion_inmueble ? `Inmueble en ${datos.direccion_inmueble}` : (datos.empleador_nombre ? `Empleador: ${datos.empleador_nombre}` : 'Respaldo verificado en Red Hábitat'),
+                                phone: g.telefono || '+54 9 261 456-7890',
+                                email: g.email || 'garante@habitat.com.ar',
+                                score: g.kyc_verificado ? 'Didit KYC Verificado (10/10)' : 'KYC en Proceso',
+                                status: estadoObj.label,
+                                id_estado_garante: g.id_estado_garante || 4,
+                                proofName: 'Comprobantes_Garantia.pdf',
+                                docsCount: (g.documentos || []).length
+                            };
+                        });
+                    }
+                }
+            }
+
+            if (guarantors.length === 0) {
+                guarantors = [
+                    {
+                        id: 'gar_mock_1',
+                        name: 'Carlos Eduardo Rossi (Padre)',
+                        type: 'Recibo de Sueldo (Fianza)',
+                        dni: '20-18492014-4',
+                        income: '$ 1.450.000 / mes',
+                        details: 'Empleador: Telecom Argentina SA (CUIT: 30-63945373-8) • Antigüedad: 4 años • 3 Recibos Aprobados',
+                        phone: '+54 9 261 456-7890',
+                        email: 'carlos.rossi@gmail.com',
+                        score: 'Didit KYC Verificado (10/10)',
+                        status: 'Aprobado',
+                        id_estado_garante: 6,
+                        proofName: 'Recibos_Sueldo_Rossi.pdf',
+                        docsCount: 3
+                    },
+                    {
+                        id: 'gar_mock_2',
+                        name: 'Mariana Gómez',
+                        type: 'Garantía Propietaria',
+                        dni: '27-32948192-3',
+                        income: 'Inmueble 100% Titular',
+                        details: 'Av. Colón 450 4°B, Mendoza (Matrícula MZA-84920/2021) • Dominio libre de gravámenes',
+                        phone: '+54 9 261 512-3456',
+                        email: 'marianagomez@hotmail.com',
+                        score: 'Auditoría Registral OK (10/10)',
+                        status: 'Aprobado',
+                        id_estado_garante: 6,
+                        proofName: 'Escritura_Propiedad_Gomez.pdf',
+                        docsCount: 2
+                    }
+                ];
+            }
 
             let modal = document.getElementById('guarantors-info-modal');
             if (!modal) {
@@ -3823,11 +3908,11 @@
                 <div class="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white max-h-[90vh] overflow-y-auto space-y-5" onclick="event.stopPropagation()">
                     <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
-                                <span class="material-symbols-outlined text-2xl">verified_user</span>
+                            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-2xl">shield_person</span>
                             </div>
                             <div>
-                                <span class="text-[10px] font-headline font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">Garantes & Respaldos Verificados</span>
+                                <span class="text-[10px] font-headline font-black uppercase text-primary tracking-wider">Garantes & Respaldos Verificados</span>
                                 <h3 class="font-headline text-lg sm:text-xl font-extrabold">Información de Garantes (${candidateName})</h3>
                             </div>
                         </div>
@@ -3841,7 +3926,7 @@
                             <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">gavel</span>
                             <div>
                                 <span class="font-headline font-extrabold text-emerald-700 dark:text-emerald-300 block">Validación Jurídica & Financiera Hábitat</span>
-                                <span class="text-zinc-500 dark:text-zinc-400">Garantes con respaldo crediticio apto y títulos de propiedad sin inhibiciones.</span>
+                                <span class="text-zinc-500 dark:text-zinc-400">Garantes con respaldo crediticio verificado, identidad Didit y solvencia apta.</span>
                             </div>
                         </div>
                         <span class="px-3 py-1 bg-emerald-600 text-white font-headline font-black rounded-full text-[10px] uppercase shrink-0">Apto 100%</span>
@@ -3852,11 +3937,12 @@
                             <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 space-y-3">
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                                        <span class="w-6 h-6 rounded-full bg-primary text-white font-bold text-xs flex items-center justify-center">${idx + 1}</span>
                                         <h4 class="font-headline text-base font-extrabold text-zinc-900 dark:text-white">${g.name}</h4>
                                         <span class="px-2.5 py-0.5 text-[10px] font-extrabold rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">${g.type}</span>
+                                        <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-md ${g.id_estado_garante === 6 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'}">${g.status}</span>
                                     </div>
-                                    <span class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400">CUIL/DNI: ${g.dni}</span>
+                                    <span class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400">DNI/CUIL: ${g.dni}</span>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -3876,13 +3962,20 @@
                                     <p class="text-zinc-700 dark:text-zinc-300 font-medium">${g.details}</p>
                                 </div>
 
-                                <div class="flex items-center justify-between gap-2 pt-1 text-xs">
+                                <div class="flex items-center justify-between gap-2 pt-1 text-xs flex-wrap">
                                     <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">verified</span> ${g.score}
                                     </span>
-                                    <button type="button" onclick="alert('Descargando comprobante de garante: ${g.proofName}')" class="px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors">
-                                        <span class="material-symbols-outlined text-xs">download</span> ${g.proofName}
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="alert('Descargando comprobante de garante: ${g.proofName}')" class="px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors">
+                                            <span class="material-symbols-outlined text-xs">download</span> ${g.proofName}
+                                        </button>
+                                        ${window.GarantesManager ? `
+                                            <button type="button" onclick="GarantesManager.openGuarantorReviewModal('${g.id}')" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer">
+                                                <span class="material-symbols-outlined text-xs">edit_note</span> Revisar
+                                            </button>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}

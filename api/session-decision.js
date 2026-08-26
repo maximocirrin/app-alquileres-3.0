@@ -13,10 +13,43 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Validar autenticación
-  const { user, profile, error: authError } = await getAuthenticatedUser(req);
-  if (authError || !user) {
-    return sendUnauthorized(res, `Autenticación requerida para consultar decisión de sesión: ${authError || 'Sesión no válida'}`);
+  const garanteToken = (req.query && (req.query.garanteToken || req.query.token)) || 
+                       (req.body && (req.body.garanteToken || req.body.token));
+
+  let user = null;
+  let profile = null;
+  let guarantorRecord = null;
+
+  if (garanteToken) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data: gFound, error: gErr } = await supabase
+        .from('Garante')
+        .select('*')
+        .eq('token_invitacion', String(garanteToken).trim())
+        .maybeSingle();
+
+      if (gErr || !gFound) {
+        return res.status(404).json({
+          error: 'Guarantor Not Found',
+          message: 'El enlace o token del garante no es válido.'
+        });
+      }
+      guarantorRecord = gFound;
+    } catch (eGaranteAuth) {
+      return res.status(500).json({
+        error: 'Database Error',
+        message: 'Error al consultar datos del garante: ' + eGaranteAuth.message
+      });
+    }
+  } else {
+    // 1. Validar autenticación
+    const authRes = await getAuthenticatedUser(req);
+    user = authRes.user;
+    profile = authRes.profile;
+    if (authRes.error || !user) {
+      return sendUnauthorized(res, `Autenticación requerida para consultar decisión de sesión: ${authRes.error || 'Sesión no válida'}`);
+    }
   }
 
   try {
@@ -37,7 +70,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`[Didit Decision] Consultando estado para sesión: ${sessionId}`);
+    console.log(`[Didit Decision] Consultando estado para sesión: ${sessionId} (Garante: ${Boolean(guarantorRecord)})`);
 
     let rawData = {};
     let isCompleted = false;
@@ -173,11 +206,87 @@ export default async function handler(req, res) {
       if (pAge >= 16 && pAge <= 120) computedAge = pAge;
     }
 
-    // Sincronizar en Supabase Perfil y Pasaporte_habitat para el usuario autenticado
-    if (isApproved && (documentNumber || fullName) && profile) {
-      try {
-        const supabase = getSupabaseAdmin();
+    const supabase = getSupabaseAdmin();
+    let passportCreatedForGuarantor = null;
 
+    // Caso 1: Sincronización para Garante
+    if (guarantorRecord && isApproved) {
+      try {
+        const updateGarante = {
+          kyc_verificado: true,
+          didit_session_id: sessionId,
+          updated_at: new Date().toISOString()
+        };
+        if (fullName) updateGarante.nombre_completo = fullName;
+        if (documentNumber) updateGarante.dni = documentNumber;
+        if (guarantorRecord.id_estado_garante < 4) {
+          updateGarante.id_estado_garante = 4; // Documentación Subida / KYC Aprobado
+        }
+
+        // Crear o vincular Pasaporte Hábitat para el Garante
+        let idPasaporteGarante = guarantorRecord.id_pasaporte_garante;
+        if (!idPasaporteGarante) {
+          const passCode = 'HBT-GAR-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
+          const now = new Date();
+          const exp = new Date(now.getTime() + (60 * 24 * 60 * 60 * 1000));
+
+          // Resolver perfil para el pasaporte del garante
+          let profileIdToUse = guarantorRecord.id_perfil;
+          if (!profileIdToUse) {
+            // Obtener perfil inquilino o crear perfil base
+            const { data: tenantPass } = await supabase
+              .from('Pasaporte_habitat')
+              .select('id_perfil')
+              .eq('id_pasaporte', guarantorRecord.id_pasaporte)
+              .maybeSingle();
+            profileIdToUse = tenantPass?.id_perfil || 1;
+          }
+
+          const { data: newPassGarante } = await supabase
+            .from('Pasaporte_habitat')
+            .insert([{
+              id_perfil: profileIdToUse,
+              id_estado_pasaporte: 3, // Activo
+              codigo_pasaporte: passCode,
+              monto_pagado: 0.00,
+              fecha_emision: now.toISOString(),
+              fecha_vencimiento: exp.toISOString(),
+              dni: documentNumber || guarantorRecord.dni,
+              razon_social: fullName || guarantorRecord.nombre_completo,
+              condicion_fiscal: 'Garante Verificado',
+              situacion_crediticia: 'Situación 1 (Normal)',
+              antecedentes_legales: true
+            }])
+            .select()
+            .single();
+
+          if (newPassGarante) {
+            idPasaporteGarante = newPassGarante.id_pasaporte;
+            updateGarante.id_pasaporte_garante = idPasaporteGarante;
+            passportCreatedForGuarantor = newPassGarante;
+          }
+        }
+
+        await supabase.from('Garante').update(updateGarante).eq('id_garante', guarantorRecord.id_garante);
+
+        // Registrar en Verificacion_kyc
+        await supabase.from('Verificacion_kyc').insert([{
+          id_garante: guarantorRecord.id_garante,
+          id_pasaporte: idPasaporteGarante || guarantorRecord.id_pasaporte,
+          proveedor: 'didit',
+          session_id: sessionId,
+          status: 'approved',
+          payload_raw: rawData
+        }]);
+
+      } catch (eGarSync) {
+        console.warn('[Session Decision] Error sincronizando Garante:', eGarSync.message);
+      }
+    }
+
+    // Caso 2: Sincronizar en Supabase Perfil y Pasaporte_habitat para el usuario autenticado (Inquilino)
+    if (isApproved && (documentNumber || fullName) && profile && !guarantorRecord) {
+      try {
         const perfUp = {
           cuenta_verificada: true,
           fecha_verificacion: new Date().toISOString()
@@ -232,6 +341,7 @@ export default async function handler(req, res) {
         edad: computedAge,
         type: 'ARG_DNI'
       },
+      guarantorPassport: passportCreatedForGuarantor,
       scores: decisionObj.scores || rawData.scores || { liveness: 'PASSED', faceMatch: 99.4 },
       raw: rawData
     });
