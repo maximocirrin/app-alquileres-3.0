@@ -18,8 +18,10 @@
     };
 
     if (typeof supabase !== 'undefined' && supabase.createClient) {
-        window.supabaseClient = supabase.createClient(initialUrl, initialKey);
-        console.log("Supabase Client Initialized (Global)");
+        if (!window.supabaseClient) {
+            window.supabaseClient = supabase.createClient(initialUrl, initialKey);
+            console.log("Supabase Client Initialized (Global)");
+        }
     } else {
         console.warn("Supabase CDN script not loaded before supabaseClient.js");
     }

@@ -22,12 +22,20 @@ async function consultarBcra(cuit, pasaporteId = null, userId = null) {
     console.log(`[BCRA Frontend] Consultando Central de Deudores BCRA para CUIT: ${cleanCuit}...`);
 
     let data = null;
+    let headers = { 'Content-Type': 'application/json' };
+    if (window.supabaseClient) {
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+        } catch (e) {}
+    }
+
     try {
         const response = await fetch('/api/bcra-deudores', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 cuit: cleanCuit,
                 pasaporteId: pasaporteId || window.currentPasaporteId || null,
