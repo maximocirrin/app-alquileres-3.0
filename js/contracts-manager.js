@@ -210,6 +210,42 @@
         return headers;
     }
 
+    async function computeContractSha256(contract) {
+        if (!contract) return 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+        const rawContent = [
+            `CTR_ID:${contract.id || contract.dbContractId || ''}`,
+            `PROP:${contract.propertyAddress || contract.title || ''}`,
+            `OWNER:${contract.owner?.name || ''}|${contract.owner?.dni || ''}|${contract.owner?.cuil || ''}`,
+            `TENANT:${contract.tenant?.name || ''}|${contract.tenant?.dni || ''}|${contract.tenant?.cuil || ''}`,
+            `RENT:${contract.monthlyRent || 0}|${contract.currency || 'ARS'}`,
+            `DURATION:${contract.durationMonths || 24}|${contract.startDate || ''}|${contract.endDate || ''}`,
+            `INDEX:${contract.adjustmentIndex || 'IPC'}|FREQ:${contract.adjustmentFrequencyMonths || 3}`,
+            `PAYMENT:${contract.paymentDueDay || 10}|CBU:${contract.aliasCbu || ''}`,
+            `CLAUSES:${JSON.stringify(contract.clauses || {})}`,
+            `CUSTOM:${JSON.stringify(contract.customClauses || [])}`
+        ].join('\n');
+
+        try {
+            if (window.crypto && window.crypto.subtle) {
+                const msgUint8 = new TextEncoder().encode(rawContent);
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch (e) { }
+
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0; i < rawContent.length; i++) {
+            const ch = rawContent.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        const hex = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+        return hex.padStart(64, '0');
+    }
+
     function detectActiveUserRole(contract) {
         const urlParams = new URLSearchParams(window.location.search);
         const urlRole = urlParams.get('role');
@@ -605,6 +641,15 @@
                             }
                         ]
                     });
+                }
+            }
+
+            for (const item of loadedContracts) {
+                if (!item.originalHash || item.originalHash.startsWith('e3b0c442')) {
+                    item.originalHash = await computeContractSha256(item);
+                    if (!item.finalHash) {
+                        item.sha256Hash = item.originalHash;
+                    }
                 }
             }
 
@@ -2610,7 +2655,7 @@
                         try {
                             uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
                         } catch (e) {}
-                        const myProfileId = currentUserId || uLocal.id_perfil || uLocal.id || null;
+                        const myProfileId = window._currentUserProfileId || (window.ContractsManager && window.ContractsManager._currentProfileId) || uLocal.id_perfil || uLocal.profileId || uLocal.id || null;
                         const myEmail = uLocal.email || null;
                         const cidNum = dbContractId || (c.id ? String(c.id).replace(/\D/g, '') : '0') || c.id;
 
@@ -2850,6 +2895,12 @@
                         contract.clauses = terms.clauses || contract.clauses;
                         contract.customClauses = terms.customClauses || contract.customClauses;
 
+                        // Recalcular Hash SHA-256 del nuevo texto/condiciones del contrato
+                        const newHash = await computeContractSha256(contract);
+                        contract.originalHash = newHash;
+                        contract.sha256Hash = contract.finalHash || newHash;
+                        contract.urlContratoOriginal = null; // Forzar regeneración del PDF con las nuevas cláusulas
+
                         const dbId = contract.dbContractId || parseInt(String(contract.id).replace(/\D/g, ''), 10);
                         if (window.supabaseClient && dbId) {
                             try {
@@ -2859,7 +2910,9 @@
                                     dia_vencimiento_mensual: contract.paymentDueDay,
                                     alias_cbu: contract.aliasCbu,
                                     "id_Indice": terms.adjustmentIndex === 'ICL' ? 2 : 1,
-                                    id_moneda: terms.currency === 'USD' ? 2 : 1
+                                    id_moneda: terms.currency === 'USD' ? 2 : 1,
+                                    hash_original_sha256: newHash,
+                                    url_contrato_original_pdf: null
                                 }).eq('id_contrato', dbId);
                             } catch (e) {
                                 console.warn("Aviso actualizando contrato en Supabase:", e);
@@ -2873,7 +2926,7 @@
                         if (window.ToastManager) {
                             window.ToastManager.show({
                                 title: '✓ Contrato Actualizado',
-                                message: 'Se aplicaron las nuevas condiciones y cláusulas al borrador oficial.',
+                                message: `Se aplicaron las nuevas condiciones y se generó el nuevo Hash Base: ${newHash.substring(0, 16)}...`,
                                 type: 'success'
                             });
                         }
