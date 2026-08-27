@@ -1,14 +1,26 @@
-import iniciarHandler from '../services/firmas/iniciar.js';
-import sellarHandler from '../services/firmas/sellar.js';
-import finalizarHandler from '../services/firmas/finalizar.js';
-import webhookDiditHandler from '../services/firmas/webhook-didit.js';
+import iniciarHandler from '../../services/firmas/iniciar.js';
+import sellarHandler from '../../services/firmas/sellar.js';
+import finalizarHandler from '../../services/firmas/finalizar.js';
+import webhookDiditHandler from '../../services/firmas/webhook-didit.js';
 
 /**
- * Unified Serverless Dispatcher for /api/firmas/*
- * Routes requests based on query parameter `action` or requested URL path.
+ * Dynamic Serverless Route for /api/firmas/[action]
+ * Automatically handles /api/firmas/sellar, /api/firmas/finalizar, /api/firmas/iniciar, /api/firmas/webhook-didit
  */
 export default async function handler(req, res) {
-  // Extract action from query param (via vercel.json rewrite) or parse from URL
+  // CORS support
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   let action = req.query?.action;
   
   if (Array.isArray(action)) {
