@@ -1398,13 +1398,15 @@ var DataManager = {
                             const notifFn = window.NotificationManager.createNotification || window.NotificationManager.add;
                             if (typeof notifFn === 'function') {
                                 notifFn.call(window.NotificationManager, {
-                                    id: `notif_app_${insertedId}_${Date.now()}`,
+                                    id: `notif_solicitud_${insertedId}`,
                                     title: '🎉 ¡Nueva postulación recibida!',
                                     message: `${appData.tenantName || 'Un inquilino verificado'} se ha postulado para alquilar "${appData.propertyTitle || 'tu propiedad'}".`,
                                     type: 'application',
                                     icon: 'person_add',
                                     link: 'administrador.html#postulaciones',
-                                    role: 'OWNER'
+                                    role: 'OWNER',
+                                    senderRole: 'TENANT',
+                                    senderProfileId: profileId
                                 });
                             }
                         }
@@ -1852,24 +1854,25 @@ var DataManager = {
             }
         } catch (e) {}
 
-        // Despachar notificaciones in-app para ambas partes con timestamp único
-        const notifTimestamp = Date.now();
+        // Despachar notificaciones in-app para ambas partes con IDs canónicos
         if (window.NotificationManager) {
             window.NotificationManager.createNotification({
-                id: `notif_accept_owner_${appId}_${contractId}_${notifTimestamp}`,
+                id: `notif_accept_owner_${appId}_${contractId}`,
                 title: '¡Postulación Aceptada! Contrato Listo para Firma',
                 message: `Has aceptado a ${tenantName} para "${propTitle}". El contrato digital ya está disponible para firmar.`,
                 type: 'contract',
                 link: `contratos.html?contract=${contractId}&sign=1&role=OWNER`,
-                role: 'OWNER'
+                role: 'OWNER',
+                senderRole: 'OWNER'
             });
             window.NotificationManager.createNotification({
-                id: `notif_accept_tenant_${appId}_${contractId}_${notifTimestamp}`,
+                id: `notif_accept_tenant_${appId}_${contractId}`,
                 title: '¡Tu postulación fue aprobada por el propietario! 🎉',
                 message: `El propietario aprobó tu postulación para "${propTitle}". Ingresa para realizar tu validación biométrica y firmar el contrato digital.`,
                 type: 'contract',
                 link: `contratos.html?contract=${contractId}&sign=1&role=TENANT`,
-                role: 'TENANT'
+                role: 'TENANT',
+                senderRole: 'OWNER'
             });
         }
 
@@ -1914,11 +1917,13 @@ var DataManager = {
 
         if (window.NotificationManager) {
             window.NotificationManager.createNotification({
+                id: `notif_reject_${appId}`,
                 title: 'Estado de postulación actualizado',
                 message: `El proceso de evaluación para "${propTitle}" ha concluido. Puedes explorar más propiedades disponibles en el Marketplace.`,
                 type: 'rejection',
                 link: 'index.html',
-                role: 'TENANT'
+                role: 'TENANT',
+                senderRole: 'OWNER'
             });
         }
 

@@ -26,28 +26,82 @@
   }
 
   /**
+   * Obtiene los encabezados de autenticación y metadatos de sesión (Supabase JWT / Profile / Email)
+   */
+  async function getDiditAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    let token = null;
+    let profileId = null;
+    let userEmail = null;
+
+    if (window.supabaseClient) {
+      try {
+        const { data: sessData } = await window.supabaseClient.auth.getSession();
+        token = sessData?.session?.access_token || null;
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        if (sessData?.session?.user?.email) {
+          userEmail = sessData.session.user.email;
+        }
+      } catch (e) { }
+    }
+
+    try {
+      const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+      if (storedProfileId) {
+        profileId = String(storedProfileId);
+        headers['x-profile-id'] = profileId;
+      }
+      const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+      const email = userEmail || uLocal.email || uLocal.mail;
+      if (email) {
+        userEmail = email;
+        headers['x-user-email'] = email;
+      }
+      if (!profileId && (uLocal.id_perfil || uLocal.profileId || uLocal.id)) {
+        profileId = String(uLocal.id_perfil || uLocal.profileId || uLocal.id);
+        headers['x-profile-id'] = profileId;
+      }
+    } catch (e) { }
+
+    return { headers, token, profileId, userEmail };
+  }
+
+  /**
    * Crea una sesión real de Didit KYC comunicándose con el endpoint /api/create-session de Vercel/Express.
    */
   async function createDiditSession(userId, options = {}) {
-    const { callbackUrl = null, workflowId = null } = options;
+    const { callbackUrl = null, workflowId = null, flow = 'signature', isLivenessOnly = false, garanteToken = null } = options;
     const wf = workflowId || DIDIT_WORKFLOW_ID;
     const cb = callbackUrl || window.location.href.split('#')[0];
     const apiBase = getApiBaseUrl();
+
+    const authMeta = await getDiditAuthHeaders();
+    const effectiveEmail = authMeta.userEmail || (userId && typeof userId === 'string' && userId.includes('@') ? userId : null);
 
     const endpointsToTry = [];
     endpointsToTry.push('/api/create-session');
     if (apiBase) endpointsToTry.push(`${apiBase}/api/create-session`);
 
+    const requestBody = {
+      userId: userId,
+      callbackUrl: cb,
+      workflowId: wf,
+      flow: flow || (isLivenessOnly ? 'signature' : undefined),
+      isLivenessOnly: Boolean(isLivenessOnly),
+      email: effectiveEmail || undefined,
+      id_perfil: authMeta.profileId || undefined,
+      access_token: authMeta.token || undefined,
+      garanteToken: garanteToken || undefined
+    };
+
     for (const ep of endpointsToTry) {
       try {
         const res = await fetch(ep, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: userId,
-            callbackUrl: cb,
-            workflowId: wf
-          })
+          headers: authMeta.headers,
+          body: JSON.stringify(requestBody)
         });
 
         if (res.ok) {
@@ -78,6 +132,7 @@
   async function fetchSessionDecision(sessionId) {
     if (!sessionId) return null;
     const apiBase = getApiBaseUrl();
+    const authMeta = await getDiditAuthHeaders();
 
     const endpointsToTry = [];
     endpointsToTry.push(`/api/session-decision?session_id=${encodeURIComponent(sessionId)}`);
@@ -85,7 +140,9 @@
 
     for (const ep of endpointsToTry) {
       try {
-        const res = await fetch(ep);
+        const res = await fetch(ep, {
+          headers: authMeta.headers
+        });
         if (res.ok) {
           const json = await res.json();
           if (json && json.success && json.document) {

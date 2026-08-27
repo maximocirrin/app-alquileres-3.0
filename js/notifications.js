@@ -62,6 +62,61 @@
         return 'TENANT';
     }
 
+    // Comprobar si el usuario actual es el destinatario de la notificación
+    function isTargetRecipient(notif) {
+        if (!notif) return false;
+        const currentRole = getActiveUserRole();
+        let uLocal = {};
+        try {
+            uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        } catch (e) {}
+        const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+        const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+
+        // Si la notificación apunta a un perfil o email específico:
+        if (notif.targetProfileId && myProfileId && String(notif.targetProfileId) !== String(myProfileId)) {
+            return false;
+        }
+        if (notif.targetEmail && myEmail && notif.targetEmail.toLowerCase().trim() !== myEmail) {
+            return false;
+        }
+
+        // Si viene remitente explícito y coincide con el usuario activo:
+        const isSender = (notif.senderTabId && notif.senderTabId === TAB_ID) ||
+                         (notif.senderEmail && myEmail && notif.senderEmail.toLowerCase().trim() === myEmail) ||
+                         (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId));
+
+        // Si fui yo quien la envió y está dirigida al rol opuesto, no mostrarla en mi propia sesión
+        if (isSender) {
+            if (notif.senderRole && notif.role && notif.role !== 'ALL' && notif.role !== notif.senderRole) {
+                return false;
+            }
+            // Auto-notificaciones de firmas o postulaciones
+            if (notif.type === 'contract' && (notif.title?.includes('firmó') || notif.title?.includes('firmado') || notif.message?.includes('completó su firma') || notif.message?.includes('firmó el contrato'))) {
+                return false;
+            }
+            if (notif.type === 'application' && (notif.title?.includes('postulación recibida') || notif.message?.includes('se ha postulado'))) {
+                return false;
+            }
+        }
+
+        // Filtrado por Rol de destino
+        if (notif.role && notif.role !== 'ALL') {
+            const targetRole = notif.role.toUpperCase();
+            if (targetRole === 'OWNER' && currentRole !== 'OWNER' && currentRole !== 'BROKER') {
+                return false;
+            }
+            if (targetRole === 'TENANT' && currentRole !== 'TENANT') {
+                return false;
+            }
+            if (targetRole === 'BROKER' && currentRole !== 'BROKER') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // BroadcastChannel cross-tab/cross-window
     let broadcastChannel = null;
     try {
@@ -106,7 +161,7 @@
         _realtimeInitialized: false,
         _processedNotifIds: new Set(),
 
-        // Obtener todas las notificaciones del usuario de manera global y consistente
+        // Obtener todas las notificaciones del usuario de manera global y filtradas por rol activo
         getAll: function () {
             let storedList = [];
             try {
@@ -123,7 +178,18 @@
                 return [...DEFAULT_NOTIFICATIONS];
             }
 
-            return storedList;
+            const currentRole = getActiveUserRole();
+            return storedList.filter(n => {
+                if (!n.role || n.role === 'ALL') return true;
+                const targetRole = n.role.toUpperCase();
+                if (currentRole === 'OWNER' || currentRole === 'BROKER') {
+                    return targetRole === 'OWNER' || targetRole === 'BROKER' || targetRole === 'ALL';
+                }
+                if (currentRole === 'TENANT') {
+                    return targetRole === 'TENANT' || targetRole === 'ALL';
+                }
+                return true;
+            });
         },
 
         // Guardar lista completa en almacenamiento
@@ -144,28 +210,9 @@
             return list.filter(n => !n.read).length;
         },
 
-        createNotification: function ({ id = null, title, message, type = 'contract', link = '#', role = 'ALL', icon = null }) {
+        createNotification: function ({ id = null, title, message, type = 'contract', link = '#', role = 'ALL', icon = null, senderRole = null, senderProfileId = null, senderEmail = null, targetRole = null, targetProfileId = null, targetEmail = null, priority = 'normal' }) {
+            const finalRole = targetRole || role || 'ALL';
             const notifId = id || ('notif_' + (type || 'gen') + '_' + title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + '_' + Date.now());
-
-            // Leer almacenamiento completo
-            let allStored = [];
-            try {
-                const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) allStored = parsed;
-                }
-            } catch (e) { }
-
-            // Deduplicación: evitar crear la misma notificación si ya existe (en los últimos 30 segundos)
-            const isDuplicate = allStored.some(n => 
-                n.id === notifId || 
-                (n.title === title && n.message === message && (Date.now() - new Date(n.createdAt).getTime()) < 30000)
-            );
-
-            if (isDuplicate) {
-                return null;
-            }
 
             let resolvedIcon = icon;
             if (!resolvedIcon) {
@@ -184,6 +231,13 @@
                 }
             }
 
+            let uLocal = {};
+            try {
+                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            } catch (e) {}
+            const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+            const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+
             const newNotif = {
                 id: notifId,
                 title,
@@ -191,24 +245,20 @@
                 type,
                 icon: resolvedIcon,
                 link,
-                role: 'ALL',
+                role: finalRole,
                 read: false,
                 createdAt: new Date().toISOString(),
-                senderTabId: TAB_ID
+                senderTabId: TAB_ID,
+                senderRole: senderRole || getActiveUserRole(),
+                senderProfileId: senderProfileId || myProfileId || null,
+                senderEmail: senderEmail || myEmail || null,
+                targetProfileId: targetProfileId || null,
+                targetEmail: targetEmail || null,
+                priority
             };
 
-            allStored.unshift(newNotif);
-            if (allStored.length > 40) allStored = allStored.slice(0, 40);
-
-            try {
-                localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
-            } catch (e) { }
-
+            // Registrar en memoria de procesados para deduplicación
             this._processedNotifIds.add(newNotif.id);
-            this.updateBadge();
-            this.renderDropdown();
-            this.showToast(newNotif);
-            playNotificationChime();
 
             // 1. Enviar vía BroadcastChannel para otras pestañas abiertas
             if (broadcastChannel) {
@@ -216,6 +266,9 @@
                     broadcastChannel.postMessage({
                         type: 'HABITAT_REALTIME_NOTIF',
                         senderTabId: TAB_ID,
+                        senderRole: newNotif.senderRole,
+                        senderProfileId: newNotif.senderProfileId,
+                        senderEmail: newNotif.senderEmail,
                         notification: newNotif
                     });
                 } catch (e) { }
@@ -227,6 +280,37 @@
             // 3. Disparar eventos reactivos locales
             window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newNotif }));
             window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: newNotif }));
+
+            // 4. Si el usuario actual en esta pestaña ES el destinatario correspondiente, guardarlo y mostrar Toast
+            if (isTargetRecipient(newNotif)) {
+                let allStored = [];
+                try {
+                    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) allStored = parsed;
+                    }
+                } catch (e) { }
+
+                const isDuplicate = allStored.some(n => 
+                    n.id === notifId || 
+                    (n.title === title && n.message === message && Math.abs(Date.now() - new Date(n.createdAt).getTime()) < 30000)
+                );
+
+                if (!isDuplicate) {
+                    allStored.unshift(newNotif);
+                    if (allStored.length > 40) allStored = allStored.slice(0, 40);
+
+                    try {
+                        localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
+                    } catch (e) { }
+
+                    this.updateBadge();
+                    this.renderDropdown();
+                    this.showToast(newNotif);
+                    playNotificationChime();
+                }
+            }
 
             return newNotif;
         },
@@ -240,16 +324,14 @@
             if (senderTabId && senderTabId === TAB_ID) return;
             if (!notif || !notif.id) return;
             if (this._processedNotifIds.has(notif.id)) return;
-            this._processedNotifIds.add(notif.id);
 
-            // Si es un mensaje enviado por mí mismo (verificado por email / profileId), ignorar
-            try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-                if (payload.senderEmail && myEmail && payload.senderEmail.toLowerCase().trim() === myEmail) return;
-                if (payload.senderProfileId && myProfileId && String(payload.senderProfileId) === String(myProfileId)) return;
-            } catch (e) {}
+            // Comprobar si soy el destinatario legítimo
+            if (!isTargetRecipient(notif)) {
+                this._processedNotifIds.add(notif.id);
+                return;
+            }
+
+            this._processedNotifIds.add(notif.id);
 
             let allStored = [];
             try {
@@ -296,6 +378,9 @@
                         event: 'habitat_notification',
                         payload: {
                             senderTabId: TAB_ID,
+                            senderRole: notif.senderRole,
+                            senderProfileId: notif.senderProfileId,
+                            senderEmail: notif.senderEmail,
                             notification: notif
                         }
                     }).catch(() => { });
@@ -359,6 +444,24 @@
                             console.log('[Supabase Realtime] Nueva Solicitud detectada:', newSol);
                             window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newSol }));
 
+                            let uLocal = {};
+                            try {
+                                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            } catch (e) {}
+                            const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+                            const currentRole = getActiveUserRole();
+
+                            // Si yo soy el solicitante o mi rol activo es inquilino, NO notificarme de "Nueva postulación recibida"
+                            if (newSol.id_perfil && myProfileId && String(newSol.id_perfil) === String(myProfileId)) {
+                                return;
+                            }
+                            if (currentRole === 'TENANT') {
+                                return;
+                            }
+
+                            const solNotifId = `notif_solicitud_${newSol.id_solicitud}`;
+                            if (NotificationManager._processedNotifIds.has(solNotifId)) return;
+
                             let applicantName = 'Un inquilino verificado';
                             let propTitle = 'tu propiedad';
                             try {
@@ -374,13 +477,15 @@
                             } catch(e) {}
 
                             NotificationManager.receiveIncomingNotification({
-                                id: `notif_solicitud_${newSol.id_solicitud}`,
+                                id: solNotifId,
                                 title: '🎉 ¡Nueva postulación recibida!',
                                 message: `${applicantName} se ha postulado para alquilar "${propTitle}".`,
                                 type: 'application',
                                 icon: 'person_add',
                                 link: 'administrador.html#postulaciones',
-                                role: 'ALL'
+                                role: 'OWNER',
+                                senderRole: 'TENANT',
+                                senderProfileId: newSol.id_perfil
                             });
                         })
                         // 3. Postgres Changes: Firmas de Contrato
@@ -393,29 +498,61 @@
                             const isSigned = ['sellada', 'completada', 'firmada'].includes(firma.estado_firma) || firma.didit_status === 'APPROVED';
                             if (!isSigned) return;
 
+                            let uLocal = {};
+                            try {
+                                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            } catch (e) {}
+                            const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                            const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+                            const currentRole = getActiveUserRole();
+
+                            // Si yo fui quien firmó, no generar auto-notificación
+                            if (firma.id_perfil && myProfileId && String(firma.id_perfil) === String(myProfileId)) {
+                                return;
+                            }
+                            if (firma.email_firmante && myEmail && firma.email_firmante.toLowerCase().trim() === myEmail) {
+                                return;
+                            }
+
                             const isTenant = ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(firma.rol_firmante);
                             const contractIdNum = firma.id_contrato;
                             const ctrCode = `CTR-2026-${String(contractIdNum).padStart(4, '0')}`;
 
                             if (isTenant) {
+                                // La firma la realizó el inquilino -> El destinatario es el PROPIETARIO
+                                if (currentRole === 'TENANT') return;
+
+                                const notifId = `notif_firma_tenant_${contractIdNum}`;
+                                if (NotificationManager._processedNotifIds.has(notifId)) return;
+
                                 NotificationManager.receiveIncomingNotification({
-                                    id: `notif_firma_inq_${firma.id_firma || contractIdNum}`,
+                                    id: notifId,
                                     title: '✍️ ¡El inquilino firmó el contrato!',
                                     message: `El locatario completó su firma digital para el contrato ${ctrCode}. Ya puedes ingresar a firmar como propietario.`,
                                     type: 'contract',
                                     icon: 'draw',
                                     link: `contratos.html?contract=${ctrCode}&sign=1&role=OWNER`,
-                                    role: 'ALL'
+                                    role: 'OWNER',
+                                    senderRole: 'TENANT',
+                                    senderProfileId: firma.id_perfil
                                 });
                             } else {
+                                // La firma la realizó el propietario -> El destinatario es el INQUILINO
+                                if (currentRole === 'OWNER') return;
+
+                                const notifId = `notif_firma_owner_${contractIdNum}`;
+                                if (NotificationManager._processedNotifIds.has(notifId)) return;
+
                                 NotificationManager.receiveIncomingNotification({
-                                    id: `notif_firma_prop_${firma.id_firma || contractIdNum}`,
+                                    id: notifId,
                                     title: '✍️ ¡El propietario firmó el contrato!',
                                     message: `El propietario completó la firma del contrato ${ctrCode}. El documento se encuentra 100% sellado bajo Ley 25.506.`,
                                     type: 'contract',
                                     icon: 'verified_user',
                                     link: `contratos.html?contract=${ctrCode}&role=TENANT`,
-                                    role: 'ALL'
+                                    role: 'TENANT',
+                                    senderRole: 'OWNER',
+                                    senderProfileId: firma.id_perfil
                                 });
                             }
                         })
