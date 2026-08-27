@@ -676,8 +676,43 @@
                 contracts = merged;
                 saveContracts();
             }
+
+            // Inicializar suscripción Realtime a Firma_contrato y Contrato
+            setupContractsRealtimeSubscription();
         } catch (err) {
             console.warn("Aviso al sincronizar contratos desde Supabase:", err);
+        }
+    }
+
+    function setupContractsRealtimeSubscription() {
+        if (!window.supabaseClient) return;
+        if (window._contractsRealtimeChannel) return;
+
+        try {
+            const channel = window.supabaseClient.channel('realtime_contracts_and_signatures_sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'Firma_contrato' }, async (payload) => {
+                    console.log('[ContractsManager Realtime] Cambio en Firma_contrato:', payload);
+                    await syncContractsFromSupabase();
+                    ContractsManager.renderDashboard('contracts-dashboard-container');
+                    if (ContractsManager._activeFullscreenContractId) {
+                        ContractsManager.openContractFullscreen(ContractsManager._activeFullscreenContractId, ContractsManager._activeFullscreenTab || 'document');
+                    }
+                    window.dispatchEvent(new CustomEvent('contractsUpdated', { detail: payload }));
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, async (payload) => {
+                    console.log('[ContractsManager Realtime] Cambio en Contrato:', payload);
+                    await syncContractsFromSupabase();
+                    ContractsManager.renderDashboard('contracts-dashboard-container');
+                    if (ContractsManager._activeFullscreenContractId) {
+                        ContractsManager.openContractFullscreen(ContractsManager._activeFullscreenContractId, ContractsManager._activeFullscreenTab || 'document');
+                    }
+                    window.dispatchEvent(new CustomEvent('contractsUpdated', { detail: payload }));
+                })
+                .subscribe();
+
+            window._contractsRealtimeChannel = channel;
+        } catch (err) {
+            console.warn('[ContractsManager] Error configurando Realtime:', err);
         }
     }
 
@@ -1027,7 +1062,7 @@
                                                 <span class="material-symbols-outlined text-sm text-emerald-500">chat</span>
                                                 <span>Chat</span>
                                             </button>
-                                            ${(!isFullySigned(c) && isUserOwnerOfContract(c)) ? `
+                                            ${((!c.tenant?.hasSigned && !c.owner?.hasSigned && c.status !== 'SIGNED_AND_SEALED') && isUserOwnerOfContract(c)) ? `
                                             <button type="button" onclick="ContractsManager.editContractConditions('${c.id}')" class="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Editar Borrador de Contrato">
                                                 <span class="material-symbols-outlined text-sm">tune</span>
                                                 <span class="hidden sm:inline">Editar</span>
@@ -1077,8 +1112,9 @@
             } catch (e) {}
 
             const isFullySigned = (c) => c.status === 'SIGNED_AND_SEALED' || (c.tenant?.hasSigned && c.owner?.hasSigned);
+            const hasAnySignature = Boolean(contract.tenant?.hasSigned || contract.owner?.hasSigned || contract.status === 'SIGNED_AND_SEALED');
             const isOwner = isUserOwnerOfContract(contract);
-            const canEditContract = (!isFullySigned(contract)) && isOwner;
+            const canEditContract = (!hasAnySignature) && isOwner;
             const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
             const signerObj = effectiveRole === 'TENANT' ? contract?.tenant : contract?.owner;
             const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
@@ -1219,8 +1255,31 @@
                                 </div>
                             </div>
 
-                            <!-- Prominent Contract Terms Editor Callout Card -->
-                            ${(canEditContract) ? `
+                            <!-- Prominent Contract Terms Editor Callout Card / Locked Notice -->
+                            ${(hasAnySignature) ? `
+                            <div class="p-4 sm:p-5 rounded-3xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                                        <span class="material-symbols-outlined text-xl">lock</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white">
+                                                Contrato Bloqueado e Inmutable (Ley 25.506)
+                                            </h4>
+                                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase tracking-wider">Firmas en Custodia</span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                            El contrato cuenta con firma(s) registrada(s). Las cláusulas y condiciones ya no pueden modificarse para preservar la validez legal y la integridad criptográfica del documento.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="ContractsManager.verifyContractIntegrity('${contract.id}')" class="px-3.5 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-primary font-bold text-xs rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                                    <span class="material-symbols-outlined text-sm text-emerald-500">verified_user</span>
+                                    <span>Verificar Hash</span>
+                                </button>
+                            </div>
+                            ` : (canEditContract) ? `
                             <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-amber-950/20 border-2 border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-start sm:items-center gap-3.5 min-w-0">
                                     <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
@@ -2848,6 +2907,10 @@
                 if (modal) modal.remove();
 
                 ContractsManager.renderDashboard('contracts-dashboard-container');
+                if (ContractsManager._activeFullscreenContractId) {
+                    ContractsManager.openContractFullscreen(ContractsManager._activeFullscreenContractId, ContractsManager._activeFullscreenTab || 'document');
+                }
+                window.dispatchEvent(new CustomEvent('contractsUpdated'));
 
                 if (window.ToastManager) {
                     window.ToastManager.show({
