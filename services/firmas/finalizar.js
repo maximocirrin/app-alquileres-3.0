@@ -163,6 +163,10 @@ export default async function finalizarHandler(req, res) {
     const inqContractPath = firmaInquilino ? firmaInquilino.url_contrato_final_pdf : null;
     const propContractPath = firmaPropietario ? firmaPropietario.url_contrato_final_pdf : null;
 
+    if (contrato.url_contrato_original_pdf) {
+      documentosDescarga.contrato_original = await obtenerUrlFirmada('contratos_originales', contrato.url_contrato_original_pdf);
+    }
+
     if (inqContractPath) {
       documentosDescarga.contrato_inquilino = await obtenerUrlFirmada('contratos_firmados', inqContractPath);
     }
@@ -177,18 +181,22 @@ export default async function finalizarHandler(req, res) {
         id_contrato: numericContractId,
         contrato_activo: ambasPartesFirmaron,
         estado_general: ambasPartesFirmaron ? 'completado_activo' : 'pendiente_otra_parte',
+        hash_original_sha256: contrato.hash_original_sha256 || null,
+        hash_final_sha256: contrato.hash_final_sha256 || null,
         resumen_firmas: {
           inquilino: {
             nombre: contrato.Inquilino?.nombre_completo || 'Inquilino',
             firmo: inquilinoFirmo,
             fecha: firmaInquilino?.fecha_firma || null,
-            estado: firmaInquilino?.estado_firma || 'pendiente'
+            estado: firmaInquilino?.estado_firma || 'pendiente',
+            hash_contrato_sha256: firmaInquilino?.hash_contrato_sha256 || null
           },
           propietario: {
             nombre: contrato.Propietario?.nombre_completo || 'Propietario',
             firmo: propietarioFirmo,
             fecha: firmaPropietario?.fecha_firma || null,
-            estado: firmaPropietario?.estado_firma || 'pendiente'
+            estado: firmaPropietario?.estado_firma || 'pendiente',
+            hash_contrato_sha256: firmaPropietario?.hash_contrato_sha256 || null
           }
         },
         documentos: documentosDescarga,

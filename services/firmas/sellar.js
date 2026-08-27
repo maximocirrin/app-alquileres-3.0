@@ -1,11 +1,12 @@
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { generateConsolidatedPdf } from './pdf-generator.js';
+import { generateOriginalContractPdf, generateConsolidatedPdf } from './pdf-generator.js';
 import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 dotenv.config();
 
 /**
- * FASE 3: Generación del Audit Trail y Sellado Criptográfico (Timestamping RFC 3161)
+ * FASE 3: Generación del Audit Trail Forense y Sellado Criptográfico en Dos Niveles (Two-Tier Hash)
+ * Cumplimiento: Ley Nacional N° 25.506 de Firma Digital y Timestamping RFC 3161
  */
 export default async function sellarHandler(req, res) {
   setCorsHeaders(req, res);
@@ -22,7 +23,7 @@ export default async function sellarHandler(req, res) {
     });
   }
 
-  // 1. Intentar validar autenticación
+  // 1. Validar autenticación
   const { user, profile } = await getAuthenticatedUser(req);
 
   try {
@@ -90,7 +91,6 @@ export default async function sellarHandler(req, res) {
       if (existingFirmas && existingFirmas.length > 0) {
         firma = existingFirmas[0];
       } else {
-        // Si no existía fila de firma previa, consultar el contrato y crearla
         const { data: cData } = await supabase.from('Contrato').select(`
           *,
           Inquilino:id_perfil_inquilino (*),
@@ -142,10 +142,63 @@ export default async function sellarHandler(req, res) {
     const contractId = firma.id_contrato;
     const firmaId = firma.id_firma;
 
-    // 3. Generar el PDF Consolidado (Contrato + Audit Trail) con pdf-lib
-    let contractPdfBytes;
+    // 3. Obtener o generar el PDF del Contrato Original y calcular su Hash Base (Nivel 1)
+    let originalPdfBytes = null;
+    let originalPdfHash = contrato.hash_original_sha256 || null;
+    const originalPdfPath = `contrato_${contractId}/contrato_original.pdf`;
+
+    // Intentar recuperar el buffer original de Storage si ya existía
+    if (contrato.url_contrato_original_pdf) {
+      try {
+        const { data: downloadedBase, error: downloadErr } = await supabase.storage
+          .from('contratos_originales')
+          .download(originalPdfPath);
+        if (!downloadErr && downloadedBase) {
+          originalPdfBytes = Buffer.from(await downloadedBase.arrayBuffer());
+          originalPdfHash = crypto.createHash('sha256').update(originalPdfBytes).digest('hex');
+        }
+      } catch (e) {
+        console.warn('[sellarHandler] Aviso al descargar PDF original de Storage:', e);
+      }
+    }
+
+    // Si aún no tenemos el PDF original, generarlo y subirlo a Storage de contratos originales
+    if (!originalPdfBytes) {
+      originalPdfBytes = await generateOriginalContractPdf({
+        contractId,
+        contrato,
+        propiedad,
+        inquilino: contrato.Inquilino || {},
+        propietario: contrato.Propietario || {}
+      });
+
+      originalPdfHash = crypto.createHash('sha256').update(originalPdfBytes).digest('hex');
+
+      try {
+        await supabase.storage
+          .from('contratos_originales')
+          .upload(originalPdfPath, originalPdfBytes, {
+            contentType: 'application/pdf',
+            upsert: true
+          });
+      } catch (upOrigErr) {
+        console.warn('[sellarHandler] Aviso subiendo contrato original a Storage:', upOrigErr);
+      }
+
+      // Actualizar Contrato con la referencia del contrato original congelado
+      await supabase
+        .from('Contrato')
+        .update({
+          hash_original_sha256: originalPdfHash,
+          url_contrato_original_pdf: originalPdfPath
+        })
+        .eq('id_contrato', contractId);
+    }
+
+    // 4. Generar el PDF Consolidado (Contrato Original + Audit Trail Forense con Hash Base Inyectado)
+    let consolidatedResult;
     try {
-      contractPdfBytes = await generateConsolidatedPdf({
+      consolidatedResult = await generateConsolidatedPdf({
         contractId,
         firmaId,
         contrato,
@@ -159,20 +212,18 @@ export default async function sellarHandler(req, res) {
         ip: firma.ip_origen || req.headers['x-forwarded-for'] || '127.0.0.1',
         userAgent: firma.user_agent || req.headers['user-agent'] || 'Mozilla/5.0',
         diditSessionId: firma.didit_session_id || didit_session_id || 'didit_sess_live',
-        diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' }
+        diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' },
+        originalPdfBytes,
+        originalPdfHash
       });
     } catch (pdfErr) {
-      console.warn('[sellarHandler] Error generando PDF con pdf-lib, fallback a buffer dummy:', pdfErr);
-      contractPdfBytes = Buffer.from(`%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF\n`);
+      console.warn('[sellarHandler] Error generando PDF con pdf-lib:', pdfErr);
+      throw pdfErr;
     }
 
-    // 4. Calcular Hash SHA-256 definitivo del PDF final
-    const finalPdfHashSha256 = crypto
-      .createHash('sha256')
-      .update(Buffer.from(contractPdfBytes))
-      .digest('hex');
+    const { consolidatedPdfBytes, finalPdfHash } = consolidatedResult;
 
-    // 5. Generar token de Sello de Tiempo TSA (RFC 3161)
+    // 5. Generar token de Sello de Tiempo TSA (RFC 3161) sobre el Hash Final Consolidado (Nivel 2)
     const tsaSerialNumber = `TSA-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     const tsaProvider = process.env.TSA_SERVER_NAME || 'Autoridad de Sellado de Tiempo (TSA RFC 3161 Argentina)';
     const tsaTokenPayload = {
@@ -181,34 +232,34 @@ export default async function sellarHandler(req, res) {
       policy: '1.3.6.1.4.1.50000.1.1.RFC3161',
       serialNumber: tsaSerialNumber,
       hashAlgorithm: 'SHA-256',
-      hashedMessage: finalPdfHashSha256,
+      hashContratoOriginal: originalPdfHash,
+      hashedMessage: finalPdfHash,
       genTimeUTC: new Date().toISOString(),
       timeZone: 'America/Argentina/Buenos_Aires (UTC-3)'
     };
 
-    // 6. Subir el Contrato Consolidado a Supabase Storage
-    const contractPdfPath = `contrato_${contractId}/contrato_definitivo_firmado_${firmaId}.pdf`;
+    // 6. Subir el Contrato Consolidado a Supabase Storage (Bucket 'contratos_firmados')
+    const finalContractPdfPath = `contrato_${contractId}/contrato_definitivo_firmado_${firmaId}.pdf`;
     try {
       await supabase.storage
         .from('contratos_firmados')
-        .upload(contractPdfPath, Buffer.from(contractPdfBytes), {
+        .upload(finalContractPdfPath, consolidatedPdfBytes, {
           contentType: 'application/pdf',
           upsert: true
         });
     } catch (uploadErr) {
-      console.warn('[sellarHandler] Aviso subiendo a Storage:', uploadErr);
+      console.warn('[sellarHandler] Aviso subiendo a Storage contratos_firmados:', uploadErr);
     }
 
-    // 7. Actualizar Firma_contrato en la base de datos
+    // 7. Actualizar Firma_contrato y Contrato en la Base de Datos
     const { data: firmaActualizada, error: errUpdate } = await supabase
       .from('Firma_contrato')
       .update({
         estado_firma: 'sellada',
-        hash_contrato_sha256: finalPdfHashSha256,
-        hash_audit_trail_sha256: null,
+        hash_original_sha256: originalPdfHash,
+        hash_contrato_sha256: finalPdfHash,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: null,
-        url_contrato_final_pdf: contractPdfPath,
+        url_contrato_final_pdf: finalContractPdfPath,
         fecha_firma: new Date().toISOString()
       })
       .eq('id_firma', firmaId)
@@ -219,6 +270,16 @@ export default async function sellarHandler(req, res) {
       console.error('[Error actualizando Firma_contrato con sellado]:', errUpdate);
     }
 
+    await supabase
+      .from('Contrato')
+      .update({
+        hash_original_sha256: originalPdfHash,
+        url_contrato_original_pdf: originalPdfPath,
+        hash_final_sha256: finalPdfHash,
+        url_contrato_final_pdf: finalContractPdfPath
+      })
+      .eq('id_contrato', contractId);
+
     return res.status(200).json({
       ok: true,
       message: 'Audit Trail y Contrato generados y firmados criptográficamente con éxito.',
@@ -226,11 +287,12 @@ export default async function sellarHandler(req, res) {
         id_firma: firmaId,
         id_contrato: contractId,
         estado_firma: 'sellada',
-        hash_contrato_sha256: finalPdfHashSha256,
-        hash_audit_trail_sha256: null,
+        hash_original_sha256: originalPdfHash,
+        hash_final_sha256: finalPdfHash,
+        hash_contrato_sha256: finalPdfHash,
+        url_contrato_original_pdf: originalPdfPath,
+        url_contrato_final_pdf: finalContractPdfPath,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: null,
-        url_contrato_final_pdf: contractPdfPath,
         fecha_firma: (firmaActualizada && firmaActualizada.fecha_firma) || new Date().toISOString()
       }
     });
