@@ -158,6 +158,11 @@ export default async function finalizarHandler(req, res) {
             await supabase.storage.from('contratos_firmados').upload(finalContractPdfPath, finalPdfBytes, { contentType: 'application/pdf', upsert: true });
 
             await supabase.from('Contrato').update({ hash_final_sha256: finalPdfHash, url_contrato_final_pdf: finalContractPdfPath }).eq('id_contrato', numericContractId);
+            
+            await supabase.from('Firma_contrato')
+              .update({ hash_contrato_sha256: finalPdfHash, url_contrato_final_pdf: finalContractPdfPath })
+              .eq('id_contrato', numericContractId);
+
             contrato.hash_final_sha256 = finalPdfHash;
             contrato.url_contrato_final_pdf = finalContractPdfPath;
           }
