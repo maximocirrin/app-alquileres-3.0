@@ -301,12 +301,12 @@
             // Asegurar resolución del perfil del usuario
             await ensureUserProfileResolved();
 
-            const isSigned = contract.status === 'SIGNED_AND_SEALED' || (contract.tenant?.hasSigned && contract.owner?.hasSigned);
+            const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
             if (isSigned) {
-                const msg = 'Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados bajo la Ley 25.506.';
+                const msg = 'Este contrato ya cuenta con firmas electrónicas registradas y sus términos se encuentran inmutables y bloqueados bajo la Ley 25.506.';
                 if (window.ToastManager) {
                     window.ToastManager.show({
-                        title: '🔒 Contrato Sellado e Inmutable',
+                        title: '🔒 Contrato Bloqueado e Inmutable',
                         message: msg,
                         type: 'warning'
                     });
