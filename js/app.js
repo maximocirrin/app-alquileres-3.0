@@ -7179,6 +7179,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
     // Normalize property details from Wizard & DB
     const pubId = prop.id_publicacion || prop.id;
+    const propIdVal = prop.id_propiedad || prop.idPropiedad || prop.id || 1;
+    const isAlreadyApplied = Boolean(typeof window.hasUserAppliedToProperty === 'function' && window.hasUserAppliedToProperty(pubId, propIdVal));
     const title = prop.title || 'Propiedad en alquiler';
     const address = prop.address || prop.ubicacion || 'Ubicación no especificada';
     const province = prop.province || extraInfo.provincia || '';
@@ -8488,12 +8490,26 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <span class="material-symbols-outlined text-base">lock</span>
                                         <span>Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}</span>
                                     </button>
+                                ` : (isAlreadyApplied ? `
+                                    <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 space-y-2">
+                                        <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-headline font-bold text-sm">
+                                            <span class="material-symbols-outlined text-lg text-emerald-600 dark:text-emerald-400">check_circle</span>
+                                            <span>Ya te postulaste a este alquiler</span>
+                                        </div>
+                                        <p class="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                                            Tu postulación y Pasaporte Hábitat se encuentran en revisión por el propietario.
+                                        </p>
+                                        <a href="tu-alquiler.html#postulaciones" class="w-full inline-flex items-center justify-center gap-1.5 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                            <span>Ver Estado de mi Postulación</span>
+                                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                        </a>
+                                    </div>
                                 ` : `
                                     <button id="mp-modal-apply-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-98 cursor-pointer text-base">
                                         <span class="material-symbols-outlined text-xl">how_to_reg</span>
                                         <span>Postularme al Alquiler</span>
                                     </button>
-                                `}
+                                `)}
 
                                 <button id="mp-modal-visit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
                                     <span class="material-symbols-outlined text-lg">calendar_month</span>
@@ -8543,6 +8559,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <div class="inline-flex items-center gap-1 bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm">
                         <span class="material-symbols-outlined text-base">key</span> Alquilada
                     </div>
+                ` : (isAlreadyApplied ? `
+                    <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">calendar_month</span> Visita
+                    </button>
+                    <a href="tu-alquiler.html#postulaciones" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md cursor-pointer">
+                        <span class="material-symbols-outlined text-base">check_circle</span> Ya Postulado
+                    </a>
                 ` : `
                     <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">calendar_month</span> Visita
@@ -8550,7 +8573,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <button type="button" onclick="document.getElementById('mp-modal-apply-btn')?.click()" class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">how_to_reg</span> Postularme
                     </button>
-                `)}
+                `))}
             </div>
         </div>
     `;
@@ -9232,6 +9255,44 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 }
             };
         }
+
+        // Asynchronously check if user already applied to update the button if needed
+        if (!isOwner && !isAlquilada && !isAlreadyApplied && typeof window.checkUserAppliedToPropertyAsync === 'function') {
+            window.checkUserAppliedToPropertyAsync(pubId, prop?.id_propiedad || prop?.id).then(applied => {
+                if (applied) {
+                    const currentApplyBtn = document.getElementById('mp-modal-apply-btn');
+                    if (currentApplyBtn && currentApplyBtn.parentElement) {
+                        const badgeHtml = `
+                            <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 space-y-2">
+                                <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-headline font-bold text-sm">
+                                    <span class="material-symbols-outlined text-lg text-emerald-600 dark:text-emerald-400">check_circle</span>
+                                    <span>Ya te postulaste a este alquiler</span>
+                                </div>
+                                <p class="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                                    Tu postulación y Pasaporte Hábitat se encuentran en revisión por el propietario.
+                                </p>
+                                <a href="tu-alquiler.html#postulaciones" class="w-full inline-flex items-center justify-center gap-1.5 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                    <span>Ver Estado de mi Postulación</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                        `;
+                        currentApplyBtn.outerHTML = badgeHtml;
+                    }
+                    const mobileTray = document.getElementById('mp-mobile-bottom-tray');
+                    if (mobileTray) {
+                        const mobApplyBtn = mobileTray.querySelector('button[onclick*="mp-modal-apply-btn"]');
+                        if (mobApplyBtn) {
+                            mobApplyBtn.outerHTML = `
+                                <a href="tu-alquiler.html#postulaciones" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">check_circle</span> Ya Postulado
+                                </a>
+                            `;
+                        }
+                    }
+                }
+            }).catch(() => {});
+        }
     }
 };
 
@@ -9672,6 +9733,79 @@ window.hasCompletedPassport = async function() {
     return false;
 };
 
+// Helper to check synchronously if tenant already applied to this property
+window.hasUserAppliedToProperty = function(pubId, propId) {
+    try {
+        const raw = localStorage.getItem('habitat_tenant_applications');
+        if (!raw) return false;
+        const apps = JSON.parse(raw);
+        if (!Array.isArray(apps)) return false;
+
+        const cleanPubId = pubId ? String(pubId).trim() : null;
+        const cleanPropId = propId ? String(propId).trim() : null;
+
+        return apps.some(a => {
+            if (!a) return false;
+            const aPubId = a.publicationId || a.publication_id || a.id_publicacion;
+            const aPropId = a.propertyId || a.property_id || a.id_propiedad;
+            const matchPub = cleanPubId && aPubId && String(aPubId).trim() === cleanPubId;
+            const matchProp = cleanPropId && aPropId && String(aPropId).trim() === cleanPropId;
+            return (matchPub || matchProp) && a.status !== 'rechazada' && a.status !== 'cancelada';
+        });
+    } catch (e) {
+        return false;
+    }
+};
+
+// Helper to check asynchronously if tenant already applied to this property in Supabase
+window.checkUserAppliedToPropertyAsync = async function(pubId, propId) {
+    if (window.hasUserAppliedToProperty(pubId, propId)) return true;
+    if (!window.supabaseClient) return false;
+    try {
+        let profileId = null;
+        const { data: sessData } = await window.supabaseClient.auth.getSession();
+        if (sessData?.session?.user) {
+            const u = sessData.session.user;
+            const { data: perf } = await window.supabaseClient.from('Perfil').select('id_perfil').or(`user_id.eq.${u.id},mail.eq.${u.email}`).maybeSingle();
+            profileId = perf?.id_perfil;
+        }
+        if (!profileId) {
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            profileId = uLocal.id_perfil || uLocal.profileId || localStorage.getItem('habitat_profile_id');
+        }
+        if (!profileId) return false;
+
+        const pubIdNum = pubId ? parseInt(pubId, 10) : null;
+        if (pubIdNum && !isNaN(pubIdNum)) {
+            const { data: sol } = await window.supabaseClient
+                .from('Solicitud')
+                .select('id_solicitud, id_estado_solicitud')
+                .eq('id_perfil', profileId)
+                .eq('id_publicacion', pubIdNum)
+                .maybeSingle();
+
+            if (sol && sol.id_solicitud) {
+                // Registrar en localStorage para sincronización instantánea
+                try {
+                    const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+                    if (!localApps.some(a => a.id_publicacion === pubIdNum || a.publication_id === pubIdNum || a.publicationId === pubIdNum)) {
+                        localApps.unshift({
+                            id: sol.id_solicitud,
+                            publication_id: pubIdNum,
+                            property_id: propId || 1,
+                            status: 'pendiente',
+                            created_at: new Date().toISOString()
+                        });
+                        localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+                    }
+                } catch (e) {}
+                return true;
+            }
+        }
+    } catch (e) {}
+    return false;
+};
+
 // Modal when tenant does not have a passport yet
 window.openPassportRequiredModal = function(prop) {
     const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
@@ -9749,16 +9883,34 @@ window.openPassportRequiredModal = function(prop) {
 };
 
 window.openPostulacionModal = async function(prop) {
-    // Si el inquilino no tiene el pasaporte hecho, avisarle y ofrecerle crearlo
+    const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
+    const pubId = prop?.id_publicacion || prop?.idPublicacion || prop?.id;
+    const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
+
+    // 1. Validar si el usuario ya se postuló a esta propiedad para evitar postulaciones duplicadas
+    const alreadyApplied = (typeof window.hasUserAppliedToProperty === 'function' && window.hasUserAppliedToProperty(pubId, propId)) || 
+                           (typeof window.checkUserAppliedToPropertyAsync === 'function' && await window.checkUserAppliedToPropertyAsync(pubId, propId));
+
+    if (alreadyApplied) {
+        if (window.showCustomAlert) {
+            await window.showCustomAlert({
+                title: 'Postulación Ya Registrada',
+                message: `Ya tenés una postulación activa enviada para "${propTitle}". Podés ver su estado en tu panel de 'Tu Alquiler'.`,
+                icon: 'info'
+            });
+        } else {
+            alert(`Ya tenés una postulación activa enviada para "${propTitle}".`);
+        }
+        return;
+    }
+
+    // 2. Si el inquilino no tiene el pasaporte hecho, avisarle y ofrecerle crearlo
     const hasPassport = await window.hasCompletedPassport();
     if (!hasPassport) {
         window.openPassportRequiredModal(prop);
         return;
     }
 
-    const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
-    const pubId = prop?.id_publicacion || prop?.idPublicacion || prop?.id;
-    const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
     const propAddress = prop?.address || prop?.ubicacion || `${prop?.calle || ''} ${prop?.numero || ''}`.trim() || 'Buenos Aires';
     const propPrice = prop?.price || prop?.precio || 450000;
     const propExpenses = prop?.expensas || prop?.expensas_mensuales || 45000;

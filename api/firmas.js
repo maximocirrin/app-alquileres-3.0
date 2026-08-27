@@ -12,14 +12,19 @@ export default async function handler(req, res) {
   let action = req.query?.action;
   
   if (Array.isArray(action)) {
-    action = action.join('/');
+    action = action[0];
   }
   
   if (!action && req.url) {
     const urlPath = req.url.split('?')[0];
-    const match = urlPath.match(/\/api\/firmas\/(.+)/);
-    if (match) {
+    const match = urlPath.match(/\/api\/firmas(?:\/([^\/\?]+))?/i);
+    if (match && match[1]) {
       action = match[1];
+    } else {
+      try {
+        const parsedUrl = new URL(req.url, 'http://localhost');
+        action = parsedUrl.searchParams.get('action');
+      } catch (e) {}
     }
   }
 
