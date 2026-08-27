@@ -2486,14 +2486,20 @@
                                 pdfBytes = new TextEncoder().encode(`%PDF-1.4\n% CONTRATO DE LOCACION CTR-2026-${dbContractId}\n% FIRMANTE: ${signerName} (${signerDni})\n% HASH: ${finalHash}\n%%EOF`);
                             }
 
+                            const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
                             // Subir a Storage
                             try {
-                                await window.supabaseClient.storage.from('contratos_originales').upload(origContractPdfPath, pdfBytes, { contentType: 'application/pdf', upsert: true });
-                            } catch(eUp1) {}
+                                await window.supabaseClient.storage.from('contratos_originales').upload(origContractPdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+                            } catch(eUp1) {
+                                console.warn("[ContractsManager] Aviso subiendo a contratos_originales:", eUp1);
+                            }
 
                             try {
-                                await window.supabaseClient.storage.from('contratos_firmados').upload(finalContractPdfPath, pdfBytes, { contentType: 'application/pdf', upsert: true });
-                            } catch(eUp2) {}
+                                await window.supabaseClient.storage.from('contratos_firmados').upload(finalContractPdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+                            } catch(eUp2) {
+                                console.warn("[ContractsManager] Aviso subiendo a contratos_firmados:", eUp2);
+                            }
 
                             const tsaPayload = {
                                 status: 'GRANTED',
