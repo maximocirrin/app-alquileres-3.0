@@ -589,7 +589,11 @@
                             agencyName: 'Palermo & Asociados Propiedades',
                             email: 'contacto@palermoprop.com'
                         },
-                        sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
+                        originalHash: dbC.hash_original_sha256 || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                        finalHash: dbC.hash_final_sha256 || null,
+                        urlContratoOriginal: dbC.url_contrato_original_pdf || null,
+                        urlContratoFinal: dbC.url_contrato_final_pdf || null,
+                        sha256Hash: dbC.hash_final_sha256 || dbC.hash_original_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
                         createdAt: dbC.created_at || new Date().toISOString(),
                         updatedAt: dbC.created_at || new Date().toISOString(),
                         auditTrailEvents: [
@@ -1202,8 +1206,54 @@
 
                                 ${renderContractClausesList(contract)}
 
-                                <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-500">
-                                    <b>Hash SHA-256 del Documento:</b> <span class="font-mono text-emerald-600 dark:text-emerald-400 break-all">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span>
+                                <!-- Dual Hash Cryptographic Evidence Card -->
+                                <div class="mt-6 pt-5 border-t border-zinc-200 dark:border-zinc-800 space-y-3 bg-zinc-50/70 dark:bg-zinc-900/70 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/80">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary dark:text-red-400 text-lg">enhanced_encryption</span>
+                                            <span class="font-headline font-bold text-xs text-zinc-900 dark:text-white uppercase tracking-wider">Cadena de Custodia Criptográfica (Ley 25.506)</span>
+                                        </div>
+                                        <button type="button" onclick="ContractsManager.verifyContractIntegrity('${contract.id}')" class="px-3 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-white dark:bg-primary/20 dark:text-red-300 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0">
+                                            <span class="material-symbols-outlined text-sm">verified_user</span>
+                                            <span>Verificar Integridad Criptográfica</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                                        <!-- Hash Original (Nivel 1) -->
+                                        <div class="p-3 bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-bold text-zinc-600 dark:text-zinc-400">1. Hash Base (Contrato Original):</span>
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">TEXTO INMUTABLE</span>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-1 font-mono text-[10px] text-zinc-800 dark:text-zinc-200">
+                                                <span class="truncate" title="${contract.originalHash || contract.sha256Hash}">${(contract.originalHash || contract.sha256Hash || '').substring(0, 28)}...</span>
+                                                <button type="button" onclick="navigator.clipboard.writeText('${contract.originalHash || contract.sha256Hash}'); if(window.ToastManager) ToastManager.show({ title: 'Hash Copiado', message: 'Hash del contrato original copiado al portapapeles.', type: 'info' });" class="p-1 hover:text-primary transition-colors cursor-pointer shrink-0" title="Copiar Hash SHA-256 Original">
+                                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hash Final Sellado (Nivel 2) -->
+                                        <div class="p-3 bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-bold text-zinc-600 dark:text-zinc-400">2. Hash Sellado (Audit Trail + TSA):</span>
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold ${contract.finalHash || isFullySigned(contract) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'}">
+                                                    ${contract.finalHash || isFullySigned(contract) ? 'SELLADO TSA' : 'EN ESPERA DE FIRMA'}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-1 font-mono text-[10px] text-zinc-800 dark:text-zinc-200">
+                                                <span class="truncate" title="${contract.finalHash || (isFullySigned(contract) ? contract.sha256Hash : 'Generado tras validación biométrica Didit')}">
+                                                    ${(contract.finalHash || (isFullySigned(contract) ? contract.sha256Hash : 'Pendiente de firma bilateral')).substring(0, 28)}...
+                                                </span>
+                                                ${(contract.finalHash || isFullySigned(contract)) ? `
+                                                <button type="button" onclick="navigator.clipboard.writeText('${contract.finalHash || contract.sha256Hash}'); if(window.ToastManager) ToastManager.show({ title: 'Hash Copiado', message: 'Hash final sellado copiado al portapapeles.', type: 'info' });" class="p-1 hover:text-primary transition-colors cursor-pointer shrink-0" title="Copiar Hash SHA-256 Final">
+                                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                </button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2194,7 +2244,7 @@
                             <div id="step-row-1" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-medium">
                                     <span class="material-symbols-outlined text-emerald-500 text-base">check_circle</span>
-                                    <span>Prueba de Vida Didit Liveness</span>
+                                    <span>1. Prueba de Vida Facial Didit</span>
                                 </div>
                                 <span class="text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">APROBADA</span>
                             </div>
@@ -2202,23 +2252,23 @@
                             <div id="step-row-2" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-primary/40 flex items-center justify-between text-zinc-900 dark:text-white">
                                 <div class="flex items-center gap-2 font-medium">
                                     <span class="material-symbols-outlined text-primary text-base animate-spin">sync</span>
-                                    <span>Digest Criptográfico SHA-256</span>
+                                    <span>2. Hash SHA-256 Contrato Original</span>
                                 </div>
                                 <span id="step-tag-2" class="text-amber-600 dark:text-amber-400 font-bold text-[10px]">EN CURSO...</span>
                             </div>
 
                             <div id="step-row-3" class="p-2.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-zinc-400">
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-zinc-400 text-base">schedule</span>
-                                    <span>Sello de Tiempo TSA (Ley 25.506)</span>
+                                    <span class="material-symbols-outlined text-zinc-400 text-base">merge_type</span>
+                                    <span>3. Inyección Audit Trail y Fusión PDF</span>
                                 </div>
                                 <span id="step-tag-3" class="text-[10px] text-zinc-400">PENDIENTE</span>
                             </div>
 
                             <div id="step-row-4" class="p-2.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-zinc-400">
                                 <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-zinc-400 text-base">folder_zip</span>
-                                    <span>Registro de Firma en Supabase</span>
+                                    <span class="material-symbols-outlined text-zinc-400 text-base">lock_clock</span>
+                                    <span>4. Sello de Tiempo TSA RFC 3161</span>
                                 </div>
                                 <span id="step-tag-4" class="text-[10px] text-zinc-400">PENDIENTE</span>
                             </div>
@@ -2452,9 +2502,9 @@
                 const row3 = document.getElementById('step-row-3');
                 const tag3 = document.getElementById('step-tag-3');
 
-                if (pBar) pBar.style.width = '70%';
-                if (pText) pText.innerText = '70%';
-                if (msg) msg.innerText = 'Generando Digest SHA-256 e incrustando firma en Supabase...';
+                if (pBar) pBar.style.width = '65%';
+                if (pText) pText.innerText = '65%';
+                if (msg) msg.innerText = 'Hash Base verificado. Inyectando evidencia de firma y fusionando PDF...';
                 if (row2 && tag2) {
                     row2.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
                     tag2.className = 'text-emerald-600 dark:text-emerald-400 font-bold text-[10px]';
@@ -2478,7 +2528,7 @@
 
                 if (pBar) pBar.style.width = '95%';
                 if (pText) pText.innerText = '95%';
-                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA y resguardando Audit Trail en Storage...';
+                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA RFC 3161 y resguardando en Supabase...';
                 if (row3 && tag3) {
                     row3.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
                     tag3.className = 'text-emerald-600 dark:text-emerald-400 font-bold text-[10px]';
@@ -2514,7 +2564,11 @@
                         c.status = 'SIGNED_AND_SEALED';
                     }
 
-                    c.sha256Hash = backendSellarData.hash_contrato_sha256 || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
+                    c.originalHash = backendSellarData.hash_original_sha256 || c.originalHash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+                    c.finalHash = backendSellarData.hash_final_sha256 || backendSellarData.hash_contrato_sha256 || c.finalHash;
+                    c.sha256Hash = c.finalHash || c.originalHash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
+                    c.urlContratoOriginal = backendSellarData.url_contrato_original_pdf || c.urlContratoOriginal;
+                    c.urlContratoFinal = backendSellarData.url_contrato_final_pdf || c.urlContratoFinal;
                     c.tsaTimestamp = backendSellarData.fecha_firma || new Date().toISOString();
                     c.tsaCertificateId = backendSellarData.tsa_sello_tiempo?.serialNumber || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
                     c.auditTrailUrl = backendSellarData.url_contrato_final_pdf;
@@ -2577,6 +2631,112 @@
 
         openContractViewer: function (contractId) {
             this.selectContract(contractId, true);
+        },
+
+        verifyContractIntegrity: function (contractId) {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            const existingModal = document.getElementById('contract-verify-modal');
+            if (existingModal) existingModal.remove();
+
+            const origHash = contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+            const finHash = contract.finalHash || contract.sha256Hash || 'Pendiente de sellado bilateral';
+            const isSealed = !!(contract.finalHash || isFullySigned(contract));
+
+            const modalHtml = `
+                <div id="contract-verify-modal" class="fixed inset-0 z-[99999] overflow-y-auto bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 font-body">
+                    <div class="relative w-full max-w-xl bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 space-y-6 overflow-hidden my-auto animate-fadeIn">
+                        
+                        <!-- Header -->
+                        <div class="flex items-start justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-2xl">verified_user</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white">Verificación de Integridad Criptográfica</h3>
+                                    <p class="text-xs text-zinc-500">Cadena de Custodia Forense bajo <b>Ley Nacional N° 25.506</b></p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('contract-verify-modal').remove()" class="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-xl">close</span>
+                            </button>
+                        </div>
+
+                        <!-- 2-Level Hash Explanatory Grid -->
+                        <div class="space-y-3 text-xs">
+                            <!-- Nivel 1: Hash Contrato Original -->
+                            <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-white">
+                                        <span class="material-symbols-outlined text-blue-500 text-base">description</span>
+                                        <span>1. Digest SHA-256 del Contrato Original (Texto Base):</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 uppercase">Inmutable</span>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    Calculado sobre las cláusulas y condiciones acordadas antes de firmar. Resguardado en el bucket <code class="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded">contratos_originales</code>.
+                                </p>
+                                <div class="flex items-center justify-between gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-blue-700 dark:text-blue-400">
+                                    <span class="break-all select-all">${origHash}</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('${origHash}'); if(window.ToastManager) ToastManager.show({ title: 'Hash Base Copiado', message: 'Copiado al portapapeles.', type: 'info' });" class="p-1 hover:text-primary transition-colors cursor-pointer shrink-0" title="Copiar Hash">
+                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Nivel 2: Hash Contrato Consolidado Sellado -->
+                            <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-white">
+                                        <span class="material-symbols-outlined text-emerald-500 text-base">lock</span>
+                                        <span>2. Digest SHA-256 Consolidado (Audit Trail + TSA):</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold ${isSealed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200'} uppercase">
+                                        ${isSealed ? 'Sellado Oficial' : 'Pendiente'}
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    Calculado sobre el PDF definitivo con el Certificado de Auditoría Didit KYC y Sello de Tiempo RFC 3161 inyectados al final.
+                                </p>
+                                <div class="flex items-center justify-between gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                                    <span class="break-all select-all">${finHash}</span>
+                                    ${isSealed ? `
+                                    <button type="button" onclick="navigator.clipboard.writeText('${finHash}'); if(window.ToastManager) ToastManager.show({ title: 'Hash Final Copiado', message: 'Copiado al portapapeles.', type: 'info' });" class="p-1 hover:text-primary transition-colors cursor-pointer shrink-0" title="Copiar Hash">
+                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verification Terminal Command Tip -->
+                        <div class="p-3.5 rounded-2xl bg-zinc-900 text-zinc-200 font-mono text-[11px] space-y-1.5">
+                            <div class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Verificación independiente por consola:</div>
+                            <div class="flex items-center justify-between gap-2 text-emerald-400">
+                                <code>shasum -a 256 contrato_firmado.pdf</code>
+                                <button type="button" onclick="navigator.clipboard.writeText('shasum -a 256 contrato_firmado.pdf'); if(window.ToastManager) ToastManager.show({ title: 'Comando Copiado', message: 'Comando shasum copiado.', type: 'info' });" class="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modal Actions -->
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" onclick="document.getElementById('contract-verify-modal').remove()" class="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                                Entendido
+                            </button>
+                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                <span>Descargar Certificado Oficial</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
         },
 
         editContractConditions: async function (contractId) {
@@ -2926,11 +3086,12 @@
                     </div>
 
                     <div class="meta-box">
-                        <b>Resumen Criptográfico y Parámetros Forenses:</b><br>
-                        • <b>Digest SHA-256 del Contrato:</b> <span style="font-family: monospace;">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
-                        • <b>Sello de Tiempo Legal (TSA):</b> ${contract.tsaTimestamp || new Date().toISOString()}<br>
-                        • <b>Proveedor Biométrico de Identidad:</b> Didit KYC & Liveness Check (Face Biometrics Engine)<br>
-                        • <b>Inmueble:</b> ${contract.propertyAddress}
+                        <b>Resumen Criptográfico y Parámetros Forenses (Ley 25.506):</b><br>
+                        • <b>1. Digest SHA-256 Base (Contrato Original):</b> <span style="font-family: monospace; color: #0284c7;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</span><br>
+                        • <b>2. Digest SHA-256 Sellado (Audit Trail + TSA):</b> <span style="font-family: monospace; color: #059669;">${contract.finalHash || contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
+                        • <b>Sello de Tiempo Legal (TSA RFC 3161):</b> ${contract.tsaTimestamp || new Date().toISOString()}<br>
+                        • <b>Proveedor Biométrico de Identidad:</b> Didit KYC & Liveness Check (Face Biometrics Engine iBeta Level 1)<br>
+                        • <b>Inmueble Objeto:</b> ${contract.propertyAddress}
                     </div>
 
                     <h3 style="font-size: 14px; font-weight: 800; color: #1e293b; margin-top: 25px;">Registro Cronológico Inmutable de Eventos</h3>

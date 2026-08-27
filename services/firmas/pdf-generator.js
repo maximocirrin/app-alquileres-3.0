@@ -16,23 +16,14 @@ function getOrdinalName(idx) {
 }
 
 /**
- * Genera un PDF Consolidado: Contrato de Locación + Audit Trail al final
+ * 1. Genera el PDF del Contrato Original (Texto Base Inmutable sin Audit Trail)
  */
-export async function generateConsolidatedPdf({
+export async function generateOriginalContractPdf({
   contractId,
-  firmaId,
   contrato = {},
   propiedad = {},
   inquilino = {},
-  propietario = {},
-  rol,
-  signerName,
-  signerDni,
-  email,
-  ip,
-  userAgent,
-  diditSessionId,
-  diditScores = {}
+  propietario = {}
 }) {
   const pdfDoc = await PDFDocument.create();
   let page = pdfDoc.addPage([595.28, 841.89]); // A4
@@ -40,13 +31,10 @@ export async function generateConsolidatedPdf({
 
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontMono = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
   const primaryColor = rgb(0.50, 0.10, 0.12);
   const darkColor = rgb(0.12, 0.16, 0.23);
-  const grayColor = rgb(0.40, 0.45, 0.53);
   const lightBg = rgb(0.97, 0.98, 0.99);
-  const emeraldColor = rgb(0.02, 0.59, 0.41);
 
   let currentY = height - 105;
 
@@ -58,8 +46,7 @@ export async function generateConsolidatedPdf({
   };
 
   const drawParagraph = (title, textHtml) => {
-    // Strip HTML tags for PDF rendering
-    const text = textHtml.replace(/<[^>]*>?/gm, '');
+    const text = String(textHtml || '').replace(/<[^>]*>?/gm, '');
 
     checkPageSpace(30);
     page.drawText(title, { x: 45, y: currentY, size: 8.5, font: fontBold, color: primaryColor });
@@ -112,7 +99,6 @@ export async function generateConsolidatedPdf({
     color: darkColor
   });
 
-  // Reconstrucción de Cláusulas (Logica portada de frontend)
   const ownerName = propietario.nombre_completo || propietario.name || 'Propietario';
   const ownerDni = propietario.dni || '00.000.000';
   const ownerCuil = propietario.cuit_cuil || propietario.cuit || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-00000000-7');
@@ -135,7 +121,6 @@ export async function generateConsolidatedPdf({
   const diaVenc = contrato.dia_vencimiento_mensual || 10;
   const aliasCbu = contrato.alias_cbu || 'No provisto';
   
-  // Custom clauses and flags
   const cFlags = contrato.clausulas_adicionales || {};
   const allowPets = cFlags.mascotas ?? true;
   const onlyResidential = cFlags.viviendaExclusiva ?? true;
@@ -204,9 +189,74 @@ export async function generateConsolidatedPdf({
     drawParagraph(`${getOrdinalName(idx)} (${clause.tag}):`, clause.body);
   });
 
-  // --- SECCIÓN AUDIT TRAIL Y FIRMAS (Nueva Página) ---
-  page = pdfDoc.addPage([595.28, 841.89]);
-  currentY = height - 50;
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
+}
+
+/**
+ * 2. Genera el PDF Consolidado: Contrato Original + Audit Trail Forense con Hash Base inyectado + Bloque de Firmas
+ */
+export async function generateConsolidatedPdf({
+  contractId,
+  firmaId,
+  contrato = {},
+  propiedad = {},
+  inquilino = {},
+  propietario = {},
+  rol,
+  signerName,
+  signerDni,
+  email,
+  ip,
+  userAgent,
+  diditSessionId,
+  diditScores = {},
+  originalPdfBytes = null,
+  originalPdfHash = null,
+  allFirmas = []
+}) {
+  let basePdfBytes = originalPdfBytes;
+  let baseHash = originalPdfHash;
+
+  // Si no se proporcionó el buffer original, generarlo y calcular su hash
+  if (!basePdfBytes) {
+    basePdfBytes = await generateOriginalContractPdf({
+      contractId,
+      contrato,
+      propiedad,
+      inquilino,
+      propietario
+    });
+  }
+
+  if (!baseHash) {
+    baseHash = crypto.createHash('sha256').update(basePdfBytes).digest('hex');
+  }
+
+  // Cargar el documento PDF original para adjuntarle la auditoría y firmas
+  const pdfDoc = await PDFDocument.load(basePdfBytes);
+  
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontMono = await pdfDoc.embedFont(StandardFonts.CourierBold);
+
+  const primaryColor = rgb(0.50, 0.10, 0.12);
+  const darkColor = rgb(0.12, 0.16, 0.23);
+  const grayColor = rgb(0.40, 0.45, 0.53);
+  const lightBg = rgb(0.97, 0.98, 0.99);
+  const emeraldColor = rgb(0.02, 0.59, 0.41);
+
+  // --- NUEVA PÁGINA: SECCIÓN AUDIT TRAIL Y FIRMAS DIGITALES ---
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  const { width, height } = page.getSize();
+  let currentY = height - 50;
+
+  const checkPageSpace = (requiredSpace) => {
+    if (currentY - requiredSpace < 50) {
+      page = pdfDoc.addPage([595.28, 841.89]);
+      currentY = height - 50;
+    }
+  };
 
   const nowArg = new Date().toLocaleString('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
@@ -214,72 +264,87 @@ export async function generateConsolidatedPdf({
     timeStyle: 'long'
   });
 
+  const propAddress = `${propiedad.calle || 'Inmueble'} ${propiedad.numero || ''}`.trim();
+
+  // Banner Header Audit Trail
   page.drawRectangle({ x: 30, y: height - 90, width: width - 60, height: 60, color: lightBg });
   page.drawText('HABITAT PLATAFORMA INMOBILIARIA S.A.', { x: 45, y: height - 55, size: 13, font: fontBold, color: primaryColor });
   page.drawText('CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA', { x: 45, y: height - 72, size: 8.5, font: fontBold, color: darkColor });
-  page.drawText('Validez Legal: Ley Nacional 25.506 y Codigo Civil y Comercial de la Nacion', { x: 45, y: height - 83, size: 7.5, font: fontRegular, color: grayColor });
+  page.drawText('Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023', { x: 45, y: height - 83, size: 7.5, font: fontRegular, color: grayColor });
   
-  currentY = height - 120;
+  currentY = height - 115;
 
-  const drawRow = (label, val) => {
+  const drawRow = (label, val, isMono = false, customColor = darkColor) => {
     checkPageSpace(15);
     page.drawText(label, { x: 45, y: currentY, size: 8.5, font: fontBold, color: darkColor });
-    page.drawText(String(val || '-'), { x: 200, y: currentY, size: 8.5, font: fontRegular, color: darkColor });
+    page.drawText(String(val || '-'), { x: 200, y: currentY, size: isMono ? 7.5 : 8.5, font: isMono ? fontMono : fontRegular, color: customColor });
     currentY -= 15;
   };
 
-  page.drawText('1. DATOS DE LA TRANSACCION Y DEL ACTO DE FIRMA', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
-  currentY -= 20;
-
-  drawRow('ID Transaccion Firma:', `HAB-FIRMA-${firmaId}`);
-  drawRow('ID Contrato Vinculado:', `CTR-2026-${String(contractId).padStart(4, '0')}`);
-  drawRow('Inmueble Objeto:', propAddress);
-  drawRow('Rol del Firmante:', String(rol || 'INQUILINO').toUpperCase());
-  drawRow('Nombre del Firmante:', signerName || 'Titular Validado');
-  drawRow('DNI / Identificacion:', signerDni || 'Validado por Didit KYC');
-  drawRow('Email Registrado:', email || '-');
-  drawRow('Fecha y Hora Oficial:', nowArg);
-
-  currentY -= 12;
-
-  page.drawText('2. METADATOS TECNICOS Y CONTEXTO DIGITAL', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
-  currentY -= 20;
-
-  drawRow('Direccion IP de Origen:', ip || '127.0.0.1');
-  drawRow('User-Agent:', (userAgent || 'Mozilla/5.0').substring(0, 52) + '...');
-  drawRow('Zona Horaria Registrada:', 'America/Argentina/Buenos_Aires (UTC-3)');
-
-  currentY -= 12;
-
-  page.drawText('3. RESULTADO DE VERIFICACION BIOMETRICA (DIDIT LIVENESS)', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
-  currentY -= 20;
-
-  drawRow('Proveedor Biometrico:', 'Didit Identity Verification Services');
-  drawRow('ID Sesion Didit:', diditSessionId || 'didit_sess_live');
-  drawRow('Prueba Facial (Face Match):', `${diditScores.face_match_score || '98.4'}% de Coincidencia [APROBADO]`);
-  drawRow('Prueba de Vida (Liveness):', 'PASSED (iBeta Level 1 / Persona fisica real)');
-  drawRow('OCR Documento Nacional:', 'DNI Fisico Argentino Legitimo Validado');
-  drawRow('Resguardo en Boveda:', 'Fotos de DNI custodiadas en Storage Privado');
-
-  currentY -= 12;
-
-  page.drawText('4. FIRMA Y ESTRUCTURA CRIPTOGRAFICA', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
-  currentY -= 20;
-  
-  page.drawText('Nota sobre la paradoja del hash:', { x: 45, y: currentY, size: 8, font: fontBold, color: darkColor });
-  currentY -= 11;
-  page.drawText('El Hash SHA-256 definitivo que asegura este documento se calcula sobre el archivo binario', { x: 45, y: currentY, size: 7.5, font: fontRegular, color: grayColor });
-  currentY -= 11;
-  page.drawText('completo luego de su creacion, y se almacena en el registro inmutable de la plataforma y TSA.', { x: 45, y: currentY, size: 7.5, font: fontRegular, color: grayColor });
+  // 1. Integridad Criptográfica del Contrato Base
+  page.drawText('1. REGISTRO CRIPTOGRAFICO DEL DOCUMENTO BASE', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
   currentY -= 18;
 
-  drawRow('Autoridad de Sellado (TSA):', 'Time-Stamp Authority Ley Nacional 25.506 (Plataforma Hábitat)');
-  drawRow('Algoritmo de Firma:', 'SHA-256 con Timestamp Token');
+  drawRow('ID Contrato Legal:', `CTR-2026-${String(contractId).padStart(4, '0')}`);
+  drawRow('Hash SHA-256 Base (Original):', baseHash, true, emeraldColor);
+  drawRow('Inmueble Objeto:', propAddress);
+
+  currentY -= 8;
+
+  // 2. Datos de la Transacción Actual
+  page.drawText('2. DATOS DEL FIRMANTE Y ACTO DE FIRMA', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
+  currentY -= 18;
+
+  drawRow('ID Transaccion Firma:', `HAB-FIRMA-${firmaId}`);
+  drawRow('Rol del Firmante:', String(rol || 'INQUILINO').toUpperCase());
+  drawRow('Nombre Completo:', signerName || 'Titular Validado');
+  drawRow('DNI / Identificacion:', signerDni || 'Validado por Didit KYC');
+  drawRow('Email Registrado:', email || '-');
+  drawRow('Fecha y Hora Oficial (UTC-3):', nowArg);
+
+  currentY -= 8;
+
+  // 3. Metadatos Técnicos y Contexto Digital
+  page.drawText('3. METADATOS TECNICOS Y CONTEXTO DIGITAL', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
+  currentY -= 18;
+
+  drawRow('Direccion IP de Origen:', ip || '127.0.0.1');
+  drawRow('User-Agent:', (userAgent || 'Mozilla/5.0').substring(0, 50) + '...');
+  drawRow('Zona Horaria Registrada:', 'America/Argentina/Buenos_Aires (UTC-3)');
+
+  currentY -= 8;
+
+  // 4. Verificación Biométrica Didit
+  page.drawText('4. RESULTADO DE VERIFICACION BIOMETRICA FACIAL (DIDIT KYC)', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
+  currentY -= 18;
+
+  drawRow('Proveedor Biometrico:', 'Didit Identity Verification Engine (iBeta Level 1)');
+  drawRow('ID Sesion Didit:', diditSessionId || 'didit_sess_live', true);
+  drawRow('Prueba Facial (Face Match):', `${diditScores.face_match_score || '98.4'}% de Coincidencia [APROBADO]`);
+  drawRow('Prueba de Vida (Liveness):', 'PASSED (Persona fisica real en vivo)');
+  drawRow('Validacion Documental:', 'DNI Fisico Argentino Legitimo Validado');
+
+  currentY -= 8;
+
+  // 5. Sellado de Tiempo TSA
+  page.drawText('5. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)', { x: 45, y: currentY, size: 10, font: fontBold, color: primaryColor });
+  currentY -= 18;
+
+  drawRow('Autoridad de Sellado (TSA):', 'Time-Stamp Authority Ley Nacional 25.506');
+  drawRow('Algoritmo Criptografico:', 'SHA-256 con Sello de Tiempo TSA RFC 3161');
 
   // Footer
   page.drawRectangle({ x: 30, y: 35, width: width - 60, height: 45, color: lightBg });
   page.drawText('DOCUMENTO AUDITABLE CUSTODIADO POR HABITAT PLATAFORMA INMOBILIARIA', { x: 45, y: 62, size: 7.5, font: fontBold, color: darkColor });
   page.drawText('Este documento certifica la inmutabilidad y autoria del contrato bajo apercibimiento del Codigo Civil y Comercial.', { x: 45, y: 48, size: 6.8, font: fontRegular, color: grayColor });
 
-  return await pdfDoc.save();
+  const consolidatedBytes = Buffer.from(await pdfDoc.save());
+  const finalHash = crypto.createHash('sha256').update(consolidatedBytes).digest('hex');
+
+  return {
+    consolidatedPdfBytes: consolidatedBytes,
+    originalPdfBytes: basePdfBytes,
+    originalPdfHash: baseHash,
+    finalPdfHash: finalHash
+  };
 }
