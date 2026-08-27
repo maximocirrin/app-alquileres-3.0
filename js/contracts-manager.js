@@ -3166,7 +3166,7 @@
                 try {
                     const { data, error } = await window.supabaseClient.storage
                         .from('contratos_firmados')
-                        .createSignedUrl(`contrato_${dbId}/contrato_definitivo.pdf`, 60 * 60 * 24 * 7);
+                        .createSignedUrl(`contrato_${dbId}/contrato_final_consolidado.pdf`, 60 * 60 * 24 * 7);
                     if (data && data.signedUrl) {
                         window.open(data.signedUrl, '_blank');
                         return;
@@ -3185,7 +3185,7 @@
                 });
                 if (finRes.ok) {
                     const finJson = await finRes.json();
-                    const signedPdfUrl = finJson?.data?.documentos?.contrato_pdf;
+                    const signedPdfUrl = finJson?.data?.documentos?.contrato_final;
                     if (signedPdfUrl) {
                         window.open(signedPdfUrl, '_blank');
                         return;
@@ -3287,7 +3287,7 @@
 
                     const { data: fList } = await window.supabaseClient
                         .from('Firma_contrato')
-                        .select('url_contrato_final_pdf, rol_firmante, id_firma')
+                        .select('url_audit_trail_pdf, rol_firmante, id_firma')
                         .eq('id_contrato', dbId);
 
                     if (fList && fList.length > 0) {
@@ -3295,8 +3295,8 @@
                             ? ['propietario', 'owner', 'OWNER', 'PROPIETARIO'].includes(f.rol_firmante) 
                             : ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(f.rol_firmante)) || fList[0];
                         if (targetFirma) {
-                            auditPath = (targetFirma.url_contrato_final_pdf && !targetFirma.url_contrato_final_pdf.startsWith('http')) 
-                                ? targetFirma.url_contrato_final_pdf 
+                            auditPath = (targetFirma.url_audit_trail_pdf && !targetFirma.url_audit_trail_pdf.startsWith('http')) 
+                                ? targetFirma.url_audit_trail_pdf 
                                 : `contrato_${dbId}/audit_trail_firma_${targetFirma.id_firma}.pdf`;
                         }
                     }
