@@ -166,14 +166,19 @@
         // Si se está editando / generando desde el panel del propietario o corredor para una postulación
         const isOwnerPanel = window.location.pathname.includes('administrador') ||
                              window.location.pathname.includes('panel-corredor') ||
-                             (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR'].includes(options.role.toUpperCase()));
+                             window.location.pathname.includes('propietarios') ||
+                             (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR', 'ADMIN'].includes(options.role.toUpperCase()));
 
-        if (isOwnerPanel && (applicant.id || options.applicant || !c.id_contrato)) {
+        if (isOwnerPanel) {
             return true;
         }
 
         const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
-        if ((activeRole === 'OWNER' || activeRole === 'PROPIETARIO' || activeRole === 'CORREDOR' || activeRole === 'BROKER') && (!tenantEmail || userEmail !== tenantEmail)) {
+        if (['OWNER', 'PROPIETARIO', 'CORREDOR', 'BROKER'].includes(activeRole)) {
+            return true;
+        }
+
+        if (!userEmail || !tenantEmail || userEmail !== tenantEmail) {
             return true;
         }
 
