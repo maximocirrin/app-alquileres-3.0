@@ -3665,9 +3665,10 @@ var DataManager = {
         };
 
         try {
+            const authHeaders = await this._getAuthHeaders();
             const response = await fetch('/api/firmas/iniciar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify(payload)
             });
 
@@ -3680,6 +3681,31 @@ var DataManager = {
             console.error("Error en iniciarFirmaContrato:", err);
             throw err;
         }
+    },
+
+    _getAuthHeaders: async function () {
+        const headers = { 'Content-Type': 'application/json' };
+        if (window.supabaseClient) {
+            try {
+                const { data: sessData } = await window.supabaseClient.auth.getSession();
+                const token = sessData?.session?.access_token;
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            } catch (e) {}
+        }
+        try {
+            const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+            if (storedProfileId) {
+                headers['x-profile-id'] = String(storedProfileId);
+            }
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const email = uLocal.email || uLocal.mail;
+            if (email) {
+                headers['x-user-email'] = email;
+            }
+        } catch (e) {}
+        return headers;
     },
 
     /**
@@ -3733,9 +3759,10 @@ var DataManager = {
      */
     sellarFirmaContrato: async function (idFirma) {
         try {
+            const authHeaders = await this._getAuthHeaders();
             const response = await fetch('/api/firmas/sellar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify({ id_firma: Number(idFirma) })
             });
 
@@ -3757,7 +3784,10 @@ var DataManager = {
      */
     finalizarYObtenerDocumentosContrato: async function (idContrato) {
         try {
-            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`);
+            const authHeaders = await this._getAuthHeaders();
+            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`, {
+                headers: authHeaders
+            });
             const result = await response.json();
             if (!response.ok || !result.ok) {
                 throw new Error(result.message || 'Error al consultar documentos del contrato.');
