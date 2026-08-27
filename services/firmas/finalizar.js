@@ -140,7 +140,7 @@ export default async function finalizarHandler(req, res) {
       if (!contrato.hash_final_sha256 && contrato.url_contrato_original_pdf && firmaInquilino?.url_audit_trail_pdf && firmaPropietario?.url_audit_trail_pdf) {
         try {
           // Descargar Original
-          const { data: origData } = await supabase.storage.from('contratos_originales').download(contrato.url_contrato_original_pdf);
+          const { data: origData } = await supabase.storage.from('contratos_firmados').download(contrato.url_contrato_original_pdf);
           const originalPdfBytes = origData ? Buffer.from(await origData.arrayBuffer()) : null;
 
           // Descargar Audit Trail Inquilino
@@ -196,7 +196,7 @@ export default async function finalizarHandler(req, res) {
     const finalContractPath = contrato.url_contrato_final_pdf || null;
 
     if (contrato.url_contrato_original_pdf) {
-      documentosDescarga.contrato_original = await obtenerUrlFirmada('contratos_originales', contrato.url_contrato_original_pdf);
+      documentosDescarga.contrato_original = await obtenerUrlFirmada('contratos_firmados', contrato.url_contrato_original_pdf);
     }
 
     if (inqAuditPath) {
