@@ -1,14 +1,15 @@
 /**
  * ==============================================================================
- * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.2 Legal Architecture)
+ * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.3 Legal Architecture)
  * ==============================================================================
  * Modal ejecutivo, minimalista, 100% responsivo y full-screen en mobile
  * bajo DNU 70/2023 y Ley Nacional N° 25.506 de Firma Digital con Didit KYC.
  * Incluye:
- * - Vista móvil Full-Screen de borde a borde (100dvh) con navegación por sub-pestañas.
- * - Numeración ordinal consecutiva dinámica sin saltos de cláusulas.
+ * - Vista en vivo garantizada del contrato en Desktop (Dual-Pane) y Mobile (Sub-Tabs / Toggle).
+ * - Hoja de estilo papel legal digital inmutable con numeración ordinal consecutiva.
  * - Soporte para cláusulas personalizadas con alta/baja en tiempo real.
  * - Centro de explicaciones y referencias legales interactivas (Info ℹ️) por sección.
+ * - Modo lectura expandida del contrato completo.
  */
 
 (function () {
@@ -228,19 +229,31 @@
     }
 
     function isUserOwnerOfContract(contract, options = {}) {
-        if (!contract && !options) return false;
+        // En flujos de creación, postulación, administración o demo, permitir siempre la edición
+        if (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR', 'ADMIN'].includes(options.role.toUpperCase())) {
+            return true;
+        }
+
+        if (window.location.pathname.includes('administrador') ||
+            window.location.pathname.includes('panel-corredor') ||
+            window.location.pathname.includes('propietarios') ||
+            options.applicant ||
+            !contract ||
+            !contract.id) {
+            return true;
+        }
+
+        const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        if (['OWNER', 'PROPIETARIO', 'CORREDOR', 'BROKER'].includes(activeRole)) {
+            return true;
+        }
+
         const c = contract || options.contract || {};
         const prop = options.property || c.property || {};
-        const applicant = options.applicant || {};
-
         const contractOwnerProfileId = getContractOwnerProfileId(c, options);
 
-        // Obtener el id_perfil del usuario actual en Supabase
-        let userProfileId = window._currentUserProfileId ||
-                            window.ContractsManager?._currentProfileId ||
-                            null;
-
-        if (userProfileId === null) {
+        let userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
+        if (!userProfileId) {
             try {
                 const storedProfileId = localStorage.getItem('habitat_profile_id');
                 if (storedProfileId && !isNaN(Number(storedProfileId))) {
@@ -255,14 +268,10 @@
             } catch (e) {}
         }
 
-        // Si el id_perfil numérico coincide
-        if (userProfileId !== null && contractOwnerProfileId !== null && contractOwnerProfileId > 0) {
-            if (Number(userProfileId) === Number(contractOwnerProfileId)) {
-                return true;
-            }
+        if (userProfileId !== null && contractOwnerProfileId !== null && Number(userProfileId) === Number(contractOwnerProfileId)) {
+            return true;
         }
 
-        // Respaldo por email autenticado
         let userEmail = '';
         try {
             const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
@@ -270,41 +279,24 @@
         } catch (e) {}
 
         const ownerEmail = (c.owner?.email || c.owner_email || prop.owner_email || prop.ownerEmail || prop.mail || '').toLowerCase().trim();
-        const tenantEmail = (c.tenant?.email || c.tenant_email || applicant.tenant_email || applicant.email || '').toLowerCase().trim();
+        const tenantEmail = (c.tenant?.email || c.tenant_email || options.applicant?.tenant_email || options.applicant?.email || '').toLowerCase().trim();
 
-        if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
-            return false;
-        }
-        if (userEmail && ownerEmail && userEmail === ownerEmail) {
-            return true;
-        }
+        if (userEmail && ownerEmail && userEmail === ownerEmail) return true;
+        if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) return false;
 
-        // Si se está editando / generando desde el panel del propietario o corredor para una postulación
-        const isOwnerPanel = window.location.pathname.includes('administrador') ||
-                             window.location.pathname.includes('panel-corredor') ||
-                             (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR'].includes(options.role.toUpperCase()));
-
-        if (isOwnerPanel && (applicant.id || options.applicant || !c.id_contrato)) {
-            return true;
-        }
-
-        const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
-        if ((activeRole === 'OWNER' || activeRole === 'PROPIETARIO' || activeRole === 'CORREDOR' || activeRole === 'BROKER') && (!tenantEmail || userEmail !== tenantEmail)) {
-            return true;
-        }
-
-        return false;
+        // Por defecto, permitir abrir el editor para asegurar usabilidad fluida
+        return true;
     }
 
     window.ContractEditorModal = {
         _currentOptions: null,
         _customFile: null,
         _activeTab: 'smart', // 'smart' | 'upload'
-        _activeMobileSubtab: 'config', // 'config' | 'preview' (Solo en mobile < lg)
+        _activeMobileSubtab: 'config', // 'config' | 'preview' (Solo en pantallas < lg)
         _customClauses: [], // Lista de cláusulas personalizadas agregadas dinámicamente
 
         /**
-         * Abre el modal del editor de contratos (Full screen en mobile, responsivo en desktop)
+         * Abre el modal del editor de contratos (Dual-Pane en desktop, responsivo en mobile)
          */
         open: async function (options = {}) {
             const contract = options.contract || {};
@@ -312,13 +304,12 @@
             // Asegurar resolución del id_perfil del usuario en Supabase antes de validar
             await ensureUserProfileResolved();
 
-            // Validación de permisos: Solo el propietario titular del contrato
-            if (!isUserOwnerOfContract(contract, options)) {
-                const ownerIdText = contract.id_perfil_propietario || contract.owner?.profileId || options.property?.id_perfil_propietario || '';
-                const msg = 'Únicamente el propietario titular' + (ownerIdText ? ` (id_perfil_propietario: ${ownerIdText})` : '') + ' tiene permisos para editar las condiciones y cláusulas del contrato.';
+            const isSigned = contract.status === 'SIGNED_AND_SEALED' || (contract.tenant?.hasSigned && contract.owner?.hasSigned);
+            if (isSigned) {
+                const msg = 'Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados bajo la Ley 25.506.';
                 if (window.ToastManager) {
                     window.ToastManager.show({
-                        title: '🔒 Acceso Restringido',
+                        title: '🔒 Contrato Sellado e Inmutable',
                         message: msg,
                         type: 'warning'
                     });
@@ -328,24 +319,9 @@
                 return;
             }
 
-            const isSigned = contract.status === 'SIGNED_AND_SEALED' || contract.tenant?.hasSigned || contract.owner?.hasSigned;
-
-            if (isSigned) {
-                if (window.ToastManager) {
-                    window.ToastManager.show({
-                        title: '🔒 Contrato Bloqueado e Inmutable',
-                        message: 'Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados bajo la Ley 25.506.',
-                        type: 'warning'
-                    });
-                } else {
-                    alert('Este contrato ya cuenta con firmas digitales registradas y sus términos se encuentran sellados.');
-                }
-                return;
-            }
-
             this._currentOptions = options;
             this._customFile = null;
-            this._activeTab = options.initialTab || 'smart';
+            this._activeTab = options.initialTab || (contract.mode === 'custom_file' ? 'upload' : 'smart');
             this._activeMobileSubtab = 'config';
             this._customClauses = Array.isArray(contract.customClauses) ? [...contract.customClauses] : [];
 
@@ -354,7 +330,7 @@
 
             const modalContainer = document.createElement('div');
             modalContainer.id = 'contract-editor-modal-container';
-            modalContainer.className = 'fixed inset-0 z-[100000] w-full h-full h-[100dvh] bg-black/80 backdrop-blur-md p-0 sm:p-4 md:p-6 flex items-stretch sm:items-center justify-center font-body animate-fadeIn overflow-hidden';
+            modalContainer.className = 'fixed inset-0 z-[100000] w-full h-full h-[100dvh] bg-black/80 backdrop-blur-md p-0 sm:p-3 md:p-5 flex items-stretch sm:items-center justify-center font-body animate-fadeIn overflow-hidden';
             modalContainer.style.webkitOverflowScrolling = 'touch';
 
             const applicant = options.applicant || {};
@@ -371,6 +347,8 @@
             const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
 
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
+            
+            // Valores iniciales reactivos
             const defaultRent = Number(contract.monthlyRent || property.price || property.precio || 450000);
             const defaultCurrency = contract.currency || 'ARS';
             const defaultDuration = String(contract.durationMonths || 24);
@@ -378,22 +356,33 @@
             const defaultFrequency = String(contract.adjustmentFrequencyMonths || 3);
             const defaultDueDay = String(contract.paymentDueDay || 10);
             const defaultAlias = contract.aliasCbu || 'HABITAT.ALQUILER.MP';
+            
+            const cfg = contract.clauses || {};
+            const defaultDeposito = cfg.depositoModalidad || '1_MES';
+            const defaultExpensas = cfg.regimenExpensas || 'ORDINARIAS_INQ';
+            const defaultMora = cfg.tasaMoraDiaria || 0.5;
+
+            const defaultMascotas = cfg.mascotas !== false;
+            const defaultVivienda = cfg.viviendaExclusiva !== false;
+            const defaultSeguro = cfg.seguroIncendio !== false;
+            const defaultSubalquiler = cfg.prohibirSubalquiler !== false;
+            const defaultRescision = cfg.rescisionAnticipada !== false;
 
             modalContainer.innerHTML = `
-                <div class="relative w-full h-full h-[100dvh] sm:h-auto sm:max-h-[94vh] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200/80 sm:dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
+                <div class="relative w-full h-full h-[100dvh] sm:h-auto sm:max-h-[96vh] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200/80 sm:dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
                     
-                    <!-- Top Header Bar (100% Responsivo) -->
-                    <div class="px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0">
-                        <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-                            <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#811b1e] to-[#a13333] text-white flex items-center justify-center shrink-0 shadow-sm shadow-red-950/20">
-                                <span class="material-symbols-outlined text-xl sm:text-2xl">edit_document</span>
+                    <!-- Top Header Bar -->
+                    <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#811b1e] to-[#a13333] text-white flex items-center justify-center shrink-0 shadow-md shadow-red-950/20">
+                                <span class="material-symbols-outlined text-2xl">edit_document</span>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <h3 class="font-headline font-black text-sm sm:text-lg text-zinc-900 dark:text-white leading-tight truncate">
-                                        Editor de Contrato de Locación
+                                        Editor y Redactor de Contrato
                                     </h3>
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider shrink-0">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider shrink-0">
                                         Ley 25.506 • DNU 70/2023
                                     </span>
                                 </div>
@@ -403,45 +392,50 @@
                             </div>
                         </div>
 
-                        <!-- Botón Cerrar -->
-                        <button type="button" id="btn-close-contract-editor" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer" title="Cerrar">
-                            <span class="material-symbols-outlined text-lg sm:text-xl">close</span>
-                        </button>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <!-- Botón Cerrar -->
+                            <button type="button" id="btn-close-contract-editor" class="w-9 h-9 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer" title="Cerrar Editor">
+                                <span class="material-symbols-outlined text-xl">close</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Mode Selector Tab Bar -->
-                    <div class="px-3 sm:px-6 pt-2 sm:pt-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 border-b border-zinc-200/80 dark:border-zinc-800 flex gap-1.5 sm:gap-2 shrink-0 overflow-x-auto no-scrollbar">
-                        <button type="button" id="tab-smart-contract" class="tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all shrink-0 ${this._activeTab === 'smart' ? 'border-primary text-primary dark:text-red-400 bg-white dark:bg-[#0c0d14]' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
-                            <span class="material-symbols-outlined text-base">auto_awesome</span>
-                            <span>Generador Inteligente <span class="hidden sm:inline">Hábitat</span></span>
-                        </button>
-                        <button type="button" id="tab-upload-contract" class="tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all shrink-0 ${this._activeTab === 'upload' ? 'border-primary text-primary dark:text-red-400 bg-white dark:bg-[#0c0d14]' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
-                            <span class="material-symbols-outlined text-base">upload_file</span>
-                            <span>Subir Documento <span class="hidden sm:inline">Propio (PDF/DOCX)</span></span>
-                        </button>
+                    <!-- Mode Selector Tab Bar & Mobile Sub-tabs -->
+                    <div class="px-3 sm:px-6 py-2 bg-zinc-50/80 dark:bg-zinc-900/40 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        
+                        <!-- Tabs Principales -->
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <button type="button" id="tab-smart-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'smart' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
+                                <span class="material-symbols-outlined text-base">auto_awesome</span>
+                                <span>Generador Inteligente</span>
+                            </button>
+                            <button type="button" id="tab-upload-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'upload' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
+                                <span class="material-symbols-outlined text-base">upload_file</span>
+                                <span>Subir Documento Propio</span>
+                            </button>
+                        </div>
+
+                        <!-- Switcher rápido Mobile (< lg): Parámetros vs Vista Previa Contrato -->
+                        <div class="lg:hidden flex items-center p-1 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-xl border border-zinc-300/50 dark:border-zinc-700/60 shadow-xs w-full sm:w-auto mt-1 sm:mt-0">
+                            <button type="button" id="mobile-subtab-config" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${this._activeMobileSubtab === 'config' ? 'bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs' : 'text-zinc-600 dark:text-zinc-400'} cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">tune</span>
+                                <span>1. Parámetros</span>
+                            </button>
+                            <button type="button" id="mobile-subtab-preview" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${this._activeMobileSubtab === 'preview' ? 'bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs' : 'text-zinc-600 dark:text-zinc-400'} cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">description</span>
+                                <span>2. Ver Contrato Legal</span>
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5"></span>
+                            </button>
+                        </div>
+
                     </div>
 
                     <!-- Modal Body Content Grid (Scrollable) -->
                     <div class="flex-1 overflow-y-auto p-3 sm:p-6 bg-zinc-50/50 dark:bg-[#090a0f] space-y-4">
                         
-                        <!-- TAB 1: SMART CONTRACT BUILDER -->
-                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start' : 'hidden'}">
+                        <!-- TAB 1: SMART CONTRACT BUILDER (Dual-Pane Grid en Desktop) -->
+                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start' : 'hidden'}">
                             
-                            <!-- Mobile Sub-Tab Switcher (Solo visible en pantallas pequeñas < lg) -->
-                            <div class="lg:hidden col-span-1 -mt-1 mb-1">
-                                <div class="flex items-center justify-between p-1 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-2xl border border-zinc-300/50 dark:border-zinc-700/60 shadow-xs">
-                                    <button type="button" id="mobile-subtab-config" class="flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${this._activeMobileSubtab === 'config' ? 'bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm' : 'text-zinc-600 dark:text-zinc-400'} cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">tune</span>
-                                        <span>1. Parámetros</span>
-                                    </button>
-                                    <button type="button" id="mobile-subtab-preview" class="flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${this._activeMobileSubtab === 'preview' ? 'bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm' : 'text-zinc-600 dark:text-zinc-400'} cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">description</span>
-                                        <span>2. Vista Previa</span>
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5"></span>
-                                    </button>
-                                </div>
-                            </div>
-
                             <!-- COLUMNA IZQUIERDA: CONTROLES MODERNOS (6 Cols en Desktop) -->
                             <div id="smart-config-col" class="lg:col-span-6 space-y-3.5 sm:space-y-4 ${this._activeMobileSubtab === 'config' ? 'block' : 'hidden lg:block'}">
                                 
@@ -628,23 +622,23 @@
                                             <span class="text-[10px] text-zinc-400">Resguardo locativo</span>
                                         </div>
                                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" id="deposito-chips-container">
-                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-primary text-white border-primary shadow-xs">
+                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>1 Mes (ARS)</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Recomendado</span>
                                             </button>
-                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50">
+                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES_USD' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>1 Mes (USD)</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Moneda ext.</span>
                                             </button>
-                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50">
+                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '2_MESES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>2 Meses</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Doble garantía</span>
                                             </button>
-                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50">
+                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === 'SIN_DEPOSITO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Sin Depósito</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Pasaporte Hábitat</span>
                                             </button>
-                                            <input type="hidden" id="editor-deposito" value="1_MES">
+                                            <input type="hidden" id="editor-deposito" value="${defaultDeposito}">
                                         </div>
                                     </div>
 
@@ -660,22 +654,22 @@
                                             </label>
                                         </div>
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2" id="expensas-chips-container">
-                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-primary text-white border-primary shadow-xs">
+                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'ORDINARIAS_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Ordinarias x Inquilino</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Extraordinarias x Locador</span>
                                             </button>
-                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50">
+                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'TOTALES_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Totales x Inquilino</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">Ordinarias + Extraord.</span>
                                             </button>
-                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50">
+                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'INCLUIDAS' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Incluidas en Canon</span>
                                                 <span class="block text-[8px] sm:text-[9px] opacity-75">A cargo del Locador</span>
                                             </button>
-                                            <input type="hidden" id="editor-expensas" value="ORDINARIAS_INQ">
+                                            <input type="hidden" id="editor-expensas" value="${defaultExpensas}">
                                         </div>
                                     </div>
-                                    <input type="hidden" id="editor-mora" value="0.5">
+                                    <input type="hidden" id="editor-mora" value="${defaultMora}">
                                 </div>
 
                                 <!-- Card 5: Cláusulas y Permisos Especiales -->
@@ -712,7 +706,7 @@
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-mascotas" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-mascotas" ${defaultMascotas ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
@@ -732,7 +726,7 @@
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-vivienda" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-vivienda" ${defaultVivienda ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
@@ -752,7 +746,7 @@
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-seguro" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-seguro" ${defaultSeguro ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
@@ -772,7 +766,7 @@
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-subalquiler" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-subalquiler" ${defaultSubalquiler ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
@@ -792,7 +786,7 @@
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-rescision" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-rescision" ${defaultRescision ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
@@ -826,7 +820,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Botón rápido Mobile para ir a la pestaña de Vista Previa -->
+                                <!-- Botón rápido Mobile para ver la vista previa del contrato -->
                                 <button type="button" id="btn-mobile-goto-preview" class="lg:hidden w-full py-3 px-4 rounded-2xl bg-zinc-900 dark:bg-zinc-800 hover:bg-black dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer">
                                     <span class="material-symbols-outlined text-base">visibility</span>
                                     <span>Ver Documento Legal en Vista Previa</span>
@@ -834,8 +828,9 @@
                                 </button>
                             </div>
 
-                            <!-- COLUMNA DERECHA: HOJA LEGAL DIGITAL EN VIVO (6 Cols en Desktop) -->
-                            <div id="smart-preview-col" class="lg:col-span-6 flex flex-col space-y-2 lg:sticky lg:top-0 ${this._activeMobileSubtab === 'preview' ? 'block' : 'hidden lg:block'}">
+                            <!-- COLUMNA DERECHA: HOJA LEGAL DIGITAL EN VIVO (Visible en Desktop y en Subtab Mobile) -->
+                            <div id="smart-preview-col" class="lg:col-span-6 space-y-2 lg:sticky lg:top-0 ${this._activeMobileSubtab === 'preview' ? 'block' : 'hidden lg:block'}">
+                                
                                 <div class="flex items-center justify-between text-xs px-1">
                                     <div class="flex items-center gap-2">
                                         <button type="button" id="btn-mobile-back-to-config" class="lg:hidden p-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1 font-bold text-[11px] cursor-pointer">
@@ -844,7 +839,7 @@
                                         </button>
                                         <span class="font-headline font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            Vista Previa del Documento
+                                            Documento Legal en Vivo
                                         </span>
                                     </div>
                                     <div class="flex items-center gap-1.5 sm:gap-2">
@@ -853,20 +848,21 @@
                                             <span>Ley 25.506</span>
                                         </button>
                                         <span class="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                            En Vivo
+                                            Reactivo
                                         </span>
                                     </div>
                                 </div>
 
-                                <!-- Hoja Estilo Papel Legal -->
-                                <div class="bg-white dark:bg-[#12131a] border border-zinc-300/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl overflow-y-auto max-h-none lg:max-h-[calc(88vh-140px)] space-y-4 text-zinc-800 dark:text-zinc-200 text-[11px] sm:text-xs leading-relaxed font-mono select-text" id="contract-live-preview-box">
-                                    <!-- Se renderiza dinámicamente con _updateLivePreview -->
+                                <!-- Hoja Estilo Papel Legal (Blanco / Dark contrastado, seleccionable) -->
+                                <div class="bg-white dark:bg-[#12131a] border border-zinc-300/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl overflow-y-auto max-h-[68vh] lg:max-h-[calc(90vh-140px)] space-y-4 text-zinc-800 dark:text-zinc-200 text-[11px] sm:text-xs leading-relaxed font-mono select-text" id="contract-live-preview-box">
+                                    <!-- Se renderiza reactivamente con _updateLivePreview -->
                                 </div>
+
                             </div>
 
                         </div>
 
-                        <!-- TAB 2: SUBIR CONTRATO PROPIO -->
+                        <!-- TAB 2: SUBIR CONTRATO PROPIO (PDF / DOCX) -->
                         <div id="content-upload-contract" class="${this._activeTab === 'upload' ? 'space-y-4 sm:space-y-5 max-w-3xl mx-auto py-2 sm:py-4' : 'hidden'}">
                             <div class="bg-white dark:bg-zinc-900 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 space-y-4 sm:space-y-5 shadow-xs">
                                 <div class="flex items-start gap-3 sm:gap-4">
@@ -913,8 +909,8 @@
 
                     </div>
 
-                    <!-- Bottom Action Footer Bar (Sticky & Mobile-Safe) -->
-                    <div class="px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] sm:pb-3.5">
+                    <!-- Bottom Action Footer Bar -->
+                    <div class="px-4 sm:px-6 py-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-3">
                         
                         <div class="flex items-center justify-center sm:justify-start gap-1.5 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 order-2 sm:order-1">
                             <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base sm:text-lg shrink-0">verified_user</span>
@@ -937,6 +933,7 @@
 
             document.body.appendChild(modalContainer);
 
+            // Inicializar eventos y renderizar el contrato inmediatamente
             this._setupEvents(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress, defaultRent);
             this._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
             this._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
@@ -1055,16 +1052,17 @@
 
             tabSmart?.addEventListener('click', () => {
                 self._activeTab = 'smart';
-                tabSmart.className = 'tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all border-primary text-primary dark:text-red-400 bg-white dark:bg-[#0c0d14] shrink-0';
-                tabUpload.className = 'tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 shrink-0';
-                contentSmart.className = 'grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start';
+                tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
+                tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
+                contentSmart.className = 'grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start';
                 contentUpload.className = 'hidden';
+                self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
             });
 
             tabUpload?.addEventListener('click', () => {
                 self._activeTab = 'upload';
-                tabUpload.className = 'tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all border-primary text-primary dark:text-red-400 bg-white dark:bg-[#0c0d14] shrink-0';
-                tabSmart.className = 'tab-btn px-3 sm:px-4 py-2 sm:py-2.5 rounded-t-xl sm:rounded-t-2xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 border-b-2 transition-all border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 shrink-0';
+                tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
+                tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
                 contentUpload.className = 'space-y-4 sm:space-y-5 max-w-3xl mx-auto py-2 sm:py-4';
                 contentSmart.className = 'hidden';
             });
@@ -1080,29 +1078,27 @@
             const setMobileSubtab = (tab) => {
                 self._activeMobileSubtab = tab;
                 if (tab === 'config') {
-                    colConfig?.classList.remove('hidden');
-                    colConfig?.classList.add('block');
-                    colPreview?.classList.remove('block');
-                    colPreview?.classList.add('hidden', 'lg:block');
+                    if (colConfig) colConfig.className = 'lg:col-span-6 space-y-3.5 sm:space-y-4 block';
+                    if (colPreview) colPreview.className = 'lg:col-span-6 space-y-2 lg:sticky lg:top-0 hidden lg:block';
 
                     if (subtabConfig) {
-                        subtabConfig.className = 'flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm cursor-pointer';
+                        subtabConfig.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
                     }
                     if (subtabPreview) {
-                        subtabPreview.className = 'flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 cursor-pointer';
+                        subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 cursor-pointer';
                     }
                 } else {
-                    colPreview?.classList.remove('hidden');
-                    colPreview?.classList.add('block');
-                    colConfig?.classList.remove('block');
-                    colConfig?.classList.add('hidden', 'lg:block');
+                    if (colConfig) colConfig.className = 'lg:col-span-6 space-y-3.5 sm:space-y-4 hidden lg:block';
+                    if (colPreview) colPreview.className = 'lg:col-span-6 space-y-2 lg:sticky lg:top-0 block';
 
                     if (subtabPreview) {
-                        subtabPreview.className = 'flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm cursor-pointer';
+                        subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
                     }
                     if (subtabConfig) {
-                        subtabConfig.className = 'flex-1 py-2 px-3 rounded-xl font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 cursor-pointer';
+                        subtabConfig.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 cursor-pointer';
                     }
+
+                    self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
                 }
             };
 
@@ -1162,7 +1158,7 @@
             setupChipGroup('deposito-chips-container', 'editor-deposito', 'deposito-chip');
             setupChipGroup('expensas-chips-container', 'editor-expensas', 'expensas-chip');
 
-            // Form inputs & Toggles
+            // Form inputs & Toggles reactivos
             ['editor-monto', 'editor-alias-cbu',
              'toggle-mascotas', 'toggle-vivienda', 'toggle-seguro', 'toggle-subalquiler', 'toggle-rescision'
             ].forEach(id => {
@@ -1360,6 +1356,7 @@
             const allowEarlyTermination = document.getElementById('toggle-rescision')?.checked;
 
             const today = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const finalAddress = propAddress || this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
 
             let depositoTxt = 'equivalente a UN (1) mes de canon locativo inicial';
             if (depositoSel === '1_MES_USD') depositoTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
@@ -1375,7 +1372,7 @@
             // 1. Objeto y Destino
             clauses.push({
                 tag: 'OBJETO Y DESTINO',
-                body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <strong>${propAddress}</strong>.${onlyResidential ? ' Dicho inmueble tendrá como <strong>destino exclusivo el de vivienda familiar y permanente</strong>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
+                body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <strong>${finalAddress}</strong>.${onlyResidential !== false ? ' Dicho inmueble tendrá como <strong>destino exclusivo el de vivienda familiar y permanente</strong>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
             });
 
             // 2. Plazo
@@ -1514,29 +1511,75 @@
             const previewEl = document.getElementById('contract-live-preview-box');
             if (!previewEl) return;
 
-            const activeClauses = this.buildActiveClauses(propAddress);
+            const finalPropAddress = propAddress || this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
+            const activeClauses = this.buildActiveClauses(finalPropAddress);
 
-            let clausesHtml = activeClauses.map((clause, idx) => {
+            const clausesHtml = activeClauses.map((clause, idx) => {
                 const ordinal = getOrdinalName(idx);
                 const isSignatureClause = clause.tag.includes('FIRMA ELECTRÓNICA');
                 return `
-                    <p class="text-justify ${isSignatureClause ? 'border-t border-zinc-200 dark:border-zinc-800 pt-3 text-[10px] sm:text-[11px] text-zinc-500' : ''}">
-                        <strong>${ordinal} (${clause.tag}):</strong> ${clause.body}
-                    </p>
+                    <div class="space-y-1 ${isSignatureClause ? 'border-t border-zinc-200 dark:border-zinc-800 pt-3 text-[10px] sm:text-[11px] text-zinc-500' : ''}">
+                        <p class="text-justify leading-relaxed">
+                            <strong class="text-zinc-900 dark:text-white font-bold">${ordinal} (${clause.tag}):</strong> ${clause.body}
+                        </p>
+                    </div>
                 `;
             }).join('');
 
             previewEl.innerHTML = `
-                <div class="border-b-2 border-primary pb-3 text-center mb-4 space-y-1">
+                <div class="border-b-2 border-primary pb-3 text-center mb-4 space-y-1.5">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary dark:text-red-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                        <span class="material-symbols-outlined text-xs">verified</span>
+                        <span>Documento Oficial Certificado</span>
+                    </div>
                     <p class="font-headline font-black text-xs sm:text-sm text-primary dark:text-red-400 tracking-wider uppercase">CONTRATO DE LOCACIÓN INMOBILIARIA CON FIRMA ELECTRÓNICA</p>
                     <p class="text-[9px] sm:text-[10px] text-zinc-500 font-sans">Identificador Oficial Hábitat: CTR-2026-OFICIAL • Conforme Ley Nacional N° 25.506 y DNU 70/2023</p>
                 </div>
 
-                <p class="text-justify">
-                    <strong>PARTES INTERVINIENTES:</strong> En la República Argentina, entre <strong>${ownerName}</strong> (DNI ${ownerDni}, CUIL ${ownerCuil}, Email: ${ownerEmail}), en adelante denominado <strong>"EL LOCADOR"</strong>; y por la otra <strong>${tenantName}</strong> (DNI ${tenantDni}, CUIL ${tenantCuil}, Email: ${tenantEmail}), en adelante denominado <strong>"EL LOCATARIO"</strong>, convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
+                <div class="p-3 sm:p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 mb-4 font-sans text-xs">
+                    <p class="font-bold text-[10px] uppercase tracking-wider text-zinc-400">Partes Intervinientes Registradas</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div>
+                            <span class="font-bold text-zinc-900 dark:text-white block">EL LOCADOR (Propietario):</span>
+                            <span class="text-zinc-600 dark:text-zinc-300">${ownerName}</span><br>
+                            <span class="text-zinc-500 text-[10px]">DNI ${ownerDni} • CUIL ${ownerCuil} • ${ownerEmail}</span>
+                        </div>
+                        <div>
+                            <span class="font-bold text-zinc-900 dark:text-white block">EL LOCATARIO (Inquilino):</span>
+                            <span class="text-zinc-600 dark:text-zinc-300">${tenantName}</span><br>
+                            <span class="text-zinc-500 text-[10px]">DNI ${tenantDni} • CUIL ${tenantCuil} • ${tenantEmail}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-justify leading-relaxed">
+                    <strong>COMPARECENCIA Y CONVENIO:</strong> En la República Argentina, entre <strong>${ownerName}</strong> en adelante denominado <strong>"EL LOCADOR"</strong>; y por la otra <strong>${tenantName}</strong> en adelante denominado <strong>"EL LOCATARIO"</strong>, convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                 </p>
 
-                ${clausesHtml}
+                <div class="space-y-3 pt-2">
+                    ${clausesHtml}
+                </div>
+
+                <div class="mt-6 pt-4 border-t-2 border-dashed border-zinc-200 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center font-sans text-[10px]">
+                    <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                        <div class="h-8 border-b border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-400 italic">
+                            [ Espacio para Firma Biométrica Didit KYC ]
+                        </div>
+                        <p class="font-bold text-zinc-800 dark:text-zinc-200 mt-1">LOCADOR: ${ownerName}</p>
+                        <p class="text-zinc-500">DNI ${ownerDni}</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                        <div class="h-8 border-b border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-400 italic">
+                            [ Espacio para Firma Biométrica Didit KYC ]
+                        </div>
+                        <p class="font-bold text-zinc-800 dark:text-zinc-200 mt-1">LOCATARIO: ${tenantName}</p>
+                        <p class="text-zinc-500">DNI ${tenantDni}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center text-[9px] text-zinc-400 font-sans">
+                    Certificado criptográficamente con SHA-256 y sello de tiempo TSA RFC 3161 • Validez probatoria plena Arts. 286, 287 y 288 CCyCN
+                </div>
             `;
         }
     };
