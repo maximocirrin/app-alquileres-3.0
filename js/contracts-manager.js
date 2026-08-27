@@ -185,6 +185,31 @@
         return false;
     }
 
+    async function getApiAuthHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (window.supabaseClient) {
+            try {
+                const { data: sessData } = await window.supabaseClient.auth.getSession();
+                const token = sessData?.session?.access_token;
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            } catch (e) {}
+        }
+        try {
+            const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+            if (storedProfileId) {
+                headers['x-profile-id'] = String(storedProfileId);
+            }
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const email = uLocal.email || uLocal.mail;
+            if (email) {
+                headers['x-user-email'] = email;
+            }
+        } catch (e) {}
+        return headers;
+    }
+
     function detectActiveUserRole(contract) {
         const urlParams = new URLSearchParams(window.location.search);
         const urlRole = urlParams.get('role');
@@ -2282,9 +2307,10 @@
                     let backendSellar = null;
                     try {
                         const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
+                        const authHeaders = await getApiAuthHeaders();
                         const sellRes = await fetch(`${apiBase}/api/firmas/sellar`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: authHeaders,
                             body: JSON.stringify({
                                 id_contrato: dbContractId,
                                 rol: dbRole,
@@ -2344,9 +2370,7 @@
                                     monto: rentAmount,
                                     fecha_vencimiento: todayStr,
                                     periodo: new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
-                                }])
-                                .select()
-                                .maybeSingle();
+                                }]);
 
                             if (newPago && newPago.id_pago) {
                                 await window.supabaseClient.from('Historial_pago').insert([{
@@ -2364,7 +2388,10 @@
                     if (tenantHasSigned && ownerHasSigned) {
                         try {
                             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
-                            const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`);
+                            const authHeaders = await getApiAuthHeaders();
+                            const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`, {
+                                headers: authHeaders
+                            });
                             if (finRes.ok) {
                                 const fj = await finRes.json();
                                 backendFinalizar = fj.data;
@@ -2696,7 +2723,10 @@
             // 2. Intentar obtener URL firmada del backend API (soporta puerto 3000 o relativo)
             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
             try {
-                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`);
+                const authHeaders = await getApiAuthHeaders();
+                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`, {
+                    headers: authHeaders
+                });
                 if (finRes.ok) {
                     const finJson = await finRes.json();
                     const signedPdfUrl = finJson?.data?.documentos?.contrato_pdf;
@@ -2831,7 +2861,10 @@
             // 2. Intentar obtener URL firmada del backend API (soporta puerto 3000 o relativo)
             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
             try {
-                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`);
+                const authHeaders = await getApiAuthHeaders();
+                const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbId}`, {
+                    headers: authHeaders
+                });
                 if (finRes.ok) {
                     const finJson = await finRes.json();
                     const docs = finJson?.data?.documentos || {};
