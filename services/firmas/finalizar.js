@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
+import { mergeFinalContractPdf } from './pdf-generator.js';
 dotenv.config();
 
 /**
@@ -134,6 +135,36 @@ export default async function finalizarHandler(req, res) {
       } catch (histErr) {
         console.warn('[Warning actualizando historial de contrato]:', histErr);
       }
+
+      // --- GENERACIÓN DEL CONTRATO FINAL CONSOLIDADO (WORM) ---
+      if (!contrato.hash_final_sha256 && contrato.url_contrato_original_pdf && firmaInquilino?.url_audit_trail_pdf && firmaPropietario?.url_audit_trail_pdf) {
+        try {
+          // Descargar Original
+          const { data: origData } = await supabase.storage.from('contratos_originales').download(contrato.url_contrato_original_pdf);
+          const originalPdfBytes = origData ? Buffer.from(await origData.arrayBuffer()) : null;
+
+          // Descargar Audit Trail Inquilino
+          const { data: inqData } = await supabase.storage.from('contratos_firmados').download(firmaInquilino.url_audit_trail_pdf);
+          const inquilinoAuditBytes = inqData ? Buffer.from(await inqData.arrayBuffer()) : null;
+
+          // Descargar Audit Trail Propietario
+          const { data: propData } = await supabase.storage.from('contratos_firmados').download(firmaPropietario.url_audit_trail_pdf);
+          const propietarioAuditBytes = propData ? Buffer.from(await propData.arrayBuffer()) : null;
+
+          if (originalPdfBytes && inquilinoAuditBytes && propietarioAuditBytes) {
+            const { finalPdfBytes, finalPdfHash } = await mergeFinalContractPdf({ originalPdfBytes, inquilinoAuditBytes, propietarioAuditBytes });
+            
+            const finalContractPdfPath = `contrato_${numericContractId}/contrato_final_consolidado.pdf`;
+            await supabase.storage.from('contratos_firmados').upload(finalContractPdfPath, finalPdfBytes, { contentType: 'application/pdf', upsert: true });
+
+            await supabase.from('Contrato').update({ hash_final_sha256: finalPdfHash, url_contrato_final_pdf: finalContractPdfPath }).eq('id_contrato', numericContractId);
+            contrato.hash_final_sha256 = finalPdfHash;
+            contrato.url_contrato_final_pdf = finalContractPdfPath;
+          }
+        } catch (mergeErr) {
+          console.error('[Error fusionando contrato final]:', mergeErr);
+        }
+      }
     }
 
     // 5. Generar URLs firmadas de descarga
@@ -160,19 +191,24 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    const inqContractPath = firmaInquilino ? firmaInquilino.url_contrato_final_pdf : null;
-    const propContractPath = firmaPropietario ? firmaPropietario.url_contrato_final_pdf : null;
+    const inqAuditPath = firmaInquilino ? firmaInquilino.url_audit_trail_pdf : null;
+    const propAuditPath = firmaPropietario ? firmaPropietario.url_audit_trail_pdf : null;
+    const finalContractPath = contrato.url_contrato_final_pdf || null;
 
     if (contrato.url_contrato_original_pdf) {
       documentosDescarga.contrato_original = await obtenerUrlFirmada('contratos_originales', contrato.url_contrato_original_pdf);
     }
 
-    if (inqContractPath) {
-      documentosDescarga.contrato_inquilino = await obtenerUrlFirmada('contratos_firmados', inqContractPath);
+    if (inqAuditPath) {
+      documentosDescarga.audit_trail_inquilino = await obtenerUrlFirmada('contratos_firmados', inqAuditPath);
     }
 
-    if (propContractPath) {
-      documentosDescarga.contrato_propietario = await obtenerUrlFirmada('contratos_firmados', propContractPath);
+    if (propAuditPath) {
+      documentosDescarga.audit_trail_propietario = await obtenerUrlFirmada('contratos_firmados', propAuditPath);
+    }
+
+    if (finalContractPath) {
+      documentosDescarga.contrato_final = await obtenerUrlFirmada('contratos_firmados', finalContractPath);
     }
 
     return res.status(200).json({

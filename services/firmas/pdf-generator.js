@@ -194,15 +194,12 @@ export async function generateOriginalContractPdf({
 }
 
 /**
- * 2. Genera el PDF Consolidado: Contrato Original + Audit Trail Forense con Hash Base inyectado + Bloque de Firmas
+ * 2. Genera el PDF del Audit Trail Forense (Solo auditoría, sin el contrato base)
  */
-export async function generateConsolidatedPdf({
+export async function generateAuditTrailPdf({
   contractId,
   firmaId,
-  contrato = {},
   propiedad = {},
-  inquilino = {},
-  propietario = {},
   rol,
   signerName,
   signerDni,
@@ -211,30 +208,9 @@ export async function generateConsolidatedPdf({
   userAgent,
   diditSessionId,
   diditScores = {},
-  originalPdfBytes = null,
-  originalPdfHash = null,
-  allFirmas = []
+  originalPdfHash = null
 }) {
-  let basePdfBytes = originalPdfBytes;
-  let baseHash = originalPdfHash;
-
-  // Si no se proporcionó el buffer original, generarlo y calcular su hash
-  if (!basePdfBytes) {
-    basePdfBytes = await generateOriginalContractPdf({
-      contractId,
-      contrato,
-      propiedad,
-      inquilino,
-      propietario
-    });
-  }
-
-  if (!baseHash) {
-    baseHash = crypto.createHash('sha256').update(basePdfBytes).digest('hex');
-  }
-
-  // Cargar el documento PDF original para adjuntarle la auditoría y firmas
-  const pdfDoc = await PDFDocument.load(basePdfBytes);
+  const pdfDoc = await PDFDocument.create();
   
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -246,7 +222,7 @@ export async function generateConsolidatedPdf({
   const lightBg = rgb(0.97, 0.98, 0.99);
   const emeraldColor = rgb(0.02, 0.59, 0.41);
 
-  // --- NUEVA PÁGINA: SECCIÓN AUDIT TRAIL Y FIRMAS DIGITALES ---
+  // --- PÁGINA: SECCIÓN AUDIT TRAIL Y FIRMAS DIGITALES ---
   let page = pdfDoc.addPage([595.28, 841.89]);
   const { width, height } = page.getSize();
   let currentY = height - 50;
@@ -286,7 +262,7 @@ export async function generateConsolidatedPdf({
   currentY -= 18;
 
   drawRow('ID Contrato Legal:', `CTR-2026-${String(contractId).padStart(4, '0')}`);
-  drawRow('Hash SHA-256 Base (Original):', baseHash, true, emeraldColor);
+  drawRow('Hash SHA-256 Base (Original):', originalPdfHash || 'No disponible aún', true, emeraldColor);
   drawRow('Inmueble Objeto:', propAddress);
 
   currentY -= 8;
@@ -338,13 +314,44 @@ export async function generateConsolidatedPdf({
   page.drawText('DOCUMENTO AUDITABLE CUSTODIADO POR HABITAT PLATAFORMA INMOBILIARIA', { x: 45, y: 62, size: 7.5, font: fontBold, color: darkColor });
   page.drawText('Este documento certifica la inmutabilidad y autoria del contrato bajo apercibimiento del Codigo Civil y Comercial.', { x: 45, y: 48, size: 6.8, font: fontRegular, color: grayColor });
 
-  const consolidatedBytes = Buffer.from(await pdfDoc.save());
-  const finalHash = crypto.createHash('sha256').update(consolidatedBytes).digest('hex');
+  const auditTrailBytes = Buffer.from(await pdfDoc.save());
+  const auditTrailHash = crypto.createHash('sha256').update(auditTrailBytes).digest('hex');
 
   return {
-    consolidatedPdfBytes: consolidatedBytes,
-    originalPdfBytes: basePdfBytes,
-    originalPdfHash: baseHash,
-    finalPdfHash: finalHash
+    auditTrailBytes,
+    auditTrailHash
+  };
+}
+
+/**
+ * 3. Fusiona el Contrato Original con los Audit Trails para crear el Contrato Final
+ */
+export async function mergeFinalContractPdf({ originalPdfBytes, inquilinoAuditBytes, propietarioAuditBytes }) {
+  const finalDoc = await PDFDocument.create();
+
+  if (originalPdfBytes) {
+    const origDoc = await PDFDocument.load(originalPdfBytes);
+    const copiedPages = await finalDoc.copyPages(origDoc, origDoc.getPageIndices());
+    copiedPages.forEach(p => finalDoc.addPage(p));
+  }
+
+  if (inquilinoAuditBytes) {
+    const inqDoc = await PDFDocument.load(inquilinoAuditBytes);
+    const copiedPages = await finalDoc.copyPages(inqDoc, inqDoc.getPageIndices());
+    copiedPages.forEach(p => finalDoc.addPage(p));
+  }
+
+  if (propietarioAuditBytes) {
+    const propDoc = await PDFDocument.load(propietarioAuditBytes);
+    const copiedPages = await finalDoc.copyPages(propDoc, propDoc.getPageIndices());
+    copiedPages.forEach(p => finalDoc.addPage(p));
+  }
+
+  const finalPdfBytes = Buffer.from(await finalDoc.save());
+  const finalPdfHash = crypto.createHash('sha256').update(finalPdfBytes).digest('hex');
+
+  return {
+    finalPdfBytes,
+    finalPdfHash
   };
 }
