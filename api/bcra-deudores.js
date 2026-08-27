@@ -109,10 +109,25 @@ export default async function handler(req, res) {
           .from('Pasaporte_habitat')
           .update({
             situacion_crediticia: bcraResult.situacionCrediticia,
-            datos_bcra: bcraResult,
             updated_at: new Date().toISOString()
           })
           .eq('id_pasaporte', targetPasaporteId);
+          
+        let participantId = null;
+        if (targetPasaporteId) {
+            const { data: pass } = await supabase.from('Pasaporte_habitat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
+            if (pass) participantId = pass.id_perfil;
+        }
+
+        if (participantId) {
+            await supabase.from('atm_records').insert([{
+                participant_id: participantId,
+                has_debt: bcraResult.situacionCrediticia !== '1 - Normal',
+                total_debt_amount: bcraResult.situacionCrediticia !== '1 - Normal' ? 1000 : 0, // Mock amount for now
+                datos_bcra: bcraResult,
+                checked_at: new Date().toISOString()
+            }]);
+        }
 
         console.log(`[BCRA WS] Audit en Supabase exitoso para Pasaporte ID: ${targetPasaporteId}`);
       } catch (dbErr) {

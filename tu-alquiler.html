@@ -2334,14 +2334,11 @@
                 }
 
                 const condicionFiscal = (pasaporte && pasaporte.condicion_fiscal)
-                    || (pasaporte && pasaporte.datos_arca && pasaporte.datos_arca.condicionFiscal)
                     || 'Monotributo / Relación de Dependencia';
 
-                const actividadArca = (pasaporte && pasaporte.datos_arca && pasaporte.datos_arca.actividadPrincipal)
-                    || 'Servicios Comerciales / Profesionales';
+                const actividadArca = 'Servicios Comerciales / Profesionales';
 
                 const situacionBcra = (pasaporte && pasaporte.situacion_crediticia)
-                    || (pasaporte && pasaporte.datos_bcra && pasaporte.datos_bcra.situacionCrediticia)
                     || 'BCRA Sit. 1 (Normal)';
 
                 const capacidadPago = pasaporte && pasaporte.capacidad_pago_mensual

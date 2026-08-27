@@ -175,9 +175,7 @@ export default async function sellarHandler(req, res) {
       .update({
         estado_firma: 'sellada',
         hash_contrato_sha256: finalPdfHashSha256,
-        hash_audit_trail_sha256: null,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: null,
         url_contrato_final_pdf: contractPdfPath,
         fecha_firma: new Date().toISOString()
       })
@@ -197,9 +195,7 @@ export default async function sellarHandler(req, res) {
         id_contrato: contractId,
         estado_firma: 'sellada',
         hash_contrato_sha256: finalPdfHashSha256,
-        hash_audit_trail_sha256: null,
         tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: null,
         url_contrato_final_pdf: contractPdfPath,
         fecha_firma: (firmaActualizada && firmaActualizada.fecha_firma) || new Date().toISOString()
       }

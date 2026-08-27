@@ -142,7 +142,6 @@ export default async function handler(req, res) {
         cuit: cleanCuit,
         condicion_fiscal: arcaResult.condicionFiscal,
         razon_social: arcaResult.razonSocial,
-        datos_arca: arcaResult,
         updated_at: new Date().toISOString()
       };
 
@@ -162,6 +161,20 @@ export default async function handler(req, res) {
             id_estado_pasaporte: 3, // Activo
             observacion: `Datos impositivos verificados con ARCA (Padrón). Condición Fiscal: ${arcaResult.condicionFiscal}`
           }]);
+          
+        let participantId = null;
+        if (targetPasaporteId) {
+            const { data: pass } = await supabase.from('Pasaporte_habitat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
+            if (pass) participantId = pass.id_perfil;
+        }
+
+        if (participantId) {
+            await supabase.from('legal_records').insert([{
+                participant_id: participantId,
+                datos_arca: arcaResult,
+                checked_at: new Date().toISOString()
+            }]);
+        }
       }
     }
 

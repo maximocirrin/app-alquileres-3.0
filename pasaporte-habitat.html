@@ -905,12 +905,8 @@
                                         condicionFiscal: pasaporte.condicion_fiscal || 'Monotributo H',
                                         razonSocial: realFullName,
                                         estadoCuit: 'ACTIVO',
-                                        actividadPrincipal: pasaporte.datos_arca ? pasaporte.datos_arca.actividadPrincipal : 'Servicios Comerciales / Profesionales'
+                                        actividadPrincipal: 'Servicios Comerciales / Profesionales' // This should be fetched from legal_records or atm_records if needed later
                                     });
-                                }
-
-                                if (window.actualizarBcraUI && pasaporte.datos_bcra) {
-                                    window.actualizarBcraUI(pasaporte.datos_bcra);
                                 }
 
                                 if (window.PassportCards) {
@@ -1524,9 +1520,6 @@
                                     situacion_crediticia: situacionCrediticiaFinal,
                                     ingreso_mensual_declarado: ingresosVal,
                                     antecedentes_legales: true,
-                                    datos_arca: arcaData || existingP.datos_arca,
-                                    datos_bcra: bcraData || existingP.datos_bcra,
-                                    datos_ingresos: mergedDatosIngresos,
                                     updated_at: new Date().toISOString()
                                 })
                                 .eq('id_pasaporte', existingP.id_pasaporte)
@@ -1554,10 +1547,7 @@
                                     condicion_fiscal: condicionFiscalFinal,
                                     situacion_crediticia: situacionCrediticiaFinal,
                                     ingreso_mensual_declarado: ingresosVal,
-                                    antecedentes_legales: true,
-                                    datos_arca: arcaData || null,
-                                    datos_bcra: bcraData || null,
-                                    datos_ingresos: mergedDatosIngresos
+                                    antecedentes_legales: true
                                 }])
                                 .select()
                                 .single();
@@ -1574,6 +1564,14 @@
                                 btn.innerHTML = `Confirmar y Pagar`;
                             }
                             return;
+                        } else {
+                            // Insertar en employment_records
+                            await window.supabaseClient.from('employment_records').insert([{
+                                participant_id: idPerfil,
+                                net_income: ingresosVal,
+                                datos_ingresos: mergedDatosIngresos,
+                                checked_at: new Date().toISOString()
+                            }]);
                         }
 
                         if (!errP && pasaporte) {
