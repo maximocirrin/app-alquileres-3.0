@@ -2585,24 +2585,38 @@
                     saveContracts();
 
                     if (window.NotificationManager) {
+                        let uLocal = {};
+                        try {
+                            uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        } catch (e) {}
+                        const myProfileId = currentUserId || uLocal.id_perfil || uLocal.id || null;
+                        const myEmail = uLocal.email || null;
+                        const cidNum = dbContractId || (c.id ? String(c.id).replace(/\D/g, '') : '0') || c.id;
+
                         if (role === 'TENANT') {
                             window.NotificationManager.createNotification({
-                                id: `notif_tenant_signed_${c.id}`,
+                                id: `notif_firma_tenant_${cidNum}`,
                                 title: '✍️ ¡El inquilino firmó el contrato!',
                                 message: `${c.tenant.name} completó su validación biométrica y firmó el contrato para "${c.title}". Ahora es tu turno de firmar como propietario.`,
                                 type: 'contract',
                                 link: `contratos.html?contract=${c.id}&sign=1&role=OWNER`,
                                 role: 'OWNER',
+                                senderRole: 'TENANT',
+                                senderProfileId: myProfileId,
+                                senderEmail: myEmail,
                                 priority: 'high'
                             });
                         } else {
                             window.NotificationManager.createNotification({
-                                id: `notif_owner_signed_${c.id}`,
+                                id: `notif_firma_owner_${cidNum}`,
                                 title: '✍️ ¡El propietario firmó el contrato!',
                                 message: `${c.owner.name} firmó y selló el contrato para "${c.title}". El contrato de locación se encuentra 100% perfeccionado.`,
                                 type: 'contract',
                                 link: `contratos.html?contract=${c.id}&role=TENANT`,
                                 role: 'TENANT',
+                                senderRole: 'OWNER',
+                                senderProfileId: myProfileId,
+                                senderEmail: myEmail,
                                 priority: 'high'
                             });
                         }
