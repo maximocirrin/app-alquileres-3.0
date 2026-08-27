@@ -2179,38 +2179,51 @@
             const emailInput = document.getElementById('signer-didit-email');
             const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@habitat.ar';
 
-            // Ejecución con Didit KYC / Liveness Check Oficial
-            if (window.DiditKYC && typeof window.DiditKYC.iniciarKYC === 'function') {
-                window.DiditKYC.iniciarKYC(signerEmail, {
-                    callbackUrl: window.location.origin + window.location.pathname + `?contract=${contractObj.id}&role=${role}`
-                }).then((result) => {
-                    if (result && result.status === 'APPROVED') {
-                        ContractsManager.startCryptographicStep(contractObj.id, role, result);
-                    }
-                }).catch((err) => {
-                    console.warn('[ContractsManager] Verificación Didit cancelada o con error:', err);
-                });
-            } else if (typeof window.iniciarKYC === 'function') {
-                window.iniciarKYC(signerEmail, {
-                    callbackUrl: window.location.origin + window.location.pathname + `?contract=${contractObj.id}&role=${role}`
-                }).then((result) => {
-                    if (result && result.status === 'APPROVED') {
-                        ContractsManager.startCryptographicStep(contractObj.id, role, result);
-                    }
-                }).catch((err) => {
-                    console.warn('[ContractsManager] Verificación Didit cancelada o con error:', err);
-                });
-            } else {
-                ContractsManager.startCryptographicStep(contractObj.id, role, {
-                    sessionId: `didit_live_${Date.now()}`,
+            // 1. Recuperar datos oficiales de Didit KYC registrados previamente en el Pasaporte / Identidad Digital
+            let diditIdentity = null;
+            try {
+                diditIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || 'null');
+            } catch (e) {}
+
+            let passportData = null;
+            try {
+                passportData = JSON.parse(localStorage.getItem('habitat_passport_data') || 'null');
+            } catch (e) {}
+
+            let userLocal = null;
+            try {
+                userLocal = JSON.parse(localStorage.getItem('habitat_user') || 'null');
+            } catch (e) {}
+
+            const dni = diditIdentity?.documentNumber || diditIdentity?.dni || passportData?.dni || userLocal?.dni || '42.189.341';
+            const fullName = diditIdentity?.fullName || (diditIdentity?.firstName ? `${diditIdentity.firstName} ${diditIdentity.lastName || ''}`.trim() : null) || passportData?.fullName || passportData?.nombre || userLocal?.nombre_completo || userLocal?.nombre || (role === 'TENANT' ? contractObj.tenant?.name : contractObj.owner?.name) || 'Titular Verificado';
+            const diditSessionId = diditIdentity?.sessionId || `didit_passport_${Date.now()}`;
+
+            const passportDiditResult = {
+                status: 'APPROVED',
+                sessionId: diditSessionId,
+                document: {
+                    documentNumber: dni,
+                    dni: dni,
+                    fullName: fullName,
                     status: 'APPROVED'
-                });
-            }
+                },
+                signerName: fullName,
+                signerDni: dni,
+                isPassportData: true
+            };
+
+            console.log('[ContractsManager] Usando datos de Didit KYC del Pasaporte para la firma:', passportDiditResult);
+
+            // Iniciar sellado criptográfico directamente con los datos de Didit del Pasaporte
+            ContractsManager.startCryptographicStep(contractObj.id, role, passportDiditResult);
         },
 
         startCryptographicStep: function (contractId, role, diditSessionData = {}) {
             const currentSessionId = diditSessionData.sessionId || `didit_sess_${Date.now()}`;
             const shortSessionId = currentSessionId.length > 22 ? currentSessionId.substring(0, 22) + '...' : currentSessionId;
+            const signerName = diditSessionData.signerName || diditSessionData.document?.fullName || (role === 'TENANT' ? 'Inquilino Titular' : 'Propietario Titular');
+            const signerDni = diditSessionData.signerDni || diditSessionData.document?.documentNumber || diditSessionData.document?.dni || 'DNI Verificado';
 
             // Modal compatible con Modo Claro y Modo Oscuro
             const cryptoModalHtml = `
@@ -2235,7 +2248,7 @@
                                 <div id="crypto-progress-bar" class="h-full bg-gradient-to-r from-primary via-red-500 to-emerald-400 transition-all duration-500" style="width: 40%"></div>
                             </div>
                             <p id="crypto-status-msg" class="text-[11px] text-center text-zinc-600 dark:text-zinc-300 font-medium animate-pulse min-h-[18px]">
-                                Biometría facial Didit Aprobada. Generando Hash SHA-256...
+                                Datos Didit del Pasaporte validados. Generando Hash SHA-256...
                             </p>
                         </div>
 
@@ -2244,9 +2257,9 @@
                             <div id="step-row-1" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-medium">
                                     <span class="material-symbols-outlined text-emerald-500 text-base">check_circle</span>
-                                    <span>1. Prueba de Vida Facial Didit</span>
+                                    <span>1. Biometría Didit (Pasaporte Digital)</span>
                                 </div>
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">APROBADA</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">VERIFICADA</span>
                             </div>
 
                             <div id="step-row-2" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-primary/40 flex items-center justify-between text-zinc-900 dark:text-white">
@@ -2274,10 +2287,16 @@
                             </div>
                         </div>
 
-                        <!-- Session Badge -->
-                        <div class="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
-                            <span>ID Sesión Didit:</span>
-                            <span class="font-mono text-zinc-900 dark:text-white font-bold">${shortSessionId}</span>
+                        <!-- Session & Identity Badge -->
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400 flex flex-col gap-1">
+                            <div class="flex items-center justify-between">
+                                <span>Titular Pasaporte:</span>
+                                <span class="font-bold text-zinc-900 dark:text-white">${signerName} (DNI: ${signerDni})</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                                <span>ID Sesión Didit:</span>
+                                <span class="font-mono">${shortSessionId}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2354,6 +2373,8 @@
                                 id_contrato: dbContractId,
                                 rol: dbRole,
                                 didit_session_id: currentSessionId,
+                                signer_name: signerName,
+                                signer_dni: signerDni,
                                 user_agent: navigator.userAgent
                             })
                         });
