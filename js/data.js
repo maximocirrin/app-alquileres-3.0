@@ -1135,6 +1135,27 @@ var DataManager = {
                     `)
                     .order('fecha_solicitud', { ascending: false });
 
+                let dbContractsMap = new Map();
+                try {
+                    const { data: dbContr } = await window.supabaseClient
+                        .from('Contrato')
+                        .select('id_contrato, id_propiedad, id_publicacion, id_perfil_inquilino');
+                    if (dbContr) {
+                        dbContr.forEach(c => {
+                            const code = `CTR-2026-${String(c.id_contrato).padStart(4, '0')}`;
+                            if (c.id_propiedad && c.id_perfil_inquilino) {
+                                dbContractsMap.set(`${c.id_propiedad}_${c.id_perfil_inquilino}`, code);
+                            }
+                            if (c.id_publicacion && c.id_perfil_inquilino) {
+                                dbContractsMap.set(`pub_${c.id_publicacion}_${c.id_perfil_inquilino}`, code);
+                            }
+                            if (c.id_propiedad) {
+                                dbContractsMap.set(`prop_${c.id_propiedad}`, code);
+                            }
+                        });
+                    }
+                } catch (eContr) { }
+
                 if (!error && data) {
                     dbApps = data
                         .filter(s => {
@@ -1215,8 +1236,12 @@ var DataManager = {
                                 realDni = clean.substring(2, clean.length - 1);
                             }
 
+                            const foundCId = dbContractsMap.get(`${propId}_${s.id_perfil}`) || dbContractsMap.get(`pub_${pubId}_${s.id_perfil}`) || dbContractsMap.get(`prop_${propId}`) || null;
+
                             return {
                                 id: s.id_solicitud,
+                                contract_id: foundCId || s.contract_id || (appStatus === 'aceptada' ? `CTR-2026-${String(s.id_solicitud).padStart(4, '0')}` : null),
+                                contractId: foundCId || s.contract_id || (appStatus === 'aceptada' ? `CTR-2026-${String(s.id_solicitud).padStart(4, '0')}` : null),
                                 property_id: propId,
                                 propertyId: propId,
                                 id_propiedad: propId,

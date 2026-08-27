@@ -2753,7 +2753,30 @@ var App = window.App || {
                 photoCountEl.innerHTML = `<span class="material-symbols-outlined text-xs">photo_camera</span> ${photoCount} ${photoCount === 1 ? 'foto' : 'fotos'}`;
             }
 
-            // 2. Marketplace Card Price & Expensas
+            // 2. Marketplace Card Property Type & Price & Expensas
+            const typeBadgeDisplay = document.getElementById('review-type-badge-display');
+            if (typeBadgeDisplay) {
+                const tipoMap = {
+                    'departamento': 'Departamento',
+                    'apartment': 'Departamento',
+                    'casa': 'Casa',
+                    'house': 'Casa',
+                    'ph': 'PH',
+                    'ph-townhouse': 'PH',
+                    'terreno': 'Terreno',
+                    'local': 'Local comercial',
+                    'local-comercial': 'Local comercial',
+                    'commercial': 'Local comercial',
+                    'oficina': 'Oficina',
+                    'oficina-comercial': 'Oficina',
+                    'quinta-vacacional': 'Quinta Vacacional',
+                    'cochera': 'Cochera',
+                    'habitacion': 'Habitación'
+                };
+                const rawType = propData.subtipo_propiedad || propData.tipo_propiedad || propData.type || extra.tipo_propiedad || extra.tipo || 'Departamento';
+                typeBadgeDisplay.textContent = tipoMap[String(rawType).toLowerCase()] || rawType;
+            }
+
             const priceDisplay = document.getElementById('review-price-display');
             if (priceDisplay) {
                 priceDisplay.textContent = `${monedaSymbol}${precioNum > 0 ? precioNum.toLocaleString('es-AR') : '0'} / mes`;

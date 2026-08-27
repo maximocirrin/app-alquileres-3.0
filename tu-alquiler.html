@@ -1663,6 +1663,39 @@
         window._allTenantApplications = [];
         window._currentTenantAppsFilter = 'todas';
 
+        window.openTenantContractModal = async function (appId, contractId, activeTab = 'document') {
+            try {
+                if (window.ContractsManager && typeof window.ContractsManager.openContractForApplication === 'function') {
+                    await window.ContractsManager.openContractForApplication(appId || contractId, activeTab);
+                    return;
+                }
+
+                if (window.ContractsManager && typeof window.ContractsManager.openContractFullscreen === 'function') {
+                    await window.ContractsManager.openContractFullscreen(contractId || appId, activeTab);
+                    return;
+                }
+
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Abriendo contrato',
+                        message: 'Iniciando módulo de firma electrónica...',
+                        type: 'info'
+                    });
+                }
+                setTimeout(async () => {
+                    if (window.ContractsManager) {
+                        if (typeof window.ContractsManager.openContractForApplication === 'function') {
+                            await window.ContractsManager.openContractForApplication(appId || contractId, activeTab);
+                        } else if (typeof window.ContractsManager.openContractFullscreen === 'function') {
+                            await window.ContractsManager.openContractFullscreen(contractId || appId, activeTab);
+                        }
+                    }
+                }, 300);
+            } catch (err) {
+                console.error("Error abriendo contrato del inquilino:", err);
+            }
+        };
+
         function setTenantAppsFilter(filter) {
             window._currentTenantAppsFilter = filter;
 
@@ -1764,28 +1797,48 @@
                         const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
                         const isRejected = stNorm === 'rechazada';
 
-                        // Resolver ID de Contrato exacto y verificar si ya fue firmado por el inquilino
-                        let targetContractId = app.contract_id;
+                        // Resolver Contrato exacto y verificar si ya fue firmado por el inquilino
+                        let targetContractId = app.contract_id || app.contractId;
                         let hasTenantSigned = false;
-                        try {
-                            const rawContr = localStorage.getItem('habitat_contracts');
-                            if (rawContr) {
-                                const cList = JSON.parse(rawContr);
-                                const foundC = cList.find(c => c && (
-                                    (targetContractId && String(c.id) === String(targetContractId)) ||
-                                    String(c.propertyId) === String(app.property_id) || 
-                                    String(c.propertyId) === String(app.id) ||
-                                    String(c.id) === String(app.contractId)
-                                ));
-                                if (foundC) {
-                                    targetContractId = foundC.id;
-                                    hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
+
+                        const allContractsList = (window.ContractsManager && typeof window.ContractsManager.getContracts === 'function')
+                            ? window.ContractsManager.getContracts()
+                            : [];
+
+                        let foundC = null;
+                        if (allContractsList && allContractsList.length > 0) {
+                            foundC = allContractsList.find(c => c && (
+                                (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
+                                (app.property_id && String(c.propertyId) === String(app.property_id)) ||
+                                (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
+                                (app.id && String(c.propertyId) === String(app.id)) ||
+                                (app.id && String(c.applicationId) === String(app.id))
+                            ));
+                        }
+
+                        if (!foundC) {
+                            try {
+                                const rawContr = localStorage.getItem('habitat_contracts');
+                                if (rawContr) {
+                                    const cList = JSON.parse(rawContr);
+                                    foundC = cList.find(c => c && (
+                                        (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
+                                        (app.property_id && String(c.propertyId) === String(app.property_id)) ||
+                                        (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
+                                        (app.id && String(c.propertyId) === String(app.id)) ||
+                                        (app.id && String(c.applicationId) === String(app.id))
+                                    ));
                                 }
-                            }
-                        } catch (e) {}
+                            } catch (e) {}
+                        }
+
+                        if (foundC) {
+                            targetContractId = foundC.id;
+                            hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
+                        }
 
                         if (!targetContractId) {
-                            targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').slice(-4) || '1042');
+                            targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').padStart(4, '0') || '1042');
                         }
 
                         if (!hasTenantSigned && window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
@@ -1881,7 +1934,7 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'document')" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
+                                            <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
                                                 <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
                                                 <span>${hasTenantSigned ? 'Ver Contrato' : 'Firmar Contrato'}</span>
                                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
@@ -1936,7 +1989,7 @@
                                         </div>
 
                                         <div class="flex items-center gap-2.5 flex-wrap">
-                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'chat')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs" title="Abrir canal de chat y negociación">
+                                            <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'chat')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs" title="Abrir canal de chat y negociación">
                                                 <span class="material-symbols-outlined text-sm">chat</span>
                                                 <span>Chat Negociación</span>
                                             </button>
@@ -1946,7 +1999,7 @@
                                             </button>
 
                                             ${isAccepted ? `
-                                                <button type="button" onclick="ContractsManager.openContractFullscreen('${targetContractId}', 'document')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+                                                <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
                                                     <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
                                                     <span>${hasTenantSigned ? 'Ver Contrato' : 'Ir a Firmar Contrato (Didit Liveness)'}</span>
                                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
@@ -2970,9 +3023,6 @@
 
     <!-- Garantes Manager Engine -->
     <script src="js/garantes-manager.js"></script>
-    <!-- Notifications & Contracts Electronic Signature Module Engine -->
-    <script src="js/notifications.js"></script>
-    <script src="js/contracts-manager.js"></script>
 </body>
 
 </html>
