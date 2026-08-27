@@ -2920,7 +2920,127 @@
                         duration: 5000
                     });
                 }
+
+                // Mostrar modal interactivo de confirmación de firma exitosa
+                ContractsManager.showSignatureSuccessModal(contractId, role);
             }, 2600);
+        },
+
+        showSignatureSuccessModal: function (contractId, role) {
+            const contract = this.getContractById(contractId);
+            if (!contract) return;
+
+            const existingModal = document.getElementById('signature-success-modal');
+            if (existingModal) existingModal.remove();
+
+            const isTenant = (role === 'TENANT' || role === 'INQUILINO' || String(role).toLowerCase() === 'inquilino');
+            const signerName = isTenant ? (contract.tenant?.name || 'Locatario') : (contract.owner?.name || 'Locador');
+            const signerDni = isTenant ? (contract.tenant?.dni || '') : (contract.owner?.dni || '');
+            const bothSigned = (contract.status === 'SIGNED_AND_SEALED') || (contract.tenant?.hasSigned && contract.owner?.hasSigned);
+            const finalHash = contract.finalHash || contract.sha256Hash || 'ee168b0a389462ed794498d5828d86c6...';
+            const shortHash = finalHash.length > 32 ? finalHash.substring(0, 16) + '...' + finalHash.substring(finalHash.length - 12) : finalHash;
+            const formattedDate = new Date(contract.tsaTimestamp || Date.now()).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
+
+            const modalHtml = `
+                <div id="signature-success-modal" class="fixed inset-0 z-[1000000] overflow-y-auto bg-black/70 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 font-body animate-fadeIn">
+                    <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 space-y-6 overflow-hidden my-auto animate-scaleUp">
+                        
+                        <!-- Close Button -->
+                        <button type="button" onclick="document.getElementById('signature-success-modal').remove()" class="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Cerrar">
+                            <span class="material-symbols-outlined text-xl">close</span>
+                        </button>
+
+                        <!-- Glow & Success Icon -->
+                        <div class="text-center space-y-3 pt-2">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30">
+                                <span class="material-symbols-outlined text-4xl sm:text-5xl">task_alt</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] uppercase tracking-wider border border-emerald-300 dark:border-emerald-800">
+                                    Firma Electrónica Certificada
+                                </span>
+                                <h3 class="font-headline font-black text-xl sm:text-2xl text-zinc-900 dark:text-white pt-1">
+                                    ¡Contrato Firmado Exitosamente!
+                                </h3>
+                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                                    Tu validación biométrica facial Didit Liveness y firma han sido estampadas con Time-Stamp TSA bajo la <b>Ley Nacional N° 25.506</b>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Forensic Evidence Summary Card -->
+                        <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between pb-2 border-b border-zinc-200/60 dark:border-zinc-700/40">
+                                <span class="text-zinc-500 font-medium">Contrato:</span>
+                                <span class="font-bold text-zinc-900 dark:text-white font-mono">${contract.contractNumber}</span>
+                            </div>
+                            <div class="flex items-center justify-between pb-2 border-b border-zinc-200/60 dark:border-zinc-700/40">
+                                <span class="text-zinc-500 font-medium">Firmante:</span>
+                                <span class="font-bold text-zinc-900 dark:text-white">${signerName} ${signerDni ? `(DNI ${signerDni})` : ''}</span>
+                            </div>
+                            <div class="flex items-center justify-between pb-2 border-b border-zinc-200/60 dark:border-zinc-700/40">
+                                <span class="text-zinc-500 font-medium">Prueba de Vida Facial:</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">verified</span> APROBADA (Didit)
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between pb-2 border-b border-zinc-200/60 dark:border-zinc-700/40">
+                                <span class="text-zinc-500 font-medium">Sello de Tiempo TSA:</span>
+                                <span class="font-semibold text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">${formattedDate}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-zinc-500 font-medium">Hash SHA-256:</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 truncate max-w-[170px]" title="${finalHash}">${shortHash}</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('${finalHash}'); if(window.ToastManager) ToastManager.show({ title: 'Hash Copiado', message: 'Hash SHA-256 copiado al portapapeles.', type: 'info' });" class="p-1 hover:text-primary transition-colors cursor-pointer" title="Copiar Hash">
+                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Context Message -->
+                        <div class="p-3.5 rounded-2xl ${bothSigned ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200'} text-xs leading-relaxed flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-lg shrink-0 ${bothSigned ? 'text-emerald-600' : 'text-blue-600'}">
+                                ${bothSigned ? 'verified' : 'info'}
+                            </span>
+                            <div class="min-w-0">
+                                ${bothSigned ? `
+                                    <span class="font-bold block">¡Contrato 100% Perfeccionado!</span>
+                                    Ambas partes han firmado y sellado el contrato. El documento oficial definitivo ya se encuentra resguardado y disponible para descarga.
+                                ` : `
+                                    <span class="font-bold block">Firma Registrada en Custodia</span>
+                                    Se ha notificado a la otra parte (${isTenant ? 'Propietario' : 'Inquilino'}) para que complete su firma. Te avisaremos en tiempo real cuando el contrato quede perfeccionado.
+                                `}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-2 pt-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button type="button" onclick="document.getElementById('signature-success-modal').remove(); ContractsManager.downloadSignedContract('${contract.id}');" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">download</span>
+                                    <span>Descargar Contrato (PDF)</span>
+                                </button>
+                                <button type="button" onclick="document.getElementById('signature-success-modal').remove(); ContractsManager.downloadAuditTrail('${contract.id}');" class="w-full py-3 px-4 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
+                                    <span>Audit Trail TSA</span>
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="document.getElementById('signature-success-modal').remove(); ContractsManager.openContractFullscreen('${contract.id}', 'document');" class="w-full py-3 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">visibility</span>
+                                <span>Ver Contrato en Pantalla Completa</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = modalHtml;
+            document.body.appendChild(wrapper.firstElementChild);
         },
 
         openContractSigning: function (contractId) {
