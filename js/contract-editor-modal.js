@@ -334,15 +334,15 @@
             const applicant = options.applicant || {};
             const property = options.property || {};
 
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
-            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';
-            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
-            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'nunimamu@gmail.com';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
+            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
             
-            const ownerName = property.owner_name || contract.owner?.name || 'Maximo Cirrincione Ornstein';
-            const ownerDni = property.owner_dni || contract.owner?.dni || '44.662.043';
-            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
-            const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
+            const ownerName = property.owner_name || contract.owner?.name || 'Propietario Titular';
+            const ownerDni = property.owner_dni || contract.owner?.dni || '';
+            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
+            const ownerEmail = property.owner_email || contract.owner?.email || 'propietario@email.com';
 
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
             
@@ -1293,7 +1293,7 @@
                     await self._currentOptions.onConfirm(terms);
                 } else {
                     const appId = self._currentOptions?.applicant?.id;
-                    let targetContractId = 'CTR-2026-0043';
+                    let targetContractId = self._currentOptions?.contract?.id || self._currentOptions?.contractId || null;
                     if (window.DataManager && window.DataManager.acceptApplication && appId) {
                         try {
                             const res = await window.DataManager.acceptApplication(appId, terms);
@@ -1303,7 +1303,11 @@
                         }
                     }
                     self.close();
-                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                    if (targetContractId) {
+                        window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                    } else {
+                        window.location.href = `contratos.html?role=OWNER`;
+                    }
                 }
             });
         },
@@ -1338,14 +1342,14 @@
             const applicant = this._currentOptions?.applicant || {};
             const property = this._currentOptions?.property || {};
             const contract = this._currentOptions?.contract || {};
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
-            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';
-            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
-            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'nunimamu@gmail.com';
-            const ownerName = property.owner_name || contract.owner?.name || 'Maximo Cirrincione Ornstein';
-            const ownerDni = property.owner_dni || contract.owner?.dni || '44.662.043';
-            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
-            const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
+            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
+            const ownerName = property.owner_name || contract.owner?.name || 'Propietario Titular';
+            const ownerDni = property.owner_dni || contract.owner?.dni || '';
+            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
+            const ownerEmail = property.owner_email || contract.owner?.email || 'propietario@email.com';
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
 
             this._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);

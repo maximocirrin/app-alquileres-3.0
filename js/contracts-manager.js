@@ -513,15 +513,15 @@
                         (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                     );
 
-                    const tenantName = inqPerfil.nombre_completo || 'Bruno Cirrincione Ornstein';
-                    const tenantDni = inqPerfil.dni || '46.665.957';
-                    const tenantCuil = (typeof window.calcularCUIL === 'function' && tenantDni) ? window.calcularCUIL(tenantDni, 'M') : (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
-                    const tenantEmail = inqPerfil.mail || 'nunimamu@gmail.com';
+                    const tenantName = inqPerfil.nombre_completo || 'Inquilino Titular';
+                    const tenantDni = inqPerfil.dni || '';
+                    const tenantCuil = (typeof window.calcularCUIL === 'function' && tenantDni) ? window.calcularCUIL(tenantDni, 'M') : (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
+                    const tenantEmail = inqPerfil.mail || 'inquilino@email.com';
 
-                    const ownerName = ownerPerfil.nombre_completo || 'Maximo Cirrincione Ornstein';
-                    const ownerDni = ownerPerfil.dni || '44.662.043';
-                    const ownerCuil = (typeof window.calcularCUIL === 'function' && ownerDni) ? window.calcularCUIL(ownerDni, 'M') : (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
-                    const ownerEmail = ownerPerfil.mail || 'maximocirrin@gmail.com';
+                    const ownerName = ownerPerfil.nombre_completo || 'Propietario Titular';
+                    const ownerDni = ownerPerfil.dni || '';
+                    const ownerCuil = (typeof window.calcularCUIL === 'function' && ownerDni) ? window.calcularCUIL(ownerDni, 'M') : (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
+                    const ownerEmail = ownerPerfil.mail || 'propietario@email.com';
 
                     let status = 'WAITING_TENANT';
                     if (tenantFirmado && ownerFirmado) status = 'SIGNED_AND_SEALED';
@@ -630,14 +630,27 @@
 
         getContractById: function (id) {
             if (!id) return contracts[0] || null;
-            let match = contracts.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id) || String(c.dbContractId) === String(id));
+            const strId = String(id).trim();
+            const numId = parseInt(strId.replace(/\D/g, ''), 10);
+
+            let match = contracts.find(c => 
+                String(c.id).toLowerCase() === strId.toLowerCase() || 
+                String(c.contractNumber).toLowerCase() === strId.toLowerCase() || 
+                String(c.dbContractId) === strId ||
+                (numId && Number(c.dbContractId) === numId)
+            );
             if (match) return match;
 
             try {
                 const raw = localStorage.getItem('habitat_contracts');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    const found = parsed.find(c => String(c.id) === String(id) || String(c.contractNumber) === String(id));
+                    const found = parsed.find(c => 
+                        String(c.id).toLowerCase() === strId.toLowerCase() || 
+                        String(c.contractNumber).toLowerCase() === strId.toLowerCase() ||
+                        String(c.dbContractId) === strId ||
+                        (numId && Number(c.dbContractId) === numId)
+                    );
                     if (found) {
                         contracts = parsed;
                         return found;
@@ -645,7 +658,7 @@
                 }
             } catch (e) {}
 
-            return contracts[0] || null;
+            return null;
         },
 
         switchRole: function (newRole) {
@@ -2100,7 +2113,11 @@
         },
 
         executeSignatureWithDidit: function (contractId, explicitRole) {
-            const contractObj = contracts.find(c => String(c.id) === String(contractId) || String(c.contractNumber) === String(contractId)) || contracts[0];
+            const contractObj = ContractsManager.getContractById(contractId);
+            if (!contractObj) {
+                alert('No se encontró el contrato especificado para firmar.');
+                return;
+            }
             const role = explicitRole || detectActiveUserRole(contractObj) || this.currentUserRole;
             this.currentUserRole = role;
             const consentCheckbox = document.getElementById('legal-inpage-consent');
@@ -2110,22 +2127,31 @@
             }
 
             const emailInput = document.getElementById('signer-didit-email');
-            const email = (emailInput && emailInput.value.trim()) || 'usuario@habitat.ar';
+            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@habitat.ar';
 
-            if (window.DiditAuth && typeof window.DiditAuth.openFaceLivenessVerification === 'function') {
-                window.DiditAuth.openFaceLivenessVerification({
-                    email: email,
-                    vendorData: `CONTRACT_SIGN_${contractId}_${role}`,
-                    callbackUrl: window.location.origin + window.location.pathname + `?contract=${contractId}&role=${role}`,
-                    onSuccess: (result) => {
-                        ContractsManager.startCryptographicStep(contractId, role, result || {});
-                    },
-                    onError: (err) => {
-                        console.warn('Firma cancelada o con error:', err);
+            // Ejecución con Didit KYC / Liveness Check Oficial
+            if (window.DiditKYC && typeof window.DiditKYC.iniciarKYC === 'function') {
+                window.DiditKYC.iniciarKYC(signerEmail, {
+                    callbackUrl: window.location.origin + window.location.pathname + `?contract=${contractObj.id}&role=${role}`
+                }).then((result) => {
+                    if (result && result.status === 'APPROVED') {
+                        ContractsManager.startCryptographicStep(contractObj.id, role, result);
                     }
+                }).catch((err) => {
+                    console.warn('[ContractsManager] Verificación Didit cancelada o con error:', err);
+                });
+            } else if (typeof window.iniciarKYC === 'function') {
+                window.iniciarKYC(signerEmail, {
+                    callbackUrl: window.location.origin + window.location.pathname + `?contract=${contractObj.id}&role=${role}`
+                }).then((result) => {
+                    if (result && result.status === 'APPROVED') {
+                        ContractsManager.startCryptographicStep(contractObj.id, role, result);
+                    }
+                }).catch((err) => {
+                    console.warn('[ContractsManager] Verificación Didit cancelada o con error:', err);
                 });
             } else {
-                ContractsManager.startCryptographicStep(contractId, role, {
+                ContractsManager.startCryptographicStep(contractObj.id, role, {
                     sessionId: `didit_live_${Date.now()}`,
                     status: 'APPROVED'
                 });
@@ -2221,11 +2247,11 @@
                         String(item.id) === String(contractId) || 
                         String(item.contractNumber) === String(contractId) || 
                         String(item.dbContractId) === String(contractId)
-                    ) || contracts[0];
+                    ) || ContractsManager.getContractById(contractId);
 
                     let dbContractId = contractObj?.dbContractId ? Number(contractObj.dbContractId) : null;
 
-                    // 1. Si no tenemos dbContractId, buscar por ID numérico extraído o por la propiedad
+                    // 1. Si no tenemos dbContractId, buscar por ID numérico extraído
                     if (!dbContractId && contractId) {
                         const parsedNum = parseInt(String(contractId).replace(/\D/g, ''), 10);
                         if (parsedNum && !isNaN(parsedNum)) {
@@ -2240,8 +2266,8 @@
                         }
                     }
 
-                    if (!dbContractId) {
-                        const propId = Number(contractObj?.propertyId || 42);
+                    if (!dbContractId && contractObj?.propertyId) {
+                        const propId = Number(contractObj.propertyId);
                         const { data: propContract } = await window.supabaseClient
                             .from('Contrato')
                             .select('id_contrato')
@@ -2255,54 +2281,17 @@
                         }
                     }
 
-                    if (!dbContractId) {
-                        const { data: latestC } = await window.supabaseClient
-                            .from('Contrato')
-                            .select('id_contrato')
-                            .order('id_contrato', { ascending: false })
-                            .limit(1)
-                            .maybeSingle();
-                        if (latestC && latestC.id_contrato) {
-                            dbContractId = latestC.id_contrato;
-                        }
-                    }
-
                     if (contractObj && dbContractId) {
                         contractObj.dbContractId = dbContractId;
                     }
 
                     if (!dbContractId) {
-                        console.error("[ContractsManager] No se pudo resolver id_contrato en Supabase.");
+                        console.error("[ContractsManager] No se pudo resolver id_contrato en Supabase para el contrato:", contractId);
                         return null;
                     }
 
                     const isTenantRole = (role === 'TENANT' || role === 'INQUILINO' || String(role).toLowerCase() === 'inquilino' || String(role).toLowerCase() === 'tenant');
                     const dbRole = isTenantRole ? 'inquilino' : 'propietario';
-
-                    let profileId = isTenantRole ? (Number(contractObj?.tenant?.profileId) || 15) : (Number(contractObj?.owner?.profileId) || 6);
-                    try {
-                        const { data: authSess } = await window.supabaseClient.auth.getSession();
-                        const currentAuthUserId = authSess?.session?.user?.id;
-                        if (currentAuthUserId) {
-                            const { data: pData } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil')
-                                .eq('user_id', currentAuthUserId)
-                                .maybeSingle();
-                            if (pData && pData.id_perfil) {
-                                profileId = pData.id_perfil;
-                            }
-                        }
-                    } catch (e) {}
-
-                    if (!profileId) {
-                        profileId = isTenantRole ? 15 : 6;
-                    }
-
-                    // La IP y Geolocalización ahora se capturan exclusivamente en el backend (servidor)
-                    // para evitar bloqueos por AdBlockers y asegurar el registro.
-                    let clientIp = '';
-                    let clientGeo = null;
 
                     let backendSellar = null;
                     try {
@@ -2328,25 +2317,26 @@
 
                     let insertedFirma = backendSellar;
 
-                    if (!insertedFirma) {
-                        console.error("[ContractsManager] El backend no devolvió la firma sellada. Falló el proceso criptográfico.");
-                        // Handle error gracefully if needed
-                    }
-
                     const { data: freshSignatures } = await window.supabaseClient
                         .from('Firma_contrato')
                         .select('rol_firmante, estado_firma, didit_status')
                         .eq('id_contrato', dbContractId);
 
-                    const tenantHasSigned = (freshSignatures || []).some(f => 
-                        ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) && 
-                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
-                    ) || isTenantRole;
+                    const otherPartySigned = isTenantRole
+                        ? (freshSignatures || []).some(f => ['OWNER', 'PROPIETARIO', 'owner', 'propietario'].includes(f.rol_firmante) && (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED'))
+                        : (freshSignatures || []).some(f => ['TENANT', 'INQUILINO', 'tenant', 'inquilino'].includes(f.rol_firmante) && (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED'));
 
-                    const ownerHasSigned = (freshSignatures || []).some(f => 
+                    const tenantHasSigned = isTenantRole || (freshSignatures || []).some(f => 
+                        ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) && 
+                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
+                    );
+
+                    const ownerHasSigned = (!isTenantRole) || (freshSignatures || []).some(f => 
                         ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) && 
-                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
-                    ) || (!isTenantRole);
+                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
+                    );
+
+                    const bothPartiesSigned = tenantHasSigned && ownerHasSigned && otherPartySigned;
 
                     const rentAmount = Number(contractObj?.monthlyRent || 450000);
                     const pubId = contractObj?.publicationId ? Number(contractObj.publicationId) : null;
@@ -2385,7 +2375,7 @@
                     }
 
                     let backendFinalizar = null;
-                    if (tenantHasSigned && ownerHasSigned) {
+                    if (bothPartiesSigned) {
                         try {
                             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
                             const authHeaders = await getApiAuthHeaders();
@@ -2506,7 +2496,7 @@
                 const backendSellarData = serverData?.backendSellar || serverData?.firma || {};
                 const backendDocs = serverData?.backendFinalizar?.documentos || {};
 
-                const c = contracts.find(item => String(item.id) === String(contractId) || String(item.contractNumber) === String(contractId)) || contracts[0];
+                const c = ContractsManager.getContractById(contractId);
                 if (c) {
                     if (role === 'TENANT') {
                         c.tenant.hasSigned = true;
@@ -2980,7 +2970,7 @@
         const container = document.getElementById('contracts-dashboard-container');
         if (container) {
             const urlParams = new URLSearchParams(window.location.search);
-            const contractParam = urlParams.get('contract') || urlParams.get('sign') || urlParams.get('id');
+            const contractParam = urlParams.get('contract') || urlParams.get('id') || urlParams.get('id_contrato');
             const statusParam = urlParams.get('status') || urlParams.get('didit_status') || urlParams.get('verification_status');
             const sessionParam = urlParams.get('session_id') || urlParams.get('sessionId');
             const roleParam = urlParams.get('role') || ContractsManager.currentUserRole;
@@ -2995,19 +2985,25 @@
             ContractsManager.renderDashboard('contracts-dashboard-container');
 
             if (contractParam && !statusParam) {
-                ContractsManager.openContractFullscreen(contractParam, 'document');
+                const targetC = ContractsManager.getContractById(contractParam);
+                if (targetC) {
+                    ContractsManager.openContractFullscreen(targetC.id, 'document');
+                }
             }
 
             // Detectar retorno de redirección desde Didit con validación aprobada
-            if (contractParam && (statusParam === 'Approved' || statusParam === 'COMPLETED' || statusParam === 'approved' || (sessionParam && !sessionParam.includes('mock')))) {
-                setTimeout(() => {
-                    ContractsManager.startCryptographicStep(contractParam, roleParam, {
-                        sessionId: sessionParam || `didit_return_${Date.now()}`,
-                        status: 'APPROVED'
-                    });
-                    const cleanUrl = window.location.pathname + `?contract=${contractParam}&role=${roleParam}`;
-                    window.history.replaceState({}, document.title, cleanUrl);
-                }, 400);
+            if (contractParam && (statusParam === 'Approved' || statusParam === 'COMPLETED' || statusParam === 'approved') && sessionParam) {
+                const targetC = ContractsManager.getContractById(contractParam);
+                if (targetC) {
+                    setTimeout(() => {
+                        ContractsManager.startCryptographicStep(targetC.id, roleParam, {
+                            sessionId: sessionParam,
+                            status: 'APPROVED'
+                        });
+                        const cleanUrl = window.location.pathname + `?contract=${targetC.id}&role=${roleParam}`;
+                        window.history.replaceState({}, document.title, cleanUrl);
+                    }, 400);
+                }
             }
         }
     });

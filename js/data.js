@@ -1471,14 +1471,14 @@ var DataManager = {
         let propTitle = 'Propiedad en Alquiler';
         let propAddress = 'Mendoza, Argentina';
         let monthlyRent = customTerms?.monthlyRent || 450000;
-        let tenantName = 'Bruno Cirrincione Ornstein';
-        let tenantDni = '46.665.957';
-        let tenantEmail = 'nunimamu@gmail.com';
+        let tenantName = 'Inquilino';
+        let tenantDni = '';
+        let tenantEmail = 'inquilino@email.com';
         let tenantPhone = '+54 9 261 000-0000';
         let photoUrls = ['img/hero-marketplace.jpg'];
-        let ownerName = 'Maximo Cirrincione Ornstein';
-        let ownerDni = '44.662.043';
-        let ownerEmail = 'maximocirrin@gmail.com';
+        let ownerName = 'Propietario';
+        let ownerDni = '';
+        let ownerEmail = 'propietario@email.com';
         let solPropId = null;
         let solPerfilId = 14;
         let solPubId = null;
@@ -1604,11 +1604,12 @@ var DataManager = {
                 // 2. Buscar o crear registro en tabla Contrato con todos los campos obligatorios
                 let contract = null;
                 try {
-                    if (solPropId) {
+                    if (solPropId && solPerfilId) {
                         const { data: existingC } = await window.supabaseClient
                             .from('Contrato')
                             .select('*')
                             .eq('id_propiedad', solPropId)
+                            .eq('id_perfil_inquilino', solPerfilId)
                             .order('id_contrato', { ascending: false })
                             .limit(1)
                             .maybeSingle();
@@ -1631,6 +1632,7 @@ var DataManager = {
                                 // Actualizar condiciones si fueron personalizadas
                                 if (customTerms) {
                                     await window.supabaseClient.from('Contrato').update({
+                                        id_perfil_inquilino: solPerfilId,
                                         monto_cierre: monthlyRent,
                                         periodo_aumento_meses: periodoAumento,
                                         dia_vencimiento_mensual: diaVencimiento,
@@ -2108,15 +2110,15 @@ var DataManager = {
                         ? `${prop.calle} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim()
                         : 'Mendoza, Argentina';
 
-                    const inqName = inq.nombre_completo || 'Bruno Cirrincione';
-                    const inqEmail = inq.mail || 'nunimamu@gmail.com';
-                    const inqPhone = inq.telefono || '+54 9 11';
-                    const inqDni = inq.dni || '46.665.957';
+                    const inqName = inq.nombre_completo || 'Inquilino Titular';
+                    const inqEmail = inq.mail || 'inquilino@email.com';
+                    const inqPhone = inq.telefono || '+54 9 11 0000-0000';
+                    const inqDni = inq.dni || '';
 
-                    const ownerName = propOwner.nombre_completo || 'Maximo Cirrincione Ornstein';
-                    const ownerEmail = propOwner.mail || 'maximocirrin@gmail.com';
-                    const ownerPhone = propOwner.telefono || '+54 9 261';
-                    const ownerDni = propOwner.dni || '44.662.043';
+                    const ownerName = propOwner.nombre_completo || 'Propietario Titular';
+                    const ownerEmail = propOwner.mail || 'propietario@email.com';
+                    const ownerPhone = propOwner.telefono || '+54 9 261 000-0000';
+                    const ownerDni = propOwner.dni || '';
 
                     const tenantFirmado = (item.Firma_contrato || []).some(f => 
                         ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) &&
