@@ -7329,8 +7329,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 </div>
             ` : ''}
             ${verified ? `
-                <div class="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-headline font-black shadow-lg border border-emerald-400/40">
-                    <span class="material-symbols-outlined text-sm">verified</span> Propietario Verificado
+                <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow-lg border border-emerald-400/40" title="Verificado">
+                    <span class="material-symbols-outlined text-base">verified</span>
                 </div>
             ` : ''}
         </div>
@@ -7447,8 +7447,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     </div>
                 ` : ''}
                 ${verified ? `
-                    <div class="inline-flex items-center gap-1 bg-emerald-600/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-headline font-black shadow-md border border-emerald-400/40">
-                        <span class="material-symbols-outlined text-xs">verified</span> Verificado
+                    <div class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow-md border border-emerald-400/40" title="Verificado">
+                        <span class="material-symbols-outlined text-sm">verified</span>
                     </div>
                 ` : ''}
             </div>
@@ -10189,8 +10189,8 @@ function createMarketplaceCard(prop, index) {
                 src="${imgSrc}"
                 onerror="this.src='img/hero-marketplace.jpg'">
             ${isVerifiedOwner ? `
-                <div class="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 bg-emerald-600/90 text-white backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-emerald-400/30">
-                    <span class="material-symbols-outlined text-xs">verified</span> Propietario Verificado
+                <div class="absolute top-4 left-4 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow-md border border-emerald-400/30" title="Verificado">
+                    <span class="material-symbols-outlined text-base">verified</span>
                 </div>
             ` : ''}
             <div class="absolute top-4 right-4 flex flex-col items-end gap-1.5">
@@ -12415,7 +12415,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- Footer -->
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex items-center gap-3 md:gap-5 text-[11px] text-zinc-400 dark:text-zinc-500">
-                    <span>ID <b class="text-zinc-700 dark:text-zinc-300">${shortId}</b></span>
+                    ${(aviso.isVerifiedOwner || aviso.verified || aviso.propietario_verificado) ? `
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" title="Verificado">
+                            <span class="material-symbols-outlined text-xs">verified</span>
+                        </span>
+                    ` : ''}
                     <span>Creado ${date}</span>
                     <span class="hidden sm:inline">${dormitorios ? dormitorios + ' dorm.' : ''} ${banos ? banos + ' baños' : ''} ${supCubierta ? supCubierta + 'm²' : ''}</span>
                 </div>

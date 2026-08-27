@@ -1471,14 +1471,14 @@ var DataManager = {
         let propTitle = 'Propiedad en Alquiler';
         let propAddress = 'Mendoza, Argentina';
         let monthlyRent = customTerms?.monthlyRent || 450000;
-        let tenantName = 'Bruno Cirrincione Ornstein';
-        let tenantDni = '46.665.957';
-        let tenantEmail = 'nunimamu@gmail.com';
+        let tenantName = 'Inquilino';
+        let tenantDni = '';
+        let tenantEmail = 'inquilino@email.com';
         let tenantPhone = '+54 9 261 000-0000';
         let photoUrls = ['img/hero-marketplace.jpg'];
-        let ownerName = 'Maximo Cirrincione Ornstein';
-        let ownerDni = '44.662.043';
-        let ownerEmail = 'maximocirrin@gmail.com';
+        let ownerName = 'Propietario';
+        let ownerDni = '';
+        let ownerEmail = 'propietario@email.com';
         let solPropId = null;
         let solPerfilId = 14;
         let solPubId = null;
@@ -1604,11 +1604,12 @@ var DataManager = {
                 // 2. Buscar o crear registro en tabla Contrato con todos los campos obligatorios
                 let contract = null;
                 try {
-                    if (solPropId) {
+                    if (solPropId && solPerfilId) {
                         const { data: existingC } = await window.supabaseClient
                             .from('Contrato')
                             .select('*')
                             .eq('id_propiedad', solPropId)
+                            .eq('id_perfil_inquilino', solPerfilId)
                             .order('id_contrato', { ascending: false })
                             .limit(1)
                             .maybeSingle();
@@ -1631,6 +1632,7 @@ var DataManager = {
                                 // Actualizar condiciones si fueron personalizadas
                                 if (customTerms) {
                                     await window.supabaseClient.from('Contrato').update({
+                                        id_perfil_inquilino: solPerfilId,
                                         monto_cierre: monthlyRent,
                                         periodo_aumento_meses: periodoAumento,
                                         dia_vencimiento_mensual: diaVencimiento,
@@ -2108,15 +2110,15 @@ var DataManager = {
                         ? `${prop.calle} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim()
                         : 'Mendoza, Argentina';
 
-                    const inqName = inq.nombre_completo || 'Bruno Cirrincione';
-                    const inqEmail = inq.mail || 'nunimamu@gmail.com';
-                    const inqPhone = inq.telefono || '+54 9 11';
-                    const inqDni = inq.dni || '46.665.957';
+                    const inqName = inq.nombre_completo || 'Inquilino Titular';
+                    const inqEmail = inq.mail || 'inquilino@email.com';
+                    const inqPhone = inq.telefono || '+54 9 11 0000-0000';
+                    const inqDni = inq.dni || '';
 
-                    const ownerName = propOwner.nombre_completo || 'Maximo Cirrincione Ornstein';
-                    const ownerEmail = propOwner.mail || 'maximocirrin@gmail.com';
-                    const ownerPhone = propOwner.telefono || '+54 9 261';
-                    const ownerDni = propOwner.dni || '44.662.043';
+                    const ownerName = propOwner.nombre_completo || 'Propietario Titular';
+                    const ownerEmail = propOwner.mail || 'propietario@email.com';
+                    const ownerPhone = propOwner.telefono || '+54 9 261 000-0000';
+                    const ownerDni = propOwner.dni || '';
 
                     const tenantFirmado = (item.Firma_contrato || []).some(f => 
                         ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) &&
@@ -3666,9 +3668,10 @@ var DataManager = {
         };
 
         try {
+            const authHeaders = await this._getAuthHeaders();
             const response = await fetch('/api/firmas/iniciar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify(payload)
             });
 
@@ -3681,6 +3684,31 @@ var DataManager = {
             console.error("Error en iniciarFirmaContrato:", err);
             throw err;
         }
+    },
+
+    _getAuthHeaders: async function () {
+        const headers = { 'Content-Type': 'application/json' };
+        if (window.supabaseClient) {
+            try {
+                const { data: sessData } = await window.supabaseClient.auth.getSession();
+                const token = sessData?.session?.access_token;
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            } catch (e) {}
+        }
+        try {
+            const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+            if (storedProfileId) {
+                headers['x-profile-id'] = String(storedProfileId);
+            }
+            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const email = uLocal.email || uLocal.mail;
+            if (email) {
+                headers['x-user-email'] = email;
+            }
+        } catch (e) {}
+        return headers;
     },
 
     /**
@@ -3734,9 +3762,10 @@ var DataManager = {
      */
     sellarFirmaContrato: async function (idFirma) {
         try {
+            const authHeaders = await this._getAuthHeaders();
             const response = await fetch('/api/firmas/sellar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify({ id_firma: Number(idFirma) })
             });
 
@@ -3758,7 +3787,10 @@ var DataManager = {
      */
     finalizarYObtenerDocumentosContrato: async function (idContrato) {
         try {
-            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`);
+            const authHeaders = await this._getAuthHeaders();
+            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`, {
+                headers: authHeaders
+            });
             const result = await response.json();
             if (!response.ok || !result.ok) {
                 throw new Error(result.message || 'Error al consultar documentos del contrato.');

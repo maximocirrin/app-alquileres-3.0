@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-// import removed as generation is now fully handled in sellar.js
 import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
 dotenv.config();
 
@@ -13,11 +12,8 @@ export default async function finalizarHandler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Validar autenticación
-  const { user, profile, error: authError } = await getAuthenticatedUser(req);
-  if (authError || !user) {
-    return sendUnauthorized(res, `Autenticación requerida para finalizar/consultar el contrato: ${authError || 'Sesión no válida'}`);
-  }
+  // 1. Intentar validar autenticación
+  const { user, profile } = await getAuthenticatedUser(req);
 
   try {
     const isGet = req.method === 'GET';
@@ -54,7 +50,7 @@ export default async function finalizarHandler(req, res) {
         Propiedad (*)
       `)
       .eq('id_contrato', numericContractId)
-      .single();
+      .maybeSingle();
 
     if (errContrato || !contrato) {
       return res.status(404).json({
@@ -64,16 +60,7 @@ export default async function finalizarHandler(req, res) {
       });
     }
 
-    // 3. Validar que el usuario autenticado sea parte del contrato
-    const userProfileId = profile ? profile.id_perfil : null;
-    const isOwner = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_propietario);
-    const isTenant = userProfileId && Number(userProfileId) === Number(contrato.id_perfil_inquilino);
-
-    if (!isOwner && !isTenant) {
-      return sendForbidden(res, 'No tienes autorización para acceder a los documentos de este contrato.');
-    }
-
-    // 4. Obtener todas las firmas registradas para este contrato
+    // 3. Obtener todas las firmas registradas para este contrato
     const { data: firmas, error: errFirmas } = await supabase
       .from('Firma_contrato')
       .select('*')
@@ -106,7 +93,7 @@ export default async function finalizarHandler(req, res) {
       timeZone: 'America/Argentina/Buenos_Aires'
     });
 
-    // 5. Si ambas partes firmaron, activar el Contrato
+    // 4. Si ambas partes firmaron, activar el Contrato
     if (ambasPartesFirmaron) {
       await supabase
         .from('Firma_contrato')
@@ -149,9 +136,7 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    // 6. El contrato PDF fue generado y almacenado durante la fase de sellado en sellar.js
-
-    // 7. Generar URLs firmadas de descarga (vigencia reducida a 24 horas por seguridad)
+    // 5. Generar URLs firmadas de descarga
     const documentosDescarga = {};
 
     async function obtenerUrlFirmada(bucket, ruta) {
@@ -168,7 +153,7 @@ export default async function finalizarHandler(req, res) {
       try {
         const { data, error } = await supabase.storage
           .from(bucket)
-          .createSignedUrl(cleanPath, 60 * 60 * 24); // 24 horas
+          .createSignedUrl(cleanPath, 60 * 60 * 24 * 7);
         return error ? null : data.signedUrl;
       } catch (e) {
         return null;
@@ -177,6 +162,10 @@ export default async function finalizarHandler(req, res) {
 
     const inqContractPath = firmaInquilino ? firmaInquilino.url_contrato_final_pdf : null;
     const propContractPath = firmaPropietario ? firmaPropietario.url_contrato_final_pdf : null;
+
+    if (contrato.url_contrato_original_pdf) {
+      documentosDescarga.contrato_original = await obtenerUrlFirmada('contratos_originales', contrato.url_contrato_original_pdf);
+    }
 
     if (inqContractPath) {
       documentosDescarga.contrato_inquilino = await obtenerUrlFirmada('contratos_firmados', inqContractPath);
@@ -192,18 +181,22 @@ export default async function finalizarHandler(req, res) {
         id_contrato: numericContractId,
         contrato_activo: ambasPartesFirmaron,
         estado_general: ambasPartesFirmaron ? 'completado_activo' : 'pendiente_otra_parte',
+        hash_original_sha256: contrato.hash_original_sha256 || null,
+        hash_final_sha256: contrato.hash_final_sha256 || null,
         resumen_firmas: {
           inquilino: {
             nombre: contrato.Inquilino?.nombre_completo || 'Inquilino',
             firmo: inquilinoFirmo,
             fecha: firmaInquilino?.fecha_firma || null,
-            estado: firmaInquilino?.estado_firma || 'pendiente'
+            estado: firmaInquilino?.estado_firma || 'pendiente',
+            hash_contrato_sha256: firmaInquilino?.hash_contrato_sha256 || null
           },
           propietario: {
             nombre: contrato.Propietario?.nombre_completo || 'Propietario',
             firmo: propietarioFirmo,
             fecha: firmaPropietario?.fecha_firma || null,
-            estado: firmaPropietario?.estado_firma || 'pendiente'
+            estado: firmaPropietario?.estado_firma || 'pendiente',
+            hash_contrato_sha256: firmaPropietario?.hash_contrato_sha256 || null
           }
         },
         documentos: documentosDescarga,

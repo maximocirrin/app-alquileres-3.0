@@ -1,15 +1,15 @@
 /**
  * ==============================================================================
- * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.3 Legal Architecture)
+ * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.4 Legal Architecture)
  * ==============================================================================
- * Modal ejecutivo, minimalista, 100% responsivo y full-screen en mobile
+ * Modal ejecutivo, minimalista, 100% responsivo y Dual-Pane en Desktop (md/lg/xl)
  * bajo DNU 70/2023 y Ley Nacional N° 25.506 de Firma Digital con Didit KYC.
  * Incluye:
- * - Vista en vivo garantizada del contrato en Desktop (Dual-Pane) y Mobile (Sub-Tabs / Toggle).
+ * - Vista en vivo garantizada del contrato en Desktop (Dual-Pane de altura fija y scroll independiente).
  * - Hoja de estilo papel legal digital inmutable con numeración ordinal consecutiva.
+ * - Sub-tabs fluidos en mobile/tablet y soporte para pantalla completa de lectura.
  * - Soporte para cláusulas personalizadas con alta/baja en tiempo real.
  * - Centro de explicaciones y referencias legales interactivas (Info ℹ️) por sección.
- * - Modo lectura expandida del contrato completo.
  */
 
 (function () {
@@ -148,7 +148,6 @@
     async function ensureUserProfileResolved() {
         if (window._currentUserProfileId) return window._currentUserProfileId;
 
-        // 1. Verificar localStorage
         try {
             const stored = localStorage.getItem('habitat_profile_id');
             if (stored && !isNaN(Number(stored))) {
@@ -164,7 +163,6 @@
             }
         } catch (e) {}
 
-        // 2. Consultar Supabase Auth & Perfil
         if (window.supabaseClient) {
             try {
                 let authUser = null;
@@ -229,7 +227,6 @@
     }
 
     function isUserOwnerOfContract(contract, options = {}) {
-        // En flujos de creación, postulación, administración o demo, permitir siempre la edición
         if (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR', 'ADMIN'].includes(options.role.toUpperCase())) {
             return true;
         }
@@ -284,7 +281,6 @@
         if (userEmail && ownerEmail && userEmail === ownerEmail) return true;
         if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) return false;
 
-        // Por defecto, permitir abrir el editor para asegurar usabilidad fluida
         return true;
     }
 
@@ -292,16 +288,17 @@
         _currentOptions: null,
         _customFile: null,
         _activeTab: 'smart', // 'smart' | 'upload'
-        _activeMobileSubtab: 'config', // 'config' | 'preview' (Solo en pantallas < lg)
-        _customClauses: [], // Lista de cláusulas personalizadas agregadas dinámicamente
+        _activeMobileSubtab: 'config', // 'config' | 'preview' (en mobile < md)
+        _isExpandedPreview: false, // Modo vista expandida en Desktop
+        _customClauses: [], // Lista de cláusulas personalizadas
 
         /**
-         * Abre el modal del editor de contratos (Dual-Pane en desktop, responsivo en mobile)
+         * Abre el modal del editor de contratos (Dual-Pane garantizado en desktop)
          */
         open: async function (options = {}) {
             const contract = options.contract || {};
 
-            // Asegurar resolución del id_perfil del usuario en Supabase antes de validar
+            // Asegurar resolución del perfil del usuario
             await ensureUserProfileResolved();
 
             const isSigned = contract.status === 'SIGNED_AND_SEALED' || (contract.tenant?.hasSigned && contract.owner?.hasSigned);
@@ -323,6 +320,7 @@
             this._customFile = null;
             this._activeTab = options.initialTab || (contract.mode === 'custom_file' ? 'upload' : 'smart');
             this._activeMobileSubtab = 'config';
+            this._isExpandedPreview = false;
             this._customClauses = Array.isArray(contract.customClauses) ? [...contract.customClauses] : [];
 
             let existingModal = document.getElementById('contract-editor-modal-container');
@@ -336,15 +334,15 @@
             const applicant = options.applicant || {};
             const property = options.property || {};
 
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
-            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';
-            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
-            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'nunimamu@gmail.com';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
+            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
             
-            const ownerName = property.owner_name || contract.owner?.name || 'Maximo Cirrincione Ornstein';
-            const ownerDni = property.owner_dni || contract.owner?.dni || '44.662.043';
-            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
-            const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
+            const ownerName = property.owner_name || contract.owner?.name || 'Propietario Titular';
+            const ownerDni = property.owner_dni || contract.owner?.dni || '';
+            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
+            const ownerEmail = property.owner_email || contract.owner?.email || 'propietario@email.com';
 
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
             
@@ -369,10 +367,10 @@
             const defaultRescision = cfg.rescisionAnticipada !== false;
 
             modalContainer.innerHTML = `
-                <div class="relative w-full h-full h-[100dvh] sm:h-auto sm:max-h-[96vh] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200/80 sm:dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
+                <div class="relative w-full h-full h-[100dvh] sm:h-[92vh] sm:max-h-[900px] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200/80 sm:dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
                     
                     <!-- Top Header Bar -->
-                    <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
+                    <div class="px-4 sm:px-6 py-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
                         <div class="flex items-center gap-3 min-w-0 flex-1">
                             <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#811b1e] to-[#a13333] text-white flex items-center justify-center shrink-0 shadow-md shadow-red-950/20">
                                 <span class="material-symbols-outlined text-2xl">edit_document</span>
@@ -401,7 +399,7 @@
                     </div>
 
                     <!-- Mode Selector Tab Bar & Mobile Sub-tabs -->
-                    <div class="px-3 sm:px-6 py-2 bg-zinc-50/80 dark:bg-zinc-900/40 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                    <div class="px-4 sm:px-6 py-2 bg-zinc-50/90 dark:bg-zinc-900/60 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
                         
                         <!-- Tabs Principales -->
                         <div class="flex items-center gap-1.5 sm:gap-2">
@@ -415,8 +413,8 @@
                             </button>
                         </div>
 
-                        <!-- Switcher rápido Mobile (< lg): Parámetros vs Vista Previa Contrato -->
-                        <div class="lg:hidden flex items-center p-1 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-xl border border-zinc-300/50 dark:border-zinc-700/60 shadow-xs w-full sm:w-auto mt-1 sm:mt-0">
+                        <!-- Switcher rápido Mobile (< md): Parámetros vs Vista Previa Contrato -->
+                        <div class="md:hidden flex items-center p-1 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-xl border border-zinc-300/50 dark:border-zinc-700/60 shadow-xs w-full sm:w-auto mt-1 sm:mt-0">
                             <button type="button" id="mobile-subtab-config" class="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${this._activeMobileSubtab === 'config' ? 'bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs' : 'text-zinc-600 dark:text-zinc-400'} cursor-pointer">
                                 <span class="material-symbols-outlined text-sm">tune</span>
                                 <span>1. Parámetros</span>
@@ -430,17 +428,17 @@
 
                     </div>
 
-                    <!-- Modal Body Content Grid (Scrollable) -->
-                    <div class="flex-1 overflow-y-auto p-3 sm:p-6 bg-zinc-50/50 dark:bg-[#090a0f] space-y-4">
+                    <!-- Modal Body Container (Fixed Height Dual-Pane Layout en Desktop) -->
+                    <div class="flex-1 min-h-0 overflow-hidden flex flex-col bg-zinc-50/50 dark:bg-[#090a0f]">
                         
-                        <!-- TAB 1: SMART CONTRACT BUILDER (Dual-Pane Grid en Desktop) -->
-                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start' : 'hidden'}">
+                        <!-- TAB 1: SMART CONTRACT BUILDER (Dual-Pane Grid en Desktop md/lg/xl) -->
+                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden' : 'hidden'}">
                             
-                            <!-- COLUMNA IZQUIERDA: CONTROLES MODERNOS (6 Cols en Desktop) -->
-                            <div id="smart-config-col" class="lg:col-span-6 space-y-3.5 sm:space-y-4 ${this._activeMobileSubtab === 'config' ? 'block' : 'hidden lg:block'}">
+                            <!-- COLUMNA IZQUIERDA: CONTROLES MODERNOS (Scroll independiente) -->
+                            <div id="smart-config-col" class="md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 ${this._activeMobileSubtab === 'config' ? 'block' : 'hidden md:block'}">
                                 
                                 <!-- Card 1: Canon & Moneda -->
-                                <div class="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 sm:space-y-3.5 shadow-xs">
+                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-2 min-w-0">
                                             <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">payments</span>
@@ -451,21 +449,21 @@
                                                         <span class="material-symbols-outlined text-[13px]">info</span>
                                                     </button>
                                                 </div>
-                                                <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate">Canon mensual acordado para el contrato</p>
+                                                <p class="text-[10px] text-zinc-400 truncate">Canon mensual acordado</p>
                                             </div>
                                         </div>
 
                                         <!-- Currency Switcher Pills -->
-                                        <div class="flex p-0.5 sm:p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700/60 shadow-xs shrink-0" id="currency-switcher-container">
-                                            <button type="button" data-currency="ARS" class="currency-chip px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'ARS' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">ARS ($)</button>
-                                            <button type="button" data-currency="USD" class="currency-chip px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'USD' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">USD (U$S)</button>
+                                        <div class="flex p-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700/60 shadow-xs shrink-0" id="currency-switcher-container">
+                                            <button type="button" data-currency="ARS" class="currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'ARS' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">ARS ($)</button>
+                                            <button type="button" data-currency="USD" class="currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'USD' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">USD (U$S)</button>
                                             <input type="hidden" id="editor-moneda" value="${defaultCurrency}">
                                         </div>
                                     </div>
 
                                     <!-- Monetary Input -->
-                                    <div class="flex items-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-11 sm:h-12 px-3 sm:px-4 focus-within:bg-white dark:focus-within:bg-zinc-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                                        <span id="editor-moneda-symbol" class="text-zinc-500 dark:text-zinc-400 font-headline font-black text-base sm:text-lg mr-2 select-none shrink-0">${defaultCurrency === 'USD' ? 'USD' : '$'}</span>
+                                    <div class="flex items-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-11 px-3.5 focus-within:bg-white dark:focus-within:bg-zinc-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                        <span id="editor-moneda-symbol" class="text-zinc-500 dark:text-zinc-400 font-headline font-black text-base mr-2 select-none shrink-0">${defaultCurrency === 'USD' ? 'USD' : '$'}</span>
                                         <input 
                                             type="number" 
                                             id="editor-monto" 
@@ -473,13 +471,13 @@
                                             value="${defaultRent}" 
                                             placeholder="0"
                                             style="border: none !important; outline: none !important; box-shadow: none !important; background: transparent !important;"
-                                            class="w-full text-zinc-900 dark:text-white font-headline font-black text-lg sm:text-xl tracking-tight p-0"
+                                            class="w-full text-zinc-900 dark:text-white font-headline font-black text-lg tracking-tight p-0"
                                         >
                                     </div>
                                 </div>
 
                                 <!-- Card 2: Duración del Contrato -->
-                                <div class="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 sm:space-y-3 shadow-xs">
+                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 shadow-xs">
                                     <div class="flex items-center justify-between gap-2">
                                         <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                             <span class="material-symbols-outlined text-sm text-primary">schedule</span>
@@ -488,20 +486,20 @@
                                                 <span class="material-symbols-outlined text-[13px]">info</span>
                                             </button>
                                         </label>
-                                        <span class="text-[10px] text-zinc-400 font-medium">Pacto libre entre partes</span>
+                                        <span class="text-[10px] text-zinc-400 font-medium">Pacto libre</span>
                                     </div>
-                                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2" id="duracion-chips-container">
-                                        <button type="button" data-val="12" class="duration-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">12 meses</button>
-                                        <button type="button" data-val="24" class="duration-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '24' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">24 meses <span class="block text-[8px] sm:text-[9px] opacity-75">Estándar</span></button>
-                                        <button type="button" data-val="36" class="duration-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '36' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">36 meses</button>
-                                        <button type="button" data-val="6" class="duration-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">6 meses</button>
-                                        <button type="button" data-val="3" class="duration-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">3 meses</button>
+                                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5" id="duracion-chips-container">
+                                        <button type="button" data-val="12" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">12 meses</button>
+                                        <button type="button" data-val="24" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '24' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">24 meses <span class="block text-[8px] opacity-75">Estándar</span></button>
+                                        <button type="button" data-val="36" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '36' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">36 meses</button>
+                                        <button type="button" data-val="6" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">6 meses</button>
+                                        <button type="button" data-val="3" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">3 meses</button>
                                         <input type="hidden" id="editor-duracion" value="${defaultDuration}">
                                     </div>
                                 </div>
 
                                 <!-- Card 3: Actualización Periódica (Índice y Frecuencia) -->
-                                <div class="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3.5 sm:space-y-4 shadow-xs">
+                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between gap-2">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
@@ -513,28 +511,28 @@
                                             </label>
                                             <span class="text-[10px] text-zinc-400">Variación oficial</span>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" id="indice-chips-container">
-                                            <button type="button" data-val="IPC" class="index-chip py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'IPC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="indice-chips-container">
+                                            <button type="button" data-val="IPC" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'IPC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>IPC</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Consumidor</span>
+                                                <span class="block text-[8px] opacity-75">Consumidor</span>
                                             </button>
-                                            <button type="button" data-val="ICL" class="index-chip py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'ICL' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="ICL" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'ICL' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>ICL</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">BCRA</span>
+                                                <span class="block text-[8px] opacity-75">BCRA</span>
                                             </button>
-                                            <button type="button" data-val="CAC" class="index-chip py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'CAC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="CAC" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'CAC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>CAC</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Construcción</span>
+                                                <span class="block text-[8px] opacity-75">Construcción</span>
                                             </button>
-                                            <button type="button" data-val="FIJO" class="index-chip py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'FIJO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="FIJO" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'FIJO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Fijo</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Sin indexar</span>
+                                                <span class="block text-[8px] opacity-75">Sin indexar</span>
                                             </button>
                                             <input type="hidden" id="editor-indice" value="${defaultIndex}">
                                         </div>
                                     </div>
 
-                                    <div class="space-y-2 pt-2.5 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">update</span>
@@ -544,18 +542,18 @@
                                                 </button>
                                             </label>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" id="frecuencia-chips-container">
-                                            <button type="button" data-val="3" class="frec-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Trimestral (3m)</button>
-                                            <button type="button" data-val="4" class="frec-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '4' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Cuatrimestral (4m)</button>
-                                            <button type="button" data-val="6" class="frec-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Semestral (6m)</button>
-                                            <button type="button" data-val="12" class="frec-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Anual (12m)</button>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="frecuencia-chips-container">
+                                            <button type="button" data-val="3" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Trimestral (3m)</button>
+                                            <button type="button" data-val="4" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '4' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Cuatrimestral (4m)</button>
+                                            <button type="button" data-val="6" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Semestral (6m)</button>
+                                            <button type="button" data-val="12" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Anual (12m)</button>
                                             <input type="hidden" id="editor-frecuencia" value="${defaultFrequency}">
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Card 4: Cobro, Cuenta, Depósito y Expensas -->
-                                <div class="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3.5 sm:space-y-4 shadow-xs">
+                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-2 min-w-0">
                                             <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
@@ -563,7 +561,7 @@
                                             </div>
                                             <div class="min-w-0">
                                                 <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">Cuenta de Cobro & Vencimiento</h4>
-                                                <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate">Datos bancarios y día límite de pago mensual</p>
+                                                <p class="text-[10px] text-zinc-400 truncate">Datos bancarios y plazo mensual</p>
                                             </div>
                                         </div>
                                         <button type="button" onclick="ContractEditorModal.showLegalInfo('cuenta_vencimiento')" class="w-6 h-6 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación de pagos y mora">
@@ -571,11 +569,11 @@
                                         </button>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <!-- Alias CBU / CVU -->
-                                        <div class="space-y-1.5 sm:space-y-2">
+                                        <div class="space-y-1.5">
                                             <div class="flex items-center justify-between">
-                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1">
                                                     <span class="material-symbols-outlined text-sm text-primary">qr_code_2</span>
                                                     <span>Alias CBU / CVU</span>
                                                 </label>
@@ -587,30 +585,30 @@
                                                 value="${defaultAlias}" 
                                                 autocapitalize="characters"
                                                 placeholder="HABITAT.ALQUILER.MP"
-                                                class="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-10 px-3.5 font-mono font-bold text-xs text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                class="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-10 px-3 font-mono font-bold text-xs text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             >
                                         </div>
 
                                         <!-- Día Límite de Pago -->
-                                        <div class="space-y-1.5 sm:space-y-2">
+                                        <div class="space-y-1.5">
                                             <div class="flex items-center justify-between">
-                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1">
                                                     <span class="material-symbols-outlined text-sm text-primary">event_available</span>
                                                     <span>Día de Vencimiento</span>
                                                 </label>
-                                                <span class="text-[10px] text-zinc-400">Plazo mensual</span>
+                                                <span class="text-[10px] text-zinc-400">Mensual</span>
                                             </div>
-                                            <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="dia-venc-chips-container">
-                                                <button type="button" data-val="5" class="dia-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '5' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 5</button>
-                                                <button type="button" data-val="10" class="dia-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '10' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 10 <span class="block text-[8px] sm:text-[9px] opacity-75">Estándar</span></button>
-                                                <button type="button" data-val="15" class="dia-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '15' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 15</button>
+                                            <div class="grid grid-cols-3 gap-1.5" id="dia-venc-chips-container">
+                                                <button type="button" data-val="5" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '5' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 5</button>
+                                                <button type="button" data-val="10" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '10' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 10 <span class="block text-[8px] opacity-75">Estándar</span></button>
+                                                <button type="button" data-val="15" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '15' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 15</button>
                                                 <input type="hidden" id="editor-dia-venc" value="${defaultDueDay}">
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Depósito en Garantía -->
-                                    <div class="space-y-2 pt-2.5 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">lock</span>
@@ -621,29 +619,29 @@
                                             </label>
                                             <span class="text-[10px] text-zinc-400">Resguardo locativo</span>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2" id="deposito-chips-container">
-                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="deposito-chips-container">
+                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>1 Mes (ARS)</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Recomendado</span>
+                                                <span class="block text-[8px] opacity-75">Recomendado</span>
                                             </button>
-                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES_USD' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES_USD' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>1 Mes (USD)</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Moneda ext.</span>
+                                                <span class="block text-[8px] opacity-75">Moneda ext.</span>
                                             </button>
-                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '2_MESES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '2_MESES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>2 Meses</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Doble garantía</span>
+                                                <span class="block text-[8px] opacity-75">Doble garantía</span>
                                             </button>
-                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === 'SIN_DEPOSITO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === 'SIN_DEPOSITO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Sin Depósito</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Pasaporte Hábitat</span>
+                                                <span class="block text-[8px] opacity-75">Pasaporte Hábitat</span>
                                             </button>
                                             <input type="hidden" id="editor-deposito" value="${defaultDeposito}">
                                         </div>
                                     </div>
 
                                     <!-- Régimen de Expensas -->
-                                    <div class="space-y-2 pt-2.5 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
                                             <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-sm text-primary">receipt_long</span>
@@ -653,18 +651,18 @@
                                                 </button>
                                             </label>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2" id="expensas-chips-container">
-                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'ORDINARIAS_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5" id="expensas-chips-container">
+                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'ORDINARIAS_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Ordinarias x Inquilino</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Extraordinarias x Locador</span>
+                                                <span class="block text-[8px] opacity-75">Extraord. x Locador</span>
                                             </button>
-                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'TOTALES_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'TOTALES_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Totales x Inquilino</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">Ordinarias + Extraord.</span>
+                                                <span class="block text-[8px] opacity-75">Ordinarias + Extraord.</span>
                                             </button>
-                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'INCLUIDAS' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'INCLUIDAS' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
                                                 <span>Incluidas en Canon</span>
-                                                <span class="block text-[8px] sm:text-[9px] opacity-75">A cargo del Locador</span>
+                                                <span class="block text-[8px] opacity-75">A cargo del Locador</span>
                                             </button>
                                             <input type="hidden" id="editor-expensas" value="${defaultExpensas}">
                                         </div>
@@ -673,7 +671,7 @@
                                 </div>
 
                                 <!-- Card 5: Cláusulas y Permisos Especiales -->
-                                <div class="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 sm:space-y-3 shadow-xs">
+                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 shadow-xs">
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-2 min-w-0">
                                             <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">policy</span>
@@ -684,7 +682,7 @@
                                                         <span class="material-symbols-outlined text-[13px]">info</span>
                                                     </button>
                                                 </div>
-                                                <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate">Personalizá las condiciones contractuales</p>
+                                                <p class="text-[10px] text-zinc-400 truncate">Personalizá las condiciones legales</p>
                                             </div>
                                         </div>
                                         <span class="text-[10px] text-zinc-400 font-medium shrink-0">Ley 25.506 & CCyCN</span>
@@ -692,9 +690,9 @@
 
                                     <div class="space-y-2 text-xs">
                                         <!-- Mascotas -->
-                                        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg sm:text-xl text-primary dark:text-red-400 shrink-0">pets</span>
+                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
+                                            <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">pets</span>
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                         <span class="font-bold text-zinc-900 dark:text-white text-xs block">Permitir Mascotas</span>
@@ -702,19 +700,19 @@
                                                             <span class="material-symbols-outlined text-[13px]">info</span>
                                                         </button>
                                                     </div>
-                                                    <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 block truncate sm:line-clamp-none">Tenencia responsable de animales domésticos</span>
+                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Tenencia responsable de animales domésticos</span>
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-mascotas" ${defaultMascotas ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
                                         <!-- Destino Vivienda -->
-                                        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg sm:text-xl text-primary dark:text-red-400 shrink-0">home</span>
+                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
+                                            <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">home</span>
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                         <span class="font-bold text-zinc-900 dark:text-white text-xs block">Destino Exclusivo Vivienda</span>
@@ -722,19 +720,19 @@
                                                             <span class="material-symbols-outlined text-[13px]">info</span>
                                                         </button>
                                                     </div>
-                                                    <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 block truncate sm:line-clamp-none">Prohíbe uso comercial o profesional</span>
+                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Prohíbe uso comercial o profesional</span>
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-vivienda" ${defaultVivienda ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
                                         <!-- Seguro Incendio -->
-                                        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg sm:text-xl text-primary dark:text-red-400 shrink-0">shield</span>
+                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
+                                            <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">shield</span>
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                         <span class="font-bold text-zinc-900 dark:text-white text-xs block">Seguro de Incendio</span>
@@ -742,19 +740,19 @@
                                                             <span class="material-symbols-outlined text-[13px]">info</span>
                                                         </button>
                                                     </div>
-                                                    <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 block truncate sm:line-clamp-none">Póliza de seguro a favor del locador</span>
+                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Póliza de seguro a favor del locador</span>
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-seguro" ${defaultSeguro ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
                                         <!-- Prohibición Subalquiler -->
-                                        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg sm:text-xl text-primary dark:text-red-400 shrink-0">block</span>
+                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
+                                            <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">block</span>
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                         <span class="font-bold text-zinc-900 dark:text-white text-xs block">Prohibición de Sublocación</span>
@@ -762,19 +760,19 @@
                                                             <span class="material-symbols-outlined text-[13px]">info</span>
                                                         </button>
                                                     </div>
-                                                    <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 block truncate sm:line-clamp-none">Prohíbe ceder o subarrendar a terceros</span>
+                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Prohíbe ceder o subarrendar a terceros</span>
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-subalquiler" ${defaultSubalquiler ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
                                         <!-- Rescisión Anticipada -->
-                                        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg sm:text-xl text-primary dark:text-red-400 shrink-0">contract_delete</span>
+                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
+                                            <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">contract_delete</span>
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-1.5 flex-wrap">
                                                         <span class="font-bold text-zinc-900 dark:text-white text-xs block">Rescisión Anticipada (Art. 1221)</span>
@@ -782,12 +780,12 @@
                                                             <span class="material-symbols-outlined text-[13px]">info</span>
                                                         </button>
                                                     </div>
-                                                    <span class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 block truncate sm:line-clamp-none">Notificación previa con 1 mes de antelación</span>
+                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Notificación previa con 1 mes de antelación</span>
                                                 </div>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-rescision" ${defaultRescision ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 sm:w-11 sm:h-6 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                                             </label>
                                         </div>
 
@@ -797,7 +795,7 @@
                                         </div>
 
                                         <!-- Formulario colapsable para agregar cláusula personalizada -->
-                                        <div id="add-custom-clause-box" class="hidden p-3 sm:p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5 mt-2">
+                                        <div id="add-custom-clause-box" class="hidden p-3 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5 mt-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="font-headline font-bold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                                                     <span class="material-symbols-outlined text-sm">add_circle</span>
@@ -821,28 +819,32 @@
                                 </div>
 
                                 <!-- Botón rápido Mobile para ver la vista previa del contrato -->
-                                <button type="button" id="btn-mobile-goto-preview" class="lg:hidden w-full py-3 px-4 rounded-2xl bg-zinc-900 dark:bg-zinc-800 hover:bg-black dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer">
+                                <button type="button" id="btn-mobile-goto-preview" class="md:hidden w-full py-3 px-4 rounded-2xl bg-zinc-900 dark:bg-zinc-800 hover:bg-black dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer">
                                     <span class="material-symbols-outlined text-base">visibility</span>
                                     <span>Ver Documento Legal en Vista Previa</span>
                                     <span class="material-symbols-outlined text-base">arrow_forward</span>
                                 </button>
                             </div>
 
-                            <!-- COLUMNA DERECHA: HOJA LEGAL DIGITAL EN VIVO (Visible en Desktop y en Subtab Mobile) -->
-                            <div id="smart-preview-col" class="lg:col-span-6 space-y-2 lg:sticky lg:top-0 ${this._activeMobileSubtab === 'preview' ? 'block' : 'hidden lg:block'}">
+                            <!-- COLUMNA DERECHA: HOJA LEGAL DIGITAL EN VIVO (Dual-Pane permanente en Desktop) -->
+                            <div id="smart-preview-col" class="md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 ${this._activeMobileSubtab === 'preview' ? 'flex' : 'hidden md:flex'}">
                                 
-                                <div class="flex items-center justify-between text-xs px-1">
+                                <div class="shrink-0 flex items-center justify-between text-xs pb-2.5 px-1">
                                     <div class="flex items-center gap-2">
-                                        <button type="button" id="btn-mobile-back-to-config" class="lg:hidden p-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1 font-bold text-[11px] cursor-pointer">
+                                        <button type="button" id="btn-mobile-back-to-config" class="md:hidden p-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1 font-bold text-[11px] cursor-pointer">
                                             <span class="material-symbols-outlined text-sm">arrow_back</span>
                                             <span>Parámetros</span>
                                         </button>
-                                        <span class="font-headline font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                        <span class="font-headline font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 text-xs sm:text-sm">
                                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             Documento Legal en Vivo
                                         </span>
                                     </div>
                                     <div class="flex items-center gap-1.5 sm:gap-2">
+                                        <button type="button" id="btn-copy-preview-text" class="p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-zinc-200/70 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-primary hover:text-white transition-all cursor-pointer flex items-center gap-1" title="Copiar texto del borrador">
+                                            <span class="material-symbols-outlined text-xs">content_copy</span>
+                                            <span class="hidden sm:inline">Copiar</span>
+                                        </button>
                                         <button type="button" onclick="ContractEditorModal.showLegalInfo('firma_digital')" class="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-zinc-500 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver marco de validez probatoria">
                                             <span class="material-symbols-outlined text-sm">gavel</span>
                                             <span>Ley 25.506</span>
@@ -853,8 +855,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Hoja Estilo Papel Legal (Blanco / Dark contrastado, seleccionable) -->
-                                <div class="bg-white dark:bg-[#12131a] border border-zinc-300/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl overflow-y-auto max-h-[68vh] lg:max-h-[calc(90vh-140px)] space-y-4 text-zinc-800 dark:text-zinc-200 text-[11px] sm:text-xs leading-relaxed font-mono select-text" id="contract-live-preview-box">
+                                <!-- Hoja Estilo Papel Legal (Blanco / Dark contrastado, seleccionable y con scroll propio perfecto) -->
+                                <div class="flex-1 min-h-0 overflow-y-auto bg-white dark:bg-[#12131a] border border-zinc-300/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-lg space-y-4 text-zinc-800 dark:text-zinc-200 text-[11px] sm:text-xs leading-relaxed font-mono select-text" id="contract-live-preview-box">
                                     <!-- Se renderiza reactivamente con _updateLivePreview -->
                                 </div>
 
@@ -863,7 +865,7 @@
                         </div>
 
                         <!-- TAB 2: SUBIR CONTRATO PROPIO (PDF / DOCX) -->
-                        <div id="content-upload-contract" class="${this._activeTab === 'upload' ? 'space-y-4 sm:space-y-5 max-w-3xl mx-auto py-2 sm:py-4' : 'hidden'}">
+                        <div id="content-upload-contract" class="${this._activeTab === 'upload' ? 'flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 max-w-3xl mx-auto' : 'hidden'}">
                             <div class="bg-white dark:bg-zinc-900 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 space-y-4 sm:space-y-5 shadow-xs">
                                 <div class="flex items-start gap-3 sm:gap-4">
                                     <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
@@ -1054,7 +1056,7 @@
                 self._activeTab = 'smart';
                 tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
                 tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
-                contentSmart.className = 'grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start';
+                contentSmart.className = 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden';
                 contentUpload.className = 'hidden';
                 self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
             });
@@ -1063,11 +1065,11 @@
                 self._activeTab = 'upload';
                 tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
                 tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
-                contentUpload.className = 'space-y-4 sm:space-y-5 max-w-3xl mx-auto py-2 sm:py-4';
+                contentUpload.className = 'flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 max-w-3xl mx-auto';
                 contentSmart.className = 'hidden';
             });
 
-            // Sub-tabs Mobile (Configuración vs Vista Previa en pantallas < lg)
+            // Sub-tabs Mobile (Configuración vs Vista Previa en pantallas < md)
             const subtabConfig = document.getElementById('mobile-subtab-config');
             const subtabPreview = document.getElementById('mobile-subtab-preview');
             const colConfig = document.getElementById('smart-config-col');
@@ -1078,8 +1080,8 @@
             const setMobileSubtab = (tab) => {
                 self._activeMobileSubtab = tab;
                 if (tab === 'config') {
-                    if (colConfig) colConfig.className = 'lg:col-span-6 space-y-3.5 sm:space-y-4 block';
-                    if (colPreview) colPreview.className = 'lg:col-span-6 space-y-2 lg:sticky lg:top-0 hidden lg:block';
+                    if (colConfig) colConfig.className = 'md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 block';
+                    if (colPreview) colPreview.className = 'md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 hidden md:flex';
 
                     if (subtabConfig) {
                         subtabConfig.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
@@ -1088,8 +1090,8 @@
                         subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 cursor-pointer';
                     }
                 } else {
-                    if (colConfig) colConfig.className = 'lg:col-span-6 space-y-3.5 sm:space-y-4 hidden lg:block';
-                    if (colPreview) colPreview.className = 'lg:col-span-6 space-y-2 lg:sticky lg:top-0 block';
+                    if (colConfig) colConfig.className = 'md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 hidden md:block';
+                    if (colPreview) colPreview.className = 'md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 flex';
 
                     if (subtabPreview) {
                         subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
@@ -1106,6 +1108,24 @@
             subtabPreview?.addEventListener('click', () => setMobileSubtab('preview'));
             btnGotoPreview?.addEventListener('click', () => setMobileSubtab('preview'));
             btnBackToConfig?.addEventListener('click', () => setMobileSubtab('config'));
+
+            // Botón Copiar Texto del Borrador
+            document.getElementById('btn-copy-preview-text')?.addEventListener('click', () => {
+                const box = document.getElementById('contract-live-preview-box');
+                if (!box) return;
+                const text = box.innerText || box.textContent || '';
+                navigator.clipboard.writeText(text).then(() => {
+                    if (window.ToastManager) {
+                        window.ToastManager.show({
+                            title: '✓ Contrato Copiado',
+                            message: 'El texto completo del contrato ha sido copiado al portapapeles.',
+                            type: 'success'
+                        });
+                    } else {
+                        alert('Texto del contrato copiado al portapapeles.');
+                    }
+                }).catch(() => {});
+            });
 
             // Reactividad de Inputs para Previsualización en Vivo
             const triggerPreview = () => {
@@ -1124,9 +1144,9 @@
                     const cur = chip.getAttribute('data-currency');
                     if (curInput) curInput.value = cur;
                     curChips.forEach(c => {
-                        c.className = 'currency-chip px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900';
+                        c.className = 'currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900';
                     });
-                    chip.className = 'currency-chip px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer bg-primary text-white shadow-xs';
+                    chip.className = 'currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer bg-primary text-white shadow-xs';
                     triggerPreview();
                 });
             });
@@ -1143,9 +1163,9 @@
                         const val = chip.getAttribute('data-val');
                         input.value = val;
                         chips.forEach(c => {
-                            c.className = `${chipClass} py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50`;
+                            c.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50`;
                         });
-                        chip.className = `${chipClass} py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-primary text-white border-primary shadow-xs`;
+                        chip.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-primary text-white border-primary shadow-xs`;
                         triggerPreview();
                     });
                 });
@@ -1273,7 +1293,7 @@
                     await self._currentOptions.onConfirm(terms);
                 } else {
                     const appId = self._currentOptions?.applicant?.id;
-                    let targetContractId = 'CTR-2026-0043';
+                    let targetContractId = self._currentOptions?.contract?.id || self._currentOptions?.contractId || null;
                     if (window.DataManager && window.DataManager.acceptApplication && appId) {
                         try {
                             const res = await window.DataManager.acceptApplication(appId, terms);
@@ -1283,7 +1303,11 @@
                         }
                     }
                     self.close();
-                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                    if (targetContractId) {
+                        window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
+                    } else {
+                        window.location.href = `contratos.html?role=OWNER`;
+                    }
                 }
             });
         },
@@ -1298,7 +1322,7 @@
             }
 
             container.innerHTML = this._customClauses.map((cc) => `
-                <div class="flex items-start justify-between p-2.5 sm:p-3 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 text-xs gap-2">
+                <div class="flex items-start justify-between p-2.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 text-xs gap-2">
                     <div class="min-w-0 space-y-0.5">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="font-headline font-black text-amber-950 dark:text-amber-300 uppercase text-xs">${cc.title}</span>
@@ -1318,14 +1342,14 @@
             const applicant = this._currentOptions?.applicant || {};
             const property = this._currentOptions?.property || {};
             const contract = this._currentOptions?.contract || {};
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Bruno Cirrincione Ornstein';
-            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '46.665.957';
-            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '20-46665957-7');
-            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'nunimamu@gmail.com';
-            const ownerName = property.owner_name || contract.owner?.name || 'Maximo Cirrincione Ornstein';
-            const ownerDni = property.owner_dni || contract.owner?.dni || '44.662.043';
-            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '20-44662043-7');
-            const ownerEmail = property.owner_email || contract.owner?.email || 'maximocirrin@gmail.com';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
+            const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
+            const ownerName = property.owner_name || contract.owner?.name || 'Propietario Titular';
+            const ownerDni = property.owner_dni || contract.owner?.dni || '';
+            const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
+            const ownerEmail = property.owner_email || contract.owner?.email || 'propietario@email.com';
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
 
             this._renderCustomClausesList(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
@@ -1341,8 +1365,9 @@
             const indice = document.getElementById('editor-indice')?.value || 'IPC';
             const frecuencia = document.getElementById('editor-frecuencia')?.value || 3;
             const montoRaw = document.getElementById('editor-monto')?.value || 450000;
+            const num = isNaN(Number(montoRaw)) ? 450000 : Number(montoRaw);
             const sym = moneda === 'USD' ? 'USD ' : '$ ';
-            const montoFmt = sym + Number(montoRaw).toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares Estadounidenses)' : ' (Pesos Argentinos)');
+            const montoFmt = sym + num.toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares Estadounidenses)' : ' (Pesos Argentinos)');
             const diaVenc = document.getElementById('editor-dia-venc')?.value || 10;
             const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
             const depositoSel = document.getElementById('editor-deposito')?.value || '1_MES';
@@ -1514,7 +1539,7 @@
             const finalPropAddress = propAddress || this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
             const activeClauses = this.buildActiveClauses(finalPropAddress);
 
-            const clausesHtml = activeClauses.map((clause, idx) => {
+            let clausesHtml = activeClauses.map((clause, idx) => {
                 const ordinal = getOrdinalName(idx);
                 const isSignatureClause = clause.tag.includes('FIRMA ELECTRÓNICA');
                 return `
@@ -1552,11 +1577,11 @@
                     </div>
                 </div>
 
-                <p class="text-justify leading-relaxed">
+                <p class="text-justify leading-relaxed font-sans text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 mb-3">
                     <strong>COMPARECENCIA Y CONVENIO:</strong> En la República Argentina, entre <strong>${ownerName}</strong> en adelante denominado <strong>"EL LOCADOR"</strong>; y por la otra <strong>${tenantName}</strong> en adelante denominado <strong>"EL LOCATARIO"</strong>, convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                 </p>
 
-                <div class="space-y-3 pt-2">
+                <div class="space-y-3.5 pt-1 text-zinc-800 dark:text-zinc-200 font-sans text-xs sm:text-[13px]">
                     ${clausesHtml}
                 </div>
 
