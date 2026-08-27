@@ -1345,8 +1345,31 @@ var DataManager = {
                 const pubIdNum = appData.publicationId || appData.id_publicacion
                     ? parseInt(appData.publicationId || appData.id_publicacion, 10)
                     : null;
+                const propIdVal = appData.propertyId || appData.id_propiedad || null;
 
-                // 2. Prevenir duplicados: verificar si ya existe una postulación activa para esta propiedad
+                // 2. Prevenir duplicados: verificar si ya existe una postulación activa para esta propiedad en LocalStorage o Supabase
+                try {
+                    const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+                    const existingLocal = localApps.find(a => {
+                        const aPubId = a.publication_id || a.publicationId || a.id_publicacion;
+                        const aPropId = a.property_id || a.propertyId || a.id_propiedad;
+                        const matchPub = pubIdNum && aPubId && String(aPubId) === String(pubIdNum);
+                        const matchProp = propIdVal && aPropId && String(aPropId) === String(propIdVal);
+                        return (matchPub || matchProp) && a.status !== 'rechazada' && a.status !== 'cancelada';
+                    });
+
+                    if (existingLocal) {
+                        console.log("[DataManager] Postulación existente en memoria/local detectada:", existingLocal.id);
+                        return {
+                            id: existingLocal.id,
+                            status: existingLocal.status || 'pendiente',
+                            created_at: existingLocal.created_at || fecha,
+                            isDuplicate: true,
+                            message: 'Ya posees una postulación enviada para esta propiedad.'
+                        };
+                    }
+                } catch (eLocal) {}
+
                 if (pubIdNum) {
                     const { data: existingApp } = await window.supabaseClient
                         .from('Solicitud')

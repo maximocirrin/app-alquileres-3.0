@@ -257,8 +257,10 @@ export default async function sellarHandler(req, res) {
       .update({
         estado_firma: 'sellada',
         hash_original_sha256: originalPdfHash,
+        hash_audit_trail_sha256: finalPdfHash,
         hash_contrato_sha256: finalPdfHash,
         tsa_sello_tiempo: tsaTokenPayload,
+        url_audit_trail_pdf: finalContractPdfPath,
         url_contrato_final_pdf: finalContractPdfPath,
         fecha_firma: new Date().toISOString()
       })
