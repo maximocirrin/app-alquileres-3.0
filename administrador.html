@@ -1156,9 +1156,6 @@
 
             // 2. Obtener Condición Fiscal / Actividad (Monotributista, Estudiante, Responsable Inscripto, etc.)
             let rawCondicion = a.condicion_fiscal || a.condicionFiscal || a.actividad || a.tax_condition || a.tipo_actividad;
-            if (!rawCondicion && a.datos_arca && a.datos_arca.condicionFiscal) {
-                rawCondicion = a.datos_arca.condicionFiscal;
-            }
 
             // 3. Obtener Edad o calcular a partir de Fecha de Nacimiento / DNI
             let rawAge = a.age ?? a.edad ?? a.tenant_age ?? a.tenant_edad ?? a.applicant_age;

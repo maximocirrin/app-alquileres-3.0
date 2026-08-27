@@ -2573,7 +2573,7 @@ var DataManager = {
 
             const { data, error } = await window.supabaseClient
                 .from('Lead_inmobiliario')
-                .select('*, Zona_lead(*)')
+                .select('*, Zona_lead(*), Disputa_lead(*)')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -2587,29 +2587,32 @@ var DataManager = {
                 return Number(l.id_perfil_corredor) === Number(profileId);
             });
 
-            return filtered.map(l => ({
-                id: `lead-${l.id_lead}`,
-                raw_id: l.id_lead,
-                id_perfil_corredor: l.id_perfil_corredor,
-                clientName: l.nombre_cliente,
-                phone: l.telefono,
-                email: l.email || '',
-                propertyName: l.nombre_propiedad || 'Consulta Inmueble',
-                propertyAddress: l.direccion_propiedad || '',
-                propertyPrice: l.precio_propiedad || '',
-                intentScore: l.puntaje_intencion || 'high',
-                timeline: l.tiempo_mudanza || 'Inmediata',
-                hasCredit: l.tiene_garantia_o_credito,
-                creditType: l.tipo_garantia || 'Directo',
-                hasPropertyToSell: l.tiene_propiedad_para_vender,
-                source: l.origen || 'Hábitat',
-                status: l.estado || 'new',
-                createdAt: l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR') : 'Reciente',
-                notes: Array.isArray(l.notas) ? l.notas : [],
-                disputeStatus: l.dispute_status || 'none',
-                disputeReason: l.dispute_reason,
-                disputeComments: l.dispute_comments
-            }));
+            return filtered.map(l => {
+                const dispute = (l.Disputa_lead && l.Disputa_lead.length > 0) ? l.Disputa_lead[l.Disputa_lead.length - 1] : null;
+                return {
+                    id: `lead-${l.id_lead}`,
+                    raw_id: l.id_lead,
+                    id_perfil_corredor: l.id_perfil_corredor,
+                    clientName: l.nombre_cliente,
+                    phone: l.telefono,
+                    email: l.email || '',
+                    propertyName: l.nombre_propiedad || 'Consulta Inmueble',
+                    propertyAddress: l.direccion_propiedad || '',
+                    propertyPrice: l.precio_propiedad || '',
+                    intentScore: l.puntaje_intencion || 'high',
+                    timeline: l.tiempo_mudanza || 'Inmediata',
+                    hasCredit: l.tiene_garantia_o_credito,
+                    creditType: l.tipo_garantia || 'Directo',
+                    hasPropertyToSell: l.tiene_propiedad_para_vender,
+                    source: l.origen || 'Hábitat',
+                    status: l.estado || 'new',
+                    createdAt: l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR') : 'Reciente',
+                    notes: Array.isArray(l.notas) ? l.notas : [],
+                    disputeStatus: dispute ? (dispute.estado === 'pendiente' ? 'pending' : dispute.estado) : 'none',
+                    disputeReason: dispute ? dispute.motivo : undefined,
+                    disputeComments: dispute ? dispute.comentarios : undefined
+                };
+            });
         } catch (e) {
             console.warn("Error in getLeads:", e);
             return [];
@@ -2701,10 +2704,7 @@ var DataManager = {
             await window.supabaseClient
                 .from('Lead_inmobiliario')
                 .update({
-                    estado: 'disputed',
-                    dispute_status: 'pending',
-                    dispute_reason: reason,
-                    dispute_comments: comments
+                    estado: 'disputed'
                 })
                 .eq('id_lead', leadRawId);
 
@@ -2927,7 +2927,13 @@ var DataManager = {
                 .from('Ticket_mantenimiento')
                 .select(`
                     *,
-                    Estado_ticket (*)
+                    Estado_ticket (*),
+                    Contrato:id_contrato (
+                        id_propiedad,
+                        id_perfil_inquilino,
+                        Propiedad:id_propiedad (calle, numero),
+                        Perfil:id_perfil_inquilino (nombre_completo)
+                    )
                 `)
                 .order('created_at', { ascending: false });
 
@@ -2971,8 +2977,8 @@ var DataManager = {
                 return {
                     id: t.id_ticket,
                     contract_id: t.id_contrato,
-                    property_address: t.direccion_propiedad || 'Propiedad Alquilada',
-                    tenant_name: t.nombre_inquilino || 'Inquilino',
+                    property_address: t.Contrato?.Propiedad ? `${t.Contrato.Propiedad.calle} ${t.Contrato.Propiedad.numero}` : 'Propiedad Alquilada',
+                    tenant_name: t.Contrato?.Perfil?.nombre_completo || 'Inquilino',
                     title: t.titulo,
                     category: t.categoria || 'General',
                     priority: t.prioridad || 'Media',
@@ -2999,15 +3005,13 @@ var DataManager = {
             .from('Ticket_mantenimiento')
             .insert([{
                 id_perfil: profileId,
-                direccion_propiedad: ticketData.propertyAddress || 'Propiedad alquilada',
-                nombre_inquilino: ticketData.tenantName || 'Carlos Gómez',
-                titulo: ticketData.title || 'Solicitud de reparación',
-                categoria: ticketData.category || 'General',
+                id_contrato: ticketData.contractId || 1,
+                titulo: ticketData.title,
+                categoria: ticketData.category,
                 prioridad: ticketData.priority || 'Media',
                 descripcion: ticketData.description || '',
                 url_foto: ticketData.photoUrl || null,
-                id_estado_ticket: 1, // Abierto
-                estado: 'abierto'
+                id_estado_ticket: 1
             }])
             .select()
             .single();
@@ -3252,7 +3256,7 @@ var DataManager = {
 
             const { data, error } = await window.supabaseClient
                 .from('Tasacion')
-                .select('*')
+                .select('*, Perfil:id_perfil_solicitante(nombre_completo, telefono, mail)')
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -3270,8 +3274,8 @@ var DataManager = {
                 raw_id: v.id_tasacion,
                 address: v.direccion,
                 type: `${v.tipo_inmueble || 'Departamento'} • ${v.ambientes || 3} Amb • ${v.superficie_m2 || 70} m²`,
-                owner: v.nombre_solicitante || 'Propietario Solicitante',
-                phone: v.telefono_solicitante || '+54 11 0000-0000',
+                owner: (v.Perfil && v.Perfil.nombre_completo) ? v.Perfil.nombre_completo : 'Propietario Solicitante',
+                phone: (v.Perfil && v.Perfil.telefono) ? v.Perfil.telefono : '+54 11 0000-0000',
                 estimated: v.valor_estimado ? `$ ${v.valor_estimado}` : 'Pendiente de cotización',
                 status: v.estado || 'Pendiente'
             }));
@@ -3293,9 +3297,6 @@ var DataManager = {
                 tipo_inmueble: valData.propertyType || 'Departamento',
                 ambientes: parseInt(valData.rooms) || 3,
                 superficie_m2: parseFloat(valData.surface) || 65,
-                nombre_solicitante: valData.ownerName || '',
-                telefono_solicitante: valData.ownerPhone || '',
-                email_solicitante: valData.ownerEmail || '',
                 estado: 'pendiente'
             }])
             .select()
