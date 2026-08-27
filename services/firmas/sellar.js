@@ -151,7 +151,7 @@ export default async function sellarHandler(req, res) {
     if (contrato.url_contrato_original_pdf) {
       try {
         const { data: downloadedBase, error: downloadErr } = await supabase.storage
-          .from('contratos_originales')
+          .from('contratos_firmados')
           .download(originalPdfPath);
         if (!downloadErr && downloadedBase) {
           originalPdfBytes = Buffer.from(await downloadedBase.arrayBuffer());
@@ -176,7 +176,7 @@ export default async function sellarHandler(req, res) {
 
       try {
         await supabase.storage
-          .from('contratos_originales')
+          .from('contratos_firmados')
           .upload(originalPdfPath, originalPdfBytes, {
             contentType: 'application/pdf',
             upsert: true
@@ -186,13 +186,14 @@ export default async function sellarHandler(req, res) {
       }
 
       // Actualizar Contrato con la referencia del contrato original congelado
-      await supabase
+      const { error: dbErr1 } = await supabase
         .from('Contrato')
         .update({
           hash_original_sha256: originalPdfHash,
           url_contrato_original_pdf: originalPdfPath
         })
         .eq('id_contrato', contractId);
+      if (dbErr1) console.error('[sellarHandler] Error updating Contrato (original):', dbErr1);
     }
 
     // 4. Generar el PDF del Audit Trail Forense (Solo Audit Trail)
@@ -268,13 +269,14 @@ export default async function sellarHandler(req, res) {
       console.error('[Error actualizando Firma_contrato con sellado]:', errUpdate);
     }
 
-    await supabase
+    const { error: dbErr2 } = await supabase
       .from('Contrato')
       .update({
         hash_original_sha256: originalPdfHash,
         url_contrato_original_pdf: originalPdfPath
       })
       .eq('id_contrato', contractId);
+    if (dbErr2) console.error('[sellarHandler] Error updating Contrato (final original update):', dbErr2);
 
     return res.status(200).json({
       ok: true,

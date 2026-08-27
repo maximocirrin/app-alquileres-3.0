@@ -2549,9 +2549,9 @@
 
                             // Subir a Storage
                             try {
-                                await window.supabaseClient.storage.from('contratos_originales').upload(origContractPdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+                                await window.supabaseClient.storage.from('contratos_firmados').upload(origContractPdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
                             } catch(eUp1) {
-                                console.warn("[ContractsManager] Aviso subiendo a contratos_originales:", eUp1);
+                                console.warn("[ContractsManager] Aviso subiendo a contratos_firmados:", eUp1);
                             }
 
                             try {
@@ -3094,7 +3094,7 @@
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 uppercase">Inmutable</span>
                                 </div>
                                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                    Calculado sobre las cláusulas y condiciones acordadas antes de firmar. Resguardado en el bucket <code class="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded">contratos_originales</code>.
+                                    Calculado sobre las cláusulas y condiciones acordadas antes de firmar. Resguardado en el bucket <code class="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded">contratos_firmados</code>.
                                 </p>
                                 <div class="flex items-center justify-between gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-blue-700 dark:text-blue-400">
                                     <span class="break-all select-all">${origHash}</span>
