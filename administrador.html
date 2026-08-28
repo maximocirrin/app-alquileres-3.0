@@ -2238,73 +2238,7 @@
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
         ];
 
-        const ownerEventsMock = [
-            {
-                id: 'EVT-101',
-                type: 'visita',
-                typeLabel: 'Visita Presencial',
-                property_title: 'Humboldt 1940 2A',
-                visitor_name: 'Gonzalo Pérez',
-                visitor_phone: '+54 11 4829-1029',
-                visitor_email: 'gonzalo.perez@gmail.com',
-                visit_date: '2026-08-03',
-                visit_time: '15:30',
-                status: 'Confirmada',
-                notes: 'Interesado en conocer el departamento de 3 ambientes.'
-            },
-            {
-                id: 'EVT-102',
-                type: 'visita',
-                typeLabel: 'Visita Presencial',
-                property_title: 'Av. Santa Fe 3420 4B',
-                visitor_name: 'Camila Benítez',
-                visitor_phone: '+54 11 5920-8811',
-                visitor_email: 'camila.benitez@gmail.com',
-                visit_date: '2026-08-03',
-                visit_time: '17:00',
-                status: 'Confirmada',
-                notes: 'Coordinado con el inquilino saliente.'
-            },
-            {
-                id: 'EVT-103',
-                type: 'firma',
-                typeLabel: 'Firma de Contrato',
-                property_title: 'Gorriti 4820 5C',
-                visitor_name: 'Martín Soria',
-                visitor_phone: '+54 11 8899-7766',
-                visitor_email: 'msoria@empresa.com',
-                visit_date: '2026-08-05',
-                visit_time: '11:00',
-                status: 'Confirmada',
-                notes: 'Firma digital de contrato y certificación.'
-            },
-            {
-                id: 'EVT-104',
-                type: 'tasacion',
-                typeLabel: 'Tasación In Situ',
-                property_title: 'Av. Libertador 2450 12A',
-                visitor_name: 'Ignacio Peralta',
-                visitor_phone: '+54 11 2233-4455',
-                visitor_email: 'iperalta@abogados.com.ar',
-                visit_date: '2026-08-06',
-                visit_time: '14:30',
-                status: 'Confirmada',
-                notes: 'Valuación comercial para nueva captación.'
-            },
-            {
-                id: 'EVT-105',
-                type: 'entrega',
-                typeLabel: 'Entrega de Llaves',
-                property_title: 'Humboldt 1940 2A',
-                visitor_name: 'Federico López',
-                visitor_phone: '+54 11 3344-9900',
-                visitor_email: 'federico.lopez@yahoo.com',
-                visit_date: '2026-08-07',
-                visit_time: '16:00',
-                status: 'Confirmada',
-                notes: 'Firma de acta de entrega de llaves.'
-            }
-        ];
+        let ownerEventsMock = [];
 
         const ownerCalFilterStyles = {
             todos: {
@@ -2537,7 +2471,6 @@
         }
 
         async function loadOwnerVisits() {
-            renderOwnerCalendarGrid();
             const list = document.getElementById('owner-list-visits');
             if (!list) return;
 
@@ -2546,24 +2479,15 @@
             let visitsList = ownerEventsMock;
             if (window.DataManager) {
                 try {
-                    const dbVisits = await window.DataManager.getVisits();
-                    if (dbVisits && dbVisits.length > 0) {
-                        visitsList = dbVisits.map((v, i) => ({
-                            id: `DB-EVT-${i}`,
-                            type: 'visita',
-                            typeLabel: 'Visita Presencial',
-                            property_title: v.property_title || 'Propiedad en Cartera',
-                            visitor_name: v.visitor_name || 'Interesado',
-                            visitor_phone: v.visitor_phone || '+54 11 4455-8899',
-                            visitor_email: v.visitor_email || 'contacto@gmail.com',
-                            visit_date: v.visit_date || '2026-08-03',
-                            visit_time: v.visit_time || '16:00',
-                            status: v.status || 'Confirmada',
-                            notes: 'Visita coordinada desde el Portal Hábitat.'
-                        }));
+                    const dbEvents = await window.DataManager.getEvents();
+                    if (dbEvents && dbEvents.length > 0) {
+                        visitsList = dbEvents;
+                        ownerEventsMock = dbEvents; // Update mock so grid render can use it too
                     }
                 } catch(e) {}
             }
+
+            renderOwnerCalendarGrid();
 
             const filteredEvents = visitsList.filter(e => {
                 const matchMonth = !ownerSelectedCalendarDay ? e.visit_date.startsWith(`${ownerCurrentCalendarYear}-${monthPadded}`) : true;

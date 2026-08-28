@@ -1983,13 +1983,14 @@ var DataManager = {
         if (!window.supabaseClient) return [];
         try {
             const { data, error } = await window.supabaseClient
-                .from('Visita')
+                .from('Evento')
                 .select(`
                     *,
                     Propiedad (*),
                     Perfil (*)
                 `)
-                .order('created_at', { ascending: false });
+                .eq('id_tipo_evento', 1) // Asumiendo que 1 es Visita
+                .order('fecha_evento', { ascending: false });
 
             if (error) return [];
 
@@ -1997,16 +1998,16 @@ var DataManager = {
                 const prop = v.Propiedad || {};
                 const perf = v.Perfil || {};
                 return {
-                    id: v.id_visita,
+                    id: v.id_evento,
                     property_id: v.id_propiedad,
                     property_title: `Propiedad en ${prop.calle || 'Visita'}`,
                     property_address: `${prop.calle || 'Dirección'} ${prop.numero || ''}`,
                     visitor_name: v.nombre_visitante || perf.nombre_completo || 'Visitante',
                     visitor_email: v.email_visitante || perf.mail || 'visitante@email.com',
                     visitor_phone: v.telefono_visitante || perf.telefono || '+54 9 11 0000-0000',
-                    visit_date: v.fecha_visita?.split('T')[0] || new Date().toISOString().split('T')[0],
-                    visit_time: v.hora_visita || '16:00 hs',
-                    status: 'programada',
+                    visit_date: v.fecha_evento?.split('T')[0] || new Date().toISOString().split('T')[0],
+                    visit_time: v.hora_evento || '16:00 hs',
+                    status: (v.id_estado_evento === 1 || v.id_estado_evento === 2) ? 'programada' : 'finalizada', // asumiendo 1/2 es programada/confirmada
                     created_at: v.created_at
                 };
             });
@@ -2021,15 +2022,17 @@ var DataManager = {
         const profileId = await DataManager._getOrCreateProfile();
 
         const { data, error } = await window.supabaseClient
-            .from('Visita')
+            .from('Evento')
             .insert([{
                 id_perfil: profileId,
                 id_propiedad: visitData.propertyId || 1,
-                fecha_visita: visitData.visitDate || new Date().toISOString(),
-                hora_visita: visitData.visitTime || '16:00 hs',
+                fecha_evento: visitData.visitDate || new Date().toISOString(),
+                hora_evento: visitData.visitTime || '16:00 hs',
                 nombre_visitante: visitData.visitorName || 'Visitante',
                 email_visitante: visitData.visitorEmail || 'visitante@email.com',
-                telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000'
+                telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000',
+                id_tipo_evento: 1, // Visita
+                id_estado_evento: 1 // Programada
             }])
             .select()
             .single();
@@ -2040,15 +2043,15 @@ var DataManager = {
         }
 
         try {
-            await window.supabaseClient.from('Historial_estado_visita').insert([{
-                id_visita: data.id_visita,
+            await window.supabaseClient.from('Historial_estado_evento').insert([{
+                id_visita: data.id_evento,
                 id_estado_visita: 1, // Programada
                 fecha_inicio: new Date().toISOString()
             }]);
         } catch (e) { }
 
         return {
-            id: data.id_visita,
+            id: data.id_evento,
             status: 'programada'
         };
     },
@@ -2056,7 +2059,11 @@ var DataManager = {
     cancelVisit: async function (visitId) {
         if (window.supabaseClient && visitId) {
             try {
-                await window.supabaseClient.from('Historial_estado_visita').insert([{
+                await window.supabaseClient.from('Evento')
+                    .update({ id_estado_evento: 3 })
+                    .eq('id_evento', visitId);
+
+                await window.supabaseClient.from('Historial_estado_evento').insert([{
                     id_visita: visitId,
                     id_estado_visita: 3, // Cancelada
                     fecha_inicio: new Date().toISOString()
