@@ -151,7 +151,12 @@ export async function generateOriginalContractPdf({
   // Cláusulas
   clauses.push({ tag: 'OBJETO Y DESTINO', body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en ${propAddress}. ${onlyResidential ? 'Dicho inmueble tendrá como destino exclusivo el de vivienda familiar y permanente, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : 'Con destino habitacional conforme a derecho.'}` });
   clauses.push({ tag: 'PLAZO DE LOCACIÓN', body: `El plazo contractual se pacta libremente entre las partes en ${duracion} meses corridos, comenzando su vigencia el día ${todayStr}.` });
-  clauses.push({ tag: 'CANON LOCATIVO Y ACTUALIZACIÓN', body: `El precio del alquiler se fija en la suma inicial de ${montoFmt} mensuales. Dicho importe se actualizará de forma periódica cada ${frecuencia} meses aplicando la variación porcentual del índice oficial ${indice}.` });
+  clauses.push({
+    tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
+    body: indice === 'FIJO'
+      ? `El precio del alquiler se fija en la suma de ${montoFmt} mensuales durante toda la vigencia del contrato, pactándose un valor fijo e inalterable sin cláusula de indexación periódica.`
+      : `El precio del alquiler se fija en la suma inicial de ${montoFmt} mensuales. Dicho importe se actualizará de forma periódica cada ${frecuencia} meses aplicando la variación porcentual del índice oficial ${indice}.`
+  });
   clauses.push({ tag: 'LUGAR Y FORMA DE PAGO', body: `El pago del alquiler mensual deberá efectuarse del 1 al día ${diaVenc} de cada mes calendario mediante transferencia bancaria a la cuenta bancaria / Alias CBU: ${aliasCbu}. En caso de mora, se devengará un interés punitorio del ${moraSel}% por cada día de atraso hasta su efectiva cancelación.` });
   clauses.push({ tag: 'EXPENSAS, SERVICIOS E IMPUESTOS', body: expensasTxt });
   clauses.push({ tag: 'DEPÓSITO EN GARANTÍA', body: `EL LOCATARIO entrega a EL LOCADOR la suma ${depositoTxt}, suma que será restituida al finalizar la locación previa verificación del estado de conservación del inmueble y entrega de llaves.` });
