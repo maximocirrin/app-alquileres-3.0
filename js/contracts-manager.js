@@ -355,7 +355,9 @@
         const rentFmt = formatMoney(contract.monthlyRent) + ` (${contract.currency || 'ARS'})`;
         clauses.push({
             tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
-            body: `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.`
+            body: contract.adjustmentIndex === 'FIJO'
+                ? `El precio del alquiler se fija en la suma de <b>${rentFmt}</b> mensuales durante toda la vigencia del contrato, pactándose un valor fijo e inalterable sin cláusula de indexación periódica.`
+                : `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.`
         });
 
         // 4. Pagos y Mora
@@ -1209,10 +1211,10 @@
                                                 ${statusBadge}
                                             </div>
                                             
-                                            <div>
-                                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-base group-hover:text-primary transition-colors line-clamp-1">${c.title}</h3>
-                                                <p class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 flex items-center gap-1 mt-0.5">
-                                                    <span class="material-symbols-outlined text-xs text-primary shrink-0">location_on</span>
+                                            <div class="text-center py-2">
+                                                <h3 class="font-headline font-black text-zinc-900 dark:text-white text-lg sm:text-xl group-hover:text-primary transition-colors line-clamp-2 leading-tight">${(c.title || '').replace(/^Contrato de Locación\s*-\s*/i, '')}</h3>
+                                                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 line-clamp-1 flex items-center justify-center gap-1 mt-1.5">
+                                                    <span class="material-symbols-outlined text-[15px] text-primary shrink-0">location_on</span>
                                                     <span>${c.propertyAddress}</span>
                                                 </p>
                                             </div>

@@ -52,7 +52,7 @@
             normative: 'Art. 1199 CCyCN (DNU 70/2023) • Resoluciones BCRA / INDEC',
             badge: 'Indexación Oficial',
             summary: 'Indexación libre y oficial para el canon',
-            explanation: 'Las partes pueden elegir libremente cualquier índice público o privado para actualizar el canon locativo. Los más transparentes y seguros en el mercado argentino son:\n\n• IPC (Índice de Precios al Consumidor): Publicado mensualmente por el INDEC, refleja la inflación minorista general.\n• ICL (Índice de Contratos de Locación): Publicado diariamente por el Banco Central (BCRA), pondera en partes iguales la inflación (IPC) y la variación de salarios registrados (RIPTE).\n• CAC (Cámara Argentina de la Construcción): Ajuste vinculado al costo de materiales y mano de obra.\n• Fijo: Valor inalterable sin cláusula de indexación.',
+            explanation: 'Las partes pueden elegir libremente cualquier índice público o privado para actualizar el canon locativo. Los más transparentes y seguros en el mercado argentino son:\n\n• IPC (Índice de Precios al Consumidor): Publicado mensualmente por el INDEC, refleja la inflación minorista general.\n• ICL (Índice de Contratos de Locación): Publicado diariamente por el Banco Central (BCRA), pondera en partes iguales la inflación (IPC) y la variación de salarios registrados (RIPTE).\n• Fijo: Valor inalterable sin cláusula de indexación.',
             articleQuote: '«Los alquileres podrán reajustarse utilizando el índice pactado libremente por las partes al celebrar el contrato, sea de carácter público o privado.»'
         },
         frecuencia: {
@@ -317,32 +317,61 @@
             }
 
             this._currentOptions = options;
-            this._customFile = null;
-            this._activeTab = options.initialTab || (contract.mode === 'custom_file' ? 'upload' : 'smart');
+            this._activeTab = 'smart';
             this._activeMobileSubtab = 'config';
-            this._isExpandedPreview = false;
-            this._customClauses = Array.isArray(contract.customClauses) ? [...contract.customClauses] : [];
-
-            let existingModal = document.getElementById('contract-editor-modal-container');
-            if (existingModal) existingModal.remove();
+            this._customFile = null;
+            this._customClauses = options.contract?.customClauses || [];
 
             const modalContainer = document.createElement('div');
             modalContainer.id = 'contract-editor-modal-container';
-            modalContainer.className = 'fixed inset-0 z-[100000] w-full h-full h-[100dvh] bg-black/80 backdrop-blur-md p-0 sm:p-3 md:p-5 flex items-stretch sm:items-center justify-center font-body animate-fadeIn overflow-hidden';
+            modalContainer.className = 'fixed inset-0 z-[100000] w-full h-full h-[100dvh] bg-black/75 p-0 sm:p-3 md:p-5 flex items-stretch sm:items-center justify-center font-body overflow-hidden';
             modalContainer.style.webkitOverflowScrolling = 'touch';
 
             const applicant = options.applicant || {};
             const property = options.property || {};
 
+            let tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            let ownerDni = property.owner_dni || contract.owner?.dni || '';
+
+            // 🤖 INTELLIGENT AUTOCOMPLETADO (Data Fetching for DNI/CUIT/CBU/Domicilio)
+            if (window.supabaseClient) {
+                try {
+                    if (tenantDni) {
+                        const { data: tenData } = await window.supabaseClient.from('Perfil').select('*').eq('dni', tenantDni.replace(/\D/g,'')).maybeSingle();
+                        if (tenData) {
+                            applicant.tenant_name = tenData.nombre_completo || applicant.tenant_name;
+                            applicant.tenant_email = tenData.email || applicant.tenant_email;
+                            applicant.tenant_cuit = tenData.cuil_cuit || applicant.tenant_cuit;
+                            applicant.tenant_domicilio = tenData.domicilio_real || applicant.tenant_domicilio;
+                            applicant.tenant_estado_civil = tenData.estado_civil;
+                        }
+                    }
+                    if (ownerDni) {
+                        const { data: ownData } = await window.supabaseClient.from('Perfil').select('*').eq('dni', ownerDni.replace(/\D/g,'')).maybeSingle();
+                        if (ownData) {
+                            property.owner_name = ownData.nombre_completo || property.owner_name;
+                            property.owner_email = ownData.email || property.owner_email;
+                            property.owner_cuit = ownData.cuil_cuit || property.owner_cuit;
+                            property.owner_domicilio = ownData.domicilio_real || property.owner_domicilio;
+                            if (ownData.cbu_alias && !contract.aliasCbu) contract.aliasCbu = ownData.cbu_alias;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Aviso: Fallo en autocompletado inteligente de perfiles.", e);
+                }
+            }
+
             const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
-            const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
+            tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
             const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
             const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
+            const tenantDomicilio = applicant.tenant_domicilio || 'Domicilio no registrado';
             
             const ownerName = property.owner_name || contract.owner?.name || 'Propietario Titular';
-            const ownerDni = property.owner_dni || contract.owner?.dni || '';
+            ownerDni = property.owner_dni || contract.owner?.dni || '';
             const ownerCuil = property.owner_cuit || contract.owner?.cuil || (ownerDni ? `20-${ownerDni.replace(/\D/g,'')}-7` : '');
             const ownerEmail = property.owner_email || contract.owner?.email || 'propietario@email.com';
+            const ownerDomicilio = property.owner_domicilio || 'Domicilio no registrado';
 
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
             
@@ -350,7 +379,7 @@
             const defaultRent = Number(contract.monthlyRent || property.price || property.precio || 450000);
             const defaultCurrency = contract.currency || 'ARS';
             const defaultDuration = String(contract.durationMonths || 24);
-            const defaultIndex = contract.adjustmentIndex || 'IPC';
+            const defaultIndex = (contract.adjustmentIndex && contract.adjustmentIndex !== 'CAC') ? contract.adjustmentIndex : 'IPC';
             const defaultFrequency = String(contract.adjustmentFrequencyMonths || 3);
             const defaultDueDay = String(contract.paymentDueDay || 10);
             const defaultAlias = contract.aliasCbu || 'HABITAT.ALQUILER.MP';
@@ -367,10 +396,10 @@
             const defaultRescision = cfg.rescisionAnticipada !== false;
 
             modalContainer.innerHTML = `
-                <div class="relative w-full h-full h-[100dvh] sm:h-[92vh] sm:max-h-[900px] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200/80 sm:dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
+                <div class="relative w-full h-full h-[100dvh] sm:h-[92vh] sm:max-h-[920px] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200 dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
                     
                     <!-- Top Header Bar -->
-                    <div class="px-4 sm:px-6 py-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
+                    <div class="px-4 sm:px-6 py-3 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
                         <div class="flex items-center gap-3 min-w-0 flex-1">
                             <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#811b1e] to-[#a13333] text-white flex items-center justify-center shrink-0 shadow-md shadow-red-950/20">
                                 <span class="material-symbols-outlined text-2xl">edit_document</span>
@@ -399,15 +428,15 @@
                     </div>
 
                     <!-- Mode Selector Tab Bar & Mobile Sub-tabs -->
-                    <div class="px-4 sm:px-6 py-2 bg-zinc-50/90 dark:bg-zinc-900/60 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                    <div class="px-4 sm:px-6 py-2 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
                         
                         <!-- Tabs Principales -->
                         <div class="flex items-center gap-1.5 sm:gap-2">
-                            <button type="button" id="tab-smart-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'smart' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
+                            <button type="button" id="tab-smart-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'smart' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-800 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
                                 <span class="material-symbols-outlined text-base">auto_awesome</span>
                                 <span>Generador Inteligente</span>
                             </button>
-                            <button type="button" id="tab-upload-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'upload' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
+                            <button type="button" id="tab-upload-contract" class="tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 ${this._activeTab === 'upload' ? 'border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-800 shadow-xs' : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'}">
                                 <span class="material-symbols-outlined text-base">upload_file</span>
                                 <span>Subir Documento Propio</span>
                             </button>
@@ -429,41 +458,40 @@
                     </div>
 
                     <!-- Modal Body Container (Fixed Height Dual-Pane Layout en Desktop) -->
-                    <div class="flex-1 min-h-0 overflow-hidden flex flex-col bg-zinc-50/50 dark:bg-[#090a0f]">
+                    <div class="flex-1 min-h-0 h-full w-full overflow-hidden flex flex-col bg-zinc-50/50 dark:bg-[#090a0f]">
                         
-                        <!-- TAB 1: SMART CONTRACT BUILDER (Dual-Pane Grid en Desktop md/lg/xl) -->
-                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden' : 'hidden'}">
+                        <!-- TAB 1: SMART CONTRACT BUILDER (Dual-Pane Flexbox en Desktop md/lg/xl) -->
+                        <div id="content-smart-contract" class="${this._activeTab === 'smart' ? 'flex-1 min-h-0 h-full w-full flex flex-col md:flex-row overflow-hidden' : 'hidden'}">
                             
                             <!-- COLUMNA IZQUIERDA: CONTROLES MODERNOS (Scroll independiente) -->
-                            <div id="smart-config-col" class="md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 ${this._activeMobileSubtab === 'config' ? 'block' : 'hidden md:block'}">
+                            <div id="smart-config-col" class="w-full md:w-[46%] lg:w-[42%] xl:w-[40%] h-full min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3.5 shrink-0 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 ${this._activeMobileSubtab === 'config' ? 'block' : 'hidden'} md:!block">
                                 
                                 <!-- Card 1: Canon & Moneda -->
-                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-4">
                                     <div class="flex items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">payments</span>
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-8 h-8 rounded-lg bg-primary/5 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400">payments</span>
+                                            </div>
                                             <div class="min-w-0">
                                                 <div class="flex items-center gap-1.5">
-                                                    <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">Precio Inicial y Moneda</h4>
-                                                    <button type="button" onclick="ContractEditorModal.showLegalInfo('precio')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación y marco legal (Art. 1187 CCyCN)">
-                                                        <span class="material-symbols-outlined text-[13px]">info</span>
-                                                    </button>
+                                                    <h4 class="font-headline font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate tracking-tight">Precio Inicial y Moneda</h4>
                                                 </div>
-                                                <p class="text-[10px] text-zinc-400 truncate">Canon mensual acordado</p>
+                                                <p class="text-[11px] text-zinc-500 truncate">Canon mensual acordado</p>
                                             </div>
                                         </div>
 
                                         <!-- Currency Switcher Pills -->
-                                        <div class="flex p-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700/60 shadow-xs shrink-0" id="currency-switcher-container">
-                                            <button type="button" data-currency="ARS" class="currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'ARS' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">ARS ($)</button>
-                                            <button type="button" data-currency="USD" class="currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'USD' ? 'bg-primary text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">USD (U$S)</button>
+                                        <div class="flex p-1 bg-zinc-100/80 dark:bg-zinc-800/50 rounded-xl shrink-0" id="currency-switcher-container">
+                                            <button type="button" data-currency="ARS" class="currency-chip px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'ARS' ? 'bg-[#811b1e] text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">ARS</button>
+                                            <button type="button" data-currency="USD" class="currency-chip px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer ${defaultCurrency === 'USD' ? 'bg-[#811b1e] text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">USD</button>
                                             <input type="hidden" id="editor-moneda" value="${defaultCurrency}">
                                         </div>
                                     </div>
 
                                     <!-- Monetary Input -->
-                                    <div class="flex items-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-11 px-3.5 focus-within:bg-white dark:focus-within:bg-zinc-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                                        <span id="editor-moneda-symbol" class="text-zinc-500 dark:text-zinc-400 font-headline font-black text-base mr-2 select-none shrink-0">${defaultCurrency === 'USD' ? 'USD' : '$'}</span>
+                                    <div class="flex items-center bg-transparent border-b-2 border-zinc-200 dark:border-zinc-700 hover:border-primary/50 focus-within:border-primary dark:focus-within:border-red-400 h-12 px-1 transition-all">
+                                        <span id="editor-moneda-symbol" class="text-zinc-400 dark:text-zinc-500 font-headline font-black text-xl mr-2 select-none shrink-0">${defaultCurrency === 'USD' ? 'USD' : '$'}</span>
                                         <input 
                                             type="number" 
                                             id="editor-monto" 
@@ -471,198 +499,159 @@
                                             value="${defaultRent}" 
                                             placeholder="0"
                                             style="border: none !important; outline: none !important; box-shadow: none !important; background: transparent !important;"
-                                            class="w-full text-zinc-900 dark:text-white font-headline font-black text-lg tracking-tight p-0"
+                                            class="w-full text-zinc-900 dark:text-white font-headline font-black text-2xl tracking-tighter p-0 focus:ring-0"
                                         >
                                     </div>
                                 </div>
 
                                 <!-- Card 2: Duración del Contrato -->
-                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 shadow-xs">
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-3.5">
                                     <div class="flex items-center justify-between gap-2">
-                                        <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-sm text-primary">schedule</span>
+                                        <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 uppercase tracking-wide">
                                             <span>Duración del Plazo</span>
-                                            <button type="button" onclick="ContractEditorModal.showLegalInfo('plazo')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación y marco legal (Art. 1198 CCyCN)">
-                                                <span class="material-symbols-outlined text-[13px]">info</span>
-                                            </button>
                                         </label>
-                                        <span class="text-[10px] text-zinc-400 font-medium">Pacto libre</span>
+                                        <span class="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">Pacto libre</span>
                                     </div>
-                                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5" id="duracion-chips-container">
-                                        <button type="button" data-val="12" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">12 meses</button>
-                                        <button type="button" data-val="24" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '24' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">24 meses <span class="block text-[8px] opacity-75">Estándar</span></button>
-                                        <button type="button" data-val="36" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '36' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">36 meses</button>
-                                        <button type="button" data-val="6" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">6 meses</button>
-                                        <button type="button" data-val="3" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">3 meses</button>
+                                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2" id="duracion-chips-container">
+                                        <button type="button" data-val="12" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '12' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">12 meses</button>
+                                        <button type="button" data-val="24" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '24' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">24 meses <span class="block text-[9px] opacity-70 font-normal">Estándar</span></button>
+                                        <button type="button" data-val="36" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '36' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">36 meses</button>
+                                        <button type="button" data-val="6" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '6' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">6 meses</button>
+                                        <button type="button" data-val="3" class="duration-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDuration === '3' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">3 meses</button>
                                         <input type="hidden" id="editor-duracion" value="${defaultDuration}">
                                     </div>
                                 </div>
 
                                 <!-- Card 3: Actualización Periódica (Índice y Frecuencia) -->
-                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
-                                    <div class="space-y-2">
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-5">
+                                    <div class="space-y-3">
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-sm text-primary">trending_up</span>
+                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 uppercase tracking-wide">
                                                 <span>Índice de Actualización</span>
-                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('indice')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación de índices (IPC / ICL / CAC / Fijo)">
-                                                    <span class="material-symbols-outlined text-[13px]">info</span>
-                                                </button>
                                             </label>
-                                            <span class="text-[10px] text-zinc-400">Variación oficial</span>
+                                            <span class="text-[10px] text-zinc-400 uppercase tracking-wider">Variación</span>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="indice-chips-container">
-                                            <button type="button" data-val="IPC" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'IPC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                        <div class="grid grid-cols-3 gap-2" id="indice-chips-container">
+                                            <button type="button" data-val="IPC" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'IPC' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>IPC</span>
-                                                <span class="block text-[8px] opacity-75">Consumidor</span>
+                                                <span class="block text-[9px] opacity-70 font-normal">Consumidor</span>
                                             </button>
-                                            <button type="button" data-val="ICL" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'ICL' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="ICL" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'ICL' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>ICL</span>
-                                                <span class="block text-[8px] opacity-75">BCRA</span>
+                                                <span class="block text-[9px] opacity-70 font-normal">BCRA</span>
                                             </button>
-                                            <button type="button" data-val="CAC" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'CAC' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
-                                                <span>CAC</span>
-                                                <span class="block text-[8px] opacity-75">Construcción</span>
-                                            </button>
-                                            <button type="button" data-val="FIJO" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'FIJO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="FIJO" class="index-chip py-2 px-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultIndex === 'FIJO' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>Fijo</span>
-                                                <span class="block text-[8px] opacity-75">Sin indexar</span>
+                                                <span class="block text-[9px] opacity-70 font-normal">Sin indexar</span>
                                             </button>
                                             <input type="hidden" id="editor-indice" value="${defaultIndex}">
                                         </div>
                                     </div>
 
-                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-sm text-primary">update</span>
+                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 uppercase tracking-wide">
                                                 <span>Frecuencia de Ajuste</span>
-                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('frecuencia')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación de frecuencia">
-                                                    <span class="material-symbols-outlined text-[13px]">info</span>
-                                                </button>
                                             </label>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="frecuencia-chips-container">
-                                            <button type="button" data-val="3" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '3' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Trimestral (3m)</button>
-                                            <button type="button" data-val="4" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '4' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Cuatrimestral (4m)</button>
-                                            <button type="button" data-val="6" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '6' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Semestral (6m)</button>
-                                            <button type="button" data-val="12" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '12' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Anual (12m)</button>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="frecuencia-chips-container">
+                                            <button type="button" data-val="3" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '3' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">Trim. (3m)</button>
+                                            <button type="button" data-val="4" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '4' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">Cuatr. (4m)</button>
+                                            <button type="button" data-val="6" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '6' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">Sem. (6m)</button>
+                                            <button type="button" data-val="12" class="frec-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultFrequency === '12' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">Anual (12m)</button>
                                             <input type="hidden" id="editor-frecuencia" value="${defaultFrequency}">
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Card 4: Cobro, Cuenta, Depósito y Expensas -->
-                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-5">
                                     <div class="flex items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
-                                                <span class="material-symbols-outlined text-base">account_balance</span>
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-8 h-8 rounded-lg bg-primary/5 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400">account_balance</span>
                                             </div>
                                             <div class="min-w-0">
-                                                <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">Cuenta de Cobro & Vencimiento</h4>
-                                                <p class="text-[10px] text-zinc-400 truncate">Datos bancarios y plazo mensual</p>
+                                                <h4 class="font-headline font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate tracking-tight">Cobro & Condiciones</h4>
+                                                <p class="text-[11px] text-zinc-500 truncate">Vencimientos y garantías</p>
                                             </div>
                                         </div>
-                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('cuenta_vencimiento')" class="w-6 h-6 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver explicación de pagos y mora">
-                                            <span class="material-symbols-outlined text-sm">info</span>
-                                        </button>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <!-- Alias CBU / CVU -->
-                                        <div class="space-y-1.5">
+                                        <div class="space-y-2">
                                             <div class="flex items-center justify-between">
-                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1">
-                                                    <span class="material-symbols-outlined text-sm text-primary">qr_code_2</span>
-                                                    <span>Alias CBU / CVU</span>
+                                                <label class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                                                    Alias CBU / CVU
                                                 </label>
-                                                <span class="text-[10px] text-zinc-400">Transferencias</span>
                                             </div>
                                             <input 
                                                 type="text" 
                                                 id="editor-alias-cbu" 
                                                 value="${defaultAlias}" 
                                                 autocapitalize="characters"
-                                                placeholder="HABITAT.ALQUILER.MP"
-                                                class="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-10 px-3 font-mono font-bold text-xs text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                placeholder="HABITAT.ALQUILER"
+                                                class="w-full bg-transparent border-b border-zinc-300 dark:border-zinc-700 hover:border-primary/50 focus:border-primary dark:focus:border-red-400 h-9 font-mono font-semibold text-sm text-zinc-900 dark:text-white focus:ring-0 outline-none transition-all placeholder-zinc-300 dark:placeholder-zinc-600 px-0"
                                             >
                                         </div>
 
                                         <!-- Día Límite de Pago -->
-                                        <div class="space-y-1.5">
+                                        <div class="space-y-2">
                                             <div class="flex items-center justify-between">
-                                                <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1">
-                                                    <span class="material-symbols-outlined text-sm text-primary">event_available</span>
-                                                    <span>Día de Vencimiento</span>
+                                                <label class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                                                    Día de Pago
                                                 </label>
-                                                <span class="text-[10px] text-zinc-400">Mensual</span>
                                             </div>
-                                            <div class="grid grid-cols-3 gap-1.5" id="dia-venc-chips-container">
-                                                <button type="button" data-val="5" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '5' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 5</button>
-                                                <button type="button" data-val="10" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '10' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 10 <span class="block text-[8px] opacity-75">Estándar</span></button>
-                                                <button type="button" data-val="15" class="dia-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '15' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">Día 15</button>
+                                            <div class="grid grid-cols-3 gap-2" id="dia-venc-chips-container">
+                                                <button type="button" data-val="5" class="dia-chip py-1.5 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '5' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">5</button>
+                                                <button type="button" data-val="10" class="dia-chip py-1.5 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '10' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">10</button>
+                                                <button type="button" data-val="15" class="dia-chip py-1.5 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDueDay === '15' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">15</button>
                                                 <input type="hidden" id="editor-dia-venc" value="${defaultDueDay}">
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Depósito en Garantía -->
-                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-sm text-primary">lock</span>
-                                                <span>Depósito en Garantía</span>
-                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('deposito')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver marco legal de depósitos">
-                                                    <span class="material-symbols-outlined text-[13px]">info</span>
-                                                </button>
+                                            <label class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                                                Depósito en Garantía
                                             </label>
-                                            <span class="text-[10px] text-zinc-400">Resguardo locativo</span>
                                         </div>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="deposito-chips-container">
-                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="deposito-chips-container">
+                                            <button type="button" data-val="1_MES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>1 Mes (ARS)</span>
-                                                <span class="block text-[8px] opacity-75">Recomendado</span>
                                             </button>
-                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES_USD' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="1_MES_USD" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultDeposito === '1_MES_USD' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>1 Mes (USD)</span>
-                                                <span class="block text-[8px] opacity-75">Moneda ext.</span>
                                             </button>
-                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === '2_MESES' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="2_MESES" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultDeposito === '2_MESES' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>2 Meses</span>
-                                                <span class="block text-[8px] opacity-75">Doble garantía</span>
                                             </button>
-                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultDeposito === 'SIN_DEPOSITO' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
+                                            <button type="button" data-val="SIN_DEPOSITO" class="deposito-chip py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultDeposito === 'SIN_DEPOSITO' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
                                                 <span>Sin Depósito</span>
-                                                <span class="block text-[8px] opacity-75">Pasaporte Hábitat</span>
                                             </button>
                                             <input type="hidden" id="editor-deposito" value="${defaultDeposito}">
                                         </div>
                                     </div>
 
                                     <!-- Régimen de Expensas -->
-                                    <div class="space-y-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
+                                    <div class="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-sm text-primary">receipt_long</span>
-                                                <span>Régimen de Expensas e Impuestos</span>
-                                                <button type="button" onclick="ContractEditorModal.showLegalInfo('expensas')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver marco legal de expensas">
-                                                    <span class="material-symbols-outlined text-[13px]">info</span>
-                                                </button>
+                                            <label class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                                                Régimen de Expensas
                                             </label>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5" id="expensas-chips-container">
-                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'ORDINARIAS_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
-                                                <span>Ordinarias x Inquilino</span>
-                                                <span class="block text-[8px] opacity-75">Extraord. x Locador</span>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="expensas-chips-container">
+                                            <button type="button" data-val="ORDINARIAS_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'ORDINARIAS_INQ' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
+                                                <span>Ordinarias Inq.</span>
                                             </button>
-                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'TOTALES_INQ' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
-                                                <span>Totales x Inquilino</span>
-                                                <span class="block text-[8px] opacity-75">Ordinarias + Extraord.</span>
+                                            <button type="button" data-val="TOTALES_INQ" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'TOTALES_INQ' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
+                                                <span>Totales Inq.</span>
                                             </button>
-                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'INCLUIDAS' ? 'bg-primary text-white border-primary shadow-xs' : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50'}">
-                                                <span>Incluidas en Canon</span>
-                                                <span class="block text-[8px] opacity-75">A cargo del Locador</span>
+                                            <button type="button" data-val="INCLUIDAS" class="expensas-chip py-2 px-2 rounded-xl border text-[11px] font-bold transition-all text-center cursor-pointer ${defaultExpensas === 'INCLUIDAS' ? 'bg-[#811b1e] text-white border-[#811b1e] shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'}">
+                                                <span>Incluidas</span>
                                             </button>
                                             <input type="hidden" id="editor-expensas" value="${defaultExpensas}">
                                         </div>
@@ -670,151 +659,228 @@
                                     <input type="hidden" id="editor-mora" value="${defaultMora}">
                                 </div>
 
-                                <!-- Card 5: Cláusulas y Permisos Especiales -->
-                                <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 shadow-xs">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="material-symbols-outlined text-xl text-primary dark:text-red-400 shrink-0">policy</span>
+                                <!-- Tipología de Inmueble -->
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-4">
+                                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-8 h-8 rounded-lg bg-primary/5 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400">domain</span>
+                                            </div>
                                             <div class="min-w-0">
-                                                <div class="flex items-center gap-1.5">
-                                                    <h4 class="font-headline font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">Cláusulas y Permisos Especiales</h4>
-                                                    <button type="button" onclick="ContractEditorModal.showLegalInfo('clausulas_personalizadas')" class="w-5 h-5 rounded-full bg-zinc-100 hover:bg-primary/10 dark:bg-zinc-800 dark:hover:bg-red-950/40 text-zinc-400 hover:text-primary dark:hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Ver marco legal de cláusulas especiales">
-                                                        <span class="material-symbols-outlined text-[13px]">info</span>
-                                                    </button>
-                                                </div>
-                                                <p class="text-[10px] text-zinc-400 truncate">Personalizá las condiciones legales</p>
+                                                <h4 class="font-headline font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate tracking-tight">Tipología de Inmueble</h4>
                                             </div>
                                         </div>
-                                        <span class="text-[10px] text-zinc-400 font-medium shrink-0">Ley 25.506 & CCyCN</span>
+                                    </div>
+                                    <select id="editor-property-type" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-primary outline-none">
+                                        <option value="departamento">Departamento / PH</option>
+                                        <option value="casa">Casa</option>
+                                        <option value="local">Local Comercial</option>
+                                        <option value="galpon">Galpón / Depósito</option>
+                                    </select>
+                                    <div id="dynamic-fields-departamento" class="dynamic-property-fields space-y-3">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-reglamento" checked> Entrega de Reglamento de Copropiedad</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-expensas-ordinarias" checked> Asunción de expensas ordinarias</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-convivencia" checked> Cláusulas de convivencia (ruidos)</label>
+                                    </div>
+                                    <div id="dynamic-fields-casa" class="dynamic-property-fields hidden space-y-3">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-mantenimiento-verde" checked> Mantenimiento de espacios verdes/piscina</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-tasas-municipales" checked> Pago de tasas municipales directas</label>
+                                    </div>
+                                    <div id="dynamic-fields-local" class="dynamic-property-fields hidden space-y-3">
+                                        <input type="text" id="input-rubro" placeholder="Rubro Exclusivo Autorizado" class="w-full bg-transparent border-b border-zinc-300 px-1 py-1 text-sm">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-habilitacion" checked> Inquilino tramita habilitación municipal</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-marquesina"> Permiso de cartelería/marquesina</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-seguro-rc" checked> Seguro Responsabilidad Civil Comprensiva</label>
+                                    </div>
+                                    <div id="dynamic-fields-galpon" class="dynamic-property-fields hidden space-y-3">
+                                        <input type="text" id="input-carga-electrica" placeholder="Carga eléctrica (ej. Trifásica)" class="w-full bg-transparent border-b border-zinc-300 px-1 py-1 text-sm">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-seguro-ambiental" checked> Seguro de impacto ambiental</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="chk-restriccion-carga" checked> Restricciones de carga/descarga</label>
+                                    </div>
+                                </div>
+
+                                <!-- Card 5: Cláusulas y Permisos Especiales -->
+                                <div class="p-4 sm:p-5 rounded-[1.25rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm space-y-4">
+                                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-8 h-8 rounded-lg bg-primary/5 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400">policy</span>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <h4 class="font-headline font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate tracking-tight">Condiciones Legales</h4>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="space-y-2 text-xs">
+                                    <div class="flex flex-col">
                                         <!-- Mascotas -->
-                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">pets</span>
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="font-bold text-zinc-900 dark:text-white text-xs block">Permitir Mascotas</span>
-                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('mascotas')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer shrink-0" title="Ver explicación legal">
-                                                            <span class="material-symbols-outlined text-[13px]">info</span>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Tenencia responsable de animales domésticos</span>
-                                                </div>
+                                        <div class="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Permitir Mascotas</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Tenencia responsable de animales</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-mascotas" ${defaultMascotas ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
 
                                         <!-- Destino Vivienda -->
-                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">home</span>
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="font-bold text-zinc-900 dark:text-white text-xs block">Destino Exclusivo Vivienda</span>
-                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('destino_vivienda')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer shrink-0" title="Ver explicación legal">
-                                                            <span class="material-symbols-outlined text-[13px]">info</span>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Prohíbe uso comercial o profesional</span>
-                                                </div>
+                                        <div class="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Exclusivo Vivienda</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Prohíbe uso comercial</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-vivienda" ${defaultVivienda ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
 
                                         <!-- Seguro Incendio -->
-                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">shield</span>
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="font-bold text-zinc-900 dark:text-white text-xs block">Seguro de Incendio</span>
-                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('seguro_incendio')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer shrink-0" title="Ver explicación legal">
-                                                            <span class="material-symbols-outlined text-[13px]">info</span>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Póliza de seguro a favor del locador</span>
-                                                </div>
+                                        <div class="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Seguro de Incendio</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">A favor del locador</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-seguro" ${defaultSeguro ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
 
                                         <!-- Prohibición Subalquiler -->
-                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">block</span>
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="font-bold text-zinc-900 dark:text-white text-xs block">Prohibición de Sublocación</span>
-                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('subalquiler')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer shrink-0" title="Ver explicación legal">
-                                                            <span class="material-symbols-outlined text-[13px]">info</span>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Prohíbe ceder o subarrendar a terceros</span>
-                                                </div>
+                                        <div class="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Prohibir Sublocación</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">No ceder a terceros</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-subalquiler" ${defaultSubalquiler ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
 
                                         <!-- Rescisión Anticipada -->
-                                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 hover:border-primary/50 transition-all gap-2">
-                                            <div class="flex items-center gap-2 min-w-0 pr-1">
-                                                <span class="material-symbols-outlined text-lg text-primary dark:text-red-400 shrink-0">contract_delete</span>
-                                                <div class="min-w-0">
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="font-bold text-zinc-900 dark:text-white text-xs block">Rescisión Anticipada (Art. 1221)</span>
-                                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('rescision')" class="text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer shrink-0" title="Ver explicación legal">
-                                                            <span class="material-symbols-outlined text-[13px]">info</span>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block truncate">Notificación previa con 1 mes de antelación</span>
-                                                </div>
+                                        <div class="flex items-center justify-between py-3">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Rescisión Anticipada</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Aviso con 1 mes</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input type="checkbox" id="toggle-rescision" ${defaultRescision ? 'checked' : ''} class="sr-only peer">
-                                                <div class="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
 
-                                        <!-- Contenedor dinámico de cláusulas adicionales personalizadas -->
-                                        <div id="custom-clauses-list-container" class="space-y-2 pt-1">
-                                            <!-- Se inyectan dinámicamente -->
-                                        </div>
-
-                                        <!-- Formulario colapsable para agregar cláusula personalizada -->
-                                        <div id="add-custom-clause-box" class="hidden p-3 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5 mt-2">
-                                            <div class="flex items-center justify-between">
-                                                <span class="font-headline font-bold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-sm">add_circle</span>
-                                                    <span>Nueva Cláusula Personalizada</span>
-                                                </span>
-                                                <button type="button" id="btn-cancel-custom-clause" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs cursor-pointer">Cancelar</button>
+                                        <!-- Proceso Monitorio -->
+                                        <div class="flex items-center justify-between py-3 border-t border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Estructura Monitoria</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Cobro ejecutivo rápido</span>
                                             </div>
-                                            <input type="text" id="new-clause-title" placeholder="Título (ej: PINTURA Y RESTITUCIÓN)" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-xs font-bold uppercase focus:ring-1 focus:ring-primary outline-none">
-                                            <textarea id="new-clause-text" rows="2" placeholder="Redacción legal de la cláusula acordada..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-primary outline-none"></textarea>
-                                            <button type="button" id="btn-save-custom-clause" class="w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                                                <span class="material-symbols-outlined text-sm">check</span>
-                                                <span>Insertar Cláusula al Contrato</span>
-                                            </button>
+                                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input type="checkbox" id="toggle-monitorio" checked class="sr-only peer">
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
+                                            </label>
                                         </div>
 
-                                        <button type="button" id="btn-show-add-clause" class="w-full py-2 px-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 hover:border-primary font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2 bg-white/50 dark:bg-zinc-900/50">
-                                            <span class="material-symbols-outlined text-base">add</span>
-                                            <span>+ Agregar Cláusula Personalizada</span>
+                                        <!-- Convenio de Desalojo -->
+                                        <div class="flex items-center justify-between py-3 border-t border-zinc-100 dark:border-zinc-800/60">
+                                            <div class="flex flex-col min-w-0 pr-4">
+                                                <span class="font-bold text-zinc-900 dark:text-white text-[13px]">Convenio de Desalojo</span>
+                                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Acuerdo de restitución express</span>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input type="checkbox" id="toggle-desalojo" checked class="sr-only peer">
+                                                <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contenedor dinámico de cláusulas adicionales personalizadas -->
+                                    <div id="custom-clauses-list-container" class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                        <!-- Se inyectan dinámicamente -->
+                                    </div>
+
+                                    <!-- Formulario colapsable para agregar cláusula personalizada -->
+                                    <div id="add-custom-clause-box" class="hidden p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 space-y-3 mt-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-xs text-zinc-900 dark:text-white uppercase tracking-wider">Nueva Cláusula</span>
+                                            <button type="button" id="btn-cancel-custom-clause" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs cursor-pointer font-medium">Cancelar</button>
+                                        </div>
+                                        <input type="text" id="new-clause-title" placeholder="Título (ej: PINTURA)" class="w-full bg-transparent border-b border-zinc-300 dark:border-zinc-700 hover:border-primary/50 focus:border-primary dark:focus:border-red-400 px-1 py-1.5 text-xs font-bold uppercase outline-none transition-all">
+                                        <textarea id="new-clause-text" rows="2" placeholder="Redacción legal de la cláusula..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-2.5 text-xs focus:border-[#811b1e] outline-none transition-all resize-none mt-2"></textarea>
+                                        <button type="button" id="btn-save-custom-clause" class="w-full py-2 px-3 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-900 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2">
+                                            <span>Insertar Cláusula</span>
                                         </button>
+                                    </div>
+
+                                    <button type="button" id="btn-show-add-clause" class="w-full py-2.5 px-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-400 font-medium text-[13px] transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2 bg-transparent">
+                                        <span>+ Agregar Cláusula Especial</span>
+                                    </button>
+                                </div>
+
+                                <!-- Card 6: Jurisdicción y Codeudores (Garantías) -->
+                                <div class="bg-white dark:bg-[#0c0d14] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <span class="material-symbols-outlined text-primary text-xl">gavel</span>
+                                        <h4 class="font-headline font-black text-sm text-zinc-900 dark:text-white uppercase tracking-wider">Jurisdicción y Garantías</h4>
+                                    </div>
+                                    
+                                    <!-- Jurisdicción -->
+                                    <div class="mb-4 space-y-2">
+                                        <label class="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Jurisdicción y Competencia (Tribunales de Paz de)</label>
+                                        <div class="relative">
+                                            <input type="text" id="editor-jurisdiccion" value="Luján de Cuyo, Mendoza" class="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                                        </div>
+                                    </div>
+
+                                    <hr class="border-zinc-200 dark:border-zinc-800 my-4">
+
+                                    <!-- Codeudores -->
+                                    <div class="space-y-4" id="codeudores-container">
+                                        <!-- Codeudor 1 -->
+                                        <div class="space-y-3 bg-zinc-50/50 dark:bg-zinc-900/20 p-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Codeudor / Garante 1</span>
+                                            </div>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div class="space-y-1">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">DNI (Autocompletable)</label>
+                                                    <input type="text" id="editor-codeudor1-dni" placeholder="Ej: 34068467" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Nombre Completo</label>
+                                                    <input type="text" id="editor-codeudor1-nombre" placeholder="Nombre del garante..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                                <div class="space-y-1 sm:col-span-2">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Domicilio Legal / Real</label>
+                                                    <input type="text" id="editor-codeudor1-domicilio" placeholder="Domicilio del garante..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Codeudor 2 -->
+                                        <div class="space-y-3 bg-zinc-50/50 dark:bg-zinc-900/20 p-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Codeudor / Garante 2 (Opcional)</span>
+                                            </div>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div class="space-y-1">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">DNI (Autocompletable)</label>
+                                                    <input type="text" id="editor-codeudor2-dni" placeholder="Ej: 16698141" class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Nombre Completo</label>
+                                                    <input type="text" id="editor-codeudor2-nombre" placeholder="Nombre del garante..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                                <div class="space-y-1 sm:col-span-2">
+                                                    <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Domicilio Legal / Real</label>
+                                                    <input type="text" id="editor-codeudor2-domicilio" placeholder="Domicilio del garante..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-primary transition-all">
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -827,36 +893,11 @@
                             </div>
 
                             <!-- COLUMNA DERECHA: HOJA LEGAL DIGITAL EN VIVO (Dual-Pane permanente en Desktop) -->
-                            <div id="smart-preview-col" class="md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 ${this._activeMobileSubtab === 'preview' ? 'flex' : 'hidden md:flex'}">
+                            <div id="smart-preview-col" class="w-full md:w-[54%] lg:w-[58%] xl:w-[60%] flex-1 h-full min-h-0 flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] overflow-hidden ${this._activeMobileSubtab === 'preview' ? 'flex' : 'hidden'} md:!flex">
                                 
-                                <div class="shrink-0 flex items-center justify-between text-xs pb-2.5 px-1">
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" id="btn-mobile-back-to-config" class="md:hidden p-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1 font-bold text-[11px] cursor-pointer">
-                                            <span class="material-symbols-outlined text-sm">arrow_back</span>
-                                            <span>Parámetros</span>
-                                        </button>
-                                        <span class="font-headline font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 text-xs sm:text-sm">
-                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            Documento Legal en Vivo
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-1.5 sm:gap-2">
-                                        <button type="button" id="btn-copy-preview-text" class="p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-zinc-200/70 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-primary hover:text-white transition-all cursor-pointer flex items-center gap-1" title="Copiar texto del borrador">
-                                            <span class="material-symbols-outlined text-xs">content_copy</span>
-                                            <span class="hidden sm:inline">Copiar</span>
-                                        </button>
-                                        <button type="button" onclick="ContractEditorModal.showLegalInfo('firma_digital')" class="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-zinc-500 hover:text-primary dark:hover:text-red-400 transition-colors cursor-pointer" title="Ver marco de validez probatoria">
-                                            <span class="material-symbols-outlined text-sm">gavel</span>
-                                            <span>Ley 25.506</span>
-                                        </button>
-                                        <span class="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                            Reactivo
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <!-- Hoja Estilo Papel Legal (Blanco / Dark contrastado, seleccionable y con scroll propio perfecto) -->
-                                <div class="flex-1 min-h-0 overflow-y-auto bg-white dark:bg-[#12131a] border border-zinc-300/80 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-lg space-y-4 text-zinc-800 dark:text-zinc-200 text-[11px] sm:text-xs leading-relaxed font-mono select-text" id="contract-live-preview-box">
+                                <!-- Hoja Estilo Papel Legal (Blanco / Dark contrastado, seleccionable y con scroll propio fluido) -->
+                                <div class="w-full flex-1 min-h-0 h-full overflow-y-auto overscroll-contain bg-white dark:bg-[#12131a] border border-zinc-300 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm space-y-4 text-zinc-900 dark:text-zinc-100 text-xs sm:text-[13px] leading-relaxed font-sans select-text" id="contract-live-preview-box">
                                     <!-- Se renderiza reactivamente con _updateLivePreview -->
                                 </div>
 
@@ -865,7 +906,7 @@
                         </div>
 
                         <!-- TAB 2: SUBIR CONTRATO PROPIO (PDF / DOCX) -->
-                        <div id="content-upload-contract" class="${this._activeTab === 'upload' ? 'flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 max-w-3xl mx-auto' : 'hidden'}">
+                        <div id="content-upload-contract" class="${this._activeTab === 'upload' ? 'flex-1 h-full min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-8 space-y-4 max-w-3xl mx-auto w-full' : 'hidden'}">
                             <div class="bg-white dark:bg-zinc-900 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 space-y-4 sm:space-y-5 shadow-xs">
                                 <div class="flex items-start gap-3 sm:gap-4">
                                     <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0">
@@ -912,7 +953,7 @@
                     </div>
 
                     <!-- Bottom Action Footer Bar -->
-                    <div class="px-4 sm:px-6 py-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-3">
+                    <div class="px-4 sm:px-6 py-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-3">
                         
                         <div class="flex items-center justify-center sm:justify-start gap-1.5 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 order-2 sm:order-1">
                             <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base sm:text-lg shrink-0">verified_user</span>
@@ -958,10 +999,10 @@
 
             const infoModal = document.createElement('div');
             infoModal.id = 'contract-legal-info-modal';
-            infoModal.className = 'fixed inset-0 z-[110000] flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-fadeIn font-body';
+            infoModal.className = 'fixed inset-0 z-[110000] flex items-center justify-center p-3 sm:p-6 bg-black/75 font-body';
 
             infoModal.innerHTML = `
-                <div class="relative w-full max-w-lg sm:max-w-xl max-h-[85vh] overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 text-zinc-900 dark:text-zinc-100 animate-scaleUp">
+                <div class="relative w-full max-w-lg sm:max-w-xl max-h-[85vh] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 space-y-4 sm:space-y-5 text-zinc-900 dark:text-zinc-100">
                     
                     <!-- Header -->
                     <div class="flex items-start justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
@@ -1054,18 +1095,18 @@
 
             tabSmart?.addEventListener('click', () => {
                 self._activeTab = 'smart';
-                tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
+                tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-800 shadow-xs';
                 tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
-                contentSmart.className = 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden';
+                contentSmart.className = 'flex-1 min-h-0 h-full w-full flex flex-col md:flex-row overflow-hidden';
                 contentUpload.className = 'hidden';
                 self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
             });
 
             tabUpload?.addEventListener('click', () => {
                 self._activeTab = 'upload';
-                tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-900 shadow-xs';
+                tabUpload.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-primary/30 text-primary dark:text-red-400 bg-white dark:bg-zinc-800 shadow-xs';
                 tabSmart.className = 'tab-btn px-3.5 py-1.5 rounded-xl font-headline font-bold text-xs sm:text-sm flex items-center gap-1.5 border transition-all shrink-0 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300';
-                contentUpload.className = 'flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 max-w-3xl mx-auto';
+                contentUpload.className = 'flex-1 h-full min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-8 space-y-4 max-w-3xl mx-auto w-full';
                 contentSmart.className = 'hidden';
             });
 
@@ -1080,8 +1121,14 @@
             const setMobileSubtab = (tab) => {
                 self._activeMobileSubtab = tab;
                 if (tab === 'config') {
-                    if (colConfig) colConfig.className = 'md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 block';
-                    if (colPreview) colPreview.className = 'md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 hidden md:flex';
+                    if (colConfig) {
+                        colConfig.classList.remove('hidden');
+                        colConfig.classList.add('block');
+                    }
+                    if (colPreview) {
+                        colPreview.classList.remove('flex');
+                        colPreview.classList.add('hidden');
+                    }
 
                     if (subtabConfig) {
                         subtabConfig.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
@@ -1090,8 +1137,14 @@
                         subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all text-zinc-600 dark:text-zinc-400 cursor-pointer';
                     }
                 } else {
-                    if (colConfig) colConfig.className = 'md:col-span-6 lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 space-y-3.5 hidden md:block';
-                    if (colPreview) colPreview.className = 'md:col-span-6 lg:col-span-7 h-full flex flex-col p-3 sm:p-5 bg-zinc-100/70 dark:bg-[#08090d] border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800/80 min-h-0 flex';
+                    if (colConfig) {
+                        colConfig.classList.remove('block');
+                        colConfig.classList.add('hidden');
+                    }
+                    if (colPreview) {
+                        colPreview.classList.remove('hidden');
+                        colPreview.classList.add('flex');
+                    }
 
                     if (subtabPreview) {
                         subtabPreview.className = 'flex-1 sm:flex-initial py-1.5 px-3 rounded-lg font-headline font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-xs cursor-pointer';
@@ -1127,13 +1180,47 @@
                 }).catch(() => {});
             });
 
-            // Reactividad de Inputs para Previsualización en Vivo
-            const triggerPreview = () => {
+            // Reactividad de Inputs para Previsualización en Vivo (optimizada con RAF)
+            let previewRafId = null;
+            const triggerPreview = (eOrId) => {
                 const moneda = document.getElementById('editor-moneda')?.value || 'ARS';
                 const sym = document.getElementById('editor-moneda-symbol');
                 if (sym) sym.textContent = moneda === 'USD' ? 'USD' : '$';
-                self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
+
+                let sourceId = null;
+                if (typeof eOrId === 'string') {
+                    sourceId = eOrId;
+                } else if (eOrId && eOrId.target && eOrId.target.id) {
+                    sourceId = eOrId.target.id;
+                }
+
+                if (sourceId) {
+                    self._lastModifiedInputId = sourceId;
+                }
+
+                if (previewRafId) cancelAnimationFrame(previewRafId);
+                previewRafId = requestAnimationFrame(() => {
+                    self._updateLivePreview(tenantName, tenantDni, tenantCuil, tenantEmail, ownerName, ownerDni, ownerCuil, ownerEmail, propAddress);
+                });
             };
+
+            // Tipología de Inmueble Logic
+            const propTypeSelect = document.getElementById('editor-property-type');
+            if (propTypeSelect) {
+                propTypeSelect.addEventListener('change', (e) => {
+                    const val = e.target.value;
+                    document.querySelectorAll('.dynamic-property-fields').forEach(el => el.classList.add('hidden'));
+                    const target = document.getElementById('dynamic-fields-' + val);
+                    if (target) target.classList.remove('hidden');
+                    triggerPreview('editor-property-type');
+                });
+            }
+
+            // Bind checkboxes & dynamic inputs inside Tipologia
+            document.querySelectorAll('.dynamic-property-fields input').forEach(el => {
+                el.addEventListener('change', triggerPreview);
+                el.addEventListener('input', triggerPreview);
+            });
 
             // Currency Chips
             const curContainer = document.getElementById('currency-switcher-container');
@@ -1144,10 +1231,10 @@
                     const cur = chip.getAttribute('data-currency');
                     if (curInput) curInput.value = cur;
                     curChips.forEach(c => {
-                        c.className = 'currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900';
+                        c.className = 'currency-chip px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white';
                     });
-                    chip.className = 'currency-chip px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer bg-primary text-white shadow-xs';
-                    triggerPreview();
+                    chip.className = 'currency-chip px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer bg-[#811b1e] text-white shadow-sm';
+                    triggerPreview('editor-moneda');
                 });
             });
 
@@ -1163,10 +1250,10 @@
                         const val = chip.getAttribute('data-val');
                         input.value = val;
                         chips.forEach(c => {
-                            c.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700/80 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 hover:border-primary/50`;
+                            c.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer border-zinc-200 dark:border-zinc-700 bg-transparent text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500`;
                         });
-                        chip.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-primary text-white border-primary shadow-xs`;
-                        triggerPreview();
+                        chip.className = `${chipClass} py-2 px-1 rounded-xl border text-[11px] sm:text-xs font-bold transition-all text-center cursor-pointer bg-[#811b1e] text-white border-[#811b1e] shadow-sm`;
+                        triggerPreview(inputId);
                     });
                 });
             }
@@ -1179,13 +1266,38 @@
             setupChipGroup('expensas-chips-container', 'editor-expensas', 'expensas-chip');
 
             // Form inputs & Toggles reactivos
-            ['editor-monto', 'editor-alias-cbu',
-             'toggle-mascotas', 'toggle-vivienda', 'toggle-seguro', 'toggle-subalquiler', 'toggle-rescision'
+            ['editor-monto', 'editor-alias-cbu', 'editor-jurisdiccion',
+             'editor-codeudor1-dni', 'editor-codeudor1-nombre', 'editor-codeudor1-domicilio',
+             'editor-codeudor2-dni', 'editor-codeudor2-nombre', 'editor-codeudor2-domicilio',
+             'toggle-mascotas', 'toggle-vivienda', 'toggle-seguro', 'toggle-subalquiler', 'toggle-rescision',
+             'toggle-monitorio', 'toggle-desalojo'
             ].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('input', triggerPreview);
                     el.addEventListener('change', triggerPreview);
+                }
+            });
+
+            // Autocompletado inteligente para Codeudores
+            [1, 2].forEach(num => {
+                const dniInput = document.getElementById(`editor-codeudor${num}-dni`);
+                if (dniInput) {
+                    dniInput.addEventListener('blur', async (e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val.length >= 7 && window.supabaseClient) {
+                            try {
+                                const { data } = await window.supabaseClient.from('Perfil').select('*').eq('dni', val).maybeSingle();
+                                if (data) {
+                                    const nomEl = document.getElementById(`editor-codeudor${num}-nombre`);
+                                    const domEl = document.getElementById(`editor-codeudor${num}-domicilio`);
+                                    if (nomEl && !nomEl.value) nomEl.value = data.nombre_completo || '';
+                                    if (domEl && !domEl.value) domEl.value = data.domicilio_real || '';
+                                    triggerPreview(`editor-codeudor${num}-dni`); // Actualizar vista previa
+                                }
+                            } catch (err) { }
+                        }
+                    });
                 }
             });
 
@@ -1322,16 +1434,16 @@
             }
 
             container.innerHTML = this._customClauses.map((cc) => `
-                <div class="flex items-start justify-between p-2.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/30 text-xs gap-2">
-                    <div class="min-w-0 space-y-0.5">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="font-headline font-black text-amber-950 dark:text-amber-300 uppercase text-xs">${cc.title}</span>
-                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-800 dark:text-amber-300">Personalizada</span>
+                <div class="flex items-start justify-between py-3 border-b border-zinc-100 dark:border-zinc-800/60 last:border-0 text-xs gap-2">
+                    <div class="flex flex-col min-w-0 pr-2">
+                        <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                            <span class="font-bold text-[13px] text-zinc-900 dark:text-white uppercase tracking-tight">${cc.title}</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary dark:bg-red-500/10 dark:text-red-400 border border-primary/20 dark:border-red-500/20 uppercase tracking-wider">Personalizada</span>
                         </div>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-[10px] sm:text-[11px] leading-relaxed">${cc.text}</p>
+                        <p class="text-zinc-500 dark:text-zinc-400 text-[11px] leading-relaxed">${cc.text}</p>
                     </div>
-                    <button type="button" onclick="ContractEditorModal.removeCustomClause('${cc.id}')" class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer" title="Eliminar cláusula">
-                        <span class="material-symbols-outlined text-base">delete</span>
+                    <button type="button" onclick="ContractEditorModal.removeCustomClause('${cc.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0 cursor-pointer mt-0.5" title="Eliminar cláusula">
+                        <span class="material-symbols-outlined text-[17px]">delete</span>
                     </button>
                 </div>
             `).join('');
@@ -1379,7 +1491,11 @@
             const needInsurance = document.getElementById('toggle-seguro')?.checked;
             const noSublease = document.getElementById('toggle-subalquiler')?.checked;
             const allowEarlyTermination = document.getElementById('toggle-rescision')?.checked;
+            const allowMonitorio = document.getElementById('toggle-monitorio')?.checked;
+            const allowDesalojo = document.getElementById('toggle-desalojo')?.checked;
 
+            const propType = document.getElementById('editor-property-type')?.value || 'departamento';
+            
             const today = new Date().toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
             const finalAddress = propAddress || this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
 
@@ -1392,82 +1508,195 @@
             if (expensasSel === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
             if (expensasSel === 'INCLUIDAS') expensasTxt = 'Las expensas e impuestos se encuentran incluidos dentro del monto del canon locativo mensual fijado.';
 
+            const cod1Dni = document.getElementById('editor-codeudor1-dni')?.value || '';
+            const cod1Nom = document.getElementById('editor-codeudor1-nombre')?.value || '';
+            const cod1Dom = document.getElementById('editor-codeudor1-domicilio')?.value || '';
+
+            const cod2Dni = document.getElementById('editor-codeudor2-dni')?.value || '';
+            const cod2Nom = document.getElementById('editor-codeudor2-nombre')?.value || '';
+            const cod2Dom = document.getElementById('editor-codeudor2-domicilio')?.value || '';
+
+            const jurisdiccion = document.getElementById('editor-jurisdiccion')?.value || 'Luján de Cuyo, Mendoza';
+            const h = (val, ...ids) => {
+                const isHighlight = ids.includes(this._lastModifiedInputId);
+                return isHighlight 
+                    ? `<span class="text-red-600 font-bold bg-red-500/10 px-1 rounded transition-colors duration-300">${val}</span>`
+                    : `<span class="bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-semibold px-1 rounded">${val}</span>`;
+            };
+
             const clauses = [];
 
-            // 1. Objeto y Destino
-            clauses.push({
-                tag: 'OBJETO Y DESTINO',
-                body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <strong>${finalAddress}</strong>.${onlyResidential !== false ? ' Dicho inmueble tendrá como <strong>destino exclusivo el de vivienda familiar y permanente</strong>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
-            });
+            // 1. OBJETO
+            let destinoBody = `EL LOCADOR da en locación a la LOCATARIA, quien acepta, el inmueble ubicado en <strong>${finalAddress}</strong>, el cual se entrega en perfecto estado de conservación, limpieza y funcionamiento.`;
+            clauses.push({ tag: 'OBJETO', body: destinoBody });
 
-            // 2. Plazo
-            clauses.push({
-                tag: 'PLAZO DE LOCACIÓN',
-                body: `El plazo contractual se pacta libremente entre las partes en <strong>${duracion} meses corridos</strong>, comenzando su vigencia el día <strong>${today}</strong>.`
-            });
-
-            // 3. Canon Locativo y Actualización
-            clauses.push({
-                tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
-                body: `El precio del alquiler se fija en la suma inicial de <strong class="text-primary dark:text-red-400">${montoFmt}</strong> mensuales. Dicho importe se actualizará de forma periódica cada <strong>${frecuencia} meses</strong> aplicando la variación porcentual del índice oficial <strong>${indice}</strong>.`
-            });
-
-            // 4. Lugar y Forma de Pago / Mora
-            clauses.push({
-                tag: 'LUGAR Y FORMA DE PAGO',
-                body: `El pago del alquiler mensual deberá efectuarse del 1 al día <strong>${diaVenc}</strong> de cada mes calendario mediante transferencia bancaria a la cuenta bancaria / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${aliasCbu}</strong>. En caso de mora, se devengará un interés punitorio del <strong>${moraSel}% por cada día de atraso</strong> hasta su efectiva cancelación.`
-            });
-
-            // 5. Expensas, Servicios e Impuestos
-            clauses.push({
-                tag: 'EXPENSAS, SERVICIOS E IMPUESTOS',
-                body: `${expensasTxt}`
-            });
-
-            // 6. Depósito en Garantía
-            clauses.push({
-                tag: 'DEPÓSITO EN GARANTÍA',
-                body: `EL LOCATARIO entrega a EL LOCADOR la suma ${depositoTxt}, suma que será restituida al finalizar la locación previa verificación del estado de conservación del inmueble y entrega de llaves.`
-            });
-
-            // 7. Mascotas
-            if (allowPets) {
-                clauses.push({
-                    tag: 'TENENCIA DE MASCOTAS',
-                    body: `Se autoriza la tenencia de animales domésticos en la propiedad bajo exclusiva responsabilidad del LOCATARIO por los cuidados sanitarios, ruidos y eventuales deterioros que pudieran ocasionar.`
-                });
+            // 2. DESTINO
+            if (propType === 'local' || propType === 'galpon') {
+                const rubro = document.getElementById('input-rubro')?.value || 'uso comercial y/o depósito';
+                clauses.push({ tag: 'DESTINO', body: `La LOCATARIA destinará el inmueble objeto del contrato exclusivamente para la explotación comercial del rubro: ${rubro}. Cualquier cambio de destino facultará a la LOCADORA a rescindir el contrato y promover el desalojo.` });
             } else {
-                clauses.push({
-                    tag: 'PROHIBICIÓN DE MASCOTAS',
-                    body: `Queda terminantemente prohibida la tenencia o permanencia de animales de cualquier especie en el inmueble arrendado.`
-                });
+                clauses.push({ tag: 'DESTINO', body: `La LOCATARIA destinará el inmueble objeto del contrato exclusivamente para uso habitacional familiar. Cualquier cambio de destino facultará a la LOCADORA a rescindir el contrato y promover el desalojo. Queda prohibido todo destino distinto al habitacional.` });
             }
 
-            // 8. Seguro contra Incendio (solo si activo)
-            if (needInsurance) {
-                clauses.push({
-                    tag: 'SEGURO CONTRA INCENDIO',
-                    body: `EL LOCATARIO se obliga a contratar y mantener vigente durante todo el plazo contractual una póliza de seguro contra incendio y responsabilidad civil sobre la propiedad, designando al LOCADOR como beneficiario.`
-                });
-            }
+            // 3. PLAZO DE LA LOCACIÓN
+            clauses.push({ tag: 'PLAZO DE LA LOCACIÓN', body: `La presente locación se pacta por el plazo de <strong>${h(duracion, 'editor-duracion')} MESES</strong>, contado a partir del día <strong>${today}</strong>.` });
 
-            // 9. Prohibición de Sublocación (solo si activo)
-            if (noSublease) {
-                clauses.push({
-                    tag: 'PROHIBICIÓN DE CESIÓN Y SUBLOCACIÓN',
-                    body: `Queda expresamente prohibida la cesión total o parcial del presente contrato, el subarriendo total o parcial y el préstamo de uso del inmueble a terceros bajo apercibimiento de rescisión culposa (Art. 1213 CCyCN).`
-                });
-            }
+            // 4. RENOVACIÓN
+            clauses.push({ tag: 'RENOVACIÓN', body: `Para que el presente contrato pueda ser renovado, cualquiera de las partes deberá notificar fehacientemente a la otra su intención de renovar con una anticipación no menor a sesenta (60) días corridos previos a la fecha de finalización del plazo pactado.` });
 
-            // 10. Rescisión Anticipada (solo si activo)
+            // 5. RESCISIÓN DEL CONTRATO POR LA LOCATARIA
             if (allowEarlyTermination) {
-                clauses.push({
-                    tag: 'RESCISIÓN ANTICIPADA',
-                    body: `EL LOCATARIO podrá rescindir el presente contrato en cualquier momento transcurridos los primeros seis meses de vigencia, notificando fehacientemente al LOCADOR con al menos un mes de anticipación conforme a las pautas del Art. 1221 del Código Civil y Comercial de la Nación.`
-                });
+                const isHighlight = this._lastModifiedInputId === 'toggle-rescision';
+                const spanClass = isHighlight ? 'text-red-600 font-bold bg-red-500/10 px-1 rounded transition-colors duration-300' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 px-1 rounded';
+                clauses.push({ tag: 'RESCISIÓN DEL CONTRATO POR LA LOCATARIA', body: `<span class="${spanClass}">La LOCATARIA podrá, una vez transcurridos los primeros seis meses de vigencia del presente contrato, resolver el mismo en cualquier momento, abonando a la LOCADORA la penalidad correspondiente conforme al Art. 1221 del Código Civil y Comercial de la Nación, notificando fehacientemente su decisión con una antelación mínima de treinta (30) días corridos.</span>` });
             }
 
-            // 11. Cláusulas Personalizadas
+            // 6. RESOLUCIÓN POR MUERTE DE CUALQUIERA DE LAS PARTES
+            clauses.push({ tag: 'RESOLUCIÓN POR MUERTE DE CUALQUIERA DE LAS PARTES', body: `Se acuerda expresamente que, ante el fallecimiento de cualquiera de las partes, la parte sobreviviente podrá rescindir este contrato de locación, comunicando tal decisión a cualquiera de los herederos, fehacientemente.` });
+
+            // 7. CLAUSULA PENAL POR RESTITUCIÓN
+            clauses.push({ tag: 'CLAUSULA PENAL POR RESTITUCIÓN', body: `La LOCATARIA se obliga, a la finalización del contrato por cualquiera de las causas contempladas, a restituir la tenencia del inmueble alquilado. El incumplimiento hará pasible a la LOCATARIA de pagar una multa diaria al equivalente de CERO COMA CINCO POR CIENTO (0.5%) del canon mensual vigente desde el día en que es exigible la obligación de restituir.` });
+
+            // 8. ABANDONO DE LA LOCACIÓN
+            clauses.push({ tag: 'ABANDONO DE LA LOCACIÓN', body: `En el caso de que la LOCATARIA abandone el inmueble alquilado, la parte LOCADORA podrá ejercer el derecho a recuperar la tenencia del mismo. La LOCATARIA y los CODEUDORES tendrán a su cargo exclusivo los costos y costas del proceso judicial.` });
+
+            // 9. PRECIO DEL ALQUILER - AJUSTE
+            clauses.push({ tag: 'PRECIO DEL ALQUILER - AJUSTE', body: indice === 'FIJO' ? `Las partes fijan el pago del canon mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, pactándose un valor fijo e inalterable.` : `Las partes fijan el pago del canon inicial mensual en <strong>${h(montoFmt, 'editor-monto')}</strong> que se reajustará cada <strong>${h(frecuencia, 'editor-frecuencia')} meses</strong> y en forma acumulativa, conforme al índice <strong>${h(indice, 'editor-indice')}</strong>.` });
+
+            // 10. LUGAR Y FORMA DE PAGO
+            clauses.push({ tag: 'LUGAR Y FORMA DE PAGO', body: `El canon mensual de alquiler será abonado por anticipado entre el día primero (1) y el día <strong>${h(diaVenc, 'editor-dia-venc')}</strong> de cada mes, mediante transferencia bancaria a la cuenta / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${h(aliasCbu, 'editor-alias-cbu')}</strong>.` });
+
+            // 11. CONSIGNACIÓN DE LLAVES
+            clauses.push({ tag: 'CONSIGNACIÓN DE LLAVES', body: `En caso de consignación de llaves, el canon mensual regirá hasta que la LOCADORA reciba la real y efectiva tenencia del inmueble locado, a través del Oficial de Justicia actuante.` });
+
+            // 12. SERVICIOS – TASAS
+            const isHighlightExpensas = this._lastModifiedInputId === 'editor-expensas';
+            const expensasClass = isHighlightExpensas ? 'text-red-600 font-bold bg-red-500/10 px-1 rounded transition-colors duration-300' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 px-1 rounded';
+            clauses.push({ tag: 'SERVICIOS – TASAS', body: `<span class="${expensasClass}">${expensasTxt}</span>` });
+
+            // 13. CLAUSULA PENAL POR MORA EN EL PAGO
+            clauses.push({ tag: 'CLAUSULA PENAL POR MORA EN EL PAGO', body: `Al incurrir en mora en el pago de los cánones mensuales, la LOCATARIA se obliga a abonar a la LOCADORA en concepto de cláusula penal una multa del <strong>${h(moraSel, 'editor-mora')}%</strong> del canon mensual vigente, diaria.` });
+
+            // 14. ESTADO DEL INMUEBLE
+            clauses.push({ tag: 'ESTADO DEL INMUEBLE', body: `El inmueble alquilado, con sus accesorios, se entrega a la LOCATARIA en buen estado de conservación y uso. Es obligación de la LOCATARIA la conservación del inmueble arrendado en buen estado.` });
+
+            // 15. REPARACIONES
+            clauses.push({ tag: 'REPARACIONES', body: `Todo arreglo o reparación de simple mantenimiento, de mejoras útiles y de mero lujo, queda a cargo y a costa exclusiva de la LOCATARIA. Las reparaciones urgentes estructurales están a cargo exclusivo de la parte LOCADORA.` });
+
+            // 16. INSPECCIÓN INMUEBLE
+            clauses.push({ tag: 'INSPECCIÓN INMUEBLE', body: `La LOCADORA o sus representantes legales tienen derecho a vigilar, inspeccionar y constatar el estado del inmueble locado, a cuyo fin podrá visitarlo previo aviso fehaciente.` });
+
+            // 17. MEJORAS
+            clauses.push({ tag: 'MEJORAS', body: `Le queda absolutamente prohibido a la LOCATARIA hacer mejoras e innovaciones edilicias en el inmueble arrendado sin expresa autorización por escrito.` });
+
+            // 18. CESIÓN-SUBLOCACIÓN-COMODATO
+            if (noSublease) {
+                clauses.push({ tag: 'CESIÓN-SUBLOCACIÓN-COMODATO', body: `Esta locación asume el carácter de personal respecto de la LOCATARIA e intransferible. Queda prohibida la cesión de la posición contractual y la sublocación.` });
+            }
+
+            // 19. PROHIBICIÓN DE ELEMENTOS NOCIVOS
+            clauses.push({ tag: 'PROHIBICIÓN DE ELEMENTOS NOCIVOS', body: `Queda prohibido a la LOCATARIA la introducción de elementos nocivos o peligrosos que resulten perjudiciales para la unidad, vecinos o reglamentos vigentes.` });
+
+            // 20. EXCEPCIÓN DE RESPONSABILIDAD
+            clauses.push({ tag: 'EXCEPCIÓN DE RESPONSABILIDAD', body: `La LOCADORA no se responsabiliza de los accidentes, ni de los daños y perjuicios que pudieran resultar para la LOCATARIA o terceros sea por caso fortuito, fuerza mayor, robo, hurto o incendios.` });
+
+            // 21. LIBERACIÓN DE RESPONSABILIDAD
+            clauses.push({ tag: 'LIBERACIÓN DE RESPONSABILIDAD', body: `La LOCATARIA libera a la LOCADORA de toda responsabilidad por la interrupción parcial o total de los servicios de electricidad, agua y cloacas si la causa no le es imputable.` });
+
+            // 22. CONSENTIMIENTO
+            clauses.push({ tag: 'CONSENTIMIENTO', body: `La LOCATARIA manifiesta su consentimiento para que la parte LOCADORA transmita a un tercero su posición contractual si así lo dispusiera.` });
+
+            // 23. NORMAS DE CONVIVENCIA Y USO DEL INMUEBLE
+            let convivenciaStr = `La LOCATARIA se obliga a mantener una convivencia armónica con vecinos y terceros, comprometiéndose a evitar todo acto que genere molestias o ruidos excesivos.`;
+            if (!allowPets) {
+                convivenciaStr += ` Queda terminantemente prohibida la tenencia o permanencia de animales de cualquier especie.`;
+            } else {
+                convivenciaStr += ` Se autoriza la tenencia de animales domésticos en la propiedad bajo exclusiva responsabilidad del LOCATARIO por los cuidados sanitarios.`;
+            }
+            clauses.push({ tag: 'NORMAS DE CONVIVENCIA Y USO DEL INMUEBLE', body: convivenciaStr });
+
+            // 24. CASO FORTUITO O FUERZA MAYOR
+            clauses.push({ tag: 'CASO FORTUITO O FUERZA MAYOR', body: `Si durante el contrato el inmueble alquilado fuere destruido parcial o totalmente por caso fortuito, el contrato queda rescindido sin responsabilidad alguna.` });
+
+            // 25. OBLIGACIÓN DE VIGILANCIA
+            clauses.push({ tag: 'OBLIGACIÓN DE VIGILANCIA', body: `La LOCATARIA queda obligada a comunicar, en forma fehaciente e inmediata, a la LOCADORA de toda situación peligrosa para el inmueble alquilado.` });
+
+            // 26. DEPÓSITO EN MONEDA
+            clauses.push({ tag: 'DEPÓSITO EN MONEDA', body: `La LOCATARIA entrega a la LOCADORA en concepto de depósito la suma ${depositoTxt}, la cual le será reintegrada al finalizar la locación previa verificación del estado del inmueble.` });
+
+            // 27. CODEUDORES
+            let codeudoresTxt = '';
+            if (cod1Dni && cod1Nom) {
+                codeudoresTxt += `1) SR/A. <strong>${h(cod1Nom, 'editor-codeudor1-nombre')}</strong>, DNI <strong>${h(cod1Dni, 'editor-codeudor1-dni')}</strong>, con domicilio en <strong>${h(cod1Dom, 'editor-codeudor1-domicilio')}</strong>. `;
+            }
+            if (cod2Dni && cod2Nom) {
+                codeudoresTxt += `2) SR/A. <strong>${h(cod2Nom, 'editor-codeudor2-nombre')}</strong>, DNI <strong>${h(cod2Dni, 'editor-codeudor2-dni')}</strong>, con domicilio en <strong>${h(cod2Dom, 'editor-codeudor2-domicilio')}</strong>. `;
+            }
+            
+            if (codeudoresTxt) {
+                clauses.push({ tag: 'CODEUDORES', body: `Las siguientes personas: ${codeudoresTxt}firman de conformidad este contrato y se constituyen en CODEUDORES en forma solidaria con la LOCATARIA por el cumplimiento de todas y cada una de las obligaciones.` });
+                // 28. OBLIGACIONES INDIVISIBLES Y SOLIDARIAS
+                clauses.push({ tag: 'OBLIGACIONES INDIVISIBLES Y SOLIDARIAS', body: `Las obligaciones que asumen la LOCATARIA y los CODEUDORES por el presente contrato, son indivisibles y solidarias.` });
+            }
+
+            // 29. MORA DE PLENO DERECHO
+            clauses.push({ tag: 'MORA DE PLENO DERECHO', body: `La falta de cumplimiento por parte de la LOCATARIA a cualquiera de las cláusulas, en especial la falta de pago de un (1) mes de alquiler, la hará incurrir en mora de pleno derecho.` });
+
+            // 30. REGISTROS DE MOROSIDAD
+            clauses.push({ tag: 'REGISTROS DE MOROSIDAD', body: `La LOCATARIA acepta expresamente que, ante la falta de pago, la LOCADORA podrá presentarlos como morosos ante registros de riesgo crediticio (Veraz, Nosis, Codeme, etc).` });
+
+            // 31. HONORARIOS PROFESIONALES
+            clauses.push({ tag: 'HONORARIOS PROFESIONALES', body: `La LOCATARIA tendrá a su cargo exclusivo el pago de los honorarios profesionales y demás gastos extrajudiciales y/o judiciales originados como consecuencia del incumplimiento contractual.` });
+
+            // 32. PROCESO DE ESTRUCTURA MONITORIA Y EJECUCIÓN
+            if (allowMonitorio) {
+                const isHighlightMon = this._lastModifiedInputId === 'toggle-monitorio';
+                const monClass = isHighlightMon ? 'text-red-600 font-bold bg-red-500/10 px-1 rounded transition-colors duration-300' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 px-1 rounded';
+                clauses.push({ tag: 'PROCESO DE ESTRUCTURA MONITORIA Y EJECUCIÓN', body: `<span class="${monClass}">Las partes convienen que el cobro de toda suma adeudada como resultado de esta locación, se tramite según las normas para el proceso de estructura monitoria y ejecución procesal aplicable.</span>` });
+            }
+
+            // 33. CONVENIO DE DESALOJO
+            if (allowDesalojo) {
+                const isHighlightDes = this._lastModifiedInputId === 'toggle-desalojo';
+                const desClass = isHighlightDes ? 'text-red-600 font-bold bg-red-500/10 px-1 rounded transition-colors duration-300' : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 px-1 rounded';
+                clauses.push({ tag: 'CONVENIO DE DESALOJO', body: `<span class="${desClass}">Las partes suscriben de mutuo acuerdo el presente convenio de desocupación. La falta de restitución habilita al LOCADOR a solicitar el desalojo inmediato bajo las normativas procesales vigentes.</span>` });
+            }
+
+            // 34. REDACCIÓN DEL CONTRATO DE LOCACIÓN
+            clauses.push({ tag: 'REDACCIÓN DEL CONTRATO DE LOCACIÓN', body: `El presente contrato y cada una de sus cláusulas han sido instrumentadas conforme a expresas instrucciones impartidas por las partes, quienes declaran conocerlas y aceptarlas manifestando total conformidad.` });
+
+            // 35. FUERO FEDERAL – COMPETENCIA
+            clauses.push({ tag: 'FUERO FEDERAL – COMPETENCIA', body: `Las partes renuncian expresamente al fuero federal, sometiéndose, exclusivamente, a la competencia territorial de los Tribunales correspondientes a la jurisdicción de <strong>${h(jurisdiccion, 'editor-jurisdiccion')}</strong>.` });
+
+            // 36. SELLADO
+            clauses.push({ tag: 'SELLADO', body: `Los gastos de sellado que demande el presente contrato serán solventados por LA LOCATARIA en la proporción que corresponda conforme a la normativa fiscal vigente.` });
+
+            // 37. DOMICILIOS ESPECIALES Y ELECTRÓNICOS
+            clauses.push({ tag: 'DOMICILIOS ESPECIALES Y ELECTRÓNICOS', body: `Para todos los efectos emergentes directa o indirectamente de este contrato, las partes fijan los domicilios legales, reales y electrónicos declarados en el encabezado del presente instrumento, donde se tendrán por válidas todas las notificaciones.` });
+
+            // 38. SEGURO CONTRA INCENDIO (Tipología)
+            if (needInsurance) {
+                clauses.push({ tag: 'SEGURO CONTRA INCENDIO', body: `EL LOCATARIO se obliga a contratar y mantener vigente durante todo el plazo contractual una póliza de seguro contra incendio y responsabilidad civil sobre la propiedad, designando al LOCADOR como beneficiario.` });
+            }
+
+            // 39. Cláusulas Específicas por Tipología
+            if (propType === 'departamento') {
+                if (document.getElementById('chk-reglamento')?.checked) clauses.push({ tag: 'REGLAMENTO DE COPROPIEDAD', body: 'EL LOCATARIO declara conocer y aceptar el Reglamento de Copropiedad y Administración del edificio, el cual forma parte integrante de este contrato.' });
+                if (document.getElementById('chk-expensas-ordinarias')?.checked) clauses.push({ tag: 'EXPENSAS ORDINARIAS', body: 'Las expensas ordinarias del edificio estarán a cargo exclusivo del LOCATARIO, debiendo abonarlas mensualmente y entregar los comprobantes al LOCADOR.' });
+                if (document.getElementById('chk-convivencia')?.checked) clauses.push({ tag: 'NORMAS DE CONVIVENCIA ESPECÍFICAS', body: 'EL LOCATARIO se obliga a respetar las normas de convivencia del edificio, evitando producir ruidos molestos que alteren la tranquilidad de los demás copropietarios.' });
+            } else if (propType === 'casa') {
+                if (document.getElementById('chk-mantenimiento-verde')?.checked) clauses.push({ tag: 'MANTENIMIENTO DE ESPACIOS VERDES', body: 'El mantenimiento del jardín, espacios verdes y/o piscina estará a cargo y costo del LOCATARIO durante toda la vigencia contractual.' });
+                if (document.getElementById('chk-tasas-municipales')?.checked) clauses.push({ tag: 'TASAS MUNICIPALES', body: 'El pago de las tasas y contribuciones municipales directas correspondientes al inmueble locado estará a cargo del LOCATARIO.' });
+            } else if (propType === 'local') {
+                if (document.getElementById('chk-habilitacion')?.checked) clauses.push({ tag: 'HABILITACIÓN MUNICIPAL', body: 'Los trámites, costos y obtención de la habilitación municipal y/o permisos necesarios para el funcionamiento del rubro comercial estarán a cargo exclusivo del LOCATARIO.' });
+                if (document.getElementById('chk-marquesina')?.checked) clauses.push({ tag: 'CARTELERÍA Y MARQUESINAS', body: 'El LOCADOR autoriza la instalación de cartelería y marquesinas propias del rubro comercial, sujeto a la normativa municipal vigente.' });
+                if (document.getElementById('chk-seguro-rc')?.checked) clauses.push({ tag: 'SEGURO DE RESPONSABILIDAD CIVIL COMPRENSIVA', body: 'EL LOCATARIO se obliga a contratar y mantener un seguro de Responsabilidad Civil Comprensiva que cubra los riesgos inherentes a su actividad comercial.' });
+            } else if (propType === 'galpon') {
+                if (document.getElementById('chk-seguro-ambiental')?.checked) clauses.push({ tag: 'SEGURO DE IMPACTO AMBIENTAL', body: 'EL LOCATARIO deberá contratar y mantener vigente un seguro de impacto y caución ambiental según la normativa aplicable a su actividad.' });
+                if (document.getElementById('chk-restriccion-carga')?.checked) clauses.push({ tag: 'RESTRICCIONES DE CARGA Y DESCARGA', body: 'Las operaciones de carga y descarga de mercaderías o insumos deberán realizarse dentro de los límites del inmueble o en los horarios y zonas autorizadas por la Municipalidad.' });
+            }
+
+            // 12. Cláusulas Personalizadas
             if (this._customClauses && this._customClauses.length > 0) {
                 this._customClauses.forEach(cc => {
                     if (cc.title && cc.text) {
@@ -1536,7 +1765,12 @@
             const previewEl = document.getElementById('contract-live-preview-box');
             if (!previewEl) return;
 
-            const finalPropAddress = propAddress || this._currentOptions?.property?.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
+            const applicant = this._currentOptions?.applicant || {};
+            const property = this._currentOptions?.property || {};
+            const tenantDomicilio = applicant.tenant_domicilio || 'Domicilio no registrado';
+            const ownerDomicilio = property.owner_domicilio || 'Domicilio no registrado';
+
+            const finalPropAddress = propAddress || property.address || this._currentOptions?.contract?.propertyAddress || 'Av. San Martín 1250, Mendoza';
             const activeClauses = this.buildActiveClauses(finalPropAddress);
 
             let clausesHtml = activeClauses.map((clause, idx) => {
@@ -1567,12 +1801,14 @@
                         <div>
                             <span class="font-bold text-zinc-900 dark:text-white block">EL LOCADOR (Propietario):</span>
                             <span class="text-zinc-600 dark:text-zinc-300">${ownerName}</span><br>
-                            <span class="text-zinc-500 text-[10px]">DNI ${ownerDni} • CUIL ${ownerCuil} • ${ownerEmail}</span>
+                            <span class="text-zinc-500 text-[10px]">DNI ${ownerDni} • CUIL ${ownerCuil} • ${ownerEmail}</span><br>
+                            <span class="text-zinc-500 text-[10px]">Domicilio Real: ${ownerDomicilio}</span>
                         </div>
                         <div>
                             <span class="font-bold text-zinc-900 dark:text-white block">EL LOCATARIO (Inquilino):</span>
                             <span class="text-zinc-600 dark:text-zinc-300">${tenantName}</span><br>
-                            <span class="text-zinc-500 text-[10px]">DNI ${tenantDni} • CUIL ${tenantCuil} • ${tenantEmail}</span>
+                            <span class="text-zinc-500 text-[10px]">DNI ${tenantDni} • CUIL ${tenantCuil} • ${tenantEmail}</span><br>
+                            <span class="text-zinc-500 text-[10px]">Domicilio Real: ${tenantDomicilio}</span>
                         </div>
                     </div>
                 </div>
@@ -1606,6 +1842,12 @@
                     Certificado criptográficamente con SHA-256 y sello de tiempo TSA RFC 3161 • Validez probatoria plena Arts. 286, 287 y 288 CCyCN
                 </div>
             `;
+
+            // Auto-scroll hacia el cambio activo en Desktop
+            const highlightEl = previewEl.querySelector('.text-red-600');
+            if (highlightEl && window.innerWidth >= 768) {
+                highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
     };
 
