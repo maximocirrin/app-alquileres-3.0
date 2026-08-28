@@ -1658,16 +1658,6 @@
                                         <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 space-y-3">
                                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-700/60 text-xs">
                                                 <span class="text-zinc-500 font-medium">Firmando como: <b class="text-zinc-900 dark:text-white">${signerObj.name}</b> (${effectiveRole === 'TENANT' ? 'Locatario' : 'Locador'})</span>
-                                                <div class="flex items-center gap-1.5">
-                                                    <span class="text-[11px] text-zinc-400">Email Didit:</span>
-                                                    <input 
-                                                        type="email" 
-                                                        id="signer-didit-email" 
-                                                        value="${signerObj.email || ''}" 
-                                                        class="px-2.5 py-1 text-xs font-mono font-bold bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:ring-1 focus:ring-primary outline-none"
-                                                        placeholder="tu.email@ejemplo.com"
-                                                    >
-                                                </div>
                                             </div>
 
                                             <label class="flex items-start gap-3 cursor-pointer select-none">
