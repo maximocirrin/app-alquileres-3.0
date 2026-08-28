@@ -94,6 +94,21 @@ export default async function finalizarHandler(req, res) {
       timeZone: 'America/Argentina/Buenos_Aires'
     });
 
+    // Actualizar estado de firmas en el Inventario si corresponde
+    try {
+      if (inquilinoFirmo || propietarioFirmo) {
+        await supabase
+          .from('Inventario_Digital')
+          .update({
+            ...(inquilinoFirmo ? { firmado_inquilino: true } : {}),
+            ...(propietarioFirmo ? { firmado_propietario: true } : {})
+          })
+          .eq('id_contrato', numericContractId);
+      }
+    } catch (invErr) {
+      console.warn('[Warning] Error actualizando firmas en Inventario_Digital:', invErr);
+    }
+
     // 4. Si ambas partes firmaron, activar el Contrato
     if (ambasPartesFirmaron) {
       await supabase

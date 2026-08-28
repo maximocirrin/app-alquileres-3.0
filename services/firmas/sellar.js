@@ -164,12 +164,32 @@ export default async function sellarHandler(req, res) {
 
     // Si aún no tenemos el PDF original, generarlo y subirlo a Storage de contratos originales
     if (!originalPdfBytes) {
+      let inventario = null;
+      try {
+        const { data: invData } = await supabase
+          .from('Inventario_Digital')
+          .select(`
+            *,
+            items:Detalle_Inventario_Item (
+              *,
+              Item:id_item (nombre),
+              Estado_item:id_estado_item (nombre)
+            )
+          `)
+          .eq('id_contrato', contractId)
+          .maybeSingle();
+        inventario = invData;
+      } catch (invErr) {
+        console.warn('[sellarHandler] Error fetching inventario:', invErr);
+      }
+
       originalPdfBytes = await generateOriginalContractPdf({
         contractId,
         contrato,
         propiedad,
         inquilino: contrato.Inquilino || {},
-        propietario: contrato.Propietario || {}
+        propietario: contrato.Propietario || {},
+        inventario
       });
 
       originalPdfHash = crypto.createHash('sha256').update(originalPdfBytes).digest('hex');
