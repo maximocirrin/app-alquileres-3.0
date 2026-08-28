@@ -163,7 +163,15 @@ const InventoryManager = {
         document.getElementById(this.modalId).classList.remove('hidden');
 
         try {
-            const res = await fetch(`/api/inventario?id_contrato=${contractId}`);
+            const headers = { 'Content-Type': 'application/json' };
+            if (window.supabaseClient) {
+                const { data: sessData } = await window.supabaseClient.auth.getSession();
+                if (sessData?.session?.access_token) {
+                    headers['Authorization'] = `Bearer ${sessData.session.access_token}`;
+                }
+            }
+
+            const res = await fetch(`/api/inventario?id_contrato=${contractId}`, { headers });
             const data = await res.json();
             
             if (res.ok && data.inventario) {
@@ -424,9 +432,17 @@ const InventoryManager = {
                 }))
             };
 
+            const headers = { 'Content-Type': 'application/json' };
+            if (window.supabaseClient) {
+                const { data: sessData } = await window.supabaseClient.auth.getSession();
+                if (sessData?.session?.access_token) {
+                    headers['Authorization'] = `Bearer ${sessData.session.access_token}`;
+                }
+            }
+
             const res = await fetch('/api/inventario', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify(payload)
             });
 
