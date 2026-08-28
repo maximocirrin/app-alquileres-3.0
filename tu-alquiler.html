@@ -750,6 +750,7 @@
     <script src="js/notifications.js"></script>
     <script src="js/contract-editor-modal.js"></script>
     <script src="js/contracts-manager.js"></script>
+    <script src="js/inventory-manager.js"></script>
 
     <!-- Script de Navegación y Funcionalidad Integral del Inquilino -->
     <script>
@@ -1108,6 +1109,11 @@
                                     <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || ''}')" class="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-800 text-xs font-bold rounded-xl hover:bg-black transition-all flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm text-emerald-400">verified_user</span> Audit Trail
                                     </button>
+                                    ${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? `
+                                    <button type="button" onclick="window.InventoryManager && window.InventoryManager.openModal('${contract.id || ''}', '${contract.property_id || ''}', true)" class="px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all flex items-center gap-1 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">inventory</span> Ver Inventario
+                                    </button>
+                                    ` : ''}
                                 </div>
                             </div>
                             <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-right shrink-0 shadow-2xs">

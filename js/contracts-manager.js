@@ -1258,6 +1258,10 @@
                                                 <span class="material-symbols-outlined text-sm">tune</span>
                                                 <span class="hidden sm:inline">Editar</span>
                                             </button>
+                                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${c.id}', '${c.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-700 hover:text-white dark:bg-emerald-950/40 dark:text-emerald-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer shrink-0" title="Generar Inventario (Anexo I)">
+                                                <span class="material-symbols-outlined text-sm">inventory</span>
+                                                <span class="hidden sm:inline">Inventario</span>
+                                            </button>
                                             ` : ''}
                                         </div>
                                     </div>
@@ -1413,6 +1417,13 @@
                                 </svg>
                                 <span class="hidden sm:inline">WhatsApp</span>
                             </a>
+                            
+                            ${(canEditContract) ? `
+                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${contract.id}', '${contract.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="h-9 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Cargar Inventario del Inmueble (Anexo I)">
+                                <span class="material-symbols-outlined text-base">inventory</span>
+                                <span>Inventario</span>
+                            </button>
+                            ` : ''}
                             
                             <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="h-9 px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Descargar PDF">
                                 <span class="material-symbols-outlined text-base text-primary">download</span>
@@ -1618,7 +1629,7 @@
                             </div>
 
                             <!-- Interactive Signature Action Zone -->
-                            <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-primary/30 space-y-5 shadow-lg">
+                            <div id="signature-section" class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-primary/30 space-y-5 shadow-lg">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-xl">face</span>
@@ -1688,6 +1699,14 @@
                             </div>
 
                         </div>
+
+                        <!-- Floating Action Button to scroll to signature -->
+                        ${(!isFullySigned(contract) && isContractPendingForMe) ? `
+                        <button type="button" onclick="document.getElementById('signature-section').scrollIntoView({ behavior: 'smooth', block: 'center' })" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] p-4 bg-primary text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(129,27,30,0.4)] hover:bg-primary-container hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group border border-white/20" title="Ir a Firmar Contrato">
+                            <span class="material-symbols-outlined text-2xl animate-[pulse_2s_ease-in-out_infinite]">draw</span>
+                            <span class="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-in-out font-headline font-bold text-sm">Ir a Firmar</span>
+                        </button>
+                        ` : ''}
                     </main>
 
                     <!-- Tab 2: Real-time Negotiation Chat with Supabase Realtime -->

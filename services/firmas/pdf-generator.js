@@ -23,7 +23,8 @@ export async function generateOriginalContractPdf({
   contrato = {},
   propiedad = {},
   inquilino = {},
-  propietario = {}
+  propietario = {},
+  inventario = null
 }) {
   const pdfDoc = await PDFDocument.create();
   let page = pdfDoc.addPage([595.28, 841.89]); // A4
@@ -187,12 +188,127 @@ export async function generateOriginalContractPdf({
     });
   }
 
+  if (inventario && inventario.items && inventario.items.length > 0) {
+    let baseInventarioText = `El estado del inmueble, sus instalaciones y bienes muebles se detallan en el Anexo I (Inventario) adjunto al presente, que firmado por las partes forma parte integral del presente contrato con plena validez legal.`;
+    
+    if (inventario.video_hash && inventario.video_url) {
+      baseInventarioText += ` Las partes reconocen como prueba fehaciente del estado estético del inmueble el video alojado en [URL/QR del Storage], cuya huella digital (Hash SHA-256) es ${inventario.video_hash}, garantizando su inalterabilidad.`;
+    }
+    
+    clauses.push({ tag: 'ANEXO I - INVENTARIO', body: baseInventarioText });
+  }
+
   clauses.push({ tag: 'FIRMA ELECTRÓNICA Y BIOMETRÍA DIDIT', body: `Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente contrato mediante Firma Electrónica, Verificación Biométrica Facial en Vivo (Didit KYC) y Sello de Tiempo TSA RFC 3161, reconociéndole plena validez legal, eficacia probatoria y fuerza ejecutoria bajo la Ley Nacional N° 25.506.` });
 
   // Renderizar Cláusulas
   clauses.forEach((clause, idx) => {
     drawParagraph(`${getOrdinalName(idx)} (${clause.tag}):`, clause.body);
   });
+
+  // Renderizar Anexo I si existe
+  if (inventario && inventario.items && inventario.items.length > 0) {
+    page = pdfDoc.addPage([595.28, 841.89]);
+    currentY = height - 50;
+
+    page.drawText('ANEXO I - INVENTARIO DEL INMUEBLE', {
+      x: 45,
+      y: currentY,
+      size: 13,
+      font: fontBold,
+      color: primaryColor
+    });
+    currentY -= 20;
+
+    const fechaInventario = inventario.fecha_inspeccion 
+      ? new Date(inventario.fecha_inspeccion).toLocaleDateString('es-AR') 
+      : todayStr;
+
+    drawParagraph('VINCULACIÓN LEGAL:', `Anexo I al Contrato de Locación del inmueble ${propAddress}, con fecha ${fechaInventario}, entre ${ownerName} y ${tenantName}. Las partes declaran que el presente detalla el estado de conservación e inventario del inmueble, sus instalaciones y bienes muebles.`);
+    currentY -= 10;
+
+    // Agrupar items por ambiente
+    const ambientes = {};
+    inventario.items.forEach(item => {
+      const amb = item.ambiente || 'General';
+      if (!ambientes[amb]) ambientes[amb] = [];
+      ambientes[amb].push(item);
+    });
+
+    for (const amb of Object.keys(ambientes)) {
+      checkPageSpace(40);
+      page.drawText(`AMBIENTE: ${amb.toUpperCase()}`, { x: 45, y: currentY, size: 9.5, font: fontBold, color: darkColor });
+      currentY -= 15;
+
+      for (const item of ambientes[amb]) {
+        checkPageSpace(20);
+        const itemName = item.Item?.nombre || item.nombre_item || 'Ítem';
+        const estado = item.Estado_item?.nombre || item.estado || 'No especificado';
+        const obs = item.observaciones ? ` - Obs: ${item.observaciones}` : '';
+        
+        page.drawText(`• ${itemName}:`, { x: 55, y: currentY, size: 8, font: fontBold, color: darkColor });
+        page.drawText(`${estado}${obs}`, { x: 55 + (itemName.length * 4.5) + 5, y: currentY, size: 8, font: fontRegular, color: darkColor });
+        currentY -= 12;
+      }
+      currentY -= 10;
+    }
+
+    if (inventario.observaciones_generales) {
+      drawParagraph('OBSERVACIONES GENERALES:', inventario.observaciones_generales);
+    }
+
+    // Apéndice Visual (Fotos)
+    const itemsWithPhotos = inventario.items.filter(it => it.fotos_urls && it.fotos_urls.length > 0);
+    if (itemsWithPhotos.length > 0) {
+      page = pdfDoc.addPage([595.28, 841.89]);
+      currentY = height - 50;
+
+      page.drawText('APÉNDICE VISUAL DEL INVENTARIO', {
+        x: 45, y: currentY, size: 13, font: fontBold, color: primaryColor
+      });
+      currentY -= 20;
+
+      for (const item of itemsWithPhotos) {
+        checkPageSpace(150);
+        const itemName = item.Item?.nombre || item.nombre_item || 'Ítem';
+        const amb = item.ambiente || 'General';
+        page.drawText(`Ambiente: ${amb.toUpperCase()} - Elemento: ${itemName}`, { x: 45, y: currentY, size: 10, font: fontBold, color: darkColor });
+        currentY -= 15;
+
+        let xPos = 45;
+        let maxHeightInRow = 0;
+
+        for (const photoUrl of item.fotos_urls) {
+          try {
+            const imgRes = await fetch(photoUrl);
+            const imgBytes = await imgRes.arrayBuffer();
+            let image;
+            try {
+              image = await pdfDoc.embedJpg(imgBytes);
+            } catch (e) {
+              image = await pdfDoc.embedPng(imgBytes);
+            }
+            
+            const fixedHeight = 120;
+            const dims = image.scaleToFit(width, fixedHeight);
+            
+            if (xPos + dims.width > width - 45) {
+              xPos = 45;
+              currentY -= (maxHeightInRow + 15);
+              checkPageSpace(fixedHeight + 30);
+              maxHeightInRow = 0;
+            }
+            
+            page.drawImage(image, { x: xPos, y: currentY - dims.height, width: dims.width, height: dims.height });
+            xPos += dims.width + 10;
+            if (dims.height > maxHeightInRow) maxHeightInRow = dims.height;
+          } catch (err) {
+            console.error('Error fetching image for PDF:', err.message);
+          }
+        }
+        currentY -= (maxHeightInRow + 25);
+      }
+    }
+  }
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
