@@ -2554,6 +2554,9 @@
                                     <button onclick="acceptOwnerVisit('${v.id}')" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer text-center">
                                         Aceptar Visita
                                     </button>
+                                    <button onclick="proposeOwnerVisit('${v.id}')" class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-headline font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer text-center">
+                                        Reprogramar
+                                    </button>
                                     <button onclick="rejectOwnerVisit('${v.id}')" class="flex-1 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl transition-all cursor-pointer text-center">
                                         Rechazar
                                     </button>
@@ -2586,6 +2589,32 @@
                 await window.DataManager.rejectEvent(id);
                 loadOwnerVisits();
             }
+        };
+
+        window.proposeOwnerVisit = function(id) {
+            document.getElementById('reschedule-visit-modal').classList.remove('hidden');
+            document.getElementById('reschedule-visit-id').value = id;
+        };
+
+        window.submitRescheduleVisit = async function() {
+            const id = document.getElementById('reschedule-visit-id').value;
+            const date = document.getElementById('reschedule-visit-date').value;
+            const time = document.getElementById('reschedule-visit-time').value;
+            
+            if (!date || !time) {
+                alert("Por favor complete la nueva fecha y hora.");
+                return;
+            }
+            
+            if (window.DataManager && window.DataManager.proposeNewVisitTime) {
+                document.getElementById('reschedule-visit-modal').classList.add('hidden');
+                await window.DataManager.proposeNewVisitTime(id, date, time);
+                loadOwnerVisits();
+            }
+        };
+        
+        window.closeRescheduleModal = function() {
+            document.getElementById('reschedule-visit-modal').classList.add('hidden');
         };
 
         let ownerActiveContractsMock = [];
@@ -3957,6 +3986,38 @@
         });
     </script>
 
+    <div id="reschedule-visit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRescheduleModal()"></div>
+        <div class="relative bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col gap-5">
+            <div>
+                <h3 class="text-xl font-headline font-black text-zinc-900 dark:text-white">Reprogramar Visita</h3>
+                <p class="text-xs text-zinc-500 mt-1">Propone una nueva fecha y hora para la visita.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="hidden" id="reschedule-visit-id">
+                
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Nueva Fecha</label>
+                    <input type="date" id="reschedule-visit-date" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
+                </div>
+                
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Nueva Hora</label>
+                    <input type="time" id="reschedule-visit-time" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeRescheduleModal()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="submitRescheduleVisit()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow transition-colors">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -11017,10 +11017,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <span class="block text-[11px] text-zinc-500">Crea tu aviso en simples pasos</span>
                                     </div>
                                 </button>
-                                <a href="administrador.html#avisos" class="menu-item-clean">
-                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">home_work</span>
-                                    <span>Mis Propiedades & Avisos</span>
-                                </a>
+
                                 <a href="administrador.html#postulaciones" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">how_to_reg</span>
                                     <span>Postulaciones & Selección</span>
