@@ -2010,50 +2010,34 @@ var DataManager = {
         let eventId = null;
 
         if (existingVisit) {
-            // Actualizar la visita existente
-            const { data, error } = await window.supabaseClient
-                .from('Evento')
-                .update({
-                    fecha_evento: visitData.visitDate || new Date().toISOString(),
-                    hora_evento: visitData.visitTime || '16:00 hs',
-                    nombre_visitante: visitData.visitorName || 'Visitante',
-                    email_visitante: visitData.visitorEmail || 'visitante@email.com',
-                    telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000',
-                    id_estado_evento: 1 // Volver a ponerla como Programada
-                })
-                .eq('id_evento', existingVisit.id_evento)
-                .select()
-                .single();
-
-            if (error) {
-                console.error("Error updating visit:", error);
-                throw error;
-            }
-            eventId = data.id_evento;
-        } else {
-            // Crear nueva visita
-            const { data, error } = await window.supabaseClient
-                .from('Evento')
-                .insert([{
-                    id_perfil: profileId,
-                    id_propiedad: propId,
-                    fecha_evento: visitData.visitDate || new Date().toISOString(),
-                    hora_evento: visitData.visitTime || '16:00 hs',
-                    nombre_visitante: visitData.visitorName || 'Visitante',
-                    email_visitante: visitData.visitorEmail || 'visitante@email.com',
-                    telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000',
-                    id_tipo_evento: 1, // Visita
-                    id_estado_evento: 1 // Programada
-                }])
-                .select()
-                .single();
-
-            if (error) {
-                console.error("Error scheduling visit:", error);
-                throw error;
-            }
-            eventId = data.id_evento;
+            // Ya existe una visita (incluso si está cancelada o completada, la regla de negocio
+            // dice "solo pueden ser solicitadas una vez por propiedad")
+            alert("Ya has solicitado una visita para esta propiedad.");
+            throw new Error("Ya has solicitado una visita para esta propiedad.");
         }
+
+        // Crear nueva visita
+        const { data, error } = await window.supabaseClient
+            .from('Evento')
+            .insert([{
+                id_perfil: profileId,
+                id_propiedad: propId,
+                fecha_evento: visitData.visitDate || new Date().toISOString(),
+                hora_evento: visitData.visitTime || '16:00 hs',
+                nombre_visitante: visitData.visitorName || 'Visitante',
+                email_visitante: visitData.visitorEmail || 'visitante@email.com',
+                telefono_visitante: visitData.visitorPhone || '+54 9 11 0000-0000',
+                id_tipo_evento: 1, // Visita
+                id_estado_evento: 1 // Programada
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error scheduling visit:", error);
+            throw error;
+        }
+        eventId = data.id_evento;
 
         try {
             await window.supabaseClient.from('Historial_estado_evento').insert([{
@@ -2154,6 +2138,44 @@ var DataManager = {
                     type: "visita",
                     userId: data.id_perfil,
                     link: "tu-alquiler.html"
+                });
+            }
+            return data;
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+    },
+
+    proposeNewVisitTime: async function (eventId, newDate, newTime) {
+        if (!window.supabaseClient || !eventId) return null;
+        try {
+            const { data, error } = await window.supabaseClient.from('Evento')
+                .update({ 
+                    id_estado_evento: 1, // Keep as pending/scheduled
+                    fecha_evento: newDate,
+                    hora_evento: newTime 
+                })
+                .eq('id_evento', eventId)
+                .select()
+                .single();
+                
+            if (error) throw error;
+
+            await window.supabaseClient.from('Historial_estado_evento').insert([{
+                id_visita: eventId,
+                id_estado_visita: 1,
+                fecha_inicio: new Date().toISOString()
+            }]);
+
+            // Notify the tenant about the reschedule
+            if (data.id_perfil) {
+                await this.createNotification({
+                    title: "Visita Reprogramada",
+                    message: `El propietario ha propuesto una nueva fecha para tu visita: ${newDate} a las ${newTime}.`,
+                    type: "visita",
+                    userId: data.id_perfil,
+                    link: "tu-alquiler.html#visitas"
                 });
             }
             return data;
