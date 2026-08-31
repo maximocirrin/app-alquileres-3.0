@@ -2374,6 +2374,12 @@
                        (c.contractNumber && c.contractNumber.toLowerCase().includes(s)) ||
                        (c.tenant?.name && c.tenant.name.toLowerCase().includes(s)) ||
                        (c.owner?.name && c.owner.name.toLowerCase().includes(s));
+            }).sort((a, b) => {
+                const msgsA = this._chatMessages[a.id] || [];
+                const msgsB = this._chatMessages[b.id] || [];
+                const timeA = msgsA.length > 0 ? new Date(msgsA[msgsA.length - 1].created_at || 0).getTime() : 0;
+                const timeB = msgsB.length > 0 ? new Date(msgsB[msgsB.length - 1].created_at || 0).getTime() : 0;
+                return timeB - timeA;
             });
 
             container.innerHTML = `
@@ -2413,7 +2419,26 @@
                                 const counterpartName = role === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
                                 const counterpartRole = role === 'TENANT' ? 'Propietario' : (role === 'OWNER' ? 'Inquilino' : 'Partes');
                                 const msgs = this._chatMessages[c.id] || [];
-                                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1].mensaje : 'Canal oficial abierto para negociación de términos.';
+                                const lastMsgObj = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                                const lastMsg = lastMsgObj ? lastMsgObj.mensaje : 'Canal oficial abierto para negociación de términos.';
+                                
+                                let hasNewMessage = false;
+                                if (lastMsgObj && !isSelected) {
+                                    const currentUser = this.resolveCurrentUserInfo(c);
+                                    const msgEmail = (lastMsgObj.remitente_email || '').toLowerCase().trim();
+                                    const curEmail = (currentUser.email || '').toLowerCase().trim();
+                                    let isMe = false;
+                                    if (msgEmail && curEmail && msgEmail === curEmail) {
+                                        isMe = true;
+                                    } else if (lastMsgObj.id_perfil && currentUser.profileId && Number(lastMsgObj.id_perfil) === Number(currentUser.profileId)) {
+                                        isMe = true;
+                                    } else if (lastMsgObj.user_id && currentUser.userId && String(lastMsgObj.user_id) === String(currentUser.userId)) {
+                                        isMe = true;
+                                    }
+                                    if (!isMe && lastMsgObj.remitente_rol !== 'SISTEMA') {
+                                        hasNewMessage = true;
+                                    }
+                                }
                                 
                                 return `
                                     <div 
@@ -2427,11 +2452,16 @@
 
                                         <div class="min-w-0 flex-1 space-y-1">
                                             <div class="flex items-center justify-between gap-1">
-                                                <h4 class="font-headline font-bold text-xs text-zinc-900 dark:text-white truncate ${isSelected ? 'text-primary dark:text-red-400' : ''}">
-                                                    ${c.title}
-                                                </h4>
+                                                <div class="flex items-center gap-1.5 min-w-0">
+                                                    <h4 class="font-headline text-xs text-zinc-900 dark:text-white truncate ${isSelected ? 'text-primary dark:text-red-400 font-bold' : (hasNewMessage ? 'font-black' : 'font-bold')}">
+                                                        ${c.title}
+                                                    </h4>
+                                                    ${hasNewMessage ? '<span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 animate-pulse" title="Nuevo mensaje"></span>' : ''}
+                                                </div>
                                                 <span class="text-[10px] text-zinc-400 font-mono shrink-0">${c.contractNumber}</span>
                                             </div>
+
+                                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate ${hasNewMessage ? 'font-semibold text-zinc-700 dark:text-zinc-200' : ''}">${lastMsg}</p>
 
                                             <div class="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
                                                 <span class="material-symbols-outlined text-xs text-emerald-500">person</span>
@@ -2439,9 +2469,6 @@
                                                 <span class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-extrabold uppercase shrink-0">${counterpartRole}</span>
                                             </div>
 
-                                            <p class="text-[11px] text-zinc-400 truncate line-clamp-1">
-                                                ${lastMsg}
-                                            </p>
                                         </div>
                                     </div>
                                 `;
