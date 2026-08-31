@@ -253,7 +253,10 @@ var DataManager = {
                 const hasUserPub = pubs.some(pub => Number(pub.id_perfil) === Number(profileId));
                 
                 const pAddr = `${p.calle || ''} ${p.numero || ''}`.toLowerCase().trim();
-                const isLeadProp = brokerLeadPropNames.some(name => name && (pAddr.includes(name) || name.includes(pAddr)));
+                const isLeadProp = brokerLeadPropNames.some(name => {
+                    if (!name || name.length < 5 || !pAddr || pAddr.length < 5) return false;
+                    return pAddr === name || pAddr.includes(name) || name.includes(pAddr);
+                });
 
                 return isOwner || isCaptador || hasUserPub || isLeadProp;
             }) : rawList;
@@ -302,10 +305,10 @@ var DataManager = {
         return this.getProperties(targetProfileId, true);
     },
 
-    getPublicMarketplaceProperties: async (limit = 50, includeAllStatuses = false) => {
+    getPublicMarketplaceProperties: async (limit = 50, includeAllStatuses = false, filterByUser = false) => {
         if (!window.supabaseClient) return [];
         try {
-            const { data: publications, error } = await window.supabaseClient
+            let query = window.supabaseClient
                 .from('Publicacion')
                 .select(`
                     *,
@@ -327,7 +330,16 @@ var DataManager = {
                         )
                     ),
                     Multimedia (*)
-                `)
+                `);
+
+            if (filterByUser && window.DataManager && window.DataManager._getOrCreateProfile) {
+                const profileId = await window.DataManager._getOrCreateProfile();
+                if (profileId) {
+                    query = query.eq('id_perfil', profileId);
+                }
+            }
+
+            const { data: publications, error } = await query
                 .order('created_at', { ascending: false })
                 .limit(limit);
 
@@ -495,7 +507,7 @@ var DataManager = {
     },
 
     getUserMarketplaceProperties: async (limit = 100) => {
-        return DataManager.getPublicMarketplaceProperties(limit, true);
+        return DataManager.getPublicMarketplaceProperties(limit, true, true);
     },
 
     recordPublicationView: async (id_publicacion) => {
@@ -2226,7 +2238,7 @@ var DataManager = {
                 .order('id_contrato', { ascending: false });
 
             if (profileId) {
-                query = query.or(`id_perfil_propietario.eq.${profileId},Propiedad.id_perfil_propietario.eq.${profileId}`);
+                query = query.eq('id_perfil_propietario', profileId);
             }
 
             const { data, error } = await query;
