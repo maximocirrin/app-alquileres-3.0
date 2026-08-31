@@ -618,7 +618,7 @@
                 }
             }
 
-            function switchViewTab(target) {
+            async function switchViewTab(target) {
                 // Update Top Pills
                 pillBtns.forEach(btn => {
                     const isTarget = btn.getAttribute('data-tab') === target;
@@ -649,15 +649,18 @@
                 });
 
                 // Render Content
-                if (target === 'avisos') loadOwnerAvisos();
-                if (target === 'postulaciones') loadOwnerApplications();
-                if (target === 'visitas') loadOwnerVisits();
-                if (target === 'alquiler-activo') loadOwnerActiveRental();
-                if (target === 'chat-negociacion') loadOwnerChatSection();
+                let renderPromise = Promise.resolve();
+                if (target === 'avisos') renderPromise = loadOwnerAvisos();
+                if (target === 'postulaciones') renderPromise = loadOwnerApplications();
+                if (target === 'visitas') renderPromise = loadOwnerVisits();
+                if (target === 'alquiler-activo') renderPromise = loadOwnerActiveRental();
+                if (target === 'chat-negociacion') renderPromise = loadOwnerChatSection();
 
                 setTimeout(() => {
                     setupOwnerCardsIntersectionObserver();
                 }, 100);
+                
+                return renderPromise;
             }
 
             window.addEventListener('resize', () => {
@@ -665,15 +668,51 @@
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             });
 
-            pillBtns.forEach(btn => btn.addEventListener('click', () => switchViewTab(btn.getAttribute('data-tab'))));
-            dockBtns.forEach(btn => btn.addEventListener('click', () => switchViewTab(btn.getAttribute('data-tab'))));
+            pillBtns.forEach(btn => btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                window.location.hash = tab;
+            }));
+            dockBtns.forEach(btn => btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                window.location.hash = tab;
+            }));
+
+            async function handleHashNavigation() {
+                const hash = window.location.hash.replace('#', '');
+                const validTabs = ['avisos', 'postulaciones', 'visitas', 'alquiler-activo', 'chat-negociacion'];
+                
+                if (hash === 'mantenimiento') {
+                    await switchViewTab('alquiler-activo');
+                    setTimeout(() => {
+                        const maintSection = document.getElementById('owner-list-tickets');
+                        if (maintSection && maintSection.parentElement) {
+                            maintSection.parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
+                } else if (validTabs.includes(hash)) {
+                    await switchViewTab(hash);
+                } else {
+                    await switchViewTab('avisos');
+                }
+                
+                setTimeout(() => {
+                    const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
+                    if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
+                }, 60);
+            }
+
+            window.addEventListener('hashchange', handleHashNavigation);
 
             // Initial view
-            switchViewTab('avisos');
-            setTimeout(() => {
-                const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
-                if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
-            }, 60);
+            if (window.location.hash) {
+                handleHashNavigation();
+            } else {
+                switchViewTab('avisos');
+                setTimeout(() => {
+                    const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
+                    if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
+                }, 60);
+            }
 
             // Scroll direction detection with requestAnimationFrame throttling for iOS
             let lastScrollY = window.scrollY;

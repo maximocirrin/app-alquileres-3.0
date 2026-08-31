@@ -1921,12 +1921,18 @@
                     : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@habitat.ar') : 'corredor@habitat.ar');
             }
 
+            let dbRole = 'corredor';
+            if (effectiveRole === 'TENANT' || effectiveRole === 'inquilino') dbRole = 'inquilino';
+            else if (effectiveRole === 'OWNER' || effectiveRole === 'propietario') dbRole = 'propietario';
+            else if (effectiveRole === 'GUARANTOR' || effectiveRole === 'garante') dbRole = 'garante';
+            else if (effectiveRole === 'SISTEMA') dbRole = 'SISTEMA';
+
             return {
                 email: email.toLowerCase().trim(),
                 name: name.trim(),
                 profileId: profileId ? Number(profileId) : null,
                 userId: userId,
-                role: effectiveRole
+                role: dbRole
             };
         },
 
@@ -2092,7 +2098,7 @@
 
                 const esc = window.escapeHtml || (s => s);
                 const safeMsg = esc(m.mensaje);
-                const safeName = esc(displayName);
+                const safeName = esc(m.remitente_nombre || 'Usuario');
 
                 if (isSystem) {
                     return `
@@ -2201,6 +2207,14 @@
 
             const contract = this.getContractById(contractId);
             const currentUser = this.resolveCurrentUserInfo(contract);
+
+            if (!currentUser.profileId && window.DataManager && window.DataManager._getOrCreateProfile) {
+                try {
+                    currentUser.profileId = await window.DataManager._getOrCreateProfile();
+                } catch (e) {
+                    console.warn("[Chat] No se pudo obtener el id_perfil:", e);
+                }
+            }
 
             const messageId = this._generateUUID();
             const nowIso = new Date().toISOString();
@@ -2321,6 +2335,11 @@
             }
 
             const allContracts = this.getContracts();
+            
+            // Preserve sidebar scroll position if it exists
+            const sidebarListId = `chat-sidebar-list-${containerId}`;
+            const existingSidebar = document.getElementById(sidebarListId);
+            const savedScroll = existingSidebar ? existingSidebar.scrollTop : 0;
             if (allContracts.length === 0) {
                 container.innerHTML = `
                     <div class="p-10 text-center rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
@@ -2388,7 +2407,7 @@
                         </div>
 
                         <!-- Conversations List -->
-                        <div class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                        <div id="${sidebarListId}" class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
                             ${filteredContracts.map(c => {
                                 const isSelected = c.id === activeContractId;
                                 const counterpartName = role === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
@@ -2526,6 +2545,12 @@
                     </section>
                 </div>
             `;
+
+            // Restore sidebar scroll position
+            const newSidebar = document.getElementById(sidebarListId);
+            if (newSidebar) {
+                newSidebar.scrollTop = savedScroll;
+            }
 
             // Initialize chat and messages for this active contract
             this.initChatForContract(activeContractId);
