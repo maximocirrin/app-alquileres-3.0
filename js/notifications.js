@@ -715,7 +715,7 @@
                         </button>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">${safeMsg}</p>
-                    ${safeLink && safeLink !== '#' ? `
+                    ${safeLink && safeLink !== '#' && notif.type !== 'chat' ? `
                         <div class="mt-2.5">
                             <a href="${safeLink}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer">
                                 <span>Ver y Firmar</span>
