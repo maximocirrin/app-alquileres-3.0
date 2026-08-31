@@ -11018,6 +11018,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                 </button>
 
+                                <a href="administrador.html#chat-negociacion" class="menu-item-clean">
+                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">chat</span>
+                                    <span>Mensajes</span>
+                                </a>
                                 <a href="administrador.html#postulaciones" class="menu-item-clean">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">how_to_reg</span>
                                     <span>Postulaciones & Selección</span>
