@@ -2238,11 +2238,14 @@
             // Save to Supabase Mensaje_Contrato table with the exact same UUID & profileId
             if (window.supabaseClient) {
                 try {
+                    const safeDbContractId = (contract && contract.dbContractId && String(contract.dbContractId) !== 'undefined' && String(contract.dbContractId) !== 'null') ? parseInt(contract.dbContractId) : null;
+                    const safeProfileId = (currentUser && currentUser.profileId && String(currentUser.profileId) !== 'undefined' && String(currentUser.profileId) !== 'null') ? parseInt(currentUser.profileId) : null;
+                    
                     const dbPayload = {
                         id_mensaje: messageId,
-                        id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
+                        id_contrato: isNaN(safeDbContractId) ? null : safeDbContractId,
                         contract_ref_id: String(contractId),
-                        id_perfil: currentUser.profileId || null,
+                        id_perfil: isNaN(safeProfileId) ? null : safeProfileId,
                         remitente_nombre: currentUser.name,
                         remitente_rol: currentUser.role,
                         remitente_email: currentUser.email,
@@ -2375,11 +2378,17 @@
                        (c.tenant?.name && c.tenant.name.toLowerCase().includes(s)) ||
                        (c.owner?.name && c.owner.name.toLowerCase().includes(s));
             }).sort((a, b) => {
-                const msgsA = this._chatMessages[a.id] || [];
-                const msgsB = this._chatMessages[b.id] || [];
-                const timeA = msgsA.length > 0 ? new Date(msgsA[msgsA.length - 1].created_at || 0).getTime() : 0;
-                const timeB = msgsB.length > 0 ? new Date(msgsB[msgsB.length - 1].created_at || 0).getTime() : 0;
-                return timeB - timeA;
+                const getLatestTime = (cId) => {
+                    let msgs = this._chatMessages[cId];
+                    if (!msgs) {
+                        try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
+                    }
+                    if (msgs.length > 0) {
+                        return new Date(msgs[msgs.length - 1].created_at || 0).getTime();
+                    }
+                    return 0;
+                };
+                return getLatestTime(b.id) - getLatestTime(a.id);
             });
 
             container.innerHTML = `
@@ -2418,7 +2427,12 @@
                                 const isSelected = c.id === activeContractId;
                                 const counterpartName = role === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
                                 const counterpartRole = role === 'TENANT' ? 'Propietario' : (role === 'OWNER' ? 'Inquilino' : 'Partes');
-                                const msgs = this._chatMessages[c.id] || [];
+                                
+                                let msgs = this._chatMessages[c.id];
+                                if (!msgs) {
+                                    try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
+                                }
+                                
                                 const lastMsgObj = msgs.length > 0 ? msgs[msgs.length - 1] : null;
                                 const lastMsg = lastMsgObj ? lastMsgObj.mensaje : 'Canal oficial abierto para negociación de términos.';
                                 
