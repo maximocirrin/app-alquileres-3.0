@@ -1755,26 +1755,7 @@
 
                             <!-- Chat Input Box -->
                             <div class="p-2 sm:p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg shrink-0 flex flex-col gap-2">
-                                <!-- Quick Proposals inline with composer -->
-                                <div class="flex items-center gap-1.5 overflow-x-auto text-[10px] font-headline font-bold px-1">
-                                    <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1"><span class="hidden sm:inline">Propuestas </span>Rápidas:</span>
-                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'canon')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                        <span class="material-symbols-outlined text-[14px] text-amber-500">payments</span>
-                                        <span>Canon</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'ajuste')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                        <span class="material-symbols-outlined text-[14px] text-blue-500">trending_up</span>
-                                        <span>Ajuste</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'llaves')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                        <span class="material-symbols-outlined text-[14px] text-purple-500">key</span>
-                                        <span>Llaves</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'acuerdo')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                                        <span>Acuerdo</span>
-                                    </button>
-                                </div>
+
                                 <div class="flex items-center gap-2">
                                     <input 
                                         type="text" 
@@ -2508,7 +2489,6 @@
                                     >
                                         <div class="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
                                             <img src="${c.propertyImage || 'img/hero-marketplace.jpg'}" alt="${c.title}" class="w-full h-full object-cover">
-                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0.5 right-0.5 ring-2 ring-white dark:ring-zinc-900"></span>
                                         </div>
 
                                         <div class="min-w-0 flex-1 space-y-1">
@@ -2590,26 +2570,7 @@
 
                         <!-- Composer Box -->
                         <div class="p-2 sm:p-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 shrink-0">
-                            <!-- Quick Proposals inline with composer -->
-                            <div class="flex items-center gap-1.5 overflow-x-auto text-[10px] font-headline font-bold px-1">
-                                <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1"><span class="hidden sm:inline">Propuestas </span>Rápidas:</span>
-                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'canon')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                    <span class="material-symbols-outlined text-[14px] text-amber-500">payments</span>
-                                    <span>Canon</span>
-                                </button>
-                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'ajuste')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                    <span class="material-symbols-outlined text-[14px] text-blue-500">trending_up</span>
-                                    <span>Ajuste</span>
-                                </button>
-                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'llaves')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                    <span class="material-symbols-outlined text-[14px] text-purple-500">key</span>
-                                    <span>Llaves</span>
-                                </button>
-                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'acuerdo')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                                    <span>Acuerdo</span>
-                                </button>
-                            </div>
+
                             
                             <!-- Input Row -->
                             <div class="flex items-center gap-2 shrink-0">
