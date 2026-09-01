@@ -1922,10 +1922,11 @@
             }
 
             let dbRole = 'BROKER';
-            if (effectiveRole === 'TENANT' || effectiveRole === 'inquilino') dbRole = 'TENANT';
-            else if (effectiveRole === 'OWNER' || effectiveRole === 'propietario') dbRole = 'OWNER';
-            else if (effectiveRole === 'GUARANTOR' || effectiveRole === 'garante') dbRole = 'TENANT';
-            else if (effectiveRole === 'SISTEMA') dbRole = 'SISTEMA';
+            const normRole = (effectiveRole || '').toUpperCase();
+            if (normRole === 'TENANT' || normRole === 'INQUILINO') dbRole = 'TENANT';
+            else if (normRole === 'OWNER' || normRole === 'PROPIETARIO') dbRole = 'OWNER';
+            else if (normRole === 'GUARANTOR' || normRole === 'GARANTE') dbRole = 'TENANT';
+            else if (normRole === 'SISTEMA') dbRole = 'SISTEMA';
 
             return {
                 email: email.toLowerCase().trim(),
