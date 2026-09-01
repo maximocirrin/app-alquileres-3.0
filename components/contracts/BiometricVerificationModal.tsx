@@ -1,22 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { DiditSessionState } from '../../types/contract';
+// import { DiditSessionState } from '../../types/contract';
 
 export interface BiometricVerificationModalProps {
-  sessionState: DiditSessionState;
-  sessionUrl?: string;
   isOpen: boolean;
+  state?: any; // DiditSessionState or string
+  verificationUrl?: string;
+  errorMessage?: string | null;
+  isSimulated?: boolean;
+  onSimulateSuccess?: () => void;
+  onSimulateFailure?: (error?: string) => void;
+  onRetry?: () => void;
   onClose: () => void;
-  onVerificationComplete: () => void;
-  onVerificationFailed: (error: string) => void;
 }
 
 export const BiometricVerificationModal: React.FC<BiometricVerificationModalProps> = ({
-  sessionState,
-  sessionUrl,
   isOpen,
+  state,
+  verificationUrl,
+  errorMessage,
+  isSimulated,
+  onSimulateSuccess,
+  onSimulateFailure,
+  onRetry,
   onClose,
-  onVerificationComplete,
-  onVerificationFailed,
 }) => {
   const [subStep, setSubStep] = useState<1 | 2 | 3>(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -63,7 +69,9 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
           mediaStreamRef.current.getTracks().forEach((t) => t.stop());
           mediaStreamRef.current = null;
         }
-        onVerificationComplete();
+        if (onSimulateSuccess) {
+          onSimulateSuccess();
+        }
       }
     }, 800);
   };
@@ -97,10 +105,10 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
         </div>
 
         {/* If real Didit session URL with iframe */}
-        {sessionUrl && sessionUrl.startsWith('http') && !sessionUrl.includes('simulate') ? (
+        {verificationUrl && verificationUrl.startsWith('http') && !verificationUrl.includes('simulate') ? (
           <div className="w-full h-96 relative">
             <iframe
-              src={sessionUrl}
+              src={verificationUrl}
               className="w-full h-full border-0"
               allow="camera; microphone; geolocation"
               title="Didit Verification"
