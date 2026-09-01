@@ -1733,10 +1733,15 @@
                                 </div>
 
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <div id="chat-realtime-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                                    <div id="chat-realtime-status-badge" class="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5 shrink-0" title="Tiempo Real Conectado">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>Tiempo Real Conectado</span>
+                                        <span class="hidden sm:inline">Conectado</span>
                                     </div>
+                                    <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-xs transition-all flex items-center justify-center shrink-0" title="Contactar por WhatsApp">
+                                        <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                        </svg>
+                                    </a>
                                 </div>
                             </div>
 
@@ -1749,24 +1754,40 @@
                             </div>
 
                             <!-- Chat Input Box -->
-                            <div class="p-2 sm:p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg shrink-0 flex items-center gap-2">
-                                <input 
-                                    type="text" 
-                                    id="fs-chat-input" 
-                                    placeholder="Escribe un mensaje para acordar términos o condiciones..." 
-                                    onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${contract.id}')"
-                                    class="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
-                                >
-                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="h-10 px-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Contactar por WhatsApp">
-                                    <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                                    </svg>
-                                    <span class="hidden sm:inline">WhatsApp</span>
-                                </a>
-                                <button type="button" onclick="ContractsManager.sendContractMessage('${contract.id}')" class="h-10 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
-                                    <span class="material-symbols-outlined text-base">send</span>
-                                    <span class="hidden sm:inline">Enviar</span>
-                                </button>
+                            <div class="p-2 sm:p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg shrink-0 flex flex-col gap-2">
+                                <!-- Quick Proposals inline with composer -->
+                                <div class="flex items-center gap-1.5 overflow-x-auto text-[10px] font-headline font-bold px-1">
+                                    <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1"><span class="hidden sm:inline">Propuestas </span>Rápidas:</span>
+                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'canon')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                        <span class="material-symbols-outlined text-[14px] text-amber-500">payments</span>
+                                        <span>Canon</span>
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'ajuste')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                        <span class="material-symbols-outlined text-[14px] text-blue-500">trending_up</span>
+                                        <span>Ajuste</span>
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'llaves')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                        <span class="material-symbols-outlined text-[14px] text-purple-500">key</span>
+                                        <span>Llaves</span>
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.sendQuickProposal('${contract.id}', 'acuerdo')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                        <span>Acuerdo</span>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="text" 
+                                        id="fs-chat-input" 
+                                        placeholder="Escribe un mensaje para acordar términos o condiciones..." 
+                                        onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${contract.id}')"
+                                        class="flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
+                                    >
+                                    <button type="button" onclick="ContractsManager.sendContractMessage('${contract.id}')" class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
+                                        <span class="material-symbols-outlined text-base">send</span>
+                                        <span class="hidden sm:inline">Enviar</span>
+                                    </button>
+                                </div>
                             </div>
 
                         </div>
@@ -2028,8 +2049,8 @@
                 ];
                 badges.forEach(badge => {
                     if (badge) {
-                        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Tiempo Real Conectado</span>';
-                        badge.className = 'px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5';
+                        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="hidden sm:inline">Conectado</span>';
+                        badge.className = 'px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5 shrink-0';
                     }
                 });
             }
@@ -2631,45 +2652,22 @@
 
                             <!-- Actions -->
                             <div class="flex items-center gap-2 shrink-0 flex-wrap">
-                                <div id="embedded-chat-realtime-status-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                                <div id="embedded-chat-realtime-status-badge" class="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5 shrink-0" title="Tiempo Real Conectado">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>Tiempo Real</span>
+                                    <span class="hidden sm:inline">Conectado</span>
                                 </div>
 
-                                <button type="button" onclick="ContractsManager.openContractFullscreen('${activeContractId}', 'document')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                                <button type="button" onclick="ContractsManager.openContractFullscreen('${activeContractId}', 'document')" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all flex items-center justify-center shrink-0" title="Ver Contrato">
                                     <span class="material-symbols-outlined text-sm">description</span>
-                                    <span class="hidden sm:inline">Ver Contrato</span>
                                 </button>
 
-                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-xs transition-all flex items-center justify-center shrink-0" title="Contactar por WhatsApp">
+                                    <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                                     </svg>
-                                    <span class="hidden sm:inline">WhatsApp</span>
                                 </a>
                             </div>
                         </header>
-
-                        <!-- Quick Proposals Bar -->
-                        <div class="px-4 py-2 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-[11px] font-headline font-bold">
-                            <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1">Propuestas Rápidas:</span>
-                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'canon')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                <span class="material-symbols-outlined text-xs text-amber-500">payments</span>
-                                <span>Canon</span>
-                            </button>
-                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'ajuste')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                <span class="material-symbols-outlined text-xs text-blue-500">trending_up</span>
-                                <span>Ajuste ICL/IPC</span>
-                            </button>
-                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'llaves')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                <span class="material-symbols-outlined text-xs text-purple-500">key</span>
-                                <span>Entrega Llaves</span>
-                            </button>
-                            <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'acuerdo')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
-                                <span class="material-symbols-outlined text-xs">check_circle</span>
-                                <span>Conformidad</span>
-                            </button>
-                        </div>
 
                         <!-- Messages Stream Container -->
                         <div id="embedded-chat-messages-container" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 flex flex-col bg-zinc-50/30 dark:bg-zinc-950/40">
@@ -2680,22 +2678,46 @@
                         </div>
 
                         <!-- Composer Box -->
-                        <div class="p-3 sm:p-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 shrink-0">
-                            <input 
-                                type="text" 
-                                id="embedded-chat-input" 
-                                placeholder="Escribe un mensaje para acordar términos o condiciones..."
-                                onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
-                                class="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
-                            >
-                            <button 
-                                type="button" 
-                                onclick="ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
-                                class="h-10 px-5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
-                            >
-                                <span class="material-symbols-outlined text-base">send</span>
-                                <span class="hidden sm:inline">Enviar</span>
-                            </button>
+                        <div class="p-2 sm:p-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 shrink-0">
+                            <!-- Quick Proposals inline with composer -->
+                            <div class="flex items-center gap-1.5 overflow-x-auto text-[10px] font-headline font-bold px-1">
+                                <span class="text-zinc-400 uppercase text-[9px] font-black tracking-wider shrink-0 mr-1"><span class="hidden sm:inline">Propuestas </span>Rápidas:</span>
+                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'canon')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-[14px] text-amber-500">payments</span>
+                                    <span>Canon</span>
+                                </button>
+                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'ajuste')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-[14px] text-blue-500">trending_up</span>
+                                    <span>Ajuste</span>
+                                </button>
+                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'llaves')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-300 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-[14px] text-purple-500">key</span>
+                                    <span>Llaves</span>
+                                </button>
+                                <button type="button" onclick="ContractsManager.sendQuickProposal('${activeContractId}', 'acuerdo')" class="px-2 py-0.5 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-emerald-600 dark:text-emerald-400 transition-all flex items-center gap-1 shrink-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span>Acuerdo</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Input Row -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <input 
+                                    type="text" 
+                                    id="embedded-chat-input" 
+                                    placeholder="Escribe un mensaje para acordar términos o condiciones..."
+                                    onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
+                                    class="flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
+                                >
+                                <button 
+                                    type="button" 
+                                    onclick="ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
+                                    class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+                                >
+                                    <span class="material-symbols-outlined text-base">send</span>
+                                    <span class="hidden sm:inline">Enviar</span>
+                                </button>
+                            </div>
                         </div>
 
                     </section>
