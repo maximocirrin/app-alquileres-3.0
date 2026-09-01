@@ -1921,10 +1921,10 @@
                     : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@habitat.ar') : 'corredor@habitat.ar');
             }
 
-            let dbRole = 'corredor';
-            if (effectiveRole === 'TENANT' || effectiveRole === 'inquilino') dbRole = 'inquilino';
-            else if (effectiveRole === 'OWNER' || effectiveRole === 'propietario') dbRole = 'propietario';
-            else if (effectiveRole === 'GUARANTOR' || effectiveRole === 'garante') dbRole = 'garante';
+            let dbRole = 'BROKER';
+            if (effectiveRole === 'TENANT' || effectiveRole === 'inquilino') dbRole = 'TENANT';
+            else if (effectiveRole === 'OWNER' || effectiveRole === 'propietario') dbRole = 'OWNER';
+            else if (effectiveRole === 'GUARANTOR' || effectiveRole === 'garante') dbRole = 'TENANT';
             else if (effectiveRole === 'SISTEMA') dbRole = 'SISTEMA';
 
             return {
@@ -2182,19 +2182,28 @@
 
             if (duplicateIndex !== -1) {
                 list[duplicateIndex] = { ...list[duplicateIndex], ...msgObj };
-                const storageKey = `habitat_chat_messages_${contractId}`;
-                localStorage.setItem(storageKey, JSON.stringify(list));
-                this.renderChatMessages(contractId, 'fs-chat-messages-container');
-                this.renderChatMessages(contractId, 'embedded-chat-messages-container');
-                return;
+                localStorage.setItem(`habitat_chat_messages_${contractId}`, JSON.stringify(list));
+            } else {
+                list.push(msgObj);
+                localStorage.setItem(`habitat_chat_messages_${contractId}`, JSON.stringify(list));
             }
 
-            // 3. Add new message
-            list.push(msgObj);
-            const storageKey = `habitat_chat_messages_${contractId}`;
-            localStorage.setItem(storageKey, JSON.stringify(list));
+            // Only update read status if this chat is currently open
+            if (ContractsManager._embeddedActiveContractId === String(contractId)) {
+                localStorage.setItem(`chat_last_seen_${contractId}`, Date.now().toString());
+            }
+
             this.renderChatMessages(contractId, 'fs-chat-messages-container');
             this.renderChatMessages(contractId, 'embedded-chat-messages-container');
+
+            // Optionally refresh the sidebar if embedded chat is active
+            if (ContractsManager._lastEmbeddedContainerId) {
+                // If the user is currently typing, don't disrupt them.
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+                    ContractsManager.renderEmbeddedChat(ContractsManager._lastEmbeddedContainerId, ContractsManager._lastEmbeddedOptions);
+                }
+            }
         },
 
         sendContractMessage: async function (contractId, customText = null, proposalData = null, inputElementId = null) {
@@ -2332,6 +2341,10 @@
             const container = document.getElementById(containerId);
             if (!container) return;
 
+            // Save container and options for real-time updates
+            ContractsManager._lastEmbeddedContainerId = containerId;
+            ContractsManager._lastEmbeddedOptions = options;
+
             // Ensure contracts are synced
             if (contracts.length === 0 && window.supabaseClient) {
                 await syncContractsFromSupabase();
@@ -2357,12 +2370,20 @@
             const role = options.role || this.currentUserRole || 'OWNER';
             this.currentUserRole = role;
 
-            if (!this._embeddedActiveContractId || !allContracts.some(c => c.id === this._embeddedActiveContractId)) {
-                this._embeddedActiveContractId = allContracts[0].id;
+
+            // Determine the active contract
+            let activeContractId = ContractsManager._embeddedActiveContractId;
+            if (!activeContractId || !allContracts.find(c => c.id === activeContractId)) {
+                activeContractId = allContracts.length > 0 ? allContracts[0].id : null;
+                ContractsManager._embeddedActiveContractId = activeContractId;
             }
 
-            const activeContract = this.getContractById(this._embeddedActiveContractId) || allContracts[0];
-            const activeContractId = activeContract.id;
+            // Mark active chat as read
+            if (activeContractId) {
+                localStorage.setItem(`chat_last_seen_${activeContractId}`, Date.now().toString());
+            }
+
+            const activeContract = this.getContractById(activeContractId);
 
             // WhatsApp url for current active contract
             const effectiveRole = this.resolveCurrentUserInfo(activeContract).role;
@@ -2450,7 +2471,11 @@
                                         isMe = true;
                                     }
                                     if (!isMe && lastMsgObj.remitente_rol !== 'SISTEMA') {
-                                        hasNewMessage = true;
+                                        const lastSeen = Number(localStorage.getItem(`chat_last_seen_${c.id}`)) || 0;
+                                        const msgTime = new Date(lastMsgObj.created_at || 0).getTime();
+                                        if (msgTime > lastSeen) {
+                                            hasNewMessage = true;
+                                        }
                                     }
                                 }
                                 
@@ -2591,6 +2616,11 @@
             const newSidebar = document.getElementById(sidebarListId);
             if (newSidebar) {
                 newSidebar.scrollTop = savedScroll;
+                // Double check in next frame for reliable restoration
+                setTimeout(() => {
+                    const checkSidebar = document.getElementById(sidebarListId);
+                    if (checkSidebar) checkSidebar.scrollTop = savedScroll;
+                }, 10);
             }
 
             // Initialize chat and messages for this active contract
