@@ -4,7 +4,7 @@
  */
 export default function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');

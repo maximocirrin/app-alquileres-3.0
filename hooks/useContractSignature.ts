@@ -130,11 +130,12 @@ export function useContractSignature({
     setCryptoMessage('Verificando prueba de vida y validación de DNI en RENAPER / Didit...');
 
     let localStepCount = 0;
+    let currentDelay = 2000;
 
     // Clear any previous timer
-    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
 
-    pollTimerRef.current = setInterval(async () => {
+    const poll = async () => {
       localStepCount++;
 
       try {
@@ -147,7 +148,6 @@ export function useContractSignature({
           setActiveCryptoStep(statusRes.step);
 
           if (statusRes.isComplete) {
-            clearInterval(pollTimerRef.current);
             finishSuccess(statusRes);
             return;
           }
@@ -168,7 +168,6 @@ export function useContractSignature({
           setCryptoProgress(100);
           setActiveCryptoStep('COMPLETED');
           setCryptoMessage('Sellado inmutable y Certificado de Evidencia (Audit Trail) generado.');
-          clearInterval(pollTimerRef.current);
 
           const completedContract: Contract = {
             ...activeContract,
@@ -192,9 +191,16 @@ export function useContractSignature({
           setActiveContract(completedContract);
           setCurrentStep('SUCCESS');
           if (onSuccess) onSuccess(completedContract);
+          return;
         }
       }
-    }, 1500);
+
+      // Schedule next poll with backoff
+      currentDelay = Math.min(currentDelay * 1.5, 10000);
+      pollTimerRef.current = setTimeout(poll, currentDelay);
+    };
+
+    pollTimerRef.current = setTimeout(poll, currentDelay);
   }, [activeContract, userRole, onSuccess]);
 
   const finishSuccess = useCallback((statusRes: SignatureStatusResponse) => {

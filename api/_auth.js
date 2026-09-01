@@ -1,9 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_MrxixhDAPh1NXACfIR29Eg_ojFWOfU5';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 /**
  * Configura los encabezados CORS seguros para la API
  */
@@ -19,9 +17,13 @@ export function setCorsHeaders(req, res) {
  * Inicializa un cliente de Supabase con permisos de Service Role (si está disponible) o Anon
  */
 export function getSupabaseAdmin() {
-  const key = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
-  return createClient(SUPABASE_URL, key);
+  // ATENCIÓN: Esta función fue modificada por seguridad. 
+  // Ya no utiliza el Service Role Key. Ahora utiliza el ANON KEY para que se aplique RLS.
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
+
+const tokenCache = new Map();
+const CACHE_TTL = 60 * 1000; // 60 seconds
 
 /**
  * Valida el token JWT en el header Authorization y retorna el usuario autenticado y su id_perfil
@@ -42,6 +44,11 @@ export async function getAuthenticatedUser(req) {
 
   // 1. Intentar validación vía Supabase JWT
   if (token) {
+    const cached = tokenCache.get(token);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return { user: cached.user, profile: cached.profile, error: null };
+    }
+
     try {
       const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const { data: { user }, error: authErr } = await supabaseClient.auth.getUser(token);
@@ -55,58 +62,24 @@ export async function getAuthenticatedUser(req) {
           .limit(1)
           .maybeSingle();
 
-        return { user, profile: profile || { user_id: user.id, mail: user.email }, error: null };
+        const finalProfile = profile || { user_id: user.id, mail: user.email };
+        
+        tokenCache.set(token, {
+          user,
+          profile: finalProfile,
+          timestamp: Date.now()
+        });
+        
+        return { user, profile: finalProfile, error: null };
       }
     } catch (err) {
       console.warn('[getAuthenticatedUser] Error validando token Supabase:', err.message);
     }
   }
 
-  // 2. Fallback de resolución por encabezados de contexto o cuerpo
-  const profileId = req.headers['x-profile-id'] || 
-                    (typeof req.body === 'object' ? req.body?.id_perfil : null) || 
-                    (req.query ? req.query.id_perfil : null);
-
-  const userEmail = req.headers['x-user-email'] || 
-                    (typeof req.body === 'object' ? req.body?.email : null) || 
-                    (req.query ? req.query.email : null);
-
-  if (profileId && !isNaN(Number(profileId))) {
-    try {
-      const { data: profile } = await supabaseAdmin
-        .from('Perfil')
-        .select('*')
-        .eq('id_perfil', Number(profileId))
-        .maybeSingle();
-
-      if (profile) {
-        return {
-          user: { id: profile.user_id || `profile_${profile.id_perfil}`, email: profile.mail },
-          profile,
-          error: null
-        };
-      }
-    } catch (e) {}
-  }
-
-  if (userEmail) {
-    try {
-      const { data: profile } = await supabaseAdmin
-        .from('Perfil')
-        .select('*')
-        .eq('mail', String(userEmail).toLowerCase().trim())
-        .limit(1)
-        .maybeSingle();
-
-      if (profile) {
-        return {
-          user: { id: profile.user_id || `profile_${profile.id_perfil}`, email: profile.mail },
-          profile,
-          error: null
-        };
-      }
-    } catch (e) {}
-  }
+  // 2. Bloqueo de fallback de resolución por encabezados de contexto
+  // Se eliminó la lectura insegura de 'x-profile-id' sin validación de token
+  // para prevenir vulnerabilidades de suplantación de identidad.
 
   return { user: null, profile: null, error: 'Token de autorización ausente o sesión inválida.' };
 }

@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const app = express();
 const port = 3000;
@@ -28,40 +28,49 @@ app.use((req, res, next) => {
     next();
 });
 
-// Protect Sensitive Files from Static Serving
+// Protect Sensitive Files from Static Serving (Whitelist approach)
 app.use((req, res, next) => {
-    // Permitir llamadas normales a rutas API (que no terminen en .js)
-    if (req.path.startsWith('/api/') && !req.path.endsWith('.js')) {
+    const p = req.path;
+
+    // 1. Rutas de API son manejadas por Express, no por archivos estáticos
+    if (p.startsWith('/api/') && !p.endsWith('.js')) {
         return next();
     }
 
-    const blockedPatterns = [
-        /^\/\.env/i,
-        /\.env(\..+)?$/i,
-        /\.key$/i,
-        /\.csr$/i,
-        /\.sql$/i,
-        /^\/\.git/i,
-        /^\/\.agents/i,
-        /^\/api\/.*\.js$/i,
-        /^\/services\//i,
-        /^\/supabase\//i,
-        /^\/scripts\//i,
-        /^\/types\//i,
-        /^\/hooks\//i,
-        /^\/server\.js$/i,
-        /^\/package\.json$/i,
-        /^\/package-lock\.json$/i,
-        /^\/build-components/i
-    ];
-    if (blockedPatterns.some(pattern => pattern.test(req.path))) {
+    // 2. Carpetas públicas permitidas explícitamente
+    const publicFolders = ['/css/', '/js/', '/img/', '/components/', '/uploads/'];
+    if (publicFolders.some(folder => p.startsWith(folder))) {
+        return next();
+    }
+
+    // 3. Archivos seguros en la raíz (HTML, iconos, etc)
+    const ext = path.extname(p).toLowerCase();
+    const safeExtensions = ['.html', '.ico', '.png', '.jpg', '.jpeg', '.svg', '.webmanifest'];
+    
+    // Si es un archivo en el directorio raíz con extensión segura
+    // (p.indexOf('/', 1) === -1 asegura que no hay subcarpetas)
+    if (p === '/' || (safeExtensions.includes(ext) && p.indexOf('/', 1) === -1)) {
+        return next();
+    }
+
+    // 4. Bloquear explícitamente archivos de código, configuración y ocultos
+    const blockedExts = ['.js', '.json', '.env', '.key', '.csr', '.sql', '.ps1', '.bat', '.md'];
+    if (blockedExts.includes(ext) || p.startsWith('/.') || p.includes('/.')) {
         return res.status(403).json({ error: 'Forbidden', message: 'Acceso restringido a este recurso.' });
     }
+
+    // 5. Bloquear carpetas internas
+    const privateFolders = ['/api/', '/services/', '/supabase/', '/scripts/', '/types/', '/hooks/'];
+    if (privateFolders.some(folder => p.startsWith(folder))) {
+        return res.status(403).json({ error: 'Forbidden', message: 'Acceso restringido a este recurso.' });
+    }
+
+    // Si no cayó en ninguna regla de bloqueo, dejar pasar (para evitar romper cosas inesperadas)
     next();
 });
 
-app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for base64 images
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '5mb' })); // Limit to prevent DoS, high enough for standard use
+app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
 // Serve Static Files
 app.use(express.static(path.join(__dirname)));
