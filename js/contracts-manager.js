@@ -2495,11 +2495,28 @@
                 return getLatestTime(b.id) - getLatestTime(a.id);
             });
 
+            // Ocultar scroll del body y footers en vista móvil
+            const footers = document.querySelectorAll('footer');
+            const docks = document.querySelectorAll('#tenant-floating-dock-container, #broker-floating-dock-container, #owner-floating-dock-container');
+            const parentTabContent = container.closest('.tab-content');
+            
+            if (ContractsManager._mobileChatVisible && window.innerWidth < 1024) {
+                document.body.classList.add('overflow-hidden');
+                footers.forEach(f => f.style.display = 'none');
+                docks.forEach(d => d.classList.add('is-hidden'));
+                if (parentTabContent) parentTabContent.style.transform = 'none';
+            } else {
+                document.body.classList.remove('overflow-hidden');
+                footers.forEach(f => f.style.display = '');
+                docks.forEach(d => d.classList.remove('is-hidden'));
+                if (parentTabContent) parentTabContent.style.transform = '';
+            }
+
             container.innerHTML = `
-                <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col md:flex-row h-[720px] max-h-[82vh] font-body">
+                <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col lg:flex-row h-[calc(100dvh-160px)] min-h-[400px] lg:h-[720px] lg:max-h-[82vh] font-body">
                     
                     <!-- Left Sidebar: Conversations List -->
-                    <aside class="w-full md:w-80 lg:w-96 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                    <aside class="w-full h-full overflow-hidden lg:w-96 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-800 flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 ${ContractsManager._mobileChatVisible ? 'hidden lg:flex' : 'flex'}">
                         <!-- Sidebar Header -->
                         <div class="p-4 border-b border-zinc-200/80 dark:border-zinc-800 space-y-3">
                             <div class="flex items-center justify-between">
@@ -2520,13 +2537,14 @@
                                     placeholder="Buscar por propiedad o nombre..."
                                     value="${this._embeddedSearchTerm || ''}"
                                     oninput="ContractsManager._embeddedSearchTerm = this.value; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
-                                    class="w-full pl-9 pr-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    style="padding-left: 2.5rem;"
+                                    class="w-full pr-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 >
                             </div>
                         </div>
 
                         <!-- Conversations List -->
-                        <div id="${sidebarListId}" class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                        <div id="${sidebarListId}" class="flex-1 overflow-y-auto overscroll-contain divide-y divide-zinc-100 dark:divide-zinc-800/60">
                             ${filteredContracts.map(c => {
                                 const isSelected = c.id === activeContractId;
                                 
@@ -2573,7 +2591,7 @@
                                 
                                 return `
                                     <div 
-                                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
+                                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager._mobileChatVisible = true; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
                                         class="p-3.5 sm:p-4 transition-all cursor-pointer flex items-start gap-3 group ${isSelected ? 'bg-primary/5 dark:bg-primary/10 border-l-4 border-primary' : 'hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'}"
                                     >
                                         <div class="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
@@ -2607,12 +2625,15 @@
                     </aside>
 
                     <!-- Right Pane: Active Live Chat Window -->
-                    <section class="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#0c0d14]">
+                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-0 z-[999] lg:static lg:inset-auto lg:z-auto' : 'hidden lg:flex'}">
                         
                         <!-- Chat Window Header -->
                         <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                            <div class="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
+                                <button type="button" onclick="ContractsManager._mobileChatVisible = false; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' }); event.stopPropagation();" class="lg:hidden w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined">arrow_back</span>
+                                </button>
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
                                     <span class="material-symbols-outlined text-xl">handshake</span>
                                 </div>
                                 <div class="min-w-0">
