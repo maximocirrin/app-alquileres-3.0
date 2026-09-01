@@ -2041,39 +2041,18 @@
                     console.warn("[Chat] Error al cargar mensajes desde Supabase:", err);
                 }
 
-                // Subscribe to Supabase Realtime Channel
-                if (this._chatChannel) {
-                    try {
-                        window.supabaseClient.removeChannel(this._chatChannel);
-                    } catch (e) {}
-                }
-
-                const channelName = `contract_chat_${contractId}`;
-                this._chatChannel = window.supabaseClient
-                    .channel(channelName)
-                    .on('postgres_changes', {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'Mensaje_Contrato'
-                    }, (payload) => {
-                        if (payload.new && (payload.new.contract_ref_id === String(contractId) || String(payload.new.id_contrato) === String(contract.dbContractId))) {
-                            ContractsManager.appendIncomingMessage(contractId, payload.new);
-                        }
-                    })
-                    .subscribe((status) => {
-                        const badges = [
-                            document.getElementById('chat-realtime-status-badge'),
-                            document.getElementById('embedded-chat-realtime-status-badge')
-                        ];
-                        badges.forEach(badge => {
-                            if (badge) {
-                                if (status === 'SUBSCRIBED') {
-                                    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="hidden sm:inline">Conectado</span>';
-                                    badge.className = 'px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5 shrink-0';
-                                }
-                            }
-                        });
-                    });
+                // The realtime subscription is now handled globally by notifications.js
+                // which dispatches 'habitat:new_chat_message' on every new message
+                const badges = [
+                    document.getElementById('chat-realtime-status-badge'),
+                    document.getElementById('embedded-chat-realtime-status-badge')
+                ];
+                badges.forEach(badge => {
+                    if (badge) {
+                        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="hidden sm:inline">Conectado</span>';
+                        badge.className = 'px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20 flex items-center gap-1.5 shrink-0';
+                    }
+                });
             }
         },
 
@@ -2218,13 +2197,9 @@
             this.renderChatMessages(contractId, 'fs-chat-messages-container');
             this.renderChatMessages(contractId, 'embedded-chat-messages-container');
 
-            // Optionally refresh the sidebar if embedded chat is active
+            // Refresh only the sidebar list if embedded chat is active to resort without losing focus
             if (ContractsManager._lastEmbeddedContainerId) {
-                // If the user is currently typing, don't disrupt them.
-                const activeTag = document.activeElement ? document.activeElement.tagName : '';
-                if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-                    ContractsManager.renderEmbeddedChat(ContractsManager._lastEmbeddedContainerId, ContractsManager._lastEmbeddedOptions);
-                }
+                ContractsManager.refreshSidebarList(ContractsManager._lastEmbeddedContainerId);
             }
         },
 
@@ -2359,6 +2334,111 @@
         _embeddedActiveContractId: null,
         _embeddedSearchTerm: '',
 
+        refreshSidebarList: function(containerId) {
+            const sidebarListId = `chat-sidebar-list-${containerId}`;
+            const listContainer = document.getElementById(sidebarListId);
+            if (!listContainer) return;
+
+            const allContracts = this.getContracts();
+            const role = this.currentUserRole || 'OWNER';
+            const activeContractId = this._embeddedActiveContractId;
+
+            const filteredContracts = allContracts.filter(c => {
+                if (!this._embeddedSearchTerm) return true;
+                const s = this._embeddedSearchTerm.toLowerCase();
+                return (c.title && c.title.toLowerCase().includes(s)) ||
+                       (c.contractNumber && c.contractNumber.toLowerCase().includes(s)) ||
+                       (c.tenant?.name && c.tenant.name.toLowerCase().includes(s)) ||
+                       (c.owner?.name && c.owner.name.toLowerCase().includes(s));
+            }).sort((a, b) => {
+                const getLatestTime = (cId) => {
+                    let msgs = this._chatMessages[cId];
+                    if (!msgs) {
+                        try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
+                    }
+                    if (msgs.length > 0) {
+                        return new Date(msgs[msgs.length - 1].created_at || 0).getTime();
+                    }
+                    return 0;
+                };
+                return getLatestTime(b.id) - getLatestTime(a.id);
+            });
+
+            listContainer.innerHTML = filteredContracts.map(c => {
+                const isSelected = c.id === activeContractId;
+                
+                // Use detectActiveUserRole for more robust counterpart resolution
+                let effectiveRole = role;
+                if (typeof detectActiveUserRole === 'function') {
+                    effectiveRole = detectActiveUserRole(c) || role;
+                }
+                const counterpartName = effectiveRole === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
+                const counterpartRole = effectiveRole === 'TENANT' ? 'Propietario' : (effectiveRole === 'OWNER' ? 'Inquilino' : 'Partes');
+                
+                let msgs = this._chatMessages[c.id];
+                if (!msgs) {
+                    try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
+                }
+                
+                const lastMsgObj = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                const lastMsg = lastMsgObj ? lastMsgObj.mensaje : 'Canal oficial abierto para negociación de términos.';
+                
+                let hasNewMessage = false;
+                let unreadCount = 0;
+                if (!isSelected) {
+                    const currentUser = this.resolveCurrentUserInfo(c);
+                    const lastSeen = Number(localStorage.getItem(`chat_last_seen_${c.id}`)) || 0;
+                    
+                    for (let i = msgs.length - 1; i >= 0; i--) {
+                        const m = msgs[i];
+                        const msgTime = new Date(m.created_at || 0).getTime();
+                        if (msgTime <= lastSeen) break;
+                        
+                        const msgEmail = (m.remitente_email || '').toLowerCase().trim();
+                        const curEmail = (currentUser.email || '').toLowerCase().trim();
+                        let isMe = false;
+                        if (msgEmail && curEmail && msgEmail === curEmail) isMe = true;
+                        else if (m.id_perfil && currentUser.profileId && Number(m.id_perfil) === Number(currentUser.profileId)) isMe = true;
+                        else if (m.user_id && currentUser.userId && String(m.user_id) === String(currentUser.userId)) isMe = true;
+                        
+                        if (!isMe && m.remitente_rol !== 'SISTEMA') {
+                            unreadCount++;
+                        }
+                    }
+                    hasNewMessage = unreadCount > 0;
+                }
+                
+                return `
+                    <div 
+                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
+                        class="p-3.5 sm:p-4 transition-all cursor-pointer flex items-start gap-3 group ${isSelected ? 'bg-primary/5 dark:bg-primary/10 border-l-4 border-primary' : 'hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'}"
+                    >
+                        <div class="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
+                            <img src="${c.propertyImage || 'img/hero-marketplace.jpg'}" alt="${c.title}" class="w-full h-full object-cover">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0.5 right-0.5 ring-2 ring-white dark:ring-zinc-900"></span>
+                        </div>
+                        <div class="min-w-0 flex-1 space-y-1">
+                            <div class="flex items-center justify-between gap-1">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <h4 class="font-headline text-xs text-zinc-900 dark:text-white truncate ${isSelected ? 'text-primary dark:text-red-400 font-bold' : (hasNewMessage ? 'font-black' : 'font-bold')}">
+                                        ${c.title}
+                                    </h4>
+                                    ${hasNewMessage ? `<span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-black flex-shrink-0 shadow-sm" title="${unreadCount} mensajes nuevos">${unreadCount > 99 ? '99+' : unreadCount}</span>` : ''}
+                                </div>
+                                <span class="text-[10px] text-zinc-400 font-mono shrink-0">${c.contractNumber}</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate ${hasNewMessage ? 'font-semibold text-zinc-700 dark:text-zinc-200' : ''}">${lastMsg}</p>
+                            <div class="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span class="material-symbols-outlined text-xs text-emerald-500">person</span>
+                                <span class="font-semibold truncate">${counterpartName}</span>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-extrabold uppercase shrink-0">${counterpartRole}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        },
+
         renderEmbeddedChat: async function (containerId, options = {}) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -2468,8 +2548,14 @@
                         <div id="${sidebarListId}" class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
                             ${filteredContracts.map(c => {
                                 const isSelected = c.id === activeContractId;
-                                const counterpartName = role === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
-                                const counterpartRole = role === 'TENANT' ? 'Propietario' : (role === 'OWNER' ? 'Inquilino' : 'Partes');
+                                
+                                // Use detectActiveUserRole for more robust counterpart resolution
+                                let effectiveRole = role;
+                                if (typeof detectActiveUserRole === 'function') {
+                                    effectiveRole = detectActiveUserRole(c) || role;
+                                }
+                                const counterpartName = effectiveRole === 'TENANT' ? (c.owner?.name || 'Propietario') : (c.tenant?.name || 'Inquilino');
+                                const counterpartRole = effectiveRole === 'TENANT' ? 'Propietario' : (effectiveRole === 'OWNER' ? 'Inquilino' : 'Partes');
                                 
                                 let msgs = this._chatMessages[c.id];
                                 if (!msgs) {
@@ -2480,25 +2566,28 @@
                                 const lastMsg = lastMsgObj ? lastMsgObj.mensaje : 'Canal oficial abierto para negociación de términos.';
                                 
                                 let hasNewMessage = false;
-                                if (lastMsgObj && !isSelected) {
+                                let unreadCount = 0;
+                                if (!isSelected) {
                                     const currentUser = this.resolveCurrentUserInfo(c);
-                                    const msgEmail = (lastMsgObj.remitente_email || '').toLowerCase().trim();
-                                    const curEmail = (currentUser.email || '').toLowerCase().trim();
-                                    let isMe = false;
-                                    if (msgEmail && curEmail && msgEmail === curEmail) {
-                                        isMe = true;
-                                    } else if (lastMsgObj.id_perfil && currentUser.profileId && Number(lastMsgObj.id_perfil) === Number(currentUser.profileId)) {
-                                        isMe = true;
-                                    } else if (lastMsgObj.user_id && currentUser.userId && String(lastMsgObj.user_id) === String(currentUser.userId)) {
-                                        isMe = true;
-                                    }
-                                    if (!isMe && lastMsgObj.remitente_rol !== 'SISTEMA') {
-                                        const lastSeen = Number(localStorage.getItem(`chat_last_seen_${c.id}`)) || 0;
-                                        const msgTime = new Date(lastMsgObj.created_at || 0).getTime();
-                                        if (msgTime > lastSeen) {
-                                            hasNewMessage = true;
+                                    const lastSeen = Number(localStorage.getItem(`chat_last_seen_${c.id}`)) || 0;
+                                    
+                                    for (let i = msgs.length - 1; i >= 0; i--) {
+                                        const m = msgs[i];
+                                        const msgTime = new Date(m.created_at || 0).getTime();
+                                        if (msgTime <= lastSeen) break;
+                                        
+                                        const msgEmail = (m.remitente_email || '').toLowerCase().trim();
+                                        const curEmail = (currentUser.email || '').toLowerCase().trim();
+                                        let isMe = false;
+                                        if (msgEmail && curEmail && msgEmail === curEmail) isMe = true;
+                                        else if (m.id_perfil && currentUser.profileId && Number(m.id_perfil) === Number(currentUser.profileId)) isMe = true;
+                                        else if (m.user_id && currentUser.userId && String(m.user_id) === String(currentUser.userId)) isMe = true;
+                                        
+                                        if (!isMe && m.remitente_rol !== 'SISTEMA') {
+                                            unreadCount++;
                                         }
                                     }
+                                    hasNewMessage = unreadCount > 0;
                                 }
                                 
                                 return `
@@ -2517,7 +2606,7 @@
                                                     <h4 class="font-headline text-xs text-zinc-900 dark:text-white truncate ${isSelected ? 'text-primary dark:text-red-400 font-bold' : (hasNewMessage ? 'font-black' : 'font-bold')}">
                                                         ${c.title}
                                                     </h4>
-                                                    ${hasNewMessage ? '<span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 animate-pulse" title="Nuevo mensaje"></span>' : ''}
+                                                    ${hasNewMessage ? `<span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-black flex-shrink-0 shadow-sm" title="${unreadCount} mensajes nuevos">${unreadCount > 99 ? '99+' : unreadCount}</span>` : ''}
                                                 </div>
                                                 <span class="text-[10px] text-zinc-400 font-mono shrink-0">${c.contractNumber}</span>
                                             </div>
@@ -3997,6 +4086,20 @@
                     }, 400);
                 }
             }
+        }
+    });
+
+    // Global listener for incoming chat messages (dispatched by notifications.js)
+    window.addEventListener('habitat:new_chat_message', (e) => {
+        const msg = e.detail;
+        if (msg && msg.contract_ref_id) {
+            // Check if we need to resolve it by dbContractId instead of string ID
+            let localContractId = msg.contract_ref_id;
+            const targetContract = ContractsManager.getContracts().find(c => String(c.dbContractId) === String(msg.id_contrato));
+            if (targetContract) {
+                localContractId = targetContract.id;
+            }
+            ContractsManager.appendIncomingMessage(localContractId, msg);
         }
     });
 
