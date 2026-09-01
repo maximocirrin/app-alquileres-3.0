@@ -393,19 +393,29 @@
 
       window.addEventListener('message', messageHandler);
 
-      // 2. Polling de seguridad a Didit cada 3.5 segundos
-      const pollInterval = setInterval(async () => {
+      // 2. Polling de seguridad con Backoff Exponencial
+      let currentDelay = 3500;
+      let pollTimer;
+
+      const poll = async () => {
         if (isFinished) {
-          clearInterval(pollInterval);
+          clearTimeout(pollTimer);
           return;
         }
         const decision = await fetchSessionDecision(sessionId);
         if (decision && decision.status && (decision.status === 'APPROVED' || decision.status === 'DECLINED')) {
-          clearInterval(pollInterval);
+          clearTimeout(pollTimer);
           window.removeEventListener('message', messageHandler);
           await completeFlow(decision);
+          return;
         }
-      }, 3500);
+
+        // Schedule next poll
+        currentDelay = Math.min(currentDelay * 1.5, 10000);
+        pollTimer = setTimeout(poll, currentDelay);
+      };
+
+      pollTimer = setTimeout(poll, currentDelay);
     });
   }
 

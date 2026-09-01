@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#ffffff" id="meta-theme-color">
@@ -795,12 +797,13 @@
 
         async function checkExistingPassport() {
             // 1. Limpiar cualquier remanente corrupto de "Usuario Habitat" en localStorage
+            let pData = {};
             try {
                 const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
                 if (diditIdent?.fullName && (diditIdent.fullName.toLowerCase().includes('usuario habitat') || diditIdent.fullName.toLowerCase() === 'usuario')) {
                     localStorage.removeItem('habitat_didit_identity');
                 }
-                const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
                 if (pData?.razon_social && (pData.razon_social.toLowerCase().includes('usuario habitat') || pData.razon_social.toLowerCase() === 'usuario')) {
                     delete pData.razon_social;
                     delete pData.nombre_completo;
@@ -1703,3 +1706,4 @@
 </body>
 
 </html>
+

@@ -14,6 +14,22 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+    // 1. Verificación de Autenticación (Previene que cualquiera invoque la función)
+    // El Cron Job deberá enviar el header: Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader !== `Bearer ${supabaseServiceKey}`) {
+      console.warn("[Sync Indices BCRA] Intento de acceso no autorizado.");
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // 3. Uso seguro de Service Role Key (ahora está protegido por la autenticación)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Calcular fecha desde hace 3 meses para sincronizaciones incrementales
@@ -105,8 +121,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("[Sync Indices BCRA Error]:", error);
+    // 4. Evitar fuga de información en errores (Bonus de seguridad)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Error interno del servidor al procesar la sincronización" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
