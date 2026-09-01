@@ -611,6 +611,8 @@
                                 link: chatLink,
                                 role: 'ALL'
                             });
+
+                            window.dispatchEvent(new CustomEvent('habitat:new_chat_message', { detail: newMsg }));
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
