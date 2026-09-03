@@ -2344,6 +2344,19 @@ var DataManager = {
                         owner_has_signed: ownerFirmado,
                         cbu_alias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
                         status: status,
+                        url_contrato_final_pdf: item.url_contrato_final_pdf || null,
+                        url_contrato_original_pdf: item.url_contrato_original_pdf || null,
+                        hash_original_sha256: item.hash_original_sha256 || null,
+                        hash_final_sha256: item.hash_final_sha256 || null,
+                        clausulas_adicionales: item.clausulas_adicionales || null,
+                        has_contract: Boolean(
+                            item.url_contrato_final_pdf || 
+                            item.url_contrato_original_pdf || 
+                            item.hash_original_sha256 || 
+                            (item.clausulas_adicionales && typeof item.clausulas_adicionales === 'object' && Object.keys(item.clausulas_adicionales).length > 0) ||
+                            tenantFirmado ||
+                            ownerFirmado
+                        ),
                         tenant: {
                             role: 'TENANT',
                             profileId: finalTenantProfileId,
@@ -4332,10 +4345,6 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" id="btn-sync-bcra" onclick="triggerManualBcraSync()" class="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-headline font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-                        <span class="material-symbols-outlined text-base" id="icon-sync-bcra">sync</span>
-                        <span id="text-sync-bcra">Sincronizar BCRA</span>
-                    </button>
                     <button type="button" onclick="document.getElementById('bcra-indices-table-modal').style.display='none'" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-200/70 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors cursor-pointer shrink-0">
                         <span class="material-symbols-outlined text-base sm:text-lg">close</span>
                     </button>

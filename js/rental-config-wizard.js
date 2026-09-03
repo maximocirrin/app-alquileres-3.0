@@ -1415,12 +1415,49 @@
             if (raw) list = JSON.parse(raw);
         } catch (e) {}
 
-        const c = list.find(item => String(item.id) === String(contractId) || String(item.contractNumber) === String(contractId)) || list[0];
+        const targetStr = String(contractId || '').toLowerCase();
+        const targetNum = parseInt(String(contractId).replace(/\D/g, ''), 10);
+
+        // 1. Buscar en window.ownerActiveContractsMock (panel propietario)
+        let c = null;
+        if (window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
+            c = window.ownerActiveContractsMock.find(item => item && (
+                String(item.id || '').toLowerCase() === targetStr ||
+                String(item.contractNumber || '').toLowerCase() === targetStr ||
+                String(item.dbContractId || '') === targetStr ||
+                (targetNum && Number(item.dbContractId) === targetNum) ||
+                (item.propertyId && String(item.propertyId) === targetStr)
+            ));
+        }
+
+        // 2. Buscar en window.brokerActiveRentalsMock (panel corredor)
+        if (!c && window.brokerActiveRentalsMock && Array.isArray(window.brokerActiveRentalsMock)) {
+            c = window.brokerActiveRentalsMock.find(item => item && (
+                String(item.id || '').toLowerCase() === targetStr ||
+                String(item.contractCode || '').toLowerCase() === targetStr ||
+                String(item.dbContractId || '') === targetStr ||
+                (targetNum && Number(item.dbContractId) === targetNum)
+            ));
+        }
+
+        // 3. Buscar en list (localStorage)
+        if (!c && Array.isArray(list)) {
+            c = list.find(item => item && (
+                String(item.id || '').toLowerCase() === targetStr ||
+                String(item.contractNumber || '').toLowerCase() === targetStr ||
+                String(item.dbContractId || '') === targetStr ||
+                (targetNum && Number(item.dbContractId) === targetNum) ||
+                (item.propertyId && String(item.propertyId) === targetStr)
+            ));
+        }
+
+        if (!c && list.length > 0) c = list[0];
+
         if (!c) {
             if (window.ToastManager) {
                 window.ToastManager.show({
-                    title: 'Contrato no encontrado',
-                    message: 'No se pudo localizar el contrato seleccionado.',
+                    title: 'Alquiler no encontrado',
+                    message: 'No se pudo localizar la información del alquiler seleccionado.',
                     type: 'warning'
                 });
             }
@@ -1444,16 +1481,62 @@
                 tenant_dni: c.tenant?.dni || c.tenant_dni || '',
                 tenant_phone: c.tenant?.phone || c.tenant_phone || ''
             },
-            onSave: (savedData) => {
+            onConfirm: async (terms) => {
+                c.has_contract = true;
+                c.hasContract = true;
+                c.customClauses = terms.customClauses || [];
+                c.clauses = terms.clauses || {};
+                c.monthly_rent = terms.monthlyRent || c.monthly_rent;
+                c.monthlyRent = terms.monthlyRent || c.monthlyRent;
+                c.status = 'WAITING_TENANT';
+
+                // 1. Guardar en localStorage
+                try {
+                    let raw = localStorage.getItem('habitat_contracts');
+                    let stored = raw ? JSON.parse(raw) : [];
+                    const idx = stored.findIndex(item => item && (
+                        String(item.id) === String(c.id) || 
+                        String(item.contractNumber) === String(c.contractNumber || c.id) ||
+                        (c.dbContractId && String(item.dbContractId) === String(c.dbContractId))
+                    ));
+                    if (idx >= 0) {
+                        stored[idx] = { ...stored[idx], ...c, has_contract: true, hasContract: true };
+                    } else {
+                        stored.unshift({ ...c, has_contract: true, hasContract: true });
+                    }
+                    localStorage.setItem('habitat_contracts', JSON.stringify(stored));
+                } catch(e) {}
+
+                // 2. Persistir en Supabase si es contrato de base de datos
+                if (window.supabaseClient && c.dbContractId) {
+                    try {
+                        await window.supabaseClient.from('Contrato').update({
+                            clausulas_adicionales: terms.clauses || {},
+                            monto_cierre: terms.monthlyRent || c.monthly_rent,
+                            periodo_aumento_meses: terms.adjustmentFrequencyMonths || c.adjustment_frequency_months || 3,
+                            dia_vencimiento_mensual: terms.paymentDueDay || c.payment_due_day || 10
+                        }).eq('id_contrato', c.dbContractId);
+                    } catch(dbErr) {
+                        console.warn('[openContractEditorForRental] Aviso actualizando Contrato Supabase:', dbErr);
+                    }
+                }
+
+                if (window.ContractEditorModal?.close) {
+                    window.ContractEditorModal.close();
+                }
+
                 if (window.ToastManager) {
                     window.ToastManager.show({
-                        title: 'Contrato Notarial Consolidado',
-                        message: 'Las cláusulas y valores han quedado guardados.',
+                        title: '¡Contrato Generado con Éxito!',
+                        message: 'El contrato digital ha sido generado y vinculado a este alquiler.',
                         type: 'success'
                     });
                 }
+
                 if (typeof window.loadOwnerActiveRental === 'function') {
                     window.loadOwnerActiveRental();
+                } else if (typeof window.renderBrokerActiveRental === 'function') {
+                    window.renderBrokerActiveRental();
                 }
             }
         };

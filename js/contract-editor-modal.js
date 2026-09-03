@@ -1403,6 +1403,8 @@
 
                 if (typeof self._currentOptions?.onConfirm === 'function') {
                     await self._currentOptions.onConfirm(terms);
+                } else if (typeof self._currentOptions?.onSave === 'function') {
+                    await self._currentOptions.onSave(terms);
                 } else {
                     const appId = self._currentOptions?.applicant?.id;
                     let targetContractId = self._currentOptions?.contract?.id || self._currentOptions?.contractId || null;

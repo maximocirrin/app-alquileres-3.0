@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -127,6 +127,26 @@
 
 <body class="bg-background text-on-background dark:bg-zinc-950 dark:text-zinc-100 min-h-screen flex flex-col antialiased">
     
+    <!-- Seamless Direct Contract Transition Overlay -->
+    <div id="contract-direct-overlay" style="display: none;" class="fixed inset-0 z-[99999] bg-[#f8fafc] dark:bg-[#090a0f] flex flex-col items-center justify-center p-6 space-y-4 font-body">
+        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
+            <span class="material-symbols-outlined text-3xl animate-spin">sync</span>
+        </div>
+        <div class="text-center space-y-1">
+            <h3 class="font-headline font-bold text-sm text-zinc-900 dark:text-white">Cargando contrato...</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Preparando firma digital y entorno seguro</p>
+        </div>
+    </div>
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('contract') || params.has('id') || params.has('id_contrato')) {
+                var overlay = document.getElementById('contract-direct-overlay');
+                if (overlay) overlay.style.display = 'flex';
+            }
+        })();
+    </script>
+
     <!-- Navbar Scripts Integration -->
     <script src="js/navbar.js?v=4"></script>
 
