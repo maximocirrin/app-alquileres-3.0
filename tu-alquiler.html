@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1063,7 +1063,7 @@
                                     Próxima Actualización de Alquiler: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/50">${nextAdj.nextDate}</span>
                                 </h3>
                                 <p class="text-xs text-blue-100/90 mt-1">
-                                    Ajuste automático según <b>${contract.adjustment_index || 'IPC'} oficial del BCRA</b> cada <b>${freqMonths} meses</b>.
+                                    Ajuste automático según <b>${contract.adjustment_index || 'IPC'} oficial del BCRA</b> cada <b>${freqMonths} meses</b>${isIpc && indicesData?.ipc?.periodoTrimestralTexto ? ` (tomando los últimos índices publicados: <b>${freqMonths >= 6 ? indicesData.ipc.periodoSemestralTexto : indicesData.ipc.periodoTrimestralTexto}</b>)` : ''}.
                                 </p>
                             </div>
                         </div>
@@ -1071,7 +1071,7 @@
                             <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-left sm:text-right">
                                 <span class="block text-[10px] uppercase font-bold text-blue-200">Nuevo Canon Estimado (+${Number(defaultRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)</span>
                                 <span class="text-xl sm:text-2xl font-black font-headline text-emerald-300 font-mono block">$ ${estimatedNewRent.toLocaleString('es-AR')}</span>
-                                <span class="block text-[10px] text-blue-200/80">Regirá a partir de ${nextAdj.nextDate}</span>
+                                <span class="block text-[10px] text-blue-200/80">Regirá desde ${nextAdj.nextDate} • Datos oficiales publicados</span>
                             </div>
                             <button type="button" onclick="openBcraIndicesTableModal('${isIpc ? 'IPC' : 'ICL'}')" class="px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
                                 <span class="material-symbols-outlined text-base text-blue-600">table_chart</span>

@@ -1561,7 +1561,11 @@
             clauses.push({ tag: 'ABANDONO DE LA LOCACIÓN', body: `En el caso de que la LOCATARIA abandone el inmueble alquilado, la parte LOCADORA podrá ejercer el derecho a recuperar la tenencia del mismo. La LOCATARIA y los CODEUDORES tendrán a su cargo exclusivo los costos y costas del proceso judicial.` });
 
             // 9. PRECIO DEL ALQUILER - AJUSTE
-            clauses.push({ tag: 'PRECIO DEL ALQUILER - AJUSTE', body: indice === 'FIJO' ? `Las partes fijan el pago del canon mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, pactándose un valor fijo e inalterable.` : `Las partes fijan el pago del canon inicial mensual en <strong>${h(montoFmt, 'editor-monto')}</strong> que se reajustará cada <strong>${h(frecuencia, 'editor-frecuencia')} meses</strong> y en forma acumulativa, conforme al índice <strong>${h(indice, 'editor-indice')}</strong>.` });
+            let ajusteBody = `Las partes fijan el pago del canon mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, pactándose un valor fijo e inalterable.`;
+            if (indice !== 'FIJO') {
+                ajusteBody = `Las partes fijan el pago del canon inicial mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, el cual se reajustará cada <strong>${h(frecuencia, 'editor-frecuencia')} meses</strong> y en forma acumulativa conforme a la variación del índice oficial <strong>${h(indice, 'editor-indice')}</strong> (BCRA / INDEC). A tal efecto, las partes convienen expresamente que para la determinación del nuevo canon se tomará la variación del índice correspondiente a los períodos inmediatamente anteriores que se encuentren oficialmente publicados a la fecha de devengamiento del nuevo canon locativo. Si a la fecha de vencimiento del pago no se encontrare aún publicado el índice oficial correspondiente al mes inmediato anterior, se aplicará el último índice oficial disponible publicado a dicha fecha, liquidándose el canon en base a dicha información oficial consolidada.`;
+            }
+            clauses.push({ tag: 'PRECIO DEL ALQUILER - AJUSTE', body: ajusteBody });
 
             // 10. LUGAR Y FORMA DE PAGO
             clauses.push({ tag: 'LUGAR Y FORMA DE PAGO', body: `El canon mensual de alquiler será abonado por anticipado entre el día primero (1) y el día <strong>${h(diaVenc, 'editor-dia-venc')}</strong> de cada mes, mediante transferencia bancaria a la cuenta / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${h(aliasCbu, 'editor-alias-cbu')}</strong>.` });

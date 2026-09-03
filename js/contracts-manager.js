@@ -357,7 +357,7 @@
             tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
             body: contract.adjustmentIndex === 'FIJO'
                 ? `El precio del alquiler se fija en la suma de <b>${rentFmt}</b> mensuales durante toda la vigencia del contrato, pactándose un valor fijo e inalterable sin cláusula de indexación periódica.`
-                : `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice <b>${contract.adjustmentIndex || 'ICL'}</b> publicado oficialmente.`
+                : `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice oficial <b>${contract.adjustmentIndex || 'ICL'}</b> publicado por el BCRA / INDEC. A tal efecto, las partes acuerdan expresamente que para la determinación del nuevo monto se computará la variación de los períodos inmediatamente anteriores que se encuentren oficialmente publicados al momento del inicio del período de ajuste. Si a la fecha de pago no estuviere aún publicado el índice del mes anterior, se aplicará el último índice oficial disponible publicado a dicha fecha.`
         });
 
         // 4. Pagos y Mora

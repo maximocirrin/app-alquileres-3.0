@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1592,7 +1592,19 @@
                 }
                 renderFilteredBrokerApplications();
 
-                // 3. Sincronizar Alquileres Activos (Contratos & Cobros de este usuario)
+                // 3. Sincronizar Índices BCRA oficiales
+                if (window.DataManager?.getLatestIndices) {
+                    try {
+                        const liveIndices = await window.DataManager.getLatestIndices();
+                        if (liveIndices) {
+                            _cachedBrokerIndices = liveIndices;
+                        }
+                    } catch (errIndices) {
+                        console.warn('[Broker] Error cargando índices BCRA:', errIndices);
+                    }
+                }
+
+                // 4. Sincronizar Alquileres Activos (Contratos & Cobros de este usuario)
                 const dbRentals = await window.DataManager.getBrokerActiveRentals(currentProfileId, true);
                 brokerActiveRentalsMock.length = 0;
                 if (dbRentals && dbRentals.length > 0) {
@@ -1789,7 +1801,7 @@
                 switchCarteraSubtab('avisos');
             } else if (['operaciones', 'visitas', 'calculadora', 'tasaciones', 'mls'].includes(rawTab)) {
                 switchCandidatosSubtab('operaciones');
-            } else if (['contactos', 'postulaciones'].includes(rawTab)) {
+            } else if (['contactos', 'postulaciones', 'candidatos'].includes(rawTab)) {
                 switchCandidatosSubtab('contactos');
             }
 
@@ -1861,8 +1873,15 @@
                 }
             }
 
-            window.location.hash = normalizedTab;
+            if (window.location.hash.replace('#', '') !== normalizedTab) {
+                window.location.hash = normalizedTab;
+            }
         }
+
+        window.addEventListener('hashchange', () => {
+            const currentHash = mapTabName((window.location.hash || '#general').replace('#', ''));
+            switchBrokerTab(currentHash);
+        });
 
         function updateSlidingIndicator(activeBtn) {
             const nav = document.getElementById('floating-dock-nav');
@@ -2023,25 +2042,219 @@
             const grid = document.getElementById('container-grid-view');
             if (!grid) return;
 
-            grid.innerHTML = currentBrokerProperties.map(p => `
-                <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
-                    <div class="aspect-[16/10] w-full min-h-[220px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
-                        <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover">
-                        <span class="absolute top-3 left-3 px-3 py-1 text-[10px] font-black rounded-full uppercase text-white ${p.status === 'publicada' ? 'bg-emerald-500' : 'bg-amber-500'}">
-                            ${p.status}
-                        </span>
+            let localContracts = [];
+            try {
+                const raw = localStorage.getItem('habitat_contracts');
+                if (raw) localContracts = JSON.parse(raw);
+            } catch (e) {}
+
+            grid.innerHTML = currentBrokerProperties.map(p => {
+                const isPaused = p.status === 'pausada';
+                const normStatus = (p.status || 'publicada').toLowerCase();
+                const safePropJson = JSON.stringify({
+                    id: p.id,
+                    title: p.title || 'Propiedad en Cartera',
+                    address: p.address || 'Buenos Aires',
+                    price: p.price || 380000,
+                    operation: p.operation || 'alquiler',
+                    type: p.type || 'Departamento',
+                    images: [p.image || 'img/hero-marketplace.jpg']
+                }).replace(/"/g, '&quot;');
+
+                // Buscar si ya tiene un contrato activo generado
+                const activeContract = localContracts.find(c => String(c.propertyId) === String(p.id) || String(c.property_id) === String(p.id)) ||
+                    (brokerActiveRentalsMock && brokerActiveRentalsMock.find(r => String(r.id) === String(p.id) || String(r.raw_id) === String(p.id)));
+
+                return `
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#121214] group cursor-pointer" onclick="if(window.App && typeof window.App.showPropertyDetail === 'function') { window.App.showPropertyDetail('${p.id}'); } else if(window.openBlindCardModal) { window.openBlindCardModal('${p.id}'); } else { window.location.href = 'propiedad-detalle.html?id=${p.id}'; }">
+                    <!-- Contenedor Imagen & Badges -->
+                    <div class="aspect-[16/10] w-full min-h-[200px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                        <img src="${p.image || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                        
+                        <!-- Badges Superiores Izquierda -->
+                        <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10 pointer-events-none">
+                            <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase text-white shadow-xs ${isPaused ? 'bg-amber-500' : (p.status === 'alquilada' ? 'bg-blue-500' : 'bg-emerald-500')}">
+                                ${p.status}
+                            </span>
+                            <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase bg-black/60 text-white backdrop-blur-md shadow-xs">
+                                ${p.operation === 'temporal' ? 'Temporal' : (p.operation === 'venta' ? 'Venta' : 'Alquiler')}
+                            </span>
+                        </div>
+
+                        <!-- Acciones Superiores Derecha: Compartir y Tres Puntos -->
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 z-20" onclick="event.stopPropagation()">
+                            <!-- Compartir Rápido -->
+                            <button type="button" onclick="shareBrokerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}');" class="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow flex items-center justify-center transition-all cursor-pointer border border-white/20 active:scale-95 shrink-0" title="Compartir publicación">
+                                <span class="material-symbols-outlined text-sm">share</span>
+                            </button>
+
+                            <!-- Tres Puntos -->
+                            <div class="relative">
+                                <button type="button" onclick="toggleBrokerCardMenu(event, '${p.id}');" class="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow flex items-center justify-center transition-all cursor-pointer border border-white/20 active:scale-95 shrink-0" title="Opciones de publicación">
+                                    <span class="material-symbols-outlined text-base">more_vert</span>
+                                </button>
+
+                                <!-- Menú Contextual Desplegable -->
+                                <div id="broker-card-menu-${p.id}" class="broker-card-menu hidden absolute right-0 top-10 w-52 bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-1.5 z-50 animate-fade-in text-xs font-headline font-bold text-zinc-700 dark:text-zinc-200" onclick="event.stopPropagation()">
+                                    <button type="button" onclick="toggleBrokerPropPause('${p.id}', '${normStatus}', this); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base ${isPaused ? 'text-emerald-500' : 'text-amber-500'}">${isPaused ? 'play_circle' : 'pause_circle'}</span>
+                                        <span>${isPaused ? 'Reanudar publicación' : 'Pausar publicación'}</span>
+                                    </button>
+                                    <button type="button" onclick="if(window.App && typeof window.App.showPublishWizard === 'function') window.App.showPublishWizard(${safePropJson}); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-zinc-400">edit</span>
+                                        <span>Editar publicación</span>
+                                    </button>
+                                    <button type="button" onclick="shareBrokerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}'); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-zinc-400">share</span>
+                                        <span>Compartir enlace</span>
+                                    </button>
+                                    <button type="button" onclick="openBlindCardModal('${p.id}'); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left text-blue-600 dark:text-blue-400">
+                                        <span class="material-symbols-outlined text-base">visibility_off</span>
+                                        <span>Generar Ficha Ciega</span>
+                                    </button>
+                                    <div class="h-px bg-zinc-100 dark:bg-zinc-800 my-1"></div>
+                                    <button type="button" onclick="deleteBrokerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}'); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-rose-500">delete</span>
+                                        <span>Eliminar propiedad</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-5 flex-grow flex flex-col justify-between space-y-3">
+
+                    <!-- Datos Principales -->
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
                         <div>
-                            <span class="text-[10px] font-bold text-primary dark:text-red-400 uppercase">${p.id}</span>
-                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white line-clamp-1">${p.title}</h3>
-                            <span class="text-zinc-500 font-bold">${p.leadsCount} Interesados</span>
-                            <button type="button" onclick="openBlindCardModal()" class="font-bold">Ficha Ciega</button>
+                            <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-primary dark:text-red-400 mb-1">
+                                <span>${p.id}</span>
+                                <span class="text-zinc-500 dark:text-zinc-400 font-bold">${p.owner || 'Propietario'}</span>
+                            </div>
+                            <h3 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">${p.title}</h3>
+                            <p class="text-xs text-zinc-500 flex items-center gap-1 mt-1 line-clamp-1">
+                                <span class="material-symbols-outlined text-sm text-zinc-400">location_on</span> ${p.address || 'Buenos Aires'}
+                            </p>
+
+                            <div class="mt-4 flex items-baseline justify-between">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-xl font-black text-zinc-900 dark:text-white">$ ${Number(p.price || 0).toLocaleString('es-AR')}</span>
+                                    <span class="text-xs text-zinc-400">/ mes</span>
+                                </div>
+                                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">group</span> ${p.leadsCount || 0} interesados
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Acciones directas de Alquiler en la tarjeta -->
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800" onclick="event.stopPropagation()">
+                            ${activeContract ? `
+                                <div class="grid grid-cols-2 gap-2 w-full">
+                                    <button type="button" onclick="selectBrokerRental('${activeContract.id}'); switchBrokerTab('alquileres');" class="py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                        <span class="material-symbols-outlined text-base text-emerald-600 dark:text-emerald-400">payments</span>
+                                        <span>Ver Alquiler</span>
+                                    </button>
+                                    <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${activeContract.id}');" class="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                        <span class="material-symbols-outlined text-base text-primary dark:text-red-400">gavel</span>
+                                        <span>Editar Contrato</span>
+                                    </button>
+                                </div>
+                            ` : `
+                                <button type="button" onclick="if(window.RentalConfigWizard) window.RentalConfigWizard.open(${safePropJson}, { isBroker: true, role: 'BROKER' });" class="w-full py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-hover active:scale-[0.99] text-white text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                    <span class="material-symbols-outlined text-base">add_home_work</span>
+                                    <span>Generar Alquiler</span>
+                                </button>
+                            `}
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
+
+        window.toggleBrokerCardMenu = function (event, propId) {
+            event.stopPropagation();
+            const menu = document.getElementById(`broker-card-menu-${propId}`);
+            const isHidden = !menu || menu.classList.contains('hidden');
+            closeAllBrokerCardMenus();
+            if (menu && isHidden) {
+                menu.classList.remove('hidden');
+            }
+        };
+
+        window.closeAllBrokerCardMenus = function () {
+            document.querySelectorAll('.broker-card-menu').forEach(m => m.classList.add('hidden'));
+        };
+
+        document.addEventListener('click', () => {
+            if (typeof closeAllBrokerCardMenus === 'function') {
+                closeAllBrokerCardMenus();
+            }
+        });
+
+        window.shareBrokerProperty = function (propId, title) {
+            const url = `${window.location.origin}/propiedad-detalle.html?id=${propId}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: title || 'Propiedad en Cartera',
+                    text: `Mirá esta propiedad en Habitat: ${title}`,
+                    url: url
+                }).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    if (window.ToastManager) {
+                        window.ToastManager.show({
+                            title: 'Enlace Copiado',
+                            message: 'El enlace de la publicación fue copiado al portapapeles.',
+                            type: 'success'
+                        });
+                    } else {
+                        alert('Enlace copiado al portapapeles: ' + url);
+                    }
+                });
+            }
+        };
+
+        window.toggleBrokerPropPause = function (propId, currentStatus, btn) {
+            const prop = (currentBrokerProperties || []).find(p => String(p.id) === String(propId));
+            if (!prop) return;
+            const isPaused = prop.status === 'pausada';
+            prop.status = isPaused ? 'publicada' : 'pausada';
+            if (window.ToastManager) {
+                window.ToastManager.show({
+                    title: isPaused ? 'Publicación Reanudada' : 'Publicación Pausada',
+                    message: `La propiedad "${prop.title}" ahora está ${prop.status}.`,
+                    type: 'info'
+                });
+            }
+            renderBrokerPropertiesGrid();
+            renderBrokerPropertiesRows();
+        };
+
+        window.deleteBrokerProperty = async function (propId, title) {
+            let confirmed = true;
+            if (window.showCustomConfirm) {
+                confirmed = await window.showCustomConfirm({
+                    title: '¿Eliminar publicación de tu cartera?',
+                    message: `Esta acción quitará "${title || propId}" de tu cartera.`,
+                    confirmText: 'Sí, eliminar',
+                    danger: true
+                });
+            } else {
+                confirmed = confirm(`¿Estás seguro de eliminar la propiedad "${title || propId}" de tu cartera?`);
+            }
+            if (!confirmed) return;
+
+            currentBrokerProperties = currentBrokerProperties.filter(p => String(p.id) !== String(propId));
+            if (window.ToastManager) {
+                window.ToastManager.show({
+                    title: 'Publicación Eliminada',
+                    message: 'La propiedad fue removida de tu cartera.',
+                    type: 'success'
+                });
+            }
+            renderBrokerPropertiesGrid();
+            renderBrokerPropertiesRows();
+        };
 
         // Helper para resolver datos de pasaporte del candidato (DNI, CUIT, Score, Edad, etc.)
         function getApplicantPassportData(a) {
@@ -2289,6 +2502,22 @@
             const isAccepted = a.status === 'aceptada';
             const isPending = a.status === 'pendiente' || !a.status;
 
+            let localContracts = [];
+            try {
+                const raw = localStorage.getItem('habitat_contracts');
+                if (raw) localContracts = JSON.parse(raw);
+            } catch (e) {}
+
+            const activeContractForCandidate = localContracts.find(c =>
+                String(c.id) === String(a.contract_id) ||
+                String(c.contractNumber) === String(a.contract_id) ||
+                String(c.propertyId) === String(a.property_id || a.propertyId) ||
+                (c.tenant && (c.tenant.email === a.tenant_email || c.tenant.dni === a.tenant_dni))
+            ) || (brokerActiveRentalsMock && brokerActiveRentalsMock.find(r =>
+                String(r.id) === String(a.contract_id) ||
+                String(r.propertyId) === String(a.property_id || a.propertyId)
+            ));
+
             return `
                 <div class="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 transition-all hover:shadow-md ${isRejected ? 'border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/40' : (isAccepted ? 'border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/10' : '')}">
                     <!-- Cabecera de la Propiedad, Fecha/Hora y Estado de la Postulación -->
@@ -2378,28 +2607,12 @@
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
                                     <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Condición Fiscal</p>
-                                    <p class="text-[10px] sm:text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1 truncate" title="${pData.condicionFiscal}">
-                                        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">account_balance</span>
-                                        <span class="truncate">${pData.condicionFiscal}</span>
-                                    </p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 truncate" title="${pData.condicionFiscal}">${pData.condicionFiscal}</p>
                                 </div>
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-2 sm:p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between min-h-[50px] sm:min-h-[54px]">
-                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Garantías</p>
-                                    <p class="text-[10px] sm:text-xs font-headline font-black text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1 truncate">
-                                        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">shield_person</span>
-                                        <span class="truncate">${pData.guarantees}</span>
-                                    </p>
+                                    <p class="text-[9px] font-headline font-extrabold uppercase text-zinc-400 tracking-wider truncate">Garantía Declarada</p>
+                                    <p class="text-[10px] sm:text-xs font-headline font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 truncate" title="${pData.guarantees}">${pData.guarantees}</p>
                                 </div>
-                            </div>
-
-                            <!-- Footer Bar of Card: Mobile optimized -->
-                            <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                                <span class="text-[11px] font-bold text-primary dark:text-red-400 flex items-center justify-center sm:justify-start gap-1 group-hover:underline">
-                                    <span class="material-symbols-outlined text-sm shrink-0">workspace_premium</span> Ver Documentación & Certificados
-                                </span>
-                                <span class="w-full sm:w-auto text-center justify-center px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 shrink-0">
-                                    <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Hábitat
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -2428,18 +2641,29 @@
                     ` : ''}
 
                     ${!isRejected && isAccepted ? `
-                        <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
-                            <a href="contratos.html?contract=${a.contract_id || (a.id_contrato ? ('CTR-2026-' + String(a.id_contrato).padStart(4, '0')) : '')}&sign=1&role=BROKER" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-base">description</span>
-                                Ver y Firmar Contrato
-                            </a>
+                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-2.5">
+                            ${activeContractForCandidate ? `
+                                <button type="button" onclick="selectBrokerRental('${activeContractForCandidate.id}'); switchBrokerTab('alquileres');" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base">payments</span>
+                                    <span>Ver Alquiler Activo</span>
+                                </button>
+                                <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${activeContractForCandidate.id}');" class="py-2.5 px-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Abrir editor de cláusulas">
+                                    <span class="material-symbols-outlined text-base text-primary dark:text-red-400">gavel</span>
+                                    <span>Editar Contrato</span>
+                                </button>
+                            ` : `
+                                <button type="button" onclick="openRentalWizardForBrokerApplication('${a.id}')" class="flex-1 py-2.5 px-4 bg-primary hover:bg-primary-hover text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-base">add_home_work</span>
+                                    <span>Generar Alquiler</span>
+                                </button>
+                            `}
                             <button type="button" onclick="if(window.ContractsManager){ContractsManager.openContractFullscreen('${a.contract_id || (a.id_contrato ? ('CTR-2026-' + String(a.id_contrato).padStart(4, '0')) : '')}', 'chat')}else{switchBrokerTab('chat-negociacion')}" class="py-2.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Abrir canal de chat y negociación">
                                 <span class="material-symbols-outlined text-base">chat</span>
                                 <span>Chat</span>
                             </button>
                             <button type="button" onclick="cancelAcceptedBrokerApplication('${a.id}')" class="py-2.5 px-3.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Cancelar aceptación y volver a evaluar postulantes">
                                 <span class="material-symbols-outlined text-base">undo</span>
-                                Cancelar Aceptación
+                                <span>Cancelar</span>
                             </button>
                         </div>
                     ` : ''}
@@ -2723,6 +2947,40 @@
                 console.warn("Accept broker app error:", e);
             }
             renderFilteredBrokerApplications();
+
+            // Desplegar pop-up modal inmediato para configurar y generar el alquiler
+            try {
+                const app = (brokerAppsState || []).find(a => String(a.id) === String(appId));
+                if (app && window.RentalConfigWizard && typeof window.RentalConfigWizard.promptPostAccept === 'function') {
+                    const prop = (currentBrokerProperties || []).find(p => String(p.id) === String(app.property_id || app.propertyId)) || {
+                        id: app.property_id || app.propertyId || 'PROP-01',
+                        title: app.property_title || 'Propiedad en Cartera',
+                        address: app.property_address || 'Buenos Aires',
+                        price: app.property_price || app.propertyPrice || 380000
+                    };
+                    window.RentalConfigWizard.promptPostAccept(app, prop, { isBroker: true, role: 'BROKER' });
+                }
+            } catch (errPrompt) {
+                console.warn('[Broker] Error abriendo wizard tras aceptar:', errPrompt);
+            }
+        };
+
+        window.openRentalWizardForBrokerApplication = function (appId) {
+            if (!window.RentalConfigWizard) {
+                console.warn('[Broker] RentalConfigWizard no disponible');
+                return;
+            }
+            const app = (brokerAppsState || []).find(a => String(a.id) === String(appId));
+            if (!app) return;
+
+            const prop = (currentBrokerProperties || []).find(p => String(p.id) === String(app.property_id || app.propertyId)) || {
+                id: app.property_id || app.propertyId || 'PROP-01',
+                title: app.property_title || 'Propiedad en Cartera',
+                address: app.property_address || 'Buenos Aires',
+                price: app.property_price || app.propertyPrice || 380000
+            };
+
+            window.RentalConfigWizard.open(prop, { tenant: app, isBroker: true, role: 'BROKER' });
         };
 
         window.cancelAcceptedBrokerApplication = async function(appId) {
@@ -3693,6 +3951,8 @@
             selectedBrokerRentalId = rentalId;
             renderBrokerActiveRental();
         }
+        window.selectBrokerRental = selectBrokerRental;
+        window.selectBrokerRentalContract = selectBrokerRental;
 
         function filterBrokerTickets(rentalId) {
             currentTicketPropertyFilter = rentalId;
@@ -3719,6 +3979,52 @@
         function renderBrokerActiveRental() {
             const container = document.getElementById('broker-container-active-rental');
             if (!container) return;
+
+            // Sincronizar contratos guardados localmente desde el RentalConfigWizard
+            try {
+                const rawC = localStorage.getItem('habitat_contracts');
+                if (rawC) {
+                    const localList = JSON.parse(rawC);
+                    localList.forEach(c => {
+                        const exists = brokerActiveRentalsMock.some(r => String(r.id) === String(c.id) || String(r.contractCode) === String(c.id));
+                        if (!exists) {
+                            const canon = Number(c.monthly_rent || c.monthlyRent || 380000);
+                            const feePct = Number(c.broker_commission_percent ?? 4.15);
+                            brokerActiveRentalsMock.unshift({
+                                id: c.id,
+                                raw_id: c.property_id || c.propertyId,
+                                propertyId: c.propertyId || c.property_id,
+                                propertyTitle: c.property_title || c.title || 'Propiedad en Alquiler',
+                                propertyAddress: c.property_address || c.propertyAddress || 'Buenos Aires',
+                                propertyImage: c.propertyImage || (c.propertyPhotos && c.propertyPhotos[0]) || 'img/hero-marketplace.jpg',
+                                tenantName: c.tenant?.name || c.tenant_name || 'Inquilino Activo',
+                                tenantEmail: c.tenant?.email || c.tenant_email || '',
+                                tenantPhone: c.tenant?.phone || c.tenant_phone || '',
+                                tenantDni: c.tenant?.dni || '',
+                                ownerName: c.owner?.name || 'Propietario Verificado',
+                                ownerEmail: c.owner?.email || '',
+                                ownerDni: c.owner?.dni || '',
+                                monthlyRent: canon,
+                                currency: c.currency || 'ARS',
+                                expensesAmount: Number(c.expenses_amount || c.expenses || 0),
+                                punitives: 0,
+                                feeAmount: Math.round(canon * (feePct / 100)),
+                                feePercent: feePct,
+                                paymentStatus: 'PENDIENTE',
+                                paymentMethod: 'MercadoPago / Transferencia',
+                                cbuAlias: c.alias_cbu || c.aliasCbu || 'HABITAT.ALQUILER.MP',
+                                dueDay: c.payment_due_day || c.paymentDueDay || 10,
+                                startDate: c.start_date || c.startDate || new Date().toISOString().split('T')[0],
+                                endDate: c.end_date || c.endDate || '2028-08-01',
+                                contractCode: c.id,
+                                adjustmentType: c.adjustment_index === 'FIJO' 
+                                    ? `Ajuste Fijo (${c.adjustment_fixed_type === 'PERCENT' ? ('+' + c.adjustment_fixed_val + '%') : (c.adjustment_fixed_type === 'AMOUNT' ? ('+' + (c.currency || '$') + ' ' + c.adjustment_fixed_val) : 'Sin aumento')})` 
+                                    : (c.adjustment_index === 'ICL' ? 'Trimestral ICL oficial' : 'Trimestral IPC oficial')
+                            });
+                        }
+                    });
+                }
+            } catch (errSyncC) {}
 
             const indicesData = _cachedBrokerIndices || {
                 ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
@@ -3889,7 +4195,7 @@
                                     Próxima Actualización: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
                                 </h3>
                                 <p class="text-xs text-blue-100 mt-1">
-                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${rental.adjustmentType || 'IPC oficial BCRA'}</b>
+                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${rental.adjustmentType || 'IPC oficial BCRA'}</b>${isIpc && indicesData?.ipc?.periodoTrimestralTexto ? ` (últimos datos publicados: <b>${freqMonths === 6 ? indicesData.ipc.periodoSemestralTexto : indicesData.ipc.periodoTrimestralTexto}</b>)` : ''}
                                 </p>
                             </div>
                         </div>
@@ -6398,6 +6704,7 @@
     <script src="js/owner-verification.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/contract-editor-modal.js"></script>
+    <script src="js/rental-config-wizard.js"></script>
     <script src="js/contracts-manager.js"></script>
     <script src="js/inventory-manager.js"></script>
     <script src="js/calendar-events.js"></script>
