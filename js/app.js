@@ -3304,9 +3304,26 @@ var App = window.App || {
                     App.clearPublishDraft();
                     document.getElementById('btn-back-from-publish')?.click();
 
+                    const savedPropInfo = {
+                        id: result?.id || result?.id_propiedad || Date.now(),
+                        title: propertyData.title || propertyData.titulo || 'Propiedad publicada',
+                        address: propertyData.calleAltura || propertyData.address || 'Mendoza, Argentina',
+                        price: propertyData.price || propertyData.precio || 380000,
+                        expenses: propertyData.expensas || 45000,
+                        images: window.selectedPropertyPhotos || [],
+                        photos: window.selectedPropertyPhotos || []
+                    };
+                    try {
+                        sessionStorage.setItem('just_published_property', JSON.stringify(savedPropInfo));
+                    } catch (e) {}
+
                     if (window.location.pathname.includes('administrador.html')) {
-                        await App.openAdminDashboard();
-                        App.navigateTo('properties-view');
+                        if (typeof window.RentalConfigWizard?.promptPostPublish === 'function') {
+                            window.RentalConfigWizard.promptPostPublish(savedPropInfo);
+                        } else {
+                            await App.openAdminDashboard();
+                            App.navigateTo('properties-view');
+                        }
                     } else if (window.location.pathname.includes('panel-corredor.html')) {
                         App.closePublishWizard();
                         if (typeof window.addNewBrokerPropertyFromWizard === 'function') {
@@ -3316,7 +3333,7 @@ var App = window.App || {
                             switchBrokerTab('avisos');
                         }
                     } else {
-                        window.location.href = 'administrador.html?view=properties';
+                        window.location.href = 'administrador.html?view=properties&justPublished=1';
                     }
                     return;
 
@@ -12144,7 +12161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     Próxima Actualización: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
                                 </h3>
                                 <p class="text-xs text-blue-100 mt-1">
-                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${defaultIndexType} oficial BCRA</b>
+                                    Faltan <b>${nextAdj.daysRemaining} días</b> • Período: <b>Cada ${freqMonths} meses</b> • Índice: <b>${defaultIndexType} oficial BCRA</b>${defaultIndexType === 'IPC' && indicesData?.ipc?.periodoTrimestralTexto ? ` (últimos datos publicados: <b>${freqMonths >= 6 ? indicesData.ipc.periodoSemestralTexto : indicesData.ipc.periodoTrimestralTexto}</b>)` : ''}
                                 </p>
                             </div>
                         </div>

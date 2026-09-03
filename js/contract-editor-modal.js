@@ -320,7 +320,14 @@
             this._activeTab = 'smart';
             this._activeMobileSubtab = 'config';
             this._customFile = null;
-            this._customClauses = options.contract?.customClauses || [];
+            
+            let customClausesRaw = options.contract?.customClauses || 
+                                   options.contract?.custom_clauses || 
+                                   options.contract?.clausulas_adicionales?.customClauses || [];
+            if (typeof customClausesRaw === 'string') {
+                try { customClausesRaw = JSON.parse(customClausesRaw); } catch (e) { customClausesRaw = []; }
+            }
+            this._customClauses = Array.isArray(customClausesRaw) ? [...customClausesRaw] : [];
 
             const modalContainer = document.createElement('div');
             modalContainer.id = 'contract-editor-modal-container';
@@ -375,25 +382,31 @@
 
             const propAddress = property.address || (property.calle ? `${property.calle} ${property.numero || ''}`.trim() : '') || contract.propertyAddress || 'Av. San Martín 1250, Mendoza';
             
-            // Valores iniciales reactivos
-            const defaultRent = Number(contract.monthlyRent || property.price || property.precio || 450000);
-            const defaultCurrency = contract.currency || 'ARS';
-            const defaultDuration = String(contract.durationMonths || 24);
-            const defaultIndex = (contract.adjustmentIndex && contract.adjustmentIndex !== 'CAC') ? contract.adjustmentIndex : 'IPC';
-            const defaultFrequency = String(contract.adjustmentFrequencyMonths || 3);
-            const defaultDueDay = String(contract.paymentDueDay || 10);
-            const defaultAlias = contract.aliasCbu || 'HABITAT.ALQUILER.MP';
-            
-            const cfg = contract.clauses || {};
+            let cfg = contract.clauses || contract.clausulas_adicionales || {};
+            if (typeof cfg === 'string') {
+                try { cfg = JSON.parse(cfg); } catch (e) { cfg = {}; }
+            }
+
+            // Valores iniciales reactivos (soporte camelCase, snake_case y clausulas_adicionales)
+            const defaultRent = Number(contract.monthlyRent || contract.monthly_rent || property.price || property.precio || cfg.monthlyRent || 450000);
+            const defaultCurrency = contract.currency || cfg.currency || cfg.moneda || (contract.id_moneda === 2 ? 'USD' : 'ARS');
+            const defaultDuration = String(contract.durationMonths || contract.duration_months || cfg.durationMonths || 24);
+            const defaultIndex = (contract.adjustmentIndex || contract.adjustment_index || cfg.adjustmentIndex || (contract.id_Indice === 2 ? 'ICL' : 'IPC'));
+            const defaultFrequency = String(contract.adjustmentFrequencyMonths || contract.adjustment_frequency_months || contract.periodo_aumento_meses || cfg.adjustmentFrequencyMonths || 3);
+            const defaultDueDay = String(contract.paymentDueDay || contract.payment_due_day || contract.dia_vencimiento_mensual || cfg.paymentDueDay || 10);
+            const defaultAlias = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'HABITAT.ALQUILER.MP';
+
             const defaultDeposito = cfg.depositoModalidad || '1_MES';
             const defaultExpensas = cfg.regimenExpensas || 'ORDINARIAS_INQ';
-            const defaultMora = cfg.tasaMoraDiaria || 0.5;
+            const defaultMora = (cfg.tasaMoraDiaria !== undefined) ? cfg.tasaMoraDiaria : (contract.tasa_punitoria_diaria || 0.5);
 
             const defaultMascotas = cfg.mascotas !== false;
             const defaultVivienda = cfg.viviendaExclusiva !== false;
             const defaultSeguro = cfg.seguroIncendio !== false;
             const defaultSubalquiler = cfg.prohibirSubalquiler !== false;
             const defaultRescision = cfg.rescisionAnticipada !== false;
+            const defaultMonitorio = cfg.estructuraMonitoria !== false;
+            const defaultDesalojo = cfg.convenioDesalojo !== false;
 
             modalContainer.innerHTML = `
                 <div class="relative w-full h-full h-[100dvh] sm:h-[92vh] sm:max-h-[920px] sm:max-w-6xl bg-white dark:bg-[#0c0d14] sm:border sm:border-zinc-200 dark:border-zinc-800 rounded-none sm:rounded-3xl shadow-xl overflow-hidden flex flex-col text-zinc-900 dark:text-zinc-100 my-0 sm:my-auto">
@@ -780,7 +793,7 @@
                                                 <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Cobro ejecutivo rápido</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-monitorio" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-monitorio" ${defaultMonitorio ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
@@ -792,7 +805,7 @@
                                                 <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Acuerdo de restitución express</span>
                                             </div>
                                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                                <input type="checkbox" id="toggle-desalojo" checked class="sr-only peer">
+                                                <input type="checkbox" id="toggle-desalojo" ${defaultDesalojo ? 'checked' : ''} class="sr-only peer">
                                                 <div class="w-9 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#811b1e]"></div>
                                             </label>
                                         </div>
@@ -1401,8 +1414,112 @@
 
                 const terms = self._collectTerms();
 
+                // 1. Guardar y actualizar el objeto contrato subyacente si existe
+                const targetContract = self._currentOptions?.contract;
+                const fullClausesPayload = {
+                    ...(terms.clauses || {}),
+                    customClauses: terms.customClauses || [],
+                    activeClausesList: terms.activeClausesList || [],
+                    durationMonths: terms.durationMonths,
+                    adjustmentIndex: terms.adjustmentIndex,
+                    currency: terms.currency,
+                    aliasCbu: terms.aliasCbu,
+                    monthlyRent: terms.monthlyRent,
+                    paymentDueDay: terms.paymentDueDay,
+                    adjustmentFrequencyMonths: terms.adjustmentFrequencyMonths
+                };
+
+                if (targetContract) {
+                    targetContract.has_contract = true;
+                    targetContract.hasContract = true;
+                    targetContract.monthlyRent = terms.monthlyRent;
+                    targetContract.monthly_rent = terms.monthlyRent;
+                    targetContract.currency = terms.currency;
+                    targetContract.durationMonths = terms.durationMonths;
+                    targetContract.duration_months = terms.durationMonths;
+                    targetContract.adjustmentIndex = terms.adjustmentIndex;
+                    targetContract.adjustment_index = terms.adjustmentIndex;
+                    targetContract.adjustmentFrequencyMonths = terms.adjustmentFrequencyMonths;
+                    targetContract.adjustment_frequency_months = terms.adjustmentFrequencyMonths;
+                    targetContract.periodo_aumento_meses = terms.adjustmentFrequencyMonths;
+                    targetContract.paymentDueDay = terms.paymentDueDay;
+                    targetContract.payment_due_day = terms.paymentDueDay;
+                    targetContract.dia_vencimiento_mensual = terms.paymentDueDay;
+                    targetContract.aliasCbu = terms.aliasCbu;
+                    targetContract.alias_cbu = terms.aliasCbu;
+                    targetContract.cbu_alias = terms.aliasCbu;
+                    targetContract.clauses = terms.clauses;
+                    targetContract.customClauses = terms.customClauses;
+                    targetContract.activeClausesList = terms.activeClausesList;
+                    targetContract.clausulas_adicionales = fullClausesPayload;
+
+                    // Persistir inmediatamente en localStorage ('habitat_contracts')
+                    try {
+                        const raw = localStorage.getItem('habitat_contracts');
+                        let list = raw ? JSON.parse(raw) : [];
+                        const tId = String(targetContract.id || targetContract.contractNumber || targetContract.dbContractId || '');
+                        const tDbId = targetContract.dbContractId ? String(targetContract.dbContractId) : null;
+                        const idx = list.findIndex(item => item && (
+                            (tId && String(item.id).toLowerCase() === tId.toLowerCase()) ||
+                            (tId && String(item.contractNumber).toLowerCase() === tId.toLowerCase()) ||
+                            (tDbId && String(item.dbContractId) === tDbId) ||
+                            (targetContract.propertyId && String(item.propertyId) === String(targetContract.propertyId))
+                        ));
+                        if (idx >= 0) {
+                            list[idx] = { ...list[idx], ...targetContract };
+                        } else {
+                            list.unshift({ ...targetContract });
+                        }
+                        localStorage.setItem('habitat_contracts', JSON.stringify(list));
+                    } catch (e) {
+                        console.warn("Aviso guardando en localStorage habitat_contracts:", e);
+                    }
+
+                    // Actualizar listas en memoria (paneles activo)
+                    if (window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
+                        const mIdx = window.ownerActiveContractsMock.findIndex(item => item && (
+                            String(item.id) === String(targetContract.id) ||
+                            (targetContract.dbContractId && String(item.dbContractId) === String(targetContract.dbContractId))
+                        ));
+                        if (mIdx >= 0) {
+                            window.ownerActiveContractsMock[mIdx] = { ...window.ownerActiveContractsMock[mIdx], ...targetContract };
+                        }
+                    }
+                    if (window.brokerActiveRentalsMock && Array.isArray(window.brokerActiveRentalsMock)) {
+                        const bIdx = window.brokerActiveRentalsMock.findIndex(item => item && (
+                            String(item.id) === String(targetContract.id) ||
+                            String(item.contractCode) === String(targetContract.id) ||
+                            (targetContract.dbContractId && String(item.dbContractId) === String(targetContract.dbContractId))
+                        ));
+                        if (bIdx >= 0) {
+                            window.brokerActiveRentalsMock[bIdx] = { ...window.brokerActiveRentalsMock[bIdx], ...targetContract };
+                        }
+                    }
+
+                    // Actualizar en Supabase si es contrato de BD
+                    const dbId = targetContract.dbContractId || (targetContract.id ? parseInt(String(targetContract.id).replace(/\D/g, ''), 10) : null);
+                    if (window.supabaseClient && dbId) {
+                        try {
+                            await window.supabaseClient.from('Contrato').update({
+                                monto_cierre: terms.monthlyRent,
+                                periodo_aumento_meses: terms.adjustmentFrequencyMonths,
+                                dia_vencimiento_mensual: terms.paymentDueDay,
+                                alias_cbu: terms.aliasCbu,
+                                "id_Indice": terms.adjustmentIndex === 'ICL' ? 2 : 1,
+                                id_moneda: terms.currency === 'USD' ? 2 : 1,
+                                clausulas_adicionales: fullClausesPayload,
+                                url_contrato_original_pdf: null
+                            }).eq('id_contrato', dbId);
+                        } catch (dbErr) {
+                            console.warn("Aviso actualizando Contrato en Supabase:", dbErr);
+                        }
+                    }
+                }
+
                 if (typeof self._currentOptions?.onConfirm === 'function') {
                     await self._currentOptions.onConfirm(terms);
+                } else if (typeof self._currentOptions?.onSave === 'function') {
+                    await self._currentOptions.onSave(terms);
                 } else {
                     const appId = self._currentOptions?.applicant?.id;
                     let targetContractId = self._currentOptions?.contract?.id || self._currentOptions?.contractId || null;
@@ -1471,28 +1588,29 @@
         /**
          * Construye la lista de cláusulas activas de forma estrictamente consecutiva
          */
-        buildActiveClauses: function (propAddress) {
-            const duracion = document.getElementById('editor-duracion')?.value || 24;
-            const moneda = document.getElementById('editor-moneda')?.value || 'ARS';
-            const indice = document.getElementById('editor-indice')?.value || 'IPC';
-            const frecuencia = document.getElementById('editor-frecuencia')?.value || 3;
-            const montoRaw = document.getElementById('editor-monto')?.value || 450000;
+        buildActiveClauses: function (propAddress, fallbackTerms = null) {
+            const terms = fallbackTerms || {};
+            const duracion = document.getElementById('editor-duracion')?.value || terms.durationMonths || terms.duration_months || 24;
+            const moneda = document.getElementById('editor-moneda')?.value || terms.currency || terms.moneda || 'ARS';
+            const indice = document.getElementById('editor-indice')?.value || terms.adjustmentIndex || terms.adjustment_index || 'IPC';
+            const frecuencia = document.getElementById('editor-frecuencia')?.value || terms.adjustmentFrequencyMonths || terms.adjustment_frequency_months || 3;
+            const montoRaw = document.getElementById('editor-monto')?.value || terms.monthlyRent || terms.monthly_rent || 450000;
             const num = isNaN(Number(montoRaw)) ? 450000 : Number(montoRaw);
             const sym = moneda === 'USD' ? 'USD ' : '$ ';
             const montoFmt = sym + num.toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares Estadounidenses)' : ' (Pesos Argentinos)');
-            const diaVenc = document.getElementById('editor-dia-venc')?.value || 10;
-            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
-            const depositoSel = document.getElementById('editor-deposito')?.value || '1_MES';
-            const moraSel = document.getElementById('editor-mora')?.value || '0.5';
-            const expensasSel = document.getElementById('editor-expensas')?.value || 'ORDINARIAS_INQ';
+            const diaVenc = document.getElementById('editor-dia-venc')?.value || terms.paymentDueDay || terms.payment_due_day || 10;
+            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || terms.aliasCbu || terms.alias_cbu || 'HABITAT.ALQUILER.MP';
+            const depositoSel = document.getElementById('editor-deposito')?.value || terms.depositoModalidad || terms.clauses?.depositoModalidad || '1_MES';
+            const moraSel = document.getElementById('editor-mora')?.value || terms.tasaMoraDiaria || terms.clauses?.tasaMoraDiaria || '0.5';
+            const expensasSel = document.getElementById('editor-expensas')?.value || terms.regimenExpensas || terms.clauses?.regimenExpensas || 'ORDINARIAS_INQ';
 
-            const allowPets = document.getElementById('toggle-mascotas')?.checked;
-            const onlyResidential = document.getElementById('toggle-vivienda')?.checked;
-            const needInsurance = document.getElementById('toggle-seguro')?.checked;
-            const noSublease = document.getElementById('toggle-subalquiler')?.checked;
-            const allowEarlyTermination = document.getElementById('toggle-rescision')?.checked;
-            const allowMonitorio = document.getElementById('toggle-monitorio')?.checked;
-            const allowDesalojo = document.getElementById('toggle-desalojo')?.checked;
+            const allowPets = document.getElementById('toggle-mascotas') ? document.getElementById('toggle-mascotas').checked : (terms.clauses?.mascotas !== false && terms.mascotas !== false);
+            const onlyResidential = document.getElementById('toggle-vivienda') ? document.getElementById('toggle-vivienda').checked : (terms.clauses?.viviendaExclusiva !== false && terms.viviendaExclusiva !== false);
+            const needInsurance = document.getElementById('toggle-seguro') ? document.getElementById('toggle-seguro').checked : (terms.clauses?.seguroIncendio !== false && terms.seguroIncendio !== false);
+            const noSublease = document.getElementById('toggle-subalquiler') ? document.getElementById('toggle-subalquiler').checked : (terms.clauses?.prohibirSubalquiler !== false && terms.prohibirSubalquiler !== false);
+            const allowEarlyTermination = document.getElementById('toggle-rescision') ? document.getElementById('toggle-rescision').checked : (terms.clauses?.rescisionAnticipada !== false && terms.rescisionAnticipada !== false);
+            const allowMonitorio = document.getElementById('toggle-monitorio') ? document.getElementById('toggle-monitorio').checked : (terms.clauses?.estructuraMonitoria !== false && terms.estructuraMonitoria !== false);
+            const allowDesalojo = document.getElementById('toggle-desalojo') ? document.getElementById('toggle-desalojo').checked : (terms.clauses?.convenioDesalojo !== false && terms.convenioDesalojo !== false);
 
             const propType = document.getElementById('editor-property-type')?.value || 'departamento';
             
@@ -1561,7 +1679,11 @@
             clauses.push({ tag: 'ABANDONO DE LA LOCACIÓN', body: `En el caso de que la LOCATARIA abandone el inmueble alquilado, la parte LOCADORA podrá ejercer el derecho a recuperar la tenencia del mismo. La LOCATARIA y los CODEUDORES tendrán a su cargo exclusivo los costos y costas del proceso judicial.` });
 
             // 9. PRECIO DEL ALQUILER - AJUSTE
-            clauses.push({ tag: 'PRECIO DEL ALQUILER - AJUSTE', body: indice === 'FIJO' ? `Las partes fijan el pago del canon mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, pactándose un valor fijo e inalterable.` : `Las partes fijan el pago del canon inicial mensual en <strong>${h(montoFmt, 'editor-monto')}</strong> que se reajustará cada <strong>${h(frecuencia, 'editor-frecuencia')} meses</strong> y en forma acumulativa, conforme al índice <strong>${h(indice, 'editor-indice')}</strong>.` });
+            let ajusteBody = `Las partes fijan el pago del canon mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, pactándose un valor fijo e inalterable.`;
+            if (indice !== 'FIJO') {
+                ajusteBody = `Las partes fijan el pago del canon inicial mensual en <strong>${h(montoFmt, 'editor-monto')}</strong>, el cual se reajustará cada <strong>${h(frecuencia, 'editor-frecuencia')} meses</strong> y en forma acumulativa conforme a la variación del índice oficial <strong>${h(indice, 'editor-indice')}</strong> (BCRA / INDEC). A tal efecto, las partes convienen expresamente que para la determinación del nuevo canon se tomará la variación del índice correspondiente a los períodos inmediatamente anteriores que se encuentren oficialmente publicados a la fecha de devengamiento del nuevo canon locativo. Si a la fecha de vencimiento del pago no se encontrare aún publicado el índice oficial correspondiente al mes inmediato anterior, se aplicará el último índice oficial disponible publicado a dicha fecha, liquidándose el canon en base a dicha información oficial consolidada.`;
+            }
+            clauses.push({ tag: 'PRECIO DEL ALQUILER - AJUSTE', body: ajusteBody });
 
             // 10. LUGAR Y FORMA DE PAGO
             clauses.push({ tag: 'LUGAR Y FORMA DE PAGO', body: `El canon mensual de alquiler será abonado por anticipado entre el día primero (1) y el día <strong>${h(diaVenc, 'editor-dia-venc')}</strong> de cada mes, mediante transferencia bancaria a la cuenta / Alias CBU: <strong class="font-mono text-emerald-600 dark:text-emerald-400">${h(aliasCbu, 'editor-alias-cbu')}</strong>.` });
@@ -1697,11 +1819,15 @@
             }
 
             // 12. Cláusulas Personalizadas
-            if (this._customClauses && this._customClauses.length > 0) {
-                this._customClauses.forEach(cc => {
-                    if (cc.title && cc.text) {
+            const customClausesToUse = (this._customClauses && this._customClauses.length > 0) 
+                ? this._customClauses 
+                : (terms.customClauses || terms.clausulas_adicionales?.customClauses || []);
+
+            if (Array.isArray(customClausesToUse) && customClausesToUse.length > 0) {
+                customClausesToUse.forEach(cc => {
+                    if (cc && cc.title && cc.text) {
                         clauses.push({
-                            tag: cc.title.toUpperCase(),
+                            tag: String(cc.title).toUpperCase(),
                             body: cc.text
                         });
                     }
@@ -1739,6 +1865,8 @@
                 seguroIncendio: document.getElementById('toggle-seguro')?.checked ?? true,
                 prohibirSubalquiler: document.getElementById('toggle-subalquiler')?.checked ?? true,
                 rescisionAnticipada: document.getElementById('toggle-rescision')?.checked ?? true,
+                estructuraMonitoria: document.getElementById('toggle-monitorio')?.checked ?? true,
+                convenioDesalojo: document.getElementById('toggle-desalojo')?.checked ?? true,
                 moneda: moneda,
                 depositoModalidad: deposito,
                 tasaMoraDiaria: mora,

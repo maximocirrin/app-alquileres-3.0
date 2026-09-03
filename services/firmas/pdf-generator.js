@@ -156,7 +156,7 @@ export async function generateOriginalContractPdf({
     tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
     body: indice === 'FIJO'
       ? `El precio del alquiler se fija en la suma de ${montoFmt} mensuales durante toda la vigencia del contrato, pactándose un valor fijo e inalterable sin cláusula de indexación periódica.`
-      : `El precio del alquiler se fija en la suma inicial de ${montoFmt} mensuales. Dicho importe se actualizará de forma periódica cada ${frecuencia} meses aplicando la variación porcentual del índice oficial ${indice}.`
+      : `El precio del alquiler se fija en la suma inicial de ${montoFmt} mensuales. Dicho importe se actualizará cada ${frecuencia} meses aplicando la variación del índice oficial ${indice} (BCRA / INDEC). Las partes convienen expresamente que para el cálculo del reajuste se computará la variación de los períodos inmediatamente anteriores que se encuentren oficialmente publicados a la fecha de devengamiento del nuevo canon locativo. Si al día de vencimiento no se encontrare aún publicado el índice del mes inmediato anterior, se aplicará el último índice oficial disponible publicado a dicha fecha, consolidándose dicho monto para el período.`
   });
   clauses.push({ tag: 'LUGAR Y FORMA DE PAGO', body: `El pago del alquiler mensual deberá efectuarse del 1 al día ${diaVenc} de cada mes calendario mediante transferencia bancaria a la cuenta bancaria / Alias CBU: ${aliasCbu}. En caso de mora, se devengará un interés punitorio del ${moraSel}% por cada día de atraso hasta su efectiva cancelación.` });
   clauses.push({ tag: 'EXPENSAS, SERVICIOS E IMPUESTOS', body: expensasTxt });

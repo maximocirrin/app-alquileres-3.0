@@ -100,7 +100,7 @@ async function run() {
         const batch = rowsToInsert.slice(i, i + batchSize);
         const { error } = await supabase
             .from('Valor_Indice_Mensual')
-            .insert(batch);
+            .upsert(batch, { onConflict: 'id_indice,fecha_publicacion' });
 
         if (error) {
             console.error(`Error al insertar lote ${i / batchSize + 1}:`, error.message);

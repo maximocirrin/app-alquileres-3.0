@@ -1742,7 +1742,18 @@ var DataManager = {
                                 alias_cbu: aliasCbu,
                                 porcentaje_honorarios_cierre: prop?.id_perfil_captador ? (customTerms?.brokerFee || 4.15) : null,
                                 porcentaje_comision_mensual: prop?.id_perfil_captador ? (customTerms?.brokerMonthlyCommission || 5.0) : null,
-                                clausulas_adicionales: customTerms?.clauses || {}
+                                clausulas_adicionales: {
+                                     ...(customTerms?.clauses || {}),
+                                     customClauses: customTerms?.customClauses || [],
+                                     activeClausesList: customTerms?.activeClausesList || [],
+                                     durationMonths: customTerms?.durationMonths || 24,
+                                     adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+                                     currency: customTerms?.currency || 'ARS',
+                                     aliasCbu: aliasCbu,
+                                     monthlyRent: monthlyRent,
+                                     paymentDueDay: diaVencimiento,
+                                     adjustmentFrequencyMonths: periodoAumento
+                                 }
                             }])
                             .select()
                             .maybeSingle();
@@ -1836,16 +1847,37 @@ var DataManager = {
             propertyImage: photoUrls[0] || 'img/hero-marketplace.jpg',
             propertyPhotos: photoUrls,
             monthlyRent: monthlyRent,
-            currency: 'ARS',
+            monthly_rent: monthlyRent,
+            currency: customTerms?.currency || 'ARS',
             status: 'WAITING_TENANT',
             startDate: todayStr,
             endDate: nextYearStr,
-            durationMonths: 24,
-            paymentDueDay: 10,
-            adjustmentIndex: 'IPC',
-            adjustmentFrequencyMonths: 3,
+            durationMonths: customTerms?.durationMonths || 24,
+            duration_months: customTerms?.durationMonths || 24,
+            paymentDueDay: diaVencimiento || 10,
+            payment_due_day: diaVencimiento || 10,
+            adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+            adjustment_index: customTerms?.adjustmentIndex || 'IPC',
+            adjustmentFrequencyMonths: periodoAumento || 3,
+            adjustment_frequency_months: periodoAumento || 3,
             depositAmount: monthlyRent,
-            aliasCbu: 'HABITAT.ALQUILER.MP',
+            aliasCbu: aliasCbu || 'HABITAT.ALQUILER.MP',
+            alias_cbu: aliasCbu || 'HABITAT.ALQUILER.MP',
+            clauses: customTerms?.clauses || {},
+            customClauses: customTerms?.customClauses || [],
+            activeClausesList: customTerms?.activeClausesList || [],
+            clausulas_adicionales: {
+                ...(customTerms?.clauses || {}),
+                customClauses: customTerms?.customClauses || [],
+                activeClausesList: customTerms?.activeClausesList || [],
+                durationMonths: customTerms?.durationMonths || 24,
+                adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+                currency: customTerms?.currency || 'ARS',
+                aliasCbu: aliasCbu,
+                monthlyRent: monthlyRent,
+                paymentDueDay: diaVencimiento,
+                adjustmentFrequencyMonths: periodoAumento
+            },
             id_perfil_propietario: Number(prop?.id_perfil_propietario || profileId || 6),
             id_perfil_inquilino: solPerfilId,
             tenant: {
@@ -2309,6 +2341,20 @@ var DataManager = {
                     const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || profileId || 6);
                     const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil || 14);
 
+                    let extraClauses = item.clausulas_adicionales || {};
+                    if (typeof extraClauses === 'string') {
+                        try { extraClauses = JSON.parse(extraClauses); } catch(e) { extraClauses = {}; }
+                    }
+                    const customClausesFromDb = extraClauses.customClauses || [];
+                    const activeClausesFromDb = extraClauses.activeClausesList || [];
+                    const currencyFromDb = extraClauses.currency || extraClauses.moneda || (item.id_moneda === 2 ? 'USD' : 'ARS');
+                    const durationFromDb = Number(extraClauses.durationMonths || 24);
+                    const indexFromDb = extraClauses.adjustmentIndex || item.indice_ajuste || (item.id_Indice === 2 ? 'ICL' : 'IPC');
+                    const freqFromDb = Number(item.periodo_aumento_meses || extraClauses.adjustmentFrequencyMonths || 3);
+                    const dueDayFromDb = Number(item.dia_vencimiento_mensual || extraClauses.paymentDueDay || 10);
+                    const aliasFromDb = item.alias_cbu || extraClauses.aliasCbu || 'HABITAT.ALQUILER.MP';
+                    const rentFromDb = Number(item.monto_cierre || extraClauses.monthlyRent || pub?.precio || 450000);
+
                     return {
                         id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
@@ -2322,13 +2368,24 @@ var DataManager = {
                         property_address: cleanAddress,
                         property_image: photos[0] || 'img/hero-marketplace.jpg',
                         photos: photos,
-                        monthly_rent: Number(item.monto_cierre || pub?.precio || 450000),
-                        monthlyRent: Number(item.monto_cierre || pub?.precio || 450000),
+                        monthly_rent: rentFromDb,
+                        monthlyRent: rentFromDb,
+                        currency: currencyFromDb,
+                        durationMonths: durationFromDb,
+                        duration_months: durationFromDb,
+                        adjustmentIndex: indexFromDb,
+                        adjustment_index: indexFromDb,
+                        adjustmentFrequencyMonths: freqFromDb,
+                        adjustment_frequency_months: freqFromDb,
+                        paymentDueDay: dueDayFromDb,
+                        payment_due_day: dueDayFromDb,
+                        payment_due_day: dueDayFromDb,
+                        aliasCbu: aliasFromDb,
+                        alias_cbu: aliasFromDb,
+                        cbu_alias: aliasFromDb,
                         expenses_amount: Number(prop.expensas_mensuales || 0),
-                        payment_due_day: item.dia_vencimiento_mensual || 10,
+                        payment_due_day: dueDayFromDb,
                         punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
-                        adjustment_index: item.indice_ajuste || 'IPC',
-                        adjustment_frequency_months: item.periodo_aumento_meses || 3,
                         broker_commission_percent: 4.15,
                         start_date: item.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
                         end_date: item.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
@@ -2342,8 +2399,23 @@ var DataManager = {
                         owner_dni: ownerDni,
                         tenant_has_signed: tenantFirmado,
                         owner_has_signed: ownerFirmado,
-                        cbu_alias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
                         status: status,
+                        url_contrato_final_pdf: item.url_contrato_final_pdf || null,
+                        url_contrato_original_pdf: item.url_contrato_original_pdf || null,
+                        hash_original_sha256: item.hash_original_sha256 || null,
+                        hash_final_sha256: item.hash_final_sha256 || null,
+                        clauses: extraClauses,
+                        customClauses: customClausesFromDb,
+                        activeClausesList: activeClausesFromDb,
+                        clausulas_adicionales: extraClauses,
+                        has_contract: Boolean(
+                            item.url_contrato_final_pdf || 
+                            item.url_contrato_original_pdf || 
+                            item.hash_original_sha256 || 
+                            (item.clausulas_adicionales && typeof item.clausulas_adicionales === 'object' && Object.keys(item.clausulas_adicionales).length > 0) ||
+                            tenantFirmado ||
+                            ownerFirmado
+                        ),
                         tenant: {
                             role: 'TENANT',
                             profileId: finalTenantProfileId,
@@ -2367,7 +2439,37 @@ var DataManager = {
                     };
                 });
 
-                return dbContracts;
+                // Combinar contratos de base de datos con los contratos locales de localStorage
+                const mergedMap = new Map();
+                (contractsList || []).forEach(c => {
+                    if (c && c.id) mergedMap.set(String(c.id), c);
+                });
+                (dbContracts || []).forEach(c => {
+                    if (c && c.id) {
+                        if (mergedMap.has(String(c.id))) {
+                            const local = mergedMap.get(String(c.id)) || {};
+                            const mergedItem = {
+                                ...local,
+                                ...c,
+                                dbContractId: c.dbContractId,
+                                clauses: (c.clauses && Object.keys(c.clauses).length > 0) ? c.clauses : (local.clauses || local.clausulas_adicionales || {}),
+                                customClauses: (c.customClauses && c.customClauses.length > 0) ? c.customClauses : (local.customClauses || []),
+                                activeClausesList: (c.activeClausesList && c.activeClausesList.length > 0) ? c.activeClausesList : (local.activeClausesList || []),
+                                durationMonths: c.durationMonths || local.durationMonths || 24,
+                                duration_months: c.durationMonths || local.durationMonths || 24,
+                                currency: c.currency || local.currency || 'ARS',
+                                adjustmentIndex: c.adjustmentIndex || local.adjustmentIndex || 'IPC',
+                                adjustmentFrequencyMonths: c.adjustmentFrequencyMonths || local.adjustmentFrequencyMonths || 3,
+                                paymentDueDay: c.paymentDueDay || local.paymentDueDay || 10,
+                                aliasCbu: c.aliasCbu || local.aliasCbu || 'HABITAT.ALQUILER.MP'
+                            };
+                            mergedMap.set(String(c.id), mergedItem);
+                        } else {
+                            mergedMap.set(String(c.id), c);
+                        }
+                    }
+                });
+                return Array.from(mergedMap.values());
             }
         } catch(e) {
             console.error("Error in getOwnerContracts:", e);
@@ -2911,10 +3013,29 @@ var DataManager = {
     },
 
     // Índices de Actualización BCRA (IPC & ICL)
+    syncIndicesFromBcra: async function () {
+        if (!window.supabaseClient) {
+            throw new Error('Supabase client no disponible.');
+        }
+        try {
+            console.log('[DataManager] Solicitando sincronización en vivo con API BCRA...');
+            const { data, error } = await window.supabaseClient.functions.invoke('sync-indices-bcra');
+            if (error) {
+                console.error('[DataManager] Error al invocar sync-indices-bcra:', error);
+                throw error;
+            }
+            console.log('[DataManager] Sincronización con BCRA exitosa:', data);
+            return data;
+        } catch (err) {
+            console.error('[DataManager] Falló la sincronización con BCRA:', err);
+            throw err;
+        }
+    },
+
     getLatestIndices: async function () {
         const defaults = {
             ipc: { valor: 2.1, fecha: '2026-07-31', tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
-            icl: { valor: 35.25, fecha: '2026-08-16', tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+            icl: { valor: 35.80, fecha: '2026-09-03', valorProyectado: 36.21, fechaProyectada: '2026-09-16', tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
         };
 
         if (!window.supabaseClient) return defaults;
@@ -2928,56 +3049,82 @@ var DataManager = {
                 .order('fecha_publicacion', { ascending: false })
                 .limit(6);
 
-            // 2. Obtener los últimos valores de ICL (id_indice = 2)
+            // 2. Obtener los últimos 200 valores de ICL (id_indice = 2)
             const { data: iclRows } = await window.supabaseClient
                 .from('Valor_Indice_Mensual')
                 .select('*')
                 .eq('id_indice', 2)
                 .order('fecha_publicacion', { ascending: false })
-                .limit(180);
+                .limit(200);
 
             let ipcResult = defaults.ipc;
             if (ipcRows && ipcRows.length > 0) {
                 const latestIpc = ipcRows[0];
-                // Calcular acumulado trimestral compuesto (últimos 3 meses)
+                // Calcular acumulado trimestral compuesto (últimos 3 meses publicados)
                 let trimestral = 1;
                 ipcRows.slice(0, 3).forEach(r => {
                     trimestral *= (1 + Number(r.valor_oficial) / 100);
                 });
                 const pctTrimestral = Number(((trimestral - 1) * 100).toFixed(1));
 
-                // Calcular acumulado semestral compuesto (últimos 6 meses)
+                // Calcular acumulado semestral compuesto (últimos 6 meses publicados)
                 let semestral = 1;
                 ipcRows.slice(0, 6).forEach(r => {
                     semestral *= (1 + Number(r.valor_oficial) / 100);
                 });
                 const pctSemestral = Number(((semestral - 1) * 100).toFixed(1));
 
+                const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const getMonthName = (dateStr) => {
+                    const p = String(dateStr).split('T')[0].split('-');
+                    return p.length > 1 ? `${monthNames[parseInt(p[1], 10) - 1]} ${p[0]}` : dateStr;
+                };
+                const last3 = ipcRows.slice(0, 3);
+                const last6 = ipcRows.slice(0, 6);
+                const periodo3 = last3.length > 1
+                    ? `${getMonthName(last3[last3.length - 1].fecha_publicacion)} a ${getMonthName(last3[0].fecha_publicacion)}`
+                    : getMonthName(last3[0].fecha_publicacion);
+                const periodo6 = last6.length > 1
+                    ? `${getMonthName(last6[last6.length - 1].fecha_publicacion)} a ${getMonthName(last6[0].fecha_publicacion)}`
+                    : getMonthName(last6[0].fecha_publicacion);
+
                 ipcResult = {
                     valor: Number(latestIpc.valor_oficial),
                     fecha: latestIpc.fecha_publicacion,
                     tasaSugeridaTrimestral: pctTrimestral || 7.2,
-                    tasaSugeridaSemestral: pctSemestral || 14.8
+                    tasaSugeridaSemestral: pctSemestral || 14.8,
+                    periodoTrimestralTexto: periodo3,
+                    periodoSemestralTexto: periodo6,
+                    fuenteCriterio: 'Últimos índices oficiales publicados por INDEC'
                 };
             }
 
             let iclResult = defaults.icl;
             if (iclRows && iclRows.length > 0) {
-                const latestIcl = iclRows[0];
-                // Calcular variación respecto a hace 90 días (trimestral)
-                const row90Days = iclRows[Math.min(90, iclRows.length - 1)];
+                const todayStr = new Date().toISOString().split('T')[0];
+                const effectiveIcl = iclRows.find(r => r.fecha_publicacion <= todayStr) || iclRows[0];
+                const projectedIcl = iclRows[0];
+
+                // Calcular variación trimestral respecto a 90 días atrás de la fecha efectiva
+                const effDate = new Date(effectiveIcl.fecha_publicacion);
+                const target90 = new Date(effDate.getFullYear(), effDate.getMonth(), effDate.getDate() - 90).toISOString().split('T')[0];
+                const row90Days = iclRows.find(r => r.fecha_publicacion <= target90) || iclRows[Math.min(90, iclRows.length - 1)];
                 const pctIclTrimestral = row90Days && Number(row90Days.valor_oficial) > 0
-                    ? Number((((Number(latestIcl.valor_oficial) / Number(row90Days.valor_oficial)) - 1) * 100).toFixed(1))
+                    ? Number((((Number(effectiveIcl.valor_oficial) / Number(row90Days.valor_oficial)) - 1) * 100).toFixed(1))
                     : 6.8;
 
-                const row180Days = iclRows[Math.min(180, iclRows.length - 1)];
+                // Calcular variación semestral respecto a 180 días atrás de la fecha efectiva
+                const target180 = new Date(effDate.getFullYear(), effDate.getMonth(), effDate.getDate() - 180).toISOString().split('T')[0];
+                const row180Days = iclRows.find(r => r.fecha_publicacion <= target180) || iclRows[Math.min(180, iclRows.length - 1)];
                 const pctIclSemestral = row180Days && Number(row180Days.valor_oficial) > 0
-                    ? Number((((Number(latestIcl.valor_oficial) / Number(row180Days.valor_oficial)) - 1) * 100).toFixed(1))
+                    ? Number((((Number(effectiveIcl.valor_oficial) / Number(row180Days.valor_oficial)) - 1) * 100).toFixed(1))
                     : 13.9;
 
                 iclResult = {
-                    valor: Number(latestIcl.valor_oficial),
-                    fecha: latestIcl.fecha_publicacion,
+                    valor: Number(effectiveIcl.valor_oficial),
+                    fecha: effectiveIcl.fecha_publicacion,
+                    valorProyectado: Number(projectedIcl.valor_oficial),
+                    fechaProyectada: projectedIcl.fecha_publicacion,
                     tasaSugeridaTrimestral: pctIclTrimestral,
                     tasaSugeridaSemestral: pctIclSemestral
                 };
@@ -4257,9 +4404,9 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
     modal.style.display = 'flex';
 
     modal.innerHTML = `
-        <div class="relative w-full max-w-4xl max-h-[94vh] sm:max-h-[90vh] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col text-zinc-900 dark:text-white overflow-hidden" onclick="event.stopPropagation()">
+        <div class="relative w-full max-w-4xl h-[90vh] max-h-[850px] bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col text-zinc-900 dark:text-white overflow-hidden" onclick="event.stopPropagation()">
             <!-- Header Modal -->
-            <div class="p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-800/50">
+            <div class="p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-800/50 shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center font-bold shrink-0 border border-primary/20">
                         <span class="material-symbols-outlined text-xl sm:text-2xl">table_chart</span>
@@ -4271,13 +4418,15 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
                         <p class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Valores oficiales del Banco Central de la República Argentina con 2 decimales.</p>
                     </div>
                 </div>
-                <button type="button" onclick="document.getElementById('bcra-indices-table-modal').style.display='none'" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-200/70 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors cursor-pointer shrink-0">
-                    <span class="material-symbols-outlined text-base sm:text-lg">close</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="document.getElementById('bcra-indices-table-modal').style.display='none'" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-200/70 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors cursor-pointer shrink-0">
+                        <span class="material-symbols-outlined text-base sm:text-lg">close</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Tabs Switcher + Filter -->
-            <div class="px-4 sm:px-6 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-zinc-900">
+            <div class="px-4 sm:px-6 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-zinc-900 shrink-0">
                 <div class="grid grid-cols-2 gap-1 w-full sm:w-72 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700/60 shrink-0">
                     <button type="button" id="tab-btn-ipc" onclick="renderIndicesTableContent('IPC')" class="w-full text-center px-3 py-2 rounded-lg text-xs font-headline font-extrabold bg-primary text-white shadow-sm transition-all cursor-pointer">
                         IPC (Inflación)
@@ -4297,13 +4446,13 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
                 <!-- Se llena dinámicamente -->
             </div>
 
-            <!-- Table Content Area (Scrollable con margin-top y padding para no chocar) -->
-            <div class="flex-grow overflow-y-auto p-4 sm:p-6 mt-1" id="indices-table-container">
-                <div class="p-8 text-center text-zinc-400">Cargando registros oficiales...</div>
+            <!-- Table Content Area (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 min-h-[320px]" id="indices-table-container">
+                <div class="p-8 text-center text-zinc-400 font-medium">Cargando registros oficiales...</div>
             </div>
 
             <!-- Footer Modal -->
-            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800/40">
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800/40 shrink-0">
                 <span class="flex items-center gap-1.5 text-center sm:text-left text-[11px] sm:text-xs">
                     <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
                     <span>Fuente Oficial: API Monetaria v4.0 BCRA • Sincronización Automática</span>
@@ -4317,6 +4466,45 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
 
     let activeTab = initialTab;
     let cachedRows = [];
+
+    window.triggerManualBcraSync = async function() {
+        const btn = document.getElementById('btn-sync-bcra');
+        const icon = document.getElementById('icon-sync-bcra');
+        const text = document.getElementById('text-sync-bcra');
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('animate-spin');
+        if (text) text.textContent = 'Sincronizando...';
+
+        try {
+            await window.DataManager.syncIndicesFromBcra();
+            if (text) text.textContent = '¡Actualizado!';
+            if (icon) {
+                icon.classList.remove('animate-spin');
+                icon.textContent = 'check';
+            }
+            await renderIndicesTableContent(activeTab);
+            setTimeout(() => {
+                if (text) text.textContent = 'Sincronizar BCRA';
+                if (icon) {
+                    icon.classList.remove('animate-spin');
+                    icon.textContent = 'sync';
+                }
+                if (btn) btn.disabled = false;
+            }, 2500);
+        } catch (e) {
+            console.error('Error sincronizando BCRA:', e);
+            if (text) text.textContent = 'Error al sincronizar';
+            if (icon) {
+                icon.classList.remove('animate-spin');
+                icon.textContent = 'error';
+            }
+            setTimeout(() => {
+                if (text) text.textContent = 'Sincronizar BCRA';
+                if (icon) icon.textContent = 'sync';
+                if (btn) btn.disabled = false;
+            }, 3000);
+        }
+    };
 
     const formatBcraDate = (dateStr) => {
         if (!dateStr) return '-';
@@ -4386,20 +4574,30 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
                     </div>
                 `;
             } else {
-                const row90 = cachedRows[Math.min(90, cachedRows.length - 1)];
+                const todayStr = new Date().toISOString().split('T')[0];
+                const effectiveIcl = cachedRows.find(r => r.fecha_publicacion <= todayStr) || latest;
+                const isProjected = latest.fecha_publicacion > todayStr;
+
+                const effDate = new Date(effectiveIcl.fecha_publicacion);
+                const target90 = new Date(effDate.getFullYear(), effDate.getMonth(), effDate.getDate() - 90).toISOString().split('T')[0];
+                const row90 = cachedRows.find(r => r.fecha_publicacion <= target90) || cachedRows[Math.min(90, cachedRows.length - 1)];
                 const pctTrim = row90 && Number(row90.valor_oficial) > 0
-                    ? (((Number(latest.valor_oficial) / Number(row90.valor_oficial)) - 1) * 100).toFixed(2)
+                    ? (((Number(effectiveIcl.valor_oficial) / Number(row90.valor_oficial)) - 1) * 100).toFixed(2)
                     : '6.80';
 
-                const row180 = cachedRows[Math.min(180, cachedRows.length - 1)];
+                const target180 = new Date(effDate.getFullYear(), effDate.getMonth(), effDate.getDate() - 180).toISOString().split('T')[0];
+                const row180 = cachedRows.find(r => r.fecha_publicacion <= target180) || cachedRows[Math.min(180, cachedRows.length - 1)];
                 const pctSem = row180 && Number(row180.valor_oficial) > 0
-                    ? (((Number(latest.valor_oficial) / Number(row180.valor_oficial)) - 1) * 100).toFixed(2)
+                    ? (((Number(effectiveIcl.valor_oficial) / Number(row180.valor_oficial)) - 1) * 100).toFixed(2)
                     : '13.90';
 
                 kpiContainer.innerHTML = `
                     <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
-                        <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Último ICL</span>
-                        <span class="text-xs sm:text-base font-black font-headline font-mono text-primary dark:text-red-400 mt-0.5 truncate">${Number(latest.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">${isProjected ? 'ICL Hoy' : 'Último ICL'}</span>
+                            ${isProjected ? `<span class="text-[9px] text-amber-500 font-bold truncate">Proy: ${Number(latest.valor_oficial).toFixed(2)}</span>` : ''}
+                        </div>
+                        <span class="text-xs sm:text-base font-black font-headline font-mono text-primary dark:text-red-400 mt-0.5 truncate">${Number(effectiveIcl.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div class="p-2 sm:p-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs flex flex-col justify-between min-w-0">
                         <span class="block text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase truncate">Trimestral (3m)</span>
@@ -4440,146 +4638,80 @@ window.openBcraIndicesTableModal = async function(initialTab = 'IPC') {
 
         if (activeTab === 'IPC') {
             container.innerHTML = `
-                <!-- Contenedor Responsivo: Tabla en Desktop y Lista de Tarjetas en Mobile -->
-                <div>
-                    <!-- Desktop Table (>= 640px) -->
-                    <div class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
-                                <tr>
-                                    <th class="p-3.5 sm:p-4">Período / Mes</th>
-                                    <th class="p-3.5 sm:p-4 text-right">Variación Mensual</th>
-                                    <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                                ${filtered.map(r => `
-                                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
-                                        <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
-                                            <div class="flex items-center gap-2.5">
-                                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                                <div>
-                                                    <span class="block">${formatBcraMonth(r.fecha_publicacion)}</span>
-                                                    <span class="block text-[11px] font-mono font-medium text-zinc-400 dark:text-zinc-500">${formatBcraDate(r.fecha_publicacion)}</span>
-                                                </div>
+                <div class="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs bg-white dark:bg-zinc-900">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="p-3.5 sm:p-4">Período / Mes</th>
+                                <th class="p-3.5 sm:p-4 text-right">Variación Mensual</th>
+                                <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800">
+                            ${filtered.map(r => `
+                                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                            <div>
+                                                <span class="block">${formatBcraMonth(r.fecha_publicacion)}</span>
+                                                <span class="block text-[11px] font-mono font-medium text-zinc-400 dark:text-zinc-500">${formatBcraDate(r.fecha_publicacion)}</span>
                                             </div>
-                                        </td>
-                                        <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
-                                            +${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-                                        </td>
-                                        <td class="p-3.5 sm:p-4 text-center">
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
-                                                Oficial BCRA
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Mobile Cards (< 640px) -->
-                    <div class="sm:hidden space-y-2">
-                        ${filtered.map(r => `
-                            <div class="p-3.5 bg-white dark:bg-zinc-800/90 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    <div class="min-w-0">
-                                        <span class="block font-headline font-extrabold text-xs text-zinc-900 dark:text-white truncate">
-                                            ${formatBcraMonth(r.fecha_publicacion)}
-                                        </span>
-                                        <span class="block text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
-                                            Pub: ${formatBcraDate(r.fecha_publicacion)}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0 flex flex-col items-end gap-1">
-                                    <span class="font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                        </div>
+                                    </td>
+                                    <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
                                         +${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
-                                        Oficial BCRA
-                                    </span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+                                    </td>
+                                    <td class="p-3.5 sm:p-4 text-center">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                                            Oficial BCRA
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
         } else {
             container.innerHTML = `
-                <!-- Contenedor Responsivo: Tabla en Desktop y Lista de Tarjetas en Mobile -->
-                <div>
-                    <!-- Desktop Table (>= 640px) -->
-                    <div class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
-                                <tr>
-                                    <th class="p-3.5 sm:p-4">Fecha</th>
-                                    <th class="p-3.5 sm:p-4 text-right">Valor Diario Oficial</th>
-                                    <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                                ${filtered.map(r => {
-                                    const todayStr = new Date().toISOString().split('T')[0];
-                                    const isFuture = String(r.fecha_publicacion) > todayStr;
-                                    return `
-                                    <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
-                                        <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
-                                            <div class="flex items-center gap-2.5">
-                                                <span class="w-2.5 h-2.5 rounded-full ${isFuture ? 'bg-amber-500' : 'bg-emerald-500'} shrink-0"></span>
-                                                <div>
-                                                    <span class="block font-mono font-bold">${formatBcraDate(r.fecha_publicacion)}</span>
-                                                    <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">${isFuture ? 'Anticipo Diario Proyectado' : 'Publicación Oficial Diaria'}</span>
-                                                </div>
+                <div class="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs bg-white dark:bg-zinc-900">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-headline font-extrabold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="p-3.5 sm:p-4">Fecha</th>
+                                <th class="p-3.5 sm:p-4 text-right">Valor Diario Oficial</th>
+                                <th class="p-3.5 sm:p-4 text-center">Tipo de Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800">
+                            ${filtered.map(r => {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                const isFuture = String(r.fecha_publicacion) > todayStr;
+                                return `
+                                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="p-3.5 sm:p-4 font-headline font-bold text-zinc-900 dark:text-white">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="w-2.5 h-2.5 rounded-full ${isFuture ? 'bg-amber-500' : 'bg-emerald-500'} shrink-0"></span>
+                                            <div>
+                                                <span class="block font-mono font-bold">${formatBcraDate(r.fecha_publicacion)}</span>
+                                                <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">${isFuture ? 'Anticipo Diario Proyectado' : 'Publicación Oficial Diaria'}</span>
                                             </div>
-                                        </td>
-                                        <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
-                                            ${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                        <td class="p-3.5 sm:p-4 text-center">
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isFuture ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/40' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'}">
-                                                ${isFuture ? 'Proyección BCRA' : 'Oficial BCRA'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Mobile Cards (< 640px) -->
-                    <div class="sm:hidden space-y-2">
-                        ${filtered.map(r => {
-                            const todayStr = new Date().toISOString().split('T')[0];
-                            const isFuture = String(r.fecha_publicacion) > todayStr;
-                            return `
-                            <div class="p-3.5 bg-white dark:bg-zinc-800/90 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <span class="w-2.5 h-2.5 rounded-full ${isFuture ? 'bg-amber-500' : 'bg-emerald-500'} shrink-0"></span>
-                                    <div class="min-w-0">
-                                        <span class="block font-headline font-bold font-mono text-xs text-zinc-900 dark:text-white truncate">
-                                            ${formatBcraDate(r.fecha_publicacion)}
-                                        </span>
-                                        <span class="block text-[10px] text-zinc-400 dark:text-zinc-500">
-                                            ${isFuture ? 'Proyección anticipada' : 'Publicación oficial'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0 flex flex-col items-end gap-1">
-                                    <span class="font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
+                                        </div>
+                                    </td>
+                                    <td class="p-3.5 sm:p-4 text-right font-headline font-black text-sm text-primary dark:text-red-400 font-mono">
                                         ${Number(r.valor_oficial).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${isFuture ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/40' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'}">
-                                        ${isFuture ? 'Proyección BCRA' : 'Oficial BCRA'}
-                                    </span>
-                                </div>
-                            </div>
-                            `;
-                        }).join('')}
-                    </div>
+                                    </td>
+                                    <td class="p-3.5 sm:p-4 text-center">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isFuture ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/40' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'}">
+                                            ${isFuture ? 'Proyección BCRA' : 'Oficial BCRA'}
+                                        </span>
+                                    </td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
         }

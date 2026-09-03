@@ -30,9 +30,43 @@
                 if (appleMeta) {
                     appleMeta.setAttribute('content', 'black-translucent');
                 }
+
+                var urlParams = new URLSearchParams(window.location.search);
+                var queryTab = urlParams.get('tab') || urlParams.get('seccion') || urlParams.get('section');
+                var targetTab = (window.location.hash ? window.location.hash.replace('#', '') : queryTab) || '';
+                if (targetTab === 'alquileres' || targetTab === 'alquiler' || targetTab === 'contratos') {
+                    targetTab = 'alquiler-activo';
+                }
+                if (targetTab && targetTab !== 'avisos') {
+                    document.documentElement.setAttribute('data-initial-tab', targetTab);
+                }
             } catch (e) {}
         })();
     </script>
+    <style>
+        /* Prevención de parpadeo de pestaña Avisos si la URL apunta a otra pestaña inicial */
+        html[data-initial-tab] #panel-content-avisos {
+            display: none !important;
+        }
+        html[data-initial-tab="alquiler-activo"] #panel-content-alquiler-activo,
+        html[data-initial-tab="postulaciones"] #panel-content-postulaciones,
+        html[data-initial-tab="visitas"] #panel-content-visitas,
+        html[data-initial-tab="chat-negociacion"] #panel-content-chat-negociacion {
+            display: block !important;
+        }
+        html[data-initial-tab="alquiler-activo"] button[data-tab="avisos"] {
+            background-color: transparent !important;
+            color: rgb(113 113 122) !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+        }
+        html[data-initial-tab="alquiler-activo"] button[data-tab="alquiler-activo"] {
+            background-color: var(--color-primary, #811B1E) !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+    </style>
         <title>Panel del Propietario | Hábitat</title>
     <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -425,15 +459,18 @@
                     <div class="flex items-center gap-3 flex-wrap shrink-0">
                         <div class="relative">
                             <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                                <button type="button" onclick="navigateOwnerCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                <button type="button" onclick="navigateOwnerCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all" title="Mes anterior">
                                     <span class="material-symbols-outlined text-base">chevron_left</span>
                                 </button>
                                 <button type="button" onclick="toggleOwnerMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
-                                    <span id="owner-calendar-month-title">Agosto 2026</span>
+                                    <span id="owner-calendar-month-title">Mes Actual</span>
                                     <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
                                 </button>
-                                <button type="button" onclick="navigateOwnerCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all">
+                                <button type="button" onclick="navigateOwnerCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all" title="Mes siguiente">
                                     <span class="material-symbols-outlined text-base">chevron_right</span>
+                                </button>
+                                <button type="button" onclick="goToOwnerCurrentMonth()" class="ml-1 px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-600 font-headline text-xs font-bold transition-all shadow-2xs cursor-pointer" title="Ir al mes actual">
+                                    Hoy
                                 </button>
                             </div>
 
@@ -580,6 +617,7 @@
     <script src="js/notifications.js?v=2"></script>
     <script src="js/contract-editor-modal.js"></script>
     <script src="js/contracts-manager.js?v=5"></script>
+    <script src="js/rental-config-wizard.js"></script>
     <script src="js/inventory-manager.js"></script>
 
     <!-- Interactive Script Handlers -->
@@ -620,7 +658,20 @@
                 }
             }
 
-            async function switchViewTab(target) {
+            let currentActiveTab = null;
+
+            async function switchViewTab(target, force = false) {
+                if (!target) target = 'avisos';
+
+                // Si ya estamos en esta pestaña y no es forzado, evitar re-render duplicado
+                if (!force && target === currentActiveTab) return;
+                currentActiveTab = target;
+
+                // Mantener el hash de la URL siempre sincronizado con la pestaña activa
+                if (window.location.hash.replace('#', '') !== target) {
+                    window.location.hash = target;
+                }
+
                 // Update Top Pills
                 pillBtns.forEach(btn => {
                     const isTarget = btn.getAttribute('data-tab') === target;
@@ -650,11 +701,20 @@
                     }
                 });
 
+                document.documentElement.removeAttribute('data-initial-tab');
+
                 // Render Content
                 let renderPromise = Promise.resolve();
                 if (target === 'avisos') renderPromise = loadOwnerAvisos();
                 if (target === 'postulaciones') renderPromise = loadOwnerApplications();
-                if (target === 'visitas') renderPromise = loadOwnerVisits();
+                if (target === 'visitas') {
+                    const nowCal = new Date();
+                    ownerCurrentCalendarYear = nowCal.getFullYear();
+                    ownerCurrentCalendarMonth = nowCal.getMonth();
+                    ownerPickerSelectedYear = nowCal.getFullYear();
+                    ownerSelectedCalendarDay = null;
+                    renderPromise = loadOwnerVisits();
+                }
                 if (target === 'alquiler-activo') renderPromise = loadOwnerActiveRental();
                 if (target === 'chat-negociacion') renderPromise = loadOwnerChatSection();
 
@@ -664,6 +724,7 @@
                 
                 return renderPromise;
             }
+            window.switchViewTab = switchViewTab;
 
             window.addEventListener('resize', () => {
                 const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
@@ -672,18 +733,25 @@
 
             pillBtns.forEach(btn => btn.addEventListener('click', () => {
                 const tab = btn.getAttribute('data-tab');
-                window.location.hash = tab;
+                if (tab) switchViewTab(tab);
             }));
             dockBtns.forEach(btn => btn.addEventListener('click', () => {
                 const tab = btn.getAttribute('data-tab');
-                window.location.hash = tab;
+                if (tab) switchViewTab(tab);
             }));
 
-            async function handleHashNavigation() {
-                const hash = window.location.hash.replace('#', '');
+            async function handleTabOrHashNavigation() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const queryTab = urlParams.get('tab') || urlParams.get('seccion') || urlParams.get('section');
+                let targetTab = (window.location.hash ? window.location.hash.replace('#', '') : queryTab) || '';
+
+                if (targetTab === 'alquileres' || targetTab === 'alquiler' || targetTab === 'contratos') {
+                    targetTab = 'alquiler-activo';
+                }
+
                 const validTabs = ['avisos', 'postulaciones', 'visitas', 'alquiler-activo', 'chat-negociacion'];
                 
-                if (hash === 'mantenimiento') {
+                if (targetTab === 'mantenimiento') {
                     await switchViewTab('alquiler-activo');
                     setTimeout(() => {
                         const maintSection = document.getElementById('owner-list-tickets');
@@ -691,8 +759,8 @@
                             maintSection.parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                     }, 100);
-                } else if (validTabs.includes(hash)) {
-                    await switchViewTab(hash);
+                } else if (validTabs.includes(targetTab)) {
+                    await switchViewTab(targetTab);
                 } else {
                     await switchViewTab('avisos');
                 }
@@ -703,18 +771,31 @@
                 }, 60);
             }
 
-            window.addEventListener('hashchange', handleHashNavigation);
+            window.addEventListener('hashchange', handleTabOrHashNavigation);
 
             // Initial view
-            if (window.location.hash) {
-                handleHashNavigation();
-            } else {
-                switchViewTab('avisos');
-                setTimeout(() => {
-                    const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
-                    if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
-                }, 60);
-            }
+            handleTabOrHashNavigation();
+
+            // Detección de publicación reciente para consultar activación de alquiler
+            setTimeout(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const justPublishedUrl = urlParams.get('justPublished') === '1' || urlParams.get('justPublished') === 'true';
+                let propData = null;
+                try {
+                    const stored = sessionStorage.getItem('just_published_property');
+                    if (stored) propData = JSON.parse(stored);
+                } catch (e) {}
+
+                if (justPublishedUrl || propData) {
+                    // Limpiar URL sin recargar
+                    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (window.location.hash || '');
+                    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+
+                    if (window.RentalConfigWizard?.promptPostPublish) {
+                        window.RentalConfigWizard.promptPostPublish(propData || {});
+                    }
+                }
+            }, 600);
 
             // Scroll direction detection with requestAnimationFrame throttling for iOS
             let lastScrollY = window.scrollY;
@@ -949,27 +1030,64 @@
                 const vistas = p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0;
                 const safePropJson = JSON.stringify(p).replace(/"/g, '&quot;');
 
+                const activeContract = (ownerActiveContractsMock || []).find(c => c && (String(c.propertyId) === String(p.id) || String(c.property_id) === String(p.id) || String(c.id_propiedad) === String(p.id)));
+
                 return `
-                <div class="owner-prop-card glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80">
-                    <div class="aspect-[16/10] w-full min-h-[210px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
-                        <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                <div class="owner-prop-card glass-card rounded-2xl overflow-visible shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80 cursor-pointer relative" onclick="handleOwnerCardClick(event, ${safePropJson})">
+                    <div class="relative aspect-[16/10] w-full min-h-[210px] bg-zinc-100 dark:bg-zinc-800 rounded-t-2xl">
+                        <div class="absolute inset-0 overflow-hidden rounded-t-2xl">
+                            <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
+                        </div>
                         
-                        <!-- Badges de Estado Superior -->
-                        <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10">
+                        <!-- Badges de Estado Superior Izquierda -->
+                        <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10 pointer-events-none">
                             <span class="px-3 py-1 text-[11px] font-black rounded-full ${st.pillClass} uppercase shadow flex items-center gap-1">
                                 <span class="material-symbols-outlined text-xs">${st.icon}</span>
                                 ${st.label}
                             </span>
                         </div>
 
-                        <!-- Insignia de Verificado Flotante (sin texto) -->
-                        ${isVerifOwner ? `
-                            <div class="absolute top-3 right-3 z-10" title="Verificado">
-                                <span class="w-7 h-7 rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow flex items-center justify-center border border-emerald-400/30">
+                        <!-- Acciones Superiores Derecha: Verificado, Compartir y Tres Puntos -->
+                        <div class="absolute top-3 right-3 flex items-center gap-1.5 z-20" onclick="event.stopPropagation()">
+                            ${isVerifOwner ? `
+                                <span class="w-8 h-8 rounded-full bg-emerald-600/90 text-white backdrop-blur-md shadow flex items-center justify-center border border-emerald-400/30 shrink-0" title="Propietario Verificado">
                                     <span class="material-symbols-outlined text-sm">verified</span>
                                 </span>
+                            ` : ''}
+
+                            <!-- Botón Compartir Rápido -->
+                            <button type="button" onclick="shareOwnerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}');" class="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow flex items-center justify-center transition-all cursor-pointer border border-white/20 active:scale-95 shrink-0" title="Compartir publicación">
+                                <span class="material-symbols-outlined text-sm">share</span>
+                            </button>
+
+                            <!-- Botón Tres Puntos -->
+                            <div class="relative">
+                                <button type="button" onclick="toggleOwnerCardMenu(event, '${p.id}');" class="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow flex items-center justify-center transition-all cursor-pointer border border-white/20 active:scale-95 shrink-0" title="Opciones de publicación">
+                                    <span class="material-symbols-outlined text-base">more_vert</span>
+                                </button>
+
+                                <!-- Menú Contextual Desplegable -->
+                                <div id="owner-card-menu-${p.id}" class="owner-card-menu hidden absolute right-0 top-10 w-52 bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl py-1.5 z-50 animate-fade-in text-xs font-headline font-bold text-zinc-700 dark:text-zinc-200" onclick="event.stopPropagation()">
+                                    <button type="button" onclick="toggleOwnerPropPause('${p.id}', '${normStatus}', this); closeAllOwnerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base ${isPaused ? 'text-emerald-500' : 'text-amber-500'}">${isPaused ? 'play_circle' : 'pause_circle'}</span>
+                                        <span>${isPaused ? 'Reanudar publicación' : 'Pausar publicación'}</span>
+                                    </button>
+                                    <button type="button" onclick="if(window.App && typeof window.App.showPublishWizard === 'function') window.App.showPublishWizard(${safePropJson}); closeAllOwnerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-zinc-400">edit</span>
+                                        <span>Editar publicación</span>
+                                    </button>
+                                    <button type="button" onclick="shareOwnerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}'); closeAllOwnerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-zinc-400">share</span>
+                                        <span>Compartir enlace</span>
+                                    </button>
+                                    <div class="h-px bg-zinc-100 dark:bg-zinc-800 my-1"></div>
+                                    <button type="button" onclick="deleteOwnerProperty('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}'); closeAllOwnerCardMenus();" class="w-full px-4 py-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                        <span class="material-symbols-outlined text-base text-rose-500">delete</span>
+                                        <span>Eliminar publicación</span>
+                                    </button>
+                                </div>
                             </div>
-                        ` : ''}
+                        </div>
                     </div>
 
                     <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
@@ -1001,22 +1119,25 @@
                             </div>
                         </div>
 
-                        <!-- Acciones directas -->
-                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
-                            <button type="button" onclick="toggleOwnerPropPause('${p.id}', '${normStatus}', this)" class="px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${isPaused ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-300/60 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 border border-amber-300/60 dark:border-amber-800'}">
-                                <span class="material-symbols-outlined text-sm">${isPaused ? 'play_circle' : 'pause_circle'}</span>
-                                <span>${isPaused ? 'Reanudar' : 'Pausar'}</span>
-                            </button>
-
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" onclick="if(window.App && typeof window.App.showPublishWizard === 'function') window.App.showPublishWizard(${safePropJson})" class="p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Editar Publicación">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
+                        <!-- Acciones directas de Alquiler -->
+                        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800" onclick="event.stopPropagation()">
+                            ${activeContract ? `
+                                <div class="grid grid-cols-2 gap-2 w-full">
+                                    <button type="button" onclick="selectOwnerActiveContract('${activeContract.id}'); switchViewTab('alquiler-activo');" class="py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                        <span class="material-symbols-outlined text-base text-emerald-600 dark:text-emerald-400">payments</span>
+                                        <span>Ver Alquiler</span>
+                                    </button>
+                                    <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${activeContract.id}');" class="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                        <span class="material-symbols-outlined text-base text-primary dark:text-red-400">gavel</span>
+                                        <span>Editar Contrato</span>
+                                    </button>
+                                </div>
+                            ` : `
+                                <button type="button" onclick="if(window.RentalConfigWizard) window.RentalConfigWizard.open(${safePropJson});" class="w-full py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-hover active:scale-[0.99] text-white text-xs font-headline font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                                    <span class="material-symbols-outlined text-base">add_home_work</span>
+                                    <span>Generar Alquiler</span>
                                 </button>
-                                <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) window.openMarketplacePropertyDetailModal(${safePropJson}, { isOwner: true })" class="px-3 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-extrabold rounded-xl text-xs shadow-xs transition-all flex items-center gap-1 cursor-pointer">
-                                    <span>Ver Ficha</span>
-                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                                </button>
-                            </div>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -1112,6 +1233,109 @@
             }
         };
 
+        window.handleOwnerCardClick = function(event, propObj) {
+            if (event.target.closest('button') || event.target.closest('a') || event.target.closest('.owner-card-menu')) {
+                return;
+            }
+            if (window.openMarketplacePropertyDetailModal) {
+                window.openMarketplacePropertyDetailModal(propObj, { isOwner: true });
+            }
+        };
+
+        window.toggleOwnerCardMenu = function(event, propId) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById(`owner-card-menu-${propId}`);
+            if (!menu) return;
+            const isHidden = menu.classList.contains('hidden');
+            window.closeAllOwnerCardMenus();
+            if (isHidden) {
+                menu.classList.remove('hidden');
+            }
+        };
+
+        window.closeAllOwnerCardMenus = function() {
+            document.querySelectorAll('.owner-card-menu').forEach(m => m.classList.add('hidden'));
+        };
+
+        window.deleteOwnerProperty = async function(propId, propTitle) {
+            let confirmed = false;
+            if (window.showCustomConfirm) {
+                confirmed = await window.showCustomConfirm({
+                    title: '¿Eliminar Publicación?',
+                    message: `¿Estás seguro de que deseas eliminar la publicación "${propTitle || 'esta propiedad'}"? Esta acción no se puede deshacer.`,
+                    confirmText: 'Eliminar Publicación',
+                    cancelText: 'Cancelar',
+                    isDanger: true,
+                    icon: 'delete_forever'
+                });
+            } else {
+                confirmed = confirm(`¿Estás seguro de eliminar "${propTitle || 'esta propiedad'}"?`);
+            }
+            if (!confirmed) return;
+
+            try {
+                if (window.DataManager && typeof window.DataManager.deleteProperty === 'function') {
+                    await window.DataManager.deleteProperty(propId);
+                }
+                ownerAvisosState = ownerAvisosState.filter(p => String(p.id) !== String(propId) && String(p.id_publicacion) !== String(propId));
+                updateOwnerStatusBadgesCounts(ownerAvisosState);
+                renderOwnerAvisosGrid();
+
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Publicación Eliminada',
+                        message: 'El aviso fue removido exitosamente.',
+                        type: 'info'
+                    });
+                }
+            } catch (e) {
+                console.error("Error al eliminar propiedad:", e);
+                if (window.showCustomAlert) {
+                    await window.showCustomAlert({
+                        title: 'Error',
+                        message: 'No se pudo eliminar la publicación. Inténtelo más tarde.',
+                        icon: 'error'
+                    });
+                }
+            }
+        };
+
+        window.shareOwnerProperty = async function(propId, propTitle) {
+            const shareUrl = `${window.location.origin}/buscar.html?id=${propId}`;
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: propTitle || 'Propiedad en Habitat',
+                        text: `Mirá esta propiedad en Habitat: ${propTitle || ''}`,
+                        url: shareUrl
+                    });
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: '¡Enlace Copiado!',
+                        message: 'El link de la publicación fue copiado al portapapeles.',
+                        type: 'success'
+                    });
+                } else {
+                    alert('¡Enlace copiado al portapapeles!');
+                }
+            } catch (e) {
+                prompt('Copia este enlace para compartir:', shareUrl);
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.owner-card-menu') && !e.target.closest('[onclick*="toggleOwnerCardMenu"]')) {
+                window.closeAllOwnerCardMenus();
+            }
+        });
+
         async function loadOwnerAvisos() {
             const grid = document.getElementById('owner-grid-props');
             if (!grid || !window.DataManager) return;
@@ -1121,6 +1345,18 @@
             try {
                 ownerAvisosState = await window.DataManager.getUserMarketplaceProperties(100);
                 updateOwnerStatusBadgesCounts(ownerAvisosState);
+
+                // Precargar contratos activos para vincular avisos con sus alquileres
+                try {
+                    let rawList = [];
+                    if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
+                        rawList = await window.DataManager.getOwnerContracts();
+                    } else {
+                        const raw = localStorage.getItem('habitat_contracts');
+                        if (raw) rawList = JSON.parse(raw);
+                    }
+                    ownerActiveContractsMock = rawList || [];
+                } catch (ce) {}
 
                 // Setup Status Tab Clicks
                 document.querySelectorAll('.owner-status-tab').forEach(tab => {
@@ -2043,7 +2279,7 @@
                         <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
                             <button type="button" class="btn-owner-accept flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2" data-id="${a.id}">
                                 <span class="material-symbols-outlined text-base">check_circle</span>
-                                Aceptar Postulación y Firmar Contrato
+                                <span>Aceptar Postulación</span>
                             </button>
                             <button type="button" onclick="ContractsManager.openContractFullscreen('${a.contract_id || 'CTR-2026-0046'}', 'chat')" class="py-2.5 px-3.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Negociar términos por chat">
                                 <span class="material-symbols-outlined text-base text-emerald-500">chat</span>
@@ -2055,26 +2291,45 @@
                         </div>
                     ` : ''}
 
-                    ${!isRejected && a.status === 'aceptada' ? `
+                    ${!isRejected && a.status === 'aceptada' ? (() => {
+                        const appContract = (ownerActiveContractsMock || []).find(c => c && (
+                            String(c.propertyId) === String(a.property_id || a.resolved_prop_id) ||
+                            String(c.property_id) === String(a.property_id || a.resolved_prop_id) ||
+                            String(c.id) === String(a.contract_id)
+                        ));
+
+                        return `
                         <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
-                            <a href="contratos.html?contract=${a.contract_id || (a.id_contrato ? ('CTR-2026-' + String(a.id_contrato).padStart(4, '0')) : '')}&sign=1&role=OWNER" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-base">description</span>
-                                Ver y Firmar Contrato
-                            </a>
+                            ${appContract ? `
+                                <button type="button" onclick="selectOwnerActiveContract('${appContract.id}'); switchViewTab('alquiler-activo');" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-base">payments</span>
+                                    <span>Ver Alquiler Activo</span>
+                                </button>
+                                <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${appContract.id}');" class="py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                                    <span class="material-symbols-outlined text-base text-primary dark:text-red-400">gavel</span>
+                                    <span>Editar Contrato</span>
+                                </button>
+                            ` : `
+                                <button type="button" onclick="openRentalWizardForApplication('${a.id}')" class="flex-1 py-2.5 px-4 bg-primary hover:bg-primary-hover active:scale-[0.98] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-base">add_home_work</span>
+                                    <span>Generar Alquiler</span>
+                                </button>
+                                <a href="contratos.html?contract=${a.contract_id || (a.id_contrato ? ('CTR-2026-' + String(a.id_contrato).padStart(4, '0')) : '')}&sign=1&role=OWNER&returnUrl=${encodeURIComponent('administrador.html?tab=alquiler-activo')}" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-base">description</span>
+                                    <span>Ver Contrato</span>
+                                </a>
+                            `}
                             <button type="button" onclick="ContractsManager.openContractFullscreen('${a.contract_id || (a.id_contrato ? ('CTR-2026-' + String(a.id_contrato).padStart(4, '0')) : '')}', 'chat')" class="py-2.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Abrir canal de chat y negociación">
                                 <span class="material-symbols-outlined text-base">chat</span>
                                 <span>Chat</span>
                             </button>
                             <button type="button" onclick="cancelAcceptedApplication('${a.id}')" class="py-2.5 px-3.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Cancelar aceptación y volver a evaluar postulantes">
                                 <span class="material-symbols-outlined text-base">undo</span>
-                                Cancelar Aceptación
-                            </button>
-                            <button type="button" onclick="rejectApplication('${a.id}')" class="py-2.5 px-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5" title="Rechazar y desestimar postulación">
-                                <span class="material-symbols-outlined text-base">person_remove</span>
-                                Rechazar / Eliminar
+                                <span>Cancelar Aceptación</span>
                             </button>
                         </div>
-                    ` : ''}
+                        `;
+                    })() : ''}
 
                     ${isRejected ? `
                         <div class="pt-1 flex items-center justify-between flex-wrap gap-2">
@@ -2209,47 +2464,13 @@
 
             list.innerHTML = html;
 
-            // Vincular acciones de aceptar postulación con Editor de Contrato
+            // Vincular acciones de aceptar postulación con el Pop-up modal y Wizard de Alquiler
             list.querySelectorAll('.btn-owner-accept').forEach(b => {
-                b.onclick = () => {
+                b.onclick = async () => {
                     const appId = b.getAttribute('data-id');
-                    const app = ownerAppsState.find(a => String(a.id) === String(appId)) || {};
-                    const prop = ownerRawProperties.find(p => String(p.id) === String(app.resolved_prop_id)) || {};
-
-                    if (window.openContractEditorModal) {
-                        window.openContractEditorModal({
-                            applicant: app,
-                            property: {
-                                ...prop,
-                                id_perfil_propietario: prop.id_perfil_propietario || app.id_perfil_propietario || window._currentUserProfileId,
-                                title: app.property_title || prop.title,
-                                address: app.property_address || prop.address,
-                                price: prop.price || prop.precio || app.property_price || app.propertyPrice
-                            },
-                            role: 'OWNER',
-                            onConfirm: async (customTerms) => {
-                                b.disabled = true;
-                                b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Generando Contrato...';
-                                let res = null;
-                                try {
-                                    if (window.DataManager && window.DataManager.acceptApplication) {
-                                        res = await window.DataManager.acceptApplication(appId, customTerms);
-                                    }
-                                } catch (e) {
-                                    console.warn("Aviso local postulación:", e);
-                                }
-                                const targetContractId = res?.contractId || (res?.id_contrato ? `CTR-2026-${String(res.id_contrato).padStart(4, '0')}` : (res?.id && String(res.id).startsWith('CTR') ? res.id : null));
-                                if (window.ContractEditorModal) window.ContractEditorModal.close();
-                                if (targetContractId) {
-                                    window.location.href = `contratos.html?contract=${targetContractId}&sign=1&role=OWNER`;
-                                } else {
-                                    window.location.href = `contratos.html?role=OWNER`;
-                                }
-                            }
-                        });
-                    } else {
-                        window.location.href = `contratos.html?role=OWNER`;
-                    }
+                    b.disabled = true;
+                    b.innerHTML = '<span class="material-symbols-outlined text-xs animate-spin">sync</span> Aceptando...';
+                    await window.handleOwnerAcceptApplicant(appId);
                 };
             });
 
@@ -2269,11 +2490,71 @@
             }
         }
 
-        let ownerCurrentCalendarYear = 2026;
-        let ownerCurrentCalendarMonth = 7; // Agosto (0-indexed)
+        window.handleOwnerAcceptApplicant = async function(appId) {
+            const app = (ownerAppsState || []).find(a => String(a.id) === String(appId)) || {};
+            const propId = app.property_id || app.resolved_prop_id;
+            const prop = (ownerRawProperties || []).find(p => String(p.id) === String(propId)) || {
+                id: propId,
+                title: app.property_title || 'Propiedad en Alquiler',
+                address: app.property_address || 'Mendoza, Argentina',
+                price: app.property_price || app.propertyPrice || 380000,
+                photos: ['img/hero-marketplace.jpg']
+            };
+
+            // 1. Aceptar postulación
+            try {
+                if (window.DataManager && window.DataManager.acceptApplication) {
+                    await window.DataManager.acceptApplication(appId);
+                }
+            } catch (e) {
+                console.warn("Aviso local postulación aceptada:", e);
+            }
+
+            // 2. Actualizar estado local
+            app.status = 'aceptada';
+            await loadOwnerApplications();
+
+            // 3. Desplegar pop-up modal para configurar y generar el alquiler de inmediato
+            if (window.RentalConfigWizard && typeof window.RentalConfigWizard.promptPostAccept === 'function') {
+                window.RentalConfigWizard.promptPostAccept(app, prop);
+            } else if (window.RentalConfigWizard) {
+                window.RentalConfigWizard.open(prop, { tenant: app });
+            }
+        };
+
+        window.openRentalWizardForApplication = function(appId) {
+            const app = (ownerAppsState || []).find(a => String(a.id) === String(appId)) || {};
+            const propId = app.property_id || app.resolved_prop_id;
+            const prop = (ownerRawProperties || []).find(p => String(p.id) === String(propId)) || {
+                id: propId,
+                title: app.property_title || 'Propiedad en Alquiler',
+                address: app.property_address || 'Mendoza, Argentina',
+                price: app.property_price || app.propertyPrice || 380000,
+                photos: ['img/hero-marketplace.jpg']
+            };
+
+            if (window.RentalConfigWizard) {
+                window.RentalConfigWizard.open(prop, { tenant: app });
+            }
+        };
+
+        const ownerNow = new Date();
+        let ownerCurrentCalendarYear = ownerNow.getFullYear();
+        let ownerCurrentCalendarMonth = ownerNow.getMonth(); // Mes actual dinámico (0-indexado)
         let ownerSelectedCalendarDay = null;
         let ownerSelectedCalendarTypeFilter = 'todos';
-        let ownerPickerSelectedYear = 2026;
+        let ownerPickerSelectedYear = ownerNow.getFullYear();
+
+        function goToOwnerCurrentMonth() {
+            const now = new Date();
+            ownerCurrentCalendarYear = now.getFullYear();
+            ownerCurrentCalendarMonth = now.getMonth();
+            ownerPickerSelectedYear = now.getFullYear();
+            ownerSelectedCalendarDay = null;
+            renderOwnerCalendarGrid();
+            loadOwnerVisits();
+        }
+        window.goToOwnerCurrentMonth = goToOwnerCurrentMonth;
 
         const ownerMonthNamesEs = [
             'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -2663,8 +2944,9 @@
 
         function selectOwnerActiveContract(contractId) {
             activeSelectedContractId = contractId;
-            loadOwnerActiveRental();
+            return loadOwnerActiveRental();
         }
+        window.selectOwnerActiveContract = selectOwnerActiveContract;
 
         async function loadOwnerActiveRental() {
             const container = document.getElementById('owner-container-active-rental');
@@ -2697,6 +2979,19 @@
                     const rawAdjFreq = Number(c.adjustment_frequency_months || c.periodo_aumento_meses || 3);
                     const rawPunitive = Number(c.punitive_daily_rate || c.punitiveDailyRate || 0.5);
 
+                    const hasContractVal = (c.has_contract !== undefined) ? Boolean(c.has_contract) : (
+                        (c.hasContract !== undefined) ? Boolean(c.hasContract) : Boolean(
+                            c.url_contrato_final_pdf ||
+                            c.url_contrato_original_pdf ||
+                            c.hash_original_sha256 ||
+                            (c.clausulas_adicionales && typeof c.clausulas_adicionales === 'object' && Object.keys(c.clausulas_adicionales).length > 0) ||
+                            (c.customClauses && c.customClauses.length > 0) ||
+                            c.tenant_has_signed ||
+                            c.owner_has_signed ||
+                            c.status === 'SIGNED_AND_SEALED'
+                        )
+                    );
+
                     return {
                         ...c,
                         id: String(c.id || `CTR-2026-${String(idx + 1).padStart(4, '0')}`),
@@ -2706,11 +3001,27 @@
                         tenant_email: String(rawTenantEmail),
                         tenant_phone: String(rawTenantPhone),
                         monthly_rent: rawRent,
+                        monthlyRent: rawRent,
                         expenses_amount: rawExpenses,
                         payment_due_day: rawDueDay,
+                        paymentDueDay: rawDueDay,
                         adjustment_index: rawAdjIndex,
+                        adjustmentIndex: rawAdjIndex,
                         adjustment_frequency_months: rawAdjFreq,
-                        punitive_daily_rate: rawPunitive
+                        adjustmentFrequencyMonths: rawAdjFreq,
+                        punitive_daily_rate: rawPunitive,
+                        has_contract: hasContractVal,
+                        hasContract: hasContractVal,
+                        durationMonths: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
+                        duration_months: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
+                        currency: c.currency || c.clausulas_adicionales?.currency || 'ARS',
+                        aliasCbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        alias_cbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        cbu_alias: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        clauses: c.clauses || c.clausulas_adicionales || {},
+                        customClauses: c.customClauses || c.clausulas_adicionales?.customClauses || [],
+                        activeClausesList: c.activeClausesList || c.clausulas_adicionales?.activeClausesList || [],
+                        clausulas_adicionales: c.clausulas_adicionales || c.clauses || {}
                     };
                 }).filter(Boolean);
 
@@ -2731,6 +3042,8 @@
                     `;
                     return;
                 }
+
+                const hasContract = Boolean(contract.has_contract ?? contract.hasContract);
 
                 let payment = null;
                 if (window.DataManager) {
@@ -2803,7 +3116,7 @@
                                         Próxima Actualización de Alquiler: <span class="text-amber-300 underline underline-offset-4 decoration-amber-300/60">${nextAdj.nextDate}</span>
                                     </h3>
                                     <p class="text-xs text-blue-100 mt-1">
-                                        Ajuste automático según <b>${contract.adjustment_index || 'IPC'} oficial del BCRA</b> cada <b>${freqMonths} meses</b>.
+                                        Ajuste automático según <b>${contract.adjustment_index || 'IPC'} oficial del BCRA</b> cada <b>${freqMonths} meses</b>${isIpc && indicesData?.ipc?.periodoTrimestralTexto ? ` (últimos datos publicados: <b>${freqMonths >= 6 ? indicesData.ipc.periodoSemestralTexto : indicesData.ipc.periodoTrimestralTexto}</b>)` : ''}.
                                     </p>
                                 </div>
                             </div>
@@ -2849,48 +3162,92 @@
                         </div>
 
                         <!-- Card Principal del Alquiler Seleccionado -->
-                        <div class="glass-card rounded-2xl overflow-hidden shadow-sm space-y-6 border border-zinc-200 dark:border-zinc-800">
-                            <!-- Top Banner del Contrato -->
-                            <div class="bg-zinc-50 dark:bg-zinc-800/60 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-zinc-200/60 dark:border-zinc-800">
-                                <div class="space-y-1">
+                        <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-6 sm:p-7 shadow-xs">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-b border-zinc-100 dark:border-zinc-800/80 pb-6">
+                                <div class="space-y-1.5 min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="px-3 py-0.5 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                                            Contrato Vigente
+                                        ${hasContract ? `
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-headline font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            ${(contract.has_signed || contract.owner_signed || contract.status === 'SIGNED_AND_SEALED') ? 'Contrato Vigente' : 'Contrato Generado'}
                                         </span>
-                                        <span class="text-xs font-bold text-zinc-400">Reajuste ${contract.adjustment_index} (${contract.adjustment_frequency_months}m)</span>
+                                        ` : `
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-headline font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            Sin Contrato Asociado
+                                        </span>
+                                        `}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                                            Reajuste ${contract.adjustment_index} (${contract.adjustment_frequency_months}m)
+                                        </span>
                                     </div>
-                                    <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">
+                                    <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-snug truncate">
                                         ${contract.property_title}
                                     </h2>
-                                    <p class="text-xs text-zinc-500 font-medium">📍 ${contract.property_address} • Inquilino: <b>${contract.tenant_name}</b> (${contract.tenant_email})</p>
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm text-zinc-400">location_on</span>
+                                            <span>${contract.property_address}</span>
+                                        </span>
+                                        <span class="text-zinc-300 dark:text-zinc-600 hidden sm:inline">•</span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm text-zinc-400">person</span>
+                                            <span>Inquilino: <b class="text-zinc-800 dark:text-zinc-200 font-bold">${contract.tenant_name}</b> <span class="text-zinc-400 font-normal">(${contract.tenant_email})</span></span>
+                                        </span>
+                                    </div>
                                 </div>
 
+                                <!-- Barra de Acciones Limpia y Jerarquizada -->
                                 <div class="flex flex-wrap items-center gap-2 shrink-0">
-                                    ${(contract.has_signed || contract.owner_signed || contract.status === 'SIGNED_AND_SEALED') ? `
-                                    <a href="contratos.html?contract=${contract.id}&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">verified</span>
-                                        <span>Ver Contrato Firmado</span>
-                                    </a>
+                                    ${hasContract ? `
+                                        ${(contract.has_signed || contract.owner_signed || contract.status === 'SIGNED_AND_SEALED') ? `
+                                        <a href="contratos.html?contract=${contract.id}&role=OWNER&returnUrl=${encodeURIComponent('administrador.html?tab=alquiler-activo')}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-headline font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                            <span class="material-symbols-outlined text-base text-emerald-400 dark:text-emerald-600">verified</span>
+                                            <span>Ver Contrato</span>
+                                        </a>
+                                        ` : `
+                                        <a href="contratos.html?contract=${contract.id}&sign=1&role=OWNER&returnUrl=${encodeURIComponent('administrador.html?tab=alquiler-activo')}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                            <span class="material-symbols-outlined text-base">draw</span>
+                                            <span>Firmar Contrato</span>
+                                        </a>
+                                        `}
+
+                                        <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id}', 'chat')" class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 font-headline font-bold text-xs rounded-xl transition-all cursor-pointer" title="Abrir chat en vivo con el inquilino">
+                                            <span class="material-symbols-outlined text-base text-blue-500">chat</span>
+                                            <span>Chat Inquilino</span>
+                                        </button>
+
+                                        <!-- Grupo Documentos (PDF + Audit Trail) -->
+                                        <div class="inline-flex items-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-0.5 shadow-2xs">
+                                            <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg text-xs font-headline font-semibold transition-colors cursor-pointer" title="Descargar contrato en PDF">
+                                                <span class="material-symbols-outlined text-sm text-zinc-400">description</span>
+                                                <span>PDF</span>
+                                            </button>
+                                            <div class="w-px h-3.5 bg-zinc-200 dark:bg-zinc-700"></div>
+                                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg text-xs font-headline font-semibold transition-colors cursor-pointer" title="Descargar certificado probatorio Audit Trail">
+                                                <span class="material-symbols-outlined text-sm text-emerald-500">verified_user</span>
+                                                <span>Audit Trail</span>
+                                            </button>
+                                        </div>
+
+                                        <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${contract.id}')" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-xs font-headline font-semibold rounded-xl shadow-2xs transition-all cursor-pointer" title="Redactar o editar cláusulas del contrato">
+                                            <span class="material-symbols-outlined text-sm text-zinc-400">gavel</span>
+                                            <span>Editar Cláusulas</span>
+                                        </button>
                                     ` : `
-                                    <a href="contratos.html?contract=${contract.id}&sign=1&role=OWNER" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">draw</span>
-                                        <span>Firmar Contrato (Didit Liveness)</span>
-                                    </a>
+                                        <button type="button" onclick="if(window.openContractEditorForRental) window.openContractEditorForRental('${contract.id}')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer" title="Redactar y generar el contrato formal para este alquiler">
+                                            <span class="material-symbols-outlined text-base">post_add</span>
+                                            <span>Generar Contrato</span>
+                                        </button>
+
+                                        <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id}', 'chat')" class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 font-headline font-bold text-xs rounded-xl transition-all cursor-pointer" title="Abrir chat con el inquilino">
+                                            <span class="material-symbols-outlined text-base text-blue-500">chat</span>
+                                            <span>Chat Inquilino</span>
+                                        </button>
                                     `}
-                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id}', 'chat')" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir chat en vivo con el inquilino">
-                                        <span class="material-symbols-outlined text-base">chat</span>
-                                        <span>Chat Inquilino</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="px-3 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl hover:bg-zinc-50 flex items-center gap-1 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">download</span>
-                                        <span>PDF</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="px-3 py-2.5 bg-zinc-900 text-white dark:bg-zinc-800 font-headline font-bold text-xs rounded-xl hover:bg-black flex items-center gap-1 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
-                                        <span>Audit Trail</span>
-                                    </button>
-                                    <button type="button" onclick="openEditRentalModal('${contract.id}')" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">edit_note</span>
+
+                                    <button type="button" onclick="openEditRentalModal('${contract.id}')" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-xs font-headline font-semibold rounded-xl shadow-2xs transition-all cursor-pointer" title="Editar canon, expensas y valores">
+                                        <span class="material-symbols-outlined text-sm text-zinc-400">tune</span>
                                         <span>Editar Valores</span>
                                     </button>
                                 </div>
@@ -3763,14 +4120,18 @@
 
         window.acceptCandidateFromPassport = async function(appId) {
             closePasaporteHabitatModal();
-            const btn = document.querySelector(`.btn-owner-accept[data-id="${appId}"]`);
-            if (btn) {
-                btn.click();
+            if (typeof window.handleOwnerAcceptApplicant === 'function') {
+                await window.handleOwnerAcceptApplicant(appId);
             } else {
-                if (window.DataManager && window.DataManager.acceptApplication) {
-                    await window.DataManager.acceptApplication(appId);
+                const btn = document.querySelector(`.btn-owner-accept[data-id="${appId}"]`);
+                if (btn) {
+                    btn.click();
+                } else {
+                    if (window.DataManager && window.DataManager.acceptApplication) {
+                        await window.DataManager.acceptApplication(appId);
+                    }
+                    await loadOwnerApplications();
                 }
-                await loadOwnerApplications();
             }
         };
 
