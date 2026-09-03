@@ -390,31 +390,90 @@
             <!-- PESTAÑA 1: GENERAL (PANEL GENERAL CON ACCESOS DIRECTOS, MÉTRICAS Y GRÁFICOS) -->
             <div id="panel-content-general" class="tab-content active space-y-6">
 
-                <!-- Header Principal CRM de Corredores & Accesos Directos -->
-                <div class="space-y-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-5">
-                    <!-- Fila Superior: Título, Matrícula y CTA Principal -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
-                                <span class="text-zinc-300 dark:text-zinc-700">•</span>
-                                <div id="header-lead-balance-badge" class="inline-flex items-center"></div>
-                            </div>
-                            <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                                <span class="material-symbols-outlined text-primary text-2xl sm:text-3xl">dashboard_customize</span>
-                                <span>Accesos Directos</span>
-                            </h1>
+                <!-- Header Principal CRM de Corredores -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200/80 dark:border-zinc-800/80 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Matrícula CUCICBA #4892</span>
+                            <span class="text-zinc-300 dark:text-zinc-700">•</span>
+                            <div id="header-lead-balance-badge" class="inline-flex items-center"></div>
                         </div>
+                        <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-primary text-2xl sm:text-3xl">dashboard</span>
+                            <span>Panel General</span>
+                        </h1>
+                    </div>
 
-                        <div class="flex items-center gap-2.5 shrink-0">
-                            <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
-                                <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
-                                <span>Nueva Captación</span>
-                            </button>
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <button type="button" onclick="openNewPropertyModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined text-base sm:text-lg">add_home</span>
+                            <span>Nueva Captación</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TARJETAS DE MÉTRICAS FINANCIAL & OPERATIONAL KPIs -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Metric 1: Alquileres Activos -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-primary flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Volumen Alquileres Activos</span>
+                            <h3 id="broker-stat-volume" class="font-headline text-2xl font-black text-zinc-900 dark:text-white">$ 0<span class="text-xs text-zinc-400 font-normal"> /mes</span></h3>
+                            <div class="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
+                                <span class="material-symbols-outlined text-base">trending_up</span>
+                                <span id="broker-stat-volume-trend">+14.2% vs mes anterior</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">payments</span>
                         </div>
                     </div>
 
-                    <!-- Suite de Herramientas Rápidas (Grid Limpio y Profesional Sin Fondo en Iconos) -->
+                    <!-- Metric 2: Comisiones Cobradas / Estimadas -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-600 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Honorarios & Comisiones</span>
+                            <h3 id="broker-stat-commissions" class="font-headline text-2xl font-black text-emerald-600 dark:text-emerald-400">$ 0</h3>
+                            <p id="broker-stat-commissions-sub" class="text-xs text-zinc-500 font-medium">4.15% Honorarios prom.</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Cartera de Propiedades -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-600 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Propiedades en Cartera</span>
+                            <h3 id="broker-stat-properties" class="font-headline text-2xl font-black text-zinc-900 dark:text-white">0 <span class="text-xs text-zinc-400 font-normal">inmuebles</span></h3>
+                            <p id="broker-stat-properties-sub" class="text-xs text-zinc-500 font-medium">0 Alquiler • 0 Pausadas</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">real_estate_agent</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 4: Embudo de Leads / Consultas -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500 flex justify-between items-start">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Postulaciones & Consultas</span>
+                            <h3 id="broker-stat-leads-clients" class="font-headline text-2xl font-black text-amber-600 dark:text-amber-400">0 <span class="text-xs text-zinc-400 font-normal">postulantes</span></h3>
+                            <p id="broker-stat-leads-sub" class="text-xs text-zinc-500 font-medium">0 Citas agendadas</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">group</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suite de Herramientas Rápidas / Accesos Directos -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">dashboard_customize</span>
+                        <h2 class="font-headline text-base sm:text-lg font-extrabold text-zinc-900 dark:text-white tracking-tight">Accesos Directos</h2>
+                    </div>
+
+                    <!-- Grid de Accesos Directos -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 sm:gap-3">
                         <!-- 1. Firma & Contratos -->
                         <a href="contratos.html" class="group flex items-center gap-3 p-3 bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer backdrop-blur-md">
@@ -478,60 +537,6 @@
                                 <span class="block text-[10px] text-zinc-400 dark:text-zinc-500 truncate">Mantenimiento</span>
                             </div>
                         </button>
-                    </div>
-                </div>
-
-                <!-- TARJETAS DE MÉTRICAS FINANCIAL & OPERATIONAL KPIs -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Metric 1: Alquileres Activos -->
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-primary flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Volumen Alquileres Activos</span>
-                            <h3 id="broker-stat-volume" class="font-headline text-2xl font-black text-zinc-900 dark:text-white">$ 0<span class="text-xs text-zinc-400 font-normal"> /mes</span></h3>
-                            <div class="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
-                                <span class="material-symbols-outlined text-base">trending_up</span>
-                                <span id="broker-stat-volume-trend">+14.2% vs mes anterior</span>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl">payments</span>
-                        </div>
-                    </div>
-
-                    <!-- Metric 2: Comisiones Cobradas / Estimadas -->
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-emerald-600 flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Honorarios & Comisiones</span>
-                            <h3 id="broker-stat-commissions" class="font-headline text-2xl font-black text-emerald-600 dark:text-emerald-400">$ 0</h3>
-                            <p id="broker-stat-commissions-sub" class="text-xs text-zinc-500 font-medium">4.15% Honorarios prom.</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
-                        </div>
-                    </div>
-
-                    <!-- Metric 3: Cartera de Propiedades -->
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-blue-600 flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Propiedades en Cartera</span>
-                            <h3 id="broker-stat-properties" class="font-headline text-2xl font-black text-zinc-900 dark:text-white">0 <span class="text-xs text-zinc-400 font-normal">inmuebles</span></h3>
-                            <p id="broker-stat-properties-sub" class="text-xs text-zinc-500 font-medium">0 Alquiler • 0 Pausadas</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl">real_estate_agent</span>
-                        </div>
-                    </div>
-
-                    <!-- Metric 4: Embudo de Leads / Consultas -->
-                    <div class="glass-card p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500 flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Postulaciones & Consultas</span>
-                            <h3 id="broker-stat-leads-clients" class="font-headline text-2xl font-black text-amber-600 dark:text-amber-400">0 <span class="text-xs text-zinc-400 font-normal">postulantes</span></h3>
-                            <p id="broker-stat-leads-sub" class="text-xs text-zinc-500 font-medium">0 Citas agendadas</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-xl">group</span>
-                        </div>
                     </div>
                 </div>
 
@@ -4020,10 +4025,26 @@
                 if (rawC) {
                     const localList = JSON.parse(rawC);
                     localList.forEach(c => {
-                        const exists = brokerActiveRentalsMock.some(r => String(r.id) === String(c.id) || String(r.contractCode) === String(c.id));
-                        if (!exists) {
-                            const canon = Number(c.monthly_rent || c.monthlyRent || 380000);
-                            const feePct = Number(c.broker_commission_percent ?? 4.15);
+                        const targetIdx = brokerActiveRentalsMock.findIndex(r => String(r.id) === String(c.id) || String(r.contractCode) === String(c.id));
+                        const canon = Number(c.monthly_rent || c.monthlyRent || 380000);
+                        const feePct = Number(c.broker_commission_percent ?? 4.15);
+                        const adjLabel = (c.adjustment_index || c.adjustmentIndex) === 'FIJO' 
+                            ? `Ajuste Fijo (${c.adjustment_fixed_type === 'PERCENT' ? ('+' + c.adjustment_fixed_val + '%') : (c.adjustment_fixed_type === 'AMOUNT' ? ('+' + (c.currency || '$') + ' ' + c.adjustment_fixed_val) : 'Sin aumento')})` 
+                            : ((c.adjustment_index || c.adjustmentIndex) === 'ICL' ? 'Trimestral ICL oficial' : 'Trimestral IPC oficial');
+
+                        if (targetIdx >= 0) {
+                            const existing = brokerActiveRentalsMock[targetIdx];
+                            existing.monthlyRent = canon;
+                            existing.currency = c.currency || existing.currency || 'ARS';
+                            existing.cbuAlias = c.alias_cbu || c.aliasCbu || existing.cbuAlias;
+                            existing.dueDay = c.payment_due_day || c.paymentDueDay || existing.dueDay;
+                            existing.adjustmentType = adjLabel;
+                            existing.durationMonths = c.durationMonths || c.duration_months || 24;
+                            existing.clauses = c.clauses || existing.clauses;
+                            existing.customClauses = c.customClauses || existing.customClauses;
+                            existing.activeClausesList = c.activeClausesList || existing.activeClausesList;
+                            existing.clausulas_adicionales = c.clausulas_adicionales || existing.clausulas_adicionales;
+                        } else {
                             brokerActiveRentalsMock.unshift({
                                 id: c.id,
                                 raw_id: c.property_id || c.propertyId,
@@ -4051,9 +4072,12 @@
                                 startDate: c.start_date || c.startDate || new Date().toISOString().split('T')[0],
                                 endDate: c.end_date || c.endDate || '2028-08-01',
                                 contractCode: c.id,
-                                adjustmentType: c.adjustment_index === 'FIJO' 
-                                    ? `Ajuste Fijo (${c.adjustment_fixed_type === 'PERCENT' ? ('+' + c.adjustment_fixed_val + '%') : (c.adjustment_fixed_type === 'AMOUNT' ? ('+' + (c.currency || '$') + ' ' + c.adjustment_fixed_val) : 'Sin aumento')})` 
-                                    : (c.adjustment_index === 'ICL' ? 'Trimestral ICL oficial' : 'Trimestral IPC oficial')
+                                adjustmentType: adjLabel,
+                                durationMonths: c.durationMonths || c.duration_months || 24,
+                                clauses: c.clauses,
+                                customClauses: c.customClauses,
+                                activeClausesList: c.activeClausesList,
+                                clausulas_adicionales: c.clausulas_adicionales
                             });
                         }
                     });

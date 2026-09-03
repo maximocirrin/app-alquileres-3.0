@@ -335,36 +335,91 @@
     }
 
     function renderContractClausesList(contract, isPrint = false) {
+        if (!contract) return '';
+
+        // 1. Si el contrato ya tiene activeClausesList (guardado desde el editor), renderizar directamente esas cláusulas oficiales
+        let activeList = contract.activeClausesList || contract.clausulas_adicionales?.activeClausesList;
+        if (typeof activeList === 'string') {
+            try { activeList = JSON.parse(activeList); } catch(e) { activeList = null; }
+        }
+
+        if (Array.isArray(activeList) && activeList.length > 0) {
+            if (isPrint) {
+                return activeList.map((c, idx) => `
+                    <div class="clause">
+                        <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                    </div>
+                `).join('');
+            }
+            return activeList.map((c, idx) => `
+                <p class="text-justify leading-relaxed">
+                    <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                </p>
+            `).join('');
+        }
+
+        // 2. Si no tiene activeClausesList, intentar generarlas mediante ContractEditorModal.buildActiveClauses
+        if (window.ContractEditorModal && typeof window.ContractEditorModal.buildActiveClauses === 'function') {
+            const propAddr = contract.propertyAddress || contract.title || 'Inmueble Locado';
+            const generated = window.ContractEditorModal.buildActiveClauses(propAddr, contract);
+            if (Array.isArray(generated) && generated.length > 0) {
+                if (isPrint) {
+                    return generated.map((c, idx) => `
+                        <div class="clause">
+                            <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                        </div>
+                    `).join('');
+                }
+                return generated.map((c, idx) => `
+                    <p class="text-justify leading-relaxed">
+                        <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                    </p>
+                `).join('');
+            }
+        }
+
+        // 3. Fallback dinámico respetando todos los valores editados
         const clauses = [];
-        const cfg = contract.clauses || {};
+        let cfg = contract.clauses || contract.clausulas_adicionales || {};
+        if (typeof cfg === 'string') {
+            try { cfg = JSON.parse(cfg); } catch(e) { cfg = {}; }
+        }
+
+        const durationMonths = contract.durationMonths || contract.duration_months || cfg.durationMonths || 24;
+        const monthlyRent = contract.monthlyRent || contract.monthly_rent || 450000;
+        const currency = contract.currency || cfg.currency || cfg.moneda || 'ARS';
+        const adjustmentIndex = contract.adjustmentIndex || contract.adjustment_index || cfg.adjustmentIndex || 'IPC';
+        const adjustmentFrequencyMonths = contract.adjustmentFrequencyMonths || contract.adjustment_frequency_months || contract.periodo_aumento_meses || cfg.adjustmentFrequencyMonths || 3;
+        const paymentDueDay = contract.paymentDueDay || contract.payment_due_day || contract.dia_vencimiento_mensual || cfg.paymentDueDay || 10;
+        const aliasCbu = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'HABITAT.CONTRATO.MP';
 
         // 1. Objeto y Destino
         const isVivienda = cfg.viviendaExclusiva !== false;
         clauses.push({
             tag: 'OBJETO Y DESTINO',
-            body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress}</b>.${isVivienda ? ' Dicho inmueble tendrá como <b>destino exclusivo el de vivienda familiar y permanente</b>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
+            body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en <b>${contract.propertyAddress || 'Mendoza'}</b>.${isVivienda ? ' Dicho inmueble tendrá como <b>destino exclusivo el de vivienda familiar y permanente</b>, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : ' Con destino habitacional conforme a derecho.'}`
         });
 
         // 2. Plazo
         clauses.push({
             tag: 'PLAZO DE LOCACIÓN',
-            body: `El plazo contractual se estipula en <b>${contract.durationMonths || 24} meses</b> corridos, con inicio el día <b>${contract.startDate || 'acordado'}</b> y finalización indefectible el día <b>${contract.endDate || 'acordado'}</b>.`
+            body: `El plazo contractual se estipula en <b>${durationMonths} meses</b> corridos, con inicio el día <b>${contract.startDate || 'acordado'}</b> y finalización indefectible el día <b>${contract.endDate || 'acordado'}</b>.`
         });
 
         // 3. Canon Locativo y Actualización
-        const rentFmt = formatMoney(contract.monthlyRent) + ` (${contract.currency || 'ARS'})`;
+        const rentFmt = formatMoney(monthlyRent) + ` (${currency})`;
         clauses.push({
             tag: 'CANON LOCATIVO Y ACTUALIZACIÓN',
-            body: contract.adjustmentIndex === 'FIJO'
+            body: adjustmentIndex === 'FIJO'
                 ? `El precio del alquiler se fija en la suma de <b>${rentFmt}</b> mensuales durante toda la vigencia del contrato, pactándose un valor fijo e inalterable sin cláusula de indexación periódica.`
-                : `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${contract.adjustmentFrequencyMonths || 6} meses</b> aplicando la variación del índice oficial <b>${contract.adjustmentIndex || 'ICL'}</b> publicado por el BCRA / INDEC. A tal efecto, las partes acuerdan expresamente que para la determinación del nuevo monto se computará la variación de los períodos inmediatamente anteriores que se encuentren oficialmente publicados al momento del inicio del período de ajuste. Si a la fecha de pago no estuviere aún publicado el índice del mes anterior, se aplicará el último índice oficial disponible publicado a dicha fecha.`
+                : `El precio inicial del alquiler mensual se fija en la suma de <b>${rentFmt}</b>. Dicho valor se actualizará cada <b>${adjustmentFrequencyMonths} meses</b> aplicando la variación del índice oficial <b>${adjustmentIndex}</b> publicado por el BCRA / INDEC. A tal efecto, las partes acuerdan expresamente que para la determinación del nuevo monto se computará la variación de los períodos inmediatamente anteriores que se encuentren oficialmente publicados al momento del inicio del período de ajuste. Si a la fecha de pago no estuviere aún publicado el índice del mes anterior, se aplicará el último índice oficial disponible publicado a dicha fecha.`
         });
 
         // 4. Pagos y Mora
         const moraTxt = cfg.tasaMoraDiaria ? ` En caso de mora, se devengará un interés punitorio del <b>${cfg.tasaMoraDiaria}% diario</b> hasta su efectiva cancelación.` : '';
         clauses.push({
             tag: 'LUGAR Y FORMA DE PAGO',
-            body: `El canon locativo deberá abonarse del 1 al ${contract.paymentDueDay || 10} de cada mes mediante transferencia bancaria al Alias CBU: <b>${contract.aliasCbu || 'HABITAT.CONTRATO.MP'}</b>.${moraTxt}`
+            body: `El canon locativo deberá abonarse del 1 al ${paymentDueDay} de cada mes mediante transferencia bancaria al Alias CBU: <b>${aliasCbu}</b>.${moraTxt}`
         });
 
         // 5. Expensas e Impuestos
@@ -425,11 +480,12 @@
         }
 
         // 11. Cláusulas Personalizadas
-        if (Array.isArray(contract.customClauses) && contract.customClauses.length > 0) {
-            contract.customClauses.forEach(cc => {
-                if (cc.title && cc.text) {
+        const customList = contract.customClauses || cfg.customClauses;
+        if (Array.isArray(customList) && customList.length > 0) {
+            customList.forEach(cc => {
+                if (cc && cc.title && cc.text) {
                     clauses.push({
-                        tag: cc.title.toUpperCase(),
+                        tag: String(cc.title).toUpperCase(),
                         body: cc.text
                     });
                 }
@@ -451,8 +507,8 @@
         }
 
         return clauses.map((c, idx) => `
-            <p>
-                <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+            <p class="text-justify leading-relaxed">
+                <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
             </p>
         `).join('');
     }
@@ -572,6 +628,20 @@
                     const finalOwnerProfileId = Number(dbC.id_perfil_propietario || propOwnerId || ownerPerfil.id_perfil || 6);
                     const finalTenantProfileId = Number(dbC.id_perfil_inquilino || inqPerfil.id_perfil || 15);
 
+                    let extraCfg = dbC.clausulas_adicionales || {};
+                    if (typeof extraCfg === 'string') {
+                        try { extraCfg = JSON.parse(extraCfg); } catch(e) { extraCfg = {}; }
+                    }
+                    const customClausesFromDb = extraCfg.customClauses || [];
+                    const activeClausesFromDb = extraCfg.activeClausesList || [];
+                    const currencyFromDb = extraCfg.currency || extraCfg.moneda || (dbC.id_moneda === 2 ? 'USD' : 'ARS');
+                    const durationFromDb = Number(extraCfg.durationMonths || 24);
+                    const indexFromDb = extraCfg.adjustmentIndex || (dbC.id_Indice === 2 ? 'ICL' : 'IPC');
+                    const freqFromDb = Number(dbC.periodo_aumento_meses || extraCfg.adjustmentFrequencyMonths || 3);
+                    const dueDayFromDb = Number(dbC.dia_vencimiento_mensual || extraCfg.paymentDueDay || 10);
+                    const aliasFromDb = dbC.alias_cbu || extraCfg.aliasCbu || 'HABITAT.ALQUILER.MP';
+                    const rentFromDb = Number(dbC.monto_cierre) || Number(extraCfg.monthlyRent) || Number(pub?.precio) || 0;
+
                     loadedContracts.push({
                         id: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
@@ -585,17 +655,27 @@
                         propertyCity: 'Mendoza',
                         propertyImage: photoUrls[0] || 'img/hero-marketplace.jpg',
                         propertyPhotos: photoUrls,
-                        monthlyRent: Number(dbC.monto_cierre) || Number(pub?.precio) || 0,
-                        currency: 'ARS',
+                        monthlyRent: rentFromDb,
+                        monthly_rent: rentFromDb,
+                        currency: currencyFromDb,
                         status: status,
                         startDate: dbC.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
                         endDate: dbC.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
-                        durationMonths: 24,
-                        paymentDueDay: dbC.dia_vencimiento_mensual || 10,
-                        adjustmentIndex: 'IPC',
-                        adjustmentFrequencyMonths: dbC.periodo_aumento_meses || 3,
-                        depositAmount: Number(dbC.monto_deposito) || Number(dbC.monto_cierre) || 0,
-                        aliasCbu: dbC.alias_cbu || 'HABITAT.ALQUILER.MP',
+                        durationMonths: durationFromDb,
+                        duration_months: durationFromDb,
+                        paymentDueDay: dueDayFromDb,
+                        payment_due_day: dueDayFromDb,
+                        adjustmentIndex: indexFromDb,
+                        adjustment_index: indexFromDb,
+                        adjustmentFrequencyMonths: freqFromDb,
+                        adjustment_frequency_months: freqFromDb,
+                        depositAmount: Number(dbC.monto_deposito) || rentFromDb,
+                        aliasCbu: aliasFromDb,
+                        alias_cbu: aliasFromDb,
+                        clauses: extraCfg,
+                        customClauses: customClausesFromDb,
+                        activeClausesList: activeClausesFromDb,
+                        clausulas_adicionales: extraCfg,
                         tenant: {
                             role: 'TENANT',
                             profileId: finalTenantProfileId,
@@ -664,12 +744,39 @@
 
             const merged = [...loadedContracts];
             for (const loc of localContracts) {
-                const already = merged.some(m => 
+                const matchIdx = merged.findIndex(m => 
                     String(m.id).toLowerCase() === String(loc.id).toLowerCase() || 
                     (m.dbContractId && loc.dbContractId && String(m.dbContractId) === String(loc.dbContractId)) ||
                     (m.propertyId && loc.propertyId && String(m.propertyId) === String(loc.propertyId) && String(m.publicationId) === String(loc.publicationId))
                 );
-                if (!already) {
+                if (matchIdx >= 0) {
+                    const dbItem = merged[matchIdx];
+                    // Si el contrato local tiene ediciones ricas de cláusulas o customClauses y la BD no, preservarlas
+                    if ((!dbItem.activeClausesList || dbItem.activeClausesList.length === 0) && loc.activeClausesList && loc.activeClausesList.length > 0) {
+                        dbItem.activeClausesList = loc.activeClausesList;
+                    }
+                    if ((!dbItem.customClauses || dbItem.customClauses.length === 0) && loc.customClauses && loc.customClauses.length > 0) {
+                        dbItem.customClauses = loc.customClauses;
+                    }
+                    if ((!dbItem.clauses || Object.keys(dbItem.clauses).length === 0) && loc.clauses) {
+                        dbItem.clauses = loc.clauses;
+                    }
+                    if (loc.durationMonths && (!dbItem.durationMonths || dbItem.durationMonths === 24)) {
+                        dbItem.durationMonths = loc.durationMonths;
+                        dbItem.duration_months = loc.durationMonths;
+                    }
+                    if (loc.adjustmentIndex && (!dbItem.adjustmentIndex || dbItem.adjustmentIndex === 'IPC')) {
+                        dbItem.adjustmentIndex = loc.adjustmentIndex;
+                        dbItem.adjustment_index = loc.adjustmentIndex;
+                    }
+                    if (loc.currency) dbItem.currency = loc.currency;
+                    if (loc.monthlyRent && !dbItem.monthlyRent) {
+                        dbItem.monthlyRent = loc.monthlyRent;
+                        dbItem.monthly_rent = loc.monthlyRent;
+                    }
+                    if (loc.has_contract) dbItem.has_contract = true;
+                    if (loc.hasContract) dbItem.hasContract = true;
+                } else {
                     merged.push(loc);
                 }
             }
@@ -3789,13 +3896,36 @@
                     contract: contract,
                     onConfirm: async (terms) => {
                         contract.monthlyRent = terms.monthlyRent || contract.monthlyRent;
+                        contract.monthly_rent = contract.monthlyRent;
                         contract.durationMonths = terms.durationMonths || contract.durationMonths;
+                        contract.duration_months = contract.durationMonths;
+                        contract.currency = terms.currency || contract.currency || 'ARS';
                         contract.adjustmentIndex = terms.adjustmentIndex || contract.adjustmentIndex;
+                        contract.adjustment_index = contract.adjustmentIndex;
                         contract.adjustmentFrequencyMonths = terms.adjustmentFrequencyMonths || contract.adjustmentFrequencyMonths;
+                        contract.adjustment_frequency_months = contract.adjustmentFrequencyMonths;
+                        contract.periodo_aumento_meses = contract.adjustmentFrequencyMonths;
                         contract.paymentDueDay = terms.paymentDueDay || contract.paymentDueDay;
+                        contract.payment_due_day = contract.paymentDueDay;
+                        contract.dia_vencimiento_mensual = contract.paymentDueDay;
                         contract.aliasCbu = terms.aliasCbu || contract.aliasCbu;
+                        contract.alias_cbu = contract.aliasCbu;
+                        contract.cbu_alias = contract.aliasCbu;
                         contract.clauses = terms.clauses || contract.clauses;
                         contract.customClauses = terms.customClauses || contract.customClauses;
+                        contract.activeClausesList = terms.activeClausesList || contract.activeClausesList;
+                        contract.clausulas_adicionales = {
+                            ...(terms.clauses || {}),
+                            customClauses: terms.customClauses || [],
+                            activeClausesList: terms.activeClausesList || [],
+                            durationMonths: terms.durationMonths,
+                            adjustmentIndex: terms.adjustmentIndex,
+                            currency: terms.currency,
+                            aliasCbu: terms.aliasCbu,
+                            monthlyRent: terms.monthlyRent,
+                            paymentDueDay: terms.paymentDueDay,
+                            adjustmentFrequencyMonths: terms.adjustmentFrequencyMonths
+                        };
 
                         // Recalcular Hash SHA-256 del nuevo texto/condiciones del contrato
                         const newHash = await computeContractSha256(contract);
@@ -3813,6 +3943,7 @@
                                     alias_cbu: contract.aliasCbu,
                                     "id_Indice": terms.adjustmentIndex === 'ICL' ? 2 : 1,
                                     id_moneda: terms.currency === 'USD' ? 2 : 1,
+                                    clausulas_adicionales: contract.clausulas_adicionales,
                                     hash_original_sha256: newHash,
                                     url_contrato_original_pdf: null
                                 }).eq('id_contrato', dbId);
@@ -3824,6 +3955,11 @@
                         saveContracts();
                         if (window.ContractEditorModal) window.ContractEditorModal.close();
                         ContractsManager.renderDashboard('contracts-dashboard-container');
+
+                        // Re-renderizar vista completa del contrato / firma inmediatamente
+                        if (ContractsManager._activeFullscreenContractId === contract.id || window.location.search.includes('contract=') || window.location.search.includes('id=')) {
+                            ContractsManager.openContractFullscreen(contract.id, ContractsManager._activeFullscreenTab || 'document');
+                        }
 
                         if (window.ToastManager) {
                             window.ToastManager.show({

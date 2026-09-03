@@ -3001,13 +3001,27 @@
                         tenant_email: String(rawTenantEmail),
                         tenant_phone: String(rawTenantPhone),
                         monthly_rent: rawRent,
+                        monthlyRent: rawRent,
                         expenses_amount: rawExpenses,
                         payment_due_day: rawDueDay,
+                        paymentDueDay: rawDueDay,
                         adjustment_index: rawAdjIndex,
+                        adjustmentIndex: rawAdjIndex,
                         adjustment_frequency_months: rawAdjFreq,
+                        adjustmentFrequencyMonths: rawAdjFreq,
                         punitive_daily_rate: rawPunitive,
                         has_contract: hasContractVal,
-                        hasContract: hasContractVal
+                        hasContract: hasContractVal,
+                        durationMonths: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
+                        duration_months: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
+                        currency: c.currency || c.clausulas_adicionales?.currency || 'ARS',
+                        aliasCbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        alias_cbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        cbu_alias: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        clauses: c.clauses || c.clausulas_adicionales || {},
+                        customClauses: c.customClauses || c.clausulas_adicionales?.customClauses || [],
+                        activeClausesList: c.activeClausesList || c.clausulas_adicionales?.activeClausesList || [],
+                        clausulas_adicionales: c.clausulas_adicionales || c.clauses || {}
                     };
                 }).filter(Boolean);
 

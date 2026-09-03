@@ -1486,9 +1486,38 @@
                 c.hasContract = true;
                 c.customClauses = terms.customClauses || [];
                 c.clauses = terms.clauses || {};
+                c.activeClausesList = terms.activeClausesList || [];
                 c.monthly_rent = terms.monthlyRent || c.monthly_rent;
                 c.monthlyRent = terms.monthlyRent || c.monthlyRent;
+                c.currency = terms.currency || c.currency || 'ARS';
+                c.durationMonths = terms.durationMonths || c.durationMonths || 24;
+                c.duration_months = c.durationMonths;
+                c.adjustmentIndex = terms.adjustmentIndex || c.adjustmentIndex || 'IPC';
+                c.adjustment_index = c.adjustmentIndex;
+                c.adjustmentFrequencyMonths = terms.adjustmentFrequencyMonths || c.adjustmentFrequencyMonths || 3;
+                c.adjustment_frequency_months = c.adjustmentFrequencyMonths;
+                c.periodo_aumento_meses = c.adjustmentFrequencyMonths;
+                c.paymentDueDay = terms.paymentDueDay || c.paymentDueDay || 10;
+                c.payment_due_day = c.paymentDueDay;
+                c.dia_vencimiento_mensual = c.paymentDueDay;
+                c.aliasCbu = terms.aliasCbu || c.aliasCbu || 'HABITAT.ALQUILER.MP';
+                c.alias_cbu = c.aliasCbu;
+                c.cbu_alias = c.aliasCbu;
                 c.status = 'WAITING_TENANT';
+
+                const fullClausesPayload = {
+                    ...(terms.clauses || {}),
+                    customClauses: terms.customClauses || [],
+                    activeClausesList: terms.activeClausesList || [],
+                    durationMonths: terms.durationMonths,
+                    adjustmentIndex: terms.adjustmentIndex,
+                    currency: terms.currency,
+                    aliasCbu: terms.aliasCbu,
+                    monthlyRent: terms.monthlyRent,
+                    paymentDueDay: terms.paymentDueDay,
+                    adjustmentFrequencyMonths: terms.adjustmentFrequencyMonths
+                };
+                c.clausulas_adicionales = fullClausesPayload;
 
                 // 1. Guardar en localStorage
                 try {
@@ -1507,14 +1536,38 @@
                     localStorage.setItem('habitat_contracts', JSON.stringify(stored));
                 } catch(e) {}
 
-                // 2. Persistir en Supabase si es contrato de base de datos
+                // 2. Actualizar mock de contratos activos en memoria
+                if (window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
+                    const mIdx = window.ownerActiveContractsMock.findIndex(item => item && (
+                        String(item.id) === String(c.id) ||
+                        (c.dbContractId && String(item.dbContractId) === String(c.dbContractId))
+                    ));
+                    if (mIdx >= 0) {
+                        window.ownerActiveContractsMock[mIdx] = { ...window.ownerActiveContractsMock[mIdx], ...c };
+                    }
+                }
+                if (window.brokerActiveRentalsMock && Array.isArray(window.brokerActiveRentalsMock)) {
+                    const bIdx = window.brokerActiveRentalsMock.findIndex(item => item && (
+                        String(item.id) === String(c.id) ||
+                        String(item.contractCode) === String(c.id) ||
+                        (c.dbContractId && String(item.dbContractId) === String(c.dbContractId))
+                    ));
+                    if (bIdx >= 0) {
+                        window.brokerActiveRentalsMock[bIdx] = { ...window.brokerActiveRentalsMock[bIdx], ...c };
+                    }
+                }
+
+                // 3. Persistir en Supabase si es contrato de base de datos
                 if (window.supabaseClient && c.dbContractId) {
                     try {
                         await window.supabaseClient.from('Contrato').update({
-                            clausulas_adicionales: terms.clauses || {},
+                            clausulas_adicionales: fullClausesPayload,
                             monto_cierre: terms.monthlyRent || c.monthly_rent,
                             periodo_aumento_meses: terms.adjustmentFrequencyMonths || c.adjustment_frequency_months || 3,
-                            dia_vencimiento_mensual: terms.paymentDueDay || c.payment_due_day || 10
+                            dia_vencimiento_mensual: terms.paymentDueDay || c.payment_due_day || 10,
+                            alias_cbu: terms.aliasCbu || c.aliasCbu,
+                            "id_Indice": terms.adjustmentIndex === 'ICL' ? 2 : 1,
+                            id_moneda: terms.currency === 'USD' ? 2 : 1
                         }).eq('id_contrato', c.dbContractId);
                     } catch(dbErr) {
                         console.warn('[openContractEditorForRental] Aviso actualizando Contrato Supabase:', dbErr);
@@ -1527,8 +1580,8 @@
 
                 if (window.ToastManager) {
                     window.ToastManager.show({
-                        title: '¡Contrato Generado con Éxito!',
-                        message: 'El contrato digital ha sido generado y vinculado a este alquiler.',
+                        title: '¡Contrato Guardado con Éxito!',
+                        message: 'Las condiciones y cláusulas del contrato han sido guardadas y aplicadas.',
                         type: 'success'
                     });
                 }

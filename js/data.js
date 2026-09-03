@@ -1742,7 +1742,18 @@ var DataManager = {
                                 alias_cbu: aliasCbu,
                                 porcentaje_honorarios_cierre: prop?.id_perfil_captador ? (customTerms?.brokerFee || 4.15) : null,
                                 porcentaje_comision_mensual: prop?.id_perfil_captador ? (customTerms?.brokerMonthlyCommission || 5.0) : null,
-                                clausulas_adicionales: customTerms?.clauses || {}
+                                clausulas_adicionales: {
+                                     ...(customTerms?.clauses || {}),
+                                     customClauses: customTerms?.customClauses || [],
+                                     activeClausesList: customTerms?.activeClausesList || [],
+                                     durationMonths: customTerms?.durationMonths || 24,
+                                     adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+                                     currency: customTerms?.currency || 'ARS',
+                                     aliasCbu: aliasCbu,
+                                     monthlyRent: monthlyRent,
+                                     paymentDueDay: diaVencimiento,
+                                     adjustmentFrequencyMonths: periodoAumento
+                                 }
                             }])
                             .select()
                             .maybeSingle();
@@ -1836,16 +1847,37 @@ var DataManager = {
             propertyImage: photoUrls[0] || 'img/hero-marketplace.jpg',
             propertyPhotos: photoUrls,
             monthlyRent: monthlyRent,
-            currency: 'ARS',
+            monthly_rent: monthlyRent,
+            currency: customTerms?.currency || 'ARS',
             status: 'WAITING_TENANT',
             startDate: todayStr,
             endDate: nextYearStr,
-            durationMonths: 24,
-            paymentDueDay: 10,
-            adjustmentIndex: 'IPC',
-            adjustmentFrequencyMonths: 3,
+            durationMonths: customTerms?.durationMonths || 24,
+            duration_months: customTerms?.durationMonths || 24,
+            paymentDueDay: diaVencimiento || 10,
+            payment_due_day: diaVencimiento || 10,
+            adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+            adjustment_index: customTerms?.adjustmentIndex || 'IPC',
+            adjustmentFrequencyMonths: periodoAumento || 3,
+            adjustment_frequency_months: periodoAumento || 3,
             depositAmount: monthlyRent,
-            aliasCbu: 'HABITAT.ALQUILER.MP',
+            aliasCbu: aliasCbu || 'HABITAT.ALQUILER.MP',
+            alias_cbu: aliasCbu || 'HABITAT.ALQUILER.MP',
+            clauses: customTerms?.clauses || {},
+            customClauses: customTerms?.customClauses || [],
+            activeClausesList: customTerms?.activeClausesList || [],
+            clausulas_adicionales: {
+                ...(customTerms?.clauses || {}),
+                customClauses: customTerms?.customClauses || [],
+                activeClausesList: customTerms?.activeClausesList || [],
+                durationMonths: customTerms?.durationMonths || 24,
+                adjustmentIndex: customTerms?.adjustmentIndex || 'IPC',
+                currency: customTerms?.currency || 'ARS',
+                aliasCbu: aliasCbu,
+                monthlyRent: monthlyRent,
+                paymentDueDay: diaVencimiento,
+                adjustmentFrequencyMonths: periodoAumento
+            },
             id_perfil_propietario: Number(prop?.id_perfil_propietario || profileId || 6),
             id_perfil_inquilino: solPerfilId,
             tenant: {
@@ -2309,6 +2341,20 @@ var DataManager = {
                     const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || profileId || 6);
                     const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil || 14);
 
+                    let extraClauses = item.clausulas_adicionales || {};
+                    if (typeof extraClauses === 'string') {
+                        try { extraClauses = JSON.parse(extraClauses); } catch(e) { extraClauses = {}; }
+                    }
+                    const customClausesFromDb = extraClauses.customClauses || [];
+                    const activeClausesFromDb = extraClauses.activeClausesList || [];
+                    const currencyFromDb = extraClauses.currency || extraClauses.moneda || (item.id_moneda === 2 ? 'USD' : 'ARS');
+                    const durationFromDb = Number(extraClauses.durationMonths || 24);
+                    const indexFromDb = extraClauses.adjustmentIndex || item.indice_ajuste || (item.id_Indice === 2 ? 'ICL' : 'IPC');
+                    const freqFromDb = Number(item.periodo_aumento_meses || extraClauses.adjustmentFrequencyMonths || 3);
+                    const dueDayFromDb = Number(item.dia_vencimiento_mensual || extraClauses.paymentDueDay || 10);
+                    const aliasFromDb = item.alias_cbu || extraClauses.aliasCbu || 'HABITAT.ALQUILER.MP';
+                    const rentFromDb = Number(item.monto_cierre || extraClauses.monthlyRent || pub?.precio || 450000);
+
                     return {
                         id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
@@ -2322,13 +2368,24 @@ var DataManager = {
                         property_address: cleanAddress,
                         property_image: photos[0] || 'img/hero-marketplace.jpg',
                         photos: photos,
-                        monthly_rent: Number(item.monto_cierre || pub?.precio || 450000),
-                        monthlyRent: Number(item.monto_cierre || pub?.precio || 450000),
+                        monthly_rent: rentFromDb,
+                        monthlyRent: rentFromDb,
+                        currency: currencyFromDb,
+                        durationMonths: durationFromDb,
+                        duration_months: durationFromDb,
+                        adjustmentIndex: indexFromDb,
+                        adjustment_index: indexFromDb,
+                        adjustmentFrequencyMonths: freqFromDb,
+                        adjustment_frequency_months: freqFromDb,
+                        paymentDueDay: dueDayFromDb,
+                        payment_due_day: dueDayFromDb,
+                        payment_due_day: dueDayFromDb,
+                        aliasCbu: aliasFromDb,
+                        alias_cbu: aliasFromDb,
+                        cbu_alias: aliasFromDb,
                         expenses_amount: Number(prop.expensas_mensuales || 0),
-                        payment_due_day: item.dia_vencimiento_mensual || 10,
+                        payment_due_day: dueDayFromDb,
                         punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
-                        adjustment_index: item.indice_ajuste || 'IPC',
-                        adjustment_frequency_months: item.periodo_aumento_meses || 3,
                         broker_commission_percent: 4.15,
                         start_date: item.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
                         end_date: item.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
@@ -2342,13 +2399,15 @@ var DataManager = {
                         owner_dni: ownerDni,
                         tenant_has_signed: tenantFirmado,
                         owner_has_signed: ownerFirmado,
-                        cbu_alias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
                         status: status,
                         url_contrato_final_pdf: item.url_contrato_final_pdf || null,
                         url_contrato_original_pdf: item.url_contrato_original_pdf || null,
                         hash_original_sha256: item.hash_original_sha256 || null,
                         hash_final_sha256: item.hash_final_sha256 || null,
-                        clausulas_adicionales: item.clausulas_adicionales || null,
+                        clauses: extraClauses,
+                        customClauses: customClausesFromDb,
+                        activeClausesList: activeClausesFromDb,
+                        clausulas_adicionales: extraClauses,
                         has_contract: Boolean(
                             item.url_contrato_final_pdf || 
                             item.url_contrato_original_pdf || 
@@ -2387,9 +2446,24 @@ var DataManager = {
                 });
                 (dbContracts || []).forEach(c => {
                     if (c && c.id) {
-                        // Si ya existe el local, preservarlo si es más reciente o actualizar campos
                         if (mergedMap.has(String(c.id))) {
-                            mergedMap.set(String(c.id), { ...mergedMap.get(String(c.id)), ...c, dbContractId: c.dbContractId });
+                            const local = mergedMap.get(String(c.id)) || {};
+                            const mergedItem = {
+                                ...local,
+                                ...c,
+                                dbContractId: c.dbContractId,
+                                clauses: (c.clauses && Object.keys(c.clauses).length > 0) ? c.clauses : (local.clauses || local.clausulas_adicionales || {}),
+                                customClauses: (c.customClauses && c.customClauses.length > 0) ? c.customClauses : (local.customClauses || []),
+                                activeClausesList: (c.activeClausesList && c.activeClausesList.length > 0) ? c.activeClausesList : (local.activeClausesList || []),
+                                durationMonths: c.durationMonths || local.durationMonths || 24,
+                                duration_months: c.durationMonths || local.durationMonths || 24,
+                                currency: c.currency || local.currency || 'ARS',
+                                adjustmentIndex: c.adjustmentIndex || local.adjustmentIndex || 'IPC',
+                                adjustmentFrequencyMonths: c.adjustmentFrequencyMonths || local.adjustmentFrequencyMonths || 3,
+                                paymentDueDay: c.paymentDueDay || local.paymentDueDay || 10,
+                                aliasCbu: c.aliasCbu || local.aliasCbu || 'HABITAT.ALQUILER.MP'
+                            };
+                            mergedMap.set(String(c.id), mergedItem);
                         } else {
                             mergedMap.set(String(c.id), c);
                         }
