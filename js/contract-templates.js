@@ -1,5 +1,5 @@
 /**
- * Habitat - Plantillas Notariales Dinámicas (DNU 70/2023)
+ * Vivat - Plantillas Notariales Dinámicas (DNU 70/2023)
  * Redacción legal blindada según modelos Vivienda y Uso Comercial.
  */
 

@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,15 +31,21 @@
                 if (appleMeta) {
                     appleMeta.setAttribute('content', 'black-translucent');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Buscar alquileres | Habitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Buscar alquileres | Vivat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
     <!-- Supabase & Data Manager -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
@@ -93,11 +100,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -267,7 +283,7 @@
             white-space: nowrap;
             flex-shrink: 0;
             scroll-snap-align: start;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
         }
 
@@ -332,7 +348,7 @@
             border-radius: 12px;
             background: var(--card);
             color: var(--card-foreground);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.25s ease;
         }
 
@@ -924,13 +940,17 @@
                             aria-hidden="true">travel_explore</span> Marketplace de alquileres</span>
                     <h1>Encontrá tu próximo alquiler.</h1>
                     <p>Buscá por zona, compará precios y filtrá propiedades listas para avanzar con validación digital,
-                        contrato online y gestión desde Habitat.</p>
+                        contrato online y gestión desde Vivat.</p>
                 </div>
 
                 <div class="search-card">
-                    <form action="buscar.html" method="GET" class="w-full m-0 p-1 sm:p-1.5 pl-3.5 sm:pl-5 rounded-full bg-white dark:bg-zinc-800/90 border border-zinc-200/90 dark:border-zinc-700/80 shadow-md flex items-center gap-1.5 sm:gap-2 transition-all focus-within:border-primary/50" id="search-form">
+                    <form action="buscar.html" method="GET"
+                        class="w-full m-0 p-1 sm:p-1.5 pl-3.5 sm:pl-5 rounded-full bg-white dark:bg-zinc-800/90 border border-zinc-200/90 dark:border-zinc-700/80 shadow-md flex items-center gap-1.5 sm:gap-2 transition-all focus-within:border-primary/50"
+                        id="search-form">
                         <div class="flex-1 flex items-center gap-2 min-w-0">
-                            <span class="material-symbols-rounded text-primary dark:text-red-400 text-lg sm:text-2xl shrink-0" aria-hidden="true">search</span>
+                            <span
+                                class="material-symbols-rounded text-primary dark:text-red-400 text-lg sm:text-2xl shrink-0"
+                                aria-hidden="true">search</span>
                             <input id="location-search" name="location" type="search" autocomplete="off"
                                 class="w-full bg-transparent text-on-surface dark:text-white font-body text-xs sm:text-sm md:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate p-0"
                                 style="border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none;"
@@ -948,7 +968,8 @@
                             class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all shrink-0 cursor-pointer active:scale-95 border-0 bg-transparent p-0 outline-none"
                             aria-label="Filtros" title="Filtros">
                             <span class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
-                            <span id="hero-filter-indicator" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-primary border border-white dark:border-zinc-900 pointer-events-none"></span>
+                            <span id="hero-filter-indicator"
+                                class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-primary border border-white dark:border-zinc-900 pointer-events-none"></span>
                         </button>
 
                         <button type="submit"
@@ -1082,77 +1103,77 @@
                             const hasRental = (name) => properties.some((rental) => rental.province === name);
 
                             function matchesRental(rental) {
-                                 const rawTags = (rental.tags || []).join(' ');
-                                 const searchable = normalize(`${rental.title || ''} ${rental.address || ''} ${rental.province || ''} ${rental.city || ''} ${rental.subtipo_propiedad || ''} ${rental.tipo_propiedad || ''} ${rawTags} ${rental.type || ''} ${rental.operation || ''} ${rental.note || ''}`);
-                                 let cleanedTerm = normalize(currentTerm).replace(/argentina/g, '').replace(/provincia de/g, '').trim();
-                                 const termWords = cleanedTerm.split(/[\s,]+/).filter(w => w.length > 2);
-                                 const matchesText = cleanedTerm === '' || searchable.includes(cleanedTerm) || (termWords.length > 0 && termWords.every(w => searchable.includes(w)));
-                                 
-                                 // Detectores de categorías para los filtros
-                                 const isApartment = rental.type === 'apartment' || rental.type === 'departamento' || rental.tipo_propiedad === 'departamento' || (rental.subtipo_propiedad && normalize(rental.subtipo_propiedad).includes('departamento')) || searchable.includes('depto') || searchable.includes('dpto') || searchable.includes('departamento') || searchable.includes('piso');
-                                 const isHouse = rental.type === 'house' || rental.type === 'casa' || rental.tipo_propiedad === 'casa' || (rental.subtipo_propiedad && normalize(rental.subtipo_propiedad).includes('casa')) || searchable.includes('casa');
-                                 const isPh = rental.type === 'ph' || rental.tipo_propiedad === 'ph' || searchable.includes('ph');
-                                 const isPetFriendly = Boolean(rental.pet || rental.permiteMascotas || rental.mascotas || rental.extraInfo?.mascotas || rental.extraInfo?.permiteMascotas || (rental.tags && rental.tags.some(t => normalize(t).includes('mascota'))) || searchable.includes('mascota') || searchable.includes('pet'));
-                                 const isVerifiedProp = Boolean(rental.verified || rental.isVerifiedOwner || rental.is_verified_owner || rental.propietario_verificado || rental.extraInfo?.verified || rental.extraInfo?.isVerifiedOwner || (rental.tags && rental.tags.some(t => normalize(t).includes('verificad'))) || searchable.includes('verificad'));
-                                 const isDirectOwner = Boolean(rental.isDirectOwner || rental.dueno_directo || rental.duenoDirecto || rental.extraInfo?.isDirectOwner || rental.extraInfo?.duenoDirecto || rental.extraInfo?.tipo_publicador === 'propietario' || isVerifiedProp || (!rental.isBroker && !rental.extraInfo?.isBroker && !searchable.includes('inmobiliaria') && !searchable.includes('corredor')));
+                                const rawTags = (rental.tags || []).join(' ');
+                                const searchable = normalize(`${rental.title || ''} ${rental.address || ''} ${rental.province || ''} ${rental.city || ''} ${rental.subtipo_propiedad || ''} ${rental.tipo_propiedad || ''} ${rawTags} ${rental.type || ''} ${rental.operation || ''} ${rental.note || ''}`);
+                                let cleanedTerm = normalize(currentTerm).replace(/argentina/g, '').replace(/provincia de/g, '').trim();
+                                const termWords = cleanedTerm.split(/[\s,]+/).filter(w => w.length > 2);
+                                const matchesText = cleanedTerm === '' || searchable.includes(cleanedTerm) || (termWords.length > 0 && termWords.every(w => searchable.includes(w)));
 
-                                 let matchesFilter = true;
-                                 if (currentFilter === 'all') {
-                                     matchesFilter = true;
-                                 } else if (currentFilter === 'apartment' || currentFilter === 'departamento') {
-                                     matchesFilter = isApartment;
-                                 } else if (currentFilter === 'owner' || currentFilter === 'dueno-directo' || currentFilter === 'direct-owner') {
-                                     matchesFilter = isDirectOwner;
-                                 } else if (currentFilter === 'pet' || currentFilter === 'mascotas') {
-                                     matchesFilter = isPetFriendly;
-                                 } else if (currentFilter === 'verified' || currentFilter === 'verificados') {
-                                     matchesFilter = isVerifiedProp;
-                                 } else if (currentFilter === 'house' || currentFilter === 'casa') {
-                                     matchesFilter = isHouse;
-                                 } else if (currentFilter === 'ph') {
-                                     matchesFilter = isPh;
-                                 } else {
-                                     matchesFilter = rental.type === currentFilter || searchable.includes(currentFilter);
-                                 }
+                                // Detectores de categorías para los filtros
+                                const isApartment = rental.type === 'apartment' || rental.type === 'departamento' || rental.tipo_propiedad === 'departamento' || (rental.subtipo_propiedad && normalize(rental.subtipo_propiedad).includes('departamento')) || searchable.includes('depto') || searchable.includes('dpto') || searchable.includes('departamento') || searchable.includes('piso');
+                                const isHouse = rental.type === 'house' || rental.type === 'casa' || rental.tipo_propiedad === 'casa' || (rental.subtipo_propiedad && normalize(rental.subtipo_propiedad).includes('casa')) || searchable.includes('casa');
+                                const isPh = rental.type === 'ph' || rental.tipo_propiedad === 'ph' || searchable.includes('ph');
+                                const isPetFriendly = Boolean(rental.pet || rental.permiteMascotas || rental.mascotas || rental.extraInfo?.mascotas || rental.extraInfo?.permiteMascotas || (rental.tags && rental.tags.some(t => normalize(t).includes('mascota'))) || searchable.includes('mascota') || searchable.includes('pet'));
+                                const isVerifiedProp = Boolean(rental.verified || rental.isVerifiedOwner || rental.is_verified_owner || rental.propietario_verificado || rental.extraInfo?.verified || rental.extraInfo?.isVerifiedOwner || (rental.tags && rental.tags.some(t => normalize(t).includes('verificad'))) || searchable.includes('verificad'));
+                                const isDirectOwner = Boolean(rental.isDirectOwner || rental.dueno_directo || rental.duenoDirecto || rental.extraInfo?.isDirectOwner || rental.extraInfo?.duenoDirecto || rental.extraInfo?.tipo_publicador === 'propietario' || isVerifiedProp || (!rental.isBroker && !rental.extraInfo?.isBroker && !searchable.includes('inmobiliaria') && !searchable.includes('corredor')));
 
-                                 const rentalPrice = parsePrice(rental.price);
-                                 const minP = parsePrice(window.minPriceFilter);
-                                 const maxP = parsePrice(window.maxPriceFilter);
-                                 const matchesMin = !minP || (rentalPrice !== null && rentalPrice >= minP);
-                                 const matchesMax = !maxP || (rentalPrice !== null && rentalPrice <= maxP);
+                                let matchesFilter = true;
+                                if (currentFilter === 'all') {
+                                    matchesFilter = true;
+                                } else if (currentFilter === 'apartment' || currentFilter === 'departamento') {
+                                    matchesFilter = isApartment;
+                                } else if (currentFilter === 'owner' || currentFilter === 'dueno-directo' || currentFilter === 'direct-owner') {
+                                    matchesFilter = isDirectOwner;
+                                } else if (currentFilter === 'pet' || currentFilter === 'mascotas') {
+                                    matchesFilter = isPetFriendly;
+                                } else if (currentFilter === 'verified' || currentFilter === 'verificados') {
+                                    matchesFilter = isVerifiedProp;
+                                } else if (currentFilter === 'house' || currentFilter === 'casa') {
+                                    matchesFilter = isHouse;
+                                } else if (currentFilter === 'ph') {
+                                    matchesFilter = isPh;
+                                } else {
+                                    matchesFilter = rental.type === currentFilter || searchable.includes(currentFilter);
+                                }
 
-                                 const opFilter = window.operationFilter || 'all';
-                                 const matchesOp = opFilter === 'all' || !rental.operation || (rental.operation && normalize(rental.operation).includes(opFilter)) || searchable.includes(opFilter);
+                                const rentalPrice = parsePrice(rental.price);
+                                const minP = parsePrice(window.minPriceFilter);
+                                const maxP = parsePrice(window.maxPriceFilter);
+                                const matchesMin = !minP || (rentalPrice !== null && rentalPrice >= minP);
+                                const matchesMax = !maxP || (rentalPrice !== null && rentalPrice <= maxP);
 
-                                 const roomsF = window.roomsFilter || 'all';
-                                 let matchesRooms = true;
-                                 if (roomsF !== 'all') {
-                                     const roomNum = parseInt(roomsF, 10);
-                                     if (rental.rooms || rental.bedrooms || rental.ambientes) {
-                                         const val = Number(rental.rooms || rental.bedrooms || rental.ambientes);
-                                         matchesRooms = roomNum >= 4 ? val >= 4 : val === roomNum;
-                                     } else {
-                                         if (roomsF === '1') matchesRooms = searchable.includes('1 dorm') || searchable.includes('1 amb') || searchable.includes('monoambiente') || searchable.includes('studio');
-                                         else if (roomsF === '2') matchesRooms = searchable.includes('2 dorm') || searchable.includes('2 amb');
-                                         else if (roomsF === '3') matchesRooms = searchable.includes('3 dorm') || searchable.includes('3 amb');
-                                         else if (roomsF === '4') matchesRooms = searchable.includes('4 dorm') || searchable.includes('4 amb');
-                                     }
-                                 }
+                                const opFilter = window.operationFilter || 'all';
+                                const matchesOp = opFilter === 'all' || !rental.operation || (rental.operation && normalize(rental.operation).includes(opFilter)) || searchable.includes(opFilter);
 
-                                 const amenitiesF = window.amenitiesFilter ? window.amenitiesFilter.split(',').filter(Boolean) : [];
-                                 const matchesAmenities = amenitiesF.length === 0 || amenitiesF.every(am => {
-                                     const normAm = normalize(am);
-                                     if (normAm === 'pet') return rental.pet || searchable.includes('mascota');
-                                     if (normAm === 'verified') return rental.verified || searchable.includes('verificad');
-                                     if (normAm === 'expensas') return rental.expensasIncluidas || searchable.includes('expensas');
-                                     if (normAm === 'cochera') return rental.cochera || searchable.includes('cochera');
-                                     if (normAm === 'balcon') return rental.balcon || searchable.includes('balcon') || searchable.includes('terraza');
-                                     if (normAm === 'amoblado') return rental.amoblado || searchable.includes('amoblado');
-                                     return searchable.includes(normAm);
-                                 });
+                                const roomsF = window.roomsFilter || 'all';
+                                let matchesRooms = true;
+                                if (roomsF !== 'all') {
+                                    const roomNum = parseInt(roomsF, 10);
+                                    if (rental.rooms || rental.bedrooms || rental.ambientes) {
+                                        const val = Number(rental.rooms || rental.bedrooms || rental.ambientes);
+                                        matchesRooms = roomNum >= 4 ? val >= 4 : val === roomNum;
+                                    } else {
+                                        if (roomsF === '1') matchesRooms = searchable.includes('1 dorm') || searchable.includes('1 amb') || searchable.includes('monoambiente') || searchable.includes('studio');
+                                        else if (roomsF === '2') matchesRooms = searchable.includes('2 dorm') || searchable.includes('2 amb');
+                                        else if (roomsF === '3') matchesRooms = searchable.includes('3 dorm') || searchable.includes('3 amb');
+                                        else if (roomsF === '4') matchesRooms = searchable.includes('4 dorm') || searchable.includes('4 amb');
+                                    }
+                                }
 
-                                 return matchesText && matchesFilter && matchesMin && matchesMax && matchesOp && matchesRooms && matchesAmenities;
-                             }
+                                const amenitiesF = window.amenitiesFilter ? window.amenitiesFilter.split(',').filter(Boolean) : [];
+                                const matchesAmenities = amenitiesF.length === 0 || amenitiesF.every(am => {
+                                    const normAm = normalize(am);
+                                    if (normAm === 'pet') return rental.pet || searchable.includes('mascota');
+                                    if (normAm === 'verified') return rental.verified || searchable.includes('verificad');
+                                    if (normAm === 'expensas') return rental.expensasIncluidas || searchable.includes('expensas');
+                                    if (normAm === 'cochera') return rental.cochera || searchable.includes('cochera');
+                                    if (normAm === 'balcon') return rental.balcon || searchable.includes('balcon') || searchable.includes('terraza');
+                                    if (normAm === 'amoblado') return rental.amoblado || searchable.includes('amoblado');
+                                    return searchable.includes(normAm);
+                                });
+
+                                return matchesText && matchesFilter && matchesMin && matchesMax && matchesOp && matchesRooms && matchesAmenities;
+                            }
                             function getVisibleRentals() {
                                 const visible = properties.filter(matchesRental);
                                 if (sortEl.value === 'price-asc') visible.sort((a, b) => (parsePrice(a.price) || 0) - (parsePrice(b.price) || 0));
@@ -1163,7 +1184,7 @@
                             function renderNewListings() {
                                 visibleRentals = getVisibleRentals();
                                 gridEl.innerHTML = '';
-                                
+
                                 if (!visibleRentals || visibleRentals.length === 0) {
                                     countEl.textContent = '0 alquileres disponibles';
                                     emptyEl.classList.add('is-visible');
@@ -1196,7 +1217,7 @@
                                         try {
                                             const d = new Date(rental.contractEndDate);
                                             formattedEndDate = d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
-                                        } catch (e) {}
+                                        } catch (e) { }
                                     }
 
                                     const tipoLabels = {
@@ -1297,7 +1318,7 @@
                                             dbProps.forEach(p => properties.push(p));
                                         }
                                         renderNewListings();
-                                    } catch(err) {
+                                    } catch (err) {
                                         console.warn('Could not sync DB properties for search:', err);
                                     }
                                 }
@@ -1370,7 +1391,7 @@
 
                                             if (!bounds.isEmpty()) {
                                                 const center = bounds.getCenter();
-                                                
+
                                                 // Expandimos ligeramente los bounds finales para asegurar que el zoom final no sea excesivo (evitamos el salto brusco)
                                                 const minSpan = 0.05; // aprox 5km
                                                 const ne = bounds.getNorthEast();
@@ -1680,20 +1701,29 @@
         </main>
     </div>
     <!-- Hero Filter Modal -->
-    <div id="hero-filter-modal" class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
-        <div id="hero-filter-modal-card" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
+    <div id="hero-filter-modal"
+        class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div id="hero-filter-modal-card"
+            class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+            <div
+                class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
                         <span class="material-symbols-outlined text-xl">tune</span>
                     </div>
                     <div>
-                        <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">Filtros de búsqueda</h3>
-                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de propiedades</p>
+                        <h3
+                            class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">
+                            Filtros de búsqueda</h3>
+                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de
+                            propiedades</p>
                     </div>
                 </div>
-                <button type="button" id="close-hero-filter-btn" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" aria-label="Cerrar">
+                <button type="button" id="close-hero-filter-btn"
+                    class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                    aria-label="Cerrar">
                     <span class="material-symbols-outlined text-xl">close</span>
                 </button>
             </div>
@@ -1702,39 +1732,52 @@
             <div class="p-6 overflow-y-auto space-y-6 font-body text-sm custom-scrollbar flex-1">
                 <!-- Operación -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Operación</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        de Operación</label>
                     <div class="grid grid-cols-3 gap-2" id="hero-filter-operation-group">
-                        <button type="button" data-op="all" class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
-                        <button type="button" data-op="alquiler" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
-                        <button type="button" data-op="venta" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
+                        <button type="button" data-op="all"
+                            class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
+                        <button type="button" data-op="alquiler"
+                            class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
+                        <button type="button" data-op="venta"
+                            class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
                     </div>
                 </div>
 
                 <!-- Tipo de propiedad -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Propiedad</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        de Propiedad</label>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="hero-filter-type-group">
-                        <button type="button" data-type="all" class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                        <button type="button" data-type="all"
+                            class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                             <span class="material-symbols-outlined text-base">view_cozy</span>
                             <span>Todas</span>
                         </button>
-                        <button type="button" data-type="apartment" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="apartment"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">apartment</span>
                             <span>Departamento</span>
                         </button>
-                        <button type="button" data-type="house" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="house"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">home</span>
                             <span>Casa</span>
                         </button>
-                        <button type="button" data-type="ph" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="ph"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">holiday_village</span>
                             <span>PH</span>
                         </button>
-                        <button type="button" data-type="monoambiente" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="monoambiente"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">chair</span>
                             <span>Monoambiente</span>
                         </button>
-                        <button type="button" data-type="commercial" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="commercial"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">storefront</span>
                             <span>Local Comercial</span>
                         </button>
@@ -1743,29 +1786,46 @@
 
                 <!-- Rango de Precio -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango de Precio ($ ARS / mes)</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango
+                        de Precio ($ ARS / mes)</label>
 
                     <!-- Visual Quick Presets -->
                     <div class="flex flex-wrap gap-2 mb-3">
-                        <button type="button" data-min="" data-max="300000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta $300.000</button>
-                        <button type="button" data-min="300000" data-max="600000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000 - $600.000</button>
-                        <button type="button" data-min="600000" data-max="1000000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000 - $1.000.000</button>
-                        <button type="button" data-min="1000000" data-max="" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
+                        <button type="button" data-min="" data-max="300000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta
+                            $300.000</button>
+                        <button type="button" data-min="300000" data-max="600000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000
+                            - $600.000</button>
+                        <button type="button" data-min="600000" data-max="1000000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000
+                            - $1.000.000</button>
+                        <button type="button" data-min="1000000" data-max=""
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
-                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <span
+                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
+                            <div
+                                class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
-                                <input type="number" id="hero-modal-minprice" placeholder="0" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                                <input type="number" id="hero-modal-minprice" placeholder="0"
+                                    class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none"
+                                    style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
                             </div>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
-                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <span
+                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
+                            <div
+                                class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
-                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite"
+                                    class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none"
+                                    style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
                             </div>
                         </div>
                     </div>
@@ -1773,41 +1833,60 @@
 
                 <!-- Dormitorios / Ambientes -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios / Ambientes</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios
+                        / Ambientes</label>
                     <div class="flex flex-wrap gap-2" id="hero-filter-rooms-group">
-                        <button type="button" data-rooms="all" class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
-                        <button type="button" data-rooms="1" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1 Dorm / Amb</button>
-                        <button type="button" data-rooms="2" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2 Dorms</button>
-                        <button type="button" data-rooms="3" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3 Dorms</button>
-                        <button type="button" data-rooms="4" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+ Dorms</button>
+                        <button type="button" data-rooms="all"
+                            class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
+                        <button type="button" data-rooms="1"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1
+                            Dorm / Amb</button>
+                        <button type="button" data-rooms="2"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2
+                            Dorms</button>
+                        <button type="button" data-rooms="3"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3
+                            Dorms</button>
+                        <button type="button" data-rooms="4"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+
+                            Dorms</button>
                     </div>
                 </div>
 
                 <!-- Requisitos y Amenities -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos & Amenities</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos
+                        & Amenities</label>
                     <div class="grid grid-cols-2 sm:grid-cols-2 gap-2" id="hero-filter-amenities-group">
-                        <button type="button" data-amenity="pet" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="pet"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-amber-500">pets</span>
                             <span class="truncate">Apto mascotas</span>
                         </button>
-                        <button type="button" data-amenity="verified" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="verified"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
                             <span class="truncate">Verificado</span>
                         </button>
-                        <button type="button" data-amenity="expensas" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="expensas"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-blue-500">receipt_long</span>
                             <span class="truncate">Expensas incluidas</span>
                         </button>
-                        <button type="button" data-amenity="cochera" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="cochera"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-rose-500">directions_car</span>
                             <span class="truncate">Cochera</span>
                         </button>
-                        <button type="button" data-amenity="balcon" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="balcon"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-teal-500">deck</span>
                             <span class="truncate">Balcón / Terraza</span>
                         </button>
-                        <button type="button" data-amenity="amoblado" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="amoblado"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-purple-500">chair</span>
                             <span class="truncate">Amoblado</span>
                         </button>
@@ -1816,12 +1895,15 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
-                <button type="button" id="reset-hero-filter-btn" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
+            <div
+                class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <button type="button" id="reset-hero-filter-btn"
+                    class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
                     <span class="material-symbols-outlined text-base">restart_alt</span>
                     <span>Limpiar filtros</span>
                 </button>
-                <button type="button" id="apply-hero-filter-btn" class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
+                <button type="button" id="apply-hero-filter-btn"
+                    class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
                     <span class="material-symbols-outlined text-base">search</span>
                     <span>Aplicar y buscar</span>
                 </button>
@@ -2172,4 +2254,3 @@
 </body>
 
 </html>
-

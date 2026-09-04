@@ -84,7 +84,7 @@ export const ContractsDashboard: React.FC<ContractsDashboardProps> = ({
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-primary/30 text-red-300 font-bold text-[11px] uppercase tracking-wider">
-              Módulo Legal Habitat
+              Módulo Legal Vivat
             </span>
             <span className="text-zinc-400 text-xs font-medium">Ley 25.506 Firma Digital</span>
           </div>

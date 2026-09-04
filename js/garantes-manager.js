@@ -1,6 +1,6 @@
 /**
- * Garantes & Garantías Manager - Pasaporte Hábitat
- * Hábitat Platform - Módulo Integral de Gestión de Garantes, KYC Didit y Scoring
+ * Garantes & Garantías Manager - Pasaporte Vivat
+ * Vivat Platform - Módulo Integral de Gestión de Garantes, KYC Didit y Scoring
  * 
  * Cumple con los 3 tipos de garantías estándar:
  * 1. Garantía Propietaria (Matrícula, folio/tomo, provincia, titularidad y escritura/impuestos)
@@ -126,7 +126,7 @@
         }
     ];
 
-    const STORAGE_KEY = 'habitat_garantes_state_v2';
+    const STORAGE_KEY = 'vivat_garantes_state_v2';
 
     function loadLocalState() {
         try {
@@ -209,9 +209,9 @@
             if (!token) return null;
             let defaultInquilinoName = 'Inquilino Solicitante';
             try {
-                const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                const dIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                const userObj = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
+                const dIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+                const userObj = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 defaultInquilinoName = pData.razon_social || pData.nombre_completo || dIdentity.fullName || userObj.nombre || 'Nicolás Rossi (Inquilino)';
             } catch (e) {}
 
@@ -219,16 +219,16 @@
                 try {
                     const { data, error } = await window.supabaseClient
                         .from('Garante')
-                        .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*), Pasaporte_habitat(id_pasaporte, razon_social, Perfil(nombre_completo, email))')
+                        .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*), Pasaporte_vivat(id_pasaporte, razon_social, Perfil(nombre_completo, email))')
                         .eq('token_invitacion', token)
                         .maybeSingle();
 
                     if (!error && data) {
                         let inquilinoNombre = defaultInquilinoName;
                         let inquilinoEmail = '';
-                        if (data.Pasaporte_habitat) {
-                            inquilinoNombre = data.Pasaporte_habitat.razon_social || data.Pasaporte_habitat.Perfil?.nombre_completo || defaultInquilinoName;
-                            inquilinoEmail = data.Pasaporte_habitat.Perfil?.email || '';
+                        if (data.Pasaporte_vivat) {
+                            inquilinoNombre = data.Pasaporte_vivat.razon_social || data.Pasaporte_vivat.Perfil?.nombre_completo || defaultInquilinoName;
+                            inquilinoEmail = data.Pasaporte_vivat.Perfil?.email || '';
                         }
 
                         return {
@@ -294,7 +294,7 @@
 
                         if (perf) {
                             const { data: pass } = await window.supabaseClient
-                                .from('Pasaporte_habitat')
+                                .from('Pasaporte_vivat')
                                 .select('id_pasaporte')
                                 .eq('id_perfil', perf.id_perfil)
                                 .order('created_at', { ascending: false })
@@ -388,7 +388,7 @@
 
                             if (perf) {
                                 const { data: pasaportes } = await window.supabaseClient
-                                    .from('Pasaporte_habitat')
+                                    .from('Pasaporte_vivat')
                                     .select('id_pasaporte')
                                     .eq('id_perfil', perf.id_perfil)
                                     .order('created_at', { ascending: false })
@@ -435,9 +435,9 @@
 
             let currentTenantName = 'Inquilino Solicitante';
             try {
-                const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                const dIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                const userObj = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
+                const dIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+                const userObj = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 currentTenantName = pData.razon_social || pData.nombre_completo || dIdentity.fullName || userObj.nombre || 'Nicolás Rossi (Inquilino)';
             } catch (e) {}
 
@@ -470,7 +470,7 @@
             if (typeof window.loadTenantPassport === 'function') {
                 window.loadTenantPassport();
             }
-            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+            window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
             return newGarante;
         },
 
@@ -518,7 +518,7 @@
 
                             if (perf) {
                                 const { data: pasaportes } = await window.supabaseClient
-                                    .from('Pasaporte_habitat')
+                                    .from('Pasaporte_vivat')
                                     .select('id_pasaporte')
                                     .eq('id_perfil', perf.id_perfil)
                                     .order('created_at', { ascending: false })
@@ -561,7 +561,7 @@
                                         tipo_documento: 'poliza_caucion',
                                         nombre_archivo: dto.file.name,
                                         tamano_bytes: dto.file.size,
-                                        archivo_url: 'https://storage.habitat.com.ar/garantes/' + encodeURIComponent(dto.file.name),
+                                        archivo_url: 'https://storage.vivat.com.ar/garantes/' + encodeURIComponent(dto.file.name),
                                         estado_documento: 'APROBADO'
                                     }]);
                             }
@@ -599,7 +599,7 @@
             if (typeof window.loadTenantPassport === 'function') {
                 window.loadTenantPassport();
             }
-            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+            window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
             return newGarante;
         },
 
@@ -626,11 +626,11 @@
             if (typeof window.loadTenantPassport === 'function') {
                 window.loadTenantPassport();
             }
-            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+            window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
         },
 
         deleteGarante: async function (id) {
-            if (confirm('¿Estás seguro de que deseas desvincular a este garante de tu Pasaporte Hábitat?')) {
+            if (confirm('¿Estás seguro de que deseas desvincular a este garante de tu Pasaporte Vivat?')) {
                 await this.onDeleteGarante(id);
             }
         },
@@ -639,7 +639,7 @@
          * Enlace de invitación
          */
         getInviteUrl: function (token) {
-            return `${window.location.origin}/pasaporte-habitat.html?view=garante-invitacion&token=${token}`;
+            return `${window.location.origin}/pasaporte-vivat.html?view=garante-invitacion&token=${token}`;
         },
 
         copyInviteLink: function (token) {
@@ -658,7 +658,7 @@
         shareWhatsApp: function (token, nombreGarante, tipoGarantiaId) {
             const url = this.getInviteUrl(token);
             const tipoObj = TIPOS_GARANTIA[tipoGarantiaId] || TIPOS_GARANTIA[3];
-            const msg = `Hola ${nombreGarante || ''}, te comparto el enlace oficial de Hábitat para completar tu validación de identidad (KYC) y cargar tu ${tipoObj.nombre} de forma 100% digital:\n\n${url}`;
+            const msg = `Hola ${nombreGarante || ''}, te comparto el enlace oficial de Vivat para completar tu validación de identidad (KYC) y cargar tu ${tipoObj.nombre} de forma 100% digital:\n\n${url}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         },
 
@@ -1143,7 +1143,7 @@
                     });
 
                     this.closeAddModal();
-                    alert(`¡Seguro de Caución (${aseguradora}) registrado con éxito en tu Pasaporte Hábitat!`);
+                    alert(`¡Seguro de Caución (${aseguradora}) registrado con éxito en tu Pasaporte Vivat!`);
 
                 // Caso Garante Personal (Propietario / Recibo de Sueldo)
                 } else {
@@ -1262,7 +1262,7 @@
                 <div class="max-w-[840px] mx-auto px-4 sm:px-6 pt-6 pb-24 font-body">
                     <!-- Top Branding -->
                     <div class="text-center mb-6">
-                        <img src="img/logo-lite.png" alt="Habitat Logo" class="h-12 w-auto mx-auto mb-3 object-contain">
+                        <img src="img/logo-lite.png" alt="Vivat Logo" class="h-12 w-auto mx-auto mb-3 object-contain">
                         <span class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-headline font-black uppercase tracking-wider">
                             <span class="material-symbols-outlined text-sm">lock</span> Portal Oficial de Validación de Garantes
                         </span>
@@ -1302,7 +1302,7 @@
                         <!-- Header de Bienvenida -->
                         <div class="text-center pb-6 border-b border-zinc-200 dark:border-zinc-800">
                             <h1 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
-                                Validación de Garantía y Pasaporte Hábitat
+                                Validación de Garantía y Pasaporte Vivat
                             </h1>
                             <p class="font-body text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-xl mx-auto">
                                 Hola. <strong>${inquilinoNombre}</strong> te solicitó respaldo mediante <strong class="text-primary dark:text-red-400 font-headline">${tipoObj.nombre}</strong> para su contrato de alquiler.
@@ -1486,7 +1486,7 @@
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-start gap-3">
                                     <input type="checkbox" id="portal-consent-check" required class="mt-1 rounded text-primary focus:ring-primary h-4 w-4">
                                     <label for="portal-consent-check" class="text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer select-none leading-relaxed">
-                                        Declaro bajo juramento que los datos y documentos proporcionados son fidedignos y autorizo a la Red Hábitat a consultar antecedentes de solvencia financiera (BCRA) bajo la Ley 25.326 de Protección de Datos Personales.
+                                        Declaro bajo juramento que los datos y documentos proporcionados son fidedignos y autorizo a la Red Vivat a consultar antecedentes de solvencia financiera (BCRA) bajo la Ley 25.326 de Protección de Datos Personales.
                                     </label>
                                 </div>
 
@@ -1750,7 +1750,7 @@
                             .insert([{
                                 id_garante: garante.id_garante,
                                 tipo_documento: item.file.name.includes('recibo') ? 'recibo_sueldo' : (item.file.name.includes('escritura') ? 'escritura' : 'poliza_caucion'),
-                                archivo_url: 'https://storage.habitat.com.ar/garantes/' + encodeURIComponent(item.nombre),
+                                archivo_url: 'https://storage.vivat.com.ar/garantes/' + encodeURIComponent(item.nombre),
                                 nombre_archivo: item.nombre,
                                 tamano_bytes: item.tamano,
                                 estado_documento: 'PENDIENTE'
@@ -1775,7 +1775,7 @@
                     saveLocalState(garantes);
                 }
 
-                window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+                window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
                 this.renderPublicGuarantorView(token);
 
             } catch (err) {
@@ -1938,7 +1938,7 @@
 
             document.getElementById('modal-auditoria-garante')?.remove();
             this.renderTenantSection();
-            window.dispatchEvent(new CustomEvent('habitat:garantes_updated', { detail: { garantes } }));
+            window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
             alert(newStatusId === 6 ? '¡Garantía aprobada con éxito!' : 'Garantía marcada como rechazada.');
         },
 

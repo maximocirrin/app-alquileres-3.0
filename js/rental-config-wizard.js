@@ -1,5 +1,5 @@
 /**
- * Habitat - Wizard de Configuración y Generación de Alquileres
+ * Vivat - Wizard de Configuración y Generación de Alquileres
  * Diseñado con la misma estructura, estética inmersiva y componentes que el
  * wizard de publicación de propiedades (publish-property-view.html).
  */
@@ -41,7 +41,7 @@
                 const dniVal = explicitTenant.tenant_dni || explicitTenant.dni || '38.123.456';
                 this._acceptedTenant = {
                     name: explicitTenant.tenant_name || explicitTenant.applicant_name || explicitTenant.name || 'Inquilino Aceptado',
-                    email: explicitTenant.tenant_email || explicitTenant.applicant_email || explicitTenant.email || 'inquilino@habitat.ar',
+                    email: explicitTenant.tenant_email || explicitTenant.applicant_email || explicitTenant.email || 'inquilino@vivat.ar',
                     phone: explicitTenant.tenant_phone || explicitTenant.phone || '+54 9 261 400-0000',
                     dni: dniVal,
                     cuil: explicitTenant.tenant_cuil || explicitTenant.cuil || (dniVal ? `20-${String(dniVal).replace(/\D/g, '')}-7` : '20-38123456-7'),
@@ -185,7 +185,7 @@
             }
             if (!allApps || allApps.length === 0) {
                 try {
-                    const raw = localStorage.getItem('habitat_tenant_applications');
+                    const raw = localStorage.getItem('vivat_tenant_applications');
                     if (raw) allApps = JSON.parse(raw);
                 } catch (e) {}
             }
@@ -201,7 +201,7 @@
                 if (match) {
                     this._acceptedTenant = {
                         name: match.tenant_name || match.applicant_name || match.name || 'Inquilino Aceptado',
-                        email: match.tenant_email || match.applicant_email || match.email || 'inquilino@habitat.ar',
+                        email: match.tenant_email || match.applicant_email || match.email || 'inquilino@vivat.ar',
                         phone: match.tenant_phone || match.phone || '+54 9 261 400-0000',
                         dni: match.tenant_dni || match.dni || '38.123.456',
                         cuil: match.tenant_cuil || match.cuil || (match.dni ? `20-${match.dni.replace(/\D/g, '')}-7` : '20-38123456-7'),
@@ -651,7 +651,7 @@
                                                 Alias CBU / CVU para Cobro
                                             </label>
                                             <div class="relative">
-                                                <input type="text" id="rw-alias-cbu" placeholder="HABITAT.COBROS.MP" value="HABITAT.ALQUILER.MP"
+                                                <input type="text" id="rw-alias-cbu" placeholder="VIVAT.COBROS.MP" value="VIVAT.ALQUILER.MP"
                                                     class="w-full appearance-none bg-zinc-100 dark:bg-[#202024] border-none text-on-background dark:text-[#f1f1f1] rounded-xl h-14 px-4 font-body text-base font-mono focus:ring-1 focus:ring-primary dark:focus:ring-[#A13333] transition-colors">
                                             </div>
                                         </div>
@@ -1231,7 +1231,7 @@
             const fechaInicio = document.getElementById('rw-fecha-inicio')?.value || new Date().toISOString().split('T')[0];
             const diaVenc = Number(document.getElementById('rw-dia-venc')?.value || 10);
             const tasaPunitoria = Number(document.getElementById('rw-tasa-punitoria')?.value || 0.5);
-            const aliasCbu = document.getElementById('rw-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
+            const aliasCbu = document.getElementById('rw-alias-cbu')?.value || 'VIVAT.ALQUILER.MP';
             const comision = this._isBroker ? Number(document.getElementById('rw-comision')?.value || 4.15) : 0;
             const montoExpensas = Number(document.getElementById('rw-monto-expensas')?.value || 45000);
             const tipoDeposito = document.getElementById('rw-deposito-tipo')?.value || '1_MES';
@@ -1240,7 +1240,7 @@
             const fixedAdjVal = Number(document.getElementById('rw-fixed-val')?.value || 0);
 
             let tenantName = 'Pendiente de Inquilino';
-            let tenantEmail = 'pendiente@habitat.ar';
+            let tenantEmail = 'pendiente@vivat.ar';
             let tenantDni = '';
             let tenantPhone = '';
             let tenantCuil = '';
@@ -1321,7 +1321,7 @@
                 tenant_phone: tenantPhone,
                 owner: {
                     name: 'Propietario Verificado',
-                    email: 'propietario@habitat.ar',
+                    email: 'propietario@vivat.ar',
                     dni: '30.123.456'
                 }
             };
@@ -1329,11 +1329,11 @@
             // 1. Guardar en localStorage
             try {
                 let list = [];
-                const raw = localStorage.getItem('habitat_contracts');
+                const raw = localStorage.getItem('vivat_contracts');
                 if (raw) list = JSON.parse(raw);
                 list = list.filter(c => String(c.propertyId) !== String(newContract.propertyId) && String(c.property_id) !== String(newContract.propertyId));
                 list.unshift(newContract);
-                localStorage.setItem('habitat_contracts', JSON.stringify(list));
+                localStorage.setItem('vivat_contracts', JSON.stringify(list));
             } catch (e) {
                 console.warn('[RentalWizard] Error guardando en localStorage:', e);
             }
@@ -1411,7 +1411,7 @@
     window.openContractEditorForRental = function (contractId) {
         let list = [];
         try {
-            const raw = localStorage.getItem('habitat_contracts');
+            const raw = localStorage.getItem('vivat_contracts');
             if (raw) list = JSON.parse(raw);
         } catch (e) {}
 
@@ -1500,7 +1500,7 @@
                 c.paymentDueDay = terms.paymentDueDay || c.paymentDueDay || 10;
                 c.payment_due_day = c.paymentDueDay;
                 c.dia_vencimiento_mensual = c.paymentDueDay;
-                c.aliasCbu = terms.aliasCbu || c.aliasCbu || 'HABITAT.ALQUILER.MP';
+                c.aliasCbu = terms.aliasCbu || c.aliasCbu || 'VIVAT.ALQUILER.MP';
                 c.alias_cbu = c.aliasCbu;
                 c.cbu_alias = c.aliasCbu;
                 c.status = 'WAITING_TENANT';
@@ -1521,7 +1521,7 @@
 
                 // 1. Guardar en localStorage
                 try {
-                    let raw = localStorage.getItem('habitat_contracts');
+                    let raw = localStorage.getItem('vivat_contracts');
                     let stored = raw ? JSON.parse(raw) : [];
                     const idx = stored.findIndex(item => item && (
                         String(item.id) === String(c.id) || 
@@ -1533,7 +1533,7 @@
                     } else {
                         stored.unshift({ ...c, has_contract: true, hasContract: true });
                     }
-                    localStorage.setItem('habitat_contracts', JSON.stringify(stored));
+                    localStorage.setItem('vivat_contracts', JSON.stringify(stored));
                 } catch(e) {}
 
                 // 2. Actualizar mock de contratos activos en memoria

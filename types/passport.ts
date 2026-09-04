@@ -1,5 +1,5 @@
 /**
- * TypeScript Interfaces for Pasaporte Hábitat Records
+ * TypeScript Interfaces for Pasaporte Vivat Records
  */
 
 export interface LegalRecordSummary {

@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * HÁBITAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.4 Legal Architecture)
+ * VIVAT - CONTRACT EDITOR & SMART BUILDER MODAL (v3.4 Legal Architecture)
  * ==============================================================================
  * Modal ejecutivo, minimalista, 100% responsivo y Dual-Pane en Desktop (md/lg/xl)
  * bajo DNU 70/2023 y Ley Nacional N° 25.506 de Firma Digital con Didit KYC.
@@ -76,7 +76,7 @@
             normative: 'Art. 1196 CCyCN (sustituido por DNU 70/2023)',
             badge: 'Garantía Contractual',
             summary: 'Libertad de fijación y reintegro del depósito',
-            explanation: 'Bajo el marco del DNU 70/2023, las partes determinan libremente la cantidad de meses de depósito, la moneda (pesos o dólares) y los plazos de restitución. El depósito está destinado exclusivamente a responder por deterioros imputables en el inmueble o deudas impagas de servicios al momento de la entrega de llaves. Puede ser sustituido por fianza digital (Pasaporte Hábitat / Seguro de Caución).',
+            explanation: 'Bajo el marco del DNU 70/2023, las partes determinan libremente la cantidad de meses de depósito, la moneda (pesos o dólares) y los plazos de restitución. El depósito está destinado exclusivamente a responder por deterioros imputables en el inmueble o deudas impagas de servicios al momento de la entrega de llaves. Puede ser sustituido por fianza digital (Pasaporte Vivat / Seguro de Caución).',
             articleQuote: '«Las partes pueden determinar libremente el importe del depósito en garantía y la moneda en que se integrará, así como el plazo y condiciones para su devolución.»'
         },
         expensas: {
@@ -140,7 +140,7 @@
             normative: 'Ley Nacional N° 25.506 de Firma Digital • Arts. 286, 287 y 288 CCyCN',
             badge: 'Plena Validez Legal',
             summary: 'Validez probatoria, autenticidad e inmutabilidad jurídica',
-            explanation: 'El contrato firmado digitalmente a través de la plataforma Hábitat utiliza validación biométrica facial en vivo (Didit Liveness Check) y sellado de tiempo criptográfico TSA RFC 3161 sobre el digest SHA-256. Esto otorga presunción de autoría, principio de no repudio e inmutabilidad del documento conforme a los Arts. 286, 287 y 288 del Código Civil y Comercial de la Nación y la Ley 25.506.',
+            explanation: 'El contrato firmado digitalmente a través de la plataforma Vivat utiliza validación biométrica facial en vivo (Didit Liveness Check) y sellado de tiempo criptográfico TSA RFC 3161 sobre el digest SHA-256. Esto otorga presunción de autoría, principio de no repudio e inmutabilidad del documento conforme a los Arts. 286, 287 y 288 del Código Civil y Comercial de la Nación y la Ley 25.506.',
             articleQuote: '«Los instrumentos generados por medios electrónicos tienen eficacia probatoria idéntica a los instrumentos privados firmados en soporte papel cuando se garantiza la autenticidad e integridad del documento.»'
         }
     };
@@ -149,16 +149,16 @@
         if (window._currentUserProfileId) return window._currentUserProfileId;
 
         try {
-            const stored = localStorage.getItem('habitat_profile_id');
+            const stored = localStorage.getItem('vivat_profile_id');
             if (stored && !isNaN(Number(stored))) {
                 window._currentUserProfileId = Number(stored);
                 return window._currentUserProfileId;
             }
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
             if (pId && !isNaN(Number(pId))) {
                 window._currentUserProfileId = Number(pId);
-                localStorage.setItem('habitat_profile_id', String(pId));
+                localStorage.setItem('vivat_profile_id', String(pId));
                 return window._currentUserProfileId;
             }
         } catch (e) {}
@@ -183,16 +183,16 @@
                     if (profiles && profiles.length > 0) {
                         const p = profiles[0];
                         window._currentUserProfileId = Number(p.id_perfil);
-                        localStorage.setItem('habitat_profile_id', String(p.id_perfil));
+                        localStorage.setItem('vivat_profile_id', String(p.id_perfil));
                         
                         try {
-                            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                             uLocal.id_perfil = p.id_perfil;
                             uLocal.email = p.mail || authUser.email;
                             uLocal.dni = p.dni || uLocal.dni;
                             uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
                             uLocal.user_id = authUser.id || p.user_id;
-                            localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                            localStorage.setItem('vivat_user', JSON.stringify(uLocal));
                         } catch (e) {}
 
                         return window._currentUserProfileId;
@@ -240,7 +240,7 @@
             return true;
         }
 
-        const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        const activeRole = (localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || '').toUpperCase();
         if (['OWNER', 'PROPIETARIO', 'CORREDOR', 'BROKER'].includes(activeRole)) {
             return true;
         }
@@ -252,11 +252,11 @@
         let userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
         if (!userProfileId) {
             try {
-                const storedProfileId = localStorage.getItem('habitat_profile_id');
+                const storedProfileId = localStorage.getItem('vivat_profile_id');
                 if (storedProfileId && !isNaN(Number(storedProfileId))) {
                     userProfileId = Number(storedProfileId);
                 } else {
-                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
                     if (pId && !isNaN(Number(pId))) {
                         userProfileId = Number(pId);
@@ -271,7 +271,7 @@
 
         let userEmail = '';
         try {
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
         } catch (e) {}
 
@@ -394,7 +394,7 @@
             const defaultIndex = (contract.adjustmentIndex || contract.adjustment_index || cfg.adjustmentIndex || (contract.id_Indice === 2 ? 'ICL' : 'IPC'));
             const defaultFrequency = String(contract.adjustmentFrequencyMonths || contract.adjustment_frequency_months || contract.periodo_aumento_meses || cfg.adjustmentFrequencyMonths || 3);
             const defaultDueDay = String(contract.paymentDueDay || contract.payment_due_day || contract.dia_vencimiento_mensual || cfg.paymentDueDay || 10);
-            const defaultAlias = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'HABITAT.ALQUILER.MP';
+            const defaultAlias = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'VIVAT.ALQUILER.MP';
 
             const defaultDeposito = cfg.depositoModalidad || '1_MES';
             const defaultExpensas = cfg.regimenExpensas || 'ORDINARIAS_INQ';
@@ -604,7 +604,7 @@
                                                 id="editor-alias-cbu" 
                                                 value="${defaultAlias}" 
                                                 autocapitalize="characters"
-                                                placeholder="HABITAT.ALQUILER"
+                                                placeholder="VIVAT.ALQUILER"
                                                 class="w-full bg-transparent border-b border-zinc-300 dark:border-zinc-700 hover:border-primary/50 focus:border-primary dark:focus:border-red-400 h-9 font-mono font-semibold text-sm text-zinc-900 dark:text-white focus:ring-0 outline-none transition-all placeholder-zinc-300 dark:placeholder-zinc-600 px-0"
                                             >
                                         </div>
@@ -1063,7 +1063,7 @@
 
                     <!-- Footer -->
                     <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs">
-                        <span class="text-[10px] sm:text-[11px] text-zinc-400 truncate">Asesoría Legal Hábitat • DNU 70/2023</span>
+                        <span class="text-[10px] sm:text-[11px] text-zinc-400 truncate">Asesoría Legal Vivat • DNU 70/2023</span>
                         <button type="button" onclick="ContractEditorModal.closeLegalInfo()" class="px-4 sm:px-5 py-2 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0">
                             Entendido
                         </button>
@@ -1453,9 +1453,9 @@
                     targetContract.activeClausesList = terms.activeClausesList;
                     targetContract.clausulas_adicionales = fullClausesPayload;
 
-                    // Persistir inmediatamente en localStorage ('habitat_contracts')
+                    // Persistir inmediatamente en localStorage ('vivat_contracts')
                     try {
-                        const raw = localStorage.getItem('habitat_contracts');
+                        const raw = localStorage.getItem('vivat_contracts');
                         let list = raw ? JSON.parse(raw) : [];
                         const tId = String(targetContract.id || targetContract.contractNumber || targetContract.dbContractId || '');
                         const tDbId = targetContract.dbContractId ? String(targetContract.dbContractId) : null;
@@ -1470,9 +1470,9 @@
                         } else {
                             list.unshift({ ...targetContract });
                         }
-                        localStorage.setItem('habitat_contracts', JSON.stringify(list));
+                        localStorage.setItem('vivat_contracts', JSON.stringify(list));
                     } catch (e) {
-                        console.warn("Aviso guardando en localStorage habitat_contracts:", e);
+                        console.warn("Aviso guardando en localStorage vivat_contracts:", e);
                     }
 
                     // Actualizar listas en memoria (paneles activo)
@@ -1599,7 +1599,7 @@
             const sym = moneda === 'USD' ? 'USD ' : '$ ';
             const montoFmt = sym + num.toLocaleString('es-AR') + (moneda === 'USD' ? ' (Dólares Estadounidenses)' : ' (Pesos Argentinos)');
             const diaVenc = document.getElementById('editor-dia-venc')?.value || terms.paymentDueDay || terms.payment_due_day || 10;
-            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || terms.aliasCbu || terms.alias_cbu || 'HABITAT.ALQUILER.MP';
+            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || terms.aliasCbu || terms.alias_cbu || 'VIVAT.ALQUILER.MP';
             const depositoSel = document.getElementById('editor-deposito')?.value || terms.depositoModalidad || terms.clauses?.depositoModalidad || '1_MES';
             const moraSel = document.getElementById('editor-mora')?.value || terms.tasaMoraDiaria || terms.clauses?.tasaMoraDiaria || '0.5';
             const expensasSel = document.getElementById('editor-expensas')?.value || terms.regimenExpensas || terms.clauses?.regimenExpensas || 'ORDINARIAS_INQ';
@@ -1620,7 +1620,7 @@
             let depositoTxt = 'equivalente a UN (1) mes de canon locativo inicial';
             if (depositoSel === '1_MES_USD') depositoTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
             if (depositoSel === '2_MESES') depositoTxt = 'equivalente a DOS (2) meses de canon locativo inicial';
-            if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Hábitat / Seguro de Caución sin integración de efectivo en garantía';
+            if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Vivat / Seguro de Caución sin integración de efectivo en garantía';
 
             let expensasTxt = 'Las expensas comunes ordinarias y los consumos de servicios (energía eléctrica, gas natural, agua potable, telecomunicaciones) serán por cuenta exclusiva del LOCATARIO. Las expensas extraordinarias e impuestos sobre el inmueble serán a cargo del LOCADOR.';
             if (expensasSel === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
@@ -1851,7 +1851,7 @@
             const frecuencia = parseInt(document.getElementById('editor-frecuencia')?.value || 3, 10);
             const monto = parseFloat(document.getElementById('editor-monto')?.value || 450000);
             const diaVenc = parseInt(document.getElementById('editor-dia-venc')?.value || 10, 10);
-            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'HABITAT.ALQUILER.MP';
+            const aliasCbu = document.getElementById('editor-alias-cbu')?.value || 'VIVAT.ALQUILER.MP';
             const deposito = document.getElementById('editor-deposito')?.value || '1_MES';
             const mora = parseFloat(document.getElementById('editor-mora')?.value || 0.5);
             const expensas = document.getElementById('editor-expensas')?.value || 'ORDINARIAS_INQ';
@@ -1920,7 +1920,7 @@
                         <span>Documento Oficial Certificado</span>
                     </div>
                     <p class="font-headline font-black text-xs sm:text-sm text-primary dark:text-red-400 tracking-wider uppercase">CONTRATO DE LOCACIÓN INMOBILIARIA CON FIRMA ELECTRÓNICA</p>
-                    <p class="text-[9px] sm:text-[10px] text-zinc-500 font-sans">Identificador Oficial Hábitat: CTR-2026-OFICIAL • Conforme Ley Nacional N° 25.506 y DNU 70/2023</p>
+                    <p class="text-[9px] sm:text-[10px] text-zinc-500 font-sans">Identificador Oficial Vivat: CTR-2026-OFICIAL • Conforme Ley Nacional N° 25.506 y DNU 70/2023</p>
                 </div>
 
                 <div class="p-3 sm:p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 mb-4 font-sans text-xs">

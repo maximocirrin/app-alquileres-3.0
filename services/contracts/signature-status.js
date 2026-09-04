@@ -30,6 +30,6 @@ export default async function signatureStatusHandler(req, res) {
     tsaCertificateId: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
     signedPdfUrl: `/api/contracts/${contractId}/download-signed`,
     auditTrailPdfUrl: `/api/contracts/${contractId}/download-audit-trail`,
-    qrVerificationUrl: `https://habitat.ar/verificar/${contractId}`
+    qrVerificationUrl: `https://vivat.ar/verificar/${contractId}`
   });
 }

@@ -13,14 +13,14 @@ CREATE POLICY "Gestionar garantes propios" ON "Garante"
     TO authenticated
     USING (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
     )
     WITH CHECK (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -41,7 +41,7 @@ CREATE POLICY "Gestionar documentos garante propios" ON "Documento_garante"
     USING (
         id_garante IN (
             SELECT g.id_garante FROM "Garante" g
-            JOIN "Pasaporte_habitat" p ON g.id_pasaporte = p.id_pasaporte
+            JOIN "Pasaporte_vivat" p ON g.id_pasaporte = p.id_pasaporte
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -49,7 +49,7 @@ CREATE POLICY "Gestionar documentos garante propios" ON "Documento_garante"
     WITH CHECK (
         id_garante IN (
             SELECT g.id_garante FROM "Garante" g
-            JOIN "Pasaporte_habitat" p ON g.id_pasaporte = p.id_pasaporte
+            JOIN "Pasaporte_vivat" p ON g.id_pasaporte = p.id_pasaporte
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -75,7 +75,7 @@ CREATE POLICY "Lectura KYC propia" ON "Verificacion_kyc"
     TO authenticated
     USING (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -86,7 +86,7 @@ CREATE POLICY "Insertar KYC propia" ON "Verificacion_kyc"
     TO authenticated
     WITH CHECK (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )

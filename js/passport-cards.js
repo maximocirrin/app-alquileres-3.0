@@ -1,5 +1,5 @@
 /**
- * Pasaporte Hábitat - Passport Cards Manager & Loader
+ * Pasaporte Vivat - Passport Cards Manager & Loader
  * Handles dynamic rendering and API fallback for LegalBackgroundCard, AtmCard, and EmploymentCard.
  */
 

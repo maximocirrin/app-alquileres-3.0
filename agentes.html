@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,11 +27,13 @@
                     root.style.backgroundColor = '#ffffff';
                     root.style.colorScheme = 'light';
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Encontrá un Corredor Inmobiliario Matriculado | Hábitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Encontrá un Corredor Inmobiliario Matriculado | Vivat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script>
@@ -40,8 +43,12 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=13">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
@@ -76,11 +83,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -150,7 +166,8 @@
     </style>
 </head>
 
-<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
+<body
+    class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
 
     <!-- TopNavBar Component (Standard App Header) -->
     <script src="js/navbar.js?v=4"></script>
@@ -158,45 +175,59 @@
     <main class="flex-grow pt-16 lg:pt-20">
 
         <!-- 1. HERO SECTION (ZILLOW STYLE HERO WITH FLOATING SEARCH) -->
-        <section class="relative w-full min-h-[440px] md:min-h-[500px] flex items-center justify-center overflow-hidden">
+        <section
+            class="relative w-full min-h-[440px] md:min-h-[500px] flex items-center justify-center overflow-hidden">
             <!-- Background Image -->
-            <img src="img/hero-marketplace.jpg" alt="Corredor Inmobiliario Hábitat" class="absolute inset-0 w-full h-full object-cover object-center scale-105">
+            <img src="img/hero-marketplace.jpg" alt="Corredor Inmobiliario Vivat"
+                class="absolute inset-0 w-full h-full object-cover object-center scale-105">
             <!-- Dark Gradient Overlay -->
             <div class="absolute inset-0 hero-overlay"></div>
 
             <div class="relative z-10 max-w-[1100px] mx-auto px-4 text-center text-white py-12 space-y-6">
                 <!-- Badge -->
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide">
+                <div
+                    class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide">
                     <span class="material-symbols-outlined text-emerald-400 text-base">verified</span>
                     <span>Red de Corredores Matriculados CUCICBA / CMCPSI</span>
                 </div>
 
-                <h1 class="font-headline text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
+                <h1
+                    class="font-headline text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
                     Un gran corredor marca toda la diferencia
                 </h1>
                 <p class="text-sm sm:text-base md:text-lg text-zinc-200 font-medium max-w-xl mx-auto">
-                    Conectá con los profesionales inmobiliarios más destacados en tu zona para tasar, alquilar o vender tu propiedad.
+                    Conectá con los profesionales inmobiliarios más destacados en tu zona para tasar, alquilar o vender
+                    tu propiedad.
                 </p>
 
                 <!-- FLOATING SEARCH BOX (ZILLOW SEARCH CARD) -->
-                <div class="max-w-2xl mx-auto bg-white dark:bg-zinc-900 rounded-3xl p-3 sm:p-4 shadow-2xl border border-zinc-200/80 dark:border-zinc-800 text-zinc-900 dark:text-white mt-8">
+                <div
+                    class="max-w-2xl mx-auto bg-white dark:bg-zinc-900 rounded-3xl p-3 sm:p-4 shadow-2xl border border-zinc-200/80 dark:border-zinc-800 text-zinc-900 dark:text-white mt-8">
                     <!-- Search Filter Tabs -->
-                    <div class="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-3 text-xs font-bold">
-                        <button type="button" onclick="setSearchMode('location')" id="tab-mode-location" class="px-4 py-1.5 rounded-xl bg-primary text-white transition-all">
+                    <div
+                        class="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-3 text-xs font-bold">
+                        <button type="button" onclick="setSearchMode('location')" id="tab-mode-location"
+                            class="px-4 py-1.5 rounded-xl bg-primary text-white transition-all">
                             Por Ubicación / Barrio
                         </button>
-                        <button type="button" onclick="setSearchMode('name')" id="tab-mode-name" class="px-4 py-1.5 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all">
+                        <button type="button" onclick="setSearchMode('name')" id="tab-mode-name"
+                            class="px-4 py-1.5 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all">
                             Por Nombre de Agente
                         </button>
                     </div>
 
                     <!-- Search Input Row -->
-                    <form onsubmit="event.preventDefault(); triggerAgentSearch();" class="flex flex-col sm:flex-row items-center gap-2">
+                    <form onsubmit="event.preventDefault(); triggerAgentSearch();"
+                        class="flex flex-col sm:flex-row items-center gap-2">
                         <div class="relative w-full flex-grow">
-                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xl">location_on</span>
-                            <input type="text" id="agent-search-input" placeholder="Ingresá tu barrio o ciudad (ej: Palermo Soho, Recoleta, Belgrano, San Isidro)" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl pl-11 pr-4 py-3 text-xs sm:text-sm font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40">
+                            <span
+                                class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xl">location_on</span>
+                            <input type="text" id="agent-search-input"
+                                placeholder="Ingresá tu barrio o ciudad (ej: Palermo Soho, Recoleta, Belgrano, San Isidro)"
+                                class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl pl-11 pr-4 py-3 text-xs sm:text-sm font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/40">
                         </div>
-                        <button type="submit" class="w-full sm:w-auto px-7 py-3 bg-primary hover:bg-primary-hover text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+                        <button type="submit"
+                            class="w-full sm:w-auto px-7 py-3 bg-primary hover:bg-primary-hover text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer">
                             <span class="material-symbols-outlined text-lg">search</span>
                             <span>Buscar Corredor</span>
                         </button>
@@ -208,28 +239,35 @@
         <!-- 2. MAIN DIRECTORY GRID SECTION (ZILLOW AGENTS DIRECTORY) -->
         <section class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-8">
 
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
+            <div
+                class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
                 <div>
-                    <h2 class="font-headline text-2xl sm:text-3xl md:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                    <h2
+                        class="font-headline text-2xl sm:text-3xl md:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                         Corredores Inmobiliarios en Buenos Aires
                     </h2>
                     <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl">
-                        Más de 1.200 corredores matriculados CUCICBA y CMCPSI verificados para guiarte en el proceso de inicio a fin.
+                        Más de 1.200 corredores matriculados CUCICBA y CMCPSI verificados para guiarte en el proceso de
+                        inicio a fin.
                     </p>
                 </div>
 
                 <!-- Specialty Filter Pills -->
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 shrink-0">
-                    <button type="button" onclick="filterAgentSpecialty('all', this)" class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-extrabold bg-primary text-white shadow-sm cursor-pointer whitespace-nowrap">
+                    <button type="button" onclick="filterAgentSpecialty('all', this)"
+                        class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-extrabold bg-primary text-white shadow-sm cursor-pointer whitespace-nowrap">
                         Todos
                     </button>
-                    <button type="button" onclick="filterAgentSpecialty('ventas', this)" class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
+                    <button type="button" onclick="filterAgentSpecialty('ventas', this)"
+                        class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
                         Vender / Tasar
                     </button>
-                    <button type="button" onclick="filterAgentSpecialty('alquileres', this)" class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
+                    <button type="button" onclick="filterAgentSpecialty('alquileres', this)"
+                        class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
                         Alquilar
                     </button>
-                    <button type="button" onclick="filterAgentSpecialty('administracion', this)" class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
+                    <button type="button" onclick="filterAgentSpecialty('administracion', this)"
+                        class="spec-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer whitespace-nowrap">
                         Administración
                     </button>
                 </div>
@@ -239,21 +277,30 @@
             <div id="directory-agents-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 <!-- CARD 1: Mariano Gómez -->
-                <a href="perfil-agente.html?id=ag-1" class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group" data-specialty="ventas alquileres" data-zones="palermo recoleta belgrano">
+                <a href="perfil-agente.html?id=ag-1"
+                    class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                    data-specialty="ventas alquileres" data-zones="palermo recoleta belgrano">
                     <div class="space-y-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80" alt="Lic. Mariano Gómez" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
-                                    <span class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md" title="Matrícula Verificada CUCICBA N° 7842">
+                                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80"
+                                        alt="Lic. Mariano Gómez"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
+                                    <span
+                                        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md"
+                                        title="Matrícula Verificada CUCICBA N° 7842">
                                         <span class="material-symbols-outlined text-sm">verified</span>
                                     </span>
                                 </div>
                                 <div>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
                                         CUCICBA N° 7842 • Verificado
                                     </span>
-                                    <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">Lic. Mariano Gómez</h3>
+                                    <h3
+                                        class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">
+                                        Lic. Mariano Gómez</h3>
                                     <p class="text-xs font-semibold text-zinc-500">Gómez & Asociados Propiedades</p>
 
                                     <!-- Rating & Reviews -->
@@ -266,11 +313,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
                         </div>
 
                         <!-- Zillow Style Agent Metrics Grid -->
-                        <div class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
+                        <div
+                            class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
                             <div>
                                 <span class="block text-[10px] font-bold text-zinc-400 uppercase">Rango Precio</span>
                                 <span class="font-extrabold text-zinc-900 dark:text-white">USD 140k - 850k</span>
@@ -289,9 +338,14 @@
                     <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[10px] font-black uppercase text-zinc-400">Zonas:</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Palermo Soho</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Recoleta</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Belgrano C</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Palermo
+                                Soho</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Recoleta</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Belgrano
+                                C</span>
                         </div>
                         <span class="text-xs font-extrabold text-primary flex items-center gap-1 group-hover:underline">
                             Ver Perfil <span class="material-symbols-outlined text-sm">chevron_right</span>
@@ -300,21 +354,30 @@
                 </a>
 
                 <!-- CARD 2: Carolina Benítez -->
-                <a href="perfil-agente.html?id=ag-2" class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group" data-specialty="ventas administracion" data-zones="recoleta puerto madero barrio norte">
+                <a href="perfil-agente.html?id=ag-2"
+                    class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                    data-specialty="ventas administracion" data-zones="recoleta puerto madero barrio norte">
                     <div class="space-y-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80" alt="Dra. Carolina Benítez" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
-                                    <span class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md" title="Matrícula Verificada CUCICBA N° 6120">
+                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80"
+                                        alt="Dra. Carolina Benítez"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
+                                    <span
+                                        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md"
+                                        title="Matrícula Verificada CUCICBA N° 6120">
                                         <span class="material-symbols-outlined text-sm">verified</span>
                                     </span>
                                 </div>
                                 <div>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
                                         CUCICBA N° 6120 • Verificado
                                     </span>
-                                    <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">Dra. Carolina Benítez</h3>
+                                    <h3
+                                        class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">
+                                        Dra. Carolina Benítez</h3>
                                     <p class="text-xs font-semibold text-zinc-500">Benítez Real Estate CABA</p>
 
                                     <div class="mt-2 flex items-center gap-2 text-xs">
@@ -326,10 +389,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
+                        <div
+                            class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
                             <div>
                                 <span class="block text-[10px] font-bold text-zinc-400 uppercase">Rango Precio</span>
                                 <span class="font-extrabold text-zinc-900 dark:text-white">USD 210k - 1.4M</span>
@@ -348,9 +413,14 @@
                     <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[10px] font-black uppercase text-zinc-400">Zonas:</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Recoleta</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Puerto Madero</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Barrio Norte</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Recoleta</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Puerto
+                                Madero</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Barrio
+                                Norte</span>
                         </div>
                         <span class="text-xs font-extrabold text-primary flex items-center gap-1 group-hover:underline">
                             Ver Perfil <span class="material-symbols-outlined text-sm">chevron_right</span>
@@ -359,41 +429,54 @@
                 </a>
 
                 <!-- INLINE PROMO CARD (ZILLOW STYLE GET HELP FINDING AN AGENT) -->
-                <div class="col-span-1 lg:col-span-2 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900/10 via-primary-light to-blue-900/10 border border-blue-900/20 dark:border-blue-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                <div
+                    class="col-span-1 lg:col-span-2 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900/10 via-primary-light to-blue-900/10 border border-blue-900/20 dark:border-blue-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
                     <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-2xl bg-blue-900 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-blue-900 text-white flex items-center justify-center shrink-0 shadow-md">
                             <span class="material-symbols-outlined text-3xl">support_agent</span>
                         </div>
                         <div class="space-y-1">
-                            <span class="px-2.5 py-0.5 rounded-full bg-blue-900 text-white text-[10px] font-black uppercase">
+                            <span
+                                class="px-2.5 py-0.5 rounded-full bg-blue-900 text-white text-[10px] font-black uppercase">
                                 Red de Corredores Matriculados
                             </span>
                             <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white">
                                 ¿Buscás asesoramiento personalizado para tasar o vender?
                             </h3>
                             <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
-                                Explorá los perfiles completos con métricas oficiales, valoraciones y propiedades activas de cada inmobiliaria.
+                                Explorá los perfiles completos con métricas oficiales, valoraciones y propiedades
+                                activas de cada inmobiliaria.
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- CARD 3: Martín Sbaraglia -->
-                <a href="perfil-agente.html?id=ag-3" class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group" data-specialty="ventas alquileres" data-zones="san isidro vicente lopez olivos">
+                <a href="perfil-agente.html?id=ag-3"
+                    class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                    data-specialty="ventas alquileres" data-zones="san isidro vicente lopez olivos">
                     <div class="space-y-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80" alt="Martín Sbaraglia" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
-                                    <span class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md" title="Matrícula Verificada CMCPSI N° 5840">
+                                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80"
+                                        alt="Martín Sbaraglia"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
+                                    <span
+                                        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md"
+                                        title="Matrícula Verificada CMCPSI N° 5840">
                                         <span class="material-symbols-outlined text-sm">verified</span>
                                     </span>
                                 </div>
                                 <div>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
                                         CMCPSI N° 5840 • Verificado
                                     </span>
-                                    <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">Martín Sbaraglia</h3>
+                                    <h3
+                                        class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">
+                                        Martín Sbaraglia</h3>
                                     <p class="text-xs font-semibold text-zinc-500">Sbaraglia Propiedades GBA Norte</p>
 
                                     <div class="mt-2 flex items-center gap-2 text-xs">
@@ -405,10 +488,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
+                        <div
+                            class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
                             <div>
                                 <span class="block text-[10px] font-bold text-zinc-400 uppercase">Rango Precio</span>
                                 <span class="font-extrabold text-zinc-900 dark:text-white">USD 180k - 2.1M</span>
@@ -427,9 +512,14 @@
                     <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[10px] font-black uppercase text-zinc-400">Zonas:</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">San Isidro</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Vicente López</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Olivos</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">San
+                                Isidro</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Vicente
+                                López</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Olivos</span>
                         </div>
                         <span class="text-xs font-extrabold text-primary flex items-center gap-1 group-hover:underline">
                             Ver Perfil <span class="material-symbols-outlined text-sm">chevron_right</span>
@@ -438,21 +528,31 @@
                 </a>
 
                 <!-- CARD 4: Vesta Partner Group -->
-                <a href="perfil-agente.html?id=ag-4" class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group" data-specialty="ventas alquileres administracion" data-zones="palermo recoleta belgrano puerto madero">
+                <a href="perfil-agente.html?id=ag-4"
+                    class="agent-card glass-card p-6 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                    data-specialty="ventas alquileres administracion"
+                    data-zones="palermo recoleta belgrano puerto madero">
                     <div class="space-y-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?w=200&auto=format&fit=crop&q=80" alt="Vesta Preferred Realty" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
-                                    <span class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md" title="Matrícula Verificada CUCICBA N° 7190">
+                                    <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?w=200&auto=format&fit=crop&q=80"
+                                        alt="Vesta Preferred Realty"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/20 shadow-md group-hover:scale-105 transition-transform duration-300">
+                                    <span
+                                        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-md"
+                                        title="Matrícula Verificada CUCICBA N° 7190">
                                         <span class="material-symbols-outlined text-sm">verified</span>
                                     </span>
                                 </div>
                                 <div>
-                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/20">
                                         CUCICBA N° 7190 • Verificado
                                     </span>
-                                    <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">Vesta Preferred Group</h3>
+                                    <h3
+                                        class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1 group-hover:text-primary transition-colors">
+                                        Vesta Preferred Group</h3>
                                     <p class="text-xs font-semibold text-zinc-500">Vesta Partners CABA & GBA</p>
 
                                     <div class="mt-2 flex items-center gap-2 text-xs">
@@ -464,10 +564,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
+                        <div
+                            class="grid grid-cols-3 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 text-center text-xs">
                             <div>
                                 <span class="block text-[10px] font-bold text-zinc-400 uppercase">Rango Precio</span>
                                 <span class="font-extrabold text-zinc-900 dark:text-white">USD 300k - 3.5M</span>
@@ -486,8 +588,12 @@
                     <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[10px] font-black uppercase text-zinc-400">Zonas:</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Puerto Madero</span>
-                            <span class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Palermo Chico</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Puerto
+                                Madero</span>
+                            <span
+                                class="px-2.5 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold">Palermo
+                                Chico</span>
                         </div>
                         <span class="text-xs font-extrabold text-primary flex items-center gap-1 group-hover:underline">
                             Ver Perfil <span class="material-symbols-outlined text-sm">chevron_right</span>
@@ -500,9 +606,11 @@
 
         <!-- 3. SECONDARY HERO BANNER (ZILLOW HELP BANNER) -->
         <section class="relative w-full py-16 bg-zinc-900 text-white overflow-hidden my-12">
-            <img src="img/personas-dandose-lamano.jpg" alt="Asesoramiento Inmobiliario" class="absolute inset-0 w-full h-full object-cover opacity-20">
+            <img src="img/personas-dandose-lamano.jpg" alt="Asesoramiento Inmobiliario"
+                class="absolute inset-0 w-full h-full object-cover opacity-20">
             <div class="relative z-10 max-w-[1100px] mx-auto px-4 text-center space-y-4">
-                <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold">
+                <span
+                    class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold">
                     Red de Corredores Verificados CUCICBA / CMCPSI
                 </span>
                 <h2 class="font-headline text-2xl sm:text-4xl font-extrabold tracking-tight">
@@ -516,7 +624,8 @@
         <section class="w-full bg-zinc-900 text-white py-16 md:py-20 mt-12">
             <div class="max-w-[1000px] mx-auto px-4 sm:px-6 space-y-8">
                 <div class="text-center space-y-2">
-                    <span class="text-xs font-black uppercase tracking-widest text-primary-light">Centro de Preguntas</span>
+                    <span class="text-xs font-black uppercase tracking-widest text-primary-light">Centro de
+                        Preguntas</span>
                     <h2 class="font-headline text-2xl sm:text-4xl font-extrabold tracking-tight">
                         Preguntas frecuentes sobre Corredores Inmobiliarios
                     </h2>
@@ -524,54 +633,70 @@
 
                 <div class="space-y-4 max-w-3xl mx-auto">
                     <!-- FAQ 1 -->
-                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer" onclick="toggleFaq(this)">
+                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer"
+                        onclick="toggleFaq(this)">
                         <div class="flex items-center justify-between gap-4">
                             <h4 class="font-headline text-sm sm:text-base font-extrabold text-white">
                                 ¿Cómo encontrar un buen corredor inmobiliario matriculado cerca mío?
                             </h4>
-                            <span class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
                         </div>
                         <div class="faq-answer text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                            Podés usar el buscador por barrio en Hábitat para ver perfiles verificados con número de Matrícula CUCICBA (CABA) o CMCPSI (Provincia de Buenos Aires). Todos nuestros corredores cuentan con opiniones y métricas reales de operaciones.
+                            Podés usar el buscador por barrio en Vivat para ver perfiles verificados con número de
+                            Matrícula CUCICBA (CABA) o CMCPSI (Provincia de Buenos Aires). Todos nuestros corredores
+                            cuentan con opiniones y métricas reales de operaciones.
                         </div>
                     </div>
 
                     <!-- FAQ 2 -->
-                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer" onclick="toggleFaq(this)">
+                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer"
+                        onclick="toggleFaq(this)">
                         <div class="flex items-center justify-between gap-4">
                             <h4 class="font-headline text-sm sm:text-base font-extrabold text-white">
-                                ¿Qué diferencia hay entre un corredor matriculado CUCICBA/CMCPSI y un agente no colegiado?
+                                ¿Qué diferencia hay entre un corredor matriculado CUCICBA/CMCPSI y un agente no
+                                colegiado?
                             </h4>
-                            <span class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
                         </div>
                         <div class="faq-answer text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                            El corredor inmobiliario matriculado es el único profesional respaldado por Ley Ley 20.266 y Leyes Estatales habilitado para tasar, firmar contratos y cobrar honorarios legales de corretaje. Hábitat sólo verifica y muestra corredores habilitados.
+                            El corredor inmobiliario matriculado es el único profesional respaldado por Ley Ley 20.266 y
+                            Leyes Estatales habilitado para tasar, firmar contratos y cobrar honorarios legales de
+                            corretaje. Vivat sólo verifica y muestra corredores habilitados.
                         </div>
                     </div>
 
                     <!-- FAQ 3 -->
-                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer" onclick="toggleFaq(this)">
+                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer"
+                        onclick="toggleFaq(this)">
                         <div class="flex items-center justify-between gap-4">
                             <h4 class="font-headline text-sm sm:text-base font-extrabold text-white">
-                                ¿Cómo me contacto con un corredor inmobiliario verificado en Hábitat?
+                                ¿Cómo me contacto con un corredor inmobiliario verificado en Vivat?
                             </h4>
-                            <span class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
                         </div>
                         <div class="faq-answer text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                            Podés usar el botón "Solicitar Agente" para enviar tus datos de contacto o presionar "WhatsApp" para abrir un chat directo e instantáneo con la oficina del corredor.
+                            Podés usar el botón "Solicitar Agente" para enviar tus datos de contacto o presionar
+                            "WhatsApp" para abrir un chat directo e instantáneo con la oficina del corredor.
                         </div>
                     </div>
 
                     <!-- FAQ 4 -->
-                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer" onclick="toggleFaq(this)">
+                    <div class="faq-item border border-zinc-800 rounded-2xl bg-zinc-950/60 p-5 cursor-pointer"
+                        onclick="toggleFaq(this)">
                         <div class="flex items-center justify-between gap-4">
                             <h4 class="font-headline text-sm sm:text-base font-extrabold text-white">
                                 ¿Cómo puedo solicitar una tasación profesional sin cargo de mi inmueble?
                             </h4>
-                            <span class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 faq-chevron transition-transform duration-300">expand_more</span>
                         </div>
                         <div class="faq-answer text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                            Completá el formulario de Solicitud de Asignación en esta página indicando "Tasación Profesional" y te coordinaremos una visita presencial de un corredor matriculado de tu barrio.
+                            Completá el formulario de Solicitud de Asignación en esta página indicando "Tasación
+                            Profesional" y te coordinaremos una visita presencial de un corredor matriculado de tu
+                            barrio.
                         </div>
                     </div>
                 </div>
@@ -580,19 +705,23 @@
 
         <!-- 6. BOTTOM BANNER FOR REAL ESTATE AGENTS -->
         <section class="max-w-[1100px] mx-auto px-4 sm:px-6 py-16">
-            <div class="glass-card p-8 sm:p-12 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-8 shadow-lg">
+            <div
+                class="glass-card p-8 sm:p-12 rounded-3xl border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-8 shadow-lg">
                 <div class="space-y-2 text-center md:text-left">
-                    <span class="px-3 py-1 rounded-full bg-primary/10 text-primary dark:text-red-400 text-xs font-extrabold uppercase">
+                    <span
+                        class="px-3 py-1 rounded-full bg-primary/10 text-primary dark:text-red-400 text-xs font-extrabold uppercase">
                         Para Profesionales Inmobiliarios
                     </span>
                     <h3 class="font-headline font-extrabold text-2xl sm:text-3xl text-zinc-900 dark:text-white">
                         ¿Sos Corredor Inmobiliario Matriculado?
                     </h3>
                     <p class="text-xs sm:text-sm text-zinc-500 max-w-xl">
-                        Validá tu matrícula CUCICBA / CMCPSI en Hábitat Pro y comenzá a recibir leads calificados de propietarios e inquilinos en tu zona.
+                        Validá tu matrícula CUCICBA / CMCPSI en Vivat Pro y comenzá a recibir leads calificados de
+                        propietarios e inquilinos en tu zona.
                     </p>
                 </div>
-                <a href="panel-corredor.html" class="px-8 py-4 bg-primary hover:bg-primary-hover text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl transition-all shrink-0 flex items-center gap-2 cursor-pointer">
+                <a href="panel-corredor.html"
+                    class="px-8 py-4 bg-primary hover:bg-primary-hover text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl transition-all shrink-0 flex items-center gap-2 cursor-pointer">
                     <span class="material-symbols-outlined text-lg">badge</span>
                     <span>Registrar mi Matrícula / Panel</span>
                 </a>
@@ -602,11 +731,13 @@
     </main>
 
     <!-- Footer Elegante -->
-    <footer class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
+    <footer
+        class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
         <div class="max-w-[1280px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
-                <span>&copy; 2026 Hábitat - Red de Corredores Matriculados. Todos los derechos reservados.</span>
+                <img src="img/logo-lite.png" alt="Vivat Logo"
+                    class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
+                <span>&copy; 2026 Vivat - Red de Corredores Matriculados. Todos los derechos reservados.</span>
             </div>
             <div class="flex items-center gap-6">
                 <a href="terminos.html" class="hover:text-primary transition-colors">Términos y Privacidad</a>
@@ -690,8 +821,8 @@
             const zoneInput = document.getElementById('form-match-zone');
             if (zoneInput) zoneInput.value = zone;
             scrollToDirectForm();
-            if (window.HabitatLeadModule && window.HabitatLeadModule.showToast) {
-                window.HabitatLeadModule.showToast(`Solicitud pre-seleccionada para ${agentName} en ${zone}. Completá tus datos para finalizar.`, 'info');
+            if (window.VivatLeadModule && window.VivatLeadModule.showToast) {
+                window.VivatLeadModule.showToast(`Solicitud pre-seleccionada para ${agentName} en ${zone}. Completá tus datos para finalizar.`, 'info');
             }
         }
 
@@ -699,8 +830,8 @@
             const zone = document.getElementById('form-match-zone')?.value || 'Palermo';
             const name = document.getElementById('form-match-name')?.value || 'Propietario';
 
-            if (window.HabitatLeadModule && window.HabitatLeadModule.showToast) {
-                window.HabitatLeadModule.showToast(`¡Solicitud enviada con éxito! 3 corredores de la zona ${zone} te contactarán por WhatsApp.`, 'success');
+            if (window.VivatLeadModule && window.VivatLeadModule.showToast) {
+                window.VivatLeadModule.showToast(`¡Solicitud enviada con éxito! 3 corredores de la zona ${zone} te contactarán por WhatsApp.`, 'success');
             } else {
                 alert(`¡Solicitud enviada con éxito! 3 corredores de la zona ${zone} te contactará por WhatsApp.`);
             }
@@ -717,4 +848,3 @@
 </body>
 
 </html>
-

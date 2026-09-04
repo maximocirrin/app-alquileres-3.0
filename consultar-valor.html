@@ -1,10 +1,12 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
+
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,15 +27,21 @@
                     root.style.backgroundColor = '#ffffff';
                     root.style.colorScheme = 'light';
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Consultar valor de alquiler | H&aacute;bitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Consultar valor de alquiler | H&aacute;bitat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=13">
     <script>
         const originalWarn = console.warn;
@@ -83,11 +91,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -112,12 +129,16 @@
             -webkit-font-smoothing: antialiased;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        html { scroll-behavior: smooth; }
-        
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         #consultar-valor-view {
             --premium-burgundy: #811b1e;
             background: #ffffff;
         }
+
         html.dark #consultar-valor-view {
             background: #09090b;
         }
@@ -134,8 +155,10 @@
         }
     </script>
 </head>
+
 <body class="bg-background text-on-background font-body antialiased">
-    <section id="consultar-valor-view" class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] min-h-screen flex flex-col">
+    <section id="consultar-valor-view"
+        class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] min-h-screen flex flex-col">
         <!-- TopNavBar Component -->
         <script src="js/navbar.js?v=4"></script>
 
@@ -143,36 +166,44 @@
             <!-- Hero Section -->
             <div class="max-w-7xl mx-auto px-6 lg:px-8 mb-24 grid md:grid-cols-2 gap-12 items-center">
                 <div class="flex flex-col gap-6">
-                    <div class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-zinc-100 text-zinc-900 w-fit dark:bg-zinc-800 dark:text-zinc-100">
+                    <div
+                        class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-zinc-100 text-zinc-900 w-fit dark:bg-zinc-800 dark:text-zinc-100">
                         Cotizar mi alquiler
                     </div>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.1]">
+                    <h1
+                        class="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.1]">
                         &iquest;Cu&aacute;nto deber&iacute;a cobrar de alquiler?
                     </h1>
-                    
+
                     <form class="mt-4 flex flex-col sm:flex-row gap-3 w-full max-w-xl">
                         <div class="flex-grow">
                             <label for="address" class="sr-only">Direcci&oacute;n</label>
-                            <input type="text" id="address" placeholder="Direcci&oacute;n" class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-lg">
+                            <input type="text" id="address" placeholder="Direcci&oacute;n"
+                                class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-lg">
                         </div>
                         <div class="sm:w-[30%]">
                             <label for="unit" class="sr-only">Unidad</label>
-                            <input type="text" id="unit" placeholder="Unidad" class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-lg">
+                            <input type="text" id="unit" placeholder="Unidad"
+                                class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-lg">
                         </div>
-                        <button type="button" class="bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-8 rounded-lg transition-colors whitespace-nowrap text-lg">
+                        <button type="button"
+                            class="bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-8 rounded-lg transition-colors whitespace-nowrap text-lg">
                             Continuar
                         </button>
                     </form>
                 </div>
                 <div class="rounded-2xl overflow-hidden relative shadow-lg">
-                    <img src="img/residencias-inquilinos.jpg" alt="Complejo de departamentos" class="w-full h-auto object-cover aspect-[4/3] sm:aspect-square md:aspect-[4/3]">
+                    <img src="img/residencias-inquilinos.jpg" alt="Complejo de departamentos"
+                        class="w-full h-auto object-cover aspect-[4/3] sm:aspect-square md:aspect-[4/3]">
                 </div>
             </div>
 
             <!-- Features Section -->
             <div class="max-w-7xl mx-auto px-6 lg:px-8 mb-24 grid md:grid-cols-2 gap-16 items-center">
-                <div class="order-2 md:order-1 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800/30 p-8 flex items-center justify-center min-h-[400px]">
-                    <img src="img/señor-usando-computadora.jpg" alt="Gr&aacute;fico de estimaci&oacute;n" class="rounded-xl shadow-xl w-full h-auto object-cover">
+                <div
+                    class="order-2 md:order-1 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800/30 p-8 flex items-center justify-center min-h-[400px]">
+                    <img src="img/señor-usando-computadora.jpg" alt="Gr&aacute;fico de estimaci&oacute;n"
+                        class="rounded-xl shadow-xl w-full h-auto object-cover">
                 </div>
                 <div class="order-1 md:order-2 flex flex-col gap-10">
                     <div>
@@ -190,16 +221,18 @@
                                 Empieza con un Estimado de Alquiler gratuito
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                El Estimado de Alquiler utiliza millones de datos p&uacute;blicos &mdash; adem&aacute;s de las tendencias del mercado local &mdash; para darte un punto de partida.
+                                El Estimado de Alquiler utiliza millones de datos p&uacute;blicos &mdash; adem&aacute;s
+                                de las tendencias del mercado local &mdash; para darte un punto de partida.
                             </p>
                         </div>
-                        
+
                         <div>
                             <h3 class="text-xl font-headline font-bold text-zinc-900 dark:text-white mb-2">
                                 Investiga otras propiedades en tu zona
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                Ordena, filtra y analiza una lista personalizada de alquileres anunciados en tu zona. La informaci&oacute;n de propiedades similares facilita establecer el precio correcto.
+                                Ordena, filtra y analiza una lista personalizada de alquileres anunciados en tu zona. La
+                                informaci&oacute;n de propiedades similares facilita establecer el precio correcto.
                             </p>
                         </div>
 
@@ -208,7 +241,8 @@
                                 Mantente al tanto de las tendencias del mercado
                             </h3>
                             <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                Despu&eacute;s de recibir tu Estimado de Alquiler, te enviaremos recursos para ayudarte a saber qu&eacute; buscan los inquilinos en tu mercado local.
+                                Despu&eacute;s de recibir tu Estimado de Alquiler, te enviaremos recursos para ayudarte
+                                a saber qu&eacute; buscan los inquilinos en tu mercado local.
                             </p>
                         </div>
                     </div>
@@ -216,13 +250,16 @@
                     <form class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-grow">
                             <label for="address2" class="sr-only">Direcci&oacute;n</label>
-                            <input type="text" id="address2" placeholder="Direcci&oacute;n" class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-base">
+                            <input type="text" id="address2" placeholder="Direcci&oacute;n"
+                                class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-base">
                         </div>
                         <div class="sm:w-[25%]">
                             <label for="unit2" class="sr-only">Unidad</label>
-                            <input type="text" id="unit2" placeholder="Unidad" class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-base">
+                            <input type="text" id="unit2" placeholder="Unidad"
+                                class="w-full px-4 py-3.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-zinc-500 font-medium text-base">
                         </div>
-                        <button type="button" class="bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-6 rounded-lg transition-colors whitespace-nowrap text-base">
+                        <button type="button"
+                            class="bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-6 rounded-lg transition-colors whitespace-nowrap text-base">
                             Continuar
                         </button>
                     </form>
@@ -233,63 +270,95 @@
             <div class="bg-primary dark:bg-zinc-900 py-24 md:py-32">
                 <div class="max-w-4xl mx-auto px-6 lg:px-8">
                     <div class="bg-white dark:bg-zinc-950 rounded-[2.5rem] p-8 md:p-14 shadow-2xl">
-                        <h2 class="text-2xl md:text-[2.25rem] md:leading-[1.1] font-headline font-extrabold text-center text-zinc-900 dark:text-white mb-12">
+                        <h2
+                            class="text-2xl md:text-[2.25rem] md:leading-[1.1] font-headline font-extrabold text-center text-zinc-900 dark:text-white mb-12">
                             Preguntas frecuentes sobre el alquiler de tu propiedad
                         </h2>
 
                         <div class="flex flex-col">
                             <!-- FAQ Item 1 -->
-                            <details class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800" open>
-                                <summary class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
+                            <details
+                                class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800"
+                                open>
+                                <summary
+                                    class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
                                     1. &iquest;C&oacute;mo debo fijar el precio de mi alquiler?
-                                    <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
+                                    <span
+                                        class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
                                 </summary>
                                 <div class="pb-8 pt-0 text-base text-zinc-600 dark:text-zinc-400 leading-relaxed pr-8">
-                                    Para determinar el precio del alquiler, considera las leyes locales de control de alquileres, las tarifas de alquiler de las propiedades en tu zona (comparables), las caracter&iacute;sticas de tu propiedad y los cambios en tu mercado local. En &uacute;ltima instancia, t&uacute; decides cu&aacute;nto cobrar de alquiler, pero para tener un punto de partida r&aacute;pido, prueba nuestra herramienta gratuita de Estimado de Alquiler. Para saber m&aacute;s sobre c&oacute;mo fijar el precio de tu alquiler, consulta este <a href="#" class="text-primary dark:text-red-400 underline hover:no-underline font-medium">art&iacute;culo</a>.
+                                    Para determinar el precio del alquiler, considera las leyes locales de control de
+                                    alquileres, las tarifas de alquiler de las propiedades en tu zona (comparables), las
+                                    caracter&iacute;sticas de tu propiedad y los cambios en tu mercado local. En
+                                    &uacute;ltima instancia, t&uacute; decides cu&aacute;nto cobrar de alquiler, pero
+                                    para tener un punto de partida r&aacute;pido, prueba nuestra herramienta gratuita de
+                                    Estimado de Alquiler. Para saber m&aacute;s sobre c&oacute;mo fijar el precio de tu
+                                    alquiler, consulta este <a href="#"
+                                        class="text-primary dark:text-red-400 underline hover:no-underline font-medium">art&iacute;culo</a>.
                                 </div>
                             </details>
 
                             <!-- FAQ Item 2 -->
-                            <details class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
-                                <summary class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
+                            <details
+                                class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
+                                <summary
+                                    class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
                                     2. &iquest;C&oacute;mo se calcula mi Estimado de Alquiler?
-                                    <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
+                                    <span
+                                        class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
                                 </summary>
                                 <div class="pb-8 pt-0 text-base text-zinc-600 dark:text-zinc-400 leading-relaxed pr-8">
-                                    El Estimado de Alquiler se calcula utilizando una f&oacute;rmula patentada que analiza millones de puntos de datos p&uacute;blicos e hist&oacute;ricos relacionados con las caracter&iacute;sticas y ubicaci&oacute;n de la propiedad.
+                                    El Estimado de Alquiler se calcula utilizando una f&oacute;rmula patentada que
+                                    analiza millones de puntos de datos p&uacute;blicos e hist&oacute;ricos relacionados
+                                    con las caracter&iacute;sticas y ubicaci&oacute;n de la propiedad.
                                 </div>
                             </details>
 
                             <!-- FAQ Item 3 -->
-                            <details class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
-                                <summary class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
+                            <details
+                                class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
+                                <summary
+                                    class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
                                     3. &iquest;C&oacute;mo puedo anunciar mi alquiler?
-                                    <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
+                                    <span
+                                        class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
                                 </summary>
                                 <div class="pb-8 pt-0 text-base text-zinc-600 dark:text-zinc-400 leading-relaxed pr-8">
-                                    Puedes anunciar tu alquiler f&aacute;cilmente a trav&eacute;s de nuestra plataforma para propietarios, donde podr&aacute;s subir fotos, describir las caracter&iacute;sticas y llegar a miles de inquilinos potenciales.
+                                    Puedes anunciar tu alquiler f&aacute;cilmente a trav&eacute;s de nuestra plataforma
+                                    para propietarios, donde podr&aacute;s subir fotos, describir las
+                                    caracter&iacute;sticas y llegar a miles de inquilinos potenciales.
                                 </div>
                             </details>
 
                             <!-- FAQ Item 4 -->
-                            <details class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
-                                <summary class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
+                            <details
+                                class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-zinc-200 dark:border-zinc-800">
+                                <summary
+                                    class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
                                     4. &iquest;Qu&eacute; debo incluir en mi anuncio de alquiler?
-                                    <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
+                                    <span
+                                        class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
                                 </summary>
                                 <div class="pb-8 pt-0 text-base text-zinc-600 dark:text-zinc-400 leading-relaxed pr-8">
-                                    Te recomendamos incluir fotograf&iacute;as de alta calidad, una descripci&oacute;n detallada de las comodidades, pol&iacute;ticas sobre mascotas, requisitos de ingresos y el plazo del contrato de arrendamiento.
+                                    Te recomendamos incluir fotograf&iacute;as de alta calidad, una descripci&oacute;n
+                                    detallada de las comodidades, pol&iacute;ticas sobre mascotas, requisitos de
+                                    ingresos y el plazo del contrato de arrendamiento.
                                 </div>
                             </details>
 
                             <!-- FAQ Item 5 -->
-                            <details class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-transparent">
-                                <summary class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
+                            <details
+                                class="group overflow-hidden [&_summary::-webkit-details-marker]:hidden border-b border-transparent">
+                                <summary
+                                    class="flex items-center justify-between py-6 cursor-pointer list-none font-bold text-zinc-900 dark:text-white text-lg">
                                     5. &iquest;Cu&aacute;ndo debo subir o bajar el precio del alquiler?
-                                    <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
+                                    <span
+                                        class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180 text-primary dark:text-red-400">expand_more</span>
                                 </summary>
                                 <div class="pb-8 pt-0 text-base text-zinc-600 dark:text-zinc-400 leading-relaxed pr-8">
-                                    Debes considerar ajustar tu precio si notas cambios significativos en la demanda del mercado local, despu&eacute;s de realizar mejoras en la propiedad o cuando renueves el contrato de arrendamiento.
+                                    Debes considerar ajustar tu precio si notas cambios significativos en la demanda del
+                                    mercado local, despu&eacute;s de realizar mejoras en la propiedad o cuando renueves
+                                    el contrato de arrendamiento.
                                 </div>
                             </details>
                         </div>
@@ -300,36 +369,52 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-surface-container dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 py-16 border-t border-zinc-200 dark:border-zinc-800">
+    <footer
+        class="bg-surface-container dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 py-16 border-t border-zinc-200 dark:border-zinc-800">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="grid md:grid-cols-3 gap-12 mb-12">
                 <div>
-                    <img src="img/logo-lite.png" alt="Habitat" class="h-8 mb-6 brightness-0 dark:invert opacity-80">
+                    <img src="img/logo-lite.png" alt="Vivat" class="h-8 mb-6 brightness-0 dark:invert opacity-80">
                 </div>
                 <div>
-                    <h4 class="font-bold text-zinc-900 dark:text-white mb-6 uppercase tracking-wider text-xs">Administrador</h4>
+                    <h4 class="font-bold text-zinc-900 dark:text-white mb-6 uppercase tracking-wider text-xs">
+                        Administrador</h4>
                     <ul class="flex flex-col gap-4">
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Resumen</a></li>
-                        <li><a href="consultar-valor.html" class="hover:text-primary dark:hover:text-white transition-colors">Cotizar mi alquiler</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Publicar</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Postulaciones</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Contratos</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Pagos</a></li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Resumen</a>
+                        </li>
+                        <li><a href="consultar-valor.html"
+                                class="hover:text-primary dark:hover:text-white transition-colors">Cotizar mi
+                                alquiler</a></li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Publicar</a>
+                        </li>
+                        <li><a href="#"
+                                class="hover:text-primary dark:hover:text-white transition-colors">Postulaciones</a>
+                        </li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Contratos</a>
+                        </li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Pagos</a>
+                        </li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-bold text-zinc-900 dark:text-white mb-6 uppercase tracking-wider text-xs">Publicidad de propiedades</h4>
+                    <h4 class="font-bold text-zinc-900 dark:text-white mb-6 uppercase tracking-wider text-xs">Publicidad
+                        de propiedades</h4>
                     <ul class="flex flex-col gap-4">
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Resumen</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Anuncios por suscripci&oacute;n</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Anuncios de pago por alquiler</a></li>
-                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Sindicar listados</a></li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Resumen</a>
+                        </li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Anuncios por
+                                suscripci&oacute;n</a></li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Anuncios de
+                                pago por alquiler</a></li>
+                        <li><a href="#" class="hover:text-primary dark:hover:text-white transition-colors">Sindicar
+                                listados</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-zinc-300 dark:border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
+            <div
+                class="border-t border-zinc-300 dark:border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
                 <div class="text-center md:text-left">
-                    &copy; 2026 Habitat Group, Inc. Todos los derechos reservados.
+                    &copy; 2026 Vivat Group, Inc. Todos los derechos reservados.
                     <br class="md:hidden">
                     <span class="hidden md:inline mx-2">|</span>
                     <a href="#" class="hover:underline mt-2 md:mt-0 inline-block">Aviso de Privacidad</a>
@@ -337,7 +422,8 @@
                     <a href="#" class="hover:underline mt-2 md:mt-0 inline-block">Preferencias de Cookies</a>
                 </div>
                 <div class="flex gap-4">
-                    <a href="#" class="hover:text-primary dark:hover:text-white transition-colors"><span class="material-symbols-outlined text-2xl">share</span></a>
+                    <a href="#" class="hover:text-primary dark:hover:text-white transition-colors"><span
+                            class="material-symbols-outlined text-2xl">share</span></a>
                 </div>
             </div>
         </div>
@@ -357,5 +443,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>

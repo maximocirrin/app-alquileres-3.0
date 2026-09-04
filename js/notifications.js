@@ -1,5 +1,5 @@
 /**
- * Habitat - Sistema Central de Notificaciones In-App en Tiempo Real
+ * Vivat - Sistema Central de Notificaciones In-App en Tiempo Real
  * Gestiona alertas instantáneas en vivo mediante Supabase Realtime (WebSockets),
  * BroadcastChannel (cross-tab) y sincronización reactiva de eventos de almacenamiento.
  */
@@ -7,16 +7,16 @@
 (function () {
     'use strict';
 
-    const NOTIF_STORAGE_KEY = 'habitat_in_app_notifications';
-    const BROADCAST_CHANNEL_NAME = 'habitat_notifications_realtime_channel';
+    const NOTIF_STORAGE_KEY = 'vivat_in_app_notifications';
+    const BROADCAST_CHANNEL_NAME = 'vivat_notifications_realtime_channel';
 
     // Generar un ID único por pestaña para evitar loops de eco
     let TAB_ID = null;
     try {
-        TAB_ID = sessionStorage.getItem('habitat_tab_session_id');
+        TAB_ID = sessionStorage.getItem('vivat_tab_session_id');
         if (!TAB_ID) {
             TAB_ID = 'tab_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
-            sessionStorage.setItem('habitat_tab_session_id', TAB_ID);
+            sessionStorage.setItem('vivat_tab_session_id', TAB_ID);
         }
     } catch(e) {
         TAB_ID = 'tab_' + Date.now();
@@ -25,7 +25,7 @@
     const DEFAULT_NOTIFICATIONS = [
         {
             id: 'notif_welcome_01',
-            title: '¡Bienvenido a Hábitat! 🏠',
+            title: '¡Bienvenido a Vivat! 🏠',
             message: 'Tu cuenta y Pasaporte digital están listos. Explora alquileres verificados y postúlate con 1 click.',
             type: 'system',
             icon: 'verified_user',
@@ -52,7 +52,7 @@
         if (document.referrer.includes('panel-corredor') || window.location.pathname.includes('panel-corredor')) {
             return 'BROKER';
         }
-        const storedRole = localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || localStorage.getItem('habitat_user_type');
+        const storedRole = localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || localStorage.getItem('vivat_user_type');
         if (storedRole) {
             const up = storedRole.toUpperCase();
             if (up === 'INQUILINO' || up === 'TENANT') return 'TENANT';
@@ -68,7 +68,7 @@
         const currentRole = getActiveUserRole();
         let uLocal = {};
         try {
-            uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
         } catch (e) {}
         const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
         const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
@@ -233,7 +233,7 @@
 
             let uLocal = {};
             try {
-                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             } catch (e) {}
             const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
             const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
@@ -264,7 +264,7 @@
             if (broadcastChannel) {
                 try {
                     broadcastChannel.postMessage({
-                        type: 'HABITAT_REALTIME_NOTIF',
+                        type: 'VIVAT_REALTIME_NOTIF',
                         senderTabId: TAB_ID,
                         senderRole: newNotif.senderRole,
                         senderProfileId: newNotif.senderProfileId,
@@ -278,8 +278,8 @@
             this.broadcastSupabaseRealtime(newNotif);
 
             // 3. Disparar eventos reactivos locales
-            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newNotif }));
-            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: newNotif }));
+            window.dispatchEvent(new CustomEvent('vivat:application_updated', { detail: newNotif }));
+            window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: newNotif }));
 
             // 4. Si el usuario actual en esta pestaña ES el destinatario correspondiente, guardarlo y mostrar Toast
             if (isTargetRecipient(newNotif)) {
@@ -360,8 +360,8 @@
             this.showToast(notif);
             playNotificationChime();
 
-            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: notif }));
-            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: notif }));
+            window.dispatchEvent(new CustomEvent('vivat:application_updated', { detail: notif }));
+            window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: notif }));
         },
 
         add: function (payload) {
@@ -375,7 +375,7 @@
                 try {
                     this._supabaseChannel.send({
                         type: 'broadcast',
-                        event: 'habitat_notification',
+                        event: 'vivat_notification',
                         payload: {
                             senderTabId: TAB_ID,
                             senderRole: notif.senderRole,
@@ -393,7 +393,7 @@
             if (broadcastChannel && !this._broadcastInitialized) {
                 this._broadcastInitialized = true;
                 broadcastChannel.onmessage = (event) => {
-                    if (event.data && event.data.type === 'HABITAT_REALTIME_NOTIF') {
+                    if (event.data && event.data.type === 'VIVAT_REALTIME_NOTIF') {
                         this.receiveIncomingNotification(event.data);
                     }
                 };
@@ -407,9 +407,9 @@
                         this.updateBadge();
                         this.renderDropdown();
                     }
-                    if (e.key === 'habitat_tenant_applications' || e.key === 'habitat_contracts') {
-                        window.dispatchEvent(new CustomEvent('habitat:application_updated'));
-                        window.dispatchEvent(new CustomEvent('habitat:contract_updated'));
+                    if (e.key === 'vivat_tenant_applications' || e.key === 'vivat_contracts') {
+                        window.dispatchEvent(new CustomEvent('vivat:application_updated'));
+                        window.dispatchEvent(new CustomEvent('vivat:contract_updated'));
                     }
                 });
             }
@@ -423,16 +423,16 @@
                     // Limpiar cualquier canal previo con el mismo topic para evitar conflictos de callbacks
                     if (typeof window.supabaseClient.getChannels === 'function') {
                         const existingChannels = window.supabaseClient.getChannels() || [];
-                        const prev = existingChannels.find(c => c.topic === 'realtime:habitat-realtime-global-channel');
+                        const prev = existingChannels.find(c => c.topic === 'realtime:vivat-realtime-global-channel');
                         if (prev) {
                             try { window.supabaseClient.removeChannel(prev); } catch (e) {}
                         }
                     }
 
-                    const channel = window.supabaseClient.channel('habitat-realtime-global-channel');
+                    const channel = window.supabaseClient.channel('vivat-realtime-global-channel');
                     channel
                         // 1. Mensajes directos Broadcast
-                        .on('broadcast', { event: 'habitat_notification' }, ({ payload }) => {
+                        .on('broadcast', { event: 'vivat_notification' }, ({ payload }) => {
                             if (payload) {
                                 this.receiveIncomingNotification(payload);
                             }
@@ -442,11 +442,11 @@
                             const newSol = payload.new;
                             if (!newSol) return;
                             console.log('[Supabase Realtime] Nueva Solicitud detectada:', newSol);
-                            window.dispatchEvent(new CustomEvent('habitat:application_updated', { detail: newSol }));
+                            window.dispatchEvent(new CustomEvent('vivat:application_updated', { detail: newSol }));
 
                             let uLocal = {};
                             try {
-                                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                                uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                             } catch (e) {}
                             const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
                             const currentRole = getActiveUserRole();
@@ -493,14 +493,14 @@
                             const firma = payload.new;
                             if (!firma) return;
                             console.log('[Supabase Realtime] Evento Firma_contrato detectado:', firma);
-                            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: firma }));
+                            window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: firma }));
 
                             const isSigned = ['sellada', 'completada', 'firmada'].includes(firma.estado_firma) || firma.didit_status === 'APPROVED';
                             if (!isSigned) return;
 
                             let uLocal = {};
                             try {
-                                uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                                uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                             } catch (e) {}
                             const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
                             const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
@@ -558,7 +558,7 @@
                         })
                         // 4. Postgres Changes: Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, (payload) => {
-                            window.dispatchEvent(new CustomEvent('habitat:contract_updated', { detail: payload.new }));
+                            window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: payload.new }));
                         })
                         // 5. Postgres Changes: Mensajes de Chat en Negociación de Contratos
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Mensaje_Contrato' }, async (payload) => {
@@ -568,7 +568,7 @@
                             // Comprobar si el mensaje fue enviado por el usuario actual
                             let isMe = false;
                             try {
-                                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                                const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                                 const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
                                 const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
 
@@ -612,7 +612,7 @@
                                 role: 'ALL'
                             });
 
-                            window.dispatchEvent(new CustomEvent('habitat:new_chat_message', { detail: newMsg }));
+                            window.dispatchEvent(new CustomEvent('vivat:new_chat_message', { detail: newMsg }));
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
@@ -682,10 +682,10 @@
                 this._activeToastKeys.delete(toastKey);
             }, 10000);
 
-            let container = document.getElementById('habitat-toast-container');
+            let container = document.getElementById('vivat-toast-container');
             if (!container) {
                 container = document.createElement('div');
-                container.id = 'habitat-toast-container';
+                container.id = 'vivat-toast-container';
                 container.className = 'fixed top-20 right-4 z-[999999] flex flex-col gap-3 pointer-events-none max-w-sm w-full font-body';
                 document.body.appendChild(container);
             }
@@ -769,8 +769,8 @@
 
             const isMobile = type === 'mobile';
             const panel = isMobile 
-                ? document.getElementById('habitat-notif-dropdown-panel-mobile') 
-                : document.getElementById('habitat-notif-dropdown-panel');
+                ? document.getElementById('vivat-notif-dropdown-panel-mobile') 
+                : document.getElementById('vivat-notif-dropdown-panel');
 
             if (!panel) {
                 return;
@@ -778,7 +778,7 @@
 
             const isCurrentlyHidden = panel.classList.contains('hidden');
 
-            document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => {
+            document.querySelectorAll('#vivat-notif-dropdown-panel, #vivat-notif-dropdown-panel-mobile').forEach(p => {
                 p.classList.add('hidden');
             });
 
@@ -863,13 +863,13 @@
 
         initUI: function () {
             // Vincular botones existentes
-            const desktopBell = document.getElementById('habitat-notif-bell-btn');
+            const desktopBell = document.getElementById('vivat-notif-bell-btn');
             if (desktopBell && !desktopBell.__notifBound) {
                 desktopBell.__notifBound = true;
                 desktopBell.onclick = (e) => this.toggleDropdown(e, 'desktop');
             }
 
-            const mobileBell = document.getElementById('habitat-notif-bell-btn-mobile');
+            const mobileBell = document.getElementById('vivat-notif-bell-btn-mobile');
             if (mobileBell && !mobileBell.__notifBound) {
                 mobileBell.__notifBound = true;
                 mobileBell.onclick = (e) => this.toggleDropdown(e, 'mobile');
@@ -878,27 +878,27 @@
             // Inyectar en caso de que no existan en el navbar
             const containers = document.querySelectorAll('#desktop-auth-container, #mobile-auth-container');
             containers.forEach(container => {
-                if (!container || container.querySelector('.habitat-notif-btn-wrapper')) return;
+                if (!container || container.querySelector('.vivat-notif-btn-wrapper')) return;
 
                 const isMobile = container.id === 'mobile-auth-container';
                 const wrapper = document.createElement('div');
                 wrapper.className = isMobile
-                    ? 'relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2 sm:mr-3.5'
-                    : 'relative habitat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2';
+                    ? 'relative vivat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2 sm:mr-3.5'
+                    : 'relative vivat-notif-btn-wrapper auth-ui-state logged-in hidden flex items-center mr-2';
                 wrapper.innerHTML = isMobile ? `
-                    <button type="button" id="habitat-notif-bell-btn-mobile" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                    <button type="button" id="vivat-notif-bell-btn-mobile" aria-label="Notificaciones" class="relative w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
                         <span class="material-symbols-outlined text-base">notifications</span>
                         <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-white text-[9px] font-black items-center justify-center shadow-xs hidden">0</span>
                     </button>
-                    <div id="habitat-notif-dropdown-panel-mobile" class="absolute right-0 top-10 w-72 sm:w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                    <div id="vivat-notif-dropdown-panel-mobile" class="absolute right-0 top-10 w-72 sm:w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
                         <div id="notifications-dropdown-menu-mobile" class="notifications-dropdown-menu-target"></div>
                     </div>
                 ` : `
-                    <button type="button" id="habitat-notif-bell-btn" aria-label="Notificaciones" class="relative w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
+                    <button type="button" id="vivat-notif-bell-btn" aria-label="Notificaciones" class="relative w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all cursor-pointer shadow-xs">
                         <span class="material-symbols-outlined text-lg xl:text-xl">notifications</span>
                         <span class="notification-badge-counter absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-black items-center justify-center shadow-xs hidden">0</span>
                     </button>
-                    <div id="habitat-notif-dropdown-panel" class="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
+                    <div id="vivat-notif-dropdown-panel" class="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 hidden z-[99999] overflow-hidden">
                         <div id="notifications-dropdown-menu" class="notifications-dropdown-menu-target"></div>
                     </div>
                 `;
@@ -913,8 +913,8 @@
 
             // Cerrar al hacer click afuera
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.habitat-notif-btn-wrapper')) {
-                    document.querySelectorAll('#habitat-notif-dropdown-panel, #habitat-notif-dropdown-panel-mobile').forEach(p => p.classList.add('hidden'));
+                if (!e.target.closest('.vivat-notif-btn-wrapper')) {
+                    document.querySelectorAll('#vivat-notif-dropdown-panel, #vivat-notif-dropdown-panel-mobile').forEach(p => p.classList.add('hidden'));
                 }
             });
 

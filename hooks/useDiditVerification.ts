@@ -100,7 +100,7 @@ export function useDiditVerification(config: DiditVerificationConfig = {}) {
       
       const popup = window.open(
         url,
-        'HabitatDiditVerification',
+        'VivatDiditVerification',
         `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
       );
       popupRef.current = popup;

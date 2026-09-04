@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     let targetPasaporteId = pasaporteId;
     if (targetPasaporteId) {
       const { data: passCheck } = await supabase
-        .from('Pasaporte_habitat')
+        .from('Pasaporte_vivat')
         .select('id_pasaporte, id_perfil')
         .eq('id_pasaporte', targetPasaporteId)
         .maybeSingle();
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       }
     } else if (profile) {
       const { data: passOwn } = await supabase
-        .from('Pasaporte_habitat')
+        .from('Pasaporte_vivat')
         .select('id_pasaporte')
         .eq('id_perfil', profile.id_perfil)
         .order('created_at', { ascending: false })
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
     if (supabase && targetPasaporteId) {
       try {
         await supabase
-          .from('Pasaporte_habitat')
+          .from('Pasaporte_vivat')
           .update({
             situacion_crediticia: bcraResult.situacionCrediticia,
             updated_at: new Date().toISOString()
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
           
         let participantId = null;
         if (targetPasaporteId) {
-            const { data: pass } = await supabase.from('Pasaporte_habitat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
+            const { data: pass } = await supabase.from('Pasaporte_vivat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
             if (pass) participantId = pass.id_perfil;
         }
 

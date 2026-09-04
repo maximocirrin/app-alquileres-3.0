@@ -1,6 +1,6 @@
 /**
- * TypeScript Interfaces for Garantes, Garantías & Pasaporte Hábitat
- * Hábitat Platform - Módulo de Garantías y Scoring
+ * TypeScript Interfaces for Garantes, Garantías & Pasaporte Vivat
+ * Vivat Platform - Módulo de Garantías y Scoring
  */
 
 export type EstadoGaranteCode = 

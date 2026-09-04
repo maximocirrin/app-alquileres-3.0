@@ -138,7 +138,7 @@ export async function generateOriginalContractPdf({
   let depositoTxt = 'equivalente a UN (1) mes de canon locativo inicial';
   if (depositoSel === '1_MES_USD') depositoTxt = 'en Dólares Estadounidenses (USD) equivalente al valor inicial acordado';
   if (depositoSel === '2_MESES') depositoTxt = 'equivalente a DOS (2) meses de canon locativo inicial';
-  if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Hábitat / Seguro de Caución sin integración de efectivo en garantía';
+  if (depositoSel === 'SIN_DEPOSITO') depositoTxt = 'respaldado íntegramente mediante Pasaporte Vivat / Seguro de Caución sin integración de efectivo en garantía';
 
   let expensasTxt = 'Las expensas comunes ordinarias y los consumos de servicios (energía eléctrica, gas natural, agua potable, telecomunicaciones) serán por cuenta exclusiva del LOCATARIO. Las expensas extraordinarias e impuestos sobre el inmueble serán a cargo del LOCADOR.';
   if (expensasSel === 'TOTALES_INQ') expensasTxt = 'La totalidad de las expensas (ordinarias y extraordinarias) y servicios serán solventadas por EL LOCATARIO.';
@@ -365,7 +365,7 @@ export async function generateAuditTrailPdf({
 
   // Banner Header Audit Trail
   page.drawRectangle({ x: 30, y: height - 90, width: width - 60, height: 60, color: lightBg });
-  page.drawText('HABITAT PLATAFORMA INMOBILIARIA S.A.', { x: 45, y: height - 55, size: 13, font: fontBold, color: primaryColor });
+  page.drawText('VIVAT PLATAFORMA INMOBILIARIA S.A.', { x: 45, y: height - 55, size: 13, font: fontBold, color: primaryColor });
   page.drawText('CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA', { x: 45, y: height - 72, size: 8.5, font: fontBold, color: darkColor });
   page.drawText('Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023', { x: 45, y: height - 83, size: 7.5, font: fontRegular, color: grayColor });
   
@@ -432,7 +432,7 @@ export async function generateAuditTrailPdf({
 
   // Footer
   page.drawRectangle({ x: 30, y: 35, width: width - 60, height: 45, color: lightBg });
-  page.drawText('DOCUMENTO AUDITABLE CUSTODIADO POR HABITAT PLATAFORMA INMOBILIARIA', { x: 45, y: 62, size: 7.5, font: fontBold, color: darkColor });
+  page.drawText('DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA', { x: 45, y: 62, size: 7.5, font: fontBold, color: darkColor });
   page.drawText('Este documento certifica la inmutabilidad y autoria del contrato bajo apercibimiento del Codigo Civil y Comercial.', { x: 45, y: 48, size: 6.8, font: fontRegular, color: grayColor });
 
   const auditTrailBytes = Buffer.from(await pdfDoc.save());

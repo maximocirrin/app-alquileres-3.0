@@ -1,5 +1,5 @@
 /**
- * Habitat - Módulo de Firma Electrónica y Gestión de Contratos
+ * Vivat - Módulo de Firma Electrónica y Gestión de Contratos
  * Cumple con la Ley Nacional N° 25.506 de Firma Digital y Código Civil y Comercial de la Nación.
  * Integra visualizador completo en página, descarga directa de PDF/Audit Trail y validación biométrica facial (Liveness Check) con Didit KYC.
  */
@@ -9,7 +9,7 @@
 
     let stored = null;
     try {
-        stored = JSON.parse(localStorage.getItem('habitat_contracts'));
+        stored = JSON.parse(localStorage.getItem('vivat_contracts'));
     } catch (e) {}
     
     // Filtrar y limpiar cualquier contrato mock antiguo, genérico o con locatario duplicado
@@ -17,10 +17,10 @@
         ? stored.filter(c => c && c.id && !['CTR-2026-0891', 'CTR-2026-0742', 'CTR-2026-0610', 'CTR-2026-0925', 'CTR-2026-0518', 'CTR-2026-1041', 'CTR-2026-0001'].includes(c.id) && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández' && c.tenant?.email !== c.owner?.email) 
         : [];
     
-    localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
+    localStorage.setItem('vivat_contracts', JSON.stringify(contracts));
 
     function saveContracts() {
-        localStorage.setItem('habitat_contracts', JSON.stringify(contracts));
+        localStorage.setItem('vivat_contracts', JSON.stringify(contracts));
     }
 
     async function ensureUserProfileResolved() {
@@ -28,18 +28,18 @@
 
         // 1. Verificar localStorage
         try {
-            const stored = localStorage.getItem('habitat_profile_id');
+            const stored = localStorage.getItem('vivat_profile_id');
             if (stored && !isNaN(Number(stored))) {
                 window._currentUserProfileId = Number(stored);
                 if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
                 return window._currentUserProfileId;
             }
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
             if (pId && !isNaN(Number(pId))) {
                 window._currentUserProfileId = Number(pId);
                 if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
-                localStorage.setItem('habitat_profile_id', String(pId));
+                localStorage.setItem('vivat_profile_id', String(pId));
                 return window._currentUserProfileId;
             }
         } catch (e) {}
@@ -66,16 +66,16 @@
                         const p = profiles[0];
                         window._currentUserProfileId = Number(p.id_perfil);
                         if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
-                        localStorage.setItem('habitat_profile_id', String(p.id_perfil));
+                        localStorage.setItem('vivat_profile_id', String(p.id_perfil));
                         
                         try {
-                            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                             uLocal.id_perfil = p.id_perfil;
                             uLocal.email = p.mail || authUser.email;
                             uLocal.dni = p.dni || uLocal.dni;
                             uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
                             uLocal.user_id = authUser.id || p.user_id;
-                            localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                            localStorage.setItem('vivat_user', JSON.stringify(uLocal));
                         } catch (e) {}
 
                         return window._currentUserProfileId;
@@ -126,11 +126,11 @@
 
         if (userProfileId === null) {
             try {
-                const storedProfileId = localStorage.getItem('habitat_profile_id');
+                const storedProfileId = localStorage.getItem('vivat_profile_id');
                 if (storedProfileId && !isNaN(Number(storedProfileId))) {
                     userProfileId = Number(storedProfileId);
                 } else {
-                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
                     if (pId && !isNaN(Number(pId))) {
                         userProfileId = Number(pId);
@@ -149,7 +149,7 @@
         // Respaldo por email autenticado
         let userEmail = '';
         try {
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
         } catch (e) {}
 
@@ -173,7 +173,7 @@
             return true;
         }
 
-        const activeRole = (localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || '').toUpperCase();
+        const activeRole = (localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || '').toUpperCase();
         if (['OWNER', 'PROPIETARIO', 'CORREDOR', 'BROKER'].includes(activeRole)) {
             return true;
         }
@@ -197,11 +197,11 @@
             } catch (e) {}
         }
         try {
-            const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+            const storedProfileId = localStorage.getItem('vivat_profile_id') || window._currentUserProfileId;
             if (storedProfileId) {
                 headers['x-profile-id'] = String(storedProfileId);
             }
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             const email = uLocal.email || uLocal.mail;
             if (email) {
                 headers['x-user-email'] = email;
@@ -261,11 +261,11 @@
         let userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
         try {
             if (!userProfileId) {
-                const storedProfileId = localStorage.getItem('habitat_profile_id');
+                const storedProfileId = localStorage.getItem('vivat_profile_id');
                 if (storedProfileId && !isNaN(Number(storedProfileId))) {
                     userProfileId = Number(storedProfileId);
                 } else {
-                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     userProfileId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
                 }
             }
@@ -280,7 +280,7 @@
 
         // Auto-detect based on logged-in user email / profile against contract
         try {
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
             const userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
             if (contract) {
@@ -306,7 +306,7 @@
         if (window.location.pathname.includes('administrador')) return 'OWNER';
         if (window.location.pathname.includes('panel-corredor')) return 'BROKER';
 
-        const storedRole = localStorage.getItem('habitat_active_role') || localStorage.getItem('habitat_user_role') || localStorage.getItem('habitat_user_type');
+        const storedRole = localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || localStorage.getItem('vivat_user_type');
         if (storedRole) {
             const up = storedRole.toUpperCase();
             if (up === 'INQUILINO' || up === 'TENANT') return 'TENANT';
@@ -391,7 +391,7 @@
         const adjustmentIndex = contract.adjustmentIndex || contract.adjustment_index || cfg.adjustmentIndex || 'IPC';
         const adjustmentFrequencyMonths = contract.adjustmentFrequencyMonths || contract.adjustment_frequency_months || contract.periodo_aumento_meses || cfg.adjustmentFrequencyMonths || 3;
         const paymentDueDay = contract.paymentDueDay || contract.payment_due_day || contract.dia_vencimiento_mensual || cfg.paymentDueDay || 10;
-        const aliasCbu = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'HABITAT.CONTRATO.MP';
+        const aliasCbu = contract.aliasCbu || contract.alias_cbu || contract.cbu_alias || cfg.aliasCbu || 'VIVAT.CONTRATO.MP';
 
         // 1. Objeto y Destino
         const isVivienda = cfg.viviendaExclusiva !== false;
@@ -539,15 +539,15 @@
                     myProfileDni = p.dni;
                     window._currentUserProfileId = myProfileId;
                     if (ContractsManager) ContractsManager._currentProfileId = myProfileId;
-                    localStorage.setItem('habitat_profile_id', String(myProfileId));
+                    localStorage.setItem('vivat_profile_id', String(myProfileId));
                     try {
-                        const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                         uLocal.id_perfil = myProfileId;
                         uLocal.email = p.mail || currentUserEmail;
                         uLocal.dni = p.dni || uLocal.dni;
                         uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
                         uLocal.user_id = currentUserId || p.user_id;
-                        localStorage.setItem('habitat_user', JSON.stringify(uLocal));
+                        localStorage.setItem('vivat_user', JSON.stringify(uLocal));
                     } catch (e) {}
                 }
             }
@@ -639,7 +639,7 @@
                     const indexFromDb = extraCfg.adjustmentIndex || (dbC.id_Indice === 2 ? 'ICL' : 'IPC');
                     const freqFromDb = Number(dbC.periodo_aumento_meses || extraCfg.adjustmentFrequencyMonths || 3);
                     const dueDayFromDb = Number(dbC.dia_vencimiento_mensual || extraCfg.paymentDueDay || 10);
-                    const aliasFromDb = dbC.alias_cbu || extraCfg.aliasCbu || 'HABITAT.ALQUILER.MP';
+                    const aliasFromDb = dbC.alias_cbu || extraCfg.aliasCbu || 'VIVAT.ALQUILER.MP';
                     const rentFromDb = Number(dbC.monto_cierre) || Number(extraCfg.monthlyRent) || Number(pub?.precio) || 0;
 
                     loadedContracts.push({
@@ -718,7 +718,7 @@
                             {
                                 timestamp: new Date(dbC.created_at || Date.now()).toISOString().replace('T', ' ').substring(0, 19),
                                 action: 'CONTRATO_GENERADO',
-                                actor: 'Habitat Smart Contracts Generator',
+                                actor: 'Vivat Smart Contracts Generator',
                                 details: `Contrato digital confeccionado para ${tenantName} en ${cleanAddress}.`
                             }
                         ]
@@ -738,7 +738,7 @@
             // Cargar contratos existentes en memoria/LocalStorage y fusionar sin eliminar contratos previos
             let localContracts = [];
             try {
-                const stored = localStorage.getItem('habitat_contracts');
+                const stored = localStorage.getItem('vivat_contracts');
                 if (stored) localContracts = JSON.parse(stored);
             } catch(e) {}
 
@@ -859,7 +859,7 @@
 
             // 2. Buscar en localStorage
             try {
-                const raw = localStorage.getItem('habitat_contracts');
+                const raw = localStorage.getItem('vivat_contracts');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     const found = parsed.find(c => c && (
@@ -939,7 +939,7 @@
                 adjustmentIndex: 'IPC',
                 adjustmentFrequencyMonths: 3,
                 depositAmount: monthlyRent,
-                aliasCbu: 'HABITAT.ALQUILER.MP',
+                aliasCbu: 'VIVAT.ALQUILER.MP',
                 tenant: {
                     role: 'TENANT',
                     profileId: Number(app.tenant_id || app.id_perfil || 14),
@@ -1015,7 +1015,7 @@
                 }
                 if (!app) {
                     try {
-                        const raw = localStorage.getItem('habitat_tenant_applications');
+                        const raw = localStorage.getItem('vivat_tenant_applications');
                         if (raw) {
                             const list = JSON.parse(raw);
                             app = list.find(a => a && (
@@ -1077,7 +1077,7 @@
         switchRole: function (newRole) {
             if (!['TENANT', 'OWNER', 'BROKER'].includes(newRole)) return;
             this.currentUserRole = newRole;
-            localStorage.setItem('habitat_active_role', newRole);
+            localStorage.setItem('vivat_active_role', newRole);
             this.renderDashboard('contracts-dashboard-container');
         },
 
@@ -1418,7 +1418,7 @@
                 }
                 if (!app) {
                     try {
-                        const raw = localStorage.getItem('habitat_tenant_applications');
+                        const raw = localStorage.getItem('vivat_tenant_applications');
                         if (raw) {
                             const list = JSON.parse(raw);
                             app = list.find(a => a && (
@@ -1460,7 +1460,7 @@
 
             let effectiveRole = role;
             try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
                 if (contract && userEmail) {
                     if (contract.tenant?.email?.toLowerCase().trim() === userEmail) {
@@ -1482,7 +1482,7 @@
 
             // Pre-formatted WhatsApp text for fast negotiation
             const targetPhone = (effectiveRole === 'TENANT' ? (contract.owner?.phone || contract.ownerPhone || '') : (contract.tenant?.phone || contract.tenantPhone || '')).replace(/[^0-9]/g, '');
-            const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber} (${contract.title}) ubicado en ${contract.propertyAddress} a través de Hábitat.`);
+            const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber} (${contract.title}) ubicado en ${contract.propertyAddress} a través de Vivat.`);
             const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
 
             const modalHtml = `
@@ -1499,7 +1499,7 @@
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs font-mono font-bold text-primary dark:text-red-400">${contract.contractNumber}</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Oficial Hábitat</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Oficial Vivat</span>
                                 </div>
                                 <h2 class="font-headline font-black text-sm sm:text-base text-zinc-900 dark:text-white truncate">
                                     ${contract.title}
@@ -1933,11 +1933,11 @@
             // Si se abrió en contratos.html desde un enlace externo / panel del inquilino / propietario
             if (window.location.pathname.includes('contratos.html')) {
                 const urlParams = new URLSearchParams(window.location.search);
-                const returnUrl = urlParams.get('returnUrl') || sessionStorage.getItem('habitat_contracts_return_url');
+                const returnUrl = urlParams.get('returnUrl') || sessionStorage.getItem('vivat_contracts_return_url');
                 
                 let targetRedirect = null;
                 if (returnUrl) {
-                    sessionStorage.removeItem('habitat_contracts_return_url');
+                    sessionStorage.removeItem('vivat_contracts_return_url');
                     targetRedirect = returnUrl;
                 } else {
                     const role = urlParams.get('role') || ContractsManager.currentUserRole;
@@ -2065,11 +2065,11 @@
             let userId = null;
 
             try {
-                const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 email = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
                 name = uLocal.name || uLocal.nombre || uLocal.nombre_completo || '';
                 profileId = uLocal.id_perfil || uLocal.profileId || null;
-                userId = uLocal.id || uLocal.user_id || localStorage.getItem('habitat_user_id') || null;
+                userId = uLocal.id || uLocal.user_id || localStorage.getItem('vivat_user_id') || null;
             } catch (e) {}
 
             const role = this.currentUserRole || detectActiveUserRole(contract);
@@ -2094,8 +2094,8 @@
             }
             if (!email) {
                 email = effectiveRole === 'TENANT' 
-                    ? (contract?.tenant?.email || 'inquilino@habitat.ar') 
-                    : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@habitat.ar') : 'corredor@habitat.ar');
+                    ? (contract?.tenant?.email || 'inquilino@vivat.ar') 
+                    : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@vivat.ar') : 'corredor@vivat.ar');
             }
 
             let dbRole = 'BROKER';
@@ -2146,7 +2146,7 @@
             const contract = this.getContractById(contractId);
             if (!contract) return;
 
-            const storageKey = `habitat_chat_messages_${contractId}`;
+            const storageKey = `vivat_chat_messages_${contractId}`;
             let cached = [];
             try {
                 cached = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -2183,7 +2183,7 @@
                             id_mensaje: this._generateUUID(),
                             id_contrato: dbContractId,
                             contract_ref_id: String(contractId),
-                            remitente_nombre: 'Sistema Hábitat',
+                            remitente_nombre: 'Sistema Vivat',
                             remitente_rol: 'SISTEMA',
                             mensaje: `💬 Canal de negociación oficial abierto para ${contract.title}. Las partes pueden proponer ajustes a los términos, fecha de entrega y canon locativo.`,
                             created_at: contract.createdAt || new Date().toISOString()
@@ -2198,7 +2198,7 @@
                 }
 
                 // The realtime subscription is now handled globally by notifications.js
-                // which dispatches 'habitat:new_chat_message' on every new message
+                // which dispatches 'vivat:new_chat_message' on every new message
                 const badges = [
                     document.getElementById('chat-realtime-status-badge'),
                     document.getElementById('embedded-chat-realtime-status-badge')
@@ -2232,7 +2232,7 @@
             }
 
             container.innerHTML = msgs.map(m => {
-                const isSystem = m.remitente_rol === 'SISTEMA' || m.remitente_nombre === 'Sistema Hábitat';
+                const isSystem = m.remitente_rol === 'SISTEMA' || m.remitente_nombre === 'Sistema Vivat';
                 
                 // Author detection strictly by email, profileId or userId (NEVER blindly by role)
                 let isMe = false;
@@ -2262,7 +2262,7 @@
                         <div class="my-2 p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-center text-xs text-zinc-600 dark:text-zinc-300 space-y-1">
                             <div class="font-bold flex items-center justify-center gap-1 text-[11px] uppercase tracking-wider text-primary dark:text-red-400">
                                 <span class="material-symbols-outlined text-sm">shield</span>
-                                <span>Mensaje del Sistema Hábitat</span>
+                                <span>Mensaje del Sistema Vivat</span>
                             </div>
                             <p>${safeMsg}</p>
                             <span class="text-[10px] text-zinc-400 block">${timeStr}</span>
@@ -2339,10 +2339,10 @@
 
             if (duplicateIndex !== -1) {
                 list[duplicateIndex] = { ...list[duplicateIndex], ...msgObj };
-                localStorage.setItem(`habitat_chat_messages_${contractId}`, JSON.stringify(list));
+                localStorage.setItem(`vivat_chat_messages_${contractId}`, JSON.stringify(list));
             } else {
                 list.push(msgObj);
-                localStorage.setItem(`habitat_chat_messages_${contractId}`, JSON.stringify(list));
+                localStorage.setItem(`vivat_chat_messages_${contractId}`, JSON.stringify(list));
             }
 
             // Only update read status if this chat is currently open
@@ -2510,7 +2510,7 @@
                 const getLatestTime = (cId) => {
                     let msgs = this._chatMessages[cId];
                     if (!msgs) {
-                        try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
+                        try { msgs = JSON.parse(localStorage.getItem(`vivat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
                     }
                     if (msgs.length > 0) {
                         return new Date(msgs[msgs.length - 1].created_at || 0).getTime();
@@ -2533,7 +2533,7 @@
                 
                 let msgs = this._chatMessages[c.id];
                 if (!msgs) {
-                    try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
+                    try { msgs = JSON.parse(localStorage.getItem(`vivat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
                 }
                 
                 const lastMsgObj = msgs.length > 0 ? msgs[msgs.length - 1] : null;
@@ -2646,7 +2646,7 @@
             // WhatsApp url for current active contract
             const effectiveRole = this.resolveCurrentUserInfo(activeContract).role;
             const targetPhone = (effectiveRole === 'TENANT' ? (activeContract.owner?.phone || activeContract.ownerPhone || '') : (activeContract.tenant?.phone || activeContract.tenantPhone || '')).replace(/[^0-9]/g, '');
-            const waText = encodeURIComponent(`Hola! Me contacto por el canal de negociación del contrato ${activeContract.contractNumber} (${activeContract.title}) a través de Hábitat.`);
+            const waText = encodeURIComponent(`Hola! Me contacto por el canal de negociación del contrato ${activeContract.contractNumber} (${activeContract.title}) a través de Vivat.`);
             const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
 
             const filteredContracts = allContracts.filter(c => {
@@ -2660,7 +2660,7 @@
                 const getLatestTime = (cId) => {
                     let msgs = this._chatMessages[cId];
                     if (!msgs) {
-                        try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
+                        try { msgs = JSON.parse(localStorage.getItem(`vivat_chat_messages_${cId}`)) || []; } catch(e) { msgs = []; }
                     }
                     if (msgs.length > 0) {
                         return new Date(msgs[msgs.length - 1].created_at || 0).getTime();
@@ -2733,7 +2733,7 @@
                                 
                                 let msgs = this._chatMessages[c.id];
                                 if (!msgs) {
-                                    try { msgs = JSON.parse(localStorage.getItem(`habitat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
+                                    try { msgs = JSON.parse(localStorage.getItem(`vivat_chat_messages_${c.id}`)) || []; } catch(e) { msgs = []; }
                                 }
                                 
                                 const lastMsgObj = msgs.length > 0 ? msgs[msgs.length - 1] : null;
@@ -2925,22 +2925,22 @@
             }
 
             const emailInput = document.getElementById('signer-didit-email');
-            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@habitat.ar';
+            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@vivat.ar';
 
             // 1. Recuperar datos oficiales de Didit KYC registrados previamente en el Pasaporte / Identidad Digital
             let diditIdentity = null;
             try {
-                diditIdentity = JSON.parse(localStorage.getItem('habitat_didit_identity') || 'null');
+                diditIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || 'null');
             } catch (e) {}
 
             let passportData = null;
             try {
-                passportData = JSON.parse(localStorage.getItem('habitat_passport_data') || 'null');
+                passportData = JSON.parse(localStorage.getItem('vivat_passport_data') || 'null');
             } catch (e) {}
 
             let userLocal = null;
             try {
-                userLocal = JSON.parse(localStorage.getItem('habitat_user') || 'null');
+                userLocal = JSON.parse(localStorage.getItem('vivat_user') || 'null');
             } catch (e) {}
 
             const dni = diditIdentity?.documentNumber || diditIdentity?.dni || passportData?.dni || userLocal?.dni || '42.189.341';
@@ -3117,7 +3117,7 @@
                                     periodo_aumento_meses: contractObj.adjustmentFrequencyMonths || 3,
                                     dia_vencimiento_mensual: contractObj.paymentDueDay || 10,
                                     monto_deposito: contractObj.depositAmount || contractObj.monthlyRent || 450000,
-                                    alias_cbu: contractObj.aliasCbu || 'HABITAT.ALQUILER.MP'
+                                    alias_cbu: contractObj.aliasCbu || 'VIVAT.ALQUILER.MP'
                                 }])
                                 .select('id_contrato')
                                 .maybeSingle();
@@ -3532,7 +3532,7 @@
                     if (window.NotificationManager) {
                         let uLocal = {};
                         try {
-                            uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                            uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                         } catch (e) {}
                         const myProfileId = window._currentUserProfileId || (window.ContractsManager && window.ContractsManager._currentProfileId) || uLocal.id_perfil || uLocal.profileId || uLocal.id || null;
                         const myEmail = uLocal.email || null;
@@ -4032,13 +4032,13 @@
             const ownerName = contract.owner?.name || contract.owner_name || 'Locador Propietario';
             const ownerDni = contract.owner?.dni || contract.owner_dni || '28.450.912';
             const ownerCuil = contract.owner?.cuil || contract.owner_cuil || '20-28450912-4';
-            const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@habitat.ar';
+            const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@vivat.ar';
             const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed);
 
             const tenantName = contract.tenant?.name || contract.tenant_name || 'Inquilino Verificado';
             const tenantDni = contract.tenant?.dni || contract.tenant_dni || '36.812.445';
             const tenantCuil = contract.tenant?.cuil || contract.tenant_cuil || '20-36812445-9';
-            const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@habitat.ar';
+            const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@vivat.ar';
             const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed);
 
             const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';
@@ -4055,7 +4055,7 @@
                 adjustmentIndex: contract.adjustmentIndex || contract.adjustment_index || 'IPC',
                 adjustmentFrequencyMonths: contract.adjustmentFrequencyMonths || contract.adjustment_frequency_months || 3,
                 paymentDueDay: contract.paymentDueDay || contract.payment_due_day || 10,
-                aliasCbu: contract.aliasCbu || contract.alias_cbu || 'HABITAT.CONTRATO.MP',
+                aliasCbu: contract.aliasCbu || contract.alias_cbu || 'VIVAT.CONTRATO.MP',
                 owner: { name: ownerName, dni: ownerDni, cuil: ownerCuil, email: ownerEmail, hasSigned: ownerSigned },
                 tenant: { name: tenantName, dni: tenantDni, cuil: tenantCuil, email: tenantEmail, hasSigned: tenantSigned }
             };
@@ -4114,7 +4114,7 @@
 
                     <div class="qr-seal">
                         <b>Digest Criptográfico SHA-256:</b> <span style="font-family: monospace; font-size: 10px;">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
-                        Sello de Tiempo TSA Registrado: ${contract.tsaTimestamp || new Date().toISOString()} • Verificable en plataforma Habitat.
+                        Sello de Tiempo TSA Registrado: ${contract.tsaTimestamp || new Date().toISOString()} • Verificable en plataforma Vivat.
                     </div>
 
                     <script>
@@ -4208,7 +4208,7 @@
                 {
                     timestamp: new Date(Date.now() - 3600000 * 24).toISOString().replace('T', ' ').substring(0, 19),
                     action: 'CONTRATO_GENERADO',
-                    actor: 'Habitat Smart Contracts Generator',
+                    actor: 'Vivat Smart Contracts Generator',
                     details: `Contrato digital legalmente redactado para ${tenantName} en ${propAddress}.`
                 },
                 {
@@ -4287,7 +4287,7 @@
                     </table>
 
                     <div style="margin-top: 35px; text-align: center; color: #64748b; font-size: 11px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                        Documento emitido y resguardado criptográficamente por la plataforma Habitat en cumplimiento del Código Civil y Comercial de la Nación y la Ley 25.506.
+                        Documento emitido y resguardado criptográficamente por la plataforma Vivat en cumplimiento del Código Civil y Comercial de la Nación y la Ley 25.506.
                     </div>
 
                     <script>
@@ -4354,7 +4354,7 @@
     });
 
     // Global listener for incoming chat messages (dispatched by notifications.js)
-    window.addEventListener('habitat:new_chat_message', (e) => {
+    window.addEventListener('vivat:new_chat_message', (e) => {
         const msg = e.detail;
         if (msg && msg.contract_ref_id) {
             // Check if we need to resolve it by dbContractId instead of string ID

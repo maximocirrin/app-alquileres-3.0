@@ -1,9 +1,9 @@
 /**
- * Módulo Frontend para la Integración de la Central de Deudores BCRA en Pasaporte Hábitat
+ * Módulo Frontend para la Integración de la Central de Deudores BCRA en Pasaporte Vivat
  */
 
 /**
- * Consulta el servicio web del BCRA para un CUIT/CUIL dado y actualiza la UI del Pasaporte Hábitat.
+ * Consulta el servicio web del BCRA para un CUIT/CUIL dado y actualiza la UI del Pasaporte Vivat.
  * @param {string} cuit - CUIT o CUIL de 11 dígitos.
  * @param {number|string} [pasaporteId] - ID opcional del pasaporte en Supabase a actualizar.
  * @param {string} [userId] - ID opcional del usuario autenticado.
@@ -71,14 +71,14 @@ async function consultarBcra(cuit, pasaporteId = null, userId = null) {
 
     console.log('[BCRA Frontend] Respuesta procesada exitosamente:', data);
 
-    // Actualizar la interfaz del Pasaporte Hábitat si estamos en la página
+    // Actualizar la interfaz del Pasaporte Vivat si estamos en la página
     actualizarBcraUI(data);
 
     return data;
 }
 
 /**
- * Actualiza dinámicamente los elementos HTML del Pasaporte Hábitat con la información obtenida del BCRA.
+ * Actualiza dinámicamente los elementos HTML del Pasaporte Vivat con la información obtenida del BCRA.
  * @param {Object} data - Objeto retornado por la API /api/bcra-deudores.
  */
 function actualizarBcraUI(data) {
