@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /buscar.html
+Allow: /propietarios.html
+Allow: /pasaporte-vivat.html
+Allow: /como-funciona.html
+Allow: /consultar-valor.html
+Allow: /detalles-garantia.html
+Allow: /terminos.html
+Allow: /img/
+
+# Páginas privadas y dashboards
+Disallow: /administrador.html
+Disallow: /panel-corredor.html
+Disallow: /tu-alquiler.html
+Disallow: /configuracion.html
+Disallow: /contratos.html
+Disallow: /contract.html
+Disallow: /tu-equipo.html
+Disallow: /api/
+
+Sitemap: https://vivat.com.ar/sitemap.xml

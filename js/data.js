@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Data Management Module - Supabase Production Integration
  * Connects all application features to Supabase Postgres DB
  */
@@ -1503,7 +1503,7 @@ var DataManager = {
                     property_beds: appData.propertyBeds || 1,
                     property_baths: appData.propertyBaths || 1,
                     tenant_name: appData.tenantName || 'Inquilino Postulante',
-                    tenant_email: appData.tenantEmail || 'inquilino@vivat.ar',
+                    tenant_email: appData.tenantEmail || 'inquilino@vivat.com.ar',
                     tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
                     tenant_dni: appData.tenantDni || null,
                     tenant_cuit: appData.tenantCuit || null,
@@ -2563,10 +2563,10 @@ var DataManager = {
                     adjustment_frequency_months: data.periodo_aumento_meses || 3,
                     cbu_alias: data.alias_cbu || 'VIVAT.PAGOS.ALQUILER',
                     tenant_name: inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : 'Inquilino Verificado'),
-                    tenant_email: inq.mail || 'inquilino@vivat.ar',
+                    tenant_email: inq.mail || 'inquilino@vivat.com.ar',
                     tenant_phone: inq.telefono || '+54 9 261 412-3456',
                     landlord_name: propOwner.nombre_completo || (propOwner.nombre && propOwner.apellido ? `${propOwner.nombre} ${propOwner.apellido}` : 'Propietario Verificado'),
-                    landlord_email: propOwner.mail || 'propietario@vivat.ar',
+                    landlord_email: propOwner.mail || 'propietario@vivat.com.ar',
                     landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
                     description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Vivat.',
                     caracteristicas: dbCaracteristicas

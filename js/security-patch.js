@@ -1,3 +1,19 @@
+// Redirección canónica automática al nuevo dominio oficial vivat.com.ar
+(function() {
+    try {
+        if (typeof window !== 'undefined' && window.location) {
+            var host = window.location.hostname;
+            if (host === 'app-alquileres-3-0.vercel.app' || (host.endsWith('.vercel.app') && host !== 'localhost')) {
+                var target = 'https://vivat.com.ar' + window.location.pathname + window.location.search + window.location.hash;
+                window.location.replace(target);
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('Error en redirección canónica:', e);
+    }
+})();
+
 (function() {
     if (typeof window.DOMPurify === 'undefined') {
         console.warn('DOMPurify no está cargado. La sanitización de seguridad global no está activa.');

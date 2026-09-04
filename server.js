@@ -211,7 +211,7 @@ const mockContracts = [
             name: 'Valeria Sotomayor',
             license: 'CUCICBA Mat. 5120',
             agencyName: 'Vivat Real Estate Network',
-            email: 'valeria@vivat.ar',
+            email: 'valeria@vivat.com.ar',
         },
         sha256Hash: '9f83c6b29f7988319f390076a91176b9dfa5fae8e60408544c4897c8d94e2402',
         createdAt: '2026-08-10T09:15:00Z',
@@ -261,7 +261,7 @@ const mockContracts = [
         sha256Hash: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
         tsaTimestamp: '2026-06-29T16:40:12Z',
         tsaCertificateId: 'TSA-AR-2026-981042',
-        qrVerificationUrl: 'https://vivat.ar/verificar/CTR-2026-0518',
+        qrVerificationUrl: 'https://vivat.com.ar/verificar/CTR-2026-0518',
         signedPdfUrl: '/api/contracts/CTR-2026-0518/download-signed',
         auditTrailPdfUrl: '/api/contracts/CTR-2026-0518/download-audit-trail',
         createdAt: '2026-06-25T10:00:00Z',
@@ -393,7 +393,7 @@ app.get('/api/contracts/:id/signature-status', (req, res) => {
         tsaCertificateId: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
         signedPdfUrl: `/api/contracts/${contractId}/download-signed`,
         auditTrailPdfUrl: `/api/contracts/${contractId}/download-audit-trail`,
-        qrVerificationUrl: `https://vivat.ar/verificar/${contractId}`
+        qrVerificationUrl: `https://vivat.com.ar/verificar/${contractId}`
     });
 });
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -577,8 +577,8 @@
 
             document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
 
-            if (window.App) {
-                App.init();
+            if (window.App && typeof window.App.setupTheme === 'function') {
+                App.setupTheme();
             }
         });
     </script>
@@ -593,7 +593,7 @@
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
     <script src="js/publish-property.js"></script>
-    <script src="js/app.js?v=101"></script>
+    <script src="js/app.js?v=102"></script>
 
 </body>
 

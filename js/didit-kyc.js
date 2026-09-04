@@ -18,8 +18,8 @@
     if (typeof window !== 'undefined') {
       const port = window.location.port;
       if (port === '5500' || port === '5501' || port === '5502' || port === '5173' || port === '8080') {
-        // Usa el backend de Vercel ya que las variables de entorno (DIDIT) están allí
-        return 'https://app-alquileres-3-0.vercel.app';
+        // Usa el backend de producción ya que las variables de entorno están allí
+        return 'https://vivat.com.ar';
       }
     }
     return '';
