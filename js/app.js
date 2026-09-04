@@ -580,13 +580,15 @@ var App = window.App || {
         const themeSwitches = document.querySelectorAll('.theme-switch__checkbox');
         const mobileThemeBtn = document.getElementById('mobile-theme-toggle');
 
-        const currentTheme = localStorage.getItem('theme') || 'light';
+        const currentTheme = localStorage.getItem('theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
         // Apply initial theme
         App.setTheme(currentTheme);
 
         // Listeners for Switch Toggles (Desktop/Headers)
         themeSwitches.forEach(sw => {
+            if (sw._appThemeBound) return;
+            sw._appThemeBound = true;
             sw.addEventListener('change', (e) => {
                 const newTheme = e.target.checked ? 'dark' : 'light';
                 App.setTheme(newTheme);
@@ -594,11 +596,21 @@ var App = window.App || {
         });
 
         // Listener for Mobile Menu Button
-        if (mobileThemeBtn) {
+        if (mobileThemeBtn && !mobileThemeBtn._appThemeBound) {
+            mobileThemeBtn._appThemeBound = true;
             mobileThemeBtn.addEventListener('click', () => {
                 App.toggleTheme();
             });
         }
+
+        // Additional theme toggle buttons across pages/modals
+        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+            if (btn._appThemeBound) return;
+            btn._appThemeBound = true;
+            btn.addEventListener('click', () => {
+                App.toggleTheme();
+            });
+        });
     },
 
     setTheme: (theme) => {
@@ -632,7 +644,9 @@ var App = window.App || {
         }
         appleStatusBarMeta.content = 'black-translucent';
 
-        localStorage.setItem('theme', theme);
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {}
 
         // Sync all checkboxes
         document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
@@ -640,11 +654,15 @@ var App = window.App || {
         });
 
         App.updateThemeIcons();
+
+        try {
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme, isDark } }));
+        } catch (e) {}
     },
 
     toggleTheme: () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        const isCurrentlyDark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+        const newTheme = isCurrentlyDark ? 'light' : 'dark';
         App.setTheme(newTheme);
     },
 
@@ -12756,15 +12774,20 @@ window.clearPublishDraft = function() {
     }
 };
 
-// Auto-initialize Scroll to top button across pages
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.App && typeof window.App.initScrollToTop === 'function') {
+// Auto-initialize Theme and Scroll to top button across pages
+function autoInitAppBasics() {
+    if (window.App) {
+        if (typeof window.App.setupTheme === 'function') {
+            window.App.setupTheme();
+        }
+        if (typeof window.App.initScrollToTop === 'function') {
             window.App.initScrollToTop();
         }
-    });
-} else {
-    if (window.App && typeof window.App.initScrollToTop === 'function') {
-        window.App.initScrollToTop();
     }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInitAppBasics);
+} else {
+    autoInitAppBasics();
 }

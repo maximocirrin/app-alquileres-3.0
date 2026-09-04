@@ -269,8 +269,12 @@ header.fixed.top-0 {
 }
 
 /* iOS Safari Home Indicator / Bottom Bar Support */
-#owner-floating-dock-container {
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+@media (max-width: 1023px) {
+    #owner-floating-dock-container,
+    #tenant-floating-dock-container,
+    #broker-floating-dock-container {
+        bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
 }
 
 footer {
@@ -944,9 +948,9 @@ html.dark .floating-dock,
 }
 
 #dock-active-indicator {
-    will-change: left, width;
-    -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: left, width, top, height;
+    -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
     box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
 }
@@ -967,6 +971,116 @@ html.dark .floating-dock,
 .broker-dock-btn.text-white,
 .broker-dock-btn.text-white * {
     color: #ffffff !important;
+}
+
+.owner-dock-btn.text-white .material-symbols-outlined,
+.tenant-dock-btn.text-white .material-symbols-outlined,
+.broker-dock-btn.text-white .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+
+@media (min-width: 1024px) {
+    body:has(#owner-floating-dock-container) footer,
+    body:has(#tenant-floating-dock-container) footer,
+    body:has(#broker-floating-dock-container) footer {
+        padding-left: 6rem !important;
+    }
+}
+
+/* Owner, Tenant & Broker Vertical Left Navigation Bar (Desktop / PC - Estilo Instagram) */
+.owner-dock-btn-desktop-only {
+    display: none !important;
+}
+
+@media (min-width: 1024px) {
+    .owner-dock-btn-desktop-only {
+        display: flex !important;
+    }
+
+    #owner-floating-dock-container,
+    #tenant-floating-dock-container,
+    #broker-floating-dock-container {
+        position: fixed !important;
+        left: 0 !important;
+        top: 5rem !important; /* Justo debajo de la franja superior */
+        bottom: 0 !important;
+        right: auto !important;
+        width: 5.25rem !important; /* 84px */
+        max-width: none !important;
+        margin: 0 !important;
+        z-index: 90 !important;
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    #owner-floating-dock-container.is-hidden,
+    #tenant-floating-dock-container.is-hidden,
+    #broker-floating-dock-container.is-hidden {
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    #owner-floating-dock-container .floating-dock,
+    #tenant-floating-dock-container .floating-dock,
+    #broker-floating-dock-container .floating-dock {
+        height: 100% !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+        box-shadow: none !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        padding: 1.5rem 0.5rem !important;
+        gap: 0.5rem !important;
+        overflow: visible !important;
+    }
+
+    html.dark #owner-floating-dock-container .floating-dock,
+    [data-theme="dark"] #owner-floating-dock-container .floating-dock,
+    html.dark #tenant-floating-dock-container .floating-dock,
+    [data-theme="dark"] #tenant-floating-dock-container .floating-dock,
+    html.dark #broker-floating-dock-container .floating-dock,
+    [data-theme="dark"] #broker-floating-dock-container .floating-dock {
+        border-right: 1px solid rgba(63, 63, 70, 0.6) !important;
+        background: rgba(14, 14, 16, 0.95) !important;
+    }
+
+    #owner-floating-dock-container .owner-dock-btn,
+    #tenant-floating-dock-container .tenant-dock-btn,
+    #broker-floating-dock-container .broker-dock-btn {
+        flex: none !important;
+        width: 100% !important;
+        padding-top: 0.65rem !important;
+        padding-bottom: 0.65rem !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+        border-radius: 0.875rem !important;
+    }
+
+    #owner-floating-dock-container #dock-active-indicator,
+    #tenant-floating-dock-container #dock-active-indicator,
+    #broker-floating-dock-container #dock-active-indicator {
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        width: calc(100% - 1rem) !important;
+        border-radius: 0.875rem !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    #owner-floating-dock-container #dock-active-indicator,
+    #tenant-floating-dock-container #dock-active-indicator,
+    #broker-floating-dock-container #dock-active-indicator {
+        top: 0.375rem !important;
+        bottom: 0.375rem !important;
+        border-radius: 9999px !important;
+    }
 }
 
 /* Desktop Header (Hidden on Mobile) */
