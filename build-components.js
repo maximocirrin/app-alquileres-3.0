@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 function convertFooterToJs(htmlPath, jsPath) {
     const html = fs.readFileSync(htmlPath, 'utf8');
@@ -33,6 +33,13 @@ function convertNavbarToJs(htmlPath, jsPath) {
     while(div.firstChild) {
         document.currentScript.parentNode.insertBefore(div.firstChild, document.currentScript);
     }
+    try {
+        var isDarkTheme = localStorage.getItem('theme') === 'dark' || document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+        var themeCb = document.querySelector('.theme-switch__checkbox');
+        if (themeCb) {
+            themeCb.checked = isDarkTheme;
+        }
+    } catch (e) {}
     if (!document.querySelector('script[src*="notifications.js"]')) {
         var nScript = document.createElement('script');
         nScript.src = 'js/notifications.js';

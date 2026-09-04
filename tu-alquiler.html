@@ -171,10 +171,10 @@
     <!-- TopNavBar Component -->
     <script src="js/navbar.js?v=4"></script>
 
-    <main class="flex-grow pt-24 pb-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto w-full flex flex-col space-y-6">
+    <main class="flex-grow pt-24 pb-32 lg:pb-12 px-4 sm:px-6 lg:pl-28 lg:pr-8 xl:pl-32 xl:pr-12 max-w-[1380px] mx-auto w-full flex flex-col space-y-6">
         
-        <!-- Pestañas Superiores (Desktop / Tablet Pills) -->
-        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
+        <!-- Pestañas Superiores (Tablet Pills Limpias) -->
+        <div class="hidden sm:flex lg:hidden items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
             <button data-tab="alquiler" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">key</span>
                 <span>Mi alquiler</span>
@@ -710,35 +710,35 @@
         </div>
     </footer>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (CONSOLIDA LAS SECCIONES) -->
-    <div id="tenant-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto">
-        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
+    <!-- BARRA DOCK NAVEGACIÓN INQUILINO (Mobile: Inferior Flotante | Desktop: Barra Lateral Vertical estilo Instagram) -->
+    <div id="tenant-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto lg:fixed lg:left-0 lg:top-20 lg:bottom-0 lg:right-auto lg:w-[84px] lg:max-w-none lg:mx-0 lg:z-[90] lg:p-0">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl lg:rounded-none lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r lg:border-zinc-200 lg:dark:border-zinc-800/80 lg:shadow-none lg:h-full lg:w-full lg:flex-col lg:justify-start lg:pt-6 lg:gap-2 lg:px-2">
             <!-- Burbuja Deslizante Activa -->
-            <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
+            <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
 
-            <button type="button" data-tab="alquiler" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-white font-extrabold active transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">key</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Mi alquiler</span>
+            <button type="button" data-tab="alquiler" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-white font-extrabold active transition-colors cursor-pointer text-center" title="Mi Alquiler Activo">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">key</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Alquiler</span>
             </button>
 
-            <button type="button" data-tab="postulaciones" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">how_to_reg</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Postulaciones</span>
+            <button type="button" data-tab="postulaciones" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Mis Postulaciones">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">how_to_reg</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Postulaciones</span>
             </button>
 
-            <button type="button" data-tab="visitas" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Visitas</span>
+            <button type="button" data-tab="visitas" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Visitas Agendadas">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">calendar_month</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Visitas</span>
             </button>
 
-            <button type="button" data-tab="pasaporte" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">badge</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Tu pasaporte</span>
+            <button type="button" data-tab="pasaporte" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Tu Pasaporte Hábitat">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">badge</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Pasaporte</span>
             </button>
 
-            <button type="button" data-tab="chat-negociacion" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">forum</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Chat</span>
+            <button type="button" data-tab="chat-negociacion" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Mensajes & Chat">
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-500">forum</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Chat</span>
             </button>
         </nav>
     </div>
@@ -780,11 +780,27 @@
                 const navRect = nav.getBoundingClientRect();
                 const btnRect = activeBtn.getBoundingClientRect();
 
-                if (btnRect.width === 0) return;
+                if (btnRect.width === 0 && btnRect.height === 0) return;
 
-                const leftOffset = btnRect.left - navRect.left;
-                indicator.style.left = `${leftOffset}px`;
-                indicator.style.width = `${btnRect.width}px`;
+                if (window.innerWidth >= 1024) {
+                    // Modo Escritorio / Vertical (estilo Instagram)
+                    const topOffset = btnRect.top - navRect.top;
+                    indicator.style.top = `${topOffset}px`;
+                    indicator.style.height = `${btnRect.height}px`;
+                    indicator.style.left = '0.5rem';
+                    indicator.style.width = 'calc(100% - 1rem)';
+                    indicator.style.bottom = 'auto';
+                    indicator.style.right = '0.5rem';
+                } else {
+                    // Modo Móvil / Horizontal (Dock Inferior)
+                    const leftOffset = btnRect.left - navRect.left;
+                    indicator.style.left = `${leftOffset}px`;
+                    indicator.style.width = `${btnRect.width}px`;
+                    indicator.style.top = '0.375rem';
+                    indicator.style.bottom = '0.375rem';
+                    indicator.style.height = 'auto';
+                    indicator.style.right = 'auto';
+                }
             }
 
             function switchTenantTab(targetTab) {
@@ -850,6 +866,9 @@
 
             // Detección de redimensión para el indicador
             window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024 && dockContainer) {
+                    dockContainer.classList.remove('is-hidden');
+                }
                 const activeDockBtn = document.querySelector('.tenant-dock-btn.active');
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             });
@@ -860,6 +879,7 @@
             const dockContainer = document.getElementById('tenant-floating-dock-container');
 
             window.addEventListener('scroll', () => {
+                if (window.innerWidth >= 1024) return; // Permanente y visible en escritorio
                 if (!isScrollTicking) {
                     window.requestAnimationFrame(() => {
                         const currentScrollY = window.scrollY;
@@ -938,6 +958,14 @@
                 const activeDockBtn = document.querySelector('.tenant-dock-btn.active');
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             }, 60);
+            setTimeout(() => {
+                const activeDockBtn = document.querySelector('.tenant-dock-btn.active');
+                if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
+            }, 250);
+            setTimeout(() => {
+                const activeDockBtn = document.querySelector('.tenant-dock-btn.active');
+                if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
+            }, 500);
 
             // Escuchar cambios de hash (navegación desde menú o enlaces externos)
             window.addEventListener('hashchange', () => {

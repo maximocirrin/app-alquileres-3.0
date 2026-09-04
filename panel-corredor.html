@@ -134,19 +134,21 @@
         }
 
         /* Floating Dock Inferior Premium con Burbuja Deslizante y Rebote Elástico */
-        #broker-floating-dock-container {
-            will-change: transform;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            -webkit-transition: -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-        }
+        @media (max-width: 1023px) {
+            #broker-floating-dock-container {
+                will-change: transform;
+                -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+                -webkit-transition: -webkit-transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+                transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+            }
 
-        #broker-floating-dock-container.is-hidden {
-            -webkit-transform: translateY(140%);
-            transform: translateY(140%);
-            opacity: 0;
-            pointer-events: none;
+            #broker-floating-dock-container.is-hidden {
+                -webkit-transform: translateY(140%);
+                transform: translateY(140%);
+                opacity: 0;
+                pointer-events: none;
+            }
         }
 
         .floating-dock {
@@ -166,9 +168,9 @@
         }
 
         #dock-active-indicator {
-            will-change: left, width;
-            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: left, width, top, height;
+            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
             box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
@@ -351,10 +353,10 @@
     <!-- TopNavBar Component (Standard App Header) -->
     <script src="js/navbar.js?v=4"></script>
 
-    <main class="flex-grow pt-24 pb-36 px-4 sm:px-6 lg:px-8 max-w-[1580px] mx-auto w-full flex flex-col space-y-6">
+    <main class="flex-grow pt-24 pb-36 lg:pb-12 px-4 sm:px-6 lg:pl-28 lg:pr-8 xl:pl-32 xl:pr-12 max-w-[1580px] mx-auto w-full flex flex-col space-y-6">
 
-        <!-- PESTAÑAS SUPERIORES (5 PESTAÑAS CONSOLIDADAS) -->
-        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto">
+        <!-- PESTAÑAS SUPERIORES (5 PESTAÑAS CONSOLIDADAS, ocultas en escritorio para usar barra vertical) -->
+        <div class="hidden sm:flex lg:hidden items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
             <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">dashboard</span>
                 <span>General</span>
@@ -998,36 +1000,36 @@
         </div>
     </main>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (5 BOTONES CONSOLIDADOS) -->
-    <div id="broker-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto">
-        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
+    <!-- BARRA DOCK NAVEGACIÓN INFERIOR / LATERAL ESCRITORIO (5 BOTONES CONSOLIDADOS) -->
+    <div id="broker-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto lg:fixed lg:left-0 lg:top-20 lg:bottom-0 lg:right-auto lg:w-[84px] lg:max-w-none lg:mx-0 lg:z-[90] lg:p-0">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden lg:rounded-none lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r lg:border-zinc-200 lg:dark:border-zinc-800/80 lg:shadow-none lg:h-full lg:w-full lg:flex-col lg:justify-start lg:pt-6 lg:gap-2 lg:px-2">
             <!-- Burbuja Deslizante Activa -->
-            <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
+            <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
 
-            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">dashboard</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">General</span>
+            <button data-tab="general" onclick="switchBrokerTab('general')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="General">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">dashboard</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">General</span>
             </button>
 
-            <button data-tab="cartera" onclick="switchBrokerTab('cartera')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">home_work</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Cartera</span>
+            <button data-tab="cartera" onclick="switchBrokerTab('cartera')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Cartera & Avisos">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">home_work</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Cartera</span>
             </button>
 
-            <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">how_to_reg</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Candidatos</span>
-                <span id="broker-badge-dock-apps" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500"></span>
+            <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Candidatos & Visitas">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">how_to_reg</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Candidatos</span>
+                <span id="broker-badge-dock-apps" class="absolute top-1 right-1 lg:top-1.5 lg:right-3 w-2 h-2 rounded-full bg-amber-500"></span>
             </button>
 
-            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl">payments</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Alquileres</span>
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Alquileres Activos">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">payments</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Alquileres</span>
             </button>
 
-            <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center">
-                <span class="material-symbols-outlined text-lg sm:text-xl text-emerald-500">forum</span>
-                <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">Chat</span>
+            <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Mensajes & Chat">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl text-emerald-500">forum</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Chat</span>
             </button>
         </nav>
     </div>
@@ -1919,33 +1921,58 @@
             const navRect = nav.getBoundingClientRect();
             const btnRect = activeBtn.getBoundingClientRect();
 
-            if (btnRect.width === 0) return;
+            if (btnRect.width === 0 && btnRect.height === 0) return;
 
-            const leftOffset = btnRect.left - navRect.left;
-            indicator.style.left = `${leftOffset}px`;
-            indicator.style.width = `${btnRect.width}px`;
+            if (window.innerWidth >= 1024) {
+                // Modo Escritorio / Vertical (estilo Instagram)
+                const topOffset = btnRect.top - navRect.top;
+                indicator.style.top = `${topOffset}px`;
+                indicator.style.height = `${btnRect.height}px`;
+                indicator.style.left = '0.5rem';
+                indicator.style.width = 'calc(100% - 1rem)';
+                indicator.style.bottom = 'auto';
+                indicator.style.right = '0.5rem';
+            } else {
+                // Modo Móvil / Horizontal (Dock Inferior)
+                const leftOffset = btnRect.left - navRect.left;
+                indicator.style.left = `${leftOffset}px`;
+                indicator.style.width = `${btnRect.width}px`;
+                indicator.style.top = '0.375rem';
+                indicator.style.bottom = '0.375rem';
+                indicator.style.height = 'auto';
+                indicator.style.right = 'auto';
+            }
         }
 
         function setupDockSlidingIndicator() {
+            const dockContainer = document.getElementById('broker-floating-dock-container');
+
             window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024 && dockContainer) {
+                    dockContainer.classList.remove('is-hidden');
+                }
                 const activeDockBtn = document.querySelector('.broker-dock-btn.text-white');
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             });
 
-            setTimeout(() => {
+            const triggerIndicator = () => {
                 const currentHash = mapTabName((window.location.hash || '#general').replace('#', ''));
                 const targetBtn = document.querySelector(`.broker-dock-btn[data-tab="${currentHash}"]`) || document.querySelector('.broker-dock-btn[data-tab="general"]');
                 if (targetBtn) {
                     targetBtn.classList.add('text-white');
                     updateSlidingIndicator(targetBtn);
                 }
-            }, 100);
+            };
+
+            setTimeout(triggerIndicator, 60);
+            setTimeout(triggerIndicator, 250);
+            setTimeout(triggerIndicator, 500);
 
             let lastScrollY = window.scrollY;
             let isScrollTicking = false;
-            const dockContainer = document.getElementById('broker-floating-dock-container');
 
             window.addEventListener('scroll', () => {
+                if (window.innerWidth >= 1024) return;
                 if (!isScrollTicking) {
                     window.requestAnimationFrame(() => {
                         const currentScrollY = window.scrollY;

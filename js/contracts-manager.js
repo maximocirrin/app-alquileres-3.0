@@ -1392,6 +1392,9 @@
             `;
 
             container.innerHTML = html;
+            if (window.App && typeof window.App.setupTheme === 'function') {
+                window.App.setupTheme();
+            }
         },
 
         // ========================================================
@@ -1552,6 +1555,12 @@
                             <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-3 py-2 bg-zinc-900 hover:bg-black text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Audit Trail TSA">
                                 <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
                                 <span class="hidden sm:inline">Audit Trail</span>
+                            </button>
+
+                            <!-- Theme Toggle Button -->
+                            <button type="button" onclick="if(window.App && typeof window.App.toggleTheme === 'function'){ window.App.toggleTheme(); } else { var isD = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isD ? 'dark' : 'light'); document.documentElement.setAttribute('data-theme', isD ? 'dark' : 'light'); }" class="h-9 w-9 p-0 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold transition-all flex items-center justify-center cursor-pointer shrink-0" title="Alternar Modo Claro / Oscuro" aria-label="Alternar Modo Claro / Oscuro">
+                                <span class="material-symbols-outlined text-lg block dark:hidden">dark_mode</span>
+                                <span class="material-symbols-outlined text-lg hidden dark:block text-amber-400">light_mode</span>
                             </button>
 
                             <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="h-9 w-9 p-0 rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center cursor-pointer shrink-0" title="Cerrar modal">

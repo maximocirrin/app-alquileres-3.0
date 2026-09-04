@@ -151,13 +151,15 @@
     <script src="js/navbar.js?v=4"></script>
 
     <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 md:py-10 lg:pl-28 xl:pl-32 lg:pb-12 space-y-8">
         
         <!-- Breadcrumbs -->
         <nav class="flex items-center gap-2 text-xs text-zinc-500 font-medium">
             <a href="index.html" class="hover:text-primary transition-colors">Inicio</a>
             <span class="material-symbols-outlined text-xs">chevron_right</span>
-            <span class="text-zinc-900 dark:text-white font-bold">Gestión de Contratos y Firma Digital</span>
+            <a href="administrador.html" class="hover:text-primary transition-colors">Panel Propietario</a>
+            <span class="material-symbols-outlined text-xs">chevron_right</span>
+            <span class="text-zinc-900 dark:text-white font-bold">Firma Electrónica & Negociación</span>
         </nav>
 
         <!-- Dynamic Contracts Module Container -->
@@ -170,6 +172,46 @@
         </div>
 
     </main>
+
+    <!-- BARRA DOCK NAVEGACIÓN PROPIETARIO (Mobile: Inferior Flotante | Desktop: Barra Lateral Vertical estilo Instagram) -->
+    <div id="owner-floating-dock-container" class="fixed bottom-4 left-4 right-4 z-[100] max-w-md mx-auto lg:fixed lg:left-0 lg:top-20 lg:bottom-0 lg:right-auto lg:w-[84px] lg:max-w-none lg:mx-0 lg:z-[90] lg:p-0">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1.5 flex items-center justify-between shadow-2xl lg:rounded-none lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r lg:border-zinc-200 lg:dark:border-zinc-800/80 lg:shadow-none lg:h-full lg:w-full lg:flex-col lg:justify-start lg:pt-6 lg:gap-2 lg:px-2">
+            <!-- Burbuja Deslizante Activa -->
+            <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
+
+            <a href="administrador.html#avisos" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Mis Avisos">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">home_work</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Avisos</span>
+            </a>
+
+            <a href="administrador.html#postulaciones" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Candidatos & Postulaciones">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">how_to_reg</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Candidatos</span>
+                <span id="badge-dock-apps" class="absolute top-1 right-2 lg:top-1.5 lg:right-3 w-2 h-2 rounded-full bg-amber-500"></span>
+            </a>
+
+            <a href="administrador.html#visitas" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Agenda de Visitas">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">calendar_month</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Visitas</span>
+            </a>
+
+            <a href="administrador.html#alquiler-activo" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Alquileres Activos & Cobros">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">payments</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Alquileres</span>
+            </a>
+
+            <!-- Botón de Firma Digital & Contratos (Solo visible en Escritorio / PC - Activo en esta sección) -->
+            <a href="contratos.html" id="owner-dock-btn-firma" class="owner-dock-btn owner-dock-btn-desktop-only relative z-10 flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-white font-extrabold transition-colors cursor-pointer" title="Firma Digital & Contratos">
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-400">draw</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Firma</span>
+            </a>
+
+            <a href="administrador.html#chat-negociacion" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Mensajes & Chat">
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-500">forum</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Chat</span>
+            </a>
+        </nav>
+    </div>
 
     <!-- Unified Footer -->
     <script src="js/footer.js"></script>
@@ -186,6 +228,68 @@
     <script src="js/contract-editor-modal.js"></script>
     <script src="js/contracts-manager.js"></script>
     <script src="js/inventory-manager.js"></script>
+
+    <!-- Script de Barra Lateral / Dock de Navegación del Propietario -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.App && typeof window.App.setupTheme === 'function') {
+                window.App.setupTheme();
+            }
+
+            const dockContainer = document.getElementById('owner-floating-dock-container');
+            const nav = document.getElementById('floating-dock-nav');
+            const indicator = document.getElementById('dock-active-indicator');
+            const firmaBtn = document.getElementById('owner-dock-btn-firma');
+
+            function updateDockIndicator() {
+                if (!nav || !indicator) return;
+
+                if (window.innerWidth >= 1024 && firmaBtn) {
+                    const navRect = nav.getBoundingClientRect();
+                    const btnRect = firmaBtn.getBoundingClientRect();
+                    if (btnRect.width === 0 && btnRect.height === 0) return;
+
+                    const topOffset = btnRect.top - navRect.top;
+                    indicator.style.top = `${topOffset}px`;
+                    indicator.style.height = `${btnRect.height}px`;
+                    indicator.style.left = '0.5rem';
+                    indicator.style.width = 'calc(100% - 1rem)';
+                    indicator.style.bottom = 'auto';
+                    indicator.style.right = '0.5rem';
+                    indicator.style.opacity = '1';
+                    indicator.style.display = 'block';
+                } else {
+                    indicator.style.opacity = '0';
+                    indicator.style.display = 'none';
+                }
+            }
+
+            let lastScrollY = window.scrollY;
+            window.addEventListener('scroll', () => {
+                if (window.innerWidth >= 1024) return;
+                const currentScrollY = window.scrollY;
+                if (dockContainer) {
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        dockContainer.classList.add('is-hidden');
+                    } else {
+                        dockContainer.classList.remove('is-hidden');
+                    }
+                }
+                lastScrollY = currentScrollY;
+            }, { passive: true });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024 && dockContainer) {
+                    dockContainer.classList.remove('is-hidden');
+                }
+                updateDockIndicator();
+            });
+
+            setTimeout(updateDockIndicator, 50);
+            setTimeout(updateDockIndicator, 200);
+            setTimeout(updateDockIndicator, 600);
+        });
+    </script>
 </body>
 
 </html>

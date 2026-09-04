@@ -47,18 +47,18 @@
 
     function createDockMarkup(activeId) {
         return `
-        <div id="tenant-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto">
-            <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl overflow-hidden">
+        <div id="tenant-floating-dock-container" class="fixed bottom-3 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-[100] max-w-md mx-auto lg:fixed lg:left-0 lg:top-20 lg:bottom-0 lg:right-auto lg:w-[84px] lg:max-w-none lg:mx-0 lg:z-[90] lg:p-0">
+            <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1 sm:p-1.5 flex items-center justify-between shadow-2xl lg:rounded-none lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r lg:border-zinc-200 lg:dark:border-zinc-800/80 lg:shadow-none lg:h-full lg:w-full lg:flex-col lg:justify-start lg:pt-6 lg:gap-2 lg:px-2">
                 <!-- Burbuja Deslizante Activa -->
-                <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
+                <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
 
                 ${SECTIONS.map(s => {
                     const isActive = s.id === activeId;
                     const activeClasses = isActive ? 'text-white font-extrabold active' : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white';
                     return `
-                    <a href="${s.href}" data-tab="${s.id}" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full ${activeClasses} transition-colors cursor-pointer text-center no-underline">
-                        <span class="material-symbols-outlined text-lg sm:text-xl">${s.icon}</span>
-                        <span class="text-[9px] sm:text-[10px] truncate w-full leading-tight font-bold">${s.label}</span>
+                    <a href="${s.href}" data-tab="${s.id}" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full ${activeClasses} transition-colors cursor-pointer text-center no-underline" title="${s.label}">
+                        <span class="material-symbols-outlined text-xl lg:text-2xl">${s.icon}</span>
+                        <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">${s.label}</span>
                     </a>
                     `;
                 }).join('')}
@@ -75,11 +75,27 @@
         const navRect = nav.getBoundingClientRect();
         const btnRect = activeBtn.getBoundingClientRect();
 
-        if (btnRect.width === 0) return;
+        if (btnRect.width === 0 && btnRect.height === 0) return;
 
-        const leftOffset = btnRect.left - navRect.left;
-        indicator.style.left = `${leftOffset}px`;
-        indicator.style.width = `${btnRect.width}px`;
+        if (window.innerWidth >= 1024) {
+            // Modo Escritorio / Vertical (estilo Instagram)
+            const topOffset = btnRect.top - navRect.top;
+            indicator.style.top = `${topOffset}px`;
+            indicator.style.height = `${btnRect.height}px`;
+            indicator.style.left = '0.5rem';
+            indicator.style.width = 'calc(100% - 1rem)';
+            indicator.style.bottom = 'auto';
+            indicator.style.right = '0.5rem';
+        } else {
+            // Modo Móvil / Horizontal (Dock Inferior)
+            const leftOffset = btnRect.left - navRect.left;
+            indicator.style.left = `${leftOffset}px`;
+            indicator.style.width = `${btnRect.width}px`;
+            indicator.style.top = '0.375rem';
+            indicator.style.bottom = '0.375rem';
+            indicator.style.height = 'auto';
+            indicator.style.right = 'auto';
+        }
     }
 
     function setupScrollHide() {
@@ -87,6 +103,7 @@
         let isScrollTicking = false;
 
         window.addEventListener('scroll', () => {
+            if (window.innerWidth >= 1024) return; // Permanente en escritorio
             if (!isScrollTicking) {
                 window.requestAnimationFrame(() => {
                     const dockContainer = document.getElementById('tenant-floating-dock-container');

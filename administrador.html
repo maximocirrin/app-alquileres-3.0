@@ -164,7 +164,7 @@
             border: 1px solid rgba(39, 39, 42, 0.9);
         }
 
-        /* Floating Dock Inferior Premium con Burbuja Deslizante y Rebote Elástico */
+        /* Floating Dock / Barra Lateral de Navegación del Propietario */
         #owner-floating-dock-container {
             will-change: transform;
             -webkit-transform: translateZ(0);
@@ -197,9 +197,9 @@
         }
 
         #dock-active-indicator {
-            will-change: left, width;
-            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: left, width, top, height;
+            -webkit-transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: linear-gradient(135deg, #811b1e 0%, #c92429 100%);
             box-shadow: 0 6px 18px -2px rgba(129, 27, 30, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
@@ -213,6 +213,84 @@
         .owner-dock-btn.text-white .material-symbols-outlined {
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+        }
+
+        .owner-dock-btn-desktop-only {
+            display: none !important;
+        }
+
+        /* Modo Escritorio / PC: Barra Lateral Vertical estilo Instagram */
+        @media (min-width: 1024px) {
+            .owner-dock-btn-desktop-only {
+                display: flex !important;
+            }
+
+            #owner-floating-dock-container {
+                position: fixed !important;
+                left: 0 !important;
+                top: 5rem !important; /* Empieza justo debajo de la franja superior */
+                bottom: 0 !important;
+                right: auto !important;
+                width: 5.25rem !important; /* 84px */
+                max-width: none !important;
+                margin: 0 !important;
+                z-index: 90 !important;
+                transform: none !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            #owner-floating-dock-container.is-hidden {
+                transform: none !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            .floating-dock {
+                height: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+                border-top: none !important;
+                border-bottom: none !important;
+                border-left: none !important;
+                border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
+                box-shadow: none !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                padding: 1.5rem 0.5rem !important;
+                gap: 0.5rem !important;
+            }
+
+            html.dark .floating-dock {
+                border-right: 1px solid rgba(63, 63, 70, 0.6) !important;
+                background: rgba(14, 14, 16, 0.95) !important;
+            }
+
+            .owner-dock-btn {
+                flex: none !important;
+                width: 100% !important;
+                padding-top: 0.65rem !important;
+                padding-bottom: 0.65rem !important;
+                padding-left: 0.25rem !important;
+                padding-right: 0.25rem !important;
+                border-radius: 0.875rem !important;
+            }
+
+            #dock-active-indicator {
+                left: 0.5rem !important;
+                right: 0.5rem !important;
+                width: calc(100% - 1rem) !important;
+                border-radius: 0.875rem !important;
+            }
+        }
+
+        /* Modo Móvil / Tablet: Dock Flotante Inferior */
+        @media (max-width: 1023px) {
+            #dock-active-indicator {
+                top: 0.375rem !important;
+                bottom: 0.375rem !important;
+                border-radius: 9999px !important;
+            }
         }
 
         /* Tab Content switching */
@@ -296,10 +374,10 @@
     <!-- TopNavBar Component (Standard App Header) -->
     <script src="js/navbar.js?v=4"></script>
 
-    <main class="flex-grow pt-24 pb-32 px-4 sm:px-6 lg:px-8 max-w-[1280px] mx-auto w-full flex flex-col space-y-6">
+    <main class="flex-grow pt-24 pb-32 lg:pb-12 px-4 sm:px-6 lg:pl-28 lg:pr-8 xl:pl-32 xl:pr-12 max-w-[1380px] mx-auto w-full flex flex-col space-y-6">
 
-        <!-- Pestañas Superiores (Desktop / Tablet Pills Limpias) -->
-        <div class="hidden sm:flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
+        <!-- Pestañas Superiores (Tablet Pills Limpias) -->
+        <div class="hidden sm:flex lg:hidden items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
             <button data-tab="avisos" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">home_work</span>
                 <span>Mis Avisos</span>
@@ -557,36 +635,42 @@
         </div>
     </main>
 
-    <!-- BARRA DOCK NAVEGACIÓN INFERIOR (Mobile & Accesos Rápidos) -->
-    <div id="owner-floating-dock-container" class="fixed bottom-4 left-4 right-4 z-[100] max-w-md mx-auto">
-        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1.5 flex items-center justify-between shadow-2xl">
+    <!-- BARRA DOCK NAVEGACIÓN (Mobile: Inferior Flotante | Desktop: Barra Lateral Vertical estilo Instagram) -->
+    <div id="owner-floating-dock-container" class="fixed bottom-4 left-4 right-4 z-[100] max-w-md mx-auto lg:fixed lg:left-0 lg:top-20 lg:bottom-0 lg:right-auto lg:w-[84px] lg:max-w-none lg:mx-0 lg:z-[90] lg:p-0">
+        <nav id="floating-dock-nav" class="floating-dock relative rounded-full p-1.5 flex items-center justify-between shadow-2xl lg:rounded-none lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r lg:border-zinc-200 lg:dark:border-zinc-800/80 lg:shadow-none lg:h-full lg:w-full lg:flex-col lg:justify-start lg:pt-6 lg:gap-2 lg:px-2">
             <!-- Burbuja Deslizante Activa -->
-            <div id="dock-active-indicator" class="absolute top-1.5 bottom-1.5 rounded-full z-0 pointer-events-none"></div>
+            <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
 
-            <button data-tab="avisos" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">home_work</span>
-                <span class="text-[10px]">Avisos</span>
+            <button data-tab="avisos" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer" title="Mis Avisos">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">home_work</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Avisos</span>
             </button>
 
-            <button data-tab="postulaciones" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">how_to_reg</span>
-                <span class="text-[10px]">Candidatos</span>
-                <span id="badge-dock-apps" class="absolute top-1 right-2 w-2 h-2 rounded-full bg-amber-500"></span>
+            <button data-tab="postulaciones" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer" title="Candidatos & Postulaciones">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">how_to_reg</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Candidatos</span>
+                <span id="badge-dock-apps" class="absolute top-1 right-2 lg:top-1.5 lg:right-3 w-2 h-2 rounded-full bg-amber-500"></span>
             </button>
 
-            <button data-tab="visitas" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">calendar_month</span>
-                <span class="text-[10px]">Visitas</span>
+            <button data-tab="visitas" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer" title="Agenda de Visitas">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">calendar_month</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Visitas</span>
             </button>
 
-            <button data-tab="alquiler-activo" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl">payments</span>
-                <span class="text-[10px]">Alquileres</span>
+            <button data-tab="alquiler-activo" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer" title="Alquileres Activos & Cobros">
+                <span class="material-symbols-outlined text-xl lg:text-2xl">payments</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Alquileres</span>
             </button>
 
-            <button data-tab="chat-negociacion" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer">
-                <span class="material-symbols-outlined text-xl text-emerald-500">forum</span>
-                <span class="text-[10px]">Chat</span>
+            <!-- Botón de Firma Digital & Contratos (Solo visible en Escritorio / PC) -->
+            <a href="contratos.html" class="owner-dock-btn owner-dock-btn-desktop-only relative z-10 flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer" title="Firma Digital & Contratos">
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-500">draw</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Firma</span>
+            </a>
+
+            <button data-tab="chat-negociacion" class="owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer" title="Mensajes & Chat">
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-500">forum</span>
+                <span class="text-[10px] lg:text-[11px] tracking-tight">Chat</span>
             </button>
         </nav>
     </div>
@@ -629,6 +713,7 @@
 
             const pillBtns = document.querySelectorAll('.owner-pill-btn');
             const dockBtns = document.querySelectorAll('.owner-dock-btn');
+            const dockContainer = document.getElementById('owner-floating-dock-container');
             const contents = {
                 'avisos': document.getElementById('panel-content-avisos'),
                 'postulaciones': document.getElementById('panel-content-postulaciones'),
@@ -645,11 +730,27 @@
                 const navRect = nav.getBoundingClientRect();
                 const btnRect = activeBtn.getBoundingClientRect();
 
-                if (btnRect.width === 0) return;
+                if (btnRect.width === 0 && btnRect.height === 0) return;
 
-                const leftOffset = btnRect.left - navRect.left;
-                indicator.style.left = `${leftOffset}px`;
-                indicator.style.width = `${btnRect.width}px`;
+                if (window.innerWidth >= 1024) {
+                    // Modo Escritorio / Vertical (estilo Instagram)
+                    const topOffset = btnRect.top - navRect.top;
+                    indicator.style.top = `${topOffset}px`;
+                    indicator.style.height = `${btnRect.height}px`;
+                    indicator.style.left = '0.5rem';
+                    indicator.style.width = 'calc(100% - 1rem)';
+                    indicator.style.bottom = 'auto';
+                    indicator.style.right = '0.5rem';
+                } else {
+                    // Modo Móvil / Horizontal (Dock Inferior)
+                    const leftOffset = btnRect.left - navRect.left;
+                    indicator.style.left = `${leftOffset}px`;
+                    indicator.style.width = `${btnRect.width}px`;
+                    indicator.style.top = '0.375rem';
+                    indicator.style.bottom = '0.375rem';
+                    indicator.style.height = 'auto';
+                    indicator.style.right = 'auto';
+                }
             }
 
             function loadOwnerChatSection() {
@@ -684,7 +785,9 @@
 
                 // Update Dock Buttons with Sliding Bubble Effect
                 dockBtns.forEach(btn => {
-                    const isTarget = btn.getAttribute('data-tab') === target;
+                    const tab = btn.getAttribute('data-tab');
+                    if (!tab) return;
+                    const isTarget = tab === target;
                     if (isTarget) {
                         btn.className = 'owner-dock-btn relative z-10 flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-2 rounded-full text-white font-extrabold transition-colors cursor-pointer';
                         updateSlidingIndicator(btn);
@@ -727,6 +830,9 @@
             window.switchViewTab = switchViewTab;
 
             window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024 && dockContainer) {
+                    dockContainer.classList.remove('is-hidden');
+                }
                 const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
                 if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
             });
@@ -800,9 +906,9 @@
             // Scroll direction detection with requestAnimationFrame throttling for iOS
             let lastScrollY = window.scrollY;
             let isScrollTicking = false;
-            const dockContainer = document.getElementById('owner-floating-dock-container');
 
             window.addEventListener('scroll', () => {
+                if (window.innerWidth >= 1024) return;
                 if (!isScrollTicking) {
                     window.requestAnimationFrame(() => {
                         const currentScrollY = window.scrollY;

@@ -8,7 +8,7 @@
                 <span class="block w-4 md:w-5 h-[2px] bg-zinc-800 dark:bg-zinc-200 transition-all origin-center"></span>
             </button>
             <label class="theme-switch flex-shrink-0 ml-2 sm:ml-3.5 xl:ml-0" style="transform: scale(0.65); margin-right: -10px;">
-                <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
+                <input type="checkbox" class="theme-switch__checkbox" style="display: none;" onchange="if(window.App && typeof window.App.setTheme === 'function'){ window.App.setTheme(this.checked ? 'dark' : 'light'); } else { var isD = this.checked; var r = document.documentElement; if(isD){ r.setAttribute('data-theme','dark'); r.classList.add('dark'); r.style.backgroundColor='#09090b'; r.style.colorScheme='dark'; localStorage.setItem('theme','dark'); } else { r.removeAttribute('data-theme'); r.classList.remove('dark'); r.style.backgroundColor='#f8fafc'; r.style.colorScheme='light'; localStorage.setItem('theme','light'); } }">
                 <div class="theme-switch__container">
                     <div class="theme-switch__clouds"></div>
                     <div class="theme-switch__stars-container">
@@ -93,9 +93,6 @@
                                 </a>
                                 <a href="administrador.html#alquiler-activo" class="landing-desktop-nav__menu-item flex items-center gap-2">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-base">payments</span> Alquiler Activo & Cobros
-                                </a>
-                                <a href="contratos.html" class="landing-desktop-nav__menu-item font-bold text-primary dark:text-red-400 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary dark:text-red-400 text-base">draw</span> Firma Digital & Contratos
                                 </a>
                                 <a href="administrador.html#mantenimiento" class="landing-desktop-nav__menu-item flex items-center gap-2">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-base">build</span> Tickets de Mantenimiento
