@@ -1,6 +1,6 @@
 /**
  * Módulo de Verificación de Identidad para Propietarios y Corredores (Modelo Híbrido)
- * Hábitat Plataforma Inmobiliaria
+ * Vivat Plataforma Inmobiliaria
  * 
  * Permite publicación ágil al final del Wizard con opción de Insignia Verificada,
  * adaptado a Modo Claro y Modo Oscuro según el diseño visual del sistema.
@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'habitat_verified_owners';
+  const STORAGE_KEY = 'vivat_verified_owners';
 
   function getVerifiedOwners() {
     try {
@@ -40,7 +40,7 @@
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-    console.log('[Didit Habitat]: Estado de verificación restablecido para pruebas.');
+    console.log('[Didit Vivat]: Estado de verificación restablecido para pruebas.');
   }
 
   function isOwnerVerified(email) {
@@ -49,21 +49,21 @@
       const targetEmail = email || 
         (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
         (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
-        (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
+        (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
         null;
 
       // 2. Verificar datos reales de pasaporte / KYC en localStorage
-      const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+      const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
       const hasValidPassport = Boolean(
         pData && (pData.cuit || pData.id_pasaporte || pData.codigo_pasaporte || pData.status === 'valid' || pData.status === 'verified')
       );
 
-      const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+      const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
       const hasValidDidit = Boolean(
         didit && (didit.documentNumber || didit.status === 'APPROVED' || didit.verified)
       );
 
-      const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+      const user = JSON.parse(localStorage.getItem('vivat_user') || '{}');
       const hasValidUser = Boolean(user && user.cuenta_verificada);
 
       // Si el usuario eliminó su pasaporte e identidad Didit, NO está verificado
@@ -98,8 +98,8 @@
     const currentEmail = emailParam || 
       (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
       (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
-      (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
-      'propietario@habitat.ar';
+      (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
+      'propietario@vivat.ar';
 
     if (typeof window.iniciarKYC !== 'function') {
       alert('El servicio de verificación Didit no está disponible.');
@@ -129,8 +129,8 @@
   function promptVerificationBeforePublish({ email, onProceed }) {
     const ownerEmail = email || 
       (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
-      (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
-      'propietario@habitat.ar';
+      (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
+      'propietario@vivat.ar';
 
     const alreadyVerified = isOwnerVerified(ownerEmail);
 
@@ -314,7 +314,7 @@
   }
 
   // Exponer al objeto global
-  window.HabitatOwnerVerification = {
+  window.VivatOwnerVerification = {
     isOwnerVerified,
     setOwnerVerified,
     resetVerification,

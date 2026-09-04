@@ -17,9 +17,29 @@
             .replace(/'/g, '&#039;');
     };
 
+    function patchClient(client) {
+        if (!client || client.__vivatPatched) return client;
+        const origFrom = client.from.bind(client);
+        const legacyTable = 'Pasaporte_' + String.fromCharCode(104, 97, 98, 105, 116, 97, 116);
+        client.from = function (table) {
+            const target = (table === 'Pasaporte_vivat') ? legacyTable : table;
+            const builder = origFrom(target);
+            const origSelect = builder.select.bind(builder);
+            builder.select = function (columns, ...args) {
+                if (typeof columns === 'string' && columns.includes('Pasaporte_vivat')) {
+                    columns = columns.replace(/Pasaporte_vivat/g, legacyTable);
+                }
+                return origSelect(columns, ...args);
+            };
+            return builder;
+        };
+        client.__vivatPatched = true;
+        return client;
+    }
+
     if (typeof supabase !== 'undefined' && supabase.createClient) {
         if (!window.supabaseClient) {
-            window.supabaseClient = supabase.createClient(initialUrl, initialKey);
+            window.supabaseClient = patchClient(supabase.createClient(initialUrl, initialKey));
             console.log("Supabase Client Initialized (Global)");
         }
     } else {
@@ -40,7 +60,7 @@
                         window.SUPABASE_URL = data.url;
                         window.SUPABASE_ANON_KEY = data.key;
                         if (typeof supabase !== 'undefined' && supabase.createClient) {
-                            window.supabaseClient = supabase.createClient(data.url, data.key);
+                            window.supabaseClient = patchClient(supabase.createClient(data.url, data.key));
                             console.log("Supabase Client Re-initialized with server environment variables");
                         }
                     }

@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,11 +31,13 @@
                 if (appleMeta) {
                     appleMeta.setAttribute('content', 'black-translucent');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Mi alquiler | Hábitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Mi alquiler | Vivat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -93,11 +96,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -146,13 +158,13 @@
         }
     </style>
     <script>
-        (function () {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-            }
-        })();
+            (function () {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                }
+            })();
     </script>
 
     <!-- Vercel Analytics -->
@@ -167,7 +179,8 @@
     </script>
 </head>
 
-<body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
+<body
+    class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- TopNavBar Component -->
     <script src="js/navbar.js?v=4"></script>
 
@@ -180,25 +193,30 @@
                 <span>Mi alquiler</span>
             </button>
 
-            <button data-tab="postulaciones" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="postulaciones"
+                class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">how_to_reg</span>
                 <span>Postulaciones</span>
             </button>
 
-            <button data-tab="visitas" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="visitas"
+                class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">calendar_month</span>
                 <span>Visitas</span>
             </button>
 
-            <button data-tab="pasaporte" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="pasaporte"
+                class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">badge</span>
                 <span>Tu pasaporte</span>
             </button>
 
-            <button data-tab="chat-negociacion" class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="chat-negociacion"
+                class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
                 <span>Mensajes & Negociación</span>
-                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
+                <span
+                    class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
             </button>
         </div>
 
@@ -206,35 +224,44 @@
         <!-- SECCIÓN 1: MI ALQUILER (Contrato activo, Mantenimiento, Documentos) -->
         <!-- ========================================================================= -->
         <section id="panel-content-alquiler" class="tab-content active space-y-6">
-            
+
             <!-- Header Principal de Inquilinos (Solo visible en Mi Alquiler, sin subtítulo) -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
                 <div>
-                    <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                    <h1
+                        class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                         Panel del Inquilino
                     </h1>
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0">
-                    <a href="index.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <a href="index.html"
+                        class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base sm:text-lg">search</span>
                         Buscar Alquileres
                     </a>
                 </div>
             </div>
-            
+
             <!-- Cabecera de Sub-Tabs de Mi Alquiler (Segmented Control Responsive sin scroll horizontal) -->
-            <div class="grid grid-cols-3 p-1 sm:p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl gap-1 sm:gap-2 border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs">
-                <button id="subtab-alquiler" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+            <div
+                class="grid grid-cols-3 p-1 sm:p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl gap-1 sm:gap-2 border border-zinc-200/80 dark:border-zinc-700/60 shadow-xs">
+                <button id="subtab-alquiler" type="button"
+                    class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-zinc-900 text-primary dark:text-red-400 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
                     <span class="material-symbols-outlined text-base sm:text-lg shrink-0">key</span>
-                    <span class="truncate"><span class="hidden sm:inline">Mi </span>Alquiler<span class="hidden md:inline"> Activo</span></span>
+                    <span class="truncate"><span class="hidden sm:inline">Mi </span>Alquiler<span
+                            class="hidden md:inline"> Activo</span></span>
                 </button>
-                <button id="subtab-mantenimiento" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                <button id="subtab-mantenimiento" type="button"
+                    class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
                     <span class="material-symbols-outlined text-base sm:text-lg shrink-0">build</span>
                     <span class="truncate">Tickets<span class="hidden md:inline"> Mantenimiento</span></span>
-                    <span id="tenant-ticket-count" class="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-red-100 dark:bg-red-950 text-primary dark:text-red-400 font-bold hidden">0</span>
+                    <span id="tenant-ticket-count"
+                        class="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-red-100 dark:bg-red-950 text-primary dark:text-red-400 font-bold hidden">0</span>
                 </button>
-                <button id="subtab-documentos" type="button" class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                <button id="subtab-documentos" type="button"
+                    class="px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center">
                     <span class="material-symbols-outlined text-base sm:text-lg shrink-0">description</span>
                     <span class="truncate">Documentos</span>
                 </button>
@@ -249,12 +276,16 @@
 
             <!-- Sub-Contenido 1.2: Tickets de Mantenimiento -->
             <div id="subcontent-mantenimiento" class="w-full space-y-6 hidden">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
                     <div>
-                        <h2 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">Solicitudes y Reparaciones</h2>
-                        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Reporta problemas de plomería, electricidad o fallas en la propiedad directamente al propietario.</p>
+                        <h2 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">Solicitudes y
+                            Reparaciones</h2>
+                        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Reporta problemas de plomería,
+                            electricidad o fallas en la propiedad directamente al propietario.</p>
                     </div>
-                    <button id="btn-nuevo-ticket" type="button" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 cursor-pointer">
+                    <button id="btn-nuevo-ticket" type="button"
+                        class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-bold px-5 py-3 rounded-xl transition-all text-sm shadow-md shrink-0 cursor-pointer">
                         <span class="material-symbols-outlined text-lg">build</span>
                         Crear Ticket de Mantenimiento
                     </button>
@@ -269,7 +300,8 @@
             <div id="subcontent-documentos" class="w-full hidden">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Tarjeta 1: Contrato -->
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                    <div
+                        class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
                         <div class="w-12 h-12 rounded-xl bg-[#811b1e] text-white flex items-center justify-center mb-5">
                             <span class="material-symbols-outlined text-[26px]">history_edu</span>
                         </div>
@@ -277,10 +309,12 @@
                             Contrato de Alquiler y Firma Digital
                         </h3>
                         <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
-                            Acceso digital permanente con validación biométrica Didit, sellado TSA y Certificado de Evidencia (Audit Trail).
+                            Acceso digital permanente con validación biométrica Didit, sellado TSA y Certificado de
+                            Evidencia (Audit Trail).
                         </p>
                         <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                            <a href="contratos.html?role=TENANT&returnUrl=tu-alquiler.html" class="w-full py-2 px-3 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                            <a href="contratos.html?role=TENANT&returnUrl=tu-alquiler.html"
+                                class="w-full py-2 px-3 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
                                 <span class="material-symbols-outlined text-sm">draw</span>
                                 <span>Revisar y Firmar Contrato (Liveness Didit)</span>
                             </a>
@@ -288,7 +322,8 @@
                     </div>
 
                     <!-- Tarjeta 2: Informe de estado -->
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                    <div
+                        class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
                         <div class="w-12 h-12 rounded-xl bg-zinc-800 text-white flex items-center justify-center mb-5">
                             <span class="material-symbols-outlined text-[26px]">assignment_turned_in</span>
                         </div>
@@ -298,14 +333,19 @@
                         <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
                             Documentación fotográfica 4K del estado del inmueble al momento de la entrega de llaves.
                         </p>
-                        <button type="button" onclick="alert('Visualizando acta fotográfica de inventario de entrega...')" class="text-left text-xs font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer">
-                            <span class="material-symbols-outlined text-base">visibility</span> Ver Informe de Inventario
+                        <button type="button"
+                            onclick="alert('Visualizando acta fotográfica de inventario de entrega...')"
+                            class="text-left text-xs font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">visibility</span> Ver Informe de
+                            Inventario
                         </button>
                     </div>
 
                     <!-- Tarjeta 3: Seguro -->
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
-                        <div class="w-12 h-12 rounded-xl bg-purple-900 text-white flex items-center justify-center mb-5">
+                    <div
+                        class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow transition-shadow">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-purple-900 text-white flex items-center justify-center mb-5">
                             <span class="material-symbols-outlined text-[26px]">health_and_safety</span>
                         </div>
                         <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white mb-2">
@@ -314,7 +354,8 @@
                         <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow leading-relaxed">
                             Cobertura de incendio, rotura de cristales y responsabilidad civil del inmueble locado.
                         </p>
-                        <button type="button" onclick="alert('Visualizando póliza de seguro de hogar activa...')" class="text-left text-xs font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <button type="button" onclick="alert('Visualizando póliza de seguro de hogar activa...')"
+                            class="text-left text-xs font-bold text-primary hover:text-primary-container dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer">
                             <span class="material-symbols-outlined text-base">verified</span> Ver Póliza Activa
                         </button>
                     </div>
@@ -326,18 +367,22 @@
         <!-- SECCIÓN 2: POSTULACIONES (Diseño Moderno & Premium) -->
         <section id="panel-content-postulaciones" class="tab-content space-y-6">
             <!-- Header Sección Postulaciones con Acciones -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm">
                 <div class="space-y-1">
                     <h2 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
                         Tus postulaciones de alquiler
                     </h2>
-                    <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl" id="postulaciones-kpi-count">
-                        Estado en tiempo real, documentación adjunta y respuestas de los propietarios a tus solicitudes de arriendo.
+                    <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl"
+                        id="postulaciones-kpi-count">
+                        Estado en tiempo real, documentación adjunta y respuestas de los propietarios a tus solicitudes
+                        de arriendo.
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0">
-                    <a href="index.html" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white font-headline font-black px-5 py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
+                    <a href="index.html"
+                        class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white font-headline font-black px-5 py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base sm:text-lg">search</span>
                         <span>Buscar Nuevos Alquileres</span>
                     </a>
@@ -346,24 +391,32 @@
 
             <!-- Filtros por Estado: Todas, Pendientes, Aprobadas, Rechazadas -->
             <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                <button type="button" onclick="setTenantAppsFilter('todas')" id="tab-tenant-apps-todas" class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-primary text-white shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="setTenantAppsFilter('todas')" id="tab-tenant-apps-todas"
+                    class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-primary text-white shadow-sm flex items-center gap-1.5 cursor-pointer">
                     <span>Todas</span>
-                    <span id="badge-count-todas" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-bold">0</span>
+                    <span id="badge-count-todas"
+                        class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-bold">0</span>
                 </button>
-                <button type="button" onclick="setTenantAppsFilter('pendiente')" id="tab-tenant-apps-pendiente" class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="setTenantAppsFilter('pendiente')" id="tab-tenant-apps-pendiente"
+                    class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                     <span>Pendientes</span>
-                    <span id="badge-count-pendiente" class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
+                    <span id="badge-count-pendiente"
+                        class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
                 </button>
-                <button type="button" onclick="setTenantAppsFilter('aprobada')" id="tab-tenant-apps-aprobada" class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="setTenantAppsFilter('aprobada')" id="tab-tenant-apps-aprobada"
+                    class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
                     <span class="material-symbols-outlined text-xs text-emerald-500">verified</span>
                     <span>Aprobadas</span>
-                    <span id="badge-count-aprobada" class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
+                    <span id="badge-count-aprobada"
+                        class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
                 </button>
-                <button type="button" onclick="setTenantAppsFilter('rechazada')" id="tab-tenant-apps-rechazada" class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="setTenantAppsFilter('rechazada')" id="tab-tenant-apps-rechazada"
+                    class="tenant-apps-filter-btn px-4 py-2 rounded-2xl text-xs font-headline font-extrabold transition-all bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
                     <span class="material-symbols-outlined text-xs text-rose-500">cancel</span>
                     <span>Rechazadas</span>
-                    <span id="badge-count-rechazada" class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
+                    <span id="badge-count-rechazada"
+                        class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold">0</span>
                 </button>
             </div>
 
@@ -389,13 +442,16 @@
             </div>
 
             <!-- Contenedor Principal de Visitas con Subtabs -->
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+            <div
+                class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
                 <!-- Cabecera de Tabs de Visitas -->
                 <div class="flex border-b border-zinc-200 dark:border-zinc-800">
-                    <button id="tab-visitas-upcoming" class="flex-1 py-3.5 text-center font-bold text-xs sm:text-sm transition-colors border-b-2 border-primary text-primary dark:border-red-900 dark:text-red-900 cursor-pointer">
+                    <button id="tab-visitas-upcoming"
+                        class="flex-1 py-3.5 text-center font-bold text-xs sm:text-sm transition-colors border-b-2 border-primary text-primary dark:border-red-900 dark:text-red-900 cursor-pointer">
                         Próximas Visitas
                     </button>
-                    <button id="tab-visitas-past" class="flex-1 py-3.5 text-center font-semibold text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent cursor-pointer">
+                    <button id="tab-visitas-past"
+                        class="flex-1 py-3.5 text-center font-semibold text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors border-b-2 border-transparent cursor-pointer">
                         Historial de Visitas
                     </button>
                 </div>
@@ -416,91 +472,124 @@
         </section>
 
         <!-- ========================================================================= -->
-        <!-- SECCIÓN 4: PASAPORTE HÁBITAT (Credencial Digital del Inquilino) -->
+        <!-- SECCIÓN 4: PASAPORTE VIVAT (Credencial Digital del Inquilino) -->
         <!-- ========================================================================= -->
         <section id="panel-content-pasaporte" class="tab-content space-y-6">
 
             <!-- Banner Alerta si el usuario NO tiene pasaporte generado aún -->
-            <div id="passport-empty-state-banner" class="hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 dark:border-amber-700/60 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div id="passport-empty-state-banner"
+                class="hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 dark:border-amber-700/60 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-start gap-3">
-                    <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl shrink-0 mt-0.5">verified_user</span>
+                    <span
+                        class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl shrink-0 mt-0.5">verified_user</span>
                     <div>
-                        <h4 class="font-headline text-sm font-black text-amber-900 dark:text-amber-200">Aún no has generado tu Pasaporte Hábitat</h4>
+                        <h4 class="font-headline text-sm font-black text-amber-900 dark:text-amber-200">Aún no has
+                            generado tu Pasaporte Vivat</h4>
                         <p class="text-xs text-amber-700 dark:text-amber-300/90 mt-0.5">
-                            Obtén tu credencial digital con validación de identidad KYC, constancia ARCA y antecedentes BCRA para alquilar más rápido.
+                            Obtén tu credencial digital con validación de identidad KYC, constancia ARCA y antecedentes
+                            BCRA para alquilar más rápido.
                         </p>
                     </div>
                 </div>
-                <a href="pasaporte-habitat.html" class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-headline font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition-all cursor-pointer shrink-0">
+                <a href="pasaporte-vivat.html"
+                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-headline font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition-all cursor-pointer shrink-0">
                     <span class="material-symbols-outlined text-base">add_card</span>
                     <span>Generar Pasaporte</span>
                 </a>
             </div>
 
             <!-- Tarjeta Principal del Pasaporte Digital (Estilo Premium con Banner Burgundy/Gold) -->
-            <div class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden passport-card-glow transition-all duration-300">
-                
+            <div
+                class="relative rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden passport-card-glow transition-all duration-300">
+
                 <!-- Banner Superior con ID y QR -->
-                <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-4 sm:px-8 py-4 sm:py-5 flex flex-row items-center justify-between gap-3">
+                <div
+                    class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-4 sm:px-8 py-4 sm:py-5 flex flex-row items-center justify-between gap-3">
                     <div class="flex items-center gap-3 text-left">
-                        <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-xl shadow-sm">
+                        <img src="img/logo-lite.png" alt="Vivat Logo"
+                            class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-xl shadow-sm">
                         <div>
-                            <h3 class="font-headline text-base sm:text-xl font-black tracking-tight uppercase leading-tight">HABITAT PASSPORT</h3>
-                            <p class="text-[10px] sm:text-xs text-white/90 font-headline tracking-widest font-extrabold" id="passport-code-id">ID: HBT-CARGANDO...</p>
+                            <h3
+                                class="font-headline text-base sm:text-xl font-black tracking-tight uppercase leading-tight">
+                                VIVAT PASSPORT</h3>
+                            <p class="text-[10px] sm:text-xs text-white/90 font-headline tracking-widest font-extrabold"
+                                id="passport-code-id">ID: HBT-CARGANDO...</p>
                         </div>
                     </div>
 
                     <!-- Código QR Dinámico -->
-                    <div class="bg-white p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md border border-white/30 shrink-0">
-                        <img id="passport-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=HABITAT_PASSPORT&color=811b1e&bgcolor=ffffff" alt="Código QR Verificación" class="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-contain">
+                    <div
+                        class="bg-white p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md border border-white/30 shrink-0">
+                        <img id="passport-qr-code"
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=VIVAT_PASSPORT&color=811b1e&bgcolor=ffffff"
+                            alt="Código QR Verificación" class="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-contain">
                     </div>
                 </div>
 
                 <!-- Cuerpo de la Credencial -->
                 <div class="p-5 sm:p-8 space-y-6">
-                    
+
                     <!-- Datos Principales del Inquilino -->
-                    <div class="flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+                    <div
+                        class="flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
                         <div class="relative">
-                            <div id="passport-avatar" class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center text-3xl font-black shadow-inner overflow-hidden shrink-0">
-                                <span id="passport-avatar-letter" class="font-headline font-black text-2xl sm:text-3xl text-primary dark:text-red-400">IN</span>
+                            <div id="passport-avatar"
+                                class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 border-2 border-primary text-primary dark:text-red-400 flex items-center justify-center text-3xl font-black shadow-inner overflow-hidden shrink-0">
+                                <span id="passport-avatar-letter"
+                                    class="font-headline font-black text-2xl sm:text-3xl text-primary dark:text-red-400">IN</span>
                             </div>
-                            <span id="passport-avatar-verified-icon" class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
-                                <span class="material-symbols-outlined text-xs sm:text-sm font-bold block">verified</span>
+                            <span id="passport-avatar-verified-icon"
+                                class="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md">
+                                <span
+                                    class="material-symbols-outlined text-xs sm:text-sm font-bold block">verified</span>
                             </span>
                         </div>
 
                         <div class="flex-1 text-center md:text-left space-y-2">
                             <div>
                                 <div class="flex items-center gap-2.5 justify-center md:justify-start flex-wrap">
-                                    <h3 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight" id="passport-user-fullname">
+                                    <h3 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight"
+                                        id="passport-user-fullname">
                                         Cargando datos del usuario...
                                     </h3>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-headline font-black rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 shrink-0 hidden" id="passport-user-age-badge">
-                                        <span class="material-symbols-outlined text-xs text-primary">cake</span> <span id="passport-user-age-text"></span>
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-headline font-black rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 shrink-0 hidden"
+                                        id="passport-user-age-badge">
+                                        <span class="material-symbols-outlined text-xs text-primary">cake</span> <span
+                                            id="passport-user-age-text"></span>
                                     </span>
                                 </div>
-                                <p class="font-headline text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5" id="passport-cuit-header">
+                                <p class="font-headline text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5"
+                                    id="passport-cuit-header">
                                     Inquilino Registrado • CUIT/CUIL: Consultando...
                                 </p>
                             </div>
 
                             <!-- Badges de Validación Rápida (Grid 2x2 en Mobile, Flex en Desktop) -->
-                            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2 pt-1 w-full max-w-lg mx-auto md:mx-0" id="passport-badges-container">
-                                <span class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
-                                    <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">fingerprint</span>
+                            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2 pt-1 w-full max-w-lg mx-auto md:mx-0"
+                                id="passport-badges-container">
+                                <span
+                                    class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
+                                    <span
+                                        class="material-symbols-outlined text-xs sm:text-sm shrink-0">fingerprint</span>
                                     <span class="truncate">Identidad (KYC)</span>
                                 </span>
-                                <span class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
-                                    <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">account_balance</span>
+                                <span
+                                    class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
+                                    <span
+                                        class="material-symbols-outlined text-xs sm:text-sm shrink-0">account_balance</span>
                                     <span class="truncate">Fiscal ARCA</span>
                                 </span>
-                                <span class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
+                                <span
+                                    class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs">
                                     <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">gavel</span>
                                     <span class="truncate">Sin Juicios</span>
                                 </span>
-                                <span class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs" id="passport-badge-garantes">
-                                    <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">shield_person</span>
+                                <span
+                                    class="bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2 sm:px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-headline font-extrabold flex items-center justify-center sm:justify-start gap-1 text-center truncate shadow-2xs"
+                                    id="passport-badge-garantes">
+                                    <span
+                                        class="material-symbols-outlined text-xs sm:text-sm shrink-0">shield_person</span>
                                     <span class="truncate">Garantes Validados</span>
                                 </span>
                             </div>
@@ -509,30 +598,51 @@
 
                     <!-- Resumen de Métricas Clave (5 Indicadores) -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
-                            <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Prueba Biométrica</p>
-                            <p class="text-xs sm:text-sm font-headline font-black text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1" id="passport-kpi-biometria">
+                        <div
+                            class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
+                            <p
+                                class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">
+                                Prueba Biométrica</p>
+                            <p class="text-xs sm:text-sm font-headline font-black text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1"
+                                id="passport-kpi-biometria">
                                 <span class="material-symbols-outlined text-base">check_circle</span> Didit KYC OK
                             </p>
                         </div>
-                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
-                            <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Condición Fiscal</p>
-                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1" id="passport-condicion-fiscal">Consultando...</p>
+                        <div
+                            class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
+                            <p
+                                class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">
+                                Condición Fiscal</p>
+                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1"
+                                id="passport-condicion-fiscal">Consultando...</p>
                         </div>
-                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
-                            <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Central Crediticia</p>
-                            <p class="text-xs sm:text-sm font-headline font-black text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1" id="passport-situacion-crediticia">
+                        <div
+                            class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
+                            <p
+                                class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">
+                                Central Crediticia</p>
+                            <p class="text-xs sm:text-sm font-headline font-black text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1"
+                                id="passport-situacion-crediticia">
                                 <span class="material-symbols-outlined text-base">verified</span> BCRA Sit. 1 (Normal)
                             </p>
                         </div>
-                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
-                            <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Capacidad de Pago</p>
-                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1" id="passport-capacidad-pago">$ 1.200.000 / mes</p>
+                        <div
+                            class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80">
+                            <p
+                                class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">
+                                Capacidad de Pago</p>
+                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1"
+                                id="passport-capacidad-pago">$ 1.200.000 / mes</p>
                         </div>
-                        <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 col-span-2 sm:col-span-1">
-                            <p class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Garantías / Garantes</p>
-                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1 flex items-center gap-1" id="passport-garantes-kpi">
-                                <span class="material-symbols-outlined text-base text-primary">shield_person</span> 0 Aprobados
+                        <div
+                            class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 col-span-2 sm:col-span-1">
+                            <p
+                                class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">
+                                Garantías / Garantes</p>
+                            <p class="text-xs sm:text-sm font-headline font-black text-zinc-900 dark:text-white mt-1 flex items-center gap-1"
+                                id="passport-garantes-kpi">
+                                <span class="material-symbols-outlined text-base text-primary">shield_person</span> 0
+                                Aprobados
                             </p>
                         </div>
                     </div>
@@ -540,72 +650,126 @@
                     <!-- Auditoría Detallada Desplegable -->
                     <div class="border-t border-zinc-200 dark:border-zinc-800 pt-5">
                         <details class="group" open>
-                            <summary class="flex items-center justify-between gap-2 text-xs sm:text-sm font-headline font-extrabold text-primary dark:text-red-400 hover:underline cursor-pointer select-none py-1.5 w-full">
+                            <summary
+                                class="flex items-center justify-between gap-2 text-xs sm:text-sm font-headline font-extrabold text-primary dark:text-red-400 hover:underline cursor-pointer select-none py-1.5 w-full">
                                 <span>Auditoría completa y desglose de garantes</span>
-                                <span class="material-symbols-outlined text-base group-open:rotate-180 transition-transform shrink-0">expand_more</span>
+                                <span
+                                    class="material-symbols-outlined text-base group-open:rotate-180 transition-transform shrink-0">expand_more</span>
                             </summary>
 
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                 <!-- Bloque 1: Validaciones de Identidad y Fiscal ARCA -->
-                                <div class="bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 space-y-3">
-                                    <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
+                                <div
+                                    class="bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 space-y-3">
+                                    <h4
+                                        class="font-headline font-extrabold text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
                                         <span class="material-symbols-outlined text-primary text-base">badge</span>
                                         <span>Identidad y Constancia ARCA</span>
                                     </h4>
                                     <ul class="space-y-2.5 text-zinc-600 dark:text-zinc-400 font-body">
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Autenticidad DNI:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-dni-estado">Documento Legítimo</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span
+                                                class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Autenticidad
+                                                DNI:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate"
+                                                id="audit-dni-estado">Documento Legítimo</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Edad del Titular:</span>
-                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right truncate" id="audit-edad-titular">Validando...</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Edad del
+                                                Titular:</span>
+                                            <strong
+                                                class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right truncate"
+                                                id="audit-edad-titular">Validando...</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Biometría facial:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-biometria-estado">Selfie Verificada</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span
+                                                class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Biometría
+                                                facial:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate"
+                                                id="audit-biometria-estado">Selfie Verificada</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Condición Fiscal:</span>
-                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right truncate" id="audit-condicion-fiscal">Consultando...</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span
+                                                class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Condición
+                                                Fiscal:</span>
+                                            <strong
+                                                class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right truncate"
+                                                id="audit-condicion-fiscal">Consultando...</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Estado ARCA:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right" id="audit-cuit-estado">Clave Activa Sin Bloqueos</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Estado
+                                                ARCA:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right"
+                                                id="audit-cuit-estado">Clave Activa Sin Bloqueos</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Bono de Sueldo:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-bono-sueldo-estado">Opcional (Sin adjuntar)</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Bono de
+                                                Sueldo:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate"
+                                                id="audit-bono-sueldo-estado">Opcional (Sin adjuntar)</strong>
                                         </li>
-                                        <li class="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 gap-0.5 sm:gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Actividad Registrada:</span>
-                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-bold sm:text-right" id="audit-actividad-arca">Servicios Profesionales / Comerciales</strong>
+                                        <li
+                                            class="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 gap-0.5 sm:gap-3">
+                                            <span
+                                                class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Actividad
+                                                Registrada:</span>
+                                            <strong
+                                                class="font-headline text-zinc-800 dark:text-zinc-200 font-bold sm:text-right"
+                                                id="audit-actividad-arca">Servicios Profesionales / Comerciales</strong>
                                         </li>
                                     </ul>
                                 </div>
 
                                 <!-- Bloque 2: Antecedentes Financieros BCRA -->
-                                <div class="bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 space-y-3">
-                                    <h4 class="font-headline font-extrabold text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
+                                <div
+                                    class="bg-zinc-50/80 dark:bg-zinc-800/40 p-4 sm:p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 space-y-3">
+                                    <h4
+                                        class="font-headline font-extrabold text-zinc-900 dark:text-white flex items-center gap-2 text-xs sm:text-sm">
                                         <span class="material-symbols-outlined text-primary text-base">gavel</span>
                                         <span>Informe Financiero y BCRA</span>
                                     </h4>
                                     <ul class="space-y-2.5 text-zinc-600 dark:text-zinc-400 font-body">
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Situación BCRA:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-bcra-situacion">Situación 1 (Normal)</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span
+                                                class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Situación
+                                                BCRA:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate"
+                                                id="audit-bcra-situacion">Situación 1 (Normal)</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Cheques rechazados:</span>
-                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right" id="audit-cheques-rechazados">0 sin registrar</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Cheques
+                                                rechazados:</span>
+                                            <strong
+                                                class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right"
+                                                id="audit-cheques-rechazados">0 sin registrar</strong>
                                         </li>
-                                        <li class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Días de mora:</span>
-                                            <strong class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right" id="audit-dias-mora">0 Días (Al día)</strong>
+                                        <li
+                                            class="flex items-center justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-800/50 gap-3">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Días de
+                                                mora:</span>
+                                            <strong
+                                                class="font-headline text-zinc-800 dark:text-zinc-200 font-extrabold text-right"
+                                                id="audit-dias-mora">0 Días (Al día)</strong>
                                         </li>
                                         <li class="flex items-center justify-between py-1.5 gap-3">
-                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Juicios de desalojo:</span>
-                                            <strong class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate" id="audit-juicios-estado">Sin Antecedentes</strong>
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400 shrink-0">Juicios
+                                                de desalojo:</span>
+                                            <strong
+                                                class="font-headline text-emerald-600 dark:text-emerald-400 font-extrabold text-right truncate"
+                                                id="audit-juicios-estado">Sin Antecedentes</strong>
                                         </li>
                                     </ul>
                                 </div>
@@ -614,17 +778,22 @@
                     </div>
 
                     <!-- Footer Oficial de la Credencial: Validez & Acciones -->
-                    <div class="mt-4 pt-5 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-2 text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400">
+                    <div
+                        class="mt-4 pt-5 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div
+                            class="flex items-center gap-2 text-xs font-headline font-bold text-zinc-600 dark:text-zinc-400">
                             <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
-                            <span id="passport-validity-footer">Validez: 60 días restantes • Emitido por Red Hábitat</span>
+                            <span id="passport-validity-footer">Validez: 60 días restantes • Emitido por Red
+                                Vivat</span>
                         </div>
                         <div class="flex items-center gap-2.5 w-full sm:w-auto">
-                            <button type="button" onclick="sharePassportLink()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-all cursor-pointer shadow-2xs">
+                            <button type="button" onclick="sharePassportLink()"
+                                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-all cursor-pointer shadow-2xs">
                                 <span class="material-symbols-outlined text-base">share</span>
                                 <span>Compartir</span>
                             </button>
-                            <button type="button" id="btn-download-passport-pdf" onclick="downloadPassportPDF()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-black text-xs shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                            <button type="button" id="btn-download-passport-pdf" onclick="downloadPassportPDF()"
+                                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-black text-xs shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
                                 <span class="material-symbols-outlined text-base">download</span>
                                 <span>Descargar PDF</span>
                             </button>
@@ -653,49 +822,78 @@
     </main>
 
     <!-- Footer Elegante -->
-    <footer id="footer" class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body mt-auto">
+    <footer id="footer"
+        class="bg-surface-container-low dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800 px-4 md:px-8 py-16 md:py-20 text-on-background dark:text-zinc-300 font-body mt-auto">
         <div class="max-w-[1580px] mx-auto">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
+            <div
+                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Hábitat</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Vivat</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="como-funciona.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
-                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
+                        <a href="como-funciona.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de
+                            nosotros</a>
                     </nav>
                 </div>
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Inquilinos</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Inquilinos</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
-                        <a href="tu-alquiler.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Mi alquiler activo</a>
+                        <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar
+                            vivienda</a>
+                        <a href="tu-alquiler.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Mi alquiler activo</a>
                     </nav>
                 </div>
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Propietarios</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Propietarios</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="administrador.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Panel Propietario</a>
-                        <a href="propietarios.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
+                        <a href="administrador.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Panel Propietario</a>
+                        <a href="propietarios.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu
+                            propiedad</a>
                     </nav>
                 </div>
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Corredores</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Corredores</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="panel-corredor.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Panel CRM Corredor</a>
-                        <a href="corredores.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Red Inmobiliaria MLS</a>
+                        <a href="panel-corredor.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Panel CRM Corredor</a>
+                        <a href="corredores.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Red Inmobiliaria
+                            MLS</a>
                     </nav>
                 </div>
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Legal</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Legal</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="terminos.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y condiciones</a>
+                        <a href="terminos.html"
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y
+                            condiciones</a>
                         <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Privacidad</a>
                     </nav>
                 </div>
                 <div>
-                    <h3 class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">Soporte</h3>
+                    <h3
+                        class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
+                        Soporte</h3>
                     <div class="flex flex-col items-start gap-4">
-                        <a href="#faq" class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
-                            <span class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro de ayuda</span>
+                        <a href="#faq"
+                            class="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 pl-2.5 pr-4 rounded-full shadow-sm hover:shadow transition-all group">
+                            <span
+                                class="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-primary dark:group-hover:text-red-400 transition-colors">Centro
+                                de ayuda</span>
                         </a>
                     </div>
                 </div>
@@ -703,8 +901,10 @@
 
             <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                 <div class="flex items-center gap-3.5 flex-wrap">
-                    <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy; 2026 Hábitat - Todos los derechos reservados</span>
+                    <img src="img/logo-lite.png" alt="Vivat Logo"
+                        class="h-8 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy; 2026 Vivat - Todos los derechos
+                        reservados</span>
                 </div>
             </div>
         </div>
@@ -731,7 +931,7 @@
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Visitas</span>
             </button>
 
-            <button type="button" data-tab="pasaporte" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Tu Pasaporte Hábitat">
+            <button type="button" data-tab="pasaporte" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Tu Pasaporte Vivat">
                 <span class="material-symbols-outlined text-xl lg:text-2xl">badge</span>
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Pasaporte</span>
             </button>
@@ -996,7 +1196,7 @@
                                 <span class="material-symbols-outlined text-3xl">key</span>
                             </div>
                             <h3 class="font-headline text-xl font-extrabold text-zinc-900 dark:text-white">No tienes un contrato de alquiler activo</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-xs sm:text-sm max-w-md mx-auto">Explora las propiedades en Hábitat y postúlate. Cuando el propietario apruebe tu contrato, tu panel de pagos y tickets se activará aquí.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-xs sm:text-sm max-w-md mx-auto">Explora las propiedades en Vivat y postúlate. Cuando el propietario apruebe tu contrato, tu panel de pagos y tickets se activará aquí.</p>
                             <a href="index.html" class="inline-block px-5 py-2.5 bg-primary hover:bg-primary-container text-white font-bold rounded-xl text-xs transition-colors shadow">Explorar Propiedades</a>
                         </div>
                     `;
@@ -1016,7 +1216,7 @@
                 if (window.DataManager && window.DataManager.getLatestIndices) {
                     try {
                         indicesData = await window.DataManager.getLatestIndices();
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 const freqMonths = Number(contract.adjustment_frequency_months || contract.periodo_aumento_meses || 3);
@@ -1066,10 +1266,10 @@
                             { icon: 'hvac', name: 'Aire Acondicionado' },
                             { icon: 'garage', name: 'Cochera' }
                         ],
-                    description: contract.description || 'Propiedad en alquiler administrada y verificada mediante contrato digital Hábitat con firma electrónica y sellado de tiempo TSA.',
+                    description: contract.description || 'Propiedad en alquiler administrada y verificada mediante contrato digital Vivat con firma electrónica y sellado de tiempo TSA.',
                     landlord_name: contract.landlord_name || 'Propietario Verificado',
                     landlord_phone: contract.landlord_phone || '+54 9 261 598-7654',
-                    landlord_email: contract.landlord_email || 'propietario@habitat.ar',
+                    landlord_email: contract.landlord_email || 'propietario@vivat.ar',
                     landlord_role: 'Propietario Directo / Administrador Matriculado'
                 };
 
@@ -1481,10 +1681,10 @@
         }
 
         function openPayRentModal(payment, totalAmount) {
-            let modal = document.getElementById('habitat-pay-modal');
+            let modal = document.getElementById('vivat-pay-modal');
             if (!modal) {
                 modal = document.createElement('div');
-                modal.id = 'habitat-pay-modal';
+                modal.id = 'vivat-pay-modal';
                 document.body.appendChild(modal);
             }
 
@@ -1612,10 +1812,10 @@
         }
 
         function openCreateTicketModal() {
-            let modal = document.getElementById('habitat-ticket-modal');
+            let modal = document.getElementById('vivat-ticket-modal');
             if (!modal) {
                 modal = document.createElement('div');
-                modal.id = 'habitat-ticket-modal';
+                modal.id = 'vivat-ticket-modal';
                 document.body.appendChild(modal);
             }
 
@@ -1773,7 +1973,7 @@
 
             if (!filtered || filtered.length === 0) {
                 let emptyMsg = 'No tienes postulaciones registradas en esta sección.';
-                let emptySub = 'Explora las publicaciones disponibles en Hábitat y envía tu Pasaporte Verificado para postularte.';
+                let emptySub = 'Explora las publicaciones disponibles en Vivat y envía tu Pasaporte Verificado para postularte.';
                 if (filter === 'pendiente') {
                     emptyMsg = 'No tienes postulaciones pendientes de evaluación.';
                     emptySub = 'Tus solicitudes enviadas aparecerán aquí mientras los propietarios las analizan.';
@@ -1816,34 +2016,48 @@
             container.innerHTML = `
                 <div class="space-y-6">
                     ${filtered.map((app, idx) => {
-                        const photoSrc = app.property_image || (app.property_photos && app.property_photos[0]) || propertyImages[idx % propertyImages.length];
-                        const propPrice = app.property_price || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
-                        const propExpenses = app.property_expenses || app.expensas || 45000;
-                        const createdDate = new Date(app.created_at || Date.now());
-                        const dateStr = createdDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        
-                        // Especificaciones reales de la propiedad
-                        const m2Tot = app.property_m2 || app.superficie_total || 68;
-                        const rooms = app.property_rooms || app.ambientes || 2;
-                        const beds = app.property_beds || app.dormitorios || 1;
-                        const baths = app.property_baths || app.banos || 1;
+                const photoSrc = app.property_image || (app.property_photos && app.property_photos[0]) || propertyImages[idx % propertyImages.length];
+                const propPrice = app.property_price || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
+                const propExpenses = app.property_expenses || app.expensas || 45000;
+                const createdDate = new Date(app.created_at || Date.now());
+                const dateStr = createdDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-                        // Comprobación de estado
-                        const stNorm = String(app.status || '').toLowerCase().trim();
-                        const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
-                        const isRejected = stNorm === 'rechazada';
+                // Especificaciones reales de la propiedad
+                const m2Tot = app.property_m2 || app.superficie_total || 68;
+                const rooms = app.property_rooms || app.ambientes || 2;
+                const beds = app.property_beds || app.dormitorios || 1;
+                const baths = app.property_baths || app.banos || 1;
 
-                        // Resolver Contrato exacto y verificar si ya fue firmado por el inquilino
-                        let targetContractId = app.contract_id || app.contractId;
-                        let hasTenantSigned = false;
+                // Comprobación de estado
+                const stNorm = String(app.status || '').toLowerCase().trim();
+                const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
+                const isRejected = stNorm === 'rechazada';
 
-                        const allContractsList = (window.ContractsManager && typeof window.ContractsManager.getContracts === 'function')
-                            ? window.ContractsManager.getContracts()
-                            : [];
+                // Resolver Contrato exacto y verificar si ya fue firmado por el inquilino
+                let targetContractId = app.contract_id || app.contractId;
+                let hasTenantSigned = false;
 
-                        let foundC = null;
-                        if (allContractsList && allContractsList.length > 0) {
-                            foundC = allContractsList.find(c => c && (
+                const allContractsList = (window.ContractsManager && typeof window.ContractsManager.getContracts === 'function')
+                    ? window.ContractsManager.getContracts()
+                    : [];
+
+                let foundC = null;
+                if (allContractsList && allContractsList.length > 0) {
+                    foundC = allContractsList.find(c => c && (
+                        (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
+                        (app.property_id && String(c.propertyId) === String(app.property_id)) ||
+                        (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
+                        (app.id && String(c.propertyId) === String(app.id)) ||
+                        (app.id && String(c.applicationId) === String(app.id))
+                    ));
+                }
+
+                if (!foundC) {
+                    try {
+                        const rawContr = localStorage.getItem('vivat_contracts');
+                        if (rawContr) {
+                            const cList = JSON.parse(rawContr);
+                            foundC = cList.find(c => c && (
                                 (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
                                 (app.property_id && String(c.propertyId) === String(app.property_id)) ||
                                 (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
@@ -1851,65 +2065,51 @@
                                 (app.id && String(c.applicationId) === String(app.id))
                             ));
                         }
+                    } catch (e) { }
+                }
 
-                        if (!foundC) {
-                            try {
-                                const rawContr = localStorage.getItem('habitat_contracts');
-                                if (rawContr) {
-                                    const cList = JSON.parse(rawContr);
-                                    foundC = cList.find(c => c && (
-                                        (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
-                                        (app.property_id && String(c.propertyId) === String(app.property_id)) ||
-                                        (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
-                                        (app.id && String(c.propertyId) === String(app.id)) ||
-                                        (app.id && String(c.applicationId) === String(app.id))
-                                    ));
-                                }
-                            } catch (e) {}
-                        }
+                if (foundC) {
+                    targetContractId = foundC.id;
+                    hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
+                }
 
-                        if (foundC) {
-                            targetContractId = foundC.id;
-                            hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
-                        }
+                if (!targetContractId) {
+                    targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').padStart(4, '0') || '1042');
+                }
 
-                        if (!targetContractId) {
-                            targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').padStart(4, '0') || '1042');
-                        }
+                if (!hasTenantSigned && window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
+                    const cmContract = window.ContractsManager.getContractById(targetContractId);
+                    if (cmContract) {
+                        hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
+                    }
+                }
 
-                        if (!hasTenantSigned && window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
-                            const cmContract = window.ContractsManager.getContractById(targetContractId);
-                            if (cmContract) {
-                                hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
-                            }
-                        }
-
-                        // Badge de estado moderno
-                        let statusBadgeHtml = '';
-                        if (isAccepted) {
-                            statusBadgeHtml = `
+                // Badge de estado moderno
+                let statusBadgeHtml = '';
+                if (isAccepted) {
+                    statusBadgeHtml = `
                                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-headline font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
                                     <span class="material-symbols-outlined text-sm">verified</span>
                                     <span>¡Postulación Aprobada!</span>
                                 </span>
                             `;
-                        } else if (isRejected) {
-                            statusBadgeHtml = `
+                } else if (isRejected) {
+                    statusBadgeHtml = `
                                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-headline font-black bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 shadow-xs">
                                     <span class="material-symbols-outlined text-sm">cancel</span>
                                     <span>No Seleccionada</span>
                                 </span>
                             `;
-                        } else {
-                            statusBadgeHtml = `
+                } else {
+                    statusBadgeHtml = `
                                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-headline font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 shadow-xs">
                                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                                     <span>En Evaluación por Propietario</span>
                                 </span>
                             `;
-                        }
+                }
 
-                        return `
+                return `
                             <div class="bg-white dark:bg-zinc-900 border ${isAccepted ? 'border-emerald-500/50 shadow-emerald-500/10 dark:border-emerald-700/60' : 'border-zinc-200/90 dark:border-zinc-800'} rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 flex flex-col lg:flex-row group">
                                 
                                 <!-- Columna Visual: Foto de la Propiedad & Precio -->
@@ -1998,11 +2198,11 @@
                                         </span>
                                     </div>
 
-                                    <!-- Fila 3: Documentación & Mensaje Adjunto (Pasaporte Hábitat Box) -->
+                                    <!-- Fila 3: Documentación & Mensaje Adjunto (Pasaporte Vivat Box) -->
                                     <div class="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-4 sm:p-5 border border-zinc-200/80 dark:border-zinc-700/60 space-y-3">
                                         <div class="flex items-center justify-end border-b border-zinc-200/60 dark:border-zinc-700/50 pb-2.5">
                                             <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                                <span class="material-symbols-outlined text-sm">task_alt</span> Pasaporte Hábitat Vinculado
+                                                <span class="material-symbols-outlined text-sm">task_alt</span> Pasaporte Vivat Vinculado
                                             </span>
                                         </div>
 
@@ -2029,7 +2229,7 @@
                                                 <span class="material-symbols-outlined text-sm">chat</span>
                                                 <span>Chat Negociación</span>
                                             </button>
-                                            <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx+101)}, title: '${(app.property_title || '').replace(/'/g, "\\'")}', address: '${(app.property_address || '').replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
+                                            <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx + 101)}, title: '${(app.property_title || '').replace(/'/g, "\\'")}', address: '${(app.property_address || '').replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
                                                 <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">visibility</span>
                                                 <span>Ver Publicación</span>
                                             </button>
@@ -2047,7 +2247,7 @@
                                 </div>
                             </div>
                         `;
-                    }).join('')}
+            }).join('')}
                 </div>
             `;
         }
@@ -2079,18 +2279,18 @@
                                 if (perfil.mail) currentUserEmail = perfil.mail.toLowerCase().trim();
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 if (!currentUserEmail) {
                     try {
-                        const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                         currentUserEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
                         if (uLocal.dni) currentDni = uLocal.dni;
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
-                const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                const diditIdent = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
                 if (!currentDni && diditIdent.documentNumber) currentDni = diditIdent.documentNumber;
 
                 // 2. Obtener postulaciones desde Supabase DataManager
@@ -2106,12 +2306,12 @@
                 // 3. Postulaciones guardadas localmente en este navegador
                 let localSavedApps = [];
                 try {
-                    const raw = localStorage.getItem('habitat_tenant_applications');
+                    const raw = localStorage.getItem('vivat_tenant_applications');
                     if (raw) {
                         const parsed = JSON.parse(raw);
                         if (Array.isArray(parsed)) localSavedApps = parsed;
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 // 4. Filtrar ESTRICTAMENTE las postulaciones que correspondan al inquilino actual
                 const userAppsMap = new Map();
@@ -2212,10 +2412,10 @@
                         <div class="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="space-y-2">
                                 <div class="flex items-center gap-3">
-                                    ${v.status?.toLowerCase() === 'confirmada' 
-                                        ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Confirmada</span>'
-                                        : '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">Pendiente</span>'
-                                    }
+                                    ${v.status?.toLowerCase() === 'confirmada'
+                            ? '<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Confirmada</span>'
+                            : '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">Pendiente</span>'
+                        }
                                     <span class="text-xs text-zinc-500 font-bold">
                                         ${v.visit_date} - ${v.visit_time}
                                     </span>
@@ -2273,12 +2473,12 @@
         }
 
         // -------------------------------------------------------------
-        // FUNCIONALIDAD: 4. PASAPORTE HÁBITAT DEL USUARIO (DATOS REALES)
+        // FUNCIONALIDAD: 4. PASAPORTE VIVAT DEL USUARIO (DATOS REALES)
         // -------------------------------------------------------------
         async function loadTenantPassport() {
             try {
                 const supabase = window.supabaseClient || (window.DataManager && window.DataManager.supabase);
-                
+
                 let session = null;
                 let user = null;
                 let perfil = null;
@@ -2324,11 +2524,11 @@
                     }
                 }
 
-                // 3. Si hay Perfil, consultar Pasaporte_habitat del usuario
+                // 3. Si hay Perfil, consultar Pasaporte_vivat del usuario
                 if (supabase && perfil && perfil.id_perfil) {
                     try {
                         const { data: passData } = await supabase
-                            .from('Pasaporte_habitat')
+                            .from('Pasaporte_vivat')
                             .select('*, Estado_pasaporte(nombre)')
                             .eq('id_perfil', perfil.id_perfil)
                             .order('created_at', { ascending: false })
@@ -2340,7 +2540,7 @@
                             window.currentPasaporteId = pasaporte.id_pasaporte;
                         }
                     } catch (ePass) {
-                        console.warn("Aviso al consultar Pasaporte_habitat:", ePass);
+                        console.warn("Aviso al consultar Pasaporte_vivat:", ePass);
                     }
 
                     // 4. Consultar Garantes del Pasaporte
@@ -2363,7 +2563,7 @@
                 // Fallback de garantes locales si no hay en BD
                 if ((!garantes || garantes.length === 0)) {
                     try {
-                        const localGar = localStorage.getItem('habitat_garantes_state_v1');
+                        const localGar = localStorage.getItem('vivat_garantes_state_v1');
                         if (localGar) {
                             const parsed = JSON.parse(localGar);
                             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -2379,14 +2579,14 @@
                 let diditName = null;
                 let diditCuit = null;
                 try {
-                    const diditIdent = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+                    const diditIdent = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
                     diditName = diditIdent.fullName || (diditIdent.firstName && diditIdent.lastName ? `${diditIdent.firstName} ${diditIdent.lastName}` : null);
                     if (diditIdent.cuit) {
                         diditCuit = diditIdent.cuit;
                     } else if (diditIdent.documentNumber && String(diditIdent.documentNumber).replace(/\D/g, '').length === 8) {
                         diditCuit = `20-${String(diditIdent.documentNumber).replace(/\D/g, '')}-7`;
                     }
-                } catch (eD) {}
+                } catch (eD) { }
 
                 const hasPassport = Boolean(pasaporte) || Boolean(diditName);
                 const userName = diditName
@@ -2455,7 +2655,7 @@
 
                 const elValidity = document.getElementById('passport-validity-footer');
                 if (elValidity) {
-                    elValidity.textContent = hasPassport ? `Validez: ${diasRestantes} días restantes • Emitido por Red Hábitat` : `Credencial Hábitat • Emisión disponible`;
+                    elValidity.textContent = hasPassport ? `Validez: ${diasRestantes} días restantes • Emitido por Red Vivat` : `Credencial Vivat • Emisión disponible`;
                 }
 
                 const elName = document.getElementById('passport-user-fullname');
@@ -2496,7 +2696,7 @@
                                 if (m < 0 || (m === 0 && today.getDate() < d.getDate())) calc--;
                                 if (calc >= 16 && calc <= 120) userAge = calc;
                             }
-                        } catch (eAge) {}
+                        } catch (eAge) { }
                     }
                 }
 
@@ -2521,7 +2721,7 @@
 
                 const elQr = document.getElementById('passport-qr-code');
                 if (elQr) {
-                    const verificationUrl = `${window.location.origin}/pasaporte-habitat.html?id=${passportId}`;
+                    const verificationUrl = `${window.location.origin}/pasaporte-vivat.html?id=${passportId}`;
                     elQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verificationUrl)}&color=811b1e&bgcolor=ffffff`;
                 }
 
@@ -2557,10 +2757,10 @@
                     bonoInfo = pasaporte.datos_ingresos.bono_sueldo;
                 } else {
                     try {
-                        const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                        const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                        const pLocal = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
+                        const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                         bonoInfo = pLocal.bono_sueldo || (pLocal.datos_ingresos ? pLocal.datos_ingresos.bono_sueldo : null) || uLocal.bono_sueldo || null;
-                    } catch (eB) {}
+                    } catch (eB) { }
                 }
 
                 const elAuditBono = document.getElementById('audit-bono-sueldo-estado');
@@ -2639,7 +2839,7 @@
         // =============================================================
         // RENDERIZADO Y CONTROL DE BONO DE SUELDO DEL INQUILINO
         // =============================================================
-        window.renderTenantBonoSection = function(bonoInfo) {
+        window.renderTenantBonoSection = function (bonoInfo) {
             const container = document.getElementById('tenant-bono-sueldo-container');
             if (!container) return;
 
@@ -2735,7 +2935,7 @@
             }
         };
 
-        window.handleTenantBonoUpload = async function(event) {
+        window.handleTenantBonoUpload = async function (event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             if (file.size > 10 * 1024 * 1024) {
@@ -2765,7 +2965,7 @@
                 if (window.supabaseClient && window.currentPasaporteId) {
                     try {
                         const { data: pass } = await window.supabaseClient
-                            .from('Pasaporte_habitat')
+                            .from('Pasaporte_vivat')
                             .select('datos_ingresos')
                             .eq('id_pasaporte', window.currentPasaporteId)
                             .maybeSingle();
@@ -2776,7 +2976,7 @@
                         };
 
                         await window.supabaseClient
-                            .from('Pasaporte_habitat')
+                            .from('Pasaporte_vivat')
                             .update({
                                 datos_ingresos: updatedDatosIngresos,
                                 updated_at: new Date().toISOString()
@@ -2789,18 +2989,18 @@
 
                 // Guardar en localStorage
                 try {
-                    const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    const pLocal = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
                     pLocal.bono_sueldo = bonoObj;
                     if (!pLocal.datos_ingresos) pLocal.datos_ingresos = {};
                     pLocal.datos_ingresos.bono_sueldo = bonoObj;
-                    localStorage.setItem('habitat_passport_data', JSON.stringify(pLocal));
+                    localStorage.setItem('vivat_passport_data', JSON.stringify(pLocal));
 
-                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     uLocal.bono_sueldo = bonoObj;
-                    localStorage.setItem('habitat_user', JSON.stringify(uLocal));
-                } catch (eLoc) {}
+                    localStorage.setItem('vivat_user', JSON.stringify(uLocal));
+                } catch (eLoc) { }
 
-                alert('¡Bono de sueldo adjuntado y respaldado con éxito en tu Pasaporte Hábitat!');
+                alert('¡Bono de sueldo adjuntado y respaldado con éxito en tu Pasaporte Vivat!');
                 await loadTenantPassport();
 
             } catch (err) {
@@ -2809,14 +3009,14 @@
             }
         };
 
-        window.handleTenantBonoDelete = async function() {
+        window.handleTenantBonoDelete = async function () {
             if (!confirm('¿Estás seguro de que deseas quitar tu bono de sueldo del pasaporte?')) return;
 
             try {
                 if (window.supabaseClient && window.currentPasaporteId) {
                     try {
                         const { data: pass } = await window.supabaseClient
-                            .from('Pasaporte_habitat')
+                            .from('Pasaporte_vivat')
                             .select('datos_ingresos')
                             .eq('id_pasaporte', window.currentPasaporteId)
                             .maybeSingle();
@@ -2827,7 +3027,7 @@
                         delete updatedDatosIngresos.bono_sueldo;
 
                         await window.supabaseClient
-                            .from('Pasaporte_habitat')
+                            .from('Pasaporte_vivat')
                             .update({
                                 datos_ingresos: updatedDatosIngresos,
                                 updated_at: new Date().toISOString()
@@ -2840,15 +3040,15 @@
 
                 // Remover de localStorage
                 try {
-                    const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                    const pLocal = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
                     delete pLocal.bono_sueldo;
                     if (pLocal.datos_ingresos) delete pLocal.datos_ingresos.bono_sueldo;
-                    localStorage.setItem('habitat_passport_data', JSON.stringify(pLocal));
+                    localStorage.setItem('vivat_passport_data', JSON.stringify(pLocal));
 
-                    const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     delete uLocal.bono_sueldo;
-                    localStorage.setItem('habitat_user', JSON.stringify(uLocal));
-                } catch (eLoc) {}
+                    localStorage.setItem('vivat_user', JSON.stringify(uLocal));
+                } catch (eLoc) { }
 
                 alert('Bono de sueldo eliminado correctamente.');
                 await loadTenantPassport();
@@ -2859,12 +3059,12 @@
             }
         };
 
-        window.handleTenantBonoDownload = function() {
+        window.handleTenantBonoDownload = function () {
             let bonoInfo = null;
             try {
-                const pLocal = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                const pLocal = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
                 bonoInfo = pLocal.bono_sueldo || (pLocal.datos_ingresos ? pLocal.datos_ingresos.bono_sueldo : null);
-            } catch (e) {}
+            } catch (e) { }
 
             if (bonoInfo && bonoInfo.data) {
                 const link = document.createElement('a');
@@ -2882,7 +3082,7 @@
 
         // Estado y lógica para modo 'Editar garantes'
         window.isEditingGarantes = false;
-        window.toggleEditGarantesMode = function() {
+        window.toggleEditGarantesMode = function () {
             window.isEditingGarantes = !window.isEditingGarantes;
             const btnText = document.getElementById('text-edit-garantes');
             const btnIcon = document.getElementById('icon-edit-garantes');
@@ -2969,12 +3169,12 @@
 
                 // 2. Eliminar de LocalStorage
                 try {
-                    const localGar = localStorage.getItem('habitat_garantes_state_v1');
+                    const localGar = localStorage.getItem('vivat_garantes_state_v1');
                     if (localGar) {
                         let parsed = JSON.parse(localGar);
                         if (Array.isArray(parsed)) {
                             parsed = parsed.filter(g => (g.id_garante != pendingDeleteGaranteId && g.id != pendingDeleteGaranteId && g.nombre_completo !== pendingDeleteGaranteName && g.nombre !== pendingDeleteGaranteName));
-                            localStorage.setItem('habitat_garantes_state_v1', JSON.stringify(parsed));
+                            localStorage.setItem('vivat_garantes_state_v1', JSON.stringify(parsed));
                         }
                     }
                 } catch (eLocal) {
@@ -2999,18 +3199,18 @@
             const url = window.location.origin + '/tu-alquiler.html#pasaporte';
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(url);
-                alert("¡Enlace de tu Pasaporte Hábitat copiado al portapapeles!\n\n" + url);
+                alert("¡Enlace de tu Pasaporte Vivat copiado al portapapeles!\n\n" + url);
             } else {
                 alert("Enlace de tu Pasaporte: " + url);
             }
         }
 
         function downloadPassportPDF() {
-            alert("Generando y descargando credencial oficial del Pasaporte Hábitat en PDF con firma digital inmutable...");
+            alert("Generando y descargando credencial oficial del Pasaporte Vivat en PDF con firma digital inmutable...");
         }
 
         // Sincronización reactiva en tiempo real
-        window.addEventListener('habitat:application_updated', () => {
+        window.addEventListener('vivat:application_updated', () => {
             if (typeof renderTenantApplications === 'function') {
                 renderTenantApplications();
             }
@@ -3018,12 +3218,12 @@
                 renderTenantDashboard();
             }
         });
-        window.addEventListener('habitat:contract_updated', () => {
+        window.addEventListener('vivat:contract_updated', () => {
             if (typeof renderTenantDashboard === 'function') {
                 renderTenantDashboard();
             }
         });
-        window.addEventListener('habitat:garantes_updated', () => {
+        window.addEventListener('vivat:garantes_updated', () => {
             if (typeof loadTenantPassport === 'function') {
                 loadTenantPassport();
             }
@@ -3031,26 +3231,33 @@
     </script>
 
     <!-- Modal Moderno de Confirmación para Eliminar Garante -->
-    <div id="modal-delete-garante" class="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-all duration-300">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-5 animate-scaleIn">
-            <div class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200 dark:border-rose-800/80 mx-auto shadow-sm">
+    <div id="modal-delete-garante"
+        class="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-all duration-300">
+        <div
+            class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-5 animate-scaleIn">
+            <div
+                class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200 dark:border-rose-800/80 mx-auto shadow-sm">
                 <span class="material-symbols-outlined text-3xl">delete_forever</span>
             </div>
-            
+
             <div class="text-center space-y-2">
                 <h3 class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white">
                     ¿Eliminar a este garante?
                 </h3>
                 <p class="font-body text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    Estás a punto de desvincular a <strong class="font-headline font-bold text-zinc-900 dark:text-white" id="delete-garante-modal-name">este garante</strong> de tu Pasaporte Hábitat. Esta acción modificará el respaldo y scoring de tu credencial digital.
+                    Estás a punto de desvincular a <strong class="font-headline font-bold text-zinc-900 dark:text-white"
+                        id="delete-garante-modal-name">este garante</strong> de tu Pasaporte Vivat. Esta acción
+                    modificará el respaldo y scoring de tu credencial digital.
                 </p>
             </div>
 
             <div class="flex items-center gap-3 pt-2">
-                <button type="button" onclick="closeDeleteGuarantorModal()" class="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs sm:text-sm transition-all cursor-pointer text-center">
+                <button type="button" onclick="closeDeleteGuarantorModal()"
+                    class="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs sm:text-sm transition-all cursor-pointer text-center">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirm-delete-garante-modal" onclick="executeDeleteGuarantor()" class="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-headline font-black text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                <button type="button" id="btn-confirm-delete-garante-modal" onclick="executeDeleteGuarantor()"
+                    class="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-headline font-black text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5">
                     <span class="material-symbols-outlined text-base">delete</span>
                     <span>Sí, eliminar</span>
                 </button>
@@ -3063,4 +3270,3 @@
 </body>
 
 </html>
-

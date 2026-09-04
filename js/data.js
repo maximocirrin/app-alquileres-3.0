@@ -82,7 +82,7 @@ var DataManager = {
             // Fallback for local storage user or hint
             try {
                 let localEmail = null;
-                let localName = 'Usuario Habitat';
+                let localName = 'Usuario Vivat';
                 if (userHint && typeof userHint === 'object') {
                     localEmail = userHint.email || userHint.mail || userHint.contactEmail;
                     localName = userHint.nombre || userHint.contactNombre || localName;
@@ -91,7 +91,7 @@ var DataManager = {
                 }
 
                 if (!localEmail) {
-                    const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                    const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                     localEmail = localUser.email || localUser.mail;
                     localName = localUser.nombre_completo || localUser.name || localName;
                 }
@@ -172,12 +172,12 @@ var DataManager = {
 
     logout: async () => {
         try {
-            localStorage.removeItem('habitat_tenant_applications');
-            localStorage.removeItem('habitat_passport_data');
-            localStorage.removeItem('habitat_didit_identity');
-            localStorage.removeItem('habitat_user');
-            localStorage.removeItem('habitat_user_id');
-            sessionStorage.removeItem('habitat_pending_didit_session');
+            localStorage.removeItem('vivat_tenant_applications');
+            localStorage.removeItem('vivat_passport_data');
+            localStorage.removeItem('vivat_didit_identity');
+            localStorage.removeItem('vivat_user');
+            localStorage.removeItem('vivat_user_id');
+            sessionStorage.removeItem('vivat_pending_didit_session');
             window.hasActivePassport = false;
             window.currentPasaporteId = null;
         } catch (e) {}
@@ -287,7 +287,7 @@ var DataManager = {
                     tenantName: 'Inquilino Activo',
                     tenantEmail: '',
                     tenantPhone: '',
-                    cbuAlias: contract?.alias_cbu || 'HABITAT.MP',
+                    cbuAlias: contract?.alias_cbu || 'VIVAT.MP',
                     photoUrl: photoUrls[0],
                     images: photoUrls,
                     caracteristicas: dbCaracteristicas,
@@ -1019,14 +1019,14 @@ var DataManager = {
 
         // 1. Guardar en lista local de eliminadas para filtrado inmediato
         try {
-            const deletedProps = JSON.parse(localStorage.getItem('habitat_deleted_properties') || '[]');
+            const deletedProps = JSON.parse(localStorage.getItem('vivat_deleted_properties') || '[]');
             if (!deletedProps.includes(strId)) {
                 deletedProps.push(strId);
-                localStorage.setItem('habitat_deleted_properties', JSON.stringify(deletedProps));
+                localStorage.setItem('vivat_deleted_properties', JSON.stringify(deletedProps));
             }
 
             // Eliminar postulaciones locales asociadas a esta propiedad / publicación
-            const rawApps = localStorage.getItem('habitat_tenant_applications');
+            const rawApps = localStorage.getItem('vivat_tenant_applications');
             if (rawApps) {
                 const parsed = JSON.parse(rawApps);
                 if (Array.isArray(parsed)) {
@@ -1035,7 +1035,7 @@ var DataManager = {
                         const pPubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
                         return pid !== strId && pPubId !== strId;
                     });
-                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(remainingApps));
+                    localStorage.setItem('vivat_tenant_applications', JSON.stringify(remainingApps));
                 }
             }
         } catch (e) {
@@ -1107,7 +1107,7 @@ var DataManager = {
     getApplications: async function (targetProfileId = null, filterByUser = false) {
         let deletedProps = [];
         try {
-            deletedProps = JSON.parse(localStorage.getItem('habitat_deleted_properties') || '[]');
+            deletedProps = JSON.parse(localStorage.getItem('vivat_deleted_properties') || '[]');
         } catch (e) {}
 
         let dbApps = [];
@@ -1142,7 +1142,7 @@ var DataManager = {
                         ),
                         Perfil (
                             *,
-                            Pasaporte_habitat (*)
+                            Pasaporte_vivat (*)
                         )
                     `)
                     .order('fecha_solicitud', { ascending: false });
@@ -1207,7 +1207,7 @@ var DataManager = {
                             const pub = s.Publicacion || {};
                             const prop = pub.Propiedad || s.Propiedad || {};
                             const perf = s.Perfil || {};
-                            const passList = Array.isArray(perf.Pasaporte_habitat) ? perf.Pasaporte_habitat : (perf.Pasaporte_habitat ? [perf.Pasaporte_habitat] : []);
+                            const passList = Array.isArray(perf.Pasaporte_vivat) ? perf.Pasaporte_vivat : (perf.Pasaporte_vivat ? [perf.Pasaporte_vivat] : []);
                             const pass = passList[0] || {};
                             const media = pub?.Multimedia || [];
                             const photoUrls = media.length > 0 ? media.map(m => m.url_archivo) : [];
@@ -1290,7 +1290,7 @@ var DataManager = {
                                 condicion_fiscal: pass.condicion_fiscal || null,
                                 situacion_crediticia: pass.situacion_crediticia || null,
                                 monthly_income: parseFloat(s.ingreso_mensual_declarado || 0),
-                                income_proof: s.comprobante_ingreso || 'Pasaporte Hábitat',
+                                income_proof: s.comprobante_ingreso || 'Pasaporte Vivat',
                                 income_proof_url: '#',
                                 message: s.mensaje || 'Interesado en alquilar la propiedad.',
                                 status: appStatus,
@@ -1305,7 +1305,7 @@ var DataManager = {
 
         let localSavedApps = [];
         try {
-            const raw = localStorage.getItem('habitat_tenant_applications');
+            const raw = localStorage.getItem('vivat_tenant_applications');
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
@@ -1341,7 +1341,7 @@ var DataManager = {
 
         const combined = Array.from(appMap.values());
         try {
-            localStorage.setItem('habitat_tenant_applications', JSON.stringify(combined));
+            localStorage.setItem('vivat_tenant_applications', JSON.stringify(combined));
         } catch (e) {}
 
         return combined;
@@ -1358,9 +1358,9 @@ var DataManager = {
                     throw new Error('Debes iniciar sesión para postularte a un alquiler.');
                 }
 
-                // 1. Validar OBLIGATORIAMENTE que el usuario posea Pasaporte Hábitat Activo en Supabase
+                // 1. Validar OBLIGATORIAMENTE que el usuario posea Pasaporte Vivat Activo en Supabase
                 const { data: activePassports, error: errPass } = await window.supabaseClient
-                    .from('Pasaporte_habitat')
+                    .from('Pasaporte_vivat')
                     .select('id_pasaporte, id_estado_pasaporte, fecha_vencimiento')
                     .eq('id_perfil', profileId)
                     .eq('id_estado_pasaporte', 3); // 3 = Activo
@@ -1374,7 +1374,7 @@ var DataManager = {
                 }
 
                 if (!hasValidPass) {
-                    const err = new Error('Para postularte es requisito obligatorio contar con tu Pasaporte Hábitat digital activo y verificado.');
+                    const err = new Error('Para postularte es requisito obligatorio contar con tu Pasaporte Vivat digital activo y verificado.');
                     err.code = 'PASSPORT_REQUIRED';
                     throw err;
                 }
@@ -1386,7 +1386,7 @@ var DataManager = {
 
                 // 2. Prevenir duplicados: verificar si ya existe una postulación activa para esta propiedad en LocalStorage o Supabase
                 try {
-                    const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+                    const localApps = JSON.parse(localStorage.getItem('vivat_tenant_applications') || '[]');
                     const existingLocal = localApps.find(a => {
                         const aPubId = a.publication_id || a.publicationId || a.id_publicacion;
                         const aPropId = a.property_id || a.propertyId || a.id_propiedad;
@@ -1435,7 +1435,7 @@ var DataManager = {
                         id_publicacion: pubIdNum,
                         ingreso_mensual_declarado: parseFloat(appData.declaredIncome || appData.monthly_income || appData.propertyPrice || 0),
                         mensaje: appData.message || '',
-                        comprobante_ingreso: appData.incomeProof || 'Pasaporte Hábitat',
+                        comprobante_ingreso: appData.incomeProof || 'Pasaporte Vivat',
                         telefono: appData.tenantPhone || '+54 9 11 0000-0000'
                     }])
                     .select()
@@ -1485,7 +1485,7 @@ var DataManager = {
 
         // Guardar copia local exclusiva para el usuario
         try {
-            const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+            const localApps = JSON.parse(localStorage.getItem('vivat_tenant_applications') || '[]');
             const existsLocal = localApps.some(a => String(a.id) === String(insertedId));
             if (!existsLocal) {
                 const newApp = {
@@ -1503,19 +1503,19 @@ var DataManager = {
                     property_beds: appData.propertyBeds || 1,
                     property_baths: appData.propertyBaths || 1,
                     tenant_name: appData.tenantName || 'Inquilino Postulante',
-                    tenant_email: appData.tenantEmail || 'inquilino@habitat.ar',
+                    tenant_email: appData.tenantEmail || 'inquilino@vivat.ar',
                     tenant_phone: appData.tenantPhone || '+54 9 11 0000-0000',
                     tenant_dni: appData.tenantDni || null,
                     tenant_cuit: appData.tenantCuit || null,
                     condicion_fiscal: appData.condicion_fiscal || appData.condicionFiscal || 'Monotributista',
                     monthly_income: parseFloat(appData.declaredIncome || appData.monthly_income || 1500000),
-                    income_proof: appData.incomeProof || 'Pasaporte Hábitat',
+                    income_proof: appData.incomeProof || 'Pasaporte Vivat',
                     message: appData.message || 'Interesado en alquilar la propiedad.',
                     status: 'pendiente',
                     created_at: fecha
                 };
                 localApps.unshift(newApp);
-                localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+                localStorage.setItem('vivat_tenant_applications', JSON.stringify(localApps));
             }
         } catch (e) {
             console.warn("Error saving local application:", e);
@@ -1548,13 +1548,13 @@ var DataManager = {
         const durationMonths = customTerms?.durationMonths || 24;
         const periodoAumento = customTerms?.adjustmentFrequencyMonths || 3;
         const diaVencimiento = customTerms?.paymentDueDay || 10;
-        const aliasCbu = customTerms?.aliasCbu || 'HABITAT.ALQUILER.MP';
+        const aliasCbu = customTerms?.aliasCbu || 'VIVAT.ALQUILER.MP';
         const adjustmentIndex = customTerms?.adjustmentIndex || 'IPC';
 
         // 1. Obtener datos desde localStorage si existen
         let localApp = null;
         try {
-            const raw = localStorage.getItem('habitat_tenant_applications');
+            const raw = localStorage.getItem('vivat_tenant_applications');
             if (raw) {
                 const apps = JSON.parse(raw);
                 localApp = apps.find(a => String(a.id) === String(appId));
@@ -1834,7 +1834,7 @@ var DataManager = {
             }
         }
 
-        // Crear objeto de contrato completo con la propiedad real y guardarlo en habitat_contracts
+        // Crear objeto de contrato completo con la propiedad real y guardarlo en vivat_contracts
         const todayStr = new Date().toISOString().split('T')[0];
         const nextYearStr = new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0];
         const contractObj = {
@@ -1861,8 +1861,8 @@ var DataManager = {
             adjustmentFrequencyMonths: periodoAumento || 3,
             adjustment_frequency_months: periodoAumento || 3,
             depositAmount: monthlyRent,
-            aliasCbu: aliasCbu || 'HABITAT.ALQUILER.MP',
-            alias_cbu: aliasCbu || 'HABITAT.ALQUILER.MP',
+            aliasCbu: aliasCbu || 'VIVAT.ALQUILER.MP',
+            alias_cbu: aliasCbu || 'VIVAT.ALQUILER.MP',
             clauses: customTerms?.clauses || {},
             customClauses: customTerms?.customClauses || [],
             activeClausesList: customTerms?.activeClausesList || [],
@@ -1923,17 +1923,17 @@ var DataManager = {
         };
 
         try {
-            const rawContr = localStorage.getItem('habitat_contracts');
+            const rawContr = localStorage.getItem('vivat_contracts');
             let existingContracts = [];
             if (rawContr) existingContracts = JSON.parse(rawContr);
             existingContracts = existingContracts.filter(c => c && c.id !== contractId && c.contractNumber !== contractId);
             existingContracts.unshift(contractObj);
-            localStorage.setItem('habitat_contracts', JSON.stringify(existingContracts));
+            localStorage.setItem('vivat_contracts', JSON.stringify(existingContracts));
         } catch (e) {}
 
         // Actualizar copia local en localStorage
         try {
-            const raw = localStorage.getItem('habitat_tenant_applications');
+            const raw = localStorage.getItem('vivat_tenant_applications');
             if (raw) {
                 const apps = JSON.parse(raw);
                 apps.forEach(a => {
@@ -1942,7 +1942,7 @@ var DataManager = {
                         a.contract_id = contractId;
                     }
                 });
-                localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
             }
         } catch (e) {}
 
@@ -1994,7 +1994,7 @@ var DataManager = {
 
         // Actualizar copia local en localStorage
         try {
-            const raw = localStorage.getItem('habitat_tenant_applications');
+            const raw = localStorage.getItem('vivat_tenant_applications');
             if (raw) {
                 const apps = JSON.parse(raw);
                 apps.forEach(a => {
@@ -2003,7 +2003,7 @@ var DataManager = {
                         if (a.property_title) propTitle = a.property_title;
                     }
                 });
-                localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
             }
         } catch (e) {}
 
@@ -2255,7 +2255,7 @@ var DataManager = {
     getOwnerContracts: async function(targetProfileId = null) {
         let contractsList = [];
         try {
-            const raw = localStorage.getItem('habitat_contracts');
+            const raw = localStorage.getItem('vivat_contracts');
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
@@ -2314,13 +2314,20 @@ var DataManager = {
                         ? `${prop.calle} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim()
                         : 'Mendoza, Argentina';
 
-                    const inqName = inq.nombre_completo || 'Inquilino Titular';
-                    const inqEmail = inq.mail || 'inquilino@email.com';
+                    const cleanVivatVal = (str, def) => {
+                        if (!str) return def;
+                        return String(str)
+                            .replace(/HABITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'))
+                            .replace(/HÁBITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'));
+                    };
+
+                    const inqName = cleanVivatVal(inq.nombre_completo, 'Inquilino Titular');
+                    const inqEmail = cleanVivatVal(inq.mail, 'inquilino@email.com');
                     const inqPhone = inq.telefono || '+54 9 11 0000-0000';
                     const inqDni = inq.dni || '';
 
-                    const ownerName = propOwner.nombre_completo || 'Propietario Titular';
-                    const ownerEmail = propOwner.mail || 'propietario@email.com';
+                    const ownerName = cleanVivatVal(propOwner.nombre_completo, 'Propietario Titular');
+                    const ownerEmail = cleanVivatVal(propOwner.mail, 'propietario@email.com');
                     const ownerPhone = propOwner.telefono || '+54 9 261 000-0000';
                     const ownerDni = propOwner.dni || '';
 
@@ -2352,7 +2359,7 @@ var DataManager = {
                     const indexFromDb = extraClauses.adjustmentIndex || item.indice_ajuste || (item.id_Indice === 2 ? 'ICL' : 'IPC');
                     const freqFromDb = Number(item.periodo_aumento_meses || extraClauses.adjustmentFrequencyMonths || 3);
                     const dueDayFromDb = Number(item.dia_vencimiento_mensual || extraClauses.paymentDueDay || 10);
-                    const aliasFromDb = item.alias_cbu || extraClauses.aliasCbu || 'HABITAT.ALQUILER.MP';
+                    const aliasFromDb = item.alias_cbu || extraClauses.aliasCbu || 'VIVAT.ALQUILER.MP';
                     const rentFromDb = Number(item.monto_cierre || extraClauses.monthlyRent || pub?.precio || 450000);
 
                     return {
@@ -2461,7 +2468,7 @@ var DataManager = {
                                 adjustmentIndex: c.adjustmentIndex || local.adjustmentIndex || 'IPC',
                                 adjustmentFrequencyMonths: c.adjustmentFrequencyMonths || local.adjustmentFrequencyMonths || 3,
                                 paymentDueDay: c.paymentDueDay || local.paymentDueDay || 10,
-                                aliasCbu: c.aliasCbu || local.aliasCbu || 'HABITAT.ALQUILER.MP'
+                                aliasCbu: c.aliasCbu || local.aliasCbu || 'VIVAT.ALQUILER.MP'
                             };
                             mergedMap.set(String(c.id), mergedItem);
                         } else {
@@ -2479,10 +2486,10 @@ var DataManager = {
     },
 
     getActiveContract: async function () {
-        // 1. Revisar si hay un contrato firmado en habitat_contracts de localStorage
+        // 1. Revisar si hay un contrato firmado en vivat_contracts de localStorage
         let localContracts = [];
         try {
-            localContracts = JSON.parse(localStorage.getItem('habitat_contracts') || '[]');
+            localContracts = JSON.parse(localStorage.getItem('vivat_contracts') || '[]');
         } catch (e) {}
 
         const activeLocal = localContracts.find(c => c && (c.status === 'SIGNED_AND_SEALED' || c.status === 'WAITING_OWNER' || c.status === 'WAITING_TENANT' || c.tenant?.hasSigned));
@@ -2554,14 +2561,14 @@ var DataManager = {
                     punitive_daily_rate: Number(data.tasa_punitoria_diaria || 0.5),
                     adjustment_index: data.indice_ajuste || 'IPC',
                     adjustment_frequency_months: data.periodo_aumento_meses || 3,
-                    cbu_alias: data.alias_cbu || 'HABITAT.PAGOS.ALQUILER',
+                    cbu_alias: data.alias_cbu || 'VIVAT.PAGOS.ALQUILER',
                     tenant_name: inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : 'Inquilino Verificado'),
-                    tenant_email: inq.mail || 'inquilino@habitat.ar',
+                    tenant_email: inq.mail || 'inquilino@vivat.ar',
                     tenant_phone: inq.telefono || '+54 9 261 412-3456',
                     landlord_name: propOwner.nombre_completo || (propOwner.nombre && propOwner.apellido ? `${propOwner.nombre} ${propOwner.apellido}` : 'Propietario Verificado'),
-                    landlord_email: propOwner.mail || 'propietario@habitat.ar',
+                    landlord_email: propOwner.mail || 'propietario@vivat.ar',
                     landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
-                    description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Hábitat.',
+                    description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Vivat.',
                     caracteristicas: dbCaracteristicas
                 };
             }
@@ -2578,7 +2585,7 @@ var DataManager = {
     _getStoredPaymentState: function (contractId) {
         if (!contractId) return null;
         try {
-            const raw = localStorage.getItem('habitat_payment_state_' + contractId);
+            const raw = localStorage.getItem('vivat_payment_state_' + contractId);
             if (raw) return JSON.parse(raw);
         } catch (e) { }
         return null;
@@ -2589,7 +2596,7 @@ var DataManager = {
         try {
             const existing = this._getStoredPaymentState(contractId) || {};
             const merged = { ...existing, ...state, updated_at: new Date().toISOString() };
-            localStorage.setItem('habitat_payment_state_' + contractId, JSON.stringify(merged));
+            localStorage.setItem('vivat_payment_state_' + contractId, JSON.stringify(merged));
         } catch (e) { }
     },
 
@@ -2878,7 +2885,7 @@ var DataManager = {
                     hasCredit: l.tiene_garantia_o_credito,
                     creditType: l.tipo_garantia || 'Directo',
                     hasPropertyToSell: l.tiene_propiedad_para_vender,
-                    source: l.origen || 'Hábitat',
+                    source: l.origen || 'Vivat',
                     status: l.estado || 'new',
                     createdAt: l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR') : 'Reciente',
                     notes: Array.isArray(l.notas) ? l.notas : [],
@@ -4018,11 +4025,11 @@ var DataManager = {
             } catch (e) {}
         }
         try {
-            const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+            const storedProfileId = localStorage.getItem('vivat_profile_id') || window._currentUserProfileId;
             if (storedProfileId) {
                 headers['x-profile-id'] = String(storedProfileId);
             }
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
             const email = uLocal.email || uLocal.mail;
             if (email) {
                 headers['x-user-email'] = email;
@@ -4201,11 +4208,11 @@ var DataManager = {
                     propertyTitle: cleanTitle,
                     propertyAddress: cleanAddress,
                     propertyImage: photos[0] || 'img/hero-marketplace.jpg',
-                    tenantName: inq.nombre_completo || 'Inquilino Hábitat',
-                    tenantEmail: inq.mail || 'inquilino@habitat.com',
+                    tenantName: inq.nombre_completo || 'Inquilino Vivat',
+                    tenantEmail: inq.mail || 'inquilino@vivat.com',
                     tenantPhone: inq.telefono || '+54 9 11',
-                    ownerName: propOwner.nombre_completo || 'Propietario Hábitat',
-                    ownerEmail: propOwner.mail || 'propietario@habitat.com',
+                    ownerName: propOwner.nombre_completo || 'Propietario Vivat',
+                    ownerEmail: propOwner.mail || 'propietario@vivat.com',
                     ownerPhone: propOwner.telefono || '+54 9 261',
                     monthlyRent: monthlyRentVal,
                     feeAmount: feeVal,
@@ -4220,8 +4227,8 @@ var DataManager = {
                     adjustmentType: adjText,
                     paymentStatus: isPaid ? 'PAGADO' : 'PENDIENTE',
                     paymentMethod: isPaid ? (latestPayment?.metodo_pago || 'Transferencia Bancaria') : 'Pendiente de cobro',
-                    cbu: item.alias_cbu || 'HABITAT.ALQUILER.MP',
-                    cbuAlias: item.alias_cbu || 'HABITAT.ALQUILER.MP',
+                    cbu: item.alias_cbu || 'VIVAT.ALQUILER.MP',
+                    cbuAlias: item.alias_cbu || 'VIVAT.ALQUILER.MP',
                     depositAmount: Number(item.monto_deposito || item.monto_cierre || 0) || 0,
                     contractCode: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                     inventoryId: `INV-2026-${String(item.id_contrato).padStart(3, '0')}`,
@@ -4288,9 +4295,9 @@ var DataManager = {
                     ownersMap.set(ownerId, {
                         id: `CLI-00${owner.id_perfil}`,
                         raw_id: owner.id_perfil,
-                        name: owner.nombre_completo || 'Propietario Hábitat',
+                        name: owner.nombre_completo || 'Propietario Vivat',
                         phone: owner.telefono || '+54 9 11 4802-9988',
-                        email: owner.mail || 'propietario@habitat.com',
+                        email: owner.mail || 'propietario@vivat.com',
                         dni: owner.dni || 'Verificado',
                         propsCount: 0,
                         propsList: [],

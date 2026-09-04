@@ -19,7 +19,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
     adjustmentIndex: 'IPC',
     adjustmentFrequencyMonths: 3,
     depositAmount: 420000,
-    aliasCbu: 'HABITAT.RECOLETA.MP',
+    aliasCbu: 'VIVAT.RECOLETA.MP',
     tenant: {
       role: 'TENANT',
       name: 'Carlos Gómez',
@@ -59,7 +59,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
         timestamp: '2026-08-12T15:00:00Z',
         action: 'SOLICITUD_FIRMA_ENVIADA',
         actorRole: 'SYSTEM',
-        actorName: 'Habitat Platform',
+        actorName: 'Vivat Platform',
         details: 'Notificación de firma electrónica despachada a inquilino (carlos.gomez@gmail.com).',
       }
     ]
@@ -81,7 +81,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
     adjustmentIndex: 'ICL',
     adjustmentFrequencyMonths: 6,
     depositAmount: 850000,
-    aliasCbu: 'HABITAT.BELGRANO.MP',
+    aliasCbu: 'VIVAT.BELGRANO.MP',
     tenant: {
       role: 'TENANT',
       name: 'Lucía Fernández',
@@ -101,8 +101,8 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
     broker: {
       name: 'Valeria Sotomayor',
       license: 'CUCICBA Mat. 5120',
-      agencyName: 'Habitat Real Estate Network',
-      email: 'valeria@habitat.ar',
+      agencyName: 'Vivat Real Estate Network',
+      email: 'valeria@vivat.ar',
     },
     draftPdfUrl: '#',
     sha256Hash: '9f83c6b29f7988319f390076a91176b9dfa5fae8e60408544c4897c8d94e2402',
@@ -145,7 +145,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
     adjustmentIndex: 'IPC',
     adjustmentFrequencyMonths: 4,
     depositAmount: 390000,
-    aliasCbu: 'HABITAT.PALERMO.MP',
+    aliasCbu: 'VIVAT.PALERMO.MP',
     tenant: {
       role: 'TENANT',
       name: 'Matías Rossi',
@@ -173,7 +173,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
     sha256Hash: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
     tsaTimestamp: '2026-06-29T16:40:12Z',
     tsaCertificateId: 'TSA-AR-2026-981042',
-    qrVerificationUrl: 'https://habitat.ar/verificar/CTR-2026-0518',
+    qrVerificationUrl: 'https://vivat.ar/verificar/CTR-2026-0518',
     signedPdfUrl: '/api/contracts/CTR-2026-0518/download-signed',
     auditTrailPdfUrl: '/api/contracts/CTR-2026-0518/download-audit-trail',
     createdAt: '2026-06-25T10:00:00Z',

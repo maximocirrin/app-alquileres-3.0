@@ -1,5 +1,5 @@
 /**
- * Hábitat - Tenant Bottom Floating Dock Navigation
+ * Vivat - Tenant Bottom Floating Dock Navigation
  * Secciones: Mi alquiler, Postulaciones, Visitas, Pasaporte
  */
 (function () {
@@ -30,7 +30,7 @@
             label: 'Tu pasaporte',
             href: 'tu-alquiler.html#pasaporte',
             icon: 'badge',
-            matches: ['pasaporte-habitat.html', 'pasaporte']
+            matches: ['pasaporte-vivat.html', 'pasaporte']
         }
     ];
 

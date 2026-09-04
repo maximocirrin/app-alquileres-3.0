@@ -205,7 +205,7 @@ export const ContractViewerModal: React.FC<ContractViewerModalProps> = ({
                 <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
                   <span className="text-[9px] font-bold text-zinc-400 uppercase block">CBU Alias</span>
                   <div className="font-bold text-zinc-900 dark:text-white text-xs mt-0.5 truncate">
-                    {contract.aliasCbu || 'HABITAT.MP'}
+                    {contract.aliasCbu || 'VIVAT.MP'}
                   </div>
                 </div>
               </div>

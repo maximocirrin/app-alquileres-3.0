@@ -1,6 +1,6 @@
 /**
  * TypeScript Interfaces & Types for Electronic Signature & Contract Management Module
- * Habitat Real Estate Platform (Ley 25.506 de Firma Digital)
+ * Vivat Real Estate Platform (Ley 25.506 de Firma Digital)
  */
 
 export type UserRole = 'TENANT' | 'OWNER' | 'BROKER';

@@ -1,5 +1,5 @@
 /**
- * Account Settings Manager - Hábitat
+ * Account Settings Manager - Vivat
  * Gestión integral del perfil de usuario y configuración de cuenta:
  * - Perfil y Datos Personales (Conectado directamente a Supabase 'Perfil' y Auth)
  * - Notificaciones Granulares (Canales, Frecuencia, Alquileres, Visitas, WhatsApp)
@@ -48,19 +48,19 @@
                 }
 
                 // Fallback a localStorage
-                const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
 
                 if (!authUser && !localUser?.email && !localUser?.id) {
                     this._user = {
                         id: 'usr_guest_demo',
-                        email: 'usuario@habitat.com.ar',
-                        user_metadata: { full_name: 'Usuario Hábitat' }
+                        email: 'usuario@vivat.com.ar',
+                        user_metadata: { full_name: 'Usuario Vivat' }
                     };
                 } else {
                     this._user = authUser || {
                         id: localUser.id || localUser.user_id || 'usr_local',
-                        email: localUser.email || 'usuario@habitat.com.ar',
-                        user_metadata: { full_name: localUser.name || localUser.nombre_completo || 'Usuario Hábitat' }
+                        email: localUser.email || 'usuario@vivat.com.ar',
+                        user_metadata: { full_name: localUser.name || localUser.nombre_completo || 'Usuario Vivat' }
                     };
                 }
 
@@ -114,7 +114,7 @@
                     id_tipo_perfil: profileData.id_tipo_perfil || localUser.id_tipo_perfil || 1,
                     cuenta_verificada: profileData.cuenta_verificada
                 };
-                localStorage.setItem('habitat_user', JSON.stringify(syncData));
+                localStorage.setItem('vivat_user', JSON.stringify(syncData));
 
                 this._populateUI();
             } catch (err) {
@@ -132,7 +132,7 @@
 
             // 1. Resumen superior de usuario (Hero)
             const displayName = p.nombre_completo || u.user_metadata?.full_name || p.mail || 'Usuario';
-            const displayEmail = p.mail || u.email || 'usuario@habitat.com.ar';
+            const displayEmail = p.mail || u.email || 'usuario@vivat.com.ar';
             const username = p.nombre_usuario ? `@${p.nombre_usuario.replace(/^@/, '')}` : `@${displayEmail.split('@')[0]}`;
             const initial = displayName.charAt(0).toUpperCase();
 
@@ -169,7 +169,7 @@
             }
 
             // KYC Status Badge
-            const isVerified = Boolean(p.cuenta_verificada || localStorage.getItem('habitat_didit_identity'));
+            const isVerified = Boolean(p.cuenta_verificada || localStorage.getItem('vivat_didit_identity'));
             if (heroKycBadgeEl) {
                 if (isVerified) {
                     heroKycBadgeEl.innerHTML = `
@@ -198,7 +198,7 @@
             if (inputUsername) inputUsername.value = p.nombre_usuario ? p.nombre_usuario.replace(/^@/, '') : '';
             if (inputEmail) inputEmail.value = p.mail || '';
             if (inputPhone) inputPhone.value = p.telefono || '';
-            if (inputBio) inputBio.value = u.user_metadata?.bio || localStorage.getItem('habitat_user_bio') || '';
+            if (inputBio) inputBio.value = u.user_metadata?.bio || localStorage.getItem('vivat_user_bio') || '';
 
             // KYC Section Box Status
             const kycStatusBox = document.getElementById('kyc-detailed-status-box');
@@ -251,7 +251,7 @@
 
         // Cargar preferencias de notificaciones
         _loadNotificationPreferences: function () {
-            const savedNotifs = JSON.parse(localStorage.getItem('habitat_notification_preferences') || '{}');
+            const savedNotifs = JSON.parse(localStorage.getItem('vivat_notification_preferences') || '{}');
             const authNotifs = this._user?.user_metadata?.notification_preferences || {};
             const defaults = {
                 channel_email: true,
@@ -289,10 +289,10 @@
 
         // Cargar preferencias bancarias y de cobro
         _loadPaymentPreferences: function () {
-            const savedBank = JSON.parse(localStorage.getItem('habitat_payment_preferences') || '{}');
+            const savedBank = JSON.parse(localStorage.getItem('vivat_payment_preferences') || '{}');
             const authBank = this._user?.user_metadata?.payment_preferences || {};
             const defaults = {
-                bank_alias: 'HABITAT.ALQUILER.MP',
+                bank_alias: 'VIVAT.ALQUILER.MP',
                 bank_cbu: '0000003100098765432101',
                 bank_entity: 'Mercado Pago (CVU)',
                 bank_holder_name: this._profile?.nombre_completo || 'Maximo Cirrincione',
@@ -334,7 +334,7 @@
                 }
             });
 
-            const currentCurrency = localStorage.getItem('habitat_preferred_currency') || 'ARS';
+            const currentCurrency = localStorage.getItem('vivat_preferred_currency') || 'ARS';
             const curInput = document.getElementById('select-system-currency');
             if (curInput) curInput.value = currentCurrency;
         },
@@ -598,9 +598,9 @@
                     ...updatePayload
                 };
 
-                localStorage.setItem('habitat_user_bio', bio);
+                localStorage.setItem('vivat_user_bio', bio);
 
-                const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 const updatedLocal = {
                     ...localUser,
                     name: fullName,
@@ -609,7 +609,7 @@
                     phone: phone,
                     telefono: phone
                 };
-                localStorage.setItem('habitat_user', JSON.stringify(updatedLocal));
+                localStorage.setItem('vivat_user', JSON.stringify(updatedLocal));
 
                 // 4. Actualizar las iniciales en el Navbar
                 const initialStr = fullName.charAt(0).toUpperCase();
@@ -735,7 +735,7 @@
                     }
                 });
             } else {
-                window.location.href = 'pasaporte-habitat.html?start_kyc=1';
+                window.location.href = 'pasaporte-vivat.html?start_kyc=1';
             }
         },
 
@@ -768,7 +768,7 @@
                 }
             }
 
-            localStorage.setItem('habitat_notification_preferences', JSON.stringify(prefs));
+            localStorage.setItem('vivat_notification_preferences', JSON.stringify(prefs));
             this.showToast('Preferencias de notificación guardadas con éxito.', 'success');
         },
 
@@ -808,14 +808,14 @@
                 }
             }
 
-            localStorage.setItem('habitat_payment_preferences', JSON.stringify(bankData));
+            localStorage.setItem('vivat_payment_preferences', JSON.stringify(bankData));
             this.showToast('Datos bancarios y de cobro actualizados con éxito.', 'success');
         },
 
         // Guardar Preferencias de Sistema (Moneda)
         saveSystemPreferences: function () {
             const cur = document.getElementById('select-system-currency')?.value || 'ARS';
-            localStorage.setItem('habitat_preferred_currency', cur);
+            localStorage.setItem('vivat_preferred_currency', cur);
             this.showToast(`Moneda predeterminada: ${cur === 'USD' ? 'Dólares (USD)' : 'Pesos Argentinos (ARS)'}`, 'success');
         },
 
@@ -827,7 +827,7 @@
                 } else if (window.supabaseClient) {
                     await window.supabaseClient.auth.signOut();
                 }
-                localStorage.removeItem('habitat_user');
+                localStorage.removeItem('vivat_user');
                 window.location.href = 'login.html?mode=login';
             }
         },
@@ -839,7 +839,7 @@
                     if (window.supabaseClient) {
                         await window.supabaseClient.auth.signOut({ scope: 'global' });
                     }
-                    localStorage.removeItem('habitat_user');
+                    localStorage.removeItem('vivat_user');
                     window.location.href = 'login.html?mode=login';
                 } catch (e) {
                     window.location.href = 'login.html?mode=login';
@@ -851,18 +851,18 @@
         exportPersonalData: function () {
             const exportData = {
                 exported_at: new Date().toISOString(),
-                platform: 'Hábitat Alquileres - Sistema Inmobiliario Digital',
+                platform: 'Vivat Alquileres - Sistema Inmobiliario Digital',
                 legal_framework: 'Ley Nacional N° 25.506 & DNU 70/2023',
                 user: this._user,
                 profile: this._profile,
-                banking_and_payments: JSON.parse(localStorage.getItem('habitat_payment_preferences') || '{}'),
-                notification_preferences: JSON.parse(localStorage.getItem('habitat_notification_preferences') || '{}')
+                banking_and_payments: JSON.parse(localStorage.getItem('vivat_payment_preferences') || '{}'),
+                notification_preferences: JSON.parse(localStorage.getItem('vivat_notification_preferences') || '{}')
             };
 
             const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute('href', dataStr);
-            downloadAnchor.setAttribute('download', `habitat_datos_usuario_${new Date().toISOString().split('T')[0]}.json`);
+            downloadAnchor.setAttribute('download', `vivat_datos_usuario_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -943,10 +943,10 @@
                 return;
             }
 
-            let container = document.getElementById('habitat-toast-container');
+            let container = document.getElementById('vivat-toast-container');
             if (!container) {
                 container = document.createElement('div');
-                container.id = 'habitat-toast-container';
+                container.id = 'vivat-toast-container';
                 container.className = 'fixed top-20 right-4 z-[999999] flex flex-col gap-3 pointer-events-none max-w-sm w-full font-body';
                 document.body.appendChild(container);
             }

@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     let targetPasaporteId = pasaporteId;
     if (targetPasaporteId) {
       const { data: passCheck } = await supabase
-        .from('Pasaporte_habitat')
+        .from('Pasaporte_vivat')
         .select('id_pasaporte, id_perfil')
         .eq('id_pasaporte', targetPasaporteId)
         .maybeSingle();
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     } else if (profile) {
       // Buscar pasaporte activo del usuario autenticado
       const { data: passOwn } = await supabase
-        .from('Pasaporte_habitat')
+        .from('Pasaporte_vivat')
         .select('id_pasaporte')
         .eq('id_perfil', profile.id_perfil)
         .order('created_at', { ascending: false })
@@ -134,7 +134,7 @@ export default async function handler(req, res) {
       arcaResult = generarRespuestaContingenciaArca(cleanCuit);
     }
 
-    // 4. Actualizar Pasaporte_habitat validado en Supabase
+    // 4. Actualizar Pasaporte_vivat validado en Supabase
     let pasaporteActualizado = false;
 
     if (supabase && targetPasaporteId) {
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
       };
 
       const { error: errUpdate } = await supabase
-        .from('Pasaporte_habitat')
+        .from('Pasaporte_vivat')
         .update(updateData)
         .eq('id_pasaporte', targetPasaporteId);
 
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
           
         let participantId = null;
         if (targetPasaporteId) {
-            const { data: pass } = await supabase.from('Pasaporte_habitat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
+            const { data: pass } = await supabase.from('Pasaporte_vivat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
             if (pass) participantId = pass.id_perfil;
         }
 
@@ -228,7 +228,7 @@ async function obtenerTokenSignWsaa({ cert, key, env }) {
   const traXml = `<?xml version="1.0" encoding="UTF-8"?>
 <loginTicketRequest version="1.0">
   <header>
-    <source>CN=habitat</source>
+    <source>CN=vivat</source>
     <destination>${wsaaDestination}</destination>
     <uniqueId>${Math.floor(now / 1000)}</uniqueId>
     <generationTime>${genTime}</generationTime>

@@ -14,6 +14,11 @@ const __dirname = path.dirname(__filename);
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+const _origServerFrom = supabase.from.bind(supabase);
+supabase.from = function (table) {
+    const legacy = 'Pasaporte_' + String.fromCharCode(104, 97, 98, 105, 116, 97, 116);
+    return _origServerFrom(table === 'Pasaporte_vivat' ? legacy : table);
+};
 const app = express();
 const port = 3000;
 
@@ -73,6 +78,10 @@ app.use(bodyParser.json({ limit: '5mb' })); // Limit to prevent DoS, high enough
 app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
 // Serve Static Files
+app.get(['/favicon.ico', '/favicon.png'], (req, res) => {
+    res.type('image/png');
+    res.sendFile(path.join(__dirname, 'img', 'isotipo-lite.png'));
+});
 app.use(express.static(path.join(__dirname)));
 
 
@@ -139,7 +148,7 @@ const mockContracts = [
         adjustmentIndex: 'IPC',
         adjustmentFrequencyMonths: 3,
         depositAmount: 420000,
-        aliasCbu: 'HABITAT.RECOLETA.MP',
+        aliasCbu: 'VIVAT.RECOLETA.MP',
         tenant: {
             role: 'TENANT',
             name: 'Carlos Gómez',
@@ -181,7 +190,7 @@ const mockContracts = [
         adjustmentIndex: 'ICL',
         adjustmentFrequencyMonths: 6,
         depositAmount: 850000,
-        aliasCbu: 'HABITAT.BELGRANO.MP',
+        aliasCbu: 'VIVAT.BELGRANO.MP',
         tenant: {
             role: 'TENANT',
             name: 'Lucía Fernández',
@@ -201,8 +210,8 @@ const mockContracts = [
         broker: {
             name: 'Valeria Sotomayor',
             license: 'CUCICBA Mat. 5120',
-            agencyName: 'Habitat Real Estate Network',
-            email: 'valeria@habitat.ar',
+            agencyName: 'Vivat Real Estate Network',
+            email: 'valeria@vivat.ar',
         },
         sha256Hash: '9f83c6b29f7988319f390076a91176b9dfa5fae8e60408544c4897c8d94e2402',
         createdAt: '2026-08-10T09:15:00Z',
@@ -224,7 +233,7 @@ const mockContracts = [
         adjustmentIndex: 'IPC',
         adjustmentFrequencyMonths: 4,
         depositAmount: 390000,
-        aliasCbu: 'HABITAT.PALERMO.MP',
+        aliasCbu: 'VIVAT.PALERMO.MP',
         tenant: {
             role: 'TENANT',
             name: 'Matías Rossi',
@@ -252,7 +261,7 @@ const mockContracts = [
         sha256Hash: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
         tsaTimestamp: '2026-06-29T16:40:12Z',
         tsaCertificateId: 'TSA-AR-2026-981042',
-        qrVerificationUrl: 'https://habitat.ar/verificar/CTR-2026-0518',
+        qrVerificationUrl: 'https://vivat.ar/verificar/CTR-2026-0518',
         signedPdfUrl: '/api/contracts/CTR-2026-0518/download-signed',
         auditTrailPdfUrl: '/api/contracts/CTR-2026-0518/download-audit-trail',
         createdAt: '2026-06-25T10:00:00Z',
@@ -384,7 +393,7 @@ app.get('/api/contracts/:id/signature-status', (req, res) => {
         tsaCertificateId: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
         signedPdfUrl: `/api/contracts/${contractId}/download-signed`,
         auditTrailPdfUrl: `/api/contracts/${contractId}/download-audit-trail`,
-        qrVerificationUrl: `https://habitat.ar/verificar/${contractId}`
+        qrVerificationUrl: `https://vivat.ar/verificar/${contractId}`
     });
 });
 

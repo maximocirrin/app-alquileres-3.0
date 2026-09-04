@@ -1,9 +1,9 @@
 /**
- * Módulo Frontend para la Integración de Servicios Web de ARCA (ex-AFIP) en Pasaporte Hábitat
+ * Módulo Frontend para la Integración de Servicios Web de ARCA (ex-AFIP) en Pasaporte Vivat
  */
 
 /**
- * Consulta el servicio web de Padrón ARCA para un CUIT/CUIL dado y actualiza el Pasaporte Hábitat.
+ * Consulta el servicio web de Padrón ARCA para un CUIT/CUIL dado y actualiza el Pasaporte Vivat.
  * @param {string} cuit - CUIT o CUIL de 11 dígitos.
  * @param {number|string} [pasaporteId] - ID opcional del pasaporte en Supabase a actualizar.
  * @param {string} [userId] - ID opcional del usuario autenticado.
@@ -74,7 +74,7 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
 
         console.log('[ARCA Frontend] Respuesta procesada exitosamente:', data);
 
-        // Actualizar la interfaz del Pasaporte Hábitat si estamos en la página
+        // Actualizar la interfaz del Pasaporte Vivat si estamos en la página
         actualizarPasaporteUI(data);
 
         return data;
@@ -86,7 +86,7 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
 }
 
 /**
- * Actualiza dinámicamente los elementos HTML del Pasaporte Hábitat con la información obtenida de ARCA.
+ * Actualiza dinámicamente los elementos HTML del Pasaporte Vivat con la información obtenida de ARCA.
  * @param {Object} data - Objeto retornado por el API /api/arca-padron.
  */
 function actualizarPasaporteUI(data) {

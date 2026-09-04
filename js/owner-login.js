@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             id: 1,
             roleName: 'inquilino',
             label: 'Usuario Particular',
-            signupTitle: 'Crea tu cuenta en Hábitat',
+            signupTitle: 'Crea tu cuenta en Vivat',
             signupSubtitle: 'Alquila, publica tus propiedades y gestiona tus contratos.',
-            loginTitle: 'Inicia sesión en Hábitat',
+            loginTitle: 'Inicia sesión en Vivat',
             loginSubtitle: 'Accede a tus postulaciones, propiedades y alquileres.',
             defaultTarget: 'index.html'
         },
@@ -49,9 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             id: 1,
             roleName: 'inquilino',
             label: 'Usuario Particular',
-            signupTitle: 'Crea tu cuenta en Hábitat',
+            signupTitle: 'Crea tu cuenta en Vivat',
             signupSubtitle: 'Alquila, publica tus propiedades y gestiona tus contratos.',
-            loginTitle: 'Inicia sesión en Hábitat',
+            loginTitle: 'Inicia sesión en Vivat',
             loginSubtitle: 'Accede a tus postulaciones, propiedades y alquileres.',
             defaultTarget: 'index.html'
         },
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (redirect === 'admin') return 'administrador.html';
         if (redirect === 'favorites') return 'index.html?fav=1';
         if (redirect === 'corredor' || redirect === 'panel-corredor') return 'panel-corredor.html';
-        if (redirect === 'pasaporte') return 'pasaporte-habitat.html';
+        if (redirect === 'pasaporte') return 'pasaporte-vivat.html';
         return ROLES[currentRole].defaultTarget;
     };
 
@@ -411,8 +411,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         targetUrl.searchParams.set('role', currentRole);
 
         // Store selected role in localStorage for session setup after OAuth redirect
-        localStorage.setItem('habitat_selected_role', currentRole);
-        localStorage.setItem('habitat_selected_role_id', String(roleData.id));
+        localStorage.setItem('vivat_selected_role', currentRole);
+        localStorage.setItem('vivat_selected_role_id', String(roleData.id));
 
         const { error } = await window.supabaseClient.auth.signInWithOAuth({
             provider: 'google',

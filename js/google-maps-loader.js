@@ -61,7 +61,7 @@
         isScriptLoading = true;
         const apiKey = await getApiKey();
 
-        window.__habitatGoogleMapsGlobalReady = function () {
+        window.__vivatGoogleMapsGlobalReady = function () {
             isScriptLoading = false;
             while (pendingCallbacks.length > 0) {
                 const cb = pendingCallbacks.shift();
@@ -71,13 +71,13 @@
 
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=${encodeURIComponent(libraries)}&callback=__habitatGoogleMapsGlobalReady&loading=async&v=weekly`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=${encodeURIComponent(libraries)}&callback=__vivatGoogleMapsGlobalReady&loading=async&v=weekly`;
         script.async = true;
         script.defer = true;
         script.onerror = function (err) {
             isScriptLoading = false;
             console.warn('[Google Maps SDK] Error al cargar desde Google CDN (posible bloqueador de anuncios o red):', err);
-            window.dispatchEvent(new CustomEvent('habitat:google_maps_error', { detail: err }));
+            window.dispatchEvent(new CustomEvent('vivat:google_maps_error', { detail: err }));
         };
 
         document.head.appendChild(script);

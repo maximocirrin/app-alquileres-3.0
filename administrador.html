@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -40,7 +41,15 @@
                 if (targetTab && targetTab !== 'avisos') {
                     document.documentElement.setAttribute('data-initial-tab', targetTab);
                 }
-            } catch (e) {}
+
+                // Limpiar cualquier residuo de caché antiguo en el navegador del usuario
+                ['vivat_contracts', 'vivat_user', 'vivat_passport_data', 'vivat_tenant_applications'].forEach(function (k) {
+                    var v = localStorage.getItem(k);
+                    if (v && /habitat|hábitat/i.test(v)) {
+                        localStorage.setItem(k, v.replace(/HABITAT/gi, 'VIVAT').replace(/Habitat/gi, 'Vivat').replace(/habitat/gi, 'vivat').replace(/Hábitat/gi, 'Vivat').replace(/hábitat/gi, 'vivat'));
+                    }
+                });
+            } catch (e) { }
         })();
     </script>
     <style>
@@ -48,18 +57,21 @@
         html[data-initial-tab] #panel-content-avisos {
             display: none !important;
         }
+
         html[data-initial-tab="alquiler-activo"] #panel-content-alquiler-activo,
         html[data-initial-tab="postulaciones"] #panel-content-postulaciones,
         html[data-initial-tab="visitas"] #panel-content-visitas,
         html[data-initial-tab="chat-negociacion"] #panel-content-chat-negociacion {
             display: block !important;
         }
+
         html[data-initial-tab="alquiler-activo"] button[data-tab="avisos"] {
             background-color: transparent !important;
             color: rgb(113 113 122) !important;
             font-weight: 600 !important;
             box-shadow: none !important;
         }
+
         html[data-initial-tab="alquiler-activo"] button[data-tab="alquiler-activo"] {
             background-color: var(--color-primary, #811B1E) !important;
             color: #ffffff !important;
@@ -67,8 +79,10 @@
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
         }
     </style>
-        <title>Panel del Propietario | Hábitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Panel del Propietario | Vivat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -119,11 +133,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -212,7 +235,7 @@
 
         .owner-dock-btn.text-white .material-symbols-outlined {
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
         }
 
         .owner-dock-btn-desktop-only {
@@ -308,7 +331,9 @@
         }
 
         /* Mobile & Tablet In-View Hover Simulation for Property Cards & Candidate Cards */
-        @media (max-width: 1024px), (hover: none) {
+        @media (max-width: 1024px),
+        (hover: none) {
+
             .owner-prop-card,
             .owner-inview-card,
             .owner-banner-inview {
@@ -370,7 +395,8 @@
     </script>
 </head>
 
-<body class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
+<body
+    class="bg-background dark:bg-[#09090b] text-on-background dark:text-[#f1f1f1] font-body antialiased flex flex-col min-h-screen">
     <!-- TopNavBar Component (Standard App Header) -->
     <script src="js/navbar.js?v=4"></script>
 
@@ -383,32 +409,40 @@
                 <span>Mis Avisos</span>
             </button>
 
-            <button data-tab="postulaciones" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="postulaciones"
+                class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">how_to_reg</span>
                 <span>Postulaciones</span>
-                <span id="badge-top-apps" class="px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-white">1</span>
+                <span id="badge-top-apps"
+                    class="px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-white">1</span>
             </button>
 
-            <button data-tab="visitas" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="visitas"
+                class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">calendar_month</span>
                 <span>Visitas Programadas</span>
             </button>
 
-            <button data-tab="alquiler-activo" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="alquiler-activo"
+                class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg">payments</span>
                 <span>Alquileres</span>
             </button>
 
-            <a href="contratos.html" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <a href="contratos.html"
+                class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg text-emerald-500">draw</span>
                 <span>Firma & Contratos</span>
-                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">NUEVO</span>
+                <span
+                    class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">NUEVO</span>
             </a>
 
-            <button data-tab="chat-negociacion" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <button data-tab="chat-negociacion"
+                class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
                 <span>Mensajes & Chat</span>
-                <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
+                <span
+                    class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
             </button>
         </div>
 
@@ -419,9 +453,11 @@
             <div id="panel-content-avisos" class="tab-content active space-y-6">
 
                 <!-- Header Exclusivo de Avisos: Panel del Propietario -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
                     <div>
-                        <h1 class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                        <h1
+                            class="font-headline text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                             Panel del Propietario
                         </h1>
                         <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -430,11 +466,14 @@
                     </div>
 
                     <div class="flex items-center gap-2.5 shrink-0">
-                        <a href="agentes.html" class="inline-flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200/90 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95 cursor-pointer shadow-xs">
-                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-base sm:text-lg">handshake</span>
+                        <a href="agentes.html"
+                            class="inline-flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200/90 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95 cursor-pointer shadow-xs">
+                            <span
+                                class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-base sm:text-lg">handshake</span>
                             <span>Solicitar Agente</span>
                         </a>
-                        <button type="button" onclick="window.App && window.App.showPublishWizard()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                        <button type="button" onclick="window.App && window.App.showPublishWizard()"
+                            class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
                             <span class="material-symbols-outlined text-base sm:text-lg">add</span>
                             <span>Publicar Propiedad</span>
                         </button>
@@ -442,40 +481,54 @@
                 </div>
 
                 <!-- Barra de Herramientas y Filtros Unificada (Toolbar Elegante) -->
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white/70 dark:bg-zinc-900/70 p-2.5 sm:p-3 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 backdrop-blur-md shadow-xs">
-                    
+                <div
+                    class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white/70 dark:bg-zinc-900/70 p-2.5 sm:p-3 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 backdrop-blur-md shadow-xs">
+
                     <!-- Filtros por Estado de Publicación (Píldoras) -->
                     <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide no-scrollbar py-0.5">
-                        <button type="button" data-status-filter="all" class="owner-status-tab active px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0">
+                        <button type="button" data-status-filter="all"
+                            class="owner-status-tab active px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm shrink-0">
                             <span>Todas</span>
-                            <span id="badge-count-all" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 dark:bg-zinc-900/20">0</span>
+                            <span id="badge-count-all"
+                                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 dark:bg-zinc-900/20">0</span>
                         </button>
-                        <button type="button" data-status-filter="disponible" class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                        <button type="button" data-status-filter="disponible"
+                            class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50"></span>
                             <span>Disponibles</span>
-                            <span id="badge-count-disponible" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">0</span>
+                            <span id="badge-count-disponible"
+                                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">0</span>
                         </button>
-                        <button type="button" data-status-filter="alquilada" class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                        <button type="button" data-status-filter="alquilada"
+                            class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
                             <span class="w-2 h-2 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
                             <span>Alquiladas</span>
-                            <span id="badge-count-alquilada" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">0</span>
+                            <span id="badge-count-alquilada"
+                                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">0</span>
                         </button>
-                        <button type="button" data-status-filter="paused" class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                        <button type="button" data-status-filter="paused"
+                            class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
                             <span class="w-2 h-2 rounded-full bg-amber-500 shadow-xs shadow-amber-500/50"></span>
                             <span>Pausadas</span>
-                            <span id="badge-count-paused" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">0</span>
+                            <span id="badge-count-paused"
+                                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">0</span>
                         </button>
-                        <button type="button" data-status-filter="draft" class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
+                        <button type="button" data-status-filter="draft"
+                            class="owner-status-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80 hover:text-zinc-900 dark:hover:text-white shrink-0">
                             <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
                             <span>Borradores / Otras</span>
-                            <span id="badge-count-draft" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
+                            <span id="badge-count-draft"
+                                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
                         </button>
                     </div>
 
                     <!-- Buscador integrado y estilizado -->
                     <div class="relative w-full lg:w-72 shrink-0">
-                        <span class="material-symbols-outlined absolute text-zinc-400 text-base pointer-events-none" style="left: 0.75rem; top: 50%; transform: translateY(-50%);">search</span>
-                        <input id="owner-search-props" type="text" placeholder="Buscar publicación..." class="w-full bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-10 pr-4 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs" style="padding-left: 2.25rem !important;">
+                        <span class="material-symbols-outlined absolute text-zinc-400 text-base pointer-events-none"
+                            style="left: 0.75rem; top: 50%; transform: translateY(-50%);">search</span>
+                        <input id="owner-search-props" type="text" placeholder="Buscar publicación..."
+                            class="w-full bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl h-10 pr-4 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
+                            style="padding-left: 2.25rem !important;">
                     </div>
                 </div>
 
@@ -491,27 +544,38 @@
                 <div class="glass-card p-5 sm:p-6 rounded-2xl shadow-sm">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">how_to_reg</span>
+                            <h2
+                                class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span
+                                    class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">how_to_reg</span>
                                 Postulaciones y Candidatos
                             </h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Revisa credenciales de Pasaporte Hábitat, scoring crediticio y selecciona a tu próximo inquilino.</p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Revisa credenciales de Pasaporte
+                                Vivat, scoring crediticio y selecciona a tu próximo inquilino.</p>
                         </div>
 
                         <!-- Botón moderno para abrir el Pop-Up de selección de propiedad -->
-                        <button type="button" onclick="openOwnerPropertyFilterModal()" id="btn-open-property-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[230px]">
+                        <button type="button" onclick="openOwnerPropertyFilterModal()" id="btn-open-property-filter"
+                            class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[230px]">
                             <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
+                                <div
+                                    class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
                                     <span class="material-symbols-outlined text-lg">home_work</span>
                                 </div>
                                 <div class="min-w-0">
-                                    <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Propiedad Filtrada</span>
-                                    <span id="owner-active-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">Todas las propiedades</span>
+                                    <span
+                                        class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Propiedad
+                                        Filtrada</span>
+                                    <span id="owner-active-filter-label"
+                                        class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">Todas
+                                        las propiedades</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0 pl-1">
-                                <span id="owner-apps-filter-count-badge" class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">0</span>
-                                <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
+                                <span id="owner-apps-filter-count-badge"
+                                    class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">0</span>
+                                <span
+                                    class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
                             </div>
                         </button>
                     </div>
@@ -525,45 +589,67 @@
             <!-- PESTAÑA 3: VISITAS PROGRAMADAS CON CALENDARIO MATRIZ MENSUAL -->
             <div id="panel-content-visitas" class="tab-content space-y-6">
                 <!-- Header del Calendario de Visitas -->
-                <div class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
+                <div
+                    class="glass-card p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800 relative z-30">
                     <div>
-                        <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                        <h2
+                            class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
                             Calendario de Visitas & Citas
                         </h2>
-                        <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato y entregas de llaves.</p>
+                        <p class="text-xs text-zinc-500">Muestras presenciales, firmas de contrato y entregas de llaves.
+                        </p>
                     </div>
 
                     <div class="flex items-center gap-3 flex-wrap shrink-0">
                         <div class="relative">
-                            <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                                <button type="button" onclick="navigateOwnerCalendarMonth(-1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all" title="Mes anterior">
+                            <div
+                                class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                <button type="button" onclick="navigateOwnerCalendarMonth(-1)"
+                                    class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all"
+                                    title="Mes anterior">
                                     <span class="material-symbols-outlined text-base">chevron_left</span>
                                 </button>
-                                <button type="button" onclick="toggleOwnerMonthPickerPopover(event)" class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
+                                <button type="button" onclick="toggleOwnerMonthPickerPopover(event)"
+                                    class="px-2.5 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 font-headline text-xs font-black text-zinc-900 dark:text-white flex items-center gap-1 cursor-pointer transition-all">
                                     <span id="owner-calendar-month-title">Mes Actual</span>
-                                    <span class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
+                                    <span
+                                        class="material-symbols-outlined text-base text-zinc-400">arrow_drop_down</span>
                                 </button>
-                                <button type="button" onclick="navigateOwnerCalendarMonth(1)" class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all" title="Mes siguiente">
+                                <button type="button" onclick="navigateOwnerCalendarMonth(1)"
+                                    class="p-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer transition-all"
+                                    title="Mes siguiente">
                                     <span class="material-symbols-outlined text-base">chevron_right</span>
                                 </button>
-                                <button type="button" onclick="goToOwnerCurrentMonth()" class="ml-1 px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-600 font-headline text-xs font-bold transition-all shadow-2xs cursor-pointer" title="Ir al mes actual">
+                                <button type="button" onclick="goToOwnerCurrentMonth()"
+                                    class="ml-1 px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-600 font-headline text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                                    title="Ir al mes actual">
                                     Hoy
                                 </button>
                             </div>
 
                             <!-- Popover Selector Rápido de Meses -->
-                            <div id="owner-calendar-month-picker-popover" class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3" onclick="event.stopPropagation()">
-                                <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                            <div id="owner-calendar-month-picker-popover"
+                                class="hidden absolute top-full left-0 mt-2 z-[100000] w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 font-body space-y-3"
+                                onclick="event.stopPropagation()">
+                                <div
+                                    class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
                                     <span class="font-headline text-xs font-bold text-zinc-500">Seleccionar Mes</span>
-                                    <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                                        <button type="button" onclick="changeOwnerPickerYear(-1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_left</span></button>
-                                        <span id="owner-picker-year-title" class="font-headline font-black text-xs text-primary dark:text-red-900 px-1">2026</span>
-                                        <button type="button" onclick="changeOwnerPickerYear(1)" class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span class="material-symbols-outlined text-xs">chevron_right</span></button>
+                                    <div
+                                        class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                        <button type="button" onclick="changeOwnerPickerYear(-1)"
+                                            class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span
+                                                class="material-symbols-outlined text-xs">chevron_left</span></button>
+                                        <span id="owner-picker-year-title"
+                                            class="font-headline font-black text-xs text-primary dark:text-red-900 px-1">2026</span>
+                                        <button type="button" onclick="changeOwnerPickerYear(1)"
+                                            class="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 cursor-pointer"><span
+                                                class="material-symbols-outlined text-xs">chevron_right</span></button>
                                     </div>
                                 </div>
 
-                                <div id="owner-picker-month-grid" class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
+                                <div id="owner-picker-month-grid"
+                                    class="grid grid-cols-3 gap-1.5 font-headline text-xs font-bold text-center"></div>
                             </div>
                         </div>
                     </div>
@@ -571,7 +657,8 @@
 
                 <!-- Filtros Rápidos por Tipo de Evento (Leyenda y Filtro de Colores) -->
                 <div class="flex flex-wrap items-center gap-2 text-xs font-headline font-bold">
-                    <button type="button" onclick="filterOwnerCalendarEventType('todos')" id="owner-cal-filter-todos" class="px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all">
+                    <button type="button" onclick="filterOwnerCalendarEventType('todos')" id="owner-cal-filter-todos"
+                        class="px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm border border-transparent flex items-center gap-1.5 cursor-pointer transition-all">
                         <span class="flex items-center gap-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -580,27 +667,35 @@
                         </span>
                         <span>Todos los Eventos</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('visita')" id="owner-cal-filter-visita" class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                    <button type="button" onclick="filterOwnerCalendarEventType('visita')" id="owner-cal-filter-visita"
+                        class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 border border-rose-200 dark:border-rose-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
                         <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
                         <span>Visitas / Muestras</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('firma')" id="owner-cal-filter-firma" class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                    <button type="button" onclick="filterOwnerCalendarEventType('firma')" id="owner-cal-filter-firma"
+                        class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/80 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                         <span>Firmas</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('tasacion')" id="owner-cal-filter-tasacion" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                    <button type="button" onclick="filterOwnerCalendarEventType('tasacion')"
+                        id="owner-cal-filter-tasacion"
+                        class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100/80 border border-blue-200 dark:border-blue-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
                         <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
                         <span>Tasaciones</span>
                     </button>
-                    <button type="button" onclick="filterOwnerCalendarEventType('entrega')" id="owner-cal-filter-entrega" class="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
+                    <button type="button" onclick="filterOwnerCalendarEventType('entrega')"
+                        id="owner-cal-filter-entrega"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100/80 border border-amber-200 dark:border-amber-900/40 flex items-center gap-1.5 cursor-pointer transition-all">
                         <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
                         <span>Entregas de Llaves</span>
                     </button>
                 </div>
 
                 <!-- Matriz de Grilla del Mes -->
-                <div class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
-                    <div class="grid grid-cols-7 gap-1 text-center font-headline text-[11px] font-extrabold uppercase text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                <div
+                    class="glass-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
+                    <div
+                        class="grid grid-cols-7 gap-1 text-center font-headline text-[11px] font-extrabold uppercase text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
                         <div>Dom</div>
                         <div>Lun</div>
                         <div>Mar</div>
@@ -676,11 +771,13 @@
     </div>
 
     <!-- Footer Elegante -->
-    <footer class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
+    <footer
+        class="bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800 py-8 text-xs text-zinc-500">
         <div class="max-w-[1280px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
-                <span>&copy; 2026 Hábitat - Todos los derechos reservados</span>
+                <img src="img/logo-lite.png" alt="Vivat Logo"
+                    class="h-7 w-auto object-contain brightness-0 dark:brightness-100 opacity-75">
+                <span>&copy; 2026 Vivat - Todos los derechos reservados</span>
             </div>
             <div class="flex items-center gap-6">
                 <a href="terminos.html" class="hover:text-primary transition-colors">Términos y Privacidad</a>
@@ -824,7 +921,7 @@
                 setTimeout(() => {
                     setupOwnerCardsIntersectionObserver();
                 }, 100);
-                
+
                 return renderPromise;
             }
             window.switchViewTab = switchViewTab;
@@ -856,7 +953,7 @@
                 }
 
                 const validTabs = ['avisos', 'postulaciones', 'visitas', 'alquiler-activo', 'chat-negociacion'];
-                
+
                 if (targetTab === 'mantenimiento') {
                     await switchViewTab('alquiler-activo');
                     setTimeout(() => {
@@ -870,7 +967,7 @@
                 } else {
                     await switchViewTab('avisos');
                 }
-                
+
                 setTimeout(() => {
                     const activeDockBtn = document.querySelector('.owner-dock-btn.text-white');
                     if (activeDockBtn) updateSlidingIndicator(activeDockBtn);
@@ -890,7 +987,7 @@
                 try {
                     const stored = sessionStorage.getItem('just_published_property');
                     if (stored) propData = JSON.parse(stored);
-                } catch (e) {}
+                } catch (e) { }
 
                 if (justPublishedUrl || propData) {
                     // Limpiar URL sin recargar
@@ -1290,7 +1387,7 @@
         window.addEventListener('resize', setupOwnerCardsIntersectionObserver, { passive: true });
         window.addEventListener('orientationchange', setupOwnerCardsIntersectionObserver, { passive: true });
 
-        window.resetOwnerAvisosFilters = function() {
+        window.resetOwnerAvisosFilters = function () {
             ownerActiveStatusFilter = 'all';
             const searchInput = document.getElementById('owner-search-props');
             if (searchInput) searchInput.value = '';
@@ -1304,7 +1401,7 @@
             renderOwnerAvisosGrid();
         };
 
-        window.toggleOwnerPropPause = async function(propId, currentStatus, btnElem) {
+        window.toggleOwnerPropPause = async function (propId, currentStatus, btnElem) {
             if (!window.DataManager || typeof window.DataManager.togglePauseProperty !== 'function') return;
             if (btnElem) {
                 btnElem.disabled = true;
@@ -1339,7 +1436,7 @@
             }
         };
 
-        window.handleOwnerCardClick = function(event, propObj) {
+        window.handleOwnerCardClick = function (event, propObj) {
             if (event.target.closest('button') || event.target.closest('a') || event.target.closest('.owner-card-menu')) {
                 return;
             }
@@ -1348,7 +1445,7 @@
             }
         };
 
-        window.toggleOwnerCardMenu = function(event, propId) {
+        window.toggleOwnerCardMenu = function (event, propId) {
             if (event) event.stopPropagation();
             const menu = document.getElementById(`owner-card-menu-${propId}`);
             if (!menu) return;
@@ -1359,11 +1456,11 @@
             }
         };
 
-        window.closeAllOwnerCardMenus = function() {
+        window.closeAllOwnerCardMenus = function () {
             document.querySelectorAll('.owner-card-menu').forEach(m => m.classList.add('hidden'));
         };
 
-        window.deleteOwnerProperty = async function(propId, propTitle) {
+        window.deleteOwnerProperty = async function (propId, propTitle) {
             let confirmed = false;
             if (window.showCustomConfirm) {
                 confirmed = await window.showCustomConfirm({
@@ -1406,13 +1503,13 @@
             }
         };
 
-        window.shareOwnerProperty = async function(propId, propTitle) {
+        window.shareOwnerProperty = async function (propId, propTitle) {
             const shareUrl = `${window.location.origin}/buscar.html?id=${propId}`;
             if (navigator.share) {
                 try {
                     await navigator.share({
-                        title: propTitle || 'Propiedad en Habitat',
-                        text: `Mirá esta propiedad en Habitat: ${propTitle || ''}`,
+                        title: propTitle || 'Propiedad en Vivat',
+                        text: `Mirá esta propiedad en Vivat: ${propTitle || ''}`,
                         url: shareUrl
                     });
                     return;
@@ -1458,11 +1555,11 @@
                     if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
                         rawList = await window.DataManager.getOwnerContracts();
                     } else {
-                        const raw = localStorage.getItem('habitat_contracts');
+                        const raw = localStorage.getItem('vivat_contracts');
                         if (raw) rawList = JSON.parse(raw);
                     }
                     ownerActiveContractsMock = rawList || [];
-                } catch (ce) {}
+                } catch (ce) { }
 
                 // Setup Status Tab Clicks
                 document.querySelectorAll('.owner-status-tab').forEach(tab => {
@@ -1503,7 +1600,7 @@
         let ownerSelectedPropFilter = 'all';
         let ownerSelectedPropTitle = 'Todas las propiedades';
         let ownerShowRejected = false;
-        
+
         function getApplicantPassportData(a) {
             if (!a) return {
                 id: '1',
@@ -1573,14 +1670,14 @@
                         }
                         if (calculated >= 16 && calculated <= 120) rawAge = calculated;
                     }
-                } catch (eAge) {}
+                } catch (eAge) { }
             }
 
             // Consultar datos locales si coinciden con el usuario activo
             try {
-                const localDidit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                const localUser = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                const localPass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
+                const localDidit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+                const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                const localPass = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
 
                 if (!rawAge) {
                     if (localUser.email === email || localUser.mail === email || localDidit.fullName === name || localPass.razon_social === name) {
@@ -1609,7 +1706,7 @@
                         }
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
 
             // Si hay CUIT de 11 dígitos y falta DNI, derivarlo del CUIT
             if (!rawDni && rawCuit) {
@@ -1703,7 +1800,7 @@
                         appliedAtTime = `${hours}:${mins} hs`;
                         appliedAtFormatted = `${day}/${month}/${year} • ${hours}:${mins} hs`;
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
             if (!appliedAtFormatted) {
                 const now = new Date();
@@ -1779,7 +1876,7 @@
                     const key = String(a.id_solicitud || a.id);
                     const pid = String(a.property_id || a.propertyId || a.id_propiedad || '');
                     const pubId = String(a.publication_id || a.publicationId || a.id_publicacion || '');
-                    
+
                     if (ownerRawProperties.length > 0) {
                         if (validPropIds.has(pid) || validPropIds.has(pubId)) {
                             if (!deduplicatedMap.has(key)) {
@@ -1827,7 +1924,7 @@
             }
         }
 
-        window.openOwnerPropertyFilterModal = function() {
+        window.openOwnerPropertyFilterModal = function () {
             let modal = document.getElementById('owner-property-filter-modal');
             if (!modal) {
                 modal = document.createElement('div');
@@ -1859,10 +1956,9 @@
                 const priceFmt = p.price || p.precio ? `$ ${Number(p.price || p.precio).toLocaleString('es-AR')}` : '';
 
                 return `
-                    <div onclick="selectOwnerPropertyFilter('${pid}', '${(p.title || '').replace(/'/g, "\\'")}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
-                        isSelected
-                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
-                            : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                    <div onclick="selectOwnerPropertyFilter('${pid}', '${(p.title || '').replace(/'/g, "\\'")}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${isSelected
+                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                        : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
                     }">
                         <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
                             <img src="${imgUrl}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='img/hero-marketplace.jpg'">
@@ -1878,22 +1974,20 @@
                                 <span class="truncate">${p.address || 'Mendoza'}</span>
                             </p>
                             <div class="mt-2 flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black ${
-                                    count > 0
-                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                        : 'bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                                }">
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-headline font-black ${count > 0
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                        : 'bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                    }">
                                     ${count} candidato${count === 1 ? '' : 's'}
                                 </span>
                             </div>
                         </div>
 
                         <div class="shrink-0">
-                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${
-                                isSelected
-                                    ? 'bg-primary text-white'
-                                    : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
-                            }">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${isSelected
+                        ? 'bg-primary text-white'
+                        : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                    }">
                                 <span class="material-symbols-outlined text-sm font-black">check</span>
                             </div>
                         </div>
@@ -1920,11 +2014,10 @@
                     <!-- Contenedor scrolleable con diseño moderno -->
                     <div class="overflow-y-auto pr-1 space-y-2.5 sm:space-y-3 flex-1 custom-scrollbar">
                         <!-- Opción 1: Todas las propiedades -->
-                        <div onclick="selectOwnerPropertyFilter('all', 'Todas las propiedades')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
-                            isAllSelected
-                                ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
-                                : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
-                        }">
+                        <div onclick="selectOwnerPropertyFilter('all', 'Todas las propiedades')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${isAllSelected
+                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                    : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                }">
                             <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 text-primary dark:text-red-400">
                                 <span class="material-symbols-outlined text-3xl sm:text-4xl">domain</span>
                             </div>
@@ -1942,11 +2035,10 @@
                                 </div>
                             </div>
                             <div class="shrink-0">
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center ${
-                                    isAllSelected
-                                        ? 'bg-primary text-white'
-                                        : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
-                                }">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center ${isAllSelected
+                    ? 'bg-primary text-white'
+                    : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                }">
                                     <span class="material-symbols-outlined text-sm font-black">check</span>
                                 </div>
                             </div>
@@ -1959,15 +2051,15 @@
             `;
         };
 
-        window.closeOwnerPropertyFilterModal = function() {
+        window.closeOwnerPropertyFilterModal = function () {
             const modal = document.getElementById('owner-property-filter-modal');
             if (modal) modal.style.display = 'none';
         };
 
-        window.selectOwnerPropertyFilter = function(propId, propTitle) {
+        window.selectOwnerPropertyFilter = function (propId, propTitle) {
             ownerSelectedPropFilter = propId;
             ownerSelectedPropTitle = propTitle || 'Todas las propiedades';
-            
+
             const label = document.getElementById('owner-active-filter-label');
             if (label) label.textContent = ownerSelectedPropTitle;
 
@@ -1975,7 +2067,7 @@
             renderFilteredOwnerApplications();
         };
 
-        window.openOwnerRentalFilterModal = function() {
+        window.openOwnerRentalFilterModal = function () {
             let modal = document.getElementById('owner-rental-filter-modal');
             if (!modal) {
                 modal = document.createElement('div');
@@ -1995,10 +2087,9 @@
                 const rentFmt = `$ ${Number(c.monthly_rent || 0).toLocaleString('es-AR')}`;
 
                 return `
-                    <div onclick="selectOwnerRentalContract('${c.id}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${
-                        isSelected
-                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
-                            : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
+                    <div onclick="selectOwnerRentalContract('${c.id}')" class="p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 group ${isSelected
+                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-red-950/20 shadow-sm'
+                        : 'border-zinc-200 dark:border-zinc-700/80 bg-zinc-50/70 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600'
                     }">
                         <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
                             <img src="${imgUrl}" alt="${cleanTitle}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='img/hero-marketplace.jpg'">
@@ -2027,11 +2118,10 @@
                         </div>
 
                         <div class="shrink-0">
-                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${
-                                isSelected
-                                    ? 'bg-primary text-white'
-                                    : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
-                            }">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center ${isSelected
+                        ? 'bg-primary text-white'
+                        : 'border-2 border-zinc-300 dark:border-zinc-600 text-transparent group-hover:border-primary'
+                    }">
                                 <span class="material-symbols-outlined text-sm font-black">check</span>
                             </div>
                         </div>
@@ -2065,18 +2155,18 @@
             `;
         };
 
-        window.closeOwnerRentalFilterModal = function() {
+        window.closeOwnerRentalFilterModal = function () {
             const modal = document.getElementById('owner-rental-filter-modal');
             if (modal) modal.style.display = 'none';
         };
 
-        window.selectOwnerRentalContract = function(contractId) {
+        window.selectOwnerRentalContract = function (contractId) {
             activeSelectedContractId = contractId;
             closeOwnerRentalFilterModal();
             loadOwnerActiveRental();
         };
 
-        window.toggleOwnerRejectedCandidates = function() {
+        window.toggleOwnerRejectedCandidates = function () {
             ownerShowRejected = !ownerShowRejected;
             const container = document.getElementById('owner-rejected-apps-container');
             const text = document.getElementById('rejected-toggle-text');
@@ -2099,7 +2189,7 @@
 
         let ownerShowAccepted = false;
 
-        window.toggleOwnerAcceptedCandidates = function() {
+        window.toggleOwnerAcceptedCandidates = function () {
             ownerShowAccepted = !ownerShowAccepted;
             const container = document.getElementById('owner-accepted-apps-container');
             const text = document.getElementById('accepted-toggle-text');
@@ -2114,7 +2204,7 @@
             }
         };
 
-        window.cancelAcceptedApplication = async function(appId) {
+        window.cancelAcceptedApplication = async function (appId) {
             let confirmed = true;
             if (window.showCustomConfirm) {
                 confirmed = await window.showCustomConfirm({
@@ -2135,7 +2225,7 @@
                         fecha_inicio: new Date().toISOString()
                     }]);
 
-                    const raw = localStorage.getItem('habitat_tenant_applications');
+                    const raw = localStorage.getItem('vivat_tenant_applications');
                     if (raw) {
                         const apps = JSON.parse(raw);
                         const targetApp = apps.find(a => String(a.id) === String(appId));
@@ -2147,7 +2237,7 @@
                         }
                     }
                 }
-                const raw = localStorage.getItem('habitat_tenant_applications');
+                const raw = localStorage.getItem('vivat_tenant_applications');
                 if (raw) {
                     const apps = JSON.parse(raw);
                     apps.forEach(a => {
@@ -2155,10 +2245,10 @@
                             a.status = 'pendiente';
                         }
                     });
-                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                    localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
                 }
 
-                const rawContr = localStorage.getItem('habitat_contracts');
+                const rawContr = localStorage.getItem('vivat_contracts');
                 if (rawContr) {
                     const parsed = JSON.parse(rawContr);
                     parsed.forEach(c => {
@@ -2166,7 +2256,7 @@
                         if (c.owner) c.owner.hasSigned = false;
                         c.status = 'WAITING_TENANT';
                     });
-                    localStorage.setItem('habitat_contracts', JSON.stringify(parsed));
+                    localStorage.setItem('vivat_contracts', JSON.stringify(parsed));
                 }
 
                 if (window.ToastManager) {
@@ -2182,7 +2272,7 @@
             await loadOwnerApplications();
         };
 
-        window.rejectApplication = async function(appId) {
+        window.rejectApplication = async function (appId) {
             let confirmed = true;
             if (window.showCustomConfirm) {
                 confirmed = await window.showCustomConfirm({
@@ -2203,7 +2293,7 @@
                         fecha_inicio: new Date().toISOString()
                     }]);
                 }
-                const raw = localStorage.getItem('habitat_tenant_applications');
+                const raw = localStorage.getItem('vivat_tenant_applications');
                 if (raw) {
                     const apps = JSON.parse(raw);
                     apps.forEach(a => {
@@ -2211,7 +2301,7 @@
                             a.status = 'rechazada';
                         }
                     });
-                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                    localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
                 }
 
                 if (window.ToastManager) {
@@ -2227,7 +2317,7 @@
             await loadOwnerApplications();
         };
 
-        window.reactivateApplication = async function(appId) {
+        window.reactivateApplication = async function (appId) {
             try {
                 if (window.supabaseClient && appId) {
                     await window.supabaseClient.from('Historial_estado_solicitud').insert([{
@@ -2236,7 +2326,7 @@
                         fecha_inicio: new Date().toISOString()
                     }]);
                 }
-                const raw = localStorage.getItem('habitat_tenant_applications');
+                const raw = localStorage.getItem('vivat_tenant_applications');
                 if (raw) {
                     const apps = JSON.parse(raw);
                     apps.forEach(a => {
@@ -2244,7 +2334,7 @@
                             a.status = 'pendiente';
                         }
                     });
-                    localStorage.setItem('habitat_tenant_applications', JSON.stringify(apps));
+                    localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
                 }
             } catch (e) {
                 console.warn("Reactivate error:", e);
@@ -2288,20 +2378,20 @@
                         </div>
                     </div>
 
-                    <!-- Credencial Digital Pasaporte Hábitat Estilo DNI -->
-                    <div class="relative rounded-2xl sm:rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md sm:shadow-xl overflow-hidden transition-all hover:shadow-2xl cursor-pointer group" onclick="openPasaporteHabitatModal('${a.id}')">
+                    <!-- Credencial Digital Pasaporte Vivat Estilo DNI -->
+                    <div class="relative rounded-2xl sm:rounded-3xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md sm:shadow-xl overflow-hidden transition-all hover:shadow-2xl cursor-pointer group" onclick="openPasaporteVivatModal('${a.id}')">
                         <!-- Passport Top Header Bar -->
                         <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-3.5 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-xs">
                             <div class="flex items-center gap-2 min-w-0">
-                                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-6 sm:h-8 w-auto bg-white p-1 rounded-lg shadow-xs shrink-0">
+                                <img src="img/logo-lite.png" alt="Vivat Logo" class="h-6 sm:h-8 w-auto bg-white p-1 rounded-lg shadow-xs shrink-0">
                                 <div class="min-w-0">
-                                    <h4 class="font-headline text-[11px] sm:text-sm font-black tracking-widest uppercase leading-tight truncate">HABITAT PASSPORT</h4>
-                                    <p class="text-[8px] sm:text-[10px] text-white/90 font-headline font-extrabold tracking-widest truncate">ID: HBT-2026-${String(a.id || '').substring(0,8).toUpperCase()}</p>
+                                    <h4 class="font-headline text-[11px] sm:text-sm font-black tracking-widest uppercase leading-tight truncate">VIVAT PASSPORT</h4>
+                                    <p class="text-[8px] sm:text-[10px] text-white/90 font-headline font-extrabold tracking-widest truncate">ID: HBT-2026-${String(a.id || '').substring(0, 8).toUpperCase()}</p>
                                 </div>
                             </div>
 
                             <div class="bg-white p-0.5 sm:p-1 rounded-lg sm:rounded-xl shadow-xs border border-white/30 shrink-0">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${a.id}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-contain">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fvivat.com.ar%2Fpasaporte-vivat.html%3Fid%3DHBT-2026-${a.id}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-contain">
                             </div>
                         </div>
 
@@ -2368,7 +2458,7 @@
                                     <span class="material-symbols-outlined text-sm shrink-0">workspace_premium</span> Ver Documentación & Certificados
                                 </span>
                                 <span class="w-full sm:w-auto text-center justify-center px-4 py-2 sm:py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 shrink-0">
-                                    <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Hábitat
+                                    <span class="material-symbols-outlined text-sm">badge</span> Ver Pasaporte Vivat
                                 </span>
                             </div>
                         </div>
@@ -2398,13 +2488,13 @@
                     ` : ''}
 
                     ${!isRejected && a.status === 'aceptada' ? (() => {
-                        const appContract = (ownerActiveContractsMock || []).find(c => c && (
-                            String(c.propertyId) === String(a.property_id || a.resolved_prop_id) ||
-                            String(c.property_id) === String(a.property_id || a.resolved_prop_id) ||
-                            String(c.id) === String(a.contract_id)
-                        ));
+                    const appContract = (ownerActiveContractsMock || []).find(c => c && (
+                        String(c.propertyId) === String(a.property_id || a.resolved_prop_id) ||
+                        String(c.property_id) === String(a.property_id || a.resolved_prop_id) ||
+                        String(c.id) === String(a.contract_id)
+                    ));
 
-                        return `
+                    return `
                         <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
                             ${appContract ? `
                                 <button type="button" onclick="selectOwnerActiveContract('${appContract.id}'); switchViewTab('alquiler-activo');" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
@@ -2435,7 +2525,7 @@
                             </button>
                         </div>
                         `;
-                    })() : ''}
+                })() : ''}
 
                     ${isRejected ? `
                         <div class="pt-1 flex items-center justify-between flex-wrap gap-2">
@@ -2596,7 +2686,7 @@
             }
         }
 
-        window.handleOwnerAcceptApplicant = async function(appId) {
+        window.handleOwnerAcceptApplicant = async function (appId) {
             const app = (ownerAppsState || []).find(a => String(a.id) === String(appId)) || {};
             const propId = app.property_id || app.resolved_prop_id;
             const prop = (ownerRawProperties || []).find(p => String(p.id) === String(propId)) || {
@@ -2628,7 +2718,7 @@
             }
         };
 
-        window.openRentalWizardForApplication = function(appId) {
+        window.openRentalWizardForApplication = function (appId) {
             const app = (ownerAppsState || []).find(a => String(a.id) === String(appId)) || {};
             const propId = app.property_id || app.resolved_prop_id;
             const prop = (ownerRawProperties || []).find(p => String(p.id) === String(propId)) || {
@@ -2753,10 +2843,9 @@
             grid.innerHTML = monthShortNames.map((m, idx) => {
                 const isSelected = (ownerPickerSelectedYear === ownerCurrentCalendarYear && idx === ownerCurrentCalendarMonth);
                 return `
-                    <button type="button" onclick="selectOwnerQuickMonth(${idx})" class="py-2 px-1 rounded-xl transition-all cursor-pointer ${
-                        isSelected 
-                            ? 'bg-primary text-white shadow-xs font-black' 
-                            : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold'
+                    <button type="button" onclick="selectOwnerQuickMonth(${idx})" class="py-2 px-1 rounded-xl transition-all cursor-pointer ${isSelected
+                        ? 'bg-primary text-white shadow-xs font-black'
+                        : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold'
                     }">
                         ${m}
                     </button>
@@ -2825,12 +2914,11 @@
                 });
 
                 html += `
-                    <div onclick="selectOwnerCalendarDay('${dateStr}')" class="min-h-[52px] sm:h-28 p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
-                        isSelected 
-                            ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm' 
-                            : (isToday 
-                                ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs ring-1 ring-primary/20' 
-                                : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
+                    <div onclick="selectOwnerCalendarDay('${dateStr}')" class="min-h-[52px] sm:h-28 p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${isSelected
+                        ? 'bg-primary/10 border-primary ring-2 ring-primary/40 shadow-sm'
+                        : (isToday
+                            ? 'bg-white dark:bg-zinc-800 border-primary/60 shadow-xs ring-1 ring-primary/20'
+                            : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-primary/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/60')
                     }">
                         <!-- Encabezado del Día -->
                         <div class="flex items-center justify-between w-full">
@@ -2851,32 +2939,32 @@
                         <!-- Eventos en Mobile (Indicadores de puntos elegantes) -->
                         <div class="sm:hidden flex items-center justify-center gap-1 my-0.5 flex-wrap">
                             ${dayEvents.slice(0, 3).map(ev => {
-                                const dotColor = ev.type === 'visita' ? 'bg-rose-500'
-                                    : (ev.type === 'firma' ? 'bg-emerald-500'
-                                    : (ev.type === 'tasacion' ? 'bg-blue-500'
+                        const dotColor = ev.type === 'visita' ? 'bg-rose-500'
+                            : (ev.type === 'firma' ? 'bg-emerald-500'
+                                : (ev.type === 'tasacion' ? 'bg-blue-500'
                                     : 'bg-amber-500'));
-                                return `<span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>`;
-                            }).join('')}
+                        return `<span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>`;
+                    }).join('')}
                             ${dayEvents.length > 3 ? `<span class="text-[7px] font-black text-primary leading-none">+${dayEvents.length - 3}</span>` : ''}
                         </div>
 
                         <!-- Eventos en Desktop (Tarjetas detalladas) -->
                         <div class="hidden sm:block space-y-1 overflow-y-auto max-h-[64px] scrollbar-none my-1">
                             ${dayEvents.map(ev => {
-                                const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
-                                    : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                                    : (ev.type === 'tasacion' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                        const badgeColor = ev.type === 'visita' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                            : (ev.type === 'firma' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                : (ev.type === 'tasacion' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
                                     : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'));
 
-                                const icon = ev.type === 'visita' ? 'meeting_room' : (ev.type === 'firma' ? 'edit_note' : (ev.type === 'tasacion' ? 'analytics' : 'key'));
+                        const icon = ev.type === 'visita' ? 'meeting_room' : (ev.type === 'firma' ? 'edit_note' : (ev.type === 'tasacion' ? 'analytics' : 'key'));
 
-                                return `
+                        return `
                                     <div class="p-1 rounded-lg border text-[9px] font-headline font-bold truncate flex items-center gap-1 ${badgeColor}" title="${ev.typeLabel}: ${ev.property_title}">
                                         <span class="material-symbols-outlined text-[11px] shrink-0">${icon}</span>
                                         <span class="truncate">${ev.visit_time} ${ev.property_title.split(',')[0]}</span>
                                     </div>
                                 `;
-                            }).join('')}
+                    }).join('')}
                         </div>
 
                         <div class="hidden sm:block text-[9px] font-bold text-zinc-400 text-right">
@@ -2905,7 +2993,7 @@
             if (!list) return;
 
             const monthPadded = (ownerCurrentCalendarMonth + 1) < 10 ? `0${ownerCurrentCalendarMonth + 1}` : `${ownerCurrentCalendarMonth + 1}`;
-            
+
             let visitsList = ownerEventsMock;
             if (window.DataManager) {
                 try {
@@ -2914,7 +3002,7 @@
                         visitsList = dbEvents;
                         ownerEventsMock = dbEvents; // Update mock so grid render can use it too
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
 
             renderOwnerCalendarGrid();
@@ -2942,8 +3030,8 @@
 
                 const badgeColor = v.type === 'visita' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                     : (v.type === 'firma' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                    : (v.type === 'tasacion' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'));
+                        : (v.type === 'tasacion' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'));
 
                 return `
                     <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4 font-body border border-zinc-200 dark:border-zinc-800">
@@ -3005,48 +3093,55 @@
             }).join('');
         }
 
-        window.acceptOwnerVisit = async function(id) {
+        window.acceptOwnerVisit = async function (id) {
             if (window.DataManager && window.DataManager.acceptEvent) {
                 await window.DataManager.acceptEvent(id);
                 loadOwnerVisits();
             }
         };
 
-        window.rejectOwnerVisit = async function(id) {
+        window.rejectOwnerVisit = async function (id) {
             if (window.DataManager && window.DataManager.rejectEvent) {
                 await window.DataManager.rejectEvent(id);
                 loadOwnerVisits();
             }
         };
 
-        window.proposeOwnerVisit = function(id) {
+        window.proposeOwnerVisit = function (id) {
             document.getElementById('reschedule-visit-modal').classList.remove('hidden');
             document.getElementById('reschedule-visit-id').value = id;
         };
 
-        window.submitRescheduleVisit = async function() {
+        window.submitRescheduleVisit = async function () {
             const id = document.getElementById('reschedule-visit-id').value;
             const date = document.getElementById('reschedule-visit-date').value;
             const time = document.getElementById('reschedule-visit-time').value;
-            
+
             if (!date || !time) {
                 alert("Por favor complete la nueva fecha y hora.");
                 return;
             }
-            
+
             if (window.DataManager && window.DataManager.proposeNewVisitTime) {
                 document.getElementById('reschedule-visit-modal').classList.add('hidden');
                 await window.DataManager.proposeNewVisitTime(id, date, time);
                 loadOwnerVisits();
             }
         };
-        
-        window.closeRescheduleModal = function() {
+
+        window.closeRescheduleModal = function () {
             document.getElementById('reschedule-visit-modal').classList.add('hidden');
         };
 
         let ownerActiveContractsMock = [];
         let activeSelectedContractId = null;
+
+        function cleanVivatText(str) {
+            if (!str || typeof str !== 'string') return str;
+            return str
+                .replace(/HABITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'))
+                .replace(/HÁBITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'));
+        }
 
         function selectOwnerActiveContract(contractId) {
             activeSelectedContractId = contractId;
@@ -3065,18 +3160,18 @@
                     rawList = await window.DataManager.getOwnerContracts();
                 } else {
                     try {
-                        const raw = localStorage.getItem('habitat_contracts');
+                        const raw = localStorage.getItem('vivat_contracts');
                         if (raw) rawList = JSON.parse(raw);
-                    } catch(e) {}
+                    } catch (e) { }
                 }
 
                 // Normalizar contratos defensivamente
                 ownerActiveContractsMock = (Array.isArray(rawList) ? rawList : []).map((c, idx) => {
                     if (!c) return null;
-                    const rawTitle = c.property_title || c.propertyTitle || c.property?.title || c.propertyAddress || c.property_address || `Propiedad #${idx + 1}`;
-                    const rawAddress = c.property_address || c.propertyAddress || c.property?.address || 'Mendoza, Argentina';
-                    const rawTenant = c.tenant_name || c.tenant?.name || 'Inquilino Verificado';
-                    const rawTenantEmail = c.tenant_email || c.tenant?.email || 'inquilino@habitat.ar';
+                    const rawTitle = cleanVivatText(c.property_title || c.propertyTitle || c.property?.title || c.propertyAddress || c.property_address || `Propiedad #${idx + 1}`);
+                    const rawAddress = cleanVivatText(c.property_address || c.propertyAddress || c.property?.address || 'Mendoza, Argentina');
+                    const rawTenant = cleanVivatText(c.tenant_name || c.tenant?.name || 'Inquilino Verificado');
+                    const rawTenantEmail = cleanVivatText(c.tenant_email || c.tenant?.email || 'inquilino@vivat.ar');
                     const rawTenantPhone = c.tenant_phone || c.tenant?.phone || '+54 9 261 412-3456';
                     const rawRent = Number(c.monthly_rent || c.monthlyRent || c.rent || 380000);
                     const rawExpenses = Number(c.expenses_amount || c.expenses || 48000);
@@ -3121,9 +3216,9 @@
                         durationMonths: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
                         duration_months: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
                         currency: c.currency || c.clausulas_adicionales?.currency || 'ARS',
-                        aliasCbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
-                        alias_cbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
-                        cbu_alias: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'HABITAT.ALQUILER.MP',
+                        aliasCbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
+                        alias_cbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
+                        cbu_alias: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
                         clauses: c.clauses || c.clausulas_adicionales || {},
                         customClauses: c.customClauses || c.clausulas_adicionales?.customClauses || [],
                         activeClausesList: c.activeClausesList || c.clausulas_adicionales?.activeClausesList || [],
@@ -3196,7 +3291,7 @@
                 if (window.DataManager && window.DataManager.getLatestIndices) {
                     try {
                         indicesData = await window.DataManager.getLatestIndices();
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 const isIpc = !contract.adjustment_index || contract.adjustment_index.includes('IPC');
@@ -3499,7 +3594,7 @@
                     bPay.onclick = async () => {
                         const totalRentAndExp = Number(contract.monthly_rent || 0) + Number(expenses || 0);
                         const finalCharge = punitives.isWaived || punitives.punitiveAmount <= 0 ? totalRentAndExp : (punitives.totalAmount + Number(expenses || 0));
-                        
+
                         let confirmed = true;
                         if (window.showCustomConfirm) {
                             confirmed = await window.showCustomConfirm({
@@ -3514,7 +3609,7 @@
                             await window.DataManager.markPaymentAsPaid(payment.id, "Transferencia / Efectivo", contract.id);
                         }
                         payment.status = 'pagado';
-                        
+
                         if (window.showCustomAlert) {
                             await window.showCustomAlert({
                                 title: '¡Pago Registrado Exitosamente!',
@@ -3648,12 +3743,12 @@
                 btnConfirm.onclick = async () => {
                     btnConfirm.disabled = true;
                     btnConfirm.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Procesando...';
-                    
+
                     if (window.DataManager) {
                         await window.DataManager.waivePunitiveInterests(payment.id, contract.id);
                     }
                     payment.is_punitive_waived = true;
-                    
+
                     modal.style.display = 'none';
                     openWaiveSuccessModal(contract, payment, punitives);
                     await loadOwnerActiveRental();
@@ -3874,8 +3969,8 @@
                 contract.adjustment_frequency_months = Number(document.getElementById('edit-rent-freq').value);
 
                 try {
-                    localStorage.setItem('habitat_contracts', JSON.stringify(ownerActiveContractsMock));
-                } catch(e) {}
+                    localStorage.setItem('vivat_contracts', JSON.stringify(ownerActiveContractsMock));
+                } catch (e) { }
             }
             const modal = document.getElementById('owner-edit-rental-modal');
             if (modal) modal.style.display = 'none';
@@ -3971,8 +4066,8 @@
             }
         }
 
-        window.closePasaporteHabitatModal = function() {
-            const modal = document.getElementById('pasaporte-habitat-full-modal');
+        window.closePasaporteVivatModal = function () {
+            const modal = document.getElementById('pasaporte-vivat-full-modal');
             if (modal) {
                 modal.classList.add('opacity-0', 'pointer-events-none');
                 setTimeout(() => {
@@ -3983,21 +4078,21 @@
             }
         };
 
-        window.openPasaporteHabitatModal = function(appId) {
+        window.openPasaporteVivatModal = function (appId) {
             let app = ownerAppsState.find(a => String(a.id) === String(appId));
             if (!app && window.DataManager && window.DataManager._mockApplications) {
                 app = window.DataManager._mockApplications.find(a => String(a.id) === String(appId));
             }
-            
+
             const pData = getApplicantPassportData(app);
             const isPending = !app || app.status === 'pendiente';
             const isAccepted = app && app.status === 'aceptada';
             const isRejected = app && app.status === 'rechazada';
 
-            let modal = document.getElementById('pasaporte-habitat-full-modal');
+            let modal = document.getElementById('pasaporte-vivat-full-modal');
             if (!modal) {
                 modal = document.createElement('div');
-                modal.id = 'pasaporte-habitat-full-modal';
+                modal.id = 'pasaporte-vivat-full-modal';
                 document.body.appendChild(modal);
             }
 
@@ -4018,7 +4113,7 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="closePasaporteHabitatModal()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-300" title="Cerrar">
+                        <button type="button" onclick="closePasaporteVivatModal()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-300" title="Cerrar">
                             <span class="material-symbols-outlined text-base">close</span>
                         </button>
                     </div>
@@ -4033,18 +4128,18 @@
                         <!-- Top Red Header Bar with compact QR and elegant Download button -->
                         <div class="bg-gradient-to-r from-[#811b1e] via-[#a13333] to-[#811b1e] text-white px-4 sm:px-7 py-3.5 sm:py-4.5 flex flex-row items-center justify-between gap-3">
                             <div class="flex items-center gap-2.5 sm:gap-3.5 text-left min-w-0">
-                                <img src="img/logo-lite.png" alt="Habitat Logo" class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-xl shadow-xs shrink-0">
+                                <img src="img/logo-lite.png" alt="Vivat Logo" class="h-8 sm:h-10 w-auto bg-white p-1 sm:p-1.5 rounded-xl shadow-xs shrink-0">
                                 <div class="min-w-0">
-                                    <h2 class="font-headline text-sm sm:text-lg font-black tracking-wider sm:tracking-widest uppercase leading-tight text-white truncate">HABITAT PASSPORT</h2>
-                                    <p class="text-[10px] sm:text-xs text-white/90 font-headline font-extrabold tracking-wider truncate">ID: HBT-2026-${String(appId || '').substring(0,8).toUpperCase()}</p>
+                                    <h2 class="font-headline text-sm sm:text-lg font-black tracking-wider sm:tracking-widest uppercase leading-tight text-white truncate">VIVAT PASSPORT</h2>
+                                    <p class="text-[10px] sm:text-xs text-white/90 font-headline font-extrabold tracking-wider truncate">ID: HBT-2026-${String(appId || '').substring(0, 8).toUpperCase()}</p>
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                                 <div class="bg-white p-1 rounded-xl shadow-sm border border-white/30 shrink-0">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fhabitat.com.ar%2Fpasaporte-habitat.html%3Fid%3DHBT-2026-${appId}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-contain">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fvivat.com.ar%2Fpasaporte-vivat.html%3Fid%3DHBT-2026-${appId}&color=811b1e&bgcolor=ffffff" alt="QR Verificación" class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-contain">
                                 </div>
-                                <button type="button" onclick="alert('Descargando Credencial Digital del Pasaporte Hábitat de ${pData.name}...')" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white font-headline font-extrabold text-[11px] sm:text-xs border border-white/30 backdrop-blur-md flex items-center gap-1.5 cursor-pointer shadow-xs transition-all shrink-0">
+                                <button type="button" onclick="alert('Descargando Credencial Digital del Pasaporte Vivat de ${pData.name}...')" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white font-headline font-extrabold text-[11px] sm:text-xs border border-white/30 backdrop-blur-md flex items-center gap-1.5 cursor-pointer shadow-xs transition-all shrink-0">
                                     <span class="material-symbols-outlined text-sm sm:text-base">download</span>
                                     <span>Descargar</span>
                                 </button>
@@ -4209,12 +4304,12 @@
 
                         <!-- Inside Card Footer -->
                         <div class="p-4 sm:p-6 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-3 bg-zinc-50/70 dark:bg-zinc-800/40">
-                            <span class="text-xs text-zinc-400 font-medium">Pasaporte Hábitat auditado el ${new Date().toLocaleDateString('es-AR')}</span>
+                            <span class="text-xs text-zinc-400 font-medium">Pasaporte Vivat auditado el ${new Date().toLocaleDateString('es-AR')}</span>
                             <div class="flex items-center gap-3">
                                 <button type="button" onclick="window.print()" class="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 font-headline font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-1.5 text-zinc-700 dark:text-zinc-200">
                                     <span class="material-symbols-outlined text-base">print</span> Imprimir Pasaporte
                                 </button>
-                                <button type="button" onclick="closePasaporteHabitatModal()" class="px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-extrabold text-xs shadow cursor-pointer transition-all">
+                                <button type="button" onclick="closePasaporteVivatModal()" class="px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-extrabold text-xs shadow cursor-pointer transition-all">
                                     Cerrar Pasaporte
                                 </button>
                             </div>
@@ -4224,8 +4319,8 @@
             `;
         };
 
-        window.acceptCandidateFromPassport = async function(appId) {
-            closePasaporteHabitatModal();
+        window.acceptCandidateFromPassport = async function (appId) {
+            closePasaporteVivatModal();
             if (typeof window.handleOwnerAcceptApplicant === 'function') {
                 await window.handleOwnerAcceptApplicant(appId);
             } else {
@@ -4241,7 +4336,7 @@
             }
         };
 
-        window.rejectCandidateFromPassport = async function(appId) {
+        window.rejectCandidateFromPassport = async function (appId) {
             let confirmed = true;
             if (window.showCustomConfirm) {
                 confirmed = await window.showCustomConfirm({
@@ -4252,7 +4347,7 @@
             }
             if (!confirmed) return;
 
-            closePasaporteHabitatModal();
+            closePasaporteVivatModal();
             const btn = document.querySelector(`.btn-owner-reject[data-id="${appId}"]`);
             if (btn) {
                 btn.click();
@@ -4333,9 +4428,9 @@
                                 type: tipoObj.nombre,
                                 dni: g.dni || 'CUIL 20-18492014-4',
                                 income: datos.ingreso_neto_mensual ? `$ ${Number(datos.ingreso_neto_mensual).toLocaleString('es-AR')}` : '$ 1.850.000 / mes',
-                                details: datos.direccion_inmueble ? `Inmueble en ${datos.direccion_inmueble}` : (datos.empleador_nombre ? `Empleador: ${datos.empleador_nombre}` : 'Respaldo verificado en Red Hábitat'),
+                                details: datos.direccion_inmueble ? `Inmueble en ${datos.direccion_inmueble}` : (datos.empleador_nombre ? `Empleador: ${datos.empleador_nombre}` : 'Respaldo verificado en Red Vivat'),
                                 phone: g.telefono || '+54 9 261 456-7890',
-                                email: g.email || 'garante@habitat.com.ar',
+                                email: g.email || 'garante@vivat.com.ar',
                                 score: g.kyc_verificado ? 'Didit KYC Verificado (10/10)' : 'KYC en Proceso',
                                 status: estadoObj.label,
                                 id_estado_garante: g.id_estado_garante || 4,
@@ -4413,7 +4508,7 @@
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">gavel</span>
                             <div>
-                                <span class="font-headline font-extrabold text-emerald-700 dark:text-emerald-300 block">Validación Jurídica & Financiera Hábitat</span>
+                                <span class="font-headline font-extrabold text-emerald-700 dark:text-emerald-300 block">Validación Jurídica & Financiera Vivat</span>
                                 <span class="text-zinc-500 dark:text-zinc-400">Garantes con respaldo crediticio verificado, identidad Didit y solvencia apta.</span>
                             </div>
                         </div>
@@ -4479,7 +4574,7 @@
         }
 
         // Sincronización reactiva en tiempo real para el panel de propietario
-        window.addEventListener('habitat:application_updated', () => {
+        window.addEventListener('vivat:application_updated', () => {
             if (typeof loadOwnerApplications === 'function') {
                 loadOwnerApplications();
             }
@@ -4487,7 +4582,7 @@
                 loadOwnerActiveRental();
             }
         });
-        window.addEventListener('habitat:contract_updated', () => {
+        window.addEventListener('vivat:contract_updated', () => {
             if (typeof loadOwnerActiveRental === 'function') {
                 loadOwnerActiveRental();
             }
@@ -4496,31 +4591,36 @@
 
     <div id="reschedule-visit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRescheduleModal()"></div>
-        <div class="relative bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col gap-5">
+        <div
+            class="relative bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col gap-5">
             <div>
                 <h3 class="text-xl font-headline font-black text-zinc-900 dark:text-white">Reprogramar Visita</h3>
                 <p class="text-xs text-zinc-500 mt-1">Propone una nueva fecha y hora para la visita.</p>
             </div>
-            
+
             <div class="space-y-4">
                 <input type="hidden" id="reschedule-visit-id">
-                
+
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Nueva Fecha</label>
-                    <input type="date" id="reschedule-visit-date" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
+                    <input type="date" id="reschedule-visit-date"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
                 </div>
-                
+
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-zinc-700 dark:text-zinc-300">Nueva Hora</label>
-                    <input type="time" id="reschedule-visit-time" class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
+                    <input type="time" id="reschedule-visit-time"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors">
                 </div>
             </div>
-            
+
             <div class="flex gap-3 pt-2">
-                <button onclick="closeRescheduleModal()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                <button onclick="closeRescheduleModal()"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
                     Cancelar
                 </button>
-                <button onclick="submitRescheduleVisit()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow transition-colors">
+                <button onclick="submitRescheduleVisit()"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow transition-colors">
                     Confirmar
                 </button>
             </div>

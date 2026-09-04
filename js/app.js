@@ -2,6 +2,29 @@
  * Main Application Logic
  */
 
+// Automated Client-Side Cache Sanitizer for Vivat
+(function() {
+    try {
+        const keys = [
+            'vivat_contracts', 'vivat_user', 'vivat_passport_data', 'vivat_didit_identity',
+            'vivat_tenant_applications', 'vivat_garantes_state_v1', 'vivat_garantes_state_v2',
+            'habitat_contracts', 'habitat_user', 'habitat_passport_data', 'habitat_didit_identity',
+            'habitat_tenant_applications', 'habitat_garantes_state_v1', 'habitat_garantes_state_v2'
+        ];
+        keys.forEach(k => {
+            const val = localStorage.getItem(k);
+            if (val && /habitat|hábitat/i.test(val)) {
+                const cleaned = val
+                    .replace(/HABITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'))
+                    .replace(/HÁBITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'));
+                const newKey = k.replace(/^habitat_/, 'vivat_');
+                localStorage.setItem(newKey, cleaned);
+                if (newKey !== k) localStorage.removeItem(k);
+            }
+        });
+    } catch(e) {}
+})();
+
 // Custom Modal Dialog System for Styled Confirm & Alert
 window.showCustomAlert = function (msgOrOpts) {
     return new Promise((resolve) => {
@@ -238,7 +261,7 @@ window.FavoritesManager = {
 
     init: async function () {
         try {
-            const local = JSON.parse(localStorage.getItem('habitat_favorites') || '[]');
+            const local = JSON.parse(localStorage.getItem('vivat_favorites') || '[]');
             (local || []).forEach(id => window.FavoritesManager.favoritesSet.add(Number(id)));
         } catch (e) { }
 
@@ -272,7 +295,7 @@ window.FavoritesManager = {
 
     saveLocal: function () {
         const arr = Array.from(window.FavoritesManager.favoritesSet);
-        localStorage.setItem('habitat_favorites', JSON.stringify(arr));
+        localStorage.setItem('vivat_favorites', JSON.stringify(arr));
     },
 
     isFavorite: function (id_publicacion) {
@@ -2660,7 +2683,7 @@ var App = window.App || {
             };
             const amenitiesList = getCheckedFeatures('#form-extras');
             const permiteMascotas = Boolean(document.getElementById('permite-mascotas')?.checked);
-            const isVerified = Boolean(window.HabitatOwnerVerification && window.HabitatOwnerVerification.isOwnerVerified());
+            const isVerified = Boolean(window.VivatOwnerVerification && window.VivatOwnerVerification.isOwnerVerified());
 
             const tags = [];
             if (isVerified) tags.push('Propietario Verificado');
@@ -3040,8 +3063,8 @@ var App = window.App || {
                 isPublishingSubmissionActive = true;
 
                 const contactEmail = (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
-                                     (localStorage.getItem('habitat_user') && JSON.parse(localStorage.getItem('habitat_user')).email) ||
-                                     'propietario@habitat.ar';
+                                     (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
+                                     'propietario@vivat.ar';
 
                 const executePublish = async (isVerified = false) => {
                     console.log('¡Iniciando publicación en Supabase! Verificado:', isVerified);
@@ -3069,7 +3092,7 @@ var App = window.App || {
                     `;
 
                 overlay.innerHTML = `
-                    <div style="height: 60px; width: 220px; margin-bottom: 2rem; background-color: #811b1e; -webkit-mask: url('img/logo-habitat-web.svg') no-repeat center / contain; mask: url('img/logo-habitat-web.svg') no-repeat center / contain;"></div>
+                    <div style="height: 60px; width: 220px; margin-bottom: 2rem; background-color: #811b1e; -webkit-mask: url('img/logo-vivat-web.svg') no-repeat center / contain; mask: url('img/logo-vivat-web.svg') no-repeat center / contain;"></div>
                     <div class="loader-pub" style="
                         width: fit-content; font-weight: bold; font-family: monospace; font-size: 30px;
                         background: radial-gradient(circle closest-side,#811b1e 94%,#0000) right/calc(200% - 1em) 100%;
@@ -3369,8 +3392,8 @@ var App = window.App || {
                 }
             };
 
-            if (window.HabitatOwnerVerification && typeof window.HabitatOwnerVerification.promptVerificationBeforePublish === 'function') {
-                window.HabitatOwnerVerification.promptVerificationBeforePublish({
+            if (window.VivatOwnerVerification && typeof window.VivatOwnerVerification.promptVerificationBeforePublish === 'function') {
+                window.VivatOwnerVerification.promptVerificationBeforePublish({
                     email: contactEmail,
                     onProceed: (isVerified) => {
                         executePublish(isVerified);
@@ -6477,7 +6500,7 @@ var App = window.App || {
                 draft.selectedPlan = selectedPlan.getAttribute('data-plan') || selectedPlan.value;
             }
 
-            localStorage.setItem('habitat_wizard_draft', JSON.stringify(draft));
+            localStorage.setItem('vivat_wizard_draft', JSON.stringify(draft));
             return true;
         } catch (err) {
             console.error("Error guardando borrador del wizard:", err);
@@ -6497,7 +6520,7 @@ var App = window.App || {
 
     restorePublishDraft: () => {
         try {
-            const raw = localStorage.getItem('habitat_wizard_draft');
+            const raw = localStorage.getItem('vivat_wizard_draft');
             if (!raw) return false;
             const draft = JSON.parse(raw);
             if (!draft || !draft.inputs) return false;
@@ -6599,7 +6622,7 @@ var App = window.App || {
 
     clearPublishDraft: () => {
         try {
-            localStorage.removeItem('habitat_wizard_draft');
+            localStorage.removeItem('vivat_wizard_draft');
         } catch (e) {
             console.warn("Could not clear draft from localStorage:", e);
         }
@@ -7895,7 +7918,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             <div class="flex items-start gap-4">
                                 <!-- Logo / Avatar -->
                                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex flex-col items-center justify-center shrink-0 shadow-md font-headline font-black p-2 text-center select-none">
-                                    <span class="text-[9px] uppercase tracking-widest leading-none font-semibold text-zinc-400 dark:text-zinc-500">HABITAT</span>
+                                    <span class="text-[9px] uppercase tracking-widest leading-none font-semibold text-zinc-400 dark:text-zinc-500">VIVAT</span>
                                     <span class="text-lg sm:text-xl font-black leading-none mt-0.5">LUX</span>
                                 </div>
 
@@ -7903,7 +7926,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="space-y-1 min-w-0 flex-1">
                                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">Agente Administrador / Propietario</span>
                                     <h3 class="font-headline text-base sm:text-lg font-black text-zinc-900 dark:text-white truncate">
-                                        ${prop.propietario_nombre || 'Urbanlux Real Estate · Hábitat'}
+                                        ${prop.propietario_nombre || 'Urbanlux Real Estate · Vivat'}
                                     </h3>
                                     <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                         <span class="material-symbols-outlined text-sm">check</span>
@@ -7912,7 +7935,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     <div class="pt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                                         <div class="flex items-center gap-1">
                                             <span>Sitio web:</span>
-                                            <a href="https://habitat.com.ar" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5">
+                                            <a href="https://vivat.com.ar" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5">
                                                 <span>fleurpremium.urbanlux.net</span>
                                                 <span class="material-symbols-outlined text-[13px]">open_in_new</span>
                                             </a>
@@ -7927,7 +7950,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             </div>
 
                             <!-- Botón "Hacer una pregunta" (Ask a question) -->
-                            <button type="button" onclick="window.open('https://wa.me/?text=' + encodeURIComponent('Hola! Me interesa hacer una consulta sobre la propiedad: ' + '${title}' + ' (' + '${fullAddress}' + ') en Hábitat'), '_blank')" class="w-full inline-flex items-center justify-center gap-2 bg-[#006aff] hover:bg-[#0053cc] active:scale-[0.99] text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 cursor-pointer text-sm sm:text-base">
+                            <button type="button" onclick="window.open('https://wa.me/?text=' + encodeURIComponent('Hola! Me interesa hacer una consulta sobre la propiedad: ' + '${title}' + ' (' + '${fullAddress}' + ') en Vivat'), '_blank')" class="w-full inline-flex items-center justify-center gap-2 bg-[#006aff] hover:bg-[#0053cc] active:scale-[0.99] text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 cursor-pointer text-sm sm:text-base">
                                 <span class="material-symbols-outlined text-lg">chat</span>
                                 <span>Hacer una pregunta</span>
                             </button>
@@ -8232,7 +8255,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Edificio y Administración</h4>
                                         <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Nombre del complejo / Torre: <strong class="text-zinc-900 dark:text-white">${barrio ? `Residencial ${barrio}` : 'Edificio Hábitat'}</strong></li>
+                                            <li>Nombre del complejo / Torre: <strong class="text-zinc-900 dark:text-white">${barrio ? `Residencial ${barrio}` : 'Edificio Vivat'}</strong></li>
                                             <li>Acepta mascotas: <strong class="text-zinc-900 dark:text-white">${petFriendly ? 'Sí (Apto Mascotas)' : 'No permitido / A consultar'}</strong></li>
                                         </ul>
                                     </div>
@@ -8320,7 +8343,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <tr class="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
                                             <td class="px-6 py-4 font-semibold text-zinc-900 dark:text-white">
                                                 ${new Date(prop.created_at || Date.now()).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Hábitat Rentals</span>
+                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Vivat Rentals</span>
                                             </td>
                                             <td class="px-6 py-4 font-bold text-zinc-900 dark:text-white">
                                                 <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
@@ -8351,7 +8374,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <tr class="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
                                             <td class="px-6 py-4 font-semibold text-zinc-500 dark:text-zinc-400">
                                                 ${new Date(new Date(prop.created_at || Date.now()).getTime() - 1000 * 60 * 60 * 24 * 90).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Hábitat Network</span>
+                                                <span class="block text-[10px] text-zinc-400 font-normal">Fuente: Vivat Network</span>
                                             </td>
                                             <td class="px-6 py-4 font-semibold text-zinc-500 dark:text-zinc-400">
                                                 Alta inicial de publicación
@@ -8365,7 +8388,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </table>
                             </div>
                             <div class="px-6 py-3 bg-zinc-50/60 dark:bg-zinc-900/60 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-400 flex items-center justify-between flex-wrap gap-2">
-                                <span>Registro oficial auditado por Hábitat · Base de datos PostgreSQL</span>
+                                <span>Registro oficial auditado por Vivat · Base de datos PostgreSQL</span>
                                 <span class="font-bold text-zinc-600 dark:text-zinc-400">Transparencia Inmobiliaria</span>
                             </div>
                         </div>
@@ -8439,26 +8462,26 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <!-- Activity & Engagement Live Tracker (Inspiración Zillow) -->
                     <section class="mp-inview-item bg-white dark:bg-[#111318] p-5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs space-y-2.5">
                         <div class="flex items-center gap-2 text-sm text-zinc-900 dark:text-white font-extrabold flex-wrap">
-                            <span class="text-base font-black">${isAlquilada ? 'Alquilada en Hábitat' : (viewsCount > 20 ? 'Popular en Hábitat' : 'Disponible en Hábitat')}</span>
+                            <span class="text-base font-black">${isAlquilada ? 'Alquilada en Vivat' : (viewsCount > 20 ? 'Popular en Vivat' : 'Disponible en Vivat')}</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
                             <span class="text-base font-black text-primary dark:text-red-400">${viewsCount > 0 ? viewsCount : 1} visualizaciones</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
                             <span class="text-emerald-600 dark:text-emerald-400 font-bold">${Math.max(1, Math.floor((viewsCount || 1) * 0.35))} interesados contactaron</span>
                         </div>
                         <div class="space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p>Disponibilidad verificada por Hábitat: <strong class="text-zinc-700 dark:text-zinc-300">${isAlquilada ? 'Alquilada con contrato vigente' : 'hoy'}</strong></p>
+                            <p>Disponibilidad verificada por Vivat: <strong class="text-zinc-700 dark:text-zinc-300">${isAlquilada ? 'Alquilada con contrato vigente' : 'hoy'}</strong></p>
                             <p>Sincronización de publicación: <strong class="text-zinc-700 dark:text-zinc-300">actualizada recientemente</strong></p>
                         </div>
                     </section>
 
-                    <!-- Hábitat Pasaporte Guarantee Banner -->
+                    <!-- Vivat Pasaporte Guarantee Banner -->
                     <section class="mp-inview-item bg-gradient-to-br from-zinc-50 to-zinc-100/60 dark:from-[#111318] dark:to-zinc-900 p-6 sm:p-7 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/90 hover:border-zinc-400 dark:hover:border-zinc-700 hover:shadow-lg transition-all duration-300 space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="w-11 h-11 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center shadow-md shrink-0">
                                 <span class="material-symbols-outlined text-2xl">verified_user</span>
                             </div>
                             <div>
-                                <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white">Alquiler Seguro con Pasaporte Hábitat</h3>
+                                <h3 class="font-headline text-lg font-bold text-zinc-900 dark:text-white">Alquiler Seguro con Pasaporte Vivat</h3>
                                 <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Proceso 100% digital respaldado por firma electrónica avanzada y validación biométrica.</p>
                             </div>
                         </div>
@@ -8555,7 +8578,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                             <span>Ya te postulaste a este alquiler</span>
                                         </div>
                                         <p class="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
-                                            Tu postulación y Pasaporte Hábitat se encuentran en revisión por el propietario.
+                                            Tu postulación y Pasaporte Vivat se encuentran en revisión por el propietario.
                                         </p>
                                         <a href="tu-alquiler.html#postulaciones" class="w-full inline-flex items-center justify-center gap-1.5 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                             <span>Ver Estado de mi Postulación</span>
@@ -8574,7 +8597,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     <span>Agendar Visita (Presencial / Virtual)</span>
                                 </button>
 
-                                <a href="https://wa.me/?text=${encodeURIComponent('Hola! Me interesa la propiedad en alquiler: ' + title + ' (' + fullAddress + ') en Hábitat: ' + window.location.href)}" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold py-3 px-6 rounded-2xl transition-all border border-emerald-200 dark:border-emerald-800/50 active:scale-98 cursor-pointer text-xs">
+                                <a href="https://wa.me/?text=${encodeURIComponent('Hola! Me interesa la propiedad en alquiler: ' + title + ' (' + fullAddress + ') en Vivat: ' + window.location.href)}" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold py-3 px-6 rounded-2xl transition-all border border-emerald-200 dark:border-emerald-800/50 active:scale-98 cursor-pointer text-xs">
                                     <span class="material-symbols-outlined text-base">chat</span>
                                     <span>Consultar por WhatsApp</span>
                                 </a>
@@ -9170,17 +9193,17 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         if (e.key === 'Escape') {
             const lb = document.getElementById('mp-lightbox-modal');
             if (lb && lb.style.display !== 'none' && lb.style.opacity !== '0') return;
-            const postulaModal = document.getElementById('habitat-postulacion-modal');
+            const postulaModal = document.getElementById('vivat-postulacion-modal');
             if (postulaModal && postulaModal.style.display !== 'none' && postulaModal.style.opacity !== '0') {
                 postulaModal.style.display = 'none';
                 return;
             }
-            const passReqModal = document.getElementById('habitat-passport-required-modal');
+            const passReqModal = document.getElementById('vivat-passport-required-modal');
             if (passReqModal && passReqModal.style.display !== 'none' && passReqModal.style.opacity !== '0') {
                 passReqModal.style.display = 'none';
                 return;
             }
-            const visitaModal = document.getElementById('habitat-visita-modal');
+            const visitaModal = document.getElementById('vivat-visita-modal');
             if (visitaModal && visitaModal.style.display !== 'none' && visitaModal.style.opacity !== '0') {
                 visitaModal.style.display = 'none';
                 return;
@@ -9327,7 +9350,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     <span>Ya te postulaste a este alquiler</span>
                                 </div>
                                 <p class="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
-                                    Tu postulación y Pasaporte Hábitat se encuentran en revisión por el propietario.
+                                    Tu postulación y Pasaporte Vivat se encuentran en revisión por el propietario.
                                 </p>
                                 <a href="tu-alquiler.html#postulaciones" class="w-full inline-flex items-center justify-center gap-1.5 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
                                     <span>Ver Estado de mi Postulación</span>
@@ -9748,7 +9771,7 @@ if (document.readyState === 'loading') {
     setTimeout(window.checkMarketplaceUrlParam, 350);
 }
 
-// Helper to verify if the tenant has generated their Pasaporte Hábitat
+// Helper to verify if the tenant has generated their Pasaporte Vivat
 window.hasCompletedPassport = async function() {
     try {
         if (window.supabaseClient) {
@@ -9762,7 +9785,7 @@ window.hasCompletedPassport = async function() {
 
                 if (perfil) {
                     const { data: activePassports } = await window.supabaseClient
-                        .from('Pasaporte_habitat')
+                        .from('Pasaporte_vivat')
                         .select('id_pasaporte, id_estado_pasaporte, fecha_vencimiento')
                         .eq('id_perfil', perfil.id_perfil)
                         .eq('id_estado_pasaporte', 3); // 3 = Activo
@@ -9782,8 +9805,8 @@ window.hasCompletedPassport = async function() {
         if (window.hasActivePassport && window.currentPasaporteId) {
             return true;
         }
-        const pData = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
+        const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
+        const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
         if ((pData.id_pasaporte || pData.codigo_pasaporte) && (didit.documentNumber || didit.verified)) {
             return true;
         }
@@ -9794,7 +9817,7 @@ window.hasCompletedPassport = async function() {
 // Helper to check synchronously if tenant already applied to this property
 window.hasUserAppliedToProperty = function(pubId, propId) {
     try {
-        const raw = localStorage.getItem('habitat_tenant_applications');
+        const raw = localStorage.getItem('vivat_tenant_applications');
         if (!raw) return false;
         const apps = JSON.parse(raw);
         if (!Array.isArray(apps)) return false;
@@ -9828,8 +9851,8 @@ window.checkUserAppliedToPropertyAsync = async function(pubId, propId) {
             profileId = perf?.id_perfil;
         }
         if (!profileId) {
-            const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-            profileId = uLocal.id_perfil || uLocal.profileId || localStorage.getItem('habitat_profile_id');
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+            profileId = uLocal.id_perfil || uLocal.profileId || localStorage.getItem('vivat_profile_id');
         }
         if (!profileId) return false;
 
@@ -9845,7 +9868,7 @@ window.checkUserAppliedToPropertyAsync = async function(pubId, propId) {
             if (sol && sol.id_solicitud) {
                 // Registrar en localStorage para sincronización instantánea
                 try {
-                    const localApps = JSON.parse(localStorage.getItem('habitat_tenant_applications') || '[]');
+                    const localApps = JSON.parse(localStorage.getItem('vivat_tenant_applications') || '[]');
                     if (!localApps.some(a => a.id_publicacion === pubIdNum || a.publication_id === pubIdNum || a.publicationId === pubIdNum)) {
                         localApps.unshift({
                             id: sol.id_solicitud,
@@ -9854,7 +9877,7 @@ window.checkUserAppliedToPropertyAsync = async function(pubId, propId) {
                             status: 'pendiente',
                             created_at: new Date().toISOString()
                         });
-                        localStorage.setItem('habitat_tenant_applications', JSON.stringify(localApps));
+                        localStorage.setItem('vivat_tenant_applications', JSON.stringify(localApps));
                     }
                 } catch (e) {}
                 return true;
@@ -9869,10 +9892,10 @@ window.openPassportRequiredModal = function(prop) {
     const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
     const propPrice = prop?.price || prop?.precio || 0;
 
-    let modal = document.getElementById('habitat-passport-required-modal');
+    let modal = document.getElementById('vivat-passport-required-modal');
     if (!modal) {
         modal = document.createElement('div');
-        modal.id = 'habitat-passport-required-modal';
+        modal.id = 'vivat-passport-required-modal';
         document.body.appendChild(modal);
     }
 
@@ -9890,7 +9913,7 @@ window.openPassportRequiredModal = function(prop) {
                         Requisito Obligatorio
                     </span>
                     <h3 class="font-headline text-lg sm:text-xl font-bold text-zinc-900 dark:text-white tracking-tight leading-snug">
-                        Generá tu Pasaporte Hábitat
+                        Generá tu Pasaporte Vivat
                     </h3>
                 </div>
                 <button type="button" id="close-no-passport-modal" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0" aria-label="Cerrar">
@@ -9915,7 +9938,7 @@ window.openPassportRequiredModal = function(prop) {
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">check_circle</span>
-                    <span><strong>Válido para todo Hábitat:</strong> Postulate con 1 solo click.</span>
+                    <span><strong>Válido para todo Vivat:</strong> Postulate con 1 solo click.</span>
                 </div>
             </div>
 
@@ -9924,7 +9947,7 @@ window.openPassportRequiredModal = function(prop) {
                 <button type="button" id="btn-cancel-no-passport" class="h-12 px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0">
                     Cerrar
                 </button>
-                <a href="pasaporte-habitat.html" id="btn-create-passport-now" class="flex-1 h-12 inline-flex items-center justify-center gap-2 px-5 rounded-2xl bg-primary hover:bg-[#992226] text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-98 cursor-pointer text-center">
+                <a href="pasaporte-vivat.html" id="btn-create-passport-now" class="flex-1 h-12 inline-flex items-center justify-center gap-2 px-5 rounded-2xl bg-primary hover:bg-[#992226] text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all active:scale-98 cursor-pointer text-center">
                     <span class="material-symbols-outlined text-base">arrow_forward</span>
                     <span>Generar Pasaporte (2 min)</span>
                 </a>
@@ -9987,17 +10010,17 @@ window.openPostulacionModal = async function(prop) {
     let defaultEmail = '';
     let defaultPhone = '';
     try {
-        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+        const user = JSON.parse(localStorage.getItem('vivat_user') || '{}');
         defaultName = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || user.nombre_completo || user.name || '';
         defaultEmail = user.email || user.mail || '';
         defaultPhone = user.telefono || user.phone || '';
     } catch (e) {}
 
-    let modal = document.getElementById('habitat-postulacion-modal');
+    let modal = document.getElementById('vivat-postulacion-modal');
     if (!modal) {
         modal = document.createElement('div');
-        modal.id = 'habitat-postulacion-modal';
+        modal.id = 'vivat-postulacion-modal';
         document.body.appendChild(modal);
     }
 
@@ -10048,7 +10071,7 @@ window.openPostulacionModal = async function(prop) {
             <!-- Verified Passport Notice (Sleek and subtle) -->
             <div class="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300">
                 <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base shrink-0">verified</span>
-                <span class="leading-tight">Tu <strong>Pasaporte Hábitat</strong> verificado se adjuntará automáticamente.</span>
+                <span class="leading-tight">Tu <strong>Pasaporte Vivat</strong> verificado se adjuntará automáticamente.</span>
             </div>
 
             <!-- Form: Only Message -->
@@ -10102,16 +10125,16 @@ window.openPostulacionModal = async function(prop) {
                 return;
             }
 
-            const userMsg = document.getElementById('postula-mensaje')?.value?.trim() || '¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Hábitat validado y toda la documentación lista para la firma.';
+            const userMsg = document.getElementById('postula-mensaje')?.value?.trim() || '¡Hola! Me interesa mucho la propiedad. Cuento con mi Pasaporte Vivat validado y toda la documentación lista para la firma.';
             
             let tenantCondicion = 'Monotributista';
             let tenantDniVal = null;
             let tenantCuitVal = null;
             let tenantNameVal = defaultName || '';
             try {
-                const pass = JSON.parse(localStorage.getItem('habitat_passport_data') || '{}');
-                const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-                const u = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+                const pass = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
+                const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+                const u = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 tenantCondicion = pass.condicion_fiscal || pass.condicionFiscal || pass.actividad || u.condicion_fiscal || u.condicionFiscal || 'Monotributista';
                 tenantDniVal = didit.documentNumber || didit.dni || u.dni || pass.dni || null;
                 tenantCuitVal = didit.cuit || pass.cuit || u.cuit || null;
@@ -10139,7 +10162,7 @@ window.openPostulacionModal = async function(prop) {
                 propertyBeds: prop?.dormitorios || prop?.bedrooms || prop?.beds || 1,
                 propertyBaths: prop?.banos || prop?.bathrooms || prop?.baths || 1,
                 tenantName: tenantNameVal || 'Inquilino Verificado',
-                tenantEmail: defaultEmail || 'inquilino@habitat.com.ar',
+                tenantEmail: defaultEmail || 'inquilino@vivat.com.ar',
                 tenantPhone: defaultPhone || '+54 9 11',
                 tenantDni: tenantDniVal,
                 tenantCuit: tenantCuitVal,
@@ -10151,7 +10174,7 @@ window.openPostulacionModal = async function(prop) {
                 tenant_fecha_nacimiento: tenantDobVal,
                 fecha_nacimiento: tenantDobVal,
                 condicion_fiscal: tenantCondicion,
-                incomeProof: `Pasaporte Hábitat (${tenantCondicion})`,
+                incomeProof: `Pasaporte Vivat (${tenantCondicion})`,
                 message: userMsg
             };
 
@@ -10178,7 +10201,7 @@ window.openPostulacionModal = async function(prop) {
             if (window.showCustomConfirm) {
                 const goToApps = await window.showCustomConfirm({
                     title: '¡Postulación Enviada!',
-                    message: `Tu postulación para "${propTitle}" fue enviada con éxito al propietario junto con tu Pasaporte Hábitat.\n\n¿Deseas ir a 'Tus Postulaciones' para hacerle seguimiento?`,
+                    message: `Tu postulación para "${propTitle}" fue enviada con éxito al propietario junto con tu Pasaporte Vivat.\n\n¿Deseas ir a 'Tus Postulaciones' para hacerle seguimiento?`,
                     confirmText: 'Ver mis postulaciones',
                     cancelText: 'Continuar navegando'
                 });
@@ -10215,17 +10238,17 @@ window.openAgendarVisitaModal = function(prop) {
     let defaultEmail = '';
     let defaultPhone = '';
     try {
-        const didit = JSON.parse(localStorage.getItem('habitat_didit_identity') || '{}');
-        const user = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+        const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+        const user = JSON.parse(localStorage.getItem('vivat_user') || '{}');
         defaultName = didit.fullName || (didit.firstName && didit.lastName ? `${didit.firstName} ${didit.lastName}` : '') || user.nombre_completo || user.name || '';
         defaultEmail = user.email || user.mail || '';
         defaultPhone = user.telefono || user.phone || '';
     } catch (e) {}
 
-    let modal = document.getElementById('habitat-visita-modal');
+    let modal = document.getElementById('vivat-visita-modal');
     if (!modal) {
         modal = document.createElement('div');
-        modal.id = 'habitat-visita-modal';
+        modal.id = 'vivat-visita-modal';
         document.body.appendChild(modal);
     }
 
@@ -10978,7 +11001,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="landing-menu__content">
                 <div class="landing-menu__top">
                     <a class="landing-menu__brand" href="index.html" aria-label="Inicio">
-                        <img src="img/logo-lite.png" alt="Habitat">
+                        <img src="img/logo-lite.png" alt="Vivat">
                     </a>
                 </div>
 
@@ -11002,9 +11025,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
                                 <span>Cómo funciona</span>
                             </a>
-                            <a href="pasaporte-habitat.html" class="menu-item-clean">
+                            <a href="pasaporte-vivat.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
-                                <span class="font-bold text-primary dark:text-red-400">Pasaporte Hábitat</span>
+                                <span class="font-bold text-primary dark:text-red-400">Pasaporte Vivat</span>
                             </a>
                             <button type="button" class="menu-item-clean w-full text-left cursor-pointer" data-menu-action="favorites">
                                 <span class="material-symbols-outlined text-rose-500 text-xl">favorite</span>
@@ -12409,10 +12432,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openInvoicePreviewModal(inv) {
-        let modal = document.getElementById('habitat-invoice-modal');
+        let modal = document.getElementById('vivat-invoice-modal');
         if (!modal) {
             modal = document.createElement('div');
-            modal.id = 'habitat-invoice-modal';
+            modal.id = 'vivat-invoice-modal';
             document.body.appendChild(modal);
         }
 
