@@ -122,7 +122,7 @@ export default async function handler(req, res) {
               updateGarante.id_estado_garante = 4; // Documentación Subida / KYC Aprobado
             }
 
-            // Generar o vincular Pasaporte Hábitat para el Garante
+            // Generar o vincular Pasaporte Vivat para el Garante
             if (!garante.id_pasaporte_garante) {
               const passCode = 'HBT-GAR-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
               const now = new Date();
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
               let profileIdToUse = garante.id_perfil;
               if (!profileIdToUse) {
                 const { data: tenantPass } = await supabase
-                  .from('Pasaporte_habitat')
+                  .from('Pasaporte_vivat')
                   .select('id_perfil')
                   .eq('id_pasaporte', garante.id_pasaporte)
                   .maybeSingle();
@@ -139,7 +139,7 @@ export default async function handler(req, res) {
               }
 
               const { data: newPass } = await supabase
-                .from('Pasaporte_habitat')
+                .from('Pasaporte_vivat')
                 .insert([{
                   id_perfil: profileIdToUse,
                   id_estado_pasaporte: 3, // Activo
@@ -178,7 +178,7 @@ export default async function handler(req, res) {
           }]);
         }
       }
-      // Caso C: Evento de Pasaporte Hábitat KYC (Inquilino)
+      // Caso C: Evento de Pasaporte Vivat KYC (Inquilino)
       else {
         // Buscar perfil por id_perfil (numérico) o por user_id (UUID)
         let perfilQuery = supabase.from('Perfil').select('id_perfil');
@@ -192,7 +192,7 @@ export default async function handler(req, res) {
 
         if (perfil) {
           const { data: pasaporte } = await supabase
-            .from('Pasaporte_habitat')
+            .from('Pasaporte_vivat')
             .select('id_pasaporte')
             .eq('id_perfil', perfil.id_perfil)
             .order('created_at', { ascending: false })
@@ -309,7 +309,7 @@ export default async function handler(req, res) {
               if (ocrAge) pasaporteUpdate.edad = ocrAge;
 
               await supabase
-                .from('Pasaporte_habitat')
+                .from('Pasaporte_vivat')
                 .update(pasaporteUpdate)
                 .eq('id_pasaporte', pasaporte.id_pasaporte);
 

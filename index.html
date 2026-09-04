@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,15 +31,21 @@
                 if (appleMeta) {
                     appleMeta.setAttribute('content', 'black-translucent');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Hábitat App</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Vivat App</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=13">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
@@ -117,11 +124,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -920,7 +936,9 @@
         }
     </script>
 </head>
-<body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
+
+<body
+    class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- Landing Marketplace View -->
     <section id="landing-marketplace-view"
         class="bg-background text-on-background font-body w-full min-h-screen z-10 transition-opacity duration-300">
@@ -933,13 +951,16 @@
                 class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-28 sm:pt-0 sm:pb-24 bg-transparent dark:bg-black">
                 <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none"
                     style="mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%);">
-                    <img alt="Luxury Estate" class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75 dark:brightness-[0.65]"
+                    <img alt="Luxury Estate"
+                        class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75 dark:brightness-[0.65]"
                         src="img/hero-marketplace.jpg" />
                     <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent"></div>
                 </div>
 
                 <!-- Bottom diffuse blend layer into page background (pure black in dark mode) -->
-                <div class="absolute inset-x-0 bottom-0 h-44 sm:h-64 bg-gradient-to-b from-transparent via-background/60 to-background dark:from-transparent dark:via-black/80 dark:to-black pointer-events-none z-[5]"></div>
+                <div
+                    class="absolute inset-x-0 bottom-0 h-44 sm:h-64 bg-gradient-to-b from-transparent via-background/60 to-background dark:from-transparent dark:via-black/80 dark:to-black pointer-events-none z-[5]">
+                </div>
 
                 <!-- Persona Selector -->
                 <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 sm:mt-10 bg-transparent">
@@ -966,7 +987,7 @@
                     </h1>
                     <div
                         class="font-body text-lg md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-on-scroll delay-100">
-                        Habitat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu
+                        Vivat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu
                         alquiler directamente desde el celular, sin costos ocultos.
                     </div>
                     <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
@@ -974,7 +995,8 @@
                             <div
                                 class="bg-surface-container-lowest dark:bg-zinc-900/95 p-1.5 sm:p-2 pl-3.5 sm:pl-5 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md border border-white/20 dark:border-zinc-800 gap-1 sm:gap-2">
                                 <div class="flex-1 flex items-center gap-2 min-w-0 bg-transparent">
-                                    <span class="material-symbols-outlined text-[#7f1d1d] text-xl sm:text-2xl shrink-0" style="color: rgb(127 29 29 / var(--tw-bg-opacity, 1)) !important;">search</span>
+                                    <span class="material-symbols-outlined text-[#7f1d1d] text-xl sm:text-2xl shrink-0"
+                                        style="color: rgb(127 29 29 / var(--tw-bg-opacity, 1)) !important;">search</span>
                                     <input id="index-location-search" name="location"
                                         class="w-full !bg-transparent text-on-surface dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
                                         style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
@@ -991,8 +1013,10 @@
                                 <button type="button" id="open-hero-filter-btn" onclick="openFilterModal()"
                                     class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all shrink-0 cursor-pointer active:scale-95 border-0 bg-transparent p-0 outline-none"
                                     aria-label="Filtros" title="Filtros">
-                                    <span class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
-                                    <span id="hero-filter-indicator" class="hidden absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
+                                    <span
+                                        class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
+                                    <span id="hero-filter-indicator"
+                                        class="hidden absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
                                 </button>
 
                                 <button type="submit"
@@ -1039,12 +1063,14 @@
 
                     <!-- Botones de Navegación Flechas para Escritorio -->
                     <div class="hidden sm:flex items-center gap-2 shrink-0">
-                        <button type="button" id="marketplace-scroll-prev-btn" onclick="window.scrollFeaturedMarketplace(-1)"
+                        <button type="button" id="marketplace-scroll-prev-btn"
+                            onclick="window.scrollFeaturedMarketplace(-1)"
                             aria-label="Ver anteriores propiedades destacadas"
                             class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
                             <span class="material-symbols-outlined text-2xl">arrow_back</span>
                         </button>
-                        <button type="button" id="marketplace-scroll-next-btn" onclick="window.scrollFeaturedMarketplace(1)"
+                        <button type="button" id="marketplace-scroll-next-btn"
+                            onclick="window.scrollFeaturedMarketplace(1)"
                             aria-label="Ver siguientes propiedades destacadas"
                             class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
                             <span class="material-symbols-outlined text-2xl">arrow_forward</span>
@@ -1222,7 +1248,7 @@
                             try {
                                 const d = new Date(prop.contractEndDate);
                                 formattedEndDate = d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
-                            } catch (e) {}
+                            } catch (e) { }
                         }
 
                         const tipoLabels = {
@@ -1325,14 +1351,14 @@
                         <div class="relative z-10 max-w-xl">
                             <h2
                                 class="font-headline text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight font-medium text-on-background dark:text-white mb-4">
-                                Pasaporte Habitat</h2>
+                                Pasaporte Vivat</h2>
                             <p
                                 class="font-body text-base sm:text-lg leading-relaxed text-zinc-600 dark:text-zinc-300 mb-6">
                                 Pagá una única vez un Service Fee tecnológico por tu "Pasaporte del Inquilino" válido
                                 por 60 días. Cubre tu validación biométrica con prueba de vida y firma electrónica
                                 avanzada. Si un propietario no te acepta, podés postularte a otra propiedad sin volver a
                                 pagar.</p>
-                            <a href="pasaporte-habitat.html"
+                            <a href="pasaporte-vivat.html"
                                 class="inline-flex items-center gap-2 bg-primary text-white hover:bg-primary-container px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md">
                                 <span>Ver Credencial de Ejemplo</span>
                                 <span class="material-symbols-outlined text-sm">arrow_forward</span>
@@ -1428,7 +1454,7 @@
                 <div class="max-w-[1280px] mx-auto">
                     <h2
                         class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white mb-6 text-center tracking-tight leading-tight">
-                        Pasaporte Habitat: Tu perfil listo para alquilar
+                        Pasaporte Vivat: Tu perfil listo para alquilar
                     </h2>
                     <p
                         class="font-body text-lg md:text-xl text-zinc-600 dark:text-zinc-300 mb-16 max-w-3xl mx-auto text-center">
@@ -1588,7 +1614,7 @@
                     </h2>
                     <p
                         class="font-body text-zinc-600 dark:text-zinc-400 text-lg sm:text-xl mb-10 max-w-2xl leading-relaxed">
-                        Súbela a <span class="font-semibold text-primary dark:text-red-400">Hábitat</span> y deja que
+                        Súbela a <span class="font-semibold text-primary dark:text-red-400">Vivat</span> y deja que
                         nos
                         encarguemos de todo.
                     </p>
@@ -1795,13 +1821,14 @@
                     </div>
 
                     <div class="owner-faq-list">
-                        <!-- Q0: Pasaporte Hábitat -->
+                        <!-- Q0: Pasaporte Vivat -->
                         <article class="owner-faq-item">
                             <button
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué es el Pasaporte Hábitat, cuánto dura y cómo lo obtengo?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Qué
+                                    es el Pasaporte Vivat, cuánto dura y cómo lo obtengo?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1809,7 +1836,11 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        El Pasaporte Hábitat es tu perfil verificado de inquilino. Confirma tu identidad y respaldo de pago para que te postules de forma directa a cualquier propiedad sin tener que presentar fotocopias ni papeles cada vez. Se genera automáticamente y tiene una vigencia de 60 días para postularte a todas las viviendas que te interesen.
+                                        El Pasaporte Vivat es tu perfil verificado de inquilino. Confirma tu identidad y
+                                        respaldo de pago para que te postules de forma directa a cualquier propiedad sin
+                                        tener que presentar fotocopias ni papeles cada vez. Se genera automáticamente y
+                                        tiene una vigencia de 60 días para postularte a todas las viviendas que te
+                                        interesen.
                                     </p>
                                 </div>
                             </div>
@@ -1820,7 +1851,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo me postulo o reservo una propiedad desde la app?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
+                                    me postulo o reservo una propiedad desde la app?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1828,7 +1860,10 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Podés explorar las propiedades disponibles en nuestro Marketplace, aplicar filtros por precio, tipo o ubicación y tocar en "Ver detalles". Desde allí podés agendar una visita presencial o enviar tu postulación de forma directa en pocos clics.
+                                        Podés explorar las propiedades disponibles en nuestro Marketplace, aplicar
+                                        filtros por precio, tipo o ubicación y tocar en "Ver detalles". Desde allí podés
+                                        agendar una visita presencial o enviar tu postulación de forma directa en pocos
+                                        clics.
                                     </p>
                                 </div>
                             </div>
@@ -1840,7 +1875,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Tiene algún costo buscar o consultar propiedades en Hábitat?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Tiene
+                                    algún costo buscar o consultar propiedades en Vivat?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1848,7 +1884,8 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        No. Buscar propiedades, solicitar visitas y realizar consultas a propietarios o corredores a través de la plataforma es 100% gratuito para los inquilinos.
+                                        No. Buscar propiedades, solicitar visitas y realizar consultas a propietarios o
+                                        corredores a través de la plataforma es 100% gratuito para los inquilinos.
                                     </p>
                                 </div>
                             </div>
@@ -1860,7 +1897,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona la firma digital del contrato de alquiler?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
+                                    funciona la firma digital del contrato de alquiler?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1868,7 +1906,9 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Una vez aprobada la postulación, el contrato de locación digital se genera en la app. Podés revisarlo detenidamente y firmarlo de forma legal y segura desde tu teléfono o computadora sin necesidad de trasladarte a una escribanía.
+                                        Una vez aprobada la postulación, el contrato de locación digital se genera en la
+                                        app. Podés revisarlo detenidamente y firmarlo de forma legal y segura desde tu
+                                        teléfono o computadora sin necesidad de trasladarte a una escribanía.
                                     </p>
                                 </div>
                             </div>
@@ -1880,7 +1920,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo registro el pago de mis alquileres y comprobantes?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
+                                    registro el pago de mis alquileres y comprobantes?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1888,7 +1929,9 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Coordinás el pago directamente con el propietario o administrador según lo pactado. Desde tu panel podés cargar tus recibos de pago y comprobantes para mantener un historial ordenado y transparente de cada mensualidad.
+                                        Coordinás el pago directamente con el propietario o administrador según lo
+                                        pactado. Desde tu panel podés cargar tus recibos de pago y comprobantes para
+                                        mantener un historial ordenado y transparente de cada mensualidad.
                                     </p>
                                 </div>
                             </div>
@@ -1900,7 +1943,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Están seguros mis datos personales y documentación?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Están
+                                    seguros mis datos personales y documentación?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1908,7 +1952,10 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Absolutamente. Operamos con encriptación de nivel bancario en cumplimiento con la Ley de Protección de Datos Personales (Ley 25.326). Tu documentación personal está resguardada y solo se comparte la información estrictamente necesaria para tu perfil de alquiler.
+                                        Absolutamente. Operamos con encriptación de nivel bancario en cumplimiento con
+                                        la Ley de Protección de Datos Personales (Ley 25.326). Tu documentación personal
+                                        está resguardada y solo se comparte la información estrictamente necesaria para
+                                        tu perfil de alquiler.
                                     </p>
                                 </div>
                             </div>
@@ -1920,7 +1967,8 @@
                                 class="owner-faq-question w-full py-6 md:py-8 flex items-center justify-between gap-5 text-left"
                                 type="button" aria-expanded="false">
                                 <span
-                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo funciona el Inventario Digital al ingresar a la propiedad?</span>
+                                    class="font-headline text-xl md:text-2xl font-extrabold text-on-background dark:text-white leading-snug">¿Cómo
+                                    funciona el Inventario Digital al ingresar a la propiedad?</span>
                                 <span
                                     class="owner-faq-icon material-symbols-outlined w-12 h-12 md:w-14 md:h-14 rounded-full bg-surface-container-low dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 flex items-center justify-center shrink-0">add</span>
                             </button>
@@ -1928,7 +1976,10 @@
                                 <div class="owner-faq-answer-inner">
                                     <p
                                         class="font-body text-base md:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed pb-7 md:pb-8 max-w-3xl">
-                                        Al momento de recibir las llaves, la app te permite capturar fotos y notas del estado real del inmueble. El registro se guarda con marcas de tiempo para certificar las condiciones del espacio y evitar cualquier controversia al devolver la propiedad.
+                                        Al momento de recibir las llaves, la app te permite capturar fotos y notas del
+                                        estado real del inmueble. El registro se guarda con marcas de tiempo para
+                                        certificar las condiciones del espacio y evitar cualquier controversia al
+                                        devolver la propiedad.
                                     </p>
                                 </div>
                             </div>
@@ -2026,7 +2077,7 @@
             <div class="max-w-[1580px] mx-auto">
                 <div
                     class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-12 pb-12 border-b border-zinc-300/70 dark:border-zinc-800">
-                    <!-- Col 1: Hábitat -->
+                    <!-- Col 1: Vivat -->
                     <div>
                         <h3
                             class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
@@ -2153,7 +2204,7 @@
                 <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                     <!-- Left: Copyright and Logo -->
                     <div class="flex items-center gap-3.5 flex-wrap">
-                        <img src="img/logo-habitat-web.svg" alt="Habitat Logo"
+                        <img src="img/logo-vivat-web.svg" alt="Vivat Logo"
                             class="h-8 w-auto object-contain dark:brightness-200 dark:opacity-90" />
                         <span class="font-body text-sm text-zinc-500 dark:text-zinc-400">
                             &copy;2026 H&aacute;bitat &ndash; Todos los derechos reservados
@@ -2230,8 +2281,10 @@
     </section>
 
     <!-- Botón Flotante Volver Arriba -->
-    <button id="btn-scroll-top" type="button" aria-label="Volver arriba" class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary text-white shadow-[0_-5px_15px_rgba(129,27,30,0.35)] border border-white/20 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
-        <span class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
+    <button id="btn-scroll-top" type="button" aria-label="Volver arriba"
+        class="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary via-red-800 to-primary text-white shadow-[0_-5px_15px_rgba(129,27,30,0.35)] border border-white/20 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-0 translate-y-6 pointer-events-none hover:scale-110 active:scale-95 group">
+        <span
+            class="material-symbols-outlined text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">arrow_upward</span>
     </button>
 
     <!-- Scripts -->
@@ -2334,20 +2387,29 @@
     <script src="js/lead-monetization.js"></script>
 
     <!-- Hero Filter Modal -->
-    <div id="hero-filter-modal" class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
-        <div id="hero-filter-modal-card" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
+    <div id="hero-filter-modal"
+        class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div id="hero-filter-modal-card"
+            class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl max-w-xl w-full shadow-2xl border border-zinc-200/90 dark:border-zinc-800 transform scale-95 transition-all duration-300 flex flex-col max-h-[92vh] overflow-hidden">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+            <div
+                class="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-500/10 flex items-center justify-center text-primary dark:text-red-400">
                         <span class="material-symbols-outlined text-xl">tune</span>
                     </div>
                     <div>
-                        <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">Filtros de búsqueda</h3>
-                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de propiedades</p>
+                        <h3
+                            class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white leading-tight">
+                            Filtros de búsqueda</h3>
+                        <p class="font-body text-xs text-zinc-500 dark:text-zinc-400">Personalizá tu búsqueda de
+                            propiedades</p>
                     </div>
                 </div>
-                <button type="button" id="close-hero-filter-btn" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white" aria-label="Cerrar">
+                <button type="button" id="close-hero-filter-btn"
+                    class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                    aria-label="Cerrar">
                     <span class="material-symbols-outlined text-xl">close</span>
                 </button>
             </div>
@@ -2356,39 +2418,52 @@
             <div class="p-6 overflow-y-auto space-y-6 font-body text-sm custom-scrollbar flex-1">
                 <!-- Operación -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Operación</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        de Operación</label>
                     <div class="grid grid-cols-3 gap-2" id="hero-filter-operation-group">
-                        <button type="button" data-op="all" class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
-                        <button type="button" data-op="alquiler" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
-                        <button type="button" data-op="venta" class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
+                        <button type="button" data-op="all"
+                            class="hero-op-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer shadow-sm">Todas</button>
+                        <button type="button" data-op="alquiler"
+                            class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Alquiler</button>
+                        <button type="button" data-op="venta"
+                            class="hero-op-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer hover:border-zinc-300">Venta</button>
                     </div>
                 </div>
 
                 <!-- Tipo de propiedad -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo de Propiedad</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Tipo
+                        de Propiedad</label>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="hero-filter-type-group">
-                        <button type="button" data-type="all" class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                        <button type="button" data-type="all"
+                            class="hero-type-btn active bg-primary text-white border-primary px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                             <span class="material-symbols-outlined text-base">view_cozy</span>
                             <span>Todas</span>
                         </button>
-                        <button type="button" data-type="apartment" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="apartment"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">apartment</span>
                             <span>Departamento</span>
                         </button>
-                        <button type="button" data-type="house" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="house"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">home</span>
                             <span>Casa</span>
                         </button>
-                        <button type="button" data-type="ph" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="ph"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">holiday_village</span>
                             <span>PH</span>
                         </button>
-                        <button type="button" data-type="monoambiente" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="monoambiente"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">chair</span>
                             <span>Monoambiente</span>
                         </button>
-                        <button type="button" data-type="commercial" class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
+                        <button type="button" data-type="commercial"
+                            class="hero-type-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-2.5 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base">storefront</span>
                             <span>Local Comercial</span>
                         </button>
@@ -2397,29 +2472,46 @@
 
                 <!-- Rango de Precio -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango de Precio ($ ARS / mes)</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Rango
+                        de Precio ($ ARS / mes)</label>
 
                     <!-- Visual Quick Presets -->
                     <div class="flex flex-wrap gap-2 mb-3">
-                        <button type="button" data-min="" data-max="300000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta $300.000</button>
-                        <button type="button" data-min="300000" data-max="600000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000 - $600.000</button>
-                        <button type="button" data-min="600000" data-max="1000000" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000 - $1.000.000</button>
-                        <button type="button" data-min="1000000" data-max="" class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
+                        <button type="button" data-min="" data-max="300000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">Hasta
+                            $300.000</button>
+                        <button type="button" data-min="300000" data-max="600000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$300.000
+                            - $600.000</button>
+                        <button type="button" data-min="600000" data-max="1000000"
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">$600.000
+                            - $1.000.000</button>
+                        <button type="button" data-min="1000000" data-max=""
+                            class="hero-price-preset px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:border-primary transition-all cursor-pointer">+$1.000.000</button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
-                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <span
+                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Mínimo</span>
+                            <div
+                                class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
-                                <input type="number" id="hero-modal-minprice" placeholder="0" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                                <input type="number" id="hero-modal-minprice" placeholder="0"
+                                    class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none"
+                                    style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
                             </div>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
-                            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <span
+                                class="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block mb-1">Máximo</span>
+                            <div
+                                class="flex items-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                                 <span class="text-xs font-extrabold text-zinc-400 select-none mr-1.5">$</span>
-                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite" class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none" style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
+                                <input type="number" id="hero-modal-maxprice" placeholder="Sin límite"
+                                    class="w-full bg-transparent text-xs font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none p-0 shadow-none"
+                                    style="border:none !important; outline:none !important; box-shadow:none !important; -webkit-appearance:none;">
                             </div>
                         </div>
                     </div>
@@ -2427,41 +2519,60 @@
 
                 <!-- Dormitorios / Ambientes -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios / Ambientes</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Dormitorios
+                        / Ambientes</label>
                     <div class="flex flex-wrap gap-2" id="hero-filter-rooms-group">
-                        <button type="button" data-rooms="all" class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
-                        <button type="button" data-rooms="1" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1 Dorm / Amb</button>
-                        <button type="button" data-rooms="2" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2 Dorms</button>
-                        <button type="button" data-rooms="3" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3 Dorms</button>
-                        <button type="button" data-rooms="4" class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+ Dorms</button>
+                        <button type="button" data-rooms="all"
+                            class="hero-rooms-btn active bg-primary text-white border-primary px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer">Todos</button>
+                        <button type="button" data-rooms="1"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">1
+                            Dorm / Amb</button>
+                        <button type="button" data-rooms="2"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">2
+                            Dorms</button>
+                        <button type="button" data-rooms="3"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">3
+                            Dorms</button>
+                        <button type="button" data-rooms="4"
+                            class="hero-rooms-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer hover:border-zinc-300">4+
+                            Dorms</button>
                     </div>
                 </div>
 
                 <!-- Requisitos y Amenities -->
                 <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos & Amenities</label>
+                    <label
+                        class="block text-xs font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">Requisitos
+                        & Amenities</label>
                     <div class="grid grid-cols-2 sm:grid-cols-2 gap-2" id="hero-filter-amenities-group">
-                        <button type="button" data-amenity="pet" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="pet"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-amber-500">pets</span>
                             <span class="truncate">Apto mascotas</span>
                         </button>
-                        <button type="button" data-amenity="verified" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="verified"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-emerald-500">verified</span>
                             <span class="truncate">Verificado</span>
                         </button>
-                        <button type="button" data-amenity="expensas" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="expensas"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-blue-500">receipt_long</span>
                             <span class="truncate">Expensas incluidas</span>
                         </button>
-                        <button type="button" data-amenity="cochera" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="cochera"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-rose-500">directions_car</span>
                             <span class="truncate">Cochera</span>
                         </button>
-                        <button type="button" data-amenity="balcon" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="balcon"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-teal-500">deck</span>
                             <span class="truncate">Balcón / Terraza</span>
                         </button>
-                        <button type="button" data-amenity="amoblado" class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
+                        <button type="button" data-amenity="amoblado"
+                            class="hero-amenity-btn bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer text-left hover:border-zinc-300">
                             <span class="material-symbols-outlined text-base text-purple-500">chair</span>
                             <span class="truncate">Amoblado</span>
                         </button>
@@ -2470,12 +2581,15 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
-                <button type="button" id="reset-hero-filter-btn" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
+            <div
+                class="flex items-center justify-between gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
+                <button type="button" id="reset-hero-filter-btn"
+                    class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
                     <span class="material-symbols-outlined text-base">restart_alt</span>
                     <span>Limpiar filtros</span>
                 </button>
-                <button type="button" id="apply-hero-filter-btn" class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
+                <button type="button" id="apply-hero-filter-btn"
+                    class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-xs shadow-lg shadow-primary/20 transition-all active:scale-95 cursor-pointer flex items-center gap-2">
                     <span class="material-symbols-outlined text-base">search</span>
                     <span>Aplicar y buscar</span>
                 </button>

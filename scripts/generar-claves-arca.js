@@ -34,4 +34,4 @@ console.log('\n--- CONTENIDO DE ARCA_PRIVATE_KEY ---');
 console.log(privateKey);
 console.log('-------------------------------------\n');
 console.log(`Siguiente paso:\nSi tienes Git instalado en Windows, puedes generar el archivo .csr ejecutando en la terminal:`);
-console.log(`& "C:\\Program Files\\Git\\usr\\bin\\openssl.exe" req -new -key arca_homo.key -subj "/C=AR/O=Habitat/CN=habitat/serialNumber=CUIT ${cleanCuit}" -out arca_homo.csr\n`);
+console.log(`& "C:\\Program Files\\Git\\usr\\bin\\openssl.exe" req -new -key arca_homo.key -subj "/C=AR/O=Vivat/CN=vivat/serialNumber=CUIT ${cleanCuit}" -out arca_homo.csr\n`);

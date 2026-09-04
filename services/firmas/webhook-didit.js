@@ -201,7 +201,7 @@ export default async function webhookDiditHandler(req, res) {
       return res.status(500).json({ ok: false, error: 'Database update error' });
     }
 
-    // Sincronizar DNI y Nombre en Perfil y Pasaporte_habitat del firmante
+    // Sincronizar DNI y Nombre en Perfil y Pasaporte_vivat del firmante
     if (isApproved && firma.id_perfil_firmante) {
       try {
         const ocrDni = diditScores.ocr_document_number;
@@ -217,7 +217,7 @@ export default async function webhookDiditHandler(req, res) {
         await supabase.from('Perfil').update(perfUpdate).eq('id_perfil', firma.id_perfil_firmante);
 
         const { data: passSigner } = await supabase
-          .from('Pasaporte_habitat')
+          .from('Pasaporte_vivat')
           .select('id_pasaporte')
           .eq('id_perfil', firma.id_perfil_firmante)
           .order('created_at', { ascending: false })
@@ -232,7 +232,7 @@ export default async function webhookDiditHandler(req, res) {
           if (ocrName) passUpdate.razon_social = ocrName;
           if (ocrDni) passUpdate.dni = ocrDni;
 
-          await supabase.from('Pasaporte_habitat').update(passUpdate).eq('id_pasaporte', passSigner.id_pasaporte);
+          await supabase.from('Pasaporte_vivat').update(passUpdate).eq('id_pasaporte', passSigner.id_pasaporte);
         }
       } catch (ePerf) {
         console.warn('[Didit Webhook Signature] Aviso actualizando Perfil/Pasaporte del firmante:', ePerf.message);

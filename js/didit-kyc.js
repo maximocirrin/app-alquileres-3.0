@@ -1,5 +1,5 @@
 /**
- * Módulo Frontend para la Integración de Didit KYC Real & Liveness Check en Hábitat
+ * Módulo Frontend para la Integración de Didit KYC Real & Liveness Check en Vivat
  * Cumple con Ley Nacional N° 25.506 de Firma Digital y validación biométrica facial.
  * 
  * 100% Real: Conecta vía Serverless Function / Backend (/api/create-session) a la API de Didit KYC.
@@ -48,12 +48,12 @@
     }
 
     try {
-      const storedProfileId = localStorage.getItem('habitat_profile_id') || window._currentUserProfileId;
+      const storedProfileId = localStorage.getItem('vivat_profile_id') || window._currentUserProfileId;
       if (storedProfileId) {
         profileId = String(storedProfileId);
         headers['x-profile-id'] = profileId;
       }
-      const uLocal = JSON.parse(localStorage.getItem('habitat_user') || '{}');
+      const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
       const email = userEmail || uLocal.email || uLocal.mail;
       if (email) {
         userEmail = email;
@@ -160,7 +160,7 @@
    */
   function renderDiditIframeModal(url, sessionId) {
     return new Promise((resolve) => {
-      const modalId = 'habitat-didit-real-kyc-modal';
+      const modalId = 'vivat-didit-real-kyc-modal';
       const existing = document.getElementById(modalId);
       if (existing) existing.remove();
 
@@ -270,10 +270,10 @@
         };
 
         try {
-          localStorage.setItem('habitat_didit_identity', JSON.stringify(identityData));
+          localStorage.setItem('vivat_didit_identity', JSON.stringify(identityData));
         } catch (e) { }
 
-        // Actualizar Perfil y Pasaporte_habitat en Supabase con los datos extraídos del DNI
+        // Actualizar Perfil y Pasaporte_vivat en Supabase con los datos extraídos del DNI
         if (window.supabaseClient) {
           try {
             let targetUserId = null;
@@ -288,10 +288,10 @@
 
             if (!targetUserId) {
               try {
-                const localU = JSON.parse(localStorage.getItem('habitat_user') || '{}');
-                targetUserId = localU.id || localU.user_id || localStorage.getItem('habitat_user_id');
+                const localU = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                targetUserId = localU.id || localU.user_id || localStorage.getItem('vivat_user_id');
                 targetEmail = targetEmail || localU.email || localU.mail;
-                targetPerfilId = localU.id_perfil || localStorage.getItem('habitat_profile_id');
+                targetPerfilId = localU.id_perfil || localStorage.getItem('vivat_profile_id');
               } catch (eLocal) { }
             }
 
@@ -323,9 +323,9 @@
                 .update(perfilUpdate)
                 .eq('id_perfil', perfilIdToUpdate);
 
-              // Actualizar también Pasaporte_habitat si ya existe
+              // Actualizar también Pasaporte_vivat si ya existe
               const { data: passDb } = await window.supabaseClient
-                .from('Pasaporte_habitat')
+                .from('Pasaporte_vivat')
                 .select('id_pasaporte')
                 .eq('id_perfil', perfilIdToUpdate)
                 .order('created_at', { ascending: false })
@@ -344,7 +344,7 @@
                 if (age) passUpdate.edad = age;
 
                 await window.supabaseClient
-                  .from('Pasaporte_habitat')
+                  .from('Pasaporte_vivat')
                   .update(passUpdate)
                   .eq('id_pasaporte', passDb.id_pasaporte);
               }
@@ -444,7 +444,7 @@
 
     // 2. Guardar sesión pendiente en sessionStorage para soportar retorno por redirección
     try {
-      sessionStorage.setItem('habitat_pending_didit_session', JSON.stringify({
+      sessionStorage.setItem('vivat_pending_didit_session', JSON.stringify({
         sessionId: sessionInfo.sessionId,
         url: sessionInfo.url,
         userId: userId,

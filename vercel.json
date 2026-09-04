@@ -25,6 +25,14 @@
   ],
   "rewrites": [
     {
+      "source": "/favicon.ico",
+      "destination": "/img/isotipo-lite.png"
+    },
+    {
+      "source": "/favicon.png",
+      "destination": "/img/isotipo-lite.png"
+    },
+    {
       "source": "/api/contracts/:path*",
       "destination": "/api/contracts?path=:path*"
     },

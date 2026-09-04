@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
   // Fallback for contract info if needed
   return res.status(200).json({
-    message: 'Habitat Contracts API Dispatcher',
+    message: 'Vivat Contracts API Dispatcher',
     path
   });
 }

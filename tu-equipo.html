@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,11 +27,13 @@
                     root.style.backgroundColor = '#ffffff';
                     root.style.colorScheme = 'light';
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Tu equipo | Hábitat</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Tu equipo | Vivat</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -88,11 +91,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -119,13 +131,13 @@
         }
     </style>
     <script>
-        (function () {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-            }
-        })();
+            (function () {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                }
+            })();
     </script>
 
     <!-- Vercel Analytics -->
@@ -140,7 +152,8 @@
     </script>
 </head>
 
-<body class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
+<body
+    class="bg-background text-on-background font-body antialiased flex flex-col min-h-screen dark:bg-[#09090b] dark:text-[#f1f1f1]">
     <!-- TopNavBar Component -->
     <script src="js/navbar.js?v=4"></script>
 
@@ -151,52 +164,61 @@
                 Tu equipo
             </h1>
             <p class="text-base md:text-lg text-zinc-600 dark:text-zinc-300">
-                Arma tu equipo a través de Hábitat — conéctate con profesionales inmobiliarios en tu zona.
+                Arma tu equipo a través de Vivat — conéctate con profesionales inmobiliarios en tu zona.
             </p>
         </div>
 
         <!-- Grid de tarjetas -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-            
+
             <!-- Tarjeta 1: Corredor inmobiliario -->
-            <div class="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow transition-shadow">
+            <div
+                class="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow transition-shadow">
                 <!-- Parte superior -->
                 <div class="p-6 md:p-8 flex flex-col h-full relative">
                     <div class="flex justify-between items-start gap-4 mb-8">
                         <div>
-                            <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
+                            <h2
+                                class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
                                 Contacta a un corredor inmobiliario
                             </h2>
                             <p class="text-sm md:text-base text-zinc-600 dark:text-zinc-400">
                                 Serán tus aliados en todo el proceso de búsqueda.
                             </p>
                         </div>
-                        <div class="w-16 h-16 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-4xl text-primary dark:text-red-400">real_estate_agent</span>
+                        <div
+                            class="w-16 h-16 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                            <span
+                                class="material-symbols-outlined text-4xl text-primary dark:text-red-400">real_estate_agent</span>
                         </div>
                     </div>
                     <div class="mt-auto">
-                        <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm">
+                        <button
+                            class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm">
                             Contactar a un corredor
                         </button>
                     </div>
                 </div>
                 <!-- Parte inferior -->
-                <div class="bg-surface-container-low dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 p-6 md:p-8">
+                <div
+                    class="bg-surface-container-low dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 p-6 md:p-8">
                     <h3 class="font-bold text-zinc-800 dark:text-zinc-200 mb-5">
                         Cómo puede ayudarte un corredor
                     </h3>
                     <ul class="space-y-4">
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">map</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">map</span>
                             <span class="text-sm md:text-base">Experto en tu zona de búsqueda</span>
                         </li>
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">calendar_month</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">calendar_month</span>
                             <span class="text-sm md:text-base">Coordina visitas a las propiedades que te gustan</span>
                         </li>
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">handshake</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">handshake</span>
                             <span class="text-sm md:text-base">Te ayuda a planificar y negociar ofertas</span>
                         </li>
                     </ul>
@@ -204,44 +226,53 @@
             </div>
 
             <!-- Tarjeta 2: Asesor de garantías -->
-            <div class="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow transition-shadow">
+            <div
+                class="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow transition-shadow">
                 <!-- Parte superior -->
                 <div class="p-6 md:p-8 flex flex-col h-full relative">
                     <div class="flex justify-between items-start gap-4 mb-8">
                         <div>
-                            <h2 class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
+                            <h2
+                                class="font-headline text-xl md:text-2xl font-extrabold text-zinc-900 dark:text-white mb-2">
                                 Contacta a un experto en garantías
                             </h2>
                             <p class="text-sm md:text-base text-zinc-600 dark:text-zinc-400">
-                                Ninguna pregunta es demasiado grande o pequeña para los asesores de Hábitat.
+                                Ninguna pregunta es demasiado grande o pequeña para los asesores de Vivat.
                             </p>
                         </div>
-                        <div class="w-16 h-16 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                            <span class="material-symbols-outlined text-4xl text-primary dark:text-red-400">support_agent</span>
+                        <div
+                            class="w-16 h-16 rounded-full bg-primary/10 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                            <span
+                                class="material-symbols-outlined text-4xl text-primary dark:text-red-400">support_agent</span>
                         </div>
                     </div>
                     <div class="mt-auto">
-                        <button class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm">
+                        <button
+                            class="bg-primary hover:bg-primary-container dark:bg-red-700 dark:hover:bg-red-600 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm">
                             Solicitar asesoramiento
                         </button>
                     </div>
                 </div>
                 <!-- Parte inferior -->
-                <div class="bg-surface-container-low dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 p-6 md:p-8">
+                <div
+                    class="bg-surface-container-low dark:bg-zinc-800/40 border-t border-zinc-200 dark:border-zinc-800 p-6 md:p-8">
                     <h3 class="font-bold text-zinc-800 dark:text-zinc-200 mb-5">
                         Preguntas que pueden responderte
                     </h3>
                     <ul class="space-y-4">
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">school</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">school</span>
                             <span class="text-sm md:text-base">¿Cómo es el proceso de evaluación?</span>
                         </li>
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">format_list_bulleted</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">format_list_bulleted</span>
                             <span class="text-sm md:text-base">¿Cuáles son mis opciones de garantía?</span>
                         </li>
                         <li class="flex items-start gap-3 text-zinc-600 dark:text-zinc-400">
-                            <span class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">check_circle</span>
+                            <span
+                                class="material-symbols-outlined text-zinc-400 dark:text-zinc-500 flex-shrink-0">check_circle</span>
                             <span class="text-sm md:text-base">¿Qué factores afectan mi perfil de inquilino?</span>
                         </li>
                     </ul>
@@ -259,11 +290,12 @@
                 <div>
                     <h3
                         class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
-                        Hábitat</h3>
+                        Vivat</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                         <a href="como-funciona.html"
                             class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
-                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de nosotros</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Acerca de
+                            nosotros</a>
                     </nav>
                 </div>
                 <div>
@@ -271,8 +303,8 @@
                         class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
                         Inquilinos</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="index.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar vivienda</a>
+                        <a href="index.html" class="hover:text-primary dark:hover:text-red-400 transition-colors">Buscar
+                            vivienda</a>
                         <a href="como-funciona.html"
                             class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
                     </nav>
@@ -283,7 +315,8 @@
                         Propietarios</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                         <a href="propietarios.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu propiedad</a>
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Anuncia tu
+                            propiedad</a>
                         <a href="como-funciona.html"
                             class="hover:text-primary dark:hover:text-red-400 transition-colors">Cómo funciona</a>
                     </nav>
@@ -293,12 +326,13 @@
                         class="font-headline text-sm font-extrabold text-on-background dark:text-white mb-5 uppercase tracking-wider">
                         Legal</h3>
                     <nav class="flex flex-col items-start gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="#"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de privacidad</a>
-                        <a href="#"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de cookies</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de
+                            privacidad</a>
+                        <a href="#" class="hover:text-primary dark:hover:text-red-400 transition-colors">Política de
+                            cookies</a>
                         <a href="terminos.html"
-                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y condiciones</a>
+                            class="hover:text-primary dark:hover:text-red-400 transition-colors">Términos y
+                            condiciones</a>
                     </nav>
                 </div>
                 <div>
@@ -319,7 +353,8 @@
                                 de ayuda</span>
                         </a>
                         <a href="#"
-                            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar con soporte</a>
+                            class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-primary dark:hover:text-red-400 transition-colors">Contactar
+                            con soporte</a>
                     </div>
                 </div>
                 <div>
@@ -341,14 +376,14 @@
 
             <div class="pt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                 <div class="flex items-center gap-3.5 flex-wrap">
-                    <img src="img/logo-lite.png" alt="Habitat Logo"
+                    <img src="img/logo-lite.png" alt="Vivat Logo"
                         class="h-10 w-auto object-contain brightness-0 dark:brightness-100 dark:opacity-80">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 Hábitat - Todos los derechos reservados</span>
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">&copy;2026 Vivat - Todos los derechos
+                        reservados</span>
                 </div>
-                <div
-                    class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
-                    <span
-                        class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Métodos de pago</span>
+                <div class="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:flex-wrap md:w-auto">
+                    <span class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Métodos de
+                        pago</span>
                     <div
                         class="flex flex-wrap items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
                         <span
@@ -369,7 +404,7 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- App Scripts -->
@@ -386,4 +421,3 @@
 </body>
 
 </html>
-

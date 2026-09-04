@@ -1,12 +1,12 @@
 /**
- * Habitat - Módulo Front-End de Captura, Gestión CRM y Monetización de Leads
+ * Vivat - Módulo Front-End de Captura, Gestión CRM y Monetización de Leads
  * Modelo: Pago por Lead / Suscripción por Zona Inmobiliaria
  * Cumplimiento Legal: CUCICBA / CMCPSI / Ley de Corretaje Argentina
  * Tipografía: Manrope (Headline) & Inter (Body)
  */
 
 // State Store Manager (Vanilla Reactive State Pattern)
-window.HabitatLeadStore = {
+window.VivatLeadStore = {
   state: {
     agent: {
       id: 'ag-4892',
@@ -63,7 +63,7 @@ window.HabitatLeadStore = {
         hasCredit: true,
         creditType: 'Fianza GarantiZAR',
         hasPropertyToSell: false,
-        source: 'Hábitat Directo',
+        source: 'Vivat Directo',
         status: 'new',
         createdAt: 'Hace 45 min',
         notes: [{ text: 'Buscando alquiler de 2 amb con recibo verificado.', date: 'Hoy 15:10' }],
@@ -101,7 +101,7 @@ window.HabitatLeadStore = {
         hasCredit: true,
         creditType: 'Recibo de sueldo',
         hasPropertyToSell: false,
-        source: 'Hábitat',
+        source: 'Vivat',
         status: 'contacted',
         createdAt: 'Hace 3 hs',
         notes: [{ text: 'Contacto telefónico realizado. Coordinando horario de muestra.', date: 'Hoy 12:45' }],
@@ -165,7 +165,7 @@ window.HabitatLeadStore = {
 
   saveToLocalStorage() {
     try {
-      localStorage.setItem('habitat_broker_leads_store', JSON.stringify(this.state));
+      localStorage.setItem('vivat_broker_leads_store', JSON.stringify(this.state));
     } catch (e) {
       console.warn('LocalStorage error:', e);
     }
@@ -173,7 +173,7 @@ window.HabitatLeadStore = {
 
   loadFromLocalStorage() {
     try {
-      const saved = localStorage.getItem('habitat_broker_leads_store');
+      const saved = localStorage.getItem('vivat_broker_leads_store');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.leads && Array.isArray(parsed.leads)) {
@@ -193,7 +193,7 @@ window.HabitatLeadStore = {
     this.state.leads.unshift(lead);
     this.state.agent.credits = Math.max(0, this.state.agent.credits - 1);
     this.notify();
-    HabitatLeadModule.checkLowBalanceWarning();
+    VivatLeadModule.checkLowBalanceWarning();
 
     if (window.DataManager) {
       window.DataManager.createLead(lead).catch(err => console.warn('Error saving lead to DB:', err));
@@ -329,7 +329,7 @@ window.HabitatLeadStore = {
 };
 
 // UI Engine Implementation
-window.HabitatLeadModule = {
+window.VivatLeadModule = {
   currentLeadsSubtab: 'kanban', // 'kanban' | 'table' | 'store'
   currentSearchQuery: '',
   currentStatusFilter: 'all',
@@ -337,12 +337,12 @@ window.HabitatLeadModule = {
   currentDisputeLeadId: null,
 
   init() {
-    HabitatLeadStore.initStore();
+    VivatLeadStore.initStore();
     this.injectModalContainers();
     this.renderAgentStatusBanners();
     this.renderLeadsMainSection();
 
-    HabitatLeadStore.subscribe(() => {
+    VivatLeadStore.subscribe(() => {
       this.renderAgentStatusBanners();
       this.renderLeadsMainSection();
       this.renderLeadInbox();
@@ -356,12 +356,12 @@ window.HabitatLeadModule = {
 
   // 1. Agent Trust & Saldo Compact Badge Top Right
   renderAgentStatusBanners() {
-    const agent = HabitatLeadStore.state.agent;
+    const agent = VivatLeadStore.state.agent;
     const badgeContainer = document.getElementById('header-lead-balance-badge');
     if (badgeContainer) {
       const isLow = agent.credits < 5;
       badgeContainer.innerHTML = `
-        <div onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${isLow ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'} border text-[11px] font-headline font-extrabold cursor-pointer hover:bg-emerald-500/20 transition-all shadow-2xs" title="Hacé clic para comprar más leads">
+        <div onclick="VivatLeadModule.openSubscriptionStoreModal()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${isLow ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'} border text-[11px] font-headline font-extrabold cursor-pointer hover:bg-emerald-500/20 transition-all shadow-2xs" title="Hacé clic para comprar más leads">
           <span class="material-symbols-outlined text-xs ${isLow ? 'text-amber-500' : 'text-emerald-500'}">account_balance_wallet</span>
           <span>Saldo: <strong>${agent.credits} leads</strong></span>
         </div>
@@ -374,7 +374,7 @@ window.HabitatLeadModule = {
     const container = document.getElementById('panel-content-leads');
     if (!container) return;
 
-    const leads = HabitatLeadStore.state.leads;
+    const leads = VivatLeadStore.state.leads;
 
     // Aggregate metrics
     const totalLeads = leads.length;
@@ -438,8 +438,8 @@ window.HabitatLeadModule = {
           <div class="glass-card p-3.5 sm:p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 flex justify-between items-start col-span-2 sm:col-span-1 lg:col-span-1">
             <div>
               <span class="text-[10px] sm:text-[11px] font-headline font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400">Créditos de Zona</span>
-              <h4 class="font-headline text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">${HabitatLeadStore.state.agent.credits}</h4>
-              <p class="text-[10px] sm:text-[11px] text-purple-600/80 font-medium">${HabitatLeadStore.state.agent.activeZones.length} Zonas asignadas</p>
+              <h4 class="font-headline text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">${VivatLeadStore.state.agent.credits}</h4>
+              <p class="text-[10px] sm:text-[11px] text-purple-600/80 font-medium">${VivatLeadStore.state.agent.activeZones.length} Zonas asignadas</p>
             </div>
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/20 text-purple-600 flex items-center justify-center shrink-0">
               <span class="material-symbols-outlined text-base sm:text-lg">storefront</span>
@@ -451,15 +451,15 @@ window.HabitatLeadModule = {
         <div class="glass-card p-3.5 sm:p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <!-- Subtab buttons (Horizontal Scrollable on Mobile) -->
           <div class="flex items-center gap-1.5 sm:gap-2 bg-zinc-100 dark:bg-zinc-800/80 p-1.5 rounded-xl border border-zinc-200/80 dark:border-zinc-700 overflow-x-auto whitespace-nowrap scrollbar-none">
-            <button type="button" onclick="HabitatLeadModule.switchLeadsSubtab('kanban')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isKanban ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
+            <button type="button" onclick="VivatLeadModule.switchLeadsSubtab('kanban')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isKanban ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
               <span class="material-symbols-outlined text-base">view_kanban</span>
               <span>Embudo CRM Kanban (${totalLeads})</span>
             </button>
-            <button type="button" onclick="HabitatLeadModule.switchLeadsSubtab('table')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isTable ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
+            <button type="button" onclick="VivatLeadModule.switchLeadsSubtab('table')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isTable ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
               <span class="material-symbols-outlined text-base">table_rows</span>
               <span>Inbox & Lista Inteligente</span>
             </button>
-            <button type="button" onclick="HabitatLeadModule.switchLeadsSubtab('store')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isStore ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
+            <button type="button" onclick="VivatLeadModule.switchLeadsSubtab('store')" class="px-3.5 py-2 rounded-lg text-xs font-headline font-black transition-all cursor-pointer flex items-center gap-1.5 ${isStore ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}">
               <span class="material-symbols-outlined text-base">shopping_cart</span>
               <span>Tienda de Leads & Zonas</span>
             </button>
@@ -467,11 +467,11 @@ window.HabitatLeadModule = {
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center gap-2 justify-end">
-            <button type="button" onclick="HabitatLeadModule.openAddManualLeadModal()" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="button" onclick="VivatLeadModule.openAddManualLeadModal()" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer">
               <span class="material-symbols-outlined text-base">person_add</span>
               <span>+ Nuevo Lead Manual</span>
             </button>
-            <button type="button" onclick="HabitatLeadModule.exportLeadsCSV()" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 cursor-pointer">
+            <button type="button" onclick="VivatLeadModule.exportLeadsCSV()" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 cursor-pointer">
               <span class="material-symbols-outlined text-base">download</span>
               <span class="hidden sm:inline">Exportar CSV</span>
             </button>
@@ -488,7 +488,7 @@ window.HabitatLeadModule = {
 
   // 3. Sub-view 1: Kanban Pipeline CRM (Grilla Adaptativa sin Scroll Horizontal)
   renderKanbanView() {
-    const leads = HabitatLeadStore.state.leads;
+    const leads = VivatLeadStore.state.leads;
 
     const columns = [
       { id: 'new', title: 'NUEVAS CONSULTAS', color: 'bg-blue-500', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
@@ -520,10 +520,10 @@ window.HabitatLeadModule = {
                 ` : colLeads.map(l => {
                   const cleanPhone = l.phone.replace(/[^0-9]/g, '');
                   const waUrl = `https://wa.me/${cleanPhone}`;
-                  const sourceTag = l.source || 'Hábitat';
+                  const sourceTag = l.source || 'Vivat';
 
                   return `
-                    <div class="glass-card p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-sm hover:shadow-md transition-all bg-white dark:bg-zinc-800/90 font-body relative" onclick="HabitatLeadModule.openLeadDetailModal('${l.id}')">
+                    <div class="glass-card p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-sm hover:shadow-md transition-all bg-white dark:bg-zinc-800/90 font-body relative" onclick="VivatLeadModule.openLeadDetailModal('${l.id}')">
                       <!-- Fila Superior: Nombre Cliente + Origen Portal -->
                       <div class="flex items-start justify-between gap-2">
                         <h5 class="font-headline font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white leading-snug">${l.clientName}</h5>
@@ -553,7 +553,7 @@ window.HabitatLeadModule = {
                         </a>
 
                         <div class="flex items-center gap-1">
-                          <select onchange="HabitatLeadModule.moveLeadStage('${l.id}', this.value)" class="bg-transparent border-none text-xs font-headline font-extrabold text-rose-900 dark:text-rose-400 outline-none cursor-pointer hover:underline">
+                          <select onchange="VivatLeadModule.moveLeadStage('${l.id}', this.value)" class="bg-transparent border-none text-xs font-headline font-extrabold text-rose-900 dark:text-rose-400 outline-none cursor-pointer hover:underline">
                             <option value="" disabled selected>Mover →</option>
                             <option value="new">Nuevas Consultas</option>
                             <option value="contacted">Contacto Realizado</option>
@@ -575,7 +575,7 @@ window.HabitatLeadModule = {
 
   // 4. Sub-view 2: Table & Inbox View (Responsive Search & Filter Bar)
   renderTableInboxView() {
-    const leads = HabitatLeadStore.state.leads;
+    const leads = VivatLeadStore.state.leads;
 
     // Filter leads
     const filtered = leads.filter(l => {
@@ -591,12 +591,12 @@ window.HabitatLeadModule = {
         <!-- Search and Filter controls -->
         <div class="glass-card p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div class="relative flex-1">
-            <input type="text" id="lead-search-input" value="${this.currentSearchQuery}" oninput="HabitatLeadModule.currentSearchQuery = this.value; HabitatLeadModule.renderLeadsMainSection();" placeholder="Buscar por nombre, teléfono, email, propiedad..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20">
+            <input type="text" id="lead-search-input" value="${this.currentSearchQuery}" oninput="VivatLeadModule.currentSearchQuery = this.value; VivatLeadModule.renderLeadsMainSection();" placeholder="Buscar por nombre, teléfono, email, propiedad..." class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20">
             <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <select onchange="HabitatLeadModule.currentStatusFilter = this.value; HabitatLeadModule.renderLeadsMainSection();" class="flex-1 sm:flex-initial bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
+            <select onchange="VivatLeadModule.currentStatusFilter = this.value; VivatLeadModule.renderLeadsMainSection();" class="flex-1 sm:flex-initial bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
               <option value="all" ${this.currentStatusFilter === 'all' ? 'selected' : ''}>Todos los Estados</option>
               <option value="new" ${this.currentStatusFilter === 'new' ? 'selected' : ''}>Nuevas Consultas</option>
               <option value="contacted" ${this.currentStatusFilter === 'contacted' ? 'selected' : ''}>Contacto Realizado</option>
@@ -606,9 +606,9 @@ window.HabitatLeadModule = {
               <option value="disputed" ${this.currentStatusFilter === 'disputed' ? 'selected' : ''}>Disputados</option>
             </select>
 
-            <select onchange="HabitatLeadModule.currentSourceFilter = this.value; HabitatLeadModule.renderLeadsMainSection();" class="flex-1 sm:flex-initial bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
+            <select onchange="VivatLeadModule.currentSourceFilter = this.value; VivatLeadModule.renderLeadsMainSection();" class="flex-1 sm:flex-initial bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-headline font-bold text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer">
               <option value="all" ${this.currentSourceFilter === 'all' ? 'selected' : ''}>Cualquier Origen</option>
-              <option value="Hábitat Directo" ${this.currentSourceFilter === 'Hábitat Directo' ? 'selected' : ''}>Hábitat Directo</option>
+              <option value="Vivat Directo" ${this.currentSourceFilter === 'Vivat Directo' ? 'selected' : ''}>Vivat Directo</option>
               <option value="Zonaprop" ${this.currentSourceFilter === 'Zonaprop' ? 'selected' : ''}>Zonaprop</option>
               <option value="Argenprop" ${this.currentSourceFilter === 'Argenprop' ? 'selected' : ''}>Argenprop</option>
               <option value="Red MLS" ${this.currentSourceFilter === 'Red MLS' ? 'selected' : ''}>Red MLS</option>
@@ -641,8 +641,8 @@ window.HabitatLeadModule = {
                   const cleanPhone = l.phone.replace(/[^0-9]/g, '');
                   const waUrl = `https://wa.me/${cleanPhone}`;
                   const isHigh = l.intentScore === 'high';
-                  const isHabitat = l.source && (l.source.toLowerCase().includes('hábitat') || l.source.toLowerCase().includes('habitat'));
-                  const sourceBadgeClass = isHabitat
+                  const isVivat = l.source && (l.source.toLowerCase().includes('vivat') || l.source.toLowerCase().includes('vivat'));
+                  const sourceBadgeClass = isVivat
                     ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-500/30'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700';
 
@@ -672,12 +672,12 @@ window.HabitatLeadModule = {
 
                       <td class="p-3 sm:p-3.5">
                         <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-headline font-black uppercase tracking-wider ${sourceBadgeClass}">
-                          ${l.source || 'Hábitat Directo'}
+                          ${l.source || 'Vivat Directo'}
                         </span>
                       </td>
 
                       <td class="p-3 sm:p-3.5">
-                        <select onchange="HabitatLeadModule.moveLeadStage('${l.id}', this.value)" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-2.5 py-1 text-xs font-headline font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                        <select onchange="VivatLeadModule.moveLeadStage('${l.id}', this.value)" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-2.5 py-1 text-xs font-headline font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
                           <option value="new" ${l.status === 'new' ? 'selected' : ''}>Nuevas Consultas</option>
                           <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>Contacto Realizado</option>
                           <option value="visiting" ${l.status === 'visiting' ? 'selected' : ''}>Visita Programada</option>
@@ -689,7 +689,7 @@ window.HabitatLeadModule = {
 
                       <td class="p-3 sm:p-3.5 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-2">
-                          <button type="button" onclick="HabitatLeadModule.openLeadDetailModal('${l.id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl transition-colors">
+                          <button type="button" onclick="VivatLeadModule.openLeadDetailModal('${l.id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs rounded-xl transition-colors">
                             Ficha
                           </button>
                           <a href="${waUrl}" target="_blank" class="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-extrabold text-xs rounded-xl shadow-sm flex items-center gap-1">
@@ -721,7 +721,7 @@ window.HabitatLeadModule = {
                 <p class="text-xs text-zinc-500">Adquirí paquetes exclusivos por barrio (Palermo, Recoleta, Belgrano, etc.) integrados con Mercado Pago.</p>
               </div>
             </div>
-            <button type="button" onclick="HabitatLeadModule.openSubscriptionStoreModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
+            <button type="button" onclick="VivatLeadModule.openSubscriptionStoreModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-base">shopping_cart</span>
               <span>Explorar Tienda y Cupos de Zonas</span>
             </button>
@@ -735,7 +735,7 @@ window.HabitatLeadModule = {
                 <p class="text-xs text-zinc-500">Cumplí con las normativas locales y aumentá la conversión mostrando tu badge verificado.</p>
               </div>
             </div>
-            <button type="button" onclick="HabitatLeadModule.openOnboardingModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
+            <button type="button" onclick="VivatLeadModule.openOnboardingModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-base">badge</span>
               <span>Cargar / Actualizar Matrícula</span>
             </button>
@@ -749,7 +749,7 @@ window.HabitatLeadModule = {
 
   // 6. Modal: Detalle / Ficha Completa e Historial del Lead
   openLeadDetailModal(leadId) {
-    const lead = HabitatLeadStore.state.leads.find(l => l.id === leadId);
+    const lead = VivatLeadStore.state.leads.find(l => l.id === leadId);
     if (!lead) return;
 
     const modalBody = document.getElementById('lead-detail-modal-content');
@@ -764,7 +764,7 @@ window.HabitatLeadModule = {
               <span class="text-[10px] font-headline font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 Ficha CRM de Prospecto
               </span>
-              <span class="text-[10px] text-zinc-400">Origen: ${lead.source || 'Hábitat'}</span>
+              <span class="text-[10px] text-zinc-400">Origen: ${lead.source || 'Vivat'}</span>
             </div>
             <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1">${lead.clientName}</h3>
           </div>
@@ -809,7 +809,7 @@ window.HabitatLeadModule = {
             
             <div class="flex gap-2">
               <input type="text" id="new-lead-note-input" placeholder="Escribir nota interna..." class="flex-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none">
-              <button type="button" onclick="HabitatLeadModule.addLeadNoteHandler('${lead.id}')" class="px-3.5 py-2 bg-primary text-white font-headline font-extrabold text-xs rounded-xl shadow-sm hover:bg-primary-hover shrink-0">
+              <button type="button" onclick="VivatLeadModule.addLeadNoteHandler('${lead.id}')" class="px-3.5 py-2 bg-primary text-white font-headline font-extrabold text-xs rounded-xl shadow-sm hover:bg-primary-hover shrink-0">
                 Añadir
               </button>
             </div>
@@ -831,7 +831,7 @@ window.HabitatLeadModule = {
         </div>
 
         <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
-          <button type="button" onclick="HabitatLeadModule.openDisputeModal('${lead.id}'); document.getElementById('lead-detail-modal-backdrop').classList.add('hidden');" class="px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 font-headline font-bold text-xs">
+          <button type="button" onclick="VivatLeadModule.openDisputeModal('${lead.id}'); document.getElementById('lead-detail-modal-backdrop').classList.add('hidden');" class="px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 font-headline font-bold text-xs">
             ${isDisputed ? 'Ver Disputa' : 'Disputar Lead'}
           </button>
           <a href="https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}" target="_blank" class="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-extrabold text-xs shadow flex items-center gap-1.5">
@@ -847,7 +847,7 @@ window.HabitatLeadModule = {
   addLeadNoteHandler(leadId) {
     const input = document.getElementById('new-lead-note-input');
     if (!input || !input.value.trim()) return;
-    HabitatLeadStore.addLeadNote(leadId, input.value.trim());
+    VivatLeadStore.addLeadNote(leadId, input.value.trim());
     this.openLeadDetailModal(leadId);
     this.showToast('Nota añadida al historial del prospecto.', 'success');
   },
@@ -871,12 +871,12 @@ window.HabitatLeadModule = {
             <span class="text-[10px] font-headline font-black uppercase text-emerald-600 tracking-wider">Ingreso CRM Directo</span>
             <h3 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">Registrar Nuevo Lead Manual</h3>
           </div>
-          <button onclick="HabitatLeadModule.closeAddManualLeadModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
+          <button onclick="VivatLeadModule.closeAddManualLeadModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onsubmit="event.preventDefault(); HabitatLeadModule.submitAddManualLeadForm();" class="space-y-4 text-xs">
+        <form onsubmit="event.preventDefault(); VivatLeadModule.submitAddManualLeadForm();" class="space-y-4 text-xs">
           <div>
             <label class="block font-headline font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Nombre y Apellido del Cliente *</label>
             <input type="text" id="manual-lead-name" placeholder="Ej: Marcelo Fernández" required class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none">
@@ -921,7 +921,7 @@ window.HabitatLeadModule = {
           </div>
 
           <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
-            <button type="button" onclick="HabitatLeadModule.closeAddManualLeadModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
+            <button type="button" onclick="VivatLeadModule.closeAddManualLeadModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
             <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer">
               Guardar Prospecto
             </button>
@@ -942,7 +942,7 @@ window.HabitatLeadModule = {
 
     if (!name || !phone) return;
 
-    HabitatLeadStore.addManualLead({
+    VivatLeadStore.addManualLead({
       clientName: name,
       phone: phone,
       email: email,
@@ -957,12 +957,12 @@ window.HabitatLeadModule = {
   },
 
   moveLeadStage(leadId, targetStage) {
-    HabitatLeadStore.changeLeadStatus(leadId, targetStage);
+    VivatLeadStore.changeLeadStatus(leadId, targetStage);
     this.showToast(`Estado actualizado a "${targetStage.toUpperCase()}"`, 'info');
   },
 
   exportLeadsCSV() {
-    const leads = HabitatLeadStore.state.leads;
+    const leads = VivatLeadStore.state.leads;
     let csv = 'ID,Nombre,Telefono,Email,Propiedad,Precio,Estado,Origen,Fecha\n';
     leads.forEach(l => {
       csv += `"${l.id}","${l.clientName}","${l.phone}","${l.email || ''}","${l.propertyName}","${l.propertyPrice}","${l.status}","${l.source || ''}","${l.createdAt}"\n`;
@@ -988,7 +988,7 @@ window.HabitatLeadModule = {
 
   renderSubscriptionStoreModal() {
     const modalBody = document.getElementById('subscription-store-modal-content');
-    const { zones, agent, selectedPackage } = HabitatLeadStore.state;
+    const { zones, agent, selectedPackage } = VivatLeadStore.state;
 
     const pkgPriceARS = selectedPackage === 'starter' ? 180000 : selectedPackage === 'pro' ? 390000 : 850000;
     const pkgLeads = selectedPackage === 'starter' ? 15 : selectedPackage === 'pro' ? 50 : 120;
@@ -1002,7 +1002,7 @@ window.HabitatLeadModule = {
             </span>
             <h3 class="font-headline font-extrabold text-lg sm:text-xl text-zinc-900 dark:text-white mt-1">Comprar Cupos de Leads Exclusivos</h3>
           </div>
-          <button onclick="HabitatLeadModule.closeSubscriptionStoreModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
+          <button onclick="VivatLeadModule.closeSubscriptionStoreModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -1021,14 +1021,14 @@ window.HabitatLeadModule = {
         <div>
           <label class="block text-xs font-headline font-extrabold uppercase text-zinc-500 mb-3">1. Seleccioná tu Paquete de Leads</label>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div onclick="HabitatLeadModule.selectPackage('starter')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'starter' ? 'border-primary bg-primary/5' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all">
+            <div onclick="VivatLeadModule.selectPackage('starter')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'starter' ? 'border-primary bg-primary/5' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all">
               <span class="text-[10px] font-headline font-black uppercase text-zinc-400">Starter</span>
               <h4 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">15 Leads / mes</h4>
               <p class="text-xs font-headline font-extrabold text-primary mt-1">$ 180.000 ARS<span class="text-[10px] text-zinc-400 font-normal"> /mes</span></p>
               <p class="text-[11px] text-zinc-500 mt-2">$ 12.000 ARS por lead</p>
             </div>
 
-            <div onclick="HabitatLeadModule.selectPackage('pro')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'pro' ? 'border-primary bg-primary/5 shadow-md' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all relative">
+            <div onclick="VivatLeadModule.selectPackage('pro')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'pro' ? 'border-primary bg-primary/5 shadow-md' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all relative">
               <span class="absolute -top-3 right-3 px-2 py-0.5 rounded-full bg-primary text-white text-[9px] font-headline font-black uppercase">Más Popular ⭐</span>
               <span class="text-[10px] font-headline font-black uppercase text-zinc-400">Pro Agentes</span>
               <h4 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">50 Leads / mes</h4>
@@ -1036,7 +1036,7 @@ window.HabitatLeadModule = {
               <p class="text-[11px] text-zinc-500 mt-2">$ 7.800 ARS por lead</p>
             </div>
 
-            <div onclick="HabitatLeadModule.selectPackage('enterprise')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'enterprise' ? 'border-primary bg-primary/5' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all">
+            <div onclick="VivatLeadModule.selectPackage('enterprise')" class="p-4 rounded-2xl border-2 ${selectedPackage === 'enterprise' ? 'border-primary bg-primary/5' : 'border-zinc-200 dark:border-zinc-800'} cursor-pointer hover:border-primary transition-all">
               <span class="text-[10px] font-headline font-black uppercase text-zinc-400">Enterprise</span>
               <h4 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">120 Leads / mes</h4>
               <p class="text-xs font-headline font-extrabold text-primary mt-1">$ 850.000 ARS<span class="text-[10px] text-zinc-400 font-normal"> /mes</span></p>
@@ -1052,7 +1052,7 @@ window.HabitatLeadModule = {
               const isSelected = agent.activeZones.includes(z.id);
               const isFull = z.availableQuota === 0;
               return `
-                <div onclick="${isFull ? '' : `HabitatLeadModule.toggleZoneSelection('${z.id}')`}" class="p-3 rounded-xl border ${isSelected ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} ${isFull ? 'opacity-50 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800/40' : 'cursor-pointer hover:border-emerald-500'} flex items-center justify-between">
+                <div onclick="${isFull ? '' : `VivatLeadModule.toggleZoneSelection('${z.id}')`}" class="p-3 rounded-xl border ${isSelected ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} ${isFull ? 'opacity-50 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800/40' : 'cursor-pointer hover:border-emerald-500'} flex items-center justify-between">
                   <div>
                     <h5 class="text-xs font-headline font-extrabold text-zinc-900 dark:text-white">${z.name}</h5>
                     <p class="text-[10px] text-zinc-400">CP ${z.postalCode} • ARS $${z.pricePerLeadARS.toLocaleString('es-AR')}</p>
@@ -1072,7 +1072,7 @@ window.HabitatLeadModule = {
             <h4 class="font-headline font-extrabold text-base text-zinc-900 dark:text-white">Total ARS: $${pkgPriceARS.toLocaleString('es-AR')} + IVA</h4>
             <p class="text-xs text-zinc-500">Incluye ${pkgLeads} créditos de leads y asignación a ${agent.activeZones.length} zonas seleccionadas.</p>
           </div>
-          <button type="button" onclick="HabitatLeadModule.confirmMercadoPagoCheckout()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#009EE3] hover:bg-[#008ac7] text-white font-headline font-extrabold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0">
+          <button type="button" onclick="VivatLeadModule.confirmMercadoPagoCheckout()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#009EE3] hover:bg-[#008ac7] text-white font-headline font-extrabold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0">
             <span class="material-symbols-outlined">payments</span>
             <span>Pagar con Mercado Pago</span>
           </button>
@@ -1082,12 +1082,12 @@ window.HabitatLeadModule = {
   },
 
   selectPackage(pkg) {
-    HabitatLeadStore.state.selectedPackage = pkg;
+    VivatLeadStore.state.selectedPackage = pkg;
     this.renderSubscriptionStoreModal();
   },
 
   toggleZoneSelection(zoneId) {
-    const active = HabitatLeadStore.state.agent.activeZones;
+    const active = VivatLeadStore.state.agent.activeZones;
     const idx = active.indexOf(zoneId);
     if (idx > -1) {
       active.splice(idx, 1);
@@ -1098,7 +1098,7 @@ window.HabitatLeadModule = {
   },
 
   confirmMercadoPagoCheckout() {
-    HabitatLeadStore.buyPackage(HabitatLeadStore.state.agent.activeZones, HabitatLeadStore.state.selectedPackage);
+    VivatLeadStore.buyPackage(VivatLeadStore.state.agent.activeZones, VivatLeadStore.state.selectedPackage);
     this.closeSubscriptionStoreModal();
     this.showToast('¡Pago procesado con éxito! Créditos acreditados en tu cuenta.', 'success');
   },
@@ -1115,7 +1115,7 @@ window.HabitatLeadModule = {
 
   renderOnboardingModal() {
     const modalBody = document.getElementById('onboarding-modal-content');
-    const agent = HabitatLeadStore.state.agent;
+    const agent = VivatLeadStore.state.agent;
 
     modalBody.innerHTML = `
       <div class="p-4 sm:p-6 space-y-5 max-w-xl w-full mx-auto font-body">
@@ -1124,12 +1124,12 @@ window.HabitatLeadModule = {
             <span class="text-[10px] font-headline font-black uppercase text-primary tracking-wider">Validación de Identidad Profesional</span>
             <h3 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">Carga de Matrícula CUCICBA / CMCPSI</h3>
           </div>
-          <button onclick="HabitatLeadModule.closeOnboardingModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
+          <button onclick="VivatLeadModule.closeOnboardingModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onsubmit="event.preventDefault(); HabitatLeadModule.submitMatriculaForm();" class="space-y-4">
+        <form onsubmit="event.preventDefault(); VivatLeadModule.submitMatriculaForm();" class="space-y-4">
           <div>
             <label class="block text-xs font-headline font-extrabold text-zinc-700 dark:text-zinc-300 mb-1">Colegio Profesional Regulador</label>
             <select id="onboard-jurisdiction" class="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-xs font-headline font-bold text-zinc-900 dark:text-white outline-none">
@@ -1162,7 +1162,7 @@ window.HabitatLeadModule = {
           </div>
 
           <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
-            <button type="button" onclick="HabitatLeadModule.closeOnboardingModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
+            <button type="button" onclick="VivatLeadModule.closeOnboardingModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
             <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer">
               Enviar para Verificación Manual
             </button>
@@ -1177,7 +1177,7 @@ window.HabitatLeadModule = {
     const jur = document.getElementById('onboard-jurisdiction').value;
     const cuit = document.getElementById('onboard-cuit').value;
 
-    HabitatLeadStore.updateAgentMatricula({ matriculaNumber: mat, jurisdiction: jur, cuit: cuit });
+    VivatLeadStore.updateAgentMatricula({ matriculaNumber: mat, jurisdiction: jur, cuit: cuit });
     this.closeOnboardingModal();
     this.showToast('Datos de matrícula enviados. El estado cambiará a verificado en breve.', 'info');
   },
@@ -1195,7 +1195,7 @@ window.HabitatLeadModule = {
 
   renderDisputeModal() {
     const modalBody = document.getElementById('dispute-modal-content');
-    const lead = HabitatLeadStore.state.leads.find(l => l.id === this.currentDisputeLeadId);
+    const lead = VivatLeadStore.state.leads.find(l => l.id === this.currentDisputeLeadId);
     if (!lead) return;
 
     modalBody.innerHTML = `
@@ -1205,7 +1205,7 @@ window.HabitatLeadModule = {
             <span class="text-[10px] font-headline font-black uppercase text-red-500 tracking-wider">SLA de Garantía 48 Horas</span>
             <h3 class="font-headline font-extrabold text-lg text-zinc-900 dark:text-white">Disputar / Reportar Lead Inválido</h3>
           </div>
-          <button onclick="HabitatLeadModule.closeDisputeModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
+          <button onclick="VivatLeadModule.closeDisputeModal()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -1233,8 +1233,8 @@ window.HabitatLeadModule = {
         </div>
 
         <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
-          <button type="button" onclick="HabitatLeadModule.closeDisputeModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
-          <button type="button" onclick="HabitatLeadModule.confirmDispute()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer">
+          <button type="button" onclick="VivatLeadModule.closeDisputeModal()" class="px-4 py-2 text-xs font-headline font-bold text-zinc-400 hover:text-zinc-600">Cancelar</button>
+          <button type="button" onclick="VivatLeadModule.confirmDispute()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-headline font-extrabold text-xs rounded-xl shadow cursor-pointer">
             Enviar Disputa de Lead
           </button>
         </div>
@@ -1245,14 +1245,14 @@ window.HabitatLeadModule = {
   confirmDispute() {
     const reason = document.getElementById('dispute-reason-select').value;
     const comments = document.getElementById('dispute-comments').value;
-    HabitatLeadStore.disputeLead(this.currentDisputeLeadId, reason, comments);
+    VivatLeadStore.disputeLead(this.currentDisputeLeadId, reason, comments);
     this.closeDisputeModal();
     this.showToast('Disputa enviada. El crédito será reembolsado si la revisión es aprobada.', 'warning');
   },
 
   checkLowBalanceWarning() {
-    if (HabitatLeadStore.state.agent.credits < 5) {
-      this.showToast(`⚠️ ¡Atención! Te quedan solo ${HabitatLeadStore.state.agent.credits} leads disponibles. Recargá tu paquete para no perder clientes.`, 'warning');
+    if (VivatLeadStore.state.agent.credits < 5) {
+      this.showToast(`⚠️ ¡Atención! Te quedan solo ${VivatLeadStore.state.agent.credits} leads disponibles. Recargá tu paquete para no perder clientes.`, 'warning');
     }
   },
 
@@ -1260,7 +1260,7 @@ window.HabitatLeadModule = {
     const container = document.getElementById('lead-inbox-container');
     if (!container) return;
 
-    const leads = HabitatLeadStore.state.leads;
+    const leads = VivatLeadStore.state.leads;
 
     container.innerHTML = `
       <div class="space-y-4 font-body">
@@ -1291,7 +1291,7 @@ window.HabitatLeadModule = {
                 </div>
 
                 <div class="flex items-center justify-between gap-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-800">
-                  <button type="button" onclick="HabitatLeadModule.openLeadDetailModal('${l.id}')" class="text-xs font-headline font-extrabold text-zinc-600 dark:text-zinc-300 hover:text-primary">
+                  <button type="button" onclick="VivatLeadModule.openLeadDetailModal('${l.id}')" class="text-xs font-headline font-extrabold text-zinc-600 dark:text-zinc-300 hover:text-primary">
                     Ver Detalles
                   </button>
                   <a href="https://wa.me/${l.phone.replace(/[^0-9]/g, '')}" target="_blank" class="px-3 py-1.5 rounded-xl bg-[#25D366] text-white text-xs font-headline font-extrabold flex items-center gap-1">
@@ -1366,5 +1366,5 @@ window.HabitatLeadModule = {
 
 // Auto Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  HabitatLeadModule.init();
+  VivatLeadModule.init();
 });

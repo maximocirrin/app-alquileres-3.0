@@ -223,7 +223,7 @@ export default async function handler(req, res) {
           updateGarante.id_estado_garante = 4; // Documentación Subida / KYC Aprobado
         }
 
-        // Crear o vincular Pasaporte Hábitat para el Garante
+        // Crear o vincular Pasaporte Vivat para el Garante
         let idPasaporteGarante = guarantorRecord.id_pasaporte_garante;
         if (!idPasaporteGarante) {
           const passCode = 'HBT-GAR-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000) + '-X9';
@@ -235,7 +235,7 @@ export default async function handler(req, res) {
           if (!profileIdToUse) {
             // Obtener perfil inquilino o crear perfil base
             const { data: tenantPass } = await supabase
-              .from('Pasaporte_habitat')
+              .from('Pasaporte_vivat')
               .select('id_perfil')
               .eq('id_pasaporte', guarantorRecord.id_pasaporte)
               .maybeSingle();
@@ -243,7 +243,7 @@ export default async function handler(req, res) {
           }
 
           const { data: newPassGarante } = await supabase
-            .from('Pasaporte_habitat')
+            .from('Pasaporte_vivat')
             .insert([{
               id_perfil: profileIdToUse,
               id_estado_pasaporte: 3, // Activo
@@ -284,7 +284,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Caso 2: Sincronizar en Supabase Perfil y Pasaporte_habitat para el usuario autenticado (Inquilino)
+    // Caso 2: Sincronizar en Supabase Perfil y Pasaporte_vivat para el usuario autenticado (Inquilino)
     if (isApproved && (documentNumber || fullName) && profile && !guarantorRecord) {
       try {
         const perfUp = {
@@ -299,7 +299,7 @@ export default async function handler(req, res) {
         await supabase.from('Perfil').update(perfUp).eq('id_perfil', profile.id_perfil);
 
         const { data: passFound } = await supabase
-          .from('Pasaporte_habitat')
+          .from('Pasaporte_vivat')
           .select('id_pasaporte')
           .eq('id_perfil', profile.id_perfil)
           .order('created_at', { ascending: false })
@@ -316,7 +316,7 @@ export default async function handler(req, res) {
           if (isoDob) passUp.fecha_nacimiento = isoDob;
           if (computedAge) passUp.edad = computedAge;
 
-          await supabase.from('Pasaporte_habitat').update(passUp).eq('id_pasaporte', passFound.id_pasaporte);
+          await supabase.from('Pasaporte_vivat').update(passUp).eq('id_pasaporte', passFound.id_pasaporte);
         }
       } catch (eDb) {
         console.warn('[Session Decision] Aviso sincronizando en Supabase:', eDb.message);

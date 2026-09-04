@@ -5,7 +5,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,15 +27,21 @@
                     root.style.backgroundColor = '#ffffff';
                     root.style.colorScheme = 'light';
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
-        <title>Acceso | Hábitat Alquileres</title>
-    <link rel="icon" type="image/jpeg" href="img/isotipo-lite.jpg">
+    <title>Acceso | Vivat Alquileres</title>
+    <link rel="icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="img/isotipo-lite.png?v=2">
+    <link rel="apple-touch-icon" href="img/isotipo-lite.png?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=13">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
@@ -95,11 +102,20 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input, button, select, textarea {
+        input,
+        button,
+        select,
+        textarea {
             font-family: inherit;
         }
 
-        h1, h2, h3, h4, h5, h6, .font-headline {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .font-headline {
             font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -166,7 +182,7 @@
             height: 40px;
             border-radius: 12px;
             object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .owner-auth-main {
@@ -456,16 +472,20 @@
 
 <body>
     <!-- Header enfocado estilo Navbar para Login / Registro -->
-    <header class="owner-auth-header bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800">
+    <header
+        class="owner-auth-header bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800">
         <!-- Izquierda: Switch de Modo Oscuro / Claro estilo Navbar -->
         <div class="flex items-center">
-            <label class="theme-switch flex-shrink-0 cursor-pointer" style="transform: scale(0.68); transform-origin: left center;">
+            <label class="theme-switch flex-shrink-0 cursor-pointer"
+                style="transform: scale(0.68); transform-origin: left center;">
                 <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
                 <div class="theme-switch__container">
                     <div class="theme-switch__clouds"></div>
                     <div class="theme-switch__stars-container">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z" fill="currentColor"></path>
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
+                                fill="currentColor"></path>
                         </svg>
                     </div>
                     <div class="theme-switch__circle-container">
@@ -481,13 +501,15 @@
             </label>
         </div>
 
-        <!-- Centro: Logo principal de Hábitat -->
+        <!-- Centro: Logo principal de Vivat -->
         <a href="index.html" class="flex items-center gap-1.5 lg:gap-2 group">
-            <img src="img/logo-lite.png" alt="Hábitat Logo" class="h-12 sm:h-14 md:h-[58px] lg:h-[68px] w-auto object-contain transition-all">
+            <img src="img/logo-lite.png" alt="Vivat Logo"
+                class="h-12 sm:h-14 md:h-[58px] lg:h-[68px] w-auto object-contain transition-all">
         </a>
 
         <!-- Derecha: Botón Volver al inicio -->
-        <a href="index.html" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-headline font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all no-underline border border-zinc-200 dark:border-zinc-700/80 shadow-xs">
+        <a href="index.html"
+            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-headline font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all no-underline border border-zinc-200 dark:border-zinc-700/80 shadow-xs">
             <span class="material-symbols-outlined text-lg">arrow_back</span>
             <span class="hidden sm:inline">Volver al inicio</span>
             <span class="sm:hidden">Volver</span>
@@ -498,26 +520,36 @@
         <section class="owner-auth-card" aria-labelledby="owner-auth-title">
             <div id="owner-auth-form-container">
                 <!-- Selector de Tipo de Usuario / Rol (Particular vs Corredor) -->
-                <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl mb-6 border border-zinc-200/80 dark:border-zinc-700/80">
-                    <button type="button" id="role-btn-inquilino" class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-xs cursor-pointer" data-role="inquilino" data-role-id="1">
+                <div
+                    class="grid grid-cols-2 gap-1.5 p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl mb-6 border border-zinc-200/80 dark:border-zinc-700/80">
+                    <button type="button" id="role-btn-inquilino"
+                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-xs cursor-pointer"
+                        data-role="inquilino" data-role-id="1">
                         <span class="material-symbols-outlined text-base sm:text-lg">person</span>
                         <span>Usuario Particular</span>
                     </button>
-                    <button type="button" id="role-btn-profesional" class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer" data-role="profesional" data-role-id="3">
+                    <button type="button" id="role-btn-profesional"
+                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                        data-role="profesional" data-role-id="3">
                         <span class="material-symbols-outlined text-base sm:text-lg">real_estate_agent</span>
                         <span>Soy Corredor</span>
                     </button>
                 </div>
 
                 <h1 id="owner-auth-title" class="owner-auth-title">Crea tu cuenta de inquilino</h1>
-                <p id="owner-auth-subtitle" class="owner-auth-subtitle">Alquila sin garantías tradicionales y gestiona tus contratos.</p>
+                <p id="owner-auth-subtitle" class="owner-auth-subtitle">Alquila sin garantías tradicionales y gestiona
+                    tus contratos.</p>
 
                 <button id="owner-google-btn" class="owner-auth-google" type="button">
                     <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        <path fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                     </svg>
                     <span>Continuar con Google</span>
                 </button>
@@ -527,12 +559,14 @@
                 <form id="owner-auth-form" class="owner-auth-form">
                     <div id="owner-name-field" class="owner-auth-field">
                         <label for="owner-name">Nombre completo</label>
-                        <input id="owner-name" name="name" type="text" autocomplete="name" placeholder="Tu nombre y apellido">
+                        <input id="owner-name" name="name" type="text" autocomplete="name"
+                            placeholder="Tu nombre y apellido">
                     </div>
 
                     <div id="owner-username-field" class="owner-auth-field" style="display: none;">
                         <label for="owner-username">Nombre de usuario</label>
-                        <input id="owner-username" name="username" type="text" autocomplete="username" placeholder="Ej: juanperez123">
+                        <input id="owner-username" name="username" type="text" autocomplete="username"
+                            placeholder="Ej: juanperez123">
                     </div>
 
                     <!-- Campos Profesionales exclusivos para Corredores (Ocultos por defecto) -->
@@ -544,7 +578,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="owner-auth-field">
                                 <label for="broker-matricula">N° Matr&iacute;cula profesional *</label>
-                                <input id="broker-matricula" name="matricula" type="text" placeholder="Ej: CUCICBA 4521">
+                                <input id="broker-matricula" name="matricula" type="text"
+                                    placeholder="Ej: CUCICBA 4521">
                             </div>
                             <div class="owner-auth-field">
                                 <label for="broker-phone">Tel&eacute;fono comercial *</label>
@@ -555,8 +590,8 @@
 
                     <div class="owner-auth-field">
                         <label for="owner-email">Correo electr&oacute;nico</label>
-                        <input id="owner-email" name="email" type="email" autocomplete="email" placeholder="tu@email.com"
-                            required>
+                        <input id="owner-email" name="email" type="email" autocomplete="email"
+                            placeholder="tu@email.com" required>
                     </div>
 
                     <div class="owner-auth-field">
@@ -564,7 +599,9 @@
                         <div class="relative flex items-center">
                             <input id="owner-password" name="password" type="password" autocomplete="new-password"
                                 placeholder="M&iacute;nimo 6 caracteres" minlength="6" required class="pr-12">
-                            <button type="button" id="toggle-password-btn" class="absolute right-3.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer flex items-center justify-center p-1" title="Mostrar/ocultar contraseña">
+                            <button type="button" id="toggle-password-btn"
+                                class="absolute right-3.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer flex items-center justify-center p-1"
+                                title="Mostrar/ocultar contraseña">
                                 <span class="material-symbols-outlined text-xl">visibility</span>
                             </button>
                         </div>
@@ -589,34 +626,60 @@
 
             <!-- Contenedor de Verificación de Código OTP (Oculto por defecto) -->
             <div id="owner-otp-container" style="display: none;" class="flex-col items-center text-center">
-                <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center mb-5 mx-auto">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center mb-5 mx-auto">
                     <span class="material-symbols-outlined text-3xl">mark_email_read</span>
                 </div>
-                <h2 class="owner-auth-title" style="font-size: clamp(26px, 5vw, 36px); margin-bottom: 10px;">Verific&aacute; tu correo</h2>
+                <h2 class="owner-auth-title" style="font-size: clamp(26px, 5vw, 36px); margin-bottom: 10px;">
+                    Verific&aacute; tu correo</h2>
                 <p class="owner-auth-subtitle" style="font-size: 16px; margin-bottom: 24px;">
-                    Enviamos un correo de confirmaci&oacute;n a <strong id="otp-user-email" class="text-zinc-900 dark:text-white font-bold"></strong>. Pod&eacute;s hacer clic en el enlace del mail o ingresar el c&oacute;digo de verificaci&oacute;n.<br><span class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1 inline-block">&#9888;&#65039; Revis&aacute; tu casilla de Spam / Correo no deseado</span>
+                    Enviamos un correo de confirmaci&oacute;n a <strong id="otp-user-email"
+                        class="text-zinc-900 dark:text-white font-bold"></strong>. Pod&eacute;s hacer clic en el enlace
+                    del mail o ingresar el c&oacute;digo de verificaci&oacute;n.<br><span
+                        class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1 inline-block">&#9888;&#65039;
+                        Revis&aacute; tu casilla de Spam / Correo no deseado</span>
                 </p>
 
                 <div class="flex justify-center gap-1.5 sm:gap-2 mb-6" id="otp-inputs-container">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="0" autocomplete="one-time-code">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="1">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="2">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="3">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="4">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="5">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="6">
-                    <input type="text" maxlength="1" inputmode="numeric" class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" data-index="7">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="0" autocomplete="one-time-code">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="1">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="2">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="3">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="4">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="5">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="6">
+                    <input type="text" maxlength="1" inputmode="numeric"
+                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        data-index="7">
                 </div>
 
                 <p id="otp-auth-message" class="owner-auth-message mb-4" role="status"></p>
 
-                <button id="otp-verify-submit" type="button" class="owner-auth-submit w-full mb-4">Verificar c&oacute;digo</button>
+                <button id="otp-verify-submit" type="button" class="owner-auth-submit w-full mb-4">Verificar
+                    c&oacute;digo</button>
 
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-zinc-500 dark:text-zinc-400 w-full mt-2">
-                    <button id="otp-resend-btn" type="button" class="hover:text-primary dark:hover:text-red-400 font-medium transition-colors cursor-pointer">
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-zinc-500 dark:text-zinc-400 w-full mt-2">
+                    <button id="otp-resend-btn" type="button"
+                        class="hover:text-primary dark:hover:text-red-400 font-medium transition-colors cursor-pointer">
                         &iquest;No recibiste el c&oacute;digo? <span class="underline font-bold">Reenviar</span>
                     </button>
-                    <button id="otp-back-btn" type="button" class="hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
+                    <button id="otp-back-btn" type="button"
+                        class="hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
                         Cambiar correo / Volver
                     </button>
                 </div>

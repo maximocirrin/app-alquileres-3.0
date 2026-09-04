@@ -1,5 +1,5 @@
 -- ====================================================================
--- MIGRACIÓN DE GESTIÓN INTEGRAL DE GARANTES Y PASAPORTE HÁBITAT
+-- MIGRACIÓN DE GESTIÓN INTEGRAL DE GARANTES Y PASAPORTE VIVAT
 -- Fecha: 2026-08-26
 -- ====================================================================
 
@@ -26,7 +26,7 @@ SELECT setval(pg_get_serial_sequence('"Estado_garante"', 'id_estado_garante'), c
 
 -- 2. EXTENDER TABLA Garante
 ALTER TABLE "Garante" 
-    ADD COLUMN IF NOT EXISTS id_pasaporte_garante bigint REFERENCES "Pasaporte_habitat"(id_pasaporte) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS id_pasaporte_garante bigint REFERENCES "Pasaporte_vivat"(id_pasaporte) ON DELETE SET NULL,
     ADD COLUMN IF NOT EXISTS id_perfil bigint REFERENCES "Perfil"(id_perfil) ON DELETE SET NULL,
     ADD COLUMN IF NOT EXISTS dni text,
     ADD COLUMN IF NOT EXISTS cuit text,
@@ -61,14 +61,14 @@ CREATE POLICY "Gestionar garantes propios" ON "Garante"
     TO authenticated
     USING (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
     )
     WITH CHECK (
         id_pasaporte IN (
-            SELECT p.id_pasaporte FROM "Pasaporte_habitat" p
+            SELECT p.id_pasaporte FROM "Pasaporte_vivat" p
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -96,7 +96,7 @@ CREATE POLICY "Gestionar documentos garante propios" ON "Documento_garante"
     USING (
         id_garante IN (
             SELECT g.id_garante FROM "Garante" g
-            JOIN "Pasaporte_habitat" p ON g.id_pasaporte = p.id_pasaporte
+            JOIN "Pasaporte_vivat" p ON g.id_pasaporte = p.id_pasaporte
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
@@ -104,7 +104,7 @@ CREATE POLICY "Gestionar documentos garante propios" ON "Documento_garante"
     WITH CHECK (
         id_garante IN (
             SELECT g.id_garante FROM "Garante" g
-            JOIN "Pasaporte_habitat" p ON g.id_pasaporte = p.id_pasaporte
+            JOIN "Pasaporte_vivat" p ON g.id_pasaporte = p.id_pasaporte
             JOIN "Perfil" perf ON p.id_perfil = perf.id_perfil
             WHERE perf.user_id = auth.uid()
         )
