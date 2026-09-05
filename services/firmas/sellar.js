@@ -184,12 +184,36 @@ export default async function sellarHandler(req, res) {
         console.warn('[sellarHandler] Error fetching inventario:', invErr);
       }
 
+      let dbGarantes = [];
+      if (contrato.id_perfil_inquilino) {
+        try {
+          const { data: pasaportes } = await supabase
+            .from('Pasaporte_habitat')
+            .select('id_pasaporte')
+            .eq('id_perfil', contrato.id_perfil_inquilino);
+          
+          const pasaporteIds = (pasaportes || []).map(p => p.id_pasaporte).filter(Boolean);
+          if (pasaporteIds.length > 0) {
+            const { data: gList } = await supabase
+              .from('Garante')
+              .select('*')
+              .in('id_pasaporte', pasaporteIds);
+            if (Array.isArray(gList) && gList.length > 0) {
+              dbGarantes = gList;
+            }
+          }
+        } catch (gErr) {
+          console.warn('[sellarHandler] Error consultando garantes en BD:', gErr);
+        }
+      }
+
       originalPdfBytes = await generateOriginalContractPdf({
         contractId,
         contrato,
         propiedad,
         inquilino: contrato.Inquilino || {},
         propietario: contrato.Propietario || {},
+        garantes: dbGarantes,
         inventario
       });
 

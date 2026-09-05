@@ -337,6 +337,24 @@
     function renderContractClausesList(contract, isPrint = false) {
         if (!contract) return '';
 
+        // Determinar garantes reales exclusivos de este contrato
+        const printGuarantors = (typeof ContractsManager !== 'undefined' && typeof ContractsManager.resolveContractGuarantors === 'function')
+            ? ContractsManager.resolveContractGuarantors(contract)
+            : ((Array.isArray(contract.guarantors) && contract.guarantors.length > 0) ? contract.guarantors : (contract.garantes || []));
+
+        let clauseGarantia = null;
+        if (Array.isArray(printGuarantors) && printGuarantors.length > 0) {
+            const garantesNombresYDocs = printGuarantors.map((g, idx) => {
+                const nom = g.name || g.nombre_completo || `Garante ${idx + 1}`;
+                const doc = g.dni ? `DNI ${g.dni}` : (g.cuil ? `CUIL ${g.cuil}` : '');
+                return `<b>${nom}</b>${doc ? ` (${doc})` : ''}`;
+            }).join(', ');
+            clauseGarantia = {
+                tag: 'FIANZA Y CODEUDA SOLIDARIA',
+                body: `Los FIADORES identificados en el comparendo (${garantesNombresYDocs}), se constituyen en <b>FIADORES Y PRINCIPALES PAGADORES</b> de todas y cada una de las obligaciones que por este contrato asume EL LOCATARIO, con expresa renuncia a los beneficios de excusión, división e interpelación previa (Arts. 1583, 1584 inc. d y 1589 del CCyCN). La presente fianza comprende no solo el canon locativo mensual, sino también expensas, impuestos, servicios, cláusulas penales, intereses y eventuales costas judiciales o extrajudiciales, extendiéndose su total e indivisible responsabilidad hasta el momento en que EL LOCADOR reciba la real y efectiva tenencia del inmueble desocupado mediante la formal entrega de llaves (Art. 1225 del CCyCN).`
+            };
+        }
+
         // 1. Si el contrato ya tiene activeClausesList (guardado desde el editor), renderizar directamente esas cláusulas oficiales
         let activeList = contract.activeClausesList || contract.clausulas_adicionales?.activeClausesList;
         if (typeof activeList === 'string') {
@@ -344,14 +362,22 @@
         }
 
         if (Array.isArray(activeList) && activeList.length > 0) {
+            let finalList = activeList.filter(c => c && c.tag !== 'FIANZA Y CODEUDA SOLIDARIA' && c.tag !== 'CODEUDORES' && c.tag !== 'OBLIGACIONES INDIVISIBLES Y SOLIDARIAS');
+            if (clauseGarantia) {
+                if (finalList.length > 0) {
+                    finalList.splice(finalList.length - 1, 0, clauseGarantia);
+                } else {
+                    finalList.push(clauseGarantia);
+                }
+            }
             if (isPrint) {
-                return activeList.map((c, idx) => `
+                return finalList.map((c, idx) => `
                     <div class="clause">
                         <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
                     </div>
                 `).join('');
             }
-            return activeList.map((c, idx) => `
+            return finalList.map((c, idx) => `
                 <p class="text-justify leading-relaxed">
                     <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
                 </p>
@@ -361,16 +387,24 @@
         // 2. Si no tiene activeClausesList, intentar generarlas mediante ContractEditorModal.buildActiveClauses
         if (window.ContractEditorModal && typeof window.ContractEditorModal.buildActiveClauses === 'function') {
             const propAddr = contract.propertyAddress || contract.title || 'Inmueble Locado';
-            const generated = window.ContractEditorModal.buildActiveClauses(propAddr, contract);
+            const generated = window.ContractEditorModal.buildActiveClauses(propAddr, { ...contract, guarantors: printGuarantors });
             if (Array.isArray(generated) && generated.length > 0) {
+                let finalList = generated.filter(c => c && c.tag !== 'FIANZA Y CODEUDA SOLIDARIA' && c.tag !== 'CODEUDORES' && c.tag !== 'OBLIGACIONES INDIVISIBLES Y SOLIDARIAS');
+                if (clauseGarantia) {
+                    if (finalList.length > 0) {
+                        finalList.splice(finalList.length - 1, 0, clauseGarantia);
+                    } else {
+                        finalList.push(clauseGarantia);
+                    }
+                }
                 if (isPrint) {
-                    return generated.map((c, idx) => `
+                    return finalList.map((c, idx) => `
                         <div class="clause">
                             <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
                         </div>
                     `).join('');
                 }
-                return generated.map((c, idx) => `
+                return finalList.map((c, idx) => `
                     <p class="text-justify leading-relaxed">
                         <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
                     </p>
@@ -490,6 +524,10 @@
                     });
                 }
             });
+        }
+
+        if (clauseGarantia) {
+            clauses.push(clauseGarantia);
         }
 
         // Cláusula final: Firma Digital y Biometría Didit
@@ -922,6 +960,10 @@
             return contracts;
         },
 
+        renderContractClausesList: function (contract, isPrint = false) {
+            return renderContractClausesList(contract, isPrint);
+        },
+
         getContractById: function (id) {
             if (!id) return contracts[0] || null;
             const strId = String(id).trim();
@@ -985,46 +1027,6 @@
                 list = [...contract.garantes];
             }
 
-            // Fallback 1: GarantesManager state en tiempo real
-            if (list.length === 0) {
-                try {
-                    if (window.GarantesManager && typeof window.GarantesManager.getState === 'function') {
-                        const gm = window.GarantesManager.getState();
-                        if (Array.isArray(gm) && gm.length > 0) list = [...gm];
-                    }
-                } catch (e) {}
-            }
-
-            // Fallback 2: Local storage de garantes
-            if (list.length === 0) {
-                try {
-                    const raw = localStorage.getItem('vivat_garantes_state_v2');
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
-                    }
-                } catch (e) {}
-            }
-
-            // Fallback 3: Postulaciones / Aplicaciones asociadas
-            if (list.length === 0) {
-                try {
-                    const appId = contract.applicationId || contract.propertyId || contract.id;
-                    const rawApps = localStorage.getItem('vivat_tenant_applications');
-                    if (rawApps) {
-                        const apps = JSON.parse(rawApps);
-                        const app = apps.find(a => a && (
-                            String(a.id) === String(appId) ||
-                            String(a.contract_id) === String(appId) ||
-                            String(a.property_id) === String(appId)
-                        ));
-                        if (app && Array.isArray(app.guarantors) && app.guarantors.length > 0) {
-                            list = app.guarantors;
-                        }
-                    }
-                } catch (e) {}
-            }
-
             // Filtrar cualquier garante mock remanente
             list = list.filter(g => g && g.id !== 'gar_101' && g.id !== 'gar_102' && g.id !== 'gar_carlos_rossi_101' && g.id !== 'gar_mariana_gomez_102');
 
@@ -1041,16 +1043,18 @@
                         dni = `${cleanDni.slice(0, 2)}.${cleanDni.slice(2, 5)}.${cleanDni.slice(5)}`;
                     }
                 }
-                if (!dni) dni = (idx === 0 ? '18.492.014' : '32.948.192');
 
                 let cuil = g.cuil || g.cuit || '';
                 if (!cuil && dni) {
                     const cleanDni = dni.replace(/\D/g, '');
-                    cuil = `20-${cleanDni}-4`;
+                    if (cleanDni.length === 8) {
+                        cuil = (typeof window.calcularCUIL === 'function') 
+                            ? window.calcularCUIL(cleanDni, 'M')
+                            : `20-${cleanDni}-7`;
+                    }
                 }
-                if (!cuil) cuil = (idx === 0 ? '20-18492014-4' : '27-32948192-3');
 
-                const email = g.email || g.mail || 'garante@vivat.com.ar';
+                const email = g.email || g.mail || '';
                 const phone = g.phone || g.telefono || '';
                 const relation = g.relation || g.relacion_inquilino || '';
 
@@ -1059,7 +1063,7 @@
                     if (g.id_tipo_garantia === 1) tipo = 'Garantía Propietaria';
                     else if (g.id_tipo_garantia === 2) tipo = 'Seguro de Caución';
                     else if (g.id_tipo_garantia === 3) tipo = 'Recibo de Sueldo';
-                    else tipo = (idx === 0 ? 'Recibo de Sueldo' : 'Garantía Propietaria');
+                    else tipo = 'Garantía Personal';
                 }
 
                 const roleLabel = g.roleLabel || (relation ? `Garante (${relation})` : `Garante (Codeudor Solidario)`);
@@ -1079,14 +1083,18 @@
                 } else if (Array.isArray(contract.signatures)) {
                     hasSigned = contract.signatures.some(s => 
                         (s.role === 'GUARANTOR' || s.rol_firmante === 'garante' || s.rol_firmante === 'guarantor') &&
-                        (s.email?.toLowerCase() === email.toLowerCase() || s.name === name || s.hasSigned)
+                        ((email && s.email?.toLowerCase() === email.toLowerCase()) || s.name === name || s.hasSigned)
                     );
-                } else {
-                    hasSigned = Boolean(g.id_estado_garante === 6 || (contract.status === 'SIGNED_AND_SEALED' && idx === 0));
+                } else if (Array.isArray(contract.Firma_contrato)) {
+                    hasSigned = contract.Firma_contrato.some(f => 
+                        ['garante', 'guarantor', 'GARANTE', 'GUARANTOR'].includes(String(f.rol_firmante || '').toLowerCase()) &&
+                        (String(f.id_perfil_firmante) === String(g.id || g.id_garante) || (email && f.Perfil?.mail === email)) &&
+                        (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
+                    );
                 }
 
                 return {
-                    id: g.id || g.id_garante || `gar_${idx}`,
+                    id: g.id || g.id_garante || `gar_${idx + 1}`,
                     name,
                     dni,
                     cuil,
@@ -1940,7 +1948,7 @@
                                 </div>
 
                                 <p>
-                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
+                                    En la Ciudad de Mendoza, a los días acordados, entre <b>${contract.owner.name}</b> (DNI ${contract.owner.dni}, CUIL ${contract.owner.cuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${contract.tenant.name}</b> (DNI ${contract.tenant.dni}, CUIL ${contract.tenant.cuil}), en adelante denominado <b>"EL LOCATARIO"</b>${(contractGuarantors && contractGuarantors.length > 0) ? `; y en calidad de FIADORES Y CODEUDORES SOLIDARIOS: ${contractGuarantors.map(g => `<b>${g.name}</b> (DNI ${g.dni}${g.cuil ? `, CUIL ${g.cuil}` : ''}${g.email ? `, Email: ${g.email}` : ''})`).join('; ')}` : ''}, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                                 </p>
 
                                 ${renderContractClausesList(contract)}
@@ -4427,15 +4435,15 @@
             }
 
             const formatMoney = (n) => '$ ' + Number(n || 0).toLocaleString('es-AR');
-            const ownerName = contract.owner?.name || contract.owner_name || 'Locador Propietario';
-            const ownerDni = contract.owner?.dni || contract.owner_dni || '28.450.912';
-            const ownerCuil = contract.owner?.cuil || contract.owner_cuil || '20-28450912-4';
-            const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@vivat.com.ar';
+            const ownerName = contract.owner?.name || contract.owner_name || 'Locador (Propietario)';
+            const ownerDni = contract.owner?.dni || contract.owner_dni || '';
+            const ownerCuil = contract.owner?.cuil || contract.owner_cuil || '';
+            const ownerEmail = contract.owner?.email || contract.owner_email || '';
 
-            const tenantName = contract.tenant?.name || contract.tenant_name || 'Inquilino Verificado';
-            const tenantDni = contract.tenant?.dni || contract.tenant_dni || '36.812.445';
-            const tenantCuil = contract.tenant?.cuil || contract.tenant_cuil || '20-36812445-9';
-            const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@vivat.com.ar';
+            const tenantName = contract.tenant?.name || contract.tenant_name || 'Locatario (Inquilino)';
+            const tenantDni = contract.tenant?.dni || contract.tenant_dni || '';
+            const tenantCuil = contract.tenant?.cuil || contract.tenant_cuil || '';
+            const tenantEmail = contract.tenant?.email || contract.tenant_email || '';
 
             const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';
             const propAddress = contract.propertyAddress || contract.property_address || contract.property_title || 'Mendoza, Argentina';
@@ -4889,7 +4897,7 @@
                         <div class="audit-card">
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locatario (Inquilino)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${tenantName}</div>
-                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.tenant?.dni || '36.812.445'} • <b>CUIL:</b> ${contract.tenant?.cuil || '20-36812445-9'}</div>
+                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.tenant?.dni || ''}${contract.tenant?.cuil ? ` • <b>CUIL:</b> ${contract.tenant.cuil}` : ''}</div>
                             <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${tIp} • ${tUa.substring(0, 38)}...</div>
                             <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
                         </div>
@@ -4897,7 +4905,7 @@
                         <div class="audit-card">
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locador (Propietario)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${ownerName}</div>
-                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.owner?.dni || '28.450.912'} • <b>CUIL:</b> ${contract.owner?.cuil || '20-28450912-4'}</div>
+                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.owner?.dni || ''}${contract.owner?.cuil ? ` • <b>CUIL:</b> ${contract.owner.cuil}` : ''}</div>
                             <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${oIp} • ${oUa.substring(0, 38)}...</div>
                             <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
                         </div>

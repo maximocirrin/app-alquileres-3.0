@@ -1746,19 +1746,23 @@
             // 26. DEPÓSITO EN MONEDA
             clauses.push({ tag: 'DEPÓSITO EN MONEDA', body: `La LOCATARIA entrega a la LOCADORA en concepto de depósito la suma ${depositoTxt}, la cual le será reintegrada al finalizar la locación previa verificación del estado del inmueble.` });
 
-            // 27. CODEUDORES
-            let codeudoresTxt = '';
-            if (cod1Dni && cod1Nom) {
-                codeudoresTxt += `1) SR/A. <strong>${h(cod1Nom, 'editor-codeudor1-nombre')}</strong>, DNI <strong>${h(cod1Dni, 'editor-codeudor1-dni')}</strong>, con domicilio en <strong>${h(cod1Dom, 'editor-codeudor1-domicilio')}</strong>. `;
-            }
-            if (cod2Dni && cod2Nom) {
-                codeudoresTxt += `2) SR/A. <strong>${h(cod2Nom, 'editor-codeudor2-nombre')}</strong>, DNI <strong>${h(cod2Dni, 'editor-codeudor2-dni')}</strong>, con domicilio en <strong>${h(cod2Dom, 'editor-codeudor2-domicilio')}</strong>. `;
-            }
-            
-            if (codeudoresTxt) {
-                clauses.push({ tag: 'CODEUDORES', body: `Las siguientes personas: ${codeudoresTxt}firman de conformidad este contrato y se constituyen en CODEUDORES en forma solidaria con la LOCATARIA por el cumplimiento de todas y cada una de las obligaciones.` });
-                // 28. OBLIGACIONES INDIVISIBLES Y SOLIDARIAS
-                clauses.push({ tag: 'OBLIGACIONES INDIVISIBLES Y SOLIDARIAS', body: `Las obligaciones que asumen la LOCATARIA y los CODEUDORES por el presente contrato, son indivisibles y solidarias.` });
+            // 27. FIANZA Y CODEUDA SOLIDARIA (Condicional a existencia de garantes en el contrato)
+            const guarantorsList = (Array.isArray(fallbackTerms?.guarantors) && fallbackTerms.guarantors.length > 0)
+                ? fallbackTerms.guarantors
+                : ((Array.isArray(fallbackTerms?.garantes) && fallbackTerms.garantes.length > 0)
+                    ? fallbackTerms.garantes
+                    : (this._currentOptions?.contract?.guarantors || []));
+
+            if (guarantorsList.length > 0) {
+                const garantesTxt = guarantorsList.map((g, idx) => {
+                    const nom = g.name || g.nombre_completo || `Garante ${idx + 1}`;
+                    const doc = g.dni ? `DNI ${g.dni}` : ((g.cuit || g.cuil) ? `CUIT/CUIL ${g.cuit || g.cuil}` : '');
+                    return `<strong>${nom}</strong>${doc ? ` (${doc})` : ''}`;
+                }).join(', ');
+                clauses.push({
+                    tag: 'FIANZA Y CODEUDA SOLIDARIA',
+                    body: `Los FIADORES identificados en el comparendo (${garantesTxt}), se constituyen en <strong>FIADORES Y PRINCIPALES PAGADORES</strong> de todas y cada una de las obligaciones que por este contrato asume la LOCATARIA, con expresa renuncia a los beneficios de excusión, división e interpelación previa (Arts. 1583, 1584 inc. d y 1589 del CCyCN). La presente fianza comprende no solo el canon locativo mensual, sino también expensas, impuestos, servicios, cláusulas penales, intereses y eventuales costas judiciales o extrajudiciales, extendiéndose su total e indivisible responsabilidad hasta el momento en que la LOCADORA reciba la real y efectiva tenencia del inmueble desocupado mediante la formal entrega de llaves (Art. 1225 del CCyCN).`
+                });
             }
 
             // 29. MORA DE PLENO DERECHO

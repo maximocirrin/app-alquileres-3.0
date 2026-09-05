@@ -221,8 +221,8 @@ export default async function finalizarHandler(req, res) {
             const g = garantesContrato[idx];
             const gId = g.id_garante || g.id || (idx + 1);
             const gNombre = g.nombre_completo || g.name || `Garante ${idx + 1}`;
-            const gDni = g.dni || '18.492.014';
-            const gMail = g.email || g.mail || 'garante@vivat.com.ar';
+            const gDni = g.dni || '';
+            const gMail = g.email || g.mail || '';
             const gRol = g.roleLabel || (g.tipo_garantia ? `Garante (${g.tipo_garantia})` : `Garante ${idx + 1} (Codeudor Solidario)`);
 
             const matchingFirma = firmasGarantes.find(fg => 
