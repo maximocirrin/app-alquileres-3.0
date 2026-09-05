@@ -52,6 +52,56 @@
             } catch (e) { }
         })();
     </script>
+    <style id="owner-auth-guard-style">
+        html.owner-auth-checking body {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    </style>
+    <script>
+        document.documentElement.classList.add('owner-auth-checking');
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script>
+        (function () {
+            // Verificación inmediata de token de sesión en localStorage
+            var hasSessionToken = false;
+            try {
+                for (var i = 0; i < localStorage.length; i++) {
+                    var k = localStorage.key(i);
+                    if (k && (k.startsWith('sb-') && k.endsWith('-auth-token'))) {
+                        var val = localStorage.getItem(k);
+                        if (val && val.includes('access_token')) {
+                            hasSessionToken = true;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) { }
+
+            if (!hasSessionToken) {
+                window.location.replace('login.html?redirect=admin&role=propietario');
+                return;
+            }
+
+            if (window.supabaseClient && window.supabaseClient.auth) {
+                window.supabaseClient.auth.getSession().then(function (res) {
+                    var session = res && res.data ? res.data.session : null;
+                    if (!session || !session.user) {
+                        window.location.replace('login.html?redirect=admin&role=propietario');
+                    } else {
+                        document.documentElement.classList.remove('owner-auth-checking');
+                        var guard = document.getElementById('owner-auth-guard-style');
+                        if (guard) guard.remove();
+                    }
+                }).catch(function () {
+                    window.location.replace('login.html?redirect=admin&role=propietario');
+                });
+            }
+        })();
+    </script>
     <style>
         /* Prevención de parpadeo de pestaña Avisos si la URL apunta a otra pestaña inicial */
         html[data-initial-tab] #panel-content-avisos {
@@ -803,7 +853,40 @@
 
     <!-- Interactive Script Handlers -->
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function checkOwnerAuthentication() {
+            try {
+                if (!window.supabaseClient) {
+                    window.location.replace('login.html?redirect=admin&role=propietario');
+                    return false;
+                }
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                let user = session?.user;
+                if (!user && window.DataManager && typeof window.DataManager.getCurrentUser === 'function') {
+                    user = await window.DataManager.getCurrentUser();
+                }
+                if (!user) {
+                    window.location.replace('login.html?redirect=admin&role=propietario');
+                    return false;
+                }
+                return true;
+            } catch (err) {
+                console.warn("Error al validar sesión en panel de propietario:", err);
+                window.location.replace('login.html?redirect=admin&role=propietario');
+                return false;
+            }
+        }
+
+        async function initOwnerDashboard() {
+            const isAuthed = await checkOwnerAuthentication();
+            if (!isAuthed) {
+                return; // Detener ejecución. No procesar datos ni renderizar tabs.
+            }
+
+            // Usuario autenticado: desbloquear visualización
+            document.documentElement.classList.remove('owner-auth-checking');
+            const guardStyle = document.getElementById('owner-auth-guard-style');
+            if (guardStyle) guardStyle.remove();
+
             if (window.App) {
                 App.setupTheme();
             }
@@ -1025,7 +1108,13 @@
                     isScrollTicking = true;
                 }
             }, { passive: true });
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initOwnerDashboard);
+        } else {
+            initOwnerDashboard();
+        }
 
         let ownerAvisosState = [];
         let ownerActiveStatusFilter = 'all';
@@ -1843,7 +1932,7 @@
 
             try {
                 const [apps, props] = await Promise.all([
-                    window.DataManager.getApplications(),
+                    window.DataManager.getApplications(null, true),
                     window.DataManager.getUserMarketplaceProperties ? window.DataManager.getUserMarketplaceProperties() : []
                 ]);
 
@@ -2997,7 +3086,7 @@
             let visitsList = ownerEventsMock;
             if (window.DataManager) {
                 try {
-                    const dbEvents = await window.DataManager.getEvents();
+                    const dbEvents = await window.DataManager.getEvents(null, true);
                     if (dbEvents && dbEvents.length > 0) {
                         visitsList = dbEvents;
                         ownerEventsMock = dbEvents; // Update mock so grid render can use it too
@@ -3989,7 +4078,7 @@
             if (!list || !window.DataManager) return;
 
             try {
-                const tickets = await window.DataManager.getMaintenanceTickets();
+                const tickets = await window.DataManager.getMaintenanceTickets(null, true);
                 if (!tickets || tickets.length === 0) {
                     list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay tickets de mantenimiento recibidos.</div>';
                     return;
