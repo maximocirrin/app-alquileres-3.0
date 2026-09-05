@@ -45,10 +45,14 @@ export interface DeviceMetadata {
 }
 
 export interface ContractSigner {
-  role: 'TENANT' | 'OWNER';
+  role: 'TENANT' | 'OWNER' | 'GUARANTOR';
   name: string;
   email: string;
   cuil: string;
+  dni?: string;
+  phone?: string;
+  roleLabel?: string;
+  isKycVerified?: boolean;
   hasSigned: boolean;
   signedAt?: string;
   diditSessionId?: string;
@@ -98,6 +102,8 @@ export interface Contract {
   // Parties
   tenant: ContractSigner;
   owner: ContractSigner;
+  guarantors?: ContractSigner[];
+  garantes?: ContractSigner[];
   broker?: {
     name: string;
     license: string;

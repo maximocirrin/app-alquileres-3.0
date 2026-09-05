@@ -179,6 +179,28 @@ export const ContractViewerModal: React.FC<ContractViewerModalProps> = ({
                 </div>
               </div>
 
+              {/* Garantes Intervinientes */}
+              {contract.guarantors && contract.guarantors.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {contract.guarantors.map((g, idx) => (
+                    <div key={idx} className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold uppercase text-zinc-400">
+                          {g.roleLabel || `Garante ${idx + 1} (Codeudor)`}
+                        </span>
+                        {g.hasSigned ? (
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">✓ Firmado</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">⏳ Pendiente</span>
+                        )}
+                      </div>
+                      <h4 className="font-bold text-zinc-900 dark:text-white">{g.name}</h4>
+                      <p className="text-[11px] text-zinc-500">CUIL: {g.cuil}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Parámetros Legales */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800">
