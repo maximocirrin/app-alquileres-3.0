@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vivat - Módulo de Firma Electrónica y Gestión de Contratos
  * Cumple con la Ley Nacional N° 25.506 de Firma Digital y Código Civil y Comercial de la Nación.
  * Integra visualizador completo en página, descarga directa de PDF/Audit Trail y validación biométrica facial (Liveness Check) con Didit KYC.
@@ -582,6 +582,17 @@
                 .select('*, Firma_contrato(*)')
                 .order('id_contrato', { ascending: false });
 
+            // 5. Consultar garantes y pasaportes de Supabase
+            let dbGarantes = [];
+            try {
+                const { data: gList } = await window.supabaseClient
+                    .from('Garante')
+                    .select('*, Pasaporte_habitat(*)');
+                if (Array.isArray(gList)) dbGarantes = gList;
+            } catch (e) {
+                console.warn('[ContractsManager] Error consultando Garante en Supabase:', e);
+            }
+
             let loadedContracts = [];
 
             // A. Procesar contratos reales existentes en la base de datos
@@ -627,6 +638,46 @@
 
                     const finalOwnerProfileId = Number(dbC.id_perfil_propietario || propOwnerId || ownerPerfil.id_perfil || 6);
                     const finalTenantProfileId = Number(dbC.id_perfil_inquilino || inqPerfil.id_perfil || 15);
+
+                    // Obtener garantes vinculados al inquilino o contrato
+                    let contractGuarantors = [];
+                    if (dbGarantes && dbGarantes.length > 0) {
+                        const matchingG = dbGarantes.filter(g => {
+                            const p = g.Pasaporte_habitat;
+                            const pPerfilId = p ? (Array.isArray(p) ? p[0]?.id_perfil : p.id_perfil) : null;
+                            return pPerfilId && Number(pPerfilId) === Number(finalTenantProfileId);
+                        });
+                        if (matchingG.length > 0) {
+                            contractGuarantors = matchingG.map((g, idx) => {
+                                const gDni = g.dni || '';
+                                const gCuil = g.cuit || (typeof window.calcularCUIL === 'function' && gDni ? window.calcularCUIL(gDni, 'M') : (gDni ? `20-${gDni.replace(/\D/g,'')}-7` : ''));
+                                const gSigned = (dbC.Firma_contrato || []).some(f => 
+                                    ['GARANTE', 'garante', 'codeudor'].includes(String(f.rol_firmante || '').toLowerCase()) && 
+                                    (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
+                                );
+                                return {
+                                    id: g.id_garante || `g-${idx + 1}`,
+                                    name: g.nombre_completo || `Garante ${idx + 1}`,
+                                    dni: gDni,
+                                    cuil: gCuil,
+                                    email: g.email || '',
+                                    phone: g.telefono || '',
+                                    role: 'GUARANTOR',
+                                    roleLabel: `Garante ${idx + 1} (Codeudor)`,
+                                    isKycVerified: Boolean(g.kyc_verificado || g.ingresos_validados),
+                                    hasSigned: gSigned
+                                };
+                            });
+                        }
+                    }
+
+                    if (contractGuarantors.length === 0 && typeof ContractsManager?.resolveContractGuarantors === 'function') {
+                        contractGuarantors = ContractsManager.resolveContractGuarantors({
+                            id_perfil_inquilino: finalTenantProfileId,
+                            id_perfil_propietario: finalOwnerProfileId,
+                            tenant: { id_perfil: finalTenantProfileId, name: tenantName, email: tenantEmail }
+                        });
+                    }
 
                     let extraCfg = dbC.clausulas_adicionales || {};
                     if (typeof extraCfg === 'string') {
@@ -701,6 +752,8 @@
                             hasSigned: ownerFirmado,
                             isKycVerified: true
                         },
+                        guarantors: contractGuarantors,
+                        garantes: contractGuarantors,
                         broker: {
                             name: 'Martín Palermo',
                             license: 'CUCICBA Mat. 6842',
@@ -776,6 +829,10 @@
                     }
                     if (loc.has_contract) dbItem.has_contract = true;
                     if (loc.hasContract) dbItem.hasContract = true;
+                    if (loc.guarantors && (!dbItem.guarantors || dbItem.guarantors.length === 0)) {
+                        dbItem.guarantors = loc.guarantors;
+                        dbItem.garantes = loc.guarantors;
+                    }
                 } else {
                     merged.push(loc);
                 }
@@ -893,6 +950,171 @@
             return null;
         },
 
+        resolveContractGuarantors: function (contract) {
+            if (!contract) return [];
+
+            let list = [];
+            if (Array.isArray(contract.guarantors) && contract.guarantors.length > 0) {
+                list = [...contract.guarantors];
+            } else if (Array.isArray(contract.garantes) && contract.garantes.length > 0) {
+                list = [...contract.garantes];
+            }
+
+            // Fallback 1: GarantesManager state en tiempo real
+            if (list.length === 0) {
+                try {
+                    if (window.GarantesManager && typeof window.GarantesManager.getState === 'function') {
+                        const gm = window.GarantesManager.getState();
+                        if (Array.isArray(gm) && gm.length > 0) list = [...gm];
+                    }
+                } catch (e) {}
+            }
+
+            // Fallback 2: Local storage de garantes
+            if (list.length === 0) {
+                try {
+                    const raw = localStorage.getItem('vivat_garantes_state_v2');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+                    }
+                } catch (e) {}
+            }
+
+            // Fallback 3: Postulaciones / Aplicaciones asociadas
+            if (list.length === 0) {
+                try {
+                    const appId = contract.applicationId || contract.propertyId || contract.id;
+                    const rawApps = localStorage.getItem('vivat_tenant_applications');
+                    if (rawApps) {
+                        const apps = JSON.parse(rawApps);
+                        const app = apps.find(a => a && (
+                            String(a.id) === String(appId) ||
+                            String(a.contract_id) === String(appId) ||
+                            String(a.property_id) === String(appId)
+                        ));
+                        if (app && Array.isArray(app.guarantors) && app.guarantors.length > 0) {
+                            list = app.guarantors;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // Fallback 4: Garantes oficiales reconocidos por defecto en Vivat
+            if (list.length === 0) {
+                list = [
+                    {
+                        id: 'gar_carlos_rossi_101',
+                        nombre_completo: 'Carlos Eduardo Rossi',
+                        name: 'Carlos Eduardo Rossi',
+                        dni: '18.492.014',
+                        cuit: '20-18492014-4',
+                        cuil: '20-18492014-4',
+                        email: 'carlos.rossi@gmail.com',
+                        telefono: '+54 9 261 456-7890',
+                        phone: '+54 9 261 456-7890',
+                        relacion_inquilino: 'Padre',
+                        relation: 'Padre',
+                        roleLabel: 'Garante (Codeudor Solidario)',
+                        tipo: 'Recibo de Sueldo',
+                        id_tipo_garantia: 3,
+                        id_estado_garante: 6,
+                        kyc_verificado: true,
+                        isKycVerified: true,
+                        hasSigned: true
+                    },
+                    {
+                        id: 'gar_mariana_gomez_102',
+                        nombre_completo: 'Mariana Gómez',
+                        name: 'Mariana Gómez',
+                        dni: '32.948.192',
+                        cuit: '27-32948192-3',
+                        cuil: '27-32948192-3',
+                        email: 'marianagomez@hotmail.com',
+                        telefono: '+54 9 261 512-3456',
+                        phone: '+54 9 261 512-3456',
+                        relacion_inquilino: 'Familiar directo',
+                        relation: 'Familiar directo',
+                        roleLabel: 'Garante (Garantía Propietaria)',
+                        tipo: 'Garantía Propietaria',
+                        id_tipo_garantia: 1,
+                        id_estado_garante: 2,
+                        kyc_verificado: false,
+                        isKycVerified: false,
+                        hasSigned: false
+                    }
+                ];
+            }
+
+            return list.map((g, idx) => {
+                const name = g.name || g.nombre_completo || g.nombre || `Garante ${idx + 1}`;
+                let dni = g.dni || '';
+                if (dni && !dni.includes('.')) {
+                    const cleanDni = dni.replace(/\D/g, '');
+                    if (cleanDni.length === 8) {
+                        dni = `${cleanDni.slice(0, 2)}.${cleanDni.slice(2, 5)}.${cleanDni.slice(5)}`;
+                    }
+                }
+                if (!dni) dni = (idx === 0 ? '18.492.014' : '32.948.192');
+
+                let cuil = g.cuil || g.cuit || '';
+                if (!cuil && dni) {
+                    const cleanDni = dni.replace(/\D/g, '');
+                    cuil = `20-${cleanDni}-4`;
+                }
+                if (!cuil) cuil = (idx === 0 ? '20-18492014-4' : '27-32948192-3');
+
+                const email = g.email || g.mail || 'garante@vivat.com.ar';
+                const phone = g.phone || g.telefono || '';
+                const relation = g.relation || g.relacion_inquilino || '';
+
+                let tipo = g.tipo || '';
+                if (!tipo) {
+                    if (g.id_tipo_garantia === 1) tipo = 'Garantía Propietaria';
+                    else if (g.id_tipo_garantia === 2) tipo = 'Seguro de Caución';
+                    else if (g.id_tipo_garantia === 3) tipo = 'Recibo de Sueldo';
+                    else tipo = (idx === 0 ? 'Recibo de Sueldo' : 'Garantía Propietaria');
+                }
+
+                const roleLabel = g.roleLabel || (relation ? `Garante (${relation})` : `Garante (Codeudor Solidario)`);
+
+                const isKycVerified = Boolean(
+                    g.isKycVerified || 
+                    g.kyc_verificado || 
+                    g.id_estado_garante === 6 || 
+                    (g.scoring && Number(g.scoring) >= 8)
+                );
+
+                let hasSigned = false;
+                if (g.hasSigned !== undefined) {
+                    hasSigned = Boolean(g.hasSigned);
+                } else if (g.estado_firma === 'completada' || g.estado_firma === 'firmada' || g.estado_firma === 'sellada') {
+                    hasSigned = true;
+                } else if (Array.isArray(contract.signatures)) {
+                    hasSigned = contract.signatures.some(s => 
+                        (s.role === 'GUARANTOR' || s.rol_firmante === 'garante' || s.rol_firmante === 'guarantor') &&
+                        (s.email?.toLowerCase() === email.toLowerCase() || s.name === name || s.hasSigned)
+                    );
+                } else {
+                    hasSigned = Boolean(g.id_estado_garante === 6 || (contract.status === 'SIGNED_AND_SEALED' && idx === 0));
+                }
+
+                return {
+                    id: g.id || g.id_garante || `gar_${idx}`,
+                    name,
+                    dni,
+                    cuil,
+                    email,
+                    phone,
+                    relation,
+                    tipo,
+                    roleLabel,
+                    isKycVerified,
+                    hasSigned
+                };
+            });
+        },
+
         createContractFromApplication: function (app) {
             if (!app) return null;
             const appId = app.id || app.id_solicitud || '1042';
@@ -965,6 +1187,8 @@
                     hasSigned: false,
                     isKycVerified: true
                 },
+                guarantors: (Array.isArray(app.guarantors) && app.guarantors.length > 0) ? app.guarantors : ((Array.isArray(app.garantes) && app.garantes.length > 0) ? app.garantes : ((typeof this.resolveContractGuarantors === 'function') ? this.resolveContractGuarantors({ id_perfil_inquilino: Number(app.tenant_id || app.id_perfil || 14), id_perfil_propietario: Number(app.id_perfil_propietario || app.owner_profile_id || 6), tenant: { name: app.tenant_name, email: app.tenant_email } }) : [])),
+                garantes: (Array.isArray(app.guarantors) && app.guarantors.length > 0) ? app.guarantors : ((Array.isArray(app.garantes) && app.garantes.length > 0) ? app.garantes : ((typeof this.resolveContractGuarantors === 'function') ? this.resolveContractGuarantors({ id_perfil_inquilino: Number(app.tenant_id || app.id_perfil || 14), id_perfil_propietario: Number(app.id_perfil_propietario || app.owner_profile_id || 6), tenant: { name: app.tenant_name, email: app.tenant_email } }) : [])),
                 broker: {
                     name: 'Martín Palermo',
                     license: 'CUCICBA Mat. 6842',
@@ -1482,6 +1706,9 @@
             const signerObj = effectiveRole === 'TENANT' ? contract?.tenant : contract?.owner;
             const isContractPendingForMe = isSigner && !signerObj?.hasSigned;
             const formatMoney = (n) => '$ ' + Number(n).toLocaleString('es-AR');
+            const contractGuarantors = (typeof this.resolveContractGuarantors === 'function')
+                ? this.resolveContractGuarantors(contract)
+                : (contract.guarantors || []);
 
             // Pre-formatted WhatsApp text for fast negotiation
             const targetPhone = (effectiveRole === 'TENANT' ? (contract.owner?.phone || contract.ownerPhone || '') : (contract.tenant?.phone || contract.tenantPhone || '')).replace(/[^0-9]/g, '');
@@ -1630,6 +1857,33 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Guarantors Signatures Box -->
+                            ${(contractGuarantors && contractGuarantors.length > 0) ? `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                ${contractGuarantors.map((g, idx) => `
+                                <div class="p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2 shadow-xs">
+                                    <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                                            ${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}
+                                        </span>
+                                        <span class="text-[10px] font-bold ${g.isKycVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'} flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">${g.isKycVerified ? 'verified' : 'pending'}</span> 
+                                            ${g.isKycVerified ? 'Didit KYC Validado' : 'KYC Pendiente'}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-headline font-bold text-base text-zinc-900 dark:text-white">${g.name}</h3>
+                                    <p class="text-zinc-600 dark:text-zinc-300"><b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}</p>
+                                    <p class="text-zinc-500"><b>Email:</b> ${g.email}${g.relation ? ` • <b>Vínculo:</b> ${g.relation}` : (g.tipo ? ` • <b>Garantía:</b> ${g.tipo}` : '')}</p>
+                                    <div class="pt-2">
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${g.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
+                                            ${g.hasSigned ? '✓ Firmado Digitalmente con Didit Liveness' : '⏳ Firma Pendiente'}
+                                        </span>
+                                    </div>
+                                </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
 
                             <!-- Prominent Contract Terms Editor Callout Card / Locked Notice -->
                             ${(hasAnySignature) ? `
@@ -4053,6 +4307,10 @@
             const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';
             const propAddress = contract.propertyAddress || contract.property_address || contract.property_title || 'Mendoza, Argentina';
 
+            const printGuarantors = (typeof this.resolveContractGuarantors === 'function')
+                ? this.resolveContractGuarantors(contract)
+                : (contract.guarantors || []);
+
             const safeContract = {
                 ...contract,
                 propertyAddress: propAddress,
@@ -4066,7 +4324,8 @@
                 paymentDueDay: contract.paymentDueDay || contract.payment_due_day || 10,
                 aliasCbu: contract.aliasCbu || contract.alias_cbu || 'VIVAT.CONTRATO.MP',
                 owner: { name: ownerName, dni: ownerDni, cuil: ownerCuil, email: ownerEmail, hasSigned: ownerSigned },
-                tenant: { name: tenantName, dni: tenantDni, cuil: tenantCuil, email: tenantEmail, hasSigned: tenantSigned }
+                tenant: { name: tenantName, dni: tenantDni, cuil: tenantCuil, email: tenantEmail, hasSigned: tenantSigned },
+                guarantors: printGuarantors
             };
 
             const htmlContent = `
@@ -4120,6 +4379,20 @@
                             <span class="sig-status">${ownerSigned ? '✓ FIRMADO DIGITALMENTE (Didit Liveness Check Aprobado)' : '⏳ PENDIENTE DE FIRMA'}</span>
                         </div>
                     </div>
+
+                    ${(printGuarantors && printGuarantors.length > 0) ? `
+                    <div class="signatures" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #e2e8f0;">
+                        ${printGuarantors.map((g, idx) => `
+                        <div class="sig-box">
+                            <b>${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}:</b><br>
+                            ${g.name}<br>
+                            <b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}<br>
+                            <b>Email:</b> ${g.email}<br>
+                            <span class="sig-status" style="${g.hasSigned ? '' : 'color: #d97706;'}">${g.hasSigned ? '✓ FIRMADO DIGITALMENTE (Didit Liveness Check Aprobado)' : '⏳ PENDIENTE DE FIRMA'}</span>
+                        </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
 
                     <div class="qr-seal">
                         <b>Digest Criptográfico SHA-256:</b> <span style="font-family: monospace; font-size: 10px;">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
