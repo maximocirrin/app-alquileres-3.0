@@ -24,6 +24,7 @@ export async function generateOriginalContractPdf({
   propiedad = {},
   inquilino = {},
   propietario = {},
+  garantes = [],
   inventario = null
 }) {
   const pdfDoc = await PDFDocument.create();
@@ -147,7 +148,22 @@ export async function generateOriginalContractPdf({
   const clauses = [];
 
   // Introducción
-  drawParagraph('PARTES INTERVINIENTES:', `En la República Argentina, entre ${ownerName} (DNI ${ownerDni}, CUIL ${ownerCuil}, Email: ${ownerMail}), en adelante denominado "EL LOCADOR"; y por la otra ${tenantName} (DNI ${tenantDni}, CUIL ${tenantCuil}, Email: ${tenantMail}), en adelante denominado "EL LOCATARIO", convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:`);
+  let partesIntervinientesText = `En la República Argentina, entre ${ownerName} (DNI ${ownerDni}, CUIL ${ownerCuil}, Email: ${ownerMail}), en adelante denominado "EL LOCADOR"; y por la otra ${tenantName} (DNI ${tenantDni}, CUIL ${tenantCuil}, Email: ${tenantMail}), en adelante denominado "EL LOCATARIO"`;
+  if (Array.isArray(garantes) && garantes.length > 0) {
+    const garantesListTxt = garantes.map((g, idx) => {
+      const gNom = g.nombre_completo || g.name || `Garante ${idx + 1}`;
+      const gDni = g.dni ? `DNI ${g.dni}` : '';
+      const gCuil = (g.cuit || g.cuil) ? `CUIL ${g.cuit || g.cuil}` : '';
+      const gDoc = [gDni, gCuil].filter(Boolean).join(', ');
+      const gMail = (g.mail || g.email) ? `Email: ${g.mail || g.email}` : '';
+      const gRol = g.roleLabel ? `, en calidad de ${g.roleLabel}` : '';
+      const gDet = [gDoc, gMail].filter(Boolean).join(', ');
+      return `${gNom}${gDet ? ` (${gDet})` : ''}${gRol}`;
+    }).join('; ');
+    partesIntervinientesText += `; y en calidad de FIADORES Y CODEUDORES SOLIDARIOS: ${garantesListTxt}`;
+  }
+  partesIntervinientesText += `, convienen en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:`;
+  drawParagraph('PARTES INTERVINIENTES:', partesIntervinientesText);
 
   // Cláusulas
   clauses.push({ tag: 'OBJETO Y DESTINO', body: `EL LOCADOR cede en locación a EL LOCATARIO, y éste acepta, el inmueble ubicado en ${propAddress}. ${onlyResidential ? 'Dicho inmueble tendrá como destino exclusivo el de vivienda familiar y permanente, quedando expresamente prohibido su cambio de destino o explotación comercial o profesional.' : 'Con destino habitacional conforme a derecho.'}` });
@@ -447,7 +463,7 @@ export async function generateAuditTrailPdf({
 /**
  * 3. Fusiona el Contrato Original con los Audit Trails para crear el Contrato Final
  */
-export async function mergeFinalContractPdf({ originalPdfBytes, inquilinoAuditBytes, propietarioAuditBytes }) {
+export async function mergeFinalContractPdf({ originalPdfBytes, inquilinoAuditBytes, propietarioAuditBytes, garantesAuditBytes = [] }) {
   const finalDoc = await PDFDocument.create();
 
   if (originalPdfBytes) {
@@ -466,6 +482,16 @@ export async function mergeFinalContractPdf({ originalPdfBytes, inquilinoAuditBy
     const propDoc = await PDFDocument.load(propietarioAuditBytes);
     const copiedPages = await finalDoc.copyPages(propDoc, propDoc.getPageIndices());
     copiedPages.forEach(p => finalDoc.addPage(p));
+  }
+
+  if (Array.isArray(garantesAuditBytes) && garantesAuditBytes.length > 0) {
+    for (const gBytes of garantesAuditBytes) {
+      if (gBytes) {
+        const gDoc = await PDFDocument.load(gBytes);
+        const copiedPages = await finalDoc.copyPages(gDoc, gDoc.getPageIndices());
+        copiedPages.forEach(p => finalDoc.addPage(p));
+      }
+    }
   }
 
   const finalPdfBytes = Buffer.from(await finalDoc.save());
