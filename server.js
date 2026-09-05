@@ -452,7 +452,7 @@ app.all('/api/session-decision', async (req, res) => {
 // API Endpoint - Unified /api/firmas/* (iniciar, sellar, finalizar, webhook)
 app.all(['/api/firmas', '/api/firmas/:action'], async (req, res) => {
     try {
-        const firmasHandler = (await import('./api/firmas.js')).default;
+        const firmasHandler = (await import('./api/firmas/[action].js')).default;
         req.query = req.query || {};
         if (req.params.action) req.query.action = req.params.action;
         await firmasHandler(req, res);

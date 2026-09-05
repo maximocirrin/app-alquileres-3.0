@@ -75,7 +75,8 @@ export default async function sellarHandler(req, res) {
       }
 
       const isTenant = (rol === 'TENANT' || rol === 'INQUILINO' || String(rol).toLowerCase() === 'inquilino');
-      const dbRole = isTenant ? 'inquilino' : 'propietario';
+      const isGuarantor = (rol === 'GARANTE' || rol === 'GUARANTOR' || String(rol).toLowerCase() === 'garante' || String(rol).toLowerCase() === 'guarantor');
+      const dbRole = isGuarantor ? 'garante' : (isTenant ? 'inquilino' : 'propietario');
 
       const { data: existingFirmas } = await supabase.from('Firma_contrato').select(`
         *,
@@ -101,7 +102,7 @@ export default async function sellarHandler(req, res) {
         if (cData) {
           const firmanteId = dbRole === 'inquilino' 
             ? (cData.id_perfil_inquilino || profile?.id_perfil || 15) 
-            : (cData.id_perfil_propietario || profile?.id_perfil || 6);
+            : (dbRole === 'garante' ? (profile?.id_perfil || 14) : (cData.id_perfil_propietario || profile?.id_perfil || 6));
 
           const { data: newFirma } = await supabase.from('Firma_contrato').insert([{
             id_contrato: numericContractId,
@@ -224,7 +225,7 @@ export default async function sellarHandler(req, res) {
         firmaId,
         propiedad,
         rol: firma.rol_firmante || rol,
-        signerName: signer_name || firmante.nombre_completo || (rol === 'OWNER' ? 'Propietario Titular' : 'Inquilino Titular'),
+        signerName: signer_name || firmante.nombre_completo || (['garante', 'guarantor', 'GARANTE', 'GUARANTOR'].includes(firma.rol_firmante || rol) ? 'Garante Titular' : (rol === 'OWNER' ? 'Propietario Titular' : 'Inquilino Titular')),
         signerDni: signer_dni || firmante.dni || 'Validado por Didit KYC',
         email: firmante.mail || '-',
         ip: firma.ip_origen || req.headers['x-forwarded-for'] || '127.0.0.1',
