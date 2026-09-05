@@ -72,71 +72,24 @@
         }
     };
 
-    // Mock inicial enriquecido
-    const MOCK_GARANTES_DEFAULT = [
-        {
-            id: 'gar_101',
-            id_tipo_garantia: 3,
-            nombre_completo: 'Carlos Eduardo Rossi',
-            email: 'carlos.rossi@gmail.com',
-            telefono: '+54 9 261 456-7890',
-            relacion_inquilino: 'Padre',
-            token_invitacion: 'mock-token-carlos-101',
-            id_estado_garante: 6, // Aprobado
-            kyc_verificado: true,
-            dni: '20-18492014-4',
-            cuit: '20-18492014-4',
-            scoring: 10.0,
-            datos_garantia: {
-                empleador_nombre: 'Telecom Argentina SA',
-                empleador_cuit: '30-63945373-8',
-                antiguedad_meses: 48,
-                ingreso_neto_mensual: 1450000,
-                puesto_cargo: 'Ingeniero de Sistemas'
-            },
-            documentos: [
-                { id: 'doc_1', tipo_documento: 'recibo_1', nombre_archivo: 'Recibo_Mayo_2026.pdf', tamano_bytes: 1420000, archivo_url: '#', estado_documento: 'APROBADO' },
-                { id: 'doc_2', tipo_documento: 'recibo_2', nombre_archivo: 'Recibo_Junio_2026.pdf', tamano_bytes: 1380000, archivo_url: '#', estado_documento: 'APROBADO' },
-                { id: 'doc_3', tipo_documento: 'recibo_3', nombre_archivo: 'Recibo_Julio_2026.pdf', tamano_bytes: 1450000, archivo_url: '#', estado_documento: 'APROBADO' }
-            ],
-            created_at: '2026-07-28'
-        },
-        {
-            id: 'gar_102',
-            id_tipo_garantia: 1,
-            nombre_completo: 'Mariana Gómez',
-            email: 'marianagomez@hotmail.com',
-            telefono: '+54 9 261 512-3456',
-            relacion_inquilino: 'Familiar directo',
-            token_invitacion: 'mock-token-mariana-102',
-            id_estado_garante: 2, // Invitado
-            kyc_verificado: false,
-            dni: '27-32948192-3',
-            cuit: '27-32948192-3',
-            scoring: 9.5,
-            datos_garantia: {
-                tipo_inmueble: 'Departamento',
-                direccion_inmueble: 'Av. Colón 450, 4°B, Mendoza',
-                provincia: 'Mendoza',
-                matricula_registro: 'MZA-84920/2021',
-                titularidad_porcentaje: 100
-            },
-            documentos: [],
-            created_at: '2026-08-01'
-        }
-    ];
-
     const STORAGE_KEY = 'vivat_garantes_state_v2';
 
     function loadLocalState() {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) return JSON.parse(stored);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Si el stored contenía los garantes mock viejos por defecto, limpiarlo
+                if (Array.isArray(parsed) && parsed.some(g => g.id === 'gar_101' || g.id === 'gar_102' || g.nombre_completo === 'Carlos Eduardo Rossi')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    return [];
+                }
+                return parsed;
+            }
         } catch (e) {
             console.warn('[GarantesManager] Could not parse stored garantes state', e);
         }
-        saveLocalState(MOCK_GARANTES_DEFAULT);
-        return MOCK_GARANTES_DEFAULT;
+        return [];
     }
 
     function saveLocalState(state) {

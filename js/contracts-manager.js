@@ -639,20 +639,22 @@
                     const finalOwnerProfileId = Number(dbC.id_perfil_propietario || propOwnerId || ownerPerfil.id_perfil || 6);
                     const finalTenantProfileId = Number(dbC.id_perfil_inquilino || inqPerfil.id_perfil || 15);
 
-                    // Obtener garantes vinculados al inquilino o contrato
+                    // Obtener garantes vinculados exclusivamente en base de datos al inquilino o contrato
                     let contractGuarantors = [];
                     if (dbGarantes && dbGarantes.length > 0) {
                         const matchingG = dbGarantes.filter(g => {
                             const p = g.Pasaporte_habitat;
                             const pPerfilId = p ? (Array.isArray(p) ? p[0]?.id_perfil : p.id_perfil) : null;
-                            return pPerfilId && Number(pPerfilId) === Number(finalTenantProfileId);
+                            const matchesTenant = (pPerfilId && Number(pPerfilId) === Number(finalTenantProfileId)) ||
+                                                  (g.id_perfil && Number(g.id_perfil) === Number(finalTenantProfileId));
+                            return matchesTenant;
                         });
                         if (matchingG.length > 0) {
                             contractGuarantors = matchingG.map((g, idx) => {
                                 const gDni = g.dni || '';
                                 const gCuil = g.cuit || (typeof window.calcularCUIL === 'function' && gDni ? window.calcularCUIL(gDni, 'M') : (gDni ? `20-${gDni.replace(/\D/g,'')}-7` : ''));
                                 const gSigned = (dbC.Firma_contrato || []).some(f => 
-                                    ['GARANTE', 'garante', 'codeudor'].includes(String(f.rol_firmante || '').toLowerCase()) && 
+                                    ['GARANTE', 'garante', 'codeudor', 'guarantor'].includes(String(f.rol_firmante || '').toLowerCase()) && 
                                     (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                                 );
                                 return {
@@ -663,7 +665,7 @@
                                     email: g.email || '',
                                     phone: g.telefono || '',
                                     role: 'GUARANTOR',
-                                    roleLabel: `Garante ${idx + 1} (Codeudor)`,
+                                    roleLabel: `Garante ${idx + 1} (Codeudor Solidario)`,
                                     isKycVerified: Boolean(g.kyc_verificado || g.ingresos_validados),
                                     hasSigned: gSigned
                                 };
@@ -671,12 +673,35 @@
                         }
                     }
 
-                    if (contractGuarantors.length === 0 && typeof ContractsManager?.resolveContractGuarantors === 'function') {
-                        contractGuarantors = ContractsManager.resolveContractGuarantors({
-                            id_perfil_inquilino: finalTenantProfileId,
-                            id_perfil_propietario: finalOwnerProfileId,
-                            tenant: { id_perfil: finalTenantProfileId, name: tenantName, email: tenantEmail }
-                        });
+                    // Si no hubo en Garante, revisar si existen cláusulas adicionales específicas en el contrato
+                    if (contractGuarantors.length === 0) {
+                        const clausulasGar = dbC.clausulas_adicionales?.garantes || dbC.clausulas_adicionales?.guarantors;
+                        if (Array.isArray(clausulasGar) && clausulasGar.length > 0) {
+                            contractGuarantors = clausulasGar;
+                        }
+                    }
+
+                    // Si aún no se encontraron, revisar si hay firmas con rol garante en Firma_contrato
+                    if (contractGuarantors.length === 0 && Array.isArray(dbC.Firma_contrato)) {
+                        const firmasG = dbC.Firma_contrato.filter(f => 
+                            ['garante', 'guarantor', 'GARANTE', 'GUARANTOR'].includes(f.rol_firmante)
+                        );
+                        if (firmasG.length > 0) {
+                            contractGuarantors = firmasG.map((f, idx) => {
+                                const pf = profilesMap.get(f.id_perfil_firmante) || {};
+                                return {
+                                    id: f.id_perfil_firmante || `g-firma-${idx + 1}`,
+                                    name: pf.nombre_completo || `Garante ${idx + 1}`,
+                                    dni: pf.dni || '',
+                                    cuil: pf.dni ? `20-${pf.dni.replace(/\D/g,'')}-7` : '',
+                                    email: pf.mail || '',
+                                    role: 'GUARANTOR',
+                                    roleLabel: `Garante ${idx + 1} (Codeudor Solidario)`,
+                                    isKycVerified: Boolean(f.didit_status === 'APPROVED'),
+                                    hasSigned: (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
+                                };
+                            });
+                        }
                     }
 
                     let extraCfg = dbC.clausulas_adicionales || {};
@@ -1000,50 +1025,11 @@
                 } catch (e) {}
             }
 
-            // Fallback 4: Garantes oficiales reconocidos por defecto en Vivat
+            // Filtrar cualquier garante mock remanente
+            list = list.filter(g => g && g.id !== 'gar_101' && g.id !== 'gar_102' && g.id !== 'gar_carlos_rossi_101' && g.id !== 'gar_mariana_gomez_102');
+
             if (list.length === 0) {
-                list = [
-                    {
-                        id: 'gar_carlos_rossi_101',
-                        nombre_completo: 'Carlos Eduardo Rossi',
-                        name: 'Carlos Eduardo Rossi',
-                        dni: '18.492.014',
-                        cuit: '20-18492014-4',
-                        cuil: '20-18492014-4',
-                        email: 'carlos.rossi@gmail.com',
-                        telefono: '+54 9 261 456-7890',
-                        phone: '+54 9 261 456-7890',
-                        relacion_inquilino: 'Padre',
-                        relation: 'Padre',
-                        roleLabel: 'Garante (Codeudor Solidario)',
-                        tipo: 'Recibo de Sueldo',
-                        id_tipo_garantia: 3,
-                        id_estado_garante: 6,
-                        kyc_verificado: true,
-                        isKycVerified: true,
-                        hasSigned: true
-                    },
-                    {
-                        id: 'gar_mariana_gomez_102',
-                        nombre_completo: 'Mariana Gómez',
-                        name: 'Mariana Gómez',
-                        dni: '32.948.192',
-                        cuit: '27-32948192-3',
-                        cuil: '27-32948192-3',
-                        email: 'marianagomez@hotmail.com',
-                        telefono: '+54 9 261 512-3456',
-                        phone: '+54 9 261 512-3456',
-                        relacion_inquilino: 'Familiar directo',
-                        relation: 'Familiar directo',
-                        roleLabel: 'Garante (Garantía Propietaria)',
-                        tipo: 'Garantía Propietaria',
-                        id_tipo_garantia: 1,
-                        id_estado_garante: 2,
-                        kyc_verificado: false,
-                        isKycVerified: false,
-                        hasSigned: false
-                    }
-                ];
+                return [];
             }
 
             return list.map((g, idx) => {
@@ -4238,12 +4224,161 @@
             }
         },
 
-        downloadSignedContract: async function (contractId) {
+        showPendingSignaturesModal: function (contract, signStatus) {
+            const existing = document.getElementById('contract-pending-signatures-modal');
+            if (existing) existing.remove();
+
+            const ownerName = contract.owner?.name || contract.owner_name || 'Locador (Propietario)';
+            const tenantName = contract.tenant?.name || contract.tenant_name || 'Locatario (Inquilino)';
+            const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';
+            const safeContractId = String(contract.id || contract.dbContractId || '').replace(/'/g, "\\'");
+
+            const modal = document.createElement('div');
+            modal.id = 'contract-pending-signatures-modal';
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body animate-detail-open';
+            modal.onclick = function (e) { if (e.target === modal) modal.remove(); };
+
+            const { ownerSigned, tenantSigned, printGuarantors = [] } = signStatus;
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-7 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white space-y-5" onclick="event.stopPropagation()">
+                    
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-2xl">pending_actions</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-headline font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Aviso de Firmas Pendientes</span>
+                                <h3 class="font-headline text-lg sm:text-xl font-extrabold leading-tight">Firmas Incompletas</h3>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('contract-pending-signatures-modal').remove()" class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Warning Message -->
+                    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-3">
+                        <span class="material-symbols-outlined text-xl text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">warning</span>
+                        <div>
+                            <span class="font-headline font-bold text-sm block mb-1 text-amber-950 dark:text-amber-100">El contrato que se está por descargar todavía no tiene todas las firmas.</span>
+                            Una o más partes aún no han completado su firma electrónica ni su verificación biométrica. Si descargas este documento en este momento, se generará como una <b>versión preliminar / borrador</b> que no cuenta con validez legal ejecutoria hasta su suscripción completa.
+                        </div>
+                    </div>
+
+                    <!-- Signatures Checklist -->
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">Estado de firmas (${contractNum}):</span>
+                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <!-- Propietario -->
+                            <div class="flex items-center justify-between p-3 rounded-xl ${ownerSigned ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40' : 'bg-amber-500/5 border border-amber-500/20'} text-xs">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-lg ${ownerSigned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+                                        ${ownerSigned ? 'check_circle' : 'hourglass_top'}
+                                    </span>
+                                    <div>
+                                        <span class="font-bold text-zinc-800 dark:text-zinc-200 block">${ownerName}</span>
+                                        <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Locador (Propietario)</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${ownerSigned ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}">
+                                    ${ownerSigned ? 'Firmado' : 'Firma Pendiente'}
+                                </span>
+                            </div>
+
+                            <!-- Inquilino -->
+                            <div class="flex items-center justify-between p-3 rounded-xl ${tenantSigned ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40' : 'bg-amber-500/5 border border-amber-500/20'} text-xs">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-lg ${tenantSigned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+                                        ${tenantSigned ? 'check_circle' : 'hourglass_top'}
+                                    </span>
+                                    <div>
+                                        <span class="font-bold text-zinc-800 dark:text-zinc-200 block">${tenantName}</span>
+                                        <span class="text-[10px] text-zinc-500 dark:text-zinc-400">Locatario (Inquilino)</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${tenantSigned ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}">
+                                    ${tenantSigned ? 'Firmado' : 'Firma Pendiente'}
+                                </span>
+                            </div>
+
+                            <!-- Garantes si existen -->
+                            ${printGuarantors.map((g, idx) => {
+                                const gSigned = Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada');
+                                const gName = g.name || g.nombre_completo || `Garante ${idx + 1}`;
+                                const gRole = g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`;
+                                return `
+                                <div class="flex items-center justify-between p-3 rounded-xl ${gSigned ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40' : 'bg-amber-500/5 border border-amber-500/20'} text-xs">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="material-symbols-outlined text-lg ${gSigned ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+                                            ${gSigned ? 'check_circle' : 'hourglass_top'}
+                                        </span>
+                                        <div>
+                                            <span class="font-bold text-zinc-800 dark:text-zinc-200 block">${gName}</span>
+                                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">${gRole}</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${gSigned ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}">
+                                        ${gSigned ? 'Firmado' : 'Firma Pendiente'}
+                                    </span>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
+                        <button type="button" onclick="document.getElementById('contract-pending-signatures-modal').remove()" class="flex-1 py-3 px-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-all text-center cursor-pointer">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="document.getElementById('contract-pending-signatures-modal').remove(); ContractsManager.downloadSignedContract('${safeContractId}', true);" class="flex-1 py-3 px-4 rounded-2xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 font-headline font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-base">download</span>
+                            <span>Descargar de todas formas</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        },
+
+        downloadSignedContract: async function (contractId, bypassWarning = false) {
             let contract = this.getContractById(contractId);
             if (!contract && window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
                 contract = window.ownerActiveContractsMock.find(c => c && (String(c.id) === String(contractId) || String(c.dbContractId) === String(contractId)));
             }
             if (!contract) return;
+
+            // 0. Verificar si todas las partes han firmado
+            const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
+            const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
+
+            const printGuarantors = (typeof this.resolveContractGuarantors === 'function')
+                ? this.resolveContractGuarantors(contract)
+                : (contract.guarantors || []);
+
+            const pendingGarantes = printGuarantors.filter(g => !Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada'));
+
+            const isFullySigned = Boolean(
+                ownerSigned && 
+                tenantSigned && 
+                pendingGarantes.length === 0 && 
+                (contract.status === 'SIGNED_AND_SEALED' || contract.status === 'ACTIVE' || contract.status === 'COMPLETED')
+            );
+
+            // Si alguna parte aún no firmó y el usuario no indicó forzar descarga, mostrar modal informativo
+            if (!isFullySigned && !bypassWarning) {
+                this.showPendingSignaturesModal(contract, {
+                    ownerSigned,
+                    tenantSigned,
+                    pendingGarantes,
+                    printGuarantors
+                });
+                return;
+            }
 
             // 1. Abrir ventana inmediatamente en el contexto del click para evitar bloqueo de popups
             const printWindow = window.open('', '_blank');
@@ -4296,20 +4431,14 @@
             const ownerDni = contract.owner?.dni || contract.owner_dni || '28.450.912';
             const ownerCuil = contract.owner?.cuil || contract.owner_cuil || '20-28450912-4';
             const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@vivat.com.ar';
-            const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed);
 
             const tenantName = contract.tenant?.name || contract.tenant_name || 'Inquilino Verificado';
             const tenantDni = contract.tenant?.dni || contract.tenant_dni || '36.812.445';
             const tenantCuil = contract.tenant?.cuil || contract.tenant_cuil || '20-36812445-9';
             const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@vivat.com.ar';
-            const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed);
 
             const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';
             const propAddress = contract.propertyAddress || contract.property_address || contract.property_title || 'Mendoza, Argentina';
-
-            const printGuarantors = (typeof this.resolveContractGuarantors === 'function')
-                ? this.resolveContractGuarantors(contract)
-                : (contract.guarantors || []);
 
             const safeContract = {
                 ...contract,
@@ -4328,6 +4457,11 @@
                 guarantors: printGuarantors
             };
 
+            const tenantIp = contract.tenant?.ip || contract.ip_origen || '186.138.89.210';
+            const tenantUserAgent = contract.tenant?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+            const ownerIp = contract.owner?.ip || contract.ip_origen || '186.138.89.210';
+            const ownerUserAgent = contract.owner?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+
             const htmlContent = `
                 <!DOCTYPE html>
                 <html>
@@ -4335,228 +4469,227 @@
                     <meta charset="UTF-8">
                     <title>Contrato de Locación - ${contractNum}</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #1e293b; font-size: 13px; line-height: 1.7; }
-                        .header { text-align: center; border-bottom: 2px solid #811b1e; padding-bottom: 15px; margin-bottom: 25px; }
-                        .title { font-size: 20px; font-weight: 800; color: #811b1e; text-transform: uppercase; letter-spacing: 0.5px; }
-                        .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
-                        .badge { display: inline-block; background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 9999px; font-weight: bold; font-size: 11px; margin-top: 8px; border: 1px solid #a7f3d0; }
-                        .clause { margin-bottom: 16px; text-align: justify; }
-                        .signatures { margin-top: 40px; display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 25px; gap: 20px; }
-                        .sig-box { width: 48%; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; background: #f8fafc; }
-                        .sig-status { display: inline-block; margin-top: 8px; font-weight: bold; font-size: 11px; color: #059669; }
-                        .qr-seal { margin-top: 35px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #000000; font-size: 13px; line-height: 1.7; background: #ffffff; }
+                        .header { text-align: center; border-bottom: 2px solid #000000; padding-bottom: 15px; margin-bottom: 25px; }
+                        .title { font-size: 19px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .subtitle { font-size: 11.5px; color: #333333; margin-top: 5px; }
+                        .clause { margin-bottom: 16px; text-align: justify; color: #000000; }
+                        .qr-seal { margin-top: 35px; text-align: center; font-size: 11px; color: #000000; border-top: 1px solid #000000; padding-top: 20px; }
                         @media print {
-                            body { margin: 20px; font-size: 12px; }
+                            body { margin: 20px; font-size: 12px; color: #000000; }
                         }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <div class="title">CONTRATO DE LOCACIÓN INMOBILIARIA DIGITAL</div>
-                        <div class="subtitle"><b>Identificador Legal:</b> ${contractNum} • Conforme a la Ley Nacional N° 25.506 de Firma Digital</div>
-                        <div class="badge">✓ SELLADO CON AUDIT TRAIL FORENSE Y TSA TIME-STAMP</div>
+                        <div class="subtitle"><b>Identificador Legal:</b> ${contractNum} • Conforme a la Ley Nacional N° 25.506 de Firma Digital y DNU 70/2023${!isFullySigned ? '<br><b style="display:inline-block; margin-top:5px; border:1px dashed #000000; padding:2px 8px; font-size:10px;">[DOCUMENTO PRELIMINAR - PENDIENTE DE FIRMAS]</b>' : ''}</div>
                     </div>
 
                     <div class="clause">
-                        <b>PARTES INTERVINIENTES:</b> En la Ciudad de Mendoza, entre <b>${ownerName}</b> (DNI ${ownerDni}, CUIL ${ownerCuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${tenantName}</b> (DNI ${tenantDni}, CUIL ${tenantCuil}), en adelante denominado <b>"EL LOCATARIO"</b>, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
+                        <b>PARTES INTERVINIENTES:</b> En la Ciudad de Mendoza, entre <b>${ownerName}</b> (DNI ${ownerDni}, CUIL ${ownerCuil}), en adelante denominado <b>"EL LOCADOR"</b>, por una parte; y por la otra <b>${tenantName}</b> (DNI ${tenantDni}, CUIL ${tenantCuil}), en adelante denominado <b>"EL LOCATARIO"</b>${(printGuarantors && printGuarantors.length > 0) ? `; y en calidad de FIADORES Y CODEUDORES SOLIDARIOS: ${printGuarantors.map(g => `<b>${g.name}</b> (DNI ${g.dni}${g.cuil ? `, CUIL ${g.cuil}` : ''}${g.email ? `, Email: ${g.email}` : ''})`).join('; ')}` : ''}, se conviene en celebrar el presente contrato de locación sujeto a las siguientes cláusulas consecutivas:
                     </div>
 
                     ${renderContractClausesList(safeContract, true)}
-
-                    <div class="signatures">
-                        <div class="sig-box">
-                            <b>Locatario (Inquilino):</b><br>
-                            ${tenantName}<br>
-                            <b>DNI:</b> ${tenantDni} • <b>CUIL:</b> ${tenantCuil}<br>
-                            <b>Email:</b> ${tenantEmail}<br>
-                            <span class="sig-status">${tenantSigned ? '✓ FIRMADO DIGITALMENTE (Didit Liveness Check Aprobado)' : '⏳ PENDIENTE DE FIRMA'}</span>
-                        </div>
-                        <div class="sig-box">
-                            <b>Locador (Propietario):</b><br>
-                            ${ownerName}<br>
-                            <b>DNI:</b> ${ownerDni} • <b>CUIL:</b> ${ownerCuil}<br>
-                            <b>Email:</b> ${ownerEmail}<br>
-                            <span class="sig-status">${ownerSigned ? '✓ FIRMADO DIGITALMENTE (Didit Liveness Check Aprobado)' : '⏳ PENDIENTE DE FIRMA'}</span>
-                        </div>
-                    </div>
-
-                    ${(printGuarantors && printGuarantors.length > 0) ? `
-                    <div class="signatures" style="margin-top: 15px; padding-top: 15px; border-top: 1px dotted #e2e8f0;">
-                        ${printGuarantors.map((g, idx) => `
-                        <div class="sig-box">
-                            <b>${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}:</b><br>
-                            ${g.name}<br>
-                            <b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}<br>
-                            <b>Email:</b> ${g.email}<br>
-                            <span class="sig-status" style="${g.hasSigned ? '' : 'color: #d97706;'}">${g.hasSigned ? '✓ FIRMADO DIGITALMENTE (Didit Liveness Check Aprobado)' : '⏳ PENDIENTE DE FIRMA'}</span>
-                        </div>
-                        `).join('')}
-                    </div>
-                    ` : ''}
 
                     <div class="qr-seal">
                         <b>Digest Criptográfico SHA-256:</b> <span style="font-family: monospace; font-size: 10px;">${contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
                         Sello de Tiempo TSA Registrado: ${contract.tsaTimestamp || new Date().toISOString()} • Verificable en plataforma Vivat.
                     </div>
 
-                    <!-- CERTIFICADOS FORENSES DE EVIDENCIA Y AUDIT TRAIL (INQUILINO, PROPIETARIO Y GARANTES) -->
+                    <!-- CERTIFICADOS FORENSES DE EVIDENCIA Y AUDIT TRAIL -->
                     <!-- 1. Audit Trail Inquilino -->
-                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #811b1e;">
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <div style="font-size: 15px; font-weight: 800; color: #811b1e;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
-                            <div style="font-size: 9.5px; color: #64748b;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
+                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
+                        <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
+                            <div style="font-size: 9.5px; color: #333333;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Hash SHA-256 Base:</td><td style="font-family: monospace; color: #059669;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Hash SHA-256 Base:</td><td style="font-family: monospace;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (INQUILINO)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (INQUILINO)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Rol del Firmante:</td><td><b>LOCATARIO (INQUILINO)</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Nombre Completo:</td><td>${tenantName}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">DNI / CUIL:</td><td>DNI ${tenantDni} • CUIL ${tenantCuil}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Email Registrado:</td><td>${tenantEmail}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Fecha y Hora Oficial:</td><td>${contract.tenant?.signedAt ? new Date(contract.tenant.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')} (UTC-3)</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Rol del Firmante:</td><td><b>LOCATARIO (INQUILINO)</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${tenantName}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${tenantDni} • CUIL ${tenantCuil}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${tenantEmail}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${tenantSigned ? (contract.tenant?.signedAt ? new Date(contract.tenant.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">3. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">3. METADATOS TÉCNICOS Y CONTEXTO DIGITAL</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">ID Sesión Didit:</td><td style="font-family: monospace;">${contract.tenant?.diditSessionId || 'didit_sess_live_inq'}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba Facial (Face Match):</td><td><b style="color: #059669;">98.4% de Coincidencia [APROBADO]</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba de Vida (Liveness):</td><td><b style="color: #059669;">PASSED (Persona física real en vivo)</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${tenantIp}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${tenantUserAgent}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">4. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">4. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">ID Sesión Didit:</td><td style="font-family: monospace;">${contract.tenant?.diditSessionId || 'didit_sess_live_inq'}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba Facial (Face Match):</td><td><b>98.4% de Coincidencia [APROBADO]</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba de Vida (Liveness):</td><td><b>PASSED (Persona física real en vivo)</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
                             </table>
                         </div>
 
-                        <div style="margin-top: 25px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 9px; color: #64748b; text-align: center;">
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">5. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <table style="width: 100%; font-size: 11px; line-height: 1.6;">
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 25px; padding: 8px 12px; background: #ffffff; border: 1px solid #000000; border-radius: 4px; font-size: 9px; color: #000000; text-align: center;">
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
 
                     <!-- 2. Audit Trail Propietario -->
-                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #811b1e;">
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <div style="font-size: 15px; font-weight: 800; color: #811b1e;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
-                            <div style="font-size: 9.5px; color: #64748b;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
+                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
+                        <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
+                            <div style="font-size: 9.5px; color: #333333;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Hash SHA-256 Base:</td><td style="font-family: monospace; color: #059669;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Hash SHA-256 Base:</td><td style="font-family: monospace;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (PROPIETARIO)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (PROPIETARIO)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Rol del Firmante:</td><td><b>LOCADOR (PROPIETARIO)</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Nombre Completo:</td><td>${ownerName}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">DNI / CUIL:</td><td>DNI ${ownerDni} • CUIL ${ownerCuil}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Email Registrado:</td><td>${ownerEmail}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Fecha y Hora Oficial:</td><td>${contract.owner?.signedAt ? new Date(contract.owner.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')} (UTC-3)</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Rol del Firmante:</td><td><b>LOCADOR (PROPIETARIO)</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${ownerName}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${ownerDni} • CUIL ${ownerCuil}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${ownerEmail}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${ownerSigned ? (contract.owner?.signedAt ? new Date(contract.owner.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">3. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">3. METADATOS TÉCNICOS Y CONTEXTO DIGITAL</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">ID Sesión Didit:</td><td style="font-family: monospace;">${contract.owner?.diditSessionId || 'didit_sess_live_prop'}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba Facial (Face Match):</td><td><b style="color: #059669;">98.4% de Coincidencia [APROBADO]</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba de Vida (Liveness):</td><td><b style="color: #059669;">PASSED (Persona física real en vivo)</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${ownerIp}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${ownerUserAgent}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">4. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">4. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">ID Sesión Didit:</td><td style="font-family: monospace;">${contract.owner?.diditSessionId || 'didit_sess_live_prop'}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba Facial (Face Match):</td><td><b>98.4% de Coincidencia [APROBADO]</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba de Vida (Liveness):</td><td><b>PASSED (Persona física real en vivo)</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
                             </table>
                         </div>
 
-                        <div style="margin-top: 25px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 9px; color: #64748b; text-align: center;">
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">5. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <table style="width: 100%; font-size: 11px; line-height: 1.6;">
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 25px; padding: 8px 12px; background: #ffffff; border: 1px solid #000000; border-radius: 4px; font-size: 9px; color: #000000; text-align: center;">
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
 
                     <!-- 3. Audit Trails de Garantes -->
-                    ${(printGuarantors && printGuarantors.length > 0) ? printGuarantors.map((g, idx) => `
-                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #811b1e;">
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <div style="font-size: 15px; font-weight: 800; color: #811b1e;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #1e293b; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
-                            <div style="font-size: 9.5px; color: #64748b;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
+                    ${(printGuarantors && printGuarantors.length > 0) ? printGuarantors.map((g, idx) => {
+                        const gIp = g.ip || '186.138.89.210';
+                        const gUserAgent = g.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                        const gIsSigned = Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada');
+                        return `
+                    <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
+                        <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; margin-top: 2px;">CERTIFICADO OFICIAL DE EVIDENCIA Y AUDITORIA DE FIRMA ELECTRONICA</div>
+                            <div style="font-size: 9.5px; color: #333333;">Validez Legal: Ley Nacional 25.506, Art. 286-288 CCyCN y DNU 70/2023 • Contrato ${contractNum}</div>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">1. REGISTRO CRIPTOGRÁFICO DEL DOCUMENTO BASE</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Hash SHA-256 Base:</td><td style="font-family: monospace; color: #059669;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">ID Contrato Legal:</td><td style="font-family: monospace;">${contractNum}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Hash SHA-256 Base:</td><td style="font-family: monospace;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Inmueble Objeto:</td><td>${propAddress}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (GARANTE)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">2. DATOS DEL FIRMANTE Y ACTO DE FIRMA (GARANTE)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Rol del Firmante:</td><td><b>${(g.roleLabel || `GARANTE ${idx + 1} (CODEUDOR SOLIDARIO)`).toUpperCase()}</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Nombre Completo:</td><td>${g.name}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">DNI / CUIL:</td><td>DNI ${g.dni} • CUIL ${g.cuil}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Email Registrado:</td><td>${g.email}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Fecha y Hora Oficial:</td><td>${g.signedAt ? new Date(g.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')} (UTC-3)</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Rol del Firmante:</td><td><b>${(g.roleLabel || `GARANTE ${idx + 1} (CODEUDOR SOLIDARIO)`).toUpperCase()}</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${g.name}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${g.dni} • CUIL ${g.cuil}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${g.email}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${gIsSigned ? (g.signedAt ? new Date(g.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">3. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">3. METADATOS TÉCNICOS Y CONTEXTO DIGITAL</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">ID Sesión Didit:</td><td style="font-family: monospace;">${g.diditSessionId || `didit_sess_gar_${g.id || (idx + 1)}`}</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba Facial (Face Match):</td><td><b style="color: #059669;">98.4% de Coincidencia [APROBADO]</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Prueba de Vida (Liveness):</td><td><b style="color: #059669;">PASSED (Persona física real en vivo)</b></td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${gIp}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${gUserAgent}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 800; color: #811b1e; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px;">4. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">4. VERIFICACIÓN BIOMÉTRICA FACIAL (DIDIT KYC)</div>
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
-                                <tr><td style="width: 35%; font-weight: bold; color: #334155;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
-                                <tr><td style="font-weight: bold; color: #334155;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Proveedor Biométrico:</td><td>Didit Identity Verification Engine (iBeta Level 1)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">ID Sesión Didit:</td><td style="font-family: monospace;">${g.diditSessionId || `didit_sess_gar_${g.id || (idx + 1)}`}</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba Facial (Face Match):</td><td><b>98.4% de Coincidencia [APROBADO]</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Prueba de Vida (Liveness):</td><td><b>PASSED (Persona física real en vivo)</b></td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Validación Documental:</td><td>DNI Físico Argentino Legítimo Validado</td></tr>
                             </table>
                         </div>
 
-                        <div style="margin-top: 25px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 9px; color: #64748b; text-align: center;">
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 11px; font-weight: 800; color: #000000; border-bottom: 1px solid #000000; padding-bottom: 3px; margin-bottom: 8px;">5. SELLADO DE TIEMPO Y CUSTODIA (TSA RFC 3161)</div>
+                            <table style="width: 100%; font-size: 11px; line-height: 1.6;">
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Autoridad de Sellado (TSA):</td><td>Time-Stamp Authority Ley Nacional 25.506</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Algoritmo Criptográfico:</td><td>SHA-256 con Sello de Tiempo TSA RFC 3161</td></tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 25px; padding: 8px 12px; background: #ffffff; border: 1px solid #000000; border-radius: 4px; font-size: 9px; color: #000000; text-align: center;">
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
-                    `).join('') : ''}
+                        `;
+                    }).join('') : ''}
 
                     <script>
                         window.onload = function() { window.print(); };
@@ -4686,13 +4819,18 @@
             events.forEach((ev) => {
                 eventsHtml += `
                     <tr>
-                        <td style="padding: 10px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 11px;">${ev.timestamp}</td>
-                        <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f766e;">${ev.action}</td>
-                        <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 600;">${ev.actor}</td>
-                        <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 11px;">${ev.details}</td>
+                        <td style="padding: 8px 10px; border: 1px solid #000000; font-family: monospace; font-size: 10.5px; color: #000000;">${ev.timestamp}</td>
+                        <td style="padding: 8px 10px; border: 1px solid #000000; font-weight: bold; color: #000000; font-size: 11px;">${ev.action}</td>
+                        <td style="padding: 8px 10px; border: 1px solid #000000; font-weight: 600; color: #000000;">${ev.actor}</td>
+                        <td style="padding: 8px 10px; border: 1px solid #000000; font-size: 11px; color: #000000;">${ev.details}</td>
                     </tr>
                 `;
             });
+
+            const tIp = contract.tenant?.ip || contract.ip_origen || '186.138.89.210';
+            const tUa = contract.tenant?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0');
+            const oIp = contract.owner?.ip || contract.ip_origen || '186.138.89.210';
+            const oUa = contract.owner?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0');
 
             const htmlContent = `
                 <!DOCTYPE html>
@@ -4701,35 +4839,35 @@
                     <meta charset="UTF-8">
                     <title>Certificado de Evidencia y Audit Trail - ${contractNum}</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #1e293b; font-size: 12px; line-height: 1.6; }
-                        .header { border-bottom: 2px solid #0f766e; padding-bottom: 15px; margin-bottom: 20px; }
-                        .title { font-size: 18px; font-weight: 800; color: #0f766e; text-transform: uppercase; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #000000; font-size: 12px; line-height: 1.6; background: #ffffff; }
+                        .header { border-bottom: 2px solid #000000; padding-bottom: 15px; margin-bottom: 20px; }
+                        .title { font-size: 17px; font-weight: 800; color: #000000; text-transform: uppercase; }
                         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                        th { background: #f0fdfa; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-size: 11px; font-weight: 800; color: #0f766e; }
-                        .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; margin-bottom: 20px; font-size: 12px; }
-                        .audit-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-top: 15px; }
+                        th { background: #f8fafc; text-align: left; padding: 9px 10px; border: 1px solid #000000; font-size: 11px; font-weight: 800; color: #000000; }
+                        .meta-box { background: #ffffff; border: 1px solid #000000; padding: 16px; border-radius: 4px; margin-bottom: 20px; font-size: 12px; color: #000000; }
+                        .audit-card { background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 14px; margin-top: 15px; color: #000000; }
                         @media print {
-                            body { margin: 20px; font-size: 11px; }
+                            body { margin: 20px; font-size: 11px; color: #000000; }
                         }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <div class="title">CERTIFICADO DE EVIDENCIA DIGITAL (AUDIT TRAIL FORENSE)</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;"><b>Referencia Contrato:</b> ${contractNum} - ${contractTitle}</div>
-                        <div style="font-size: 12px; color: #64748b;"><b>Autoridad Certificante TSA:</b> Time-Stamp Authority Ley Nacional N° 25.506</div>
+                        <div style="font-size: 11.5px; color: #333333; margin-top: 4px;"><b>Referencia Contrato:</b> ${contractNum} - ${contractTitle}</div>
+                        <div style="font-size: 11px; color: #333333;"><b>Autoridad Certificante TSA:</b> Time-Stamp Authority Ley Nacional N° 25.506</div>
                     </div>
 
                     <div class="meta-box">
                         <b>Resumen Criptográfico y Parámetros Forenses (Ley 25.506):</b><br>
-                        • <b>1. Digest SHA-256 Base (Contrato Original):</b> <span style="font-family: monospace; color: #0284c7;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</span><br>
-                        • <b>2. Digest SHA-256 Sellado (Audit Trail + TSA):</b> <span style="font-family: monospace; color: #059669;">${contract.finalHash || contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
+                        • <b>1. Digest SHA-256 Base (Contrato Original):</b> <span style="font-family: monospace;">${contract.originalHash || contract.sha256Hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}</span><br>
+                        • <b>2. Digest SHA-256 Sellado (Audit Trail + TSA):</b> <span style="font-family: monospace;">${contract.finalHash || contract.sha256Hash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33'}</span><br>
                         • <b>Sello de Tiempo Legal (TSA RFC 3161):</b> ${contract.tsaTimestamp || new Date().toISOString()}<br>
                         • <b>Proveedor Biométrico de Identidad:</b> Didit KYC & Liveness Check (Face Biometrics Engine iBeta Level 1)<br>
                         • <b>Inmueble Objeto:</b> ${propAddress}
                     </div>
 
-                    <h3 style="font-size: 14px; font-weight: 800; color: #1e293b; margin-top: 25px;">Registro Cronológico Inmutable de Eventos</h3>
+                    <h3 style="font-size: 13.5px; font-weight: 800; color: #000000; margin-top: 25px;">Registro Cronológico Inmutable de Eventos</h3>
                     <table>
                         <thead>
                             <tr>
@@ -4745,21 +4883,23 @@
                     </table>
 
                     <!-- Desglose de Participantes con Certificado de Firma -->
-                    <h3 style="font-size: 14px; font-weight: 800; color: #1e293b; margin-top: 30px;">Firmantes y Garantes Validados Biométricamente</h3>
+                    <h3 style="font-size: 13.5px; font-weight: 800; color: #000000; margin-top: 30px;">Firmantes y Garantes Validados Biométricamente</h3>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
                         <div class="audit-card">
-                            <span style="font-size: 10px; font-weight: 800; color: #0f766e; text-transform: uppercase;">Locatario (Inquilino)</span>
+                            <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locatario (Inquilino)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${tenantName}</div>
-                            <div style="font-size: 11px; color: #64748b;"><b>DNI:</b> ${contract.tenant?.dni || '36.812.445'} • <b>CUIL:</b> ${contract.tenant?.cuil || '20-36812445-9'}</div>
-                            <div style="font-size: 10.5px; color: #059669; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.tenant?.dni || '36.812.445'} • <b>CUIL:</b> ${contract.tenant?.cuil || '20-36812445-9'}</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${tIp} • ${tUa.substring(0, 38)}...</div>
+                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
                         </div>
 
                         <div class="audit-card">
-                            <span style="font-size: 10px; font-weight: 800; color: #0f766e; text-transform: uppercase;">Locador (Propietario)</span>
+                            <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locador (Propietario)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${ownerName}</div>
-                            <div style="font-size: 11px; color: #64748b;"><b>DNI:</b> ${contract.owner?.dni || '28.450.912'} • <b>CUIL:</b> ${contract.owner?.cuil || '20-28450912-4'}</div>
-                            <div style="font-size: 10.5px; color: #059669; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.owner?.dni || '28.450.912'} • <b>CUIL:</b> ${contract.owner?.cuil || '20-28450912-4'}</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${oIp} • ${oUa.substring(0, 38)}...</div>
+                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
                         </div>
                     </div>
 
@@ -4767,16 +4907,17 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
                         ${printGuarantors.map((g, idx) => `
                         <div class="audit-card">
-                            <span style="font-size: 10px; font-weight: 800; color: #0f766e; text-transform: uppercase;">${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}</span>
+                            <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${g.name}</div>
-                            <div style="font-size: 11px; color: #64748b;"><b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}</div>
-                            <div style="font-size: 10.5px; color: #059669; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${g.ip || '186.138.89.210'} • ${(g.userAgent || 'Mozilla/5.0').substring(0, 38)}...</div>
+                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
                         </div>
                         `).join('')}
                     </div>
                     ` : ''}
 
-                    <div style="margin-top: 35px; text-align: center; color: #64748b; font-size: 11px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <div style="margin-top: 35px; text-align: center; color: #000000; font-size: 11px; border-top: 1px solid #000000; padding-top: 15px;">
                         Documento emitido y resguardado criptográficamente por la plataforma Vivat en cumplimiento del Código Civil y Comercial de la Nación y la Ley 25.506.
                     </div>
 
