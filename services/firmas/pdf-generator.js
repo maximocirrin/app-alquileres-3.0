@@ -34,9 +34,9 @@ export async function generateOriginalContractPdf({
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  const primaryColor = rgb(0.50, 0.10, 0.12);
-  const darkColor = rgb(0.12, 0.16, 0.23);
-  const lightBg = rgb(0.97, 0.98, 0.99);
+  const primaryColor = rgb(0, 0, 0);
+  const darkColor = rgb(0, 0, 0);
+  const lightBg = rgb(0.96, 0.96, 0.96);
 
   let currentY = height - 105;
 
@@ -353,11 +353,11 @@ export async function generateAuditTrailPdf({
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontMono = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
-  const primaryColor = rgb(0.50, 0.10, 0.12);
-  const darkColor = rgb(0.12, 0.16, 0.23);
-  const grayColor = rgb(0.40, 0.45, 0.53);
-  const lightBg = rgb(0.97, 0.98, 0.99);
-  const emeraldColor = rgb(0.02, 0.59, 0.41);
+  const primaryColor = rgb(0, 0, 0);
+  const darkColor = rgb(0, 0, 0);
+  const grayColor = rgb(0.30, 0.30, 0.30);
+  const lightBg = rgb(0.96, 0.96, 0.96);
+  const emeraldColor = rgb(0, 0, 0);
 
   // --- PÁGINA: SECCIÓN AUDIT TRAIL Y FIRMAS DIGITALES ---
   let page = pdfDoc.addPage([595.28, 841.89]);

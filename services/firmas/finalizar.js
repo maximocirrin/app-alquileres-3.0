@@ -121,36 +121,18 @@ export default async function finalizarHandler(req, res) {
       }
     }
 
-    // Fallback con los garantes oficiales de Vivat si no existen en BD
-    if (garantesContrato.length === 0) {
-      garantesContrato = [
-        {
-          id: 'gar_carlos_rossi_101',
-          nombre_completo: 'Carlos Eduardo Rossi',
-          name: 'Carlos Eduardo Rossi',
-          dni: '18.492.014',
-          cuit: '20-18492014-4',
-          cuil: '20-18492014-4',
-          email: 'carlos.rossi@gmail.com',
-          roleLabel: 'Garante (Codeudor Solidario)',
-          tipo_garantia: 'Recibo de Sueldo',
-          isKycVerified: true,
-          hasSigned: true
-        },
-        {
-          id: 'gar_mariana_gomez_102',
-          nombre_completo: 'Mariana Gómez',
-          name: 'Mariana Gómez',
-          dni: '32.948.192',
-          cuit: '27-32948192-3',
-          cuil: '27-32948192-3',
-          email: 'marianagomez@hotmail.com',
-          roleLabel: 'Garante (Garantía Propietaria)',
-          tipo_garantia: 'Garantía Propietaria',
-          isKycVerified: true,
-          hasSigned: true
-        }
-      ];
+    // Si aún está vacío, revisar si hay firmas reales registradas como garante en Firma_contrato
+    if (garantesContrato.length === 0 && firmasGarantes.length > 0) {
+      garantesContrato = firmasGarantes.map((fg, idx) => ({
+        id_garante: fg.id_perfil_firmante || (idx + 1),
+        id_perfil: fg.id_perfil_firmante,
+        nombre_completo: fg.Perfil?.nombre_completo || `Garante ${idx + 1}`,
+        dni: fg.Perfil?.dni || '',
+        email: fg.Perfil?.mail || fg.Perfil?.email || '',
+        didit_session_id: fg.didit_session_id,
+        didit_scores: fg.didit_scores,
+        roleLabel: 'Garante (Codeudor Solidario)'
+      }));
     }
 
     const inquilinoFirmo = !!firmaInquilino;
