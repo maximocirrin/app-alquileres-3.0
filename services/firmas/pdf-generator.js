@@ -214,6 +214,18 @@ export async function generateOriginalContractPdf({
     clauses.push({ tag: 'ANEXO I - INVENTARIO', body: baseInventarioText });
   }
 
+  if (Array.isArray(garantes) && garantes.length > 0) {
+    const garantesNombresYDoc = garantes.map(g => {
+      const nom = g.nombre_completo || g.name || 'Garante';
+      const doc = g.dni ? `DNI ${g.dni}` : ((g.cuit || g.cuil) ? `CUIT/CUIL ${g.cuit || g.cuil}` : '');
+      return `${nom}${doc ? ` (${doc})` : ''}`;
+    }).join(', ');
+    clauses.push({
+      tag: 'FIANZA Y CODEUDA SOLIDARIA',
+      body: `Los FIADORES identificados en el comparendo (${garantesNombresYDoc}), se constituyen en FIADORES Y PRINCIPALES PAGADORES de todas y cada una de las obligaciones que por este contrato asume EL LOCATARIO, con expresa renuncia a los beneficios de excusión, división e interpelación previa (Arts. 1583, 1584 inc. d y 1589 del CCyCN). La presente fianza comprende no solo el canon locativo mensual, sino también expensas, impuestos, servicios, cláusulas penales, intereses y eventuales costas judiciales o extrajudiciales, extendiéndose su total e indivisible responsabilidad hasta el momento en que EL LOCADOR reciba la real y efectiva tenencia del inmueble desocupado mediante la formal entrega de llaves (Art. 1225 del CCyCN).`
+    });
+  }
+
   clauses.push({ tag: 'FIRMA ELECTRÓNICA Y BIOMETRÍA DIDIT', body: `Las partes prestan su expreso e irrevocable consentimiento para la suscripción del presente contrato mediante Firma Electrónica, Verificación Biométrica Facial en Vivo (Didit KYC) y Sello de Tiempo TSA RFC 3161, reconociéndole plena validez legal, eficacia probatoria y fuerza ejecutoria bajo la Ley Nacional N° 25.506.` });
 
   // Renderizar Cláusulas
