@@ -32,6 +32,8 @@
             return true;
         }
     }, true);
+})();
+
 // Redirección canónica automática al nuevo dominio oficial vivat.com.ar
 (function() {
     try {

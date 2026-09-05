@@ -4,7 +4,9 @@
   "description": "Backend for Rental Management System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:css": "tailwindcss -i ./css/input.css -o ./css/tailwind.css --minify",
+    "build": "node build-components.js && npm run build:css"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -30,10 +32,13 @@
   },
   "homepage": "https://github.com/maximocirrin/app-alquileres-3.0#readme",
   "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.11",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "tailwindcss": "^3.4.17",
     "typescript": "^7.0.2"
   }
 }
