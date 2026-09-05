@@ -534,6 +534,8 @@ var App = window.App || {
                 } else if (shouldOpenPublish) {
                     App.showPublishWizard();
                     window.history.replaceState({}, document.title, window.location.pathname);
+                } else if (pageContext === 'corredores' || pageContext === 'public') {
+                    // Public landing page - do not override or re-render main marketplace
                 } else {
                     App.showMainApp(user);
                 }
@@ -542,8 +544,15 @@ var App = window.App || {
                     window.location.replace('login.html?redirect=publish');
                 } else if (pageContext === 'admin' || shouldOpenAdmin) {
                     window.location.replace('login.html?redirect=admin&mode=login');
+                } else if (pageContext === 'corredores' || pageContext === 'inquilinos' || pageContext === 'propietarios' || pageContext === 'public') {
+                    App.applyPageContext();
                 } else if (pageContext === 'default') {
-                    App.showLogin();
+                    const isProtected = document.getElementById('app') && !document.getElementById('landing-corredores-view') && !document.getElementById('landing-marketplace-view') && !document.getElementById('landing-propietarios-view');
+                    if (isProtected) {
+                        App.showLogin();
+                    } else {
+                        App.applyPageContext();
+                    }
                 } else {
                     App.applyPageContext();
                 }
@@ -556,6 +565,7 @@ var App = window.App || {
     checkAuth: async () => {
         const user = await DataManager.getCurrentUser();
         const loginView = document.getElementById('login-view');
+        const context = App.getPageContext();
         if (!user && loginView && !loginView.classList.contains('hidden')) {
             // Stay on login
         } else if (!user) {
@@ -566,6 +576,8 @@ var App = window.App || {
             } else if (context === 'default') {
                 App.showLogin();
             }
+        } else if (!user && (context === 'admin' || (context === 'default' && document.getElementById('app') && !document.getElementById('landing-corredores-view') && !document.getElementById('landing-marketplace-view') && !document.getElementById('landing-propietarios-view')))) {
+            App.showLogin();
         }
     },
 
@@ -685,10 +697,29 @@ var App = window.App || {
     },
 
     getPageContext: () => {
-        const page = window.location.pathname.split('/').pop() || 'index.html';
-        if (page === 'propietarios.html') return 'propietarios';
-        if (page === 'administrador.html') return 'admin';
-        if (page === 'inquilinos.html' || page === 'index.html') return 'inquilinos';
+        let page = window.location.pathname.split('/').pop() || 'index.html';
+        if (page.includes('?')) page = page.split('?')[0];
+        if (page.includes('#')) page = page.split('#')[0];
+        page = page.toLowerCase();
+
+        if (page === 'propietarios.html' || page === 'propietarios') return 'propietarios';
+        if (page === 'administrador.html' || page === 'administrador') return 'admin';
+        if (page === 'corredores.html' || page === 'corredores') return 'corredores';
+        if (page === 'inquilinos.html' || page === 'inquilinos' || page === 'index.html' || page === 'index' || page === '') return 'inquilinos';
+
+        const publicPages = [
+            'como-funciona.html', 'como-funciona',
+            'pasaporte-vivat.html', 'pasaporte-vivat',
+            'detalles-garantia.html', 'detalles-garantia',
+            'consultar-valor.html', 'consultar-valor',
+            'buscar.html', 'buscar',
+            'terminos.html', 'terminos',
+            'agentes.html', 'agentes',
+            'perfil-agente.html', 'perfil-agente',
+            'login.html', 'login'
+        ];
+        if (publicPages.includes(page)) return 'public';
+
         return 'default';
     },
 
@@ -3070,7 +3101,7 @@ var App = window.App || {
 
                 const contactEmail = (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
                                      (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
-                                     'propietario@vivat.ar';
+                                     'propietario@vivat.com.ar';
 
                 const executePublish = async (isVerified = false) => {
                     console.log('¡Iniciando publicación en Supabase! Verificado:', isVerified);

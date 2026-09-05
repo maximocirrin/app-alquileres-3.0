@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vivat - Módulo de Firma Electrónica y Gestión de Contratos
  * Cumple con la Ley Nacional N° 25.506 de Firma Digital y Código Civil y Comercial de la Nación.
  * Integra visualizador completo en página, descarga directa de PDF/Audit Trail y validación biométrica facial (Liveness Check) con Didit KYC.
@@ -2103,8 +2103,8 @@
             }
             if (!email) {
                 email = effectiveRole === 'TENANT' 
-                    ? (contract?.tenant?.email || 'inquilino@vivat.ar') 
-                    : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@vivat.ar') : 'corredor@vivat.ar');
+                    ? (contract?.tenant?.email || 'inquilino@vivat.com.ar') 
+                    : (effectiveRole === 'OWNER' ? (contract?.owner?.email || 'propietario@vivat.com.ar') : 'corredor@vivat.com.ar');
             }
 
             let dbRole = 'BROKER';
@@ -2934,7 +2934,7 @@
             }
 
             const emailInput = document.getElementById('signer-didit-email');
-            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@vivat.ar';
+            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@vivat.com.ar';
 
             // 1. Recuperar datos oficiales de Didit KYC registrados previamente en el Pasaporte / Identidad Digital
             let diditIdentity = null;
@@ -4041,13 +4041,13 @@
             const ownerName = contract.owner?.name || contract.owner_name || 'Locador Propietario';
             const ownerDni = contract.owner?.dni || contract.owner_dni || '28.450.912';
             const ownerCuil = contract.owner?.cuil || contract.owner_cuil || '20-28450912-4';
-            const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@vivat.ar';
+            const ownerEmail = contract.owner?.email || contract.owner_email || 'propietario@vivat.com.ar';
             const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed);
 
             const tenantName = contract.tenant?.name || contract.tenant_name || 'Inquilino Verificado';
             const tenantDni = contract.tenant?.dni || contract.tenant_dni || '36.812.445';
             const tenantCuil = contract.tenant?.cuil || contract.tenant_cuil || '20-36812445-9';
-            const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@vivat.ar';
+            const tenantEmail = contract.tenant?.email || contract.tenant_email || 'inquilino@vivat.com.ar';
             const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed);
 
             const contractNum = contract.contractNumber || contract.id || 'CTR-2026-0001';

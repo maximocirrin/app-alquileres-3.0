@@ -33,6 +33,14 @@
       "destination": "/img/isotipo-lite.png"
     },
     {
+      "source": "/og-image.png",
+      "destination": "/img/og-vivat.png"
+    },
+    {
+      "source": "/og-vivat.png",
+      "destination": "/img/og-vivat.png"
+    },
+    {
       "source": "/api/contracts/:path*",
       "destination": "/api/contracts?path=:path*"
     },

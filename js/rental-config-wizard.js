@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vivat - Wizard de Configuración y Generación de Alquileres
  * Diseñado con la misma estructura, estética inmersiva y componentes que el
  * wizard de publicación de propiedades (publish-property-view.html).
@@ -41,7 +41,7 @@
                 const dniVal = explicitTenant.tenant_dni || explicitTenant.dni || '38.123.456';
                 this._acceptedTenant = {
                     name: explicitTenant.tenant_name || explicitTenant.applicant_name || explicitTenant.name || 'Inquilino Aceptado',
-                    email: explicitTenant.tenant_email || explicitTenant.applicant_email || explicitTenant.email || 'inquilino@vivat.ar',
+                    email: explicitTenant.tenant_email || explicitTenant.applicant_email || explicitTenant.email || 'inquilino@vivat.com.ar',
                     phone: explicitTenant.tenant_phone || explicitTenant.phone || '+54 9 261 400-0000',
                     dni: dniVal,
                     cuil: explicitTenant.tenant_cuil || explicitTenant.cuil || (dniVal ? `20-${String(dniVal).replace(/\D/g, '')}-7` : '20-38123456-7'),
@@ -201,7 +201,7 @@
                 if (match) {
                     this._acceptedTenant = {
                         name: match.tenant_name || match.applicant_name || match.name || 'Inquilino Aceptado',
-                        email: match.tenant_email || match.applicant_email || match.email || 'inquilino@vivat.ar',
+                        email: match.tenant_email || match.applicant_email || match.email || 'inquilino@vivat.com.ar',
                         phone: match.tenant_phone || match.phone || '+54 9 261 400-0000',
                         dni: match.tenant_dni || match.dni || '38.123.456',
                         cuil: match.tenant_cuil || match.cuil || (match.dni ? `20-${match.dni.replace(/\D/g, '')}-7` : '20-38123456-7'),
@@ -1240,7 +1240,7 @@
             const fixedAdjVal = Number(document.getElementById('rw-fixed-val')?.value || 0);
 
             let tenantName = 'Pendiente de Inquilino';
-            let tenantEmail = 'pendiente@vivat.ar';
+            let tenantEmail = 'pendiente@vivat.com.ar';
             let tenantDni = '';
             let tenantPhone = '';
             let tenantCuil = '';
@@ -1321,7 +1321,7 @@
                 tenant_phone: tenantPhone,
                 owner: {
                     name: 'Propietario Verificado',
-                    email: 'propietario@vivat.ar',
+                    email: 'propietario@vivat.com.ar',
                     dni: '30.123.456'
                 }
             };

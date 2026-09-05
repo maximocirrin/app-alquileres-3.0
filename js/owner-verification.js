@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Módulo de Verificación de Identidad para Propietarios y Corredores (Modelo Híbrido)
  * Vivat Plataforma Inmobiliaria
  * 
@@ -99,7 +99,7 @@
       (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
       (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
       (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
-      'propietario@vivat.ar';
+      'propietario@vivat.com.ar';
 
     if (typeof window.iniciarKYC !== 'function') {
       alert('El servicio de verificación Didit no está disponible.');
@@ -130,7 +130,7 @@
     const ownerEmail = email || 
       (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
       (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
-      'propietario@vivat.ar';
+      'propietario@vivat.com.ar';
 
     const alreadyVerified = isOwnerVerified(ownerEmail);
 

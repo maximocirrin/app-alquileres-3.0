@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -3260,7 +3260,7 @@
                     const rawTitle = cleanVivatText(c.property_title || c.propertyTitle || c.property?.title || c.propertyAddress || c.property_address || `Propiedad #${idx + 1}`);
                     const rawAddress = cleanVivatText(c.property_address || c.propertyAddress || c.property?.address || 'Mendoza, Argentina');
                     const rawTenant = cleanVivatText(c.tenant_name || c.tenant?.name || 'Inquilino Verificado');
-                    const rawTenantEmail = cleanVivatText(c.tenant_email || c.tenant?.email || 'inquilino@vivat.ar');
+                    const rawTenantEmail = cleanVivatText(c.tenant_email || c.tenant?.email || 'inquilino@vivat.com.ar');
                     const rawTenantPhone = c.tenant_phone || c.tenant?.phone || '+54 9 261 412-3456';
                     const rawRent = Number(c.monthly_rent || c.monthlyRent || c.rent || 380000);
                     const rawExpenses = Number(c.expenses_amount || c.expenses || 48000);

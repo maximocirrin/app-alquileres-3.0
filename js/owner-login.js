@@ -407,7 +407,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     googleBtn.addEventListener('click', async () => {
         clearMessage();
         const roleData = ROLES[currentRole];
-        const targetUrl = new URL(getRedirectTarget(), window.location.href);
+        const origin = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? window.location.origin
+            : 'https://vivat.com.ar';
+        const targetUrl = new URL(getRedirectTarget(), origin);
         targetUrl.searchParams.set('role', currentRole);
 
         // Store selected role in localStorage for session setup after OAuth redirect
@@ -442,9 +445,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const getRedirectUrl = () => {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                return 'https://app-alquileres-3-0.vercel.app/login.html';
+                return window.location.href;
             }
-            return window.location.href;
+            return 'https://vivat.com.ar/login.html';
         };
 
         try {

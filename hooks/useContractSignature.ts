@@ -175,7 +175,7 @@ export function useContractSignature({
             sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
             tsaTimestamp: new Date().toISOString(),
             tsaCertificateId: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-            qrVerificationUrl: `https://vivat.ar/verificar/${activeContract.id}`,
+            qrVerificationUrl: `https://vivat.com.ar/verificar/${activeContract.id}`,
             signedPdfUrl: `/api/contracts/${activeContract.id}/download-signed`,
             auditTrailPdfUrl: `/api/contracts/${activeContract.id}/download-audit-trail`,
           };
