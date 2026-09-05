@@ -79,52 +79,48 @@ var DataManager = {
                 }
             }
 
-            // Fallback for local storage user or hint
-            try {
-                let localEmail = null;
-                let localName = 'Usuario Vivat';
-                if (userHint && typeof userHint === 'object') {
-                    localEmail = userHint.email || userHint.mail || userHint.contactEmail;
-                    localName = userHint.nombre || userHint.contactNombre || localName;
-                } else if (typeof userHint === 'string' && userHint.includes('@')) {
-                    localEmail = userHint;
-                }
-
-                if (!localEmail) {
-                    const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                    localEmail = localUser.email || localUser.mail;
-                    localName = localUser.nombre_completo || localUser.name || localName;
-                }
-
-                if (localEmail) {
-                    localEmail = localEmail.trim().toLowerCase();
-                    const { data: matched } = await window.supabaseClient
-                        .from('Perfil')
-                        .select('id_perfil')
-                        .ilike('mail', localEmail)
-                        .limit(1);
-
-                    if (matched && matched.length > 0) {
-                        return matched[0].id_perfil;
+            // Fallback for explicit userHint (e.g. from publication wizard contact info)
+            if (userHint) {
+                try {
+                    let localEmail = null;
+                    let localName = 'Usuario Vivat';
+                    if (typeof userHint === 'object') {
+                        localEmail = userHint.email || userHint.mail || userHint.contactEmail;
+                        localName = userHint.nombre || userHint.contactNombre || localName;
+                    } else if (typeof userHint === 'string' && userHint.includes('@')) {
+                        localEmail = userHint;
                     }
 
-                    const { data: createdProf, error: createErr } = await window.supabaseClient
-                        .from('Perfil')
-                        .insert([{
-                            mail: localEmail,
-                            nombre_completo: localName,
-                            id_tipo_perfil: 1,
-                            cuenta_verificada: false
-                        }])
-                        .select('id_perfil')
-                        .single();
+                    if (localEmail) {
+                        localEmail = localEmail.trim().toLowerCase();
+                        const { data: matched } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil')
+                            .ilike('mail', localEmail)
+                            .limit(1);
 
-                    if (!createErr && createdProf) {
-                        return createdProf.id_perfil;
+                        if (matched && matched.length > 0) {
+                            return matched[0].id_perfil;
+                        }
+
+                        const { data: createdProf, error: createErr } = await window.supabaseClient
+                            .from('Perfil')
+                            .insert([{
+                                mail: localEmail,
+                                nombre_completo: localName,
+                                id_tipo_perfil: 1,
+                                cuenta_verificada: false
+                            }])
+                            .select('id_perfil')
+                            .single();
+
+                        if (!createErr && createdProf) {
+                            return createdProf.id_perfil;
+                        }
                     }
+                } catch (localErr) {
+                    console.warn("Fallback profile lookup error:", localErr);
                 }
-            } catch (localErr) {
-                console.warn("Fallback profile lookup error:", localErr);
             }
 
             return null;
@@ -212,6 +208,9 @@ var DataManager = {
             let profileId = targetProfileId;
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
+            }
+            if (filterByUser && !profileId) {
+                return [];
             }
 
             const { data: properties, error } = await window.supabaseClient
@@ -332,11 +331,15 @@ var DataManager = {
                     Multimedia (*)
                 `);
 
-            if (filterByUser && window.DataManager && window.DataManager._getOrCreateProfile) {
-                const profileId = await window.DataManager._getOrCreateProfile();
-                if (profileId) {
-                    query = query.eq('id_perfil', profileId);
+            let profileId = null;
+            if (filterByUser) {
+                if (window.DataManager && window.DataManager._getOrCreateProfile) {
+                    profileId = await window.DataManager._getOrCreateProfile();
                 }
+                if (!profileId) {
+                    return [];
+                }
+                query = query.eq('id_perfil', profileId);
             }
 
             const { data: publications, error } = await query
@@ -497,6 +500,11 @@ var DataManager = {
                 };
             }).filter(p => {
                 if (p.status === 'deleted') return false;
+                if (filterByUser && profileId) {
+                    const isAuthor = Number(p.id_perfil) === Number(profileId);
+                    const isOwner = Number(p.id_perfil_propietario) === Number(profileId);
+                    if (!isAuthor && !isOwner) return false;
+                }
                 if (includeAllStatuses) return true;
                 return p.status === 'disponible' || p.status === 'alquilada';
             });
@@ -1117,6 +1125,9 @@ var DataManager = {
                 if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                     profileId = await window.DataManager._getOrCreateProfile();
                 }
+                if (filterByUser && !profileId) {
+                    return [];
+                }
 
                 const { data, error } = await window.supabaseClient
                     .from('Solicitud')
@@ -1175,7 +1186,8 @@ var DataManager = {
                             const prop = pub.Propiedad || s.Propiedad || {};
 
                             // Strict user filter: only show applications for this user's listings/properties
-                            if (filterByUser && profileId) {
+                            if (filterByUser) {
+                                if (!profileId) return false;
                                 const isPubAuthor = Number(pub.id_perfil) === Number(profileId);
                                 const isPropOwner = Number(prop.id_perfil_propietario) === Number(profileId);
                                 const isPropCaptador = Number(prop.id_perfil_captador) === Number(profileId);
@@ -2274,6 +2286,10 @@ var DataManager = {
                 profileId = await window.DataManager._getOrCreateProfile();
             }
 
+            if (!profileId) {
+                return [];
+            }
+
             let query = window.supabaseClient
                 .from('Contrato')
                 .select(`
@@ -2289,11 +2305,8 @@ var DataManager = {
                     Propietario:Perfil!id_perfil_propietario (*),
                     Firma_contrato (*)
                 `)
-                .order('id_contrato', { ascending: false });
-
-            if (profileId) {
-                query = query.eq('id_perfil_propietario', profileId);
-            }
+                .order('id_contrato', { ascending: false })
+                .eq('id_perfil_propietario', profileId);
 
             const { data, error } = await query;
 
@@ -3248,6 +3261,9 @@ var DataManager = {
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
             }
+            if (filterByUser && !profileId) {
+                return [];
+            }
 
             const { data, error } = await window.supabaseClient
                 .from('Ticket_mantenimiento')
@@ -3462,6 +3478,9 @@ var DataManager = {
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
             }
+            if (filterByUser && !profileId) {
+                return [];
+            }
 
             const { data, error } = await window.supabaseClient
                 .from('Evento')
@@ -3579,6 +3598,9 @@ var DataManager = {
             let profileId = targetProfileId;
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
+            }
+            if (filterByUser && !profileId) {
+                return [];
             }
 
             const { data, error } = await window.supabaseClient
@@ -4139,6 +4161,9 @@ var DataManager = {
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
             }
+            if (filterByUser && !profileId) {
+                return [];
+            }
 
             const { data, error } = await window.supabaseClient
                 .from('Contrato')
@@ -4251,6 +4276,9 @@ var DataManager = {
             let profileId = targetProfileId;
             if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
                 profileId = await window.DataManager._getOrCreateProfile();
+            }
+            if (filterByUser && !profileId) {
+                return [];
             }
 
             const { data: props, error } = await window.supabaseClient

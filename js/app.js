@@ -558,8 +558,14 @@ var App = window.App || {
         const loginView = document.getElementById('login-view');
         if (!user && loginView && !loginView.classList.contains('hidden')) {
             // Stay on login
-        } else if (!user && App.getPageContext() === 'default') {
-            App.showLogin();
+        } else if (!user) {
+            const context = App.getPageContext();
+            if (context === 'admin') {
+                window.location.href = 'login.html?redirect=admin&role=propietario';
+                return;
+            } else if (context === 'default') {
+                App.showLogin();
+            }
         }
     },
 
@@ -9159,7 +9165,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const currentUrl = new URL(window.location.href);
             if (currentUrl.searchParams.has('prop')) {
                 currentUrl.searchParams.delete('prop');
-                window.history.pushState({}, '', currentUrl.pathname + (currentUrl.search ? currentUrl.search : ''));
+                const newSearch = currentUrl.search ? currentUrl.search : '';
+                const newHash = currentUrl.hash || '';
+                window.history.replaceState({}, '', currentUrl.pathname + newSearch + newHash);
             }
         } catch (e) {
             console.warn('Could not clean up URL parameter', e);
