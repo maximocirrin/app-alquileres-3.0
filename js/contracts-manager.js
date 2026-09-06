@@ -963,7 +963,13 @@
                     }
                     window.dispatchEvent(new CustomEvent('contractsUpdated', { detail: payload }));
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+                        if (window._contractsRealtimeChannel === channel) {
+                            window._contractsRealtimeChannel = null;
+                        }
+                    }
+                });
 
             window._contractsRealtimeChannel = channel;
         } catch (err) {
@@ -5352,6 +5358,16 @@
                 localContractId = targetContract.id;
             }
             ContractsManager.appendIncomingMessage(localContractId, msg);
+        }
+    });
+
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted) {
+            if (window._contractsRealtimeChannel && window.supabaseClient && typeof window.supabaseClient.removeChannel === 'function') {
+                try { window.supabaseClient.removeChannel(window._contractsRealtimeChannel); } catch (err) {}
+                window._contractsRealtimeChannel = null;
+            }
+            setupContractsRealtimeSubscription();
         }
     });
 
