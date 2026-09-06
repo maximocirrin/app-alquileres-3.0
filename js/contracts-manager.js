@@ -2625,7 +2625,7 @@
             } else {
                 const origin = window.location.origin;
                 const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                inviteUrl = `${origin}${path}validar-garante.html?token=${encodeURIComponent(token || '')}`;
+                inviteUrl = `${origin}${path}tu-alquiler.html?view=garante-invitacion&token=${encodeURIComponent(token || '')}`;
             }
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -2649,7 +2649,7 @@
             } else {
                 const origin = window.location.origin;
                 const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                inviteUrl = `${origin}${path}validar-garante.html?token=${encodeURIComponent(token || '')}`;
+                inviteUrl = `${origin}${path}tu-alquiler.html?view=garante-invitacion&token=${encodeURIComponent(token || '')}`;
             }
             const cleanName = name || 'Garante';
             const cleanTitle = contractTitle || 'Contrato de Locación';
