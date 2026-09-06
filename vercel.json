@@ -46,6 +46,10 @@
       "destination": "/api/contracts?path=:path*"
     },
     {
+      "source": "/api/firmas/:path*",
+      "destination": "/api/firmas/:path*"
+    },
+    {
       "source": "/contract",
       "destination": "/contract.html"
     },

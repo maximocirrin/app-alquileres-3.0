@@ -170,18 +170,34 @@
 
             if (window.supabaseClient) {
                 try {
-                    const { data, error } = await window.supabaseClient
-                        .from('Garante')
-                        .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*), Pasaporte_vivat(id_pasaporte, razon_social, Perfil(nombre_completo, email))')
-                        .eq('token_invitacion', token)
-                        .maybeSingle();
+                    let data = null;
+                    try {
+                        const res = await window.supabaseClient
+                            .from('Garante')
+                            .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*), Pasaporte_habitat:Pasaporte_habitat!fk_garante_pasaporte(id_pasaporte, razon_social, Perfil:Perfil!id_perfil(nombre_completo, mail))')
+                            .eq('token_invitacion', token)
+                            .maybeSingle();
+                        if (res && res.data) data = res.data;
+                    } catch(e) {}
 
-                    if (!error && data) {
+                    if (!data) {
+                        try {
+                            const res2 = await window.supabaseClient
+                                .from('Garante')
+                                .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*)')
+                                .eq('token_invitacion', token)
+                                .maybeSingle();
+                            if (res2 && res2.data) data = res2.data;
+                        } catch(e2) {}
+                    }
+
+                    if (data) {
                         let inquilinoNombre = defaultInquilinoName;
                         let inquilinoEmail = '';
-                        if (data.Pasaporte_vivat) {
-                            inquilinoNombre = data.Pasaporte_vivat.razon_social || data.Pasaporte_vivat.Perfil?.nombre_completo || defaultInquilinoName;
-                            inquilinoEmail = data.Pasaporte_vivat.Perfil?.email || '';
+                        const passObj = data.Pasaporte_habitat || data.Pasaporte_vivat;
+                        if (passObj) {
+                            inquilinoNombre = passObj.razon_social || passObj.Perfil?.nombre_completo || defaultInquilinoName;
+                            inquilinoEmail = passObj.Perfil?.mail || passObj.Perfil?.email || '';
                         }
 
                         return {
@@ -245,9 +261,13 @@
                             .eq('user_id', session.user.id)
                             .maybeSingle();
 
+                        if (!perf && window._tenantProfileIdForGuarantor) {
+                            perf = { id_perfil: window._tenantProfileIdForGuarantor };
+                        }
+
                         if (perf) {
                             const { data: pass } = await window.supabaseClient
-                                .from('Pasaporte_vivat')
+                                .from('Pasaporte_habitat')
                                 .select('id_pasaporte')
                                 .eq('id_perfil', perf.id_perfil)
                                 .order('created_at', { ascending: false })
@@ -255,6 +275,15 @@
                                 .maybeSingle();
                             if (pass) pId = pass.id_pasaporte;
                         }
+                    } else if (window._tenantProfileIdForGuarantor) {
+                        const { data: pass } = await window.supabaseClient
+                            .from('Pasaporte_habitat')
+                            .select('id_pasaporte')
+                            .eq('id_perfil', window._tenantProfileIdForGuarantor)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+                        if (pass) pId = pass.id_pasaporte;
                     }
                 }
 
@@ -331,25 +360,29 @@
                 try {
                     let pasaporteId = window.currentPasaporteId || null;
                     if (!pasaporteId) {
-                        const { data: { user } } = await window.supabaseClient.auth.getUser();
-                        if (user) {
-                            const { data: perf } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil')
-                                .eq('user_id', user.id)
-                                .maybeSingle();
+                        let targetProfileId = window._tenantProfileIdForGuarantor || null;
+                        if (!targetProfileId) {
+                            const { data: { user } } = await window.supabaseClient.auth.getUser();
+                            if (user) {
+                                const { data: perf } = await window.supabaseClient
+                                    .from('Perfil')
+                                    .select('id_perfil')
+                                    .eq('user_id', user.id)
+                                    .maybeSingle();
+                                if (perf) targetProfileId = perf.id_perfil;
+                            }
+                        }
 
-                            if (perf) {
-                                const { data: pasaportes } = await window.supabaseClient
-                                    .from('Pasaporte_vivat')
-                                    .select('id_pasaporte')
-                                    .eq('id_perfil', perf.id_perfil)
-                                    .order('created_at', { ascending: false })
-                                    .limit(1);
+                        if (targetProfileId) {
+                            const { data: pasaportes } = await window.supabaseClient
+                                .from('Pasaporte_habitat')
+                                .select('id_pasaporte')
+                                .eq('id_perfil', targetProfileId)
+                                .order('created_at', { ascending: false })
+                                .limit(1);
 
-                                if (pasaportes && pasaportes.length > 0) {
-                                    pasaporteId = pasaportes[0].id_pasaporte;
-                                }
+                            if (pasaportes && pasaportes.length > 0) {
+                                pasaporteId = pasaportes[0].id_pasaporte;
                             }
                         }
                     }
@@ -461,25 +494,29 @@
                 try {
                     let pasaporteId = window.currentPasaporteId || null;
                     if (!pasaporteId) {
-                        const { data: { user } } = await window.supabaseClient.auth.getUser();
-                        if (user) {
-                            const { data: perf } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil')
-                                .eq('user_id', user.id)
-                                .maybeSingle();
+                        let targetProfileId = window._tenantProfileIdForGuarantor || null;
+                        if (!targetProfileId) {
+                            const { data: { user } } = await window.supabaseClient.auth.getUser();
+                            if (user) {
+                                const { data: perf } = await window.supabaseClient
+                                    .from('Perfil')
+                                    .select('id_perfil')
+                                    .eq('user_id', user.id)
+                                    .maybeSingle();
+                                if (perf) targetProfileId = perf.id_perfil;
+                            }
+                        }
 
-                            if (perf) {
-                                const { data: pasaportes } = await window.supabaseClient
-                                    .from('Pasaporte_vivat')
-                                    .select('id_pasaporte')
-                                    .eq('id_perfil', perf.id_perfil)
-                                    .order('created_at', { ascending: false })
-                                    .limit(1);
+                        if (targetProfileId) {
+                            const { data: pasaportes } = await window.supabaseClient
+                                .from('Pasaporte_habitat')
+                                .select('id_pasaporte')
+                                .eq('id_perfil', targetProfileId)
+                                .order('created_at', { ascending: false })
+                                .limit(1);
 
-                                if (pasaportes && pasaportes.length > 0) {
-                                    pasaporteId = pasaportes[0].id_pasaporte;
-                                }
+                            if (pasaportes && pasaportes.length > 0) {
+                                pasaporteId = pasaportes[0].id_pasaporte;
                             }
                         }
                     }
@@ -812,7 +849,7 @@
 
             modal = document.createElement('div');
             modal.id = 'modal-agregar-garante-v2';
-            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 font-body';
+            modal.className = 'fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 font-body';
             modal.innerHTML = `
                 <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl transform scale-95 transition-all duration-300 max-h-[92vh] overflow-y-auto">
                     <!-- Top Header -->
@@ -1134,7 +1171,7 @@
 
             modal = document.createElement('div');
             modal.id = 'modal-invite-success-v2';
-            modal.className = 'fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-300 font-body';
+            modal.className = 'fixed inset-0 z-[100060] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-300 font-body';
             modal.innerHTML = `
                 <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-lg w-full p-6 sm:p-8 shadow-2xl text-center">
                     <div class="w-16 h-16 rounded-3xl bg-emerald-500/10 text-emerald-500 mx-auto flex items-center justify-center mb-4 border border-emerald-500/20 shadow-xs">
@@ -1759,7 +1796,7 @@
 
             modal = document.createElement('div');
             modal.id = 'modal-auditoria-garante';
-            modal.className = 'fixed inset-0 z-[220] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
+            modal.className = 'fixed inset-0 z-[100070] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-body';
             modal.innerHTML = `
                 <div class="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
                     <!-- Header -->
