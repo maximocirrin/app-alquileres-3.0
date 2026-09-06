@@ -41,6 +41,10 @@
       "destination": "/img/og-vivat.png"
     },
     {
+      "source": "/api/firmas/:action*",
+      "destination": "/api/firmas?action=:action*"
+    },
+    {
       "source": "/api/contracts/:path*",
       "destination": "/api/contracts?path=:path*"
     },
