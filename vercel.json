@@ -25,14 +25,7 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/favicon.ico",
-      "destination": "/img/isotipo-lite.png"
-    },
-    {
-      "source": "/favicon.png",
-      "destination": "/img/isotipo-lite.png"
-    },
+
     {
       "source": "/og-image.png",
       "destination": "/img/og-vivat.png"
