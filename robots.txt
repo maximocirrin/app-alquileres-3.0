@@ -8,6 +8,7 @@ Allow: /como-funciona.html
 Allow: /consultar-valor.html
 Allow: /detalles-garantia.html
 Allow: /corredores.html
+Allow: /agentes.html
 Allow: /terminos.html
 Allow: /img/
 
