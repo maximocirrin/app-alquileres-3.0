@@ -616,6 +616,20 @@
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
+                            if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+                                if (this._supabaseChannel === channel) {
+                                    this._supabaseChannel = null;
+                                }
+                                if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && document.visibilityState !== 'hidden') {
+                                    clearTimeout(this._reconnectTimer);
+                                    this._reconnectTimer = setTimeout(() => {
+                                        if (!this._supabaseChannel && document.visibilityState !== 'hidden') {
+                                            console.log('[Supabase Realtime] Reintentando conexión tras error de canal...');
+                                            this.initRealtimeWebSockets();
+                                        }
+                                    }, 4000);
+                                }
+                            }
                         });
 
                     this._supabaseChannel = channel;
@@ -629,6 +643,22 @@
                     }
                 }, 300);
             }
+        },
+
+        cleanupRealtime: function () {
+            if (this._supabaseChannel) {
+                try {
+                    if (window.supabaseClient && typeof window.supabaseClient.removeChannel === 'function') {
+                        window.supabaseClient.removeChannel(this._supabaseChannel);
+                    }
+                } catch (e) {}
+                this._supabaseChannel = null;
+            }
+        },
+
+        reconnectRealtime: function () {
+            this.cleanupRealtime();
+            this.initRealtimeWebSockets();
         },
 
         markAsRead: function (notifId) {
@@ -935,6 +965,31 @@
         if (window.NotificationManager) {
             window.NotificationManager.updateBadge();
             window.NotificationManager.renderDropdown();
+            if (!window.NotificationManager._supabaseChannel) {
+                window.NotificationManager.initRealtimeWebSockets();
+            }
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && window.NotificationManager) {
+            if (!window.NotificationManager._supabaseChannel) {
+                window.NotificationManager.initRealtimeWebSockets();
+            }
+        }
+    });
+
+    // Soporte para Back-Forward Cache (bfcache) de los navegadores
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted && window.NotificationManager) {
+            console.log('[Realtime Notifications] Página restaurada desde bfcache. Reconectando...');
+            window.NotificationManager.reconnectRealtime();
+        }
+    });
+
+    window.addEventListener('pagehide', () => {
+        if (window.NotificationManager) {
+            window.NotificationManager.cleanupRealtime();
         }
     });
 })();
