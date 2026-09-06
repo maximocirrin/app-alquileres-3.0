@@ -1,14 +1,15 @@
-import iniciarHandler from '../../services/firmas/iniciar.js';
-import sellarHandler from '../../services/firmas/sellar.js';
-import finalizarHandler from '../../services/firmas/finalizar.js';
-import webhookDiditHandler from '../../services/firmas/webhook-didit.js';
+import iniciarHandler from '../services/firmas/iniciar.js';
+import sellarHandler from '../services/firmas/sellar.js';
+import finalizarHandler from '../services/firmas/finalizar.js';
+import webhookDiditHandler from '../services/firmas/webhook-didit.js';
 
 /**
- * Dynamic Serverless Route for /api/firmas/[action]
- * Automatically handles /api/firmas/sellar, /api/firmas/finalizar, /api/firmas/iniciar, /api/firmas/webhook-didit
+ * Unified Serverless Dispatcher for /api/firmas/*
+ * Handles /api/firmas/sellar, /api/firmas/finalizar, /api/firmas/iniciar, /api/firmas/webhook-didit
+ * Consolidates multiple endpoints into a single function to respect Vercel Hobby plan limits.
  */
 export default async function handler(req, res) {
-  // CORS support
+  // Configurar cabeceras CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -22,11 +23,10 @@ export default async function handler(req, res) {
   }
 
   let action = req.query?.action;
-  
   if (Array.isArray(action)) {
     action = action[0];
   }
-  
+
   if (!action && req.url) {
     const urlPath = req.url.split('?')[0];
     const match = urlPath.match(/\/api\/firmas(?:\/([^\/\?]+))?/i);
