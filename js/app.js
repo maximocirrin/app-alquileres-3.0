@@ -633,22 +633,31 @@ var App = window.App || {
 
     setTheme: (theme) => {
         const isDark = theme === 'dark';
-        const lightBg = '#f8fafc';
-        const darkBg = '#09090b';
-        const bgColor = isDark ? darkBg : lightBg;
 
-        if (isDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.classList.add('dark');
-            document.documentElement.style.backgroundColor = darkBg;
-            document.documentElement.style.colorScheme = 'dark';
-            if (document.body) document.body.style.backgroundColor = darkBg;
+        if (typeof window.__vivatApplyTheme === 'function') {
+            window.__vivatApplyTheme(theme);
         } else {
-            document.documentElement.removeAttribute('data-theme');
-            document.documentElement.classList.remove('dark');
-            document.documentElement.style.backgroundColor = lightBg;
-            document.documentElement.style.colorScheme = 'light';
-            if (document.body) document.body.style.backgroundColor = lightBg;
+            const lightBg = '#f8fafc';
+            const darkBg = '#09090b';
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.classList.add('dark');
+                document.documentElement.style.backgroundColor = darkBg;
+                document.documentElement.style.colorScheme = 'dark';
+                if (document.body) document.body.style.backgroundColor = darkBg;
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.backgroundColor = lightBg;
+                document.documentElement.style.colorScheme = 'light';
+                if (document.body) document.body.style.backgroundColor = lightBg;
+            }
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (e) {}
+            document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+                cb.checked = isDark;
+            });
         }
 
         // Eliminar meta theme-color para evitar que Safari pinte el fondo de la barra de URL en iPhone
@@ -661,15 +670,6 @@ var App = window.App || {
             document.head.appendChild(appleStatusBarMeta);
         }
         appleStatusBarMeta.content = 'black-translucent';
-
-        try {
-            localStorage.setItem('theme', theme);
-        } catch (e) {}
-
-        // Sync all checkboxes
-        document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
-            cb.checked = isDark;
-        });
 
         App.updateThemeIcons();
 
