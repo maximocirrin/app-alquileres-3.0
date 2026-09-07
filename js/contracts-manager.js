@@ -1220,26 +1220,40 @@
                 );
 
                 let hasSigned = false;
+                let signedAt = g.signedAt || g.signed_at || g.fecha_firma || null;
+                let diditSessionId = g.diditSessionId || g.didit_session_id || null;
+
                 if (g.hasSigned !== undefined) {
                     hasSigned = Boolean(g.hasSigned);
                 } else if (g.estado_firma === 'completada' || g.estado_firma === 'firmada' || g.estado_firma === 'sellada') {
                     hasSigned = true;
                 } else if (Array.isArray(contract.signatures)) {
-                    hasSigned = contract.signatures.some(s => 
+                    const matchSig = contract.signatures.find(s => 
                         (s.role === 'GUARANTOR' || s.rol_firmante === 'garante' || s.rol_firmante === 'guarantor') &&
                         ((email && s.email?.toLowerCase() === email.toLowerCase()) || s.name === name || s.hasSigned)
                     );
+                    if (matchSig) {
+                        hasSigned = Boolean(matchSig.hasSigned || matchSig.signedAt || matchSig.estado_firma === 'firmada');
+                        if (matchSig.signedAt) signedAt = matchSig.signedAt;
+                        if (matchSig.diditSessionId) diditSessionId = matchSig.diditSessionId;
+                    }
                 } else if (Array.isArray(contract.Firma_contrato)) {
-                    hasSigned = contract.Firma_contrato.some(f => 
+                    const matchFirma = contract.Firma_contrato.find(f => 
                         ['garante', 'guarantor', 'GARANTE', 'GUARANTOR'].includes(String(f.rol_firmante || '').toLowerCase()) &&
-                        (String(f.id_perfil_firmante) === String(g.id || g.id_garante) || (email && f.Perfil?.mail === email)) &&
+                        (String(f.id_perfil_firmante) === String(g.id_perfil || g.id || g.id_garante) || (email && f.Perfil?.mail?.toLowerCase() === email?.toLowerCase()) || (dni && f.Perfil?.dni === dni)) &&
                         (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                     );
+                    if (matchFirma) {
+                        hasSigned = true;
+                        signedAt = matchFirma.fecha_firma || matchFirma.created_at;
+                        diditSessionId = matchFirma.didit_session_id;
+                    }
                 }
 
                 return {
                     id: g.id || g.id_garante || `gar_${idx + 1}`,
                     id_garante: g.id_garante || g.id,
+                    id_perfil: g.id_perfil,
                     name,
                     dni,
                     cuil,
@@ -1253,7 +1267,10 @@
                     token_invitacion: g.token_invitacion || g.token || '',
                     roleLabel,
                     isKycVerified,
-                    hasSigned
+                    hasSigned,
+                    signedAt,
+                    diditSessionId,
+                    estado_firma: hasSigned ? 'firmada' : (g.estado_firma || 'pendiente')
                 };
             });
         },
@@ -4861,7 +4878,8 @@
                     </div>
 
                     <!-- CERTIFICADOS FORENSES DE EVIDENCIA Y AUDIT TRAIL -->
-                    <!-- 1. Audit Trail Inquilino -->
+                    <!-- 1. Audit Trail Inquilino (Solo si ha firmado) -->
+                    ${tenantSigned ? `
                     <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
                         <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
                             <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
@@ -4885,7 +4903,7 @@
                                 <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${tenantName}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${tenantDni} • CUIL ${tenantCuil}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${tenantEmail}</td></tr>
-                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${tenantSigned ? (contract.tenant?.signedAt ? new Date(contract.tenant.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${contract.tenant?.signedAt ? new Date(contract.tenant.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')} (UTC-3)</td></tr>
                             </table>
                         </div>
 
@@ -4922,8 +4940,10 @@
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
+                    ` : ''}
 
-                    <!-- 2. Audit Trail Propietario -->
+                    <!-- 2. Audit Trail Propietario (Solo si ha firmado) -->
+                    ${ownerSigned ? `
                     <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
                         <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
                             <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
@@ -4947,7 +4967,7 @@
                                 <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${ownerName}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${ownerDni} • CUIL ${ownerCuil}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${ownerEmail}</td></tr>
-                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${ownerSigned ? (contract.owner?.signedAt ? new Date(contract.owner.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${contract.owner?.signedAt ? new Date(contract.owner.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')} (UTC-3)</td></tr>
                             </table>
                         </div>
 
@@ -4984,13 +5004,21 @@
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
+                    ` : ''}
 
-                    <!-- 3. Audit Trails de Garantes -->
-                    ${(printGuarantors && printGuarantors.length > 0) ? printGuarantors.map((g, idx) => {
-                        const gIp = g.ip || '186.138.89.210';
-                        const gUserAgent = g.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-                        const gIsSigned = Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada');
-                        return `
+                    <!-- 3. Audit Trails de Garantes (Únicamente garantes que hayan firmado efectivamente) -->
+                    ${(() => {
+                        const signedGuarantors = (printGuarantors && printGuarantors.length > 0)
+                            ? printGuarantors.filter(g => Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada'))
+                            : [];
+                        
+                        if (signedGuarantors.length === 0) return '';
+
+                        return signedGuarantors.map((g, idx) => {
+                            const gIp = g.ip || '186.138.89.210';
+                            const gUserAgent = g.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                            const gSignedDate = g.signedAt ? new Date(g.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR');
+                            return `
                     <div class="audit-page" style="page-break-before: always; margin-top: 40px; padding-top: 20px; border-top: 2px solid #000000;">
                         <div style="background: #ffffff; border: 1px solid #000000; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
                             <div style="font-size: 15px; font-weight: 800; color: #000000;">VIVAT PLATAFORMA INMOBILIARIA S.A.</div>
@@ -5014,7 +5042,7 @@
                                 <tr><td style="font-weight: bold; color: #000000;">Nombre Completo:</td><td>${g.name}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">DNI / CUIL:</td><td>DNI ${g.dni} • CUIL ${g.cuil}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Email Registrado:</td><td>${g.email}</td></tr>
-                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${gIsSigned ? (g.signedAt ? new Date(g.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR')) + ' (UTC-3)' : '<b>PENDIENTE DE SUSCRIPCIÓN</b> (Aún no firmado por esta parte)'}</td></tr>
+                                <tr><td style="width: 35%; font-weight: bold; color: #000000;">Fecha y Hora Oficial:</td><td>${gSignedDate} (UTC-3)</td></tr>
                             </table>
                         </div>
 
@@ -5051,8 +5079,9 @@
                             DOCUMENTO AUDITABLE CUSTODIADO POR VIVAT PLATAFORMA INMOBILIARIA • CUMPLIMIENTO LEY 25.506
                         </div>
                     </div>
-                        `;
-                    }).join('') : ''}
+                            `;
+                        }).join('');
+                    })()}
 
                     <script>
                         window.onload = function() { window.print(); };
@@ -5145,6 +5174,11 @@
                 ? this.resolveContractGuarantors(contract)
                 : (contract.guarantors || []);
 
+            const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
+            const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
+            const signedGuarantors = printGuarantors.filter(g => Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada'));
+            const isFullySigned = Boolean(ownerSigned && tenantSigned && signedGuarantors.length === printGuarantors.length);
+
             const events = contract.auditTrailEvents || [
                 {
                     timestamp: new Date(Date.now() - 3600000 * 24).toISOString().replace('T', ' ').substring(0, 19),
@@ -5152,30 +5186,35 @@
                     actor: 'Vivat Smart Contracts Generator',
                     details: `Contrato digital legalmente redactado para ${tenantName} en ${propAddress}.`
                 },
-                {
-                    timestamp: new Date(Date.now() - 3600000 * 18).toISOString().replace('T', ' ').substring(0, 19),
+                ...(tenantSigned ? [{
+                    timestamp: contract.tenant?.signedAt ? new Date(contract.tenant.signedAt).toISOString().replace('T', ' ').substring(0, 19) : new Date(Date.now() - 3600000 * 18).toISOString().replace('T', ' ').substring(0, 19),
                     action: 'DIDIT_LIVENESS_INQUILINO',
                     actor: `${tenantName} (Locatario)`,
                     details: 'Validación biométrica facial 3D superada exitosamente con prueba de vida activa Didit KYC (iBeta Level 1).'
-                },
-                {
-                    timestamp: new Date(Date.now() - 3600000 * 12).toISOString().replace('T', ' ').substring(0, 19),
+                }] : []),
+                ...(ownerSigned ? [{
+                    timestamp: contract.owner?.signedAt ? new Date(contract.owner.signedAt).toISOString().replace('T', ' ').substring(0, 19) : new Date(Date.now() - 3600000 * 12).toISOString().replace('T', ' ').substring(0, 19),
                     action: 'DIDIT_LIVENESS_PROPIETARIO',
                     actor: `${ownerName} (Locador)`,
                     details: 'Validación biométrica facial 3D superada exitosamente con prueba de vida activa Didit KYC (iBeta Level 1).'
-                },
-                ...printGuarantors.map((g, idx) => ({
-                    timestamp: new Date(Date.now() - 3600000 * (10 - idx)).toISOString().replace('T', ' ').substring(0, 19),
+                }] : []),
+                ...signedGuarantors.map((g, idx) => ({
+                    timestamp: g.signedAt ? new Date(g.signedAt).toISOString().replace('T', ' ').substring(0, 19) : new Date(Date.now() - 3600000 * (10 - idx)).toISOString().replace('T', ' ').substring(0, 19),
                     action: `DIDIT_LIVENESS_GARANTE_${idx + 1}`,
                     actor: `${g.name} (${g.roleLabel || 'Garante'})`,
                     details: `Validación de identidad y biometría facial 3D superada exitosamente. DNI ${g.dni} verificado con prueba de vida Didit.`
                 })),
-                {
+                ...(isFullySigned ? [{
                     timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
                     action: 'SELLADO_FORENSE_TSA',
                     actor: 'Autoridad Certificante TSA RFC 3161',
                     details: 'Digest criptográfico SHA-256 estampado con sello de tiempo legal inmutable bajo Ley Nacional 25.506.'
-                }
+                }] : [{
+                    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    action: 'REGISTRO_PRELIMINAR',
+                    actor: 'Sistema de Custodia Vivat',
+                    details: 'Documento en proceso de suscripción digital. Aguardando firmas y validaciones biométricas restantes.'
+                }])
             ];
 
             let eventsHtml = '';
@@ -5249,34 +5288,43 @@
                     <h3 style="font-size: 13.5px; font-weight: 800; color: #000000; margin-top: 30px;">Firmantes y Garantes Validados Biométricamente</h3>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
-                        <div class="audit-card">
+                        <div class="audit-card" style="${tenantSigned ? '' : 'background: #fafafa; border-style: dashed; opacity: 0.8;'}">
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locatario (Inquilino)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${tenantName}</div>
                             <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.tenant?.dni || ''}${contract.tenant?.cuil ? ` • <b>CUIL:</b> ${contract.tenant.cuil}` : ''}</div>
-                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${tIp} • ${tUa.substring(0, 38)}...</div>
-                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">${tenantSigned ? `IP: ${tIp} • ${tUa.substring(0, 38)}...` : 'IP: Pendiente de conexión'}</div>
+                            <div style="font-size: 10.5px; font-weight: bold; margin-top: 6px;">
+                                ${tenantSigned ? '<span style="color: #000000;">✓ Didit KYC & Liveness 3D Aprobado</span>' : '<span style="color: #b45309;">⏳ Pendiente de Firma y Validación Biométrica</span>'}
+                            </div>
                         </div>
 
-                        <div class="audit-card">
+                        <div class="audit-card" style="${ownerSigned ? '' : 'background: #fafafa; border-style: dashed; opacity: 0.8;'}">
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">Locador (Propietario)</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${ownerName}</div>
                             <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${contract.owner?.dni || ''}${contract.owner?.cuil ? ` • <b>CUIL:</b> ${contract.owner.cuil}` : ''}</div>
-                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${oIp} • ${oUa.substring(0, 38)}...</div>
-                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">${ownerSigned ? `IP: ${oIp} • ${oUa.substring(0, 38)}...` : 'IP: Pendiente de conexión'}</div>
+                            <div style="font-size: 10.5px; font-weight: bold; margin-top: 6px;">
+                                ${ownerSigned ? '<span style="color: #000000;">✓ Didit KYC & Liveness 3D Aprobado</span>' : '<span style="color: #b45309;">⏳ Pendiente de Firma y Validación Biométrica</span>'}
+                            </div>
                         </div>
                     </div>
 
                     ${(printGuarantors && printGuarantors.length > 0) ? `
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
-                        ${printGuarantors.map((g, idx) => `
-                        <div class="audit-card">
+                        ${printGuarantors.map((g, idx) => {
+                            const isGSigned = Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada');
+                            return `
+                        <div class="audit-card" style="${isGSigned ? '' : 'background: #fafafa; border-style: dashed; opacity: 0.8;'}">
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${g.name}</div>
                             <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}</div>
-                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">IP: ${g.ip || '186.138.89.210'} • ${(g.userAgent || 'Mozilla/5.0').substring(0, 38)}...</div>
-                            <div style="font-size: 10.5px; color: #000000; font-weight: bold; margin-top: 6px;">✓ Didit KYC & Liveness 3D Aprobado</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">${isGSigned ? `IP: ${g.ip || '186.138.89.210'} • ${(g.userAgent || 'Mozilla/5.0').substring(0, 38)}...` : 'IP: Pendiente de conexión'}</div>
+                            <div style="font-size: 10.5px; font-weight: bold; margin-top: 6px;">
+                                ${isGSigned ? '<span style="color: #000000;">✓ Didit KYC & Liveness 3D Aprobado</span>' : '<span style="color: #b45309;">⏳ Pendiente de Firma y Validación Biométrica</span>'}
+                            </div>
                         </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                     ` : ''}
 
