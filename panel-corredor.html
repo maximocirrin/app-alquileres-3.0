@@ -2471,7 +2471,7 @@
                                         <span class="material-symbols-outlined text-base ${isPaused ? 'text-emerald-500' : 'text-amber-500'}">${isPaused ? 'play_circle' : 'pause_circle'}</span>
                                         <span>${isPaused ? 'Reanudar publicación' : 'Pausar publicación'}</span>
                                     </button>
-                                    <button type="button" onclick="if(window.App && typeof window.App.showPublishWizard === 'function') window.App.showPublishWizard(${safePropJson}); closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
+                                    <button type="button" onclick="if(window.openMarketplacePropertyDetailModal) { window.openMarketplacePropertyDetailModal(${safePropJson}, { isOwner: true, isEditing: true }); } else if(window.App && typeof window.App.showPublishWizard === 'function') { window.App.showPublishWizard(${safePropJson}); } closeAllBrokerCardMenus();" class="w-full px-4 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 transition-colors cursor-pointer text-left">
                                         <span class="material-symbols-outlined text-base text-zinc-400">edit</span>
                                         <span>Editar publicación</span>
                                     </button>
