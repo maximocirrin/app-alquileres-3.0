@@ -1,17 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" prefix="og: https://ogp.me/ns#">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RQET5XVCSH"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-RQET5XVCSH');
-    </script>
     <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Vivat | Alquileres Seguros, Garantías y Contratos Digitales</title>
 
     <!-- Metadatos Open Graph / WhatsApp / Facebook (Prioritarios para el crawler) -->
@@ -21,20 +14,13 @@
     <meta property="og:description" content="Vivat es la plataforma integral de alquileres en Argentina. Buscá propiedades, calificá con Pasaporte Vivat y gestioná contratos digitales 100% online y seguros.">
     <meta property="og:url" content="https://vivat.com.ar/">
     
-    <!-- Imagen Principal (1200x630 banner) sin redirecciones intermedias -->
+    <!-- Imagen Principal (1200x630) optimizada para WhatsApp, Facebook y Twitter -->
     <meta property="og:image" content="https://vivat.com.ar/img/og-vivat.png">
     <meta property="og:image:secure_url" content="https://vivat.com.ar/img/og-vivat.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Logo Vivat - Alquileres Seguros">
-
-    <!-- Imagen Cuadrada (600x600) optimizada para WhatsApp Móvil -->
-    <meta property="og:image" content="https://vivat.com.ar/img/logo-share.png">
-    <meta property="og:image:secure_url" content="https://vivat.com.ar/img/logo-share.png">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="600">
-    <meta property="og:image:height" content="600">
     <meta property="og:locale" content="es_AR">
 
     <!-- Fallbacks para WhatsApp y motores de previsualización -->
@@ -58,14 +44,19 @@
     <meta name="geo.region" content="AR">
     <link rel="canonical" href="https://vivat.com.ar/">
 
-    <!-- Verificación Google Search Console (Pega aquí tu código de verificación HTML si usas método etiqueta) -->
-    <!-- <meta name="google-site-verification" content="PEGA_AQUI_TU_CODIGO_DE_GSC" /> -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RQET5XVCSH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RQET5XVCSH');
+    </script>
 
     <!-- Seguridad y compatibilidad -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -293,12 +284,14 @@
             opacity: 0;
             transform: translateY(30px);
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transition-property: opacity, transform;
             will-change: opacity, transform;
         }
 
         .animate-on-scroll.is-visible {
             opacity: 1;
             transform: translateY(0);
+            transition-delay: 0s !important;
         }
 
         .premium-guarantee-target {
@@ -1361,12 +1354,17 @@
                             'habitacion': 'Habitación'
                         };
                         const rawType = prop.subtipo_propiedad || prop.tipo_propiedad || prop.type || prop.extraInfo?.tipo_propiedad || prop.extraInfo?.tipo || 'Departamento';
-                        const propertyType = tipoLabels[String(rawType).toLowerCase()] || rawType;
+                        const propertyType = (typeof window.formatPropertyTypeBadge === 'function')
+                            ? window.formatPropertyTypeBadge(prop)
+                            : (tipoLabels[String(rawType).toLowerCase()] || rawType);
+                        const calleNum = (prop.calle && prop.numero) ? `${prop.calle} ${prop.numero}` : (prop.calle_altura || prop.calle || prop.address || prop.title);
+                        const barrioProv = [prop.barrio || prop.extraInfo?.barrio, prop.provincia || prop.province || prop.extraInfo?.provincia].filter(Boolean).join(', ') || prop.address;
 
-                        card.innerHTML = `
+                            const isMyProp = typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop);
+                            card.innerHTML = `
                             <div>
                                 <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
-                                    <img src="${prop.image}" alt="${prop.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="${prop.image}" alt="${calleNum}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     ${isAlquilada ? `
                                         <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                             <span class="material-symbols-outlined text-xs">key</span> Alquilada
@@ -1392,7 +1390,7 @@
                                     </span>
                                 </div>
                                 <h3 class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors flex items-center gap-1.5">
-                                    <span>${prop.title}</span>
+                                    <span>${calleNum}</span>
                                     ${isVerified ? `
                                         <span class="text-emerald-600 dark:text-emerald-400 inline-flex items-center shrink-0" title="Propietario Verificado">
                                             <span class="material-symbols-outlined text-base">verified</span>
@@ -1401,7 +1399,7 @@
                                 </h3>
                                 <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
                                     <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
-                                    ${prop.address}
+                                    ${barrioProv}
                                 </p>
                                 <div class="flex flex-wrap gap-1.5 mb-4">
                                     ${prop.tags.filter(t => t !== 'Propietario Verificado').slice(0, 3).map(tag => `
@@ -1413,7 +1411,7 @@
                             </div>
                             <button type="button" class="w-full ${isAlquilada ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300' : 'bg-zinc-100 dark:bg-zinc-800/80 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white group-hover:bg-primary group-hover:text-white dark:group-hover:bg-red-700 text-zinc-800 dark:text-zinc-200'} py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer group/btn">
                                 <span class="material-symbols-outlined text-base transition-transform duration-300 group-hover/btn:scale-110">visibility</span>
-                                <span>${isAlquilada ? 'Ver detalle de alquiler' : 'Ver detalle y postularse'}</span>
+                                <span>${isMyProp ? 'Administrar mi publicación' : (isAlquilada ? 'Ver detalle de alquiler' : 'Ver detalle y postularse')}</span>
                             </button>
                         `;
 

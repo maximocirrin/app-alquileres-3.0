@@ -1558,6 +1558,8 @@ html.dark .floating-dock,
   
   display: inline-block;
   cursor: pointer;
+  contain: layout;
+  will-change: transform;
 }
 
 /* Adjust size for desktop header if needed */

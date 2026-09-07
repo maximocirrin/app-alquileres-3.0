@@ -1282,17 +1282,21 @@
                                         'habitacion': 'Habitación'
                                     };
                                     const rawType = rental.subtipo_propiedad || rental.tipo_propiedad || rental.type || rental.extraInfo?.tipo_propiedad || rental.extraInfo?.tipo || 'Departamento';
-                                    const propertyType = tipoLabels[String(rawType).toLowerCase()] || rawType;
+                                    const propertyType = (typeof window.formatPropertyTypeBadge === 'function')
+                                        ? window.formatPropertyTypeBadge(rental)
+                                        : (tipoLabels[String(rawType).toLowerCase()] || rawType);
+                                    const calleNum = (rental.calle && rental.numero) ? `${rental.calle} ${rental.numero}` : (rental.calle_altura || rental.calle || rental.address || rental.title);
+                                    const barrioProv = [rental.barrio || rental.extraInfo?.barrio, rental.provincia || rental.province || rental.extraInfo?.provincia].filter(Boolean).join(', ') || rental.address;
 
                                     card.innerHTML = `
                                         <div class="listing-media relative overflow-hidden">
-                                            <img src="${rental.image}" alt="${rental.title}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                            <img src="${rental.image}" alt="${calleNum}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                                             ${isAlquilada ? `
                                                 <div class="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                                     <span class="material-symbols-outlined text-xs">key</span> Alquilada
                                                 </div>
                                             ` : ''}
-                                            <button class="favorite-btn" type="button" aria-label="Guardar ${rental.title}">
+                                            <button class="favorite-btn" type="button" aria-label="Guardar ${calleNum}">
                                                 <span class="material-symbols-rounded" aria-hidden="true">favorite</span>
                                             </button>
                                             ${photosCount > 1 ? `
@@ -1313,7 +1317,7 @@
                                                         <span class="status-badge ${isIncluidas ? 'status-expensas-incluidas' : 'status-expensas-mas'}">${expensasText}</span>
                                                     </div>
                                                     <h2 class="listing-title flex items-center gap-1.5">
-                                                        <span>${rental.title}</span>
+                                                        <span>${calleNum}</span>
                                                         ${isVerified ? `
                                                             <span class="text-emerald-600 dark:text-emerald-400 inline-flex items-center shrink-0" title="Propietario Verificado">
                                                                 <span class="material-symbols-outlined text-base">verified</span>
@@ -1322,11 +1326,13 @@
                                                     </h2>
                                                 </div>
                                             </div>
-                                            <span class="listing-address">${rental.address}</span>
+                                            <span class="listing-address flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-2 line-clamp-1 font-body">
+                                                <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
+                                                ${barrioProv}
+                                            </span>
                                             <ul class="spec-list">
                                                 ${rental.tags.filter(t => t !== 'Propietario Verificado').map((tag) => `<li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>${tag}</li>`).join('')}
                                             </ul>
-                                            <p class="listing-note">${rental.note}</p>
                                             <div class="card-actions mt-1 w-full">
                                                 <button class="primary-action btn-open-detail w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm bg-zinc-100 dark:bg-zinc-800/80 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white text-zinc-800 dark:text-zinc-200 transition-all duration-300 flex items-center justify-center gap-2 shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer group/btn" type="button">
                                                     <span class="material-symbols-rounded text-base transition-transform duration-300 group-hover/btn:scale-110" aria-hidden="true">visibility</span>

@@ -1,17 +1,32 @@
-// Gestor optimizado de cambio de tema (Claro / Oscuro) con bloqueo temporal de transiciones
-// para garantizar un cambio 100% instantáneo (0ms) sin desfases visuales ni animaciones asíncronas
+// Gestor ultrarrápido y fluido de cambio de tema (Claro / Oscuro)
+// Elimina desincronizaciones y elementos trabados bloqueando transiciones lentas en elementos generales,
+// pero permitiendo que el interruptor (.theme-switch) se anime con total fluidez a 60/120fps.
 window.__vivatApplyTheme = function (theme) {
     const isDark = theme === 'dark';
     const darkBg = '#09090b';
     const lightBg = '#f8fafc';
+    const r = document.documentElement;
 
-    // 1. Candado instantáneo de transiciones CSS
+    // Si ya está en ese tema, solo asegurar checkboxes y salir
+    const currentlyDark = r.classList.contains('dark') || r.getAttribute('data-theme') === 'dark';
+    if (currentlyDark === isDark && window.__vivatCurrentTheme === theme) {
+        document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+            if (cb.checked !== isDark) cb.checked = isDark;
+        });
+        return;
+    }
+    window.__vivatCurrentTheme = theme;
+
+    // 1. Candado instantáneo de transiciones: excluye explícitamente el interruptor animado (.theme-switch)
+    // para que el toggle deslice suavemente mientras los 100+ elementos de la página cambian sin lag ni retrasos.
     let lock = document.getElementById('vivat-theme-transition-lock');
     if (!lock) {
         lock = document.createElement('style');
         lock.id = 'vivat-theme-transition-lock';
         lock.textContent = `
-            *, *::before, *::after {
+            *:not(.theme-switch, .theme-switch *, .theme-switch__container, .theme-switch__container *),
+            *:not(.theme-switch, .theme-switch *, .theme-switch__container, .theme-switch__container *)::before,
+            *:not(.theme-switch, .theme-switch *, .theme-switch__container, .theme-switch__container *)::after {
                 -webkit-transition: none !important;
                 -moz-transition: none !important;
                 -o-transition: none !important;
@@ -22,8 +37,7 @@ window.__vivatApplyTheme = function (theme) {
         document.head.appendChild(lock);
     }
 
-    // 2. Aplicación síncrona de clases y atributos en html y body
-    const r = document.documentElement;
+    // 2. Aplicación de atributos y estilos de fondo de manera síncrona
     if (isDark) {
         r.setAttribute('data-theme', 'dark');
         r.classList.add('dark');
@@ -48,23 +62,23 @@ window.__vivatApplyTheme = function (theme) {
         localStorage.setItem('theme', theme);
     } catch (e) {}
 
-    // Sincronizar checkboxes de tema
+    // Sincronizar todos los interruptores sin disparar eventos en cascada
     document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
-        cb.checked = isDark;
+        if (cb.checked !== isDark) cb.checked = isDark;
     });
 
-    // 3. Forzar repintado síncrono del frame
-    void r.offsetHeight;
+    // 3. Forzar que el motor de renderizado asimile el cambio de tema de inmediato sin transiciones
+    if (document.body) {
+        void window.getComputedStyle(document.body).opacity;
+    }
 
-    // 4. Liberar el candado para que las animaciones de interacción (hover, menús) sigan funcionando
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            const el = document.getElementById('vivat-theme-transition-lock');
-            if (el && el.parentNode) {
-                el.parentNode.removeChild(el);
-            }
-        });
-    });
+    // 4. Liberar el candado en el próximo ciclo para que las interacciones normales (hover, modales) sigan activas
+    setTimeout(() => {
+        const el = document.getElementById('vivat-theme-transition-lock');
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
+    }, 20);
 };
 
 // Reintento automático de scripts CDN ante desconexiones de red (ej. net::ERR_NETWORK_CHANGED)

@@ -25,6 +25,87 @@
     } catch(e) {}
 })();
 
+// Global Property Subtypes Configuration (Wizard strictly defines types and subtypes)
+window.PROPERTY_SUBTYPES_CONFIG = window.PROPERTY_SUBTYPES_CONFIG || {
+    departamento: [
+        { value: 'Estándar', label: 'Estándar' },
+        { value: 'Monoambiente', label: 'Monoambiente' },
+        { value: 'Dúplex', label: 'Dúplex' },
+        { value: 'Piso', label: 'Piso' }
+    ],
+    'local-comercial': [
+        { value: 'Local a la calle', label: 'Local a la calle' },
+        { value: 'En galería', label: 'En galería' },
+        { value: 'Galpón', label: 'Galpón' },
+        { value: 'Depósito', label: 'Depósito' }
+    ],
+    local: [
+        { value: 'Local a la calle', label: 'Local a la calle' },
+        { value: 'En galería', label: 'En galería' },
+        { value: 'Galpón', label: 'Galpón' },
+        { value: 'Depósito', label: 'Depósito' }
+    ]
+};
+
+// Formatter for Property Type / Subtype Badge on cards and previews
+window.formatPropertyTypeBadge = function (propOrTipo, maybeSubtipo) {
+    let tipo = '';
+    let subtipo = '';
+
+    if (propOrTipo && typeof propOrTipo === 'object') {
+        const p = propOrTipo;
+        const extra = p.extraInfo || {};
+        tipo = p.tipo_propiedad || p.tipo || extra.tipo_propiedad || extra.tipo || extra.tipoPropiedad || p.type || '';
+        subtipo = p.subtipo_propiedad || p.subtipo || extra.subtipo_propiedad || extra.subtipo || extra.subtipoPropiedad || p.subtipoPropiedad || '';
+        if (!tipo && (p.id_tipo_propiedad || p.Propiedad?.id_tipo_propiedad)) {
+            const idMap = { 1: 'Departamento', 2: 'Casa', 3: 'PH', 6: 'Local comercial' };
+            const idT = p.id_tipo_propiedad || p.Propiedad?.id_tipo_propiedad;
+            tipo = idMap[idT] || 'Departamento';
+        }
+    } else {
+        tipo = String(propOrTipo || '');
+        subtipo = String(maybeSubtipo || '');
+    }
+
+    const normTipo = String(tipo || 'departamento').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const normSub = String(subtipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    if (normTipo.includes('casa')) {
+        return 'Casa';
+    }
+
+    if (normTipo.includes('ph')) {
+        return 'PH';
+    }
+
+    if (normTipo.includes('local')) {
+        if (normSub && !normSub.includes('estandar')) {
+            const subMap = {
+                'local-a-calle': 'Local a la calle',
+                'local a la calle': 'Local a la calle',
+                'galeria': 'En galería',
+                'en galeria': 'En galería',
+                'galpon': 'Galpón',
+                'deposito': 'Depósito'
+            };
+            return subMap[normSub] || subtipo || 'Local comercial';
+        }
+        return 'Local comercial';
+    }
+
+    // Regla Departamento: Si seleccionan departamento, muestra el subtipo a menos que sea estándar donde solo se muestra Departamento
+    if (normSub && normSub !== 'estandar' && normSub !== 'departamento' && normSub !== 'sin subtipo') {
+        const deptoSubMap = {
+            'monoambiente': 'Monoambiente',
+            'duplex': 'Dúplex',
+            'piso': 'Piso'
+        };
+        return deptoSubMap[normSub] || (subtipo.charAt(0).toUpperCase() + subtipo.slice(1)) || 'Departamento';
+    }
+
+    return 'Departamento';
+};
+
 // Custom Modal Dialog System for Styled Confirm & Alert
 window.showCustomAlert = function (msgOrOpts) {
     return new Promise((resolve) => {
@@ -634,29 +715,34 @@ var App = window.App || {
     setTheme: (theme) => {
         const isDark = theme === 'dark';
 
+        // Evitar ejecuciones reentrantes o duplicadas en cascada
+        if (App._isSettingTheme) return;
+        App._isSettingTheme = true;
+
         if (typeof window.__vivatApplyTheme === 'function') {
             window.__vivatApplyTheme(theme);
         } else {
             const lightBg = '#f8fafc';
             const darkBg = '#09090b';
+            const r = document.documentElement;
             if (isDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-                document.documentElement.style.backgroundColor = darkBg;
-                document.documentElement.style.colorScheme = 'dark';
+                r.setAttribute('data-theme', 'dark');
+                r.classList.add('dark');
+                r.style.backgroundColor = darkBg;
+                r.style.colorScheme = 'dark';
                 if (document.body) document.body.style.backgroundColor = darkBg;
             } else {
-                document.documentElement.removeAttribute('data-theme');
-                document.documentElement.classList.remove('dark');
-                document.documentElement.style.backgroundColor = lightBg;
-                document.documentElement.style.colorScheme = 'light';
+                r.removeAttribute('data-theme');
+                r.classList.remove('dark');
+                r.style.backgroundColor = lightBg;
+                r.style.colorScheme = 'light';
                 if (document.body) document.body.style.backgroundColor = lightBg;
             }
             try {
                 localStorage.setItem('theme', theme);
             } catch (e) {}
             document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
-                cb.checked = isDark;
+                if (cb.checked !== isDark) cb.checked = isDark;
             });
         }
 
@@ -676,6 +762,10 @@ var App = window.App || {
         try {
             window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme, isDark } }));
         } catch (e) {}
+
+        setTimeout(() => {
+            App._isSettingTheme = false;
+        }, 50);
     },
 
     toggleTheme: () => {
@@ -1353,20 +1443,27 @@ var App = window.App || {
         const selectSubtipoPropiedad = document.getElementById('subtipo-propiedad');
 
         if (selectTipoPropiedad && selectSubtipoPropiedad) {
-            const subtiposConfig = {
+            window.PROPERTY_SUBTYPES_CONFIG = {
                 departamento: [
-                    { value: 'estandar', label: 'Estándar' },
-                    { value: 'monoambiente', label: 'Monoambiente' },
-                    { value: 'duplex', label: 'Dúplex' },
-                    { value: 'piso', label: 'Piso' }
+                    { value: 'Estándar', label: 'Estándar' },
+                    { value: 'Monoambiente', label: 'Monoambiente' },
+                    { value: 'Dúplex', label: 'Dúplex' },
+                    { value: 'Piso', label: 'Piso' }
                 ],
                 'local-comercial': [
-                    { value: 'local-a-calle', label: 'Local a la calle' },
-                    { value: 'galeria', label: 'En galería' },
-                    { value: 'galpon', label: 'Galpón' },
-                    { value: 'deposito', label: 'Depósito' }
+                    { value: 'Local a la calle', label: 'Local a la calle' },
+                    { value: 'En galería', label: 'En galería' },
+                    { value: 'Galpón', label: 'Galpón' },
+                    { value: 'Depósito', label: 'Depósito' }
+                ],
+                local: [
+                    { value: 'Local a la calle', label: 'Local a la calle' },
+                    { value: 'En galería', label: 'En galería' },
+                    { value: 'Galpón', label: 'Galpón' },
+                    { value: 'Depósito', label: 'Depósito' }
                 ]
             };
+            const subtiposConfig = window.PROPERTY_SUBTYPES_CONFIG;
 
             selectTipoPropiedad.addEventListener('change', (e) => {
                 const tipo = e.target.value;
@@ -2647,9 +2744,21 @@ var App = window.App || {
 
             const operacion = (getRadioVal('operacion') || 'Alquiler');
             const tipoSelect = document.getElementById('tipo-propiedad');
-            const tipoText = (tipoSelect && tipoSelect.selectedIndex > 0 && tipoSelect.options[tipoSelect.selectedIndex]?.text) || 'Departamento';
+            let tipoText = 'Departamento';
+            if (tipoSelect) {
+                if (tipoSelect.selectedIndex > 0 && tipoSelect.options[tipoSelect.selectedIndex]?.text) {
+                    tipoText = tipoSelect.options[tipoSelect.selectedIndex].text;
+                } else if (tipoSelect.value) {
+                    const tVal = tipoSelect.value.toLowerCase();
+                    if (tVal === 'casa') tipoText = 'Casa';
+                    else if (tVal === 'ph') tipoText = 'PH';
+                    else if (tVal.includes('local')) tipoText = 'Local comercial';
+                    else tipoText = 'Departamento';
+                }
+            }
+            const isNoSubtype = tipoText.toLowerCase().includes('casa') || tipoText.toLowerCase().includes('ph');
             const subtipoSelect = document.getElementById('subtipo-propiedad');
-            const subtipoText = (subtipoSelect && subtipoSelect.selectedIndex > 0 && subtipoSelect.options[subtipoSelect.selectedIndex]?.text) || '';
+            const subtipoText = isNoSubtype ? '' : ((subtipoSelect && subtipoSelect.selectedIndex > 0 && subtipoSelect.options[subtipoSelect.selectedIndex]?.text) || '');
             const piso = getVal('piso-propiedad');
             const depto = getVal('depto-propiedad');
             const numeroLocal = getVal('numero-local');
@@ -2834,25 +2943,7 @@ var App = window.App || {
             // 2. Marketplace Card Property Type & Price & Expensas
             const typeBadgeDisplay = document.getElementById('review-type-badge-display');
             if (typeBadgeDisplay) {
-                const tipoMap = {
-                    'departamento': 'Departamento',
-                    'apartment': 'Departamento',
-                    'casa': 'Casa',
-                    'house': 'Casa',
-                    'ph': 'PH',
-                    'ph-townhouse': 'PH',
-                    'terreno': 'Terreno',
-                    'local': 'Local comercial',
-                    'local-comercial': 'Local comercial',
-                    'commercial': 'Local comercial',
-                    'oficina': 'Oficina',
-                    'oficina-comercial': 'Oficina',
-                    'quinta-vacacional': 'Quinta Vacacional',
-                    'cochera': 'Cochera',
-                    'habitacion': 'Habitación'
-                };
-                const rawType = propData.subtipo_propiedad || propData.tipo_propiedad || propData.type || extra.tipo_propiedad || extra.tipo || 'Departamento';
-                typeBadgeDisplay.textContent = tipoMap[String(rawType).toLowerCase()] || rawType;
+                typeBadgeDisplay.textContent = window.formatPropertyTypeBadge(propData);
             }
 
             const priceDisplay = document.getElementById('review-price-display');
@@ -2874,15 +2965,25 @@ var App = window.App || {
                 }
             }
 
-            // 3. Marketplace Card Title & Address
+            // 3. Marketplace Card Address (Calle y Numeración) & Barrio / Provincia
+            // "en el preview de las publicaciones no muestres el titlo o descripcion de la publicacion. quiero que muestres la direccion (calle y numeracion), barrio y provincia."
             const titleDisplay = document.getElementById('review-title-display');
+            const addressDisplay = document.getElementById('review-address-display');
+
+            const calleAlturaVal = document.getElementById('calle-altura')?.value?.trim() || propData.calle_altura || propData.calle || '';
+            const barrioVal = window.selectedPropertyBarrio || document.getElementById('barrio')?.value?.trim() || propData.barrio || '';
+            const ciudadVal = window.selectedPropertyCiudad || document.getElementById('ciudad')?.value?.trim() || propData.city || propData.ciudad || '';
+            const provinciaVal = window.selectedPropertyProvincia || document.getElementById('provincia')?.value?.trim() || propData.province || propData.provincia || 'Mendoza';
+
+            const direccionLinea = calleAlturaVal || propData.address || 'Dirección no especificada';
+            const ubicacionZona = [barrioVal, provinciaVal].filter(Boolean).join(', ') || [ciudadVal, provinciaVal].filter(Boolean).join(', ') || 'Mendoza';
+
             if (titleDisplay) {
-                titleDisplay.textContent = propData.title || 'Título de la propiedad';
+                titleDisplay.textContent = direccionLinea;
             }
 
-            const addressDisplay = document.getElementById('review-address-display');
             if (addressDisplay) {
-                addressDisplay.innerHTML = `<span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span> <span>${propData.address || 'Dirección no especificada'}</span>`;
+                addressDisplay.innerHTML = `<span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span> <span>${ubicacionZona}</span>`;
             }
 
             // 4. Marketplace Card Tags Chips
@@ -2890,7 +2991,7 @@ var App = window.App || {
             if (tagsContainer) {
                 const tagsToRender = (propData.tags || []).filter(t => t !== 'Propietario Verificado').slice(0, 4);
                 if (tagsToRender.length === 0) {
-                    tagsContainer.innerHTML = `<span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">${propData.type || 'Inmueble'}</span>`;
+                    tagsContainer.innerHTML = `<span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">${window.formatPropertyTypeBadge(propData)}</span>`;
                 } else {
                     tagsContainer.innerHTML = tagsToRender.map(t => `
                         <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
@@ -2902,7 +3003,7 @@ var App = window.App || {
 
             // 5. Modular Cards Updates (Ubicación, Características, Galería, Amenities, Mascotas, Visitas)
             const revOpTipo = document.getElementById('review-operacion-tipo');
-            if (revOpTipo) revOpTipo.textContent = `${extra.operacion || 'Alquiler'} • ${propData.type || 'Departamento'}${propData.subtipo_propiedad ? ` (${propData.subtipo_propiedad})` : ''}`;
+            if (revOpTipo) revOpTipo.textContent = `${extra.operacion || 'Alquiler'} • ${window.formatPropertyTypeBadge(propData)}`;
 
             const revDireccion = document.getElementById('review-direccion');
             if (revDireccion) revDireccion.textContent = document.getElementById('calle-altura')?.value?.trim() || 'No especificada';
@@ -5778,6 +5879,8 @@ var App = window.App || {
 
         // Theme Switch (Checkbox)
         document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+            if (cb._appThemeBound) return;
+            cb._appThemeBound = true;
             cb.addEventListener('change', (e) => {
                 App.setTheme(e.target.checked ? 'dark' : 'light');
             });
@@ -7199,18 +7302,146 @@ window.App = App;
 // ============================================================
 // Marketplace Property Detail & Photo Gallery (Zillow Fullscreen Experience)
 // ============================================================
+
+window.isUserOwnerOfProperty = function (prop) {
+    if (!prop) return false;
+    if (prop.isOwner === true) return true;
+
+    // Check specific owner pages / views
+    if (window.location.pathname.includes('administrador') || window.location.pathname.includes('propietarios')) {
+        return true;
+    }
+    if (document.getElementById('mis-avisos-view') && !document.getElementById('mis-avisos-view').classList.contains('hidden')) {
+        return true;
+    }
+    if (document.getElementById('panel-content-avisos') || document.getElementById('owner-grid-props')) {
+        return true;
+    }
+
+    // Check Stored Profile ID
+    const curProfileId = window._currentUserProfileId || localStorage.getItem('vivat_profile_id');
+    const propOwnerProfileId = prop.id_perfil_propietario || prop.owner_profile_id || prop.id_perfil || prop.Propiedad?.id_perfil_propietario;
+    if (curProfileId && propOwnerProfileId && Number(curProfileId) === Number(propOwnerProfileId)) {
+        return true;
+    }
+
+    // Check Stored User Data
+    try {
+        const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+        const curEmail = (uLocal.email || uLocal.mail || localStorage.getItem('ownerEmail') || '').toLowerCase().trim();
+        const propOwnerEmail = (prop.owner_email || prop.extraInfo?.ownerEmail || prop.extraInfo?.owner_email || '').toLowerCase().trim();
+        if (curEmail && propOwnerEmail && curEmail === propOwnerEmail) {
+            return true;
+        }
+
+        const curUserId = uLocal.id || uLocal.user_id || localStorage.getItem('vivat_user_id');
+        const propUserId = prop.user_id || prop.Propiedad?.user_id;
+        if (curUserId && propUserId && String(curUserId) === String(propUserId)) {
+            return true;
+        }
+
+        if (uLocal.id_perfil && propOwnerProfileId && Number(uLocal.id_perfil) === Number(propOwnerProfileId)) {
+            return true;
+        }
+    } catch (e) {}
+
+    // Check Supabase session from localStorage synchronously
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+                const sessionData = JSON.parse(localStorage.getItem(k) || '{}');
+                const userObj = sessionData?.user;
+                if (userObj) {
+                    const authMail = (userObj.email || '').toLowerCase().trim();
+                    const propOwnerEmail = (prop.owner_email || prop.extraInfo?.ownerEmail || prop.extraInfo?.owner_email || '').toLowerCase().trim();
+                    if (authMail && propOwnerEmail && authMail === propOwnerEmail) return true;
+
+                    const authId = userObj.id;
+                    const propUserId = prop.user_id || prop.Propiedad?.user_id;
+                    if (authId && propUserId && String(authId) === String(propUserId)) return true;
+                }
+            }
+        }
+    } catch (e) {}
+
+    return false;
+};
+
+window.checkIsUserOwnerAsync = async function (prop) {
+    if (!prop) return false;
+    if (window.isUserOwnerOfProperty(prop)) return true;
+    if (!window.supabaseClient) return false;
+
+    try {
+        const { data: userData } = await window.supabaseClient.auth.getUser();
+        const authUser = userData?.user;
+        if (!authUser) return false;
+
+        let profileId = window._currentUserProfileId || localStorage.getItem('vivat_profile_id');
+        if (!profileId && window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function') {
+            profileId = await window.DataManager._getOrCreateProfile();
+        }
+
+        if (profileId) {
+            window._currentUserProfileId = profileId;
+            try { localStorage.setItem('vivat_profile_id', String(profileId)); } catch (e) {}
+        }
+
+        const propOwnerPId = prop.id_perfil_propietario || prop.owner_profile_id || prop.id_perfil || prop.Propiedad?.id_perfil_propietario;
+        const propOwnerMail = (prop.owner_email || prop.extraInfo?.ownerEmail || prop.extraInfo?.owner_email || '').toLowerCase().trim();
+        const authMail = (authUser.email || '').toLowerCase().trim();
+        const propUserId = prop.user_id || prop.Propiedad?.user_id;
+
+        if (profileId && propOwnerPId && Number(profileId) === Number(propOwnerPId)) return true;
+        if (authMail && propOwnerMail && authMail === propOwnerMail) return true;
+        if (authUser.id && propUserId && String(authUser.id) === String(propUserId)) return true;
+
+        const pubId = prop.id_publicacion || prop.id;
+        if (pubId && profileId) {
+            const { data: pubMatch } = await window.supabaseClient
+                .from('Publicacion')
+                .select('id_publicacion')
+                .eq('id_publicacion', pubId)
+                .eq('id_perfil', profileId)
+                .maybeSingle();
+            if (pubMatch) return true;
+        }
+
+        const propId = prop.id_propiedad || prop.idPropiedad || prop.Propiedad?.id_propiedad;
+        if (propId && profileId) {
+            const { data: propMatch } = await window.supabaseClient
+                .from('Propiedad')
+                .select('id_propiedad')
+                .eq('id_propiedad', propId)
+                .eq('id_perfil_propietario', profileId)
+                .maybeSingle();
+            if (propMatch) return true;
+        }
+    } catch (e) {
+        console.warn('checkIsUserOwnerAsync error:', e);
+    }
+    return false;
+};
+
+window.openDirectPropertyEditModal = function (prop, options = {}) {
+    if (!prop) return;
+    // Direct in-page editing directly inside property detail (no popup overlay)
+    window.openMarketplacePropertyDetailModal(prop, {
+        ...options,
+        isOwner: true,
+        isEditing: true
+    });
+};
+
 window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     if (!prop) return;
 
     const isOwner = Boolean(
         options.isOwner ||
-        prop.isOwner ||
-        window.location.pathname.includes('administrador') ||
-        window.location.pathname.includes('propietarios') ||
-        (document.getElementById('mis-avisos-view') && !document.getElementById('mis-avisos-view').classList.contains('hidden')) ||
-        document.getElementById('panel-content-avisos') ||
-        document.getElementById('owner-grid-props')
+        window.isUserOwnerOfProperty(prop)
     );
+    const isEditing = Boolean(isOwner && options.isEditing);
 
     // Record view in DB when property details are opened (ONLY for non-owner visitors)
     if (!isOwner) {
@@ -7398,6 +7629,48 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         tagsList = ['Balcón', 'Cocina equipada', 'Luz natural', 'Aire acondicionado', 'Ascensor', 'Seguridad'];
     }
 
+    // Extract Property Type & Subtype
+    let resolvedTipo = (
+        prop.tipo_propiedad ||
+        prop.tipo ||
+        extraInfo.tipo_propiedad ||
+        extraInfo.tipo ||
+        prop.type ||
+        ''
+    ).trim();
+
+    let resolvedSubtipo = (
+        prop.subtipo_propiedad ||
+        prop.subtipo ||
+        extraInfo.subtipo_propiedad ||
+        extraInfo.subtipoPropiedad ||
+        extraInfo.subtipo ||
+        ''
+    ).trim();
+
+    // Deduce tipo if not provided directly (Wizard types: Departamento, Casa, PH, Local Comercial)
+    if (!resolvedTipo) {
+        const lowerSub = resolvedSubtipo.toLowerCase();
+        if (lowerSub.includes('casa')) resolvedTipo = 'Casa';
+        else if (lowerSub.includes('ph')) resolvedTipo = 'PH';
+        else if (lowerSub.includes('local')) resolvedTipo = 'Local Comercial';
+        else resolvedTipo = 'Departamento';
+    }
+
+    const tipoLower = resolvedTipo.toLowerCase();
+    let canonicalTipo = 'Departamento';
+    if (tipoLower.includes('casa')) canonicalTipo = 'Casa';
+    else if (tipoLower.includes('ph')) canonicalTipo = 'PH';
+    else if (tipoLower.includes('local')) canonicalTipo = 'Local Comercial';
+    else canonicalTipo = 'Departamento';
+
+    // Casa and PH have NO subtypes in the wizard
+    if (canonicalTipo === 'Casa' || canonicalTipo === 'PH') {
+        resolvedSubtipo = '';
+    } else if (!resolvedSubtipo || resolvedSubtipo.toLowerCase() === canonicalTipo.toLowerCase() || resolvedSubtipo.toLowerCase() === 'departamento') {
+        resolvedSubtipo = canonicalTipo === 'Local Comercial' ? 'Local a la calle' : 'Estándar';
+    }
+
     // Create or select full-screen container
     let modal = document.getElementById('marketplace-property-modal');
     if (!modal) {
@@ -7406,8 +7679,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         document.body.appendChild(modal);
     }
 
-    // Always reset modal scroll position to top when opening a property
-    modal.scrollTop = 0;
+    // Reset or preserve modal scroll position
+    if (options.scrollPos !== undefined) {
+        modal.scrollTop = options.scrollPos;
+        requestAnimationFrame(() => { modal.scrollTop = options.scrollPos; });
+    } else if (!options.preserveScroll) {
+        modal.scrollTop = 0;
+    }
 
     // Full-screen Zillow layout styles (Safe for Safari, iPhone, iPad, and Tab Previews)
     modal.className = 'fixed inset-0 z-[99999] w-full max-w-full h-full h-[100dvh] max-h-[100dvh] bg-[#f8f9fc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-y-auto overscroll-contain transition-opacity duration-200 font-body';
@@ -7436,6 +7714,150 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         const counterEl = document.getElementById('mp-mobile-slide-num');
         if (counterEl) {
             counterEl.textContent = Math.min(photos.length, Math.max(1, idx + 1));
+        }
+    };
+
+    // Helper functions for inline amenities / characteristics management
+    window.__updateAmenitiesCount = function () {
+        const list = document.getElementById('mp-selected-amenities-list');
+        const countEl = document.getElementById('mp-amenities-count');
+        if (!list) return;
+        const tags = list.querySelectorAll('.mp-selected-amenity-tag');
+        if (countEl) countEl.textContent = tags.length;
+
+        const selectedNames = Array.from(tags).map(el => (el.dataset.amenityName || el.querySelector('.amenity-name')?.textContent || '').toLowerCase().trim());
+        document.querySelectorAll('.mp-preset-amenity-btn').forEach(btn => {
+            const btnName = (btn.dataset.presetName || '').toLowerCase().trim();
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (selectedNames.includes(btnName)) {
+                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-xs transition-all active:scale-95 cursor-pointer';
+                if (icon) icon.textContent = 'check';
+            } else {
+                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500/60 transition-all active:scale-95 cursor-pointer';
+                if (icon) icon.textContent = 'add';
+            }
+        });
+    };
+
+    window.__toggleAmenityTag = function (amenityName) {
+        if (!amenityName) return;
+        const cleanName = String(amenityName).trim();
+        if (!cleanName) return;
+
+        const list = document.getElementById('mp-selected-amenities-list');
+        if (!list) return;
+
+        const existing = Array.from(list.querySelectorAll('.mp-selected-amenity-tag')).find(el => {
+            const name = el.dataset.amenityName || el.querySelector('.amenity-name')?.textContent || '';
+            return name.toLowerCase().trim() === cleanName.toLowerCase().trim();
+        });
+
+        if (existing) {
+            existing.remove();
+        } else {
+            const span = document.createElement('span');
+            span.className = 'mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-emerald-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all animate-fade-in';
+            span.dataset.amenityName = cleanName;
+            span.innerHTML = `
+                <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">check_circle</span>
+                <span class="amenity-name">${cleanName}</span>
+                <button type="button" class="btn-remove-amenity text-zinc-400 hover:text-rose-500 transition-colors ml-1 p-0.5 rounded cursor-pointer" title="Quitar amenity" onclick="event.stopPropagation(); this.closest('.mp-selected-amenity-tag').remove(); window.__updateAmenitiesCount();">
+                    <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
+                </button>
+            `;
+            list.appendChild(span);
+        }
+        window.__updateAmenitiesCount();
+    };
+
+    window.__addCustomAmenity = function () {
+        const input = document.getElementById('mp-new-amenity-input');
+        if (!input) return;
+        const val = input.value.trim();
+        if (!val) return;
+        window.__toggleAmenityTag(val);
+        input.value = '';
+        input.focus();
+    };
+
+    // Helper function to populate subtypes dropdown dynamically
+    window.__updateInlineSubtipos = function (tipoVal, targetSelectId = 'mp-inline-subtipo-propiedad', selectedSubtipo = '') {
+        const subSelect = typeof targetSelectId === 'string' ? document.getElementById(targetSelectId) : targetSelectId;
+        const container = document.getElementById('container-inline-subtipo-propiedad');
+
+        const rawTipo = String(tipoVal || 'departamento').toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .trim();
+
+        let key = '';
+        if (rawTipo.includes('casa')) key = 'casa';
+        else if (rawTipo.includes('ph')) key = 'ph';
+        else if (rawTipo.includes('local')) key = 'local-comercial';
+        else if (rawTipo.includes('departamento') || rawTipo.includes('depto')) key = 'departamento';
+        else key = 'departamento';
+
+        const config = window.PROPERTY_SUBTYPES_CONFIG || {
+            departamento: [
+                { value: 'Estándar', label: 'Estándar' },
+                { value: 'Monoambiente', label: 'Monoambiente' },
+                { value: 'Dúplex', label: 'Dúplex' },
+                { value: 'Piso', label: 'Piso' }
+            ],
+            'local-comercial': [
+                { value: 'Local a la calle', label: 'Local a la calle' },
+                { value: 'En galería', label: 'En galería' },
+                { value: 'Galpón', label: 'Galpón' },
+                { value: 'Depósito', label: 'Depósito' }
+            ],
+            local: [
+                { value: 'Local a la calle', label: 'Local a la calle' },
+                { value: 'En galería', label: 'En galería' },
+                { value: 'Galpón', label: 'Galpón' },
+                { value: 'Depósito', label: 'Depósito' }
+            ]
+        };
+        const list = config[key] || [];
+
+        // If Casa or PH (or any type without subtypes), hide container and clear selection
+        if (!list || list.length === 0) {
+            if (container) {
+                container.classList.add('hidden');
+                container.style.display = 'none';
+            }
+            if (subSelect) {
+                subSelect.innerHTML = '<option value="">Sin subtipo</option>';
+                subSelect.value = '';
+                subSelect.disabled = true;
+            }
+            return;
+        }
+
+        if (container) {
+            container.classList.remove('hidden');
+            container.style.display = 'flex';
+        }
+
+        if (subSelect) {
+            subSelect.disabled = false;
+            subSelect.innerHTML = '';
+            const normSelected = String(selectedSubtipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+            let matchedOption = false;
+            list.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.value;
+                opt.textContent = item.label;
+                const normItemVal = item.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                if (normSelected && (normItemVal === normSelected || normItemVal.includes(normSelected) || normSelected.includes(normItemVal))) {
+                    opt.selected = true;
+                    matchedOption = true;
+                }
+                subSelect.appendChild(opt);
+            });
+
+            if (!matchedOption && subSelect.options.length > 0) {
+                subSelect.options[0].selected = true;
+            }
         }
     };
 
@@ -7675,6 +8097,53 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             </div>
         </header>
 
+        ${isOwner ? (isEditing ? `
+            <!-- Sticky In-Page Editor Toolbar -->
+            <div class="sticky top-[53px] sm:top-[61px] z-35 bg-emerald-600 dark:bg-emerald-700 text-white backdrop-blur-xl border-b border-emerald-500/40 px-4 sm:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3 shadow-md">
+                <div class="flex items-center gap-2.5">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white shadow-inner">
+                        <span class="material-symbols-outlined text-lg">edit</span>
+                    </span>
+                    <div>
+                        <span class="text-xs font-black uppercase tracking-wider block">Modo Edición Activado</span>
+                        <span class="text-xs text-white/90">Modificá los campos directamente en esta pantalla. Al terminar, presioná Guardar.</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="mp-top-cancel-btn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">close</span>
+                        <span>Cancelar</span>
+                    </button>
+                    <button id="mp-top-save-btn" type="button" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-100 text-emerald-800 text-xs font-extrabold shadow-md transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        <span class="mp-save-label">Guardar Cambios</span>
+                    </button>
+                </div>
+            </div>
+        ` : `
+            <!-- Owner Information & Management Bar -->
+            <div class="bg-amber-500/10 dark:bg-amber-500/20 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                        <span class="material-symbols-outlined text-base">manage_accounts</span>
+                    </span>
+                    <span class="text-xs font-bold text-amber-900 dark:text-amber-200">
+                        Esta es tu publicación. Podés editarla directamente en esta pantalla o consultar tus postulaciones y alquiler.
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="mp-top-edit-btn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                        <span>Editar Publicación</span>
+                    </button>
+                    <button id="mp-top-view-rental-btn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                        <span>${isAlquilada ? 'Ver Alquiler' : 'Ver Postulaciones'}</span>
+                    </button>
+                </div>
+            </div>
+        `) : ''}
+
         <!-- Main Full-Screen Body Content -->
         <main class="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-36 lg:pb-12 space-y-8">
             
@@ -7816,40 +8285,83 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <div class="space-y-4 border-b border-zinc-200 dark:border-zinc-800/80 pb-6">
                         <!-- Luxury Minimalist Badges (Monochrome & Subtle Accents) -->
                         <div class="flex items-center gap-2 flex-wrap">
-                            ${isAlquilada ? `
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-black tracking-wide rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 shadow-2xs">
-                                    <span class="material-symbols-outlined text-sm text-amber-600 dark:text-amber-400">key</span>
-                                    Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}
-                                </span>
+                            ${isEditing ? `
+                                <!-- Inline Select: Estado del aviso -->
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
+                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">sync</span>
+                                    <label for="mp-inline-status" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Estado:</label>
+                                    <select id="mp-inline-status" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                                        <option value="disponible" ${status === 'disponible' || (!isAlquilada && status !== 'paused' && status !== 'pausado') ? 'selected' : ''}>🟢 Disponible</option>
+                                        <option value="paused" ${status === 'paused' || status === 'pausado' ? 'selected' : ''}>🟡 Pausada</option>
+                                        <option value="alquilada" ${isAlquilada ? 'selected' : ''}>🔵 Alquilada</option>
+                                    </select>
+                                </div>
+
+                                <!-- Inline Select: Amoblado -->
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">chair</span>
+                                    <label for="mp-inline-amoblado" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Muebles:</label>
+                                    <select id="mp-inline-amoblado" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                                        <option value="sin-amoblar" ${amobladoVal === 'sin-amoblar' || amobladoVal === false ? 'selected' : ''}>Sin amoblar</option>
+                                        <option value="semiamoblado" ${amobladoVal === 'semiamoblado' ? 'selected' : ''}>Semiamoblado</option>
+                                        <option value="totalmente-amoblado" ${amobladoVal === 'totalmente-amoblado' || amobladoVal === true ? 'selected' : ''}>Totalmente Amoblado</option>
+                                    </select>
+                                </div>
+
+                                <!-- Inline Select: Mascotas -->
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">pets</span>
+                                    <label for="mp-inline-mascotas" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Mascotas:</label>
+                                    <select id="mp-inline-mascotas" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                                        <option value="true" ${petFriendly ? 'selected' : ''}>Apto Mascotas</option>
+                                        <option value="false" ${!petFriendly ? 'selected' : ''}>No acepta mascotas</option>
+                                    </select>
+                                </div>
                             ` : `
-                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-black tracking-wider rounded-full uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                    ${operacion}
+                                ${isAlquilada ? `
+                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-black tracking-wide rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 shadow-2xs">
+                                        <span class="material-symbols-outlined text-sm text-amber-600 dark:text-amber-400">key</span>
+                                        Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}
+                                    </span>
+                                ` : `
+                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-black tracking-wider rounded-full uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        ${operacion}
+                                    </span>
+                                `}
+                                ${verified ? `
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                                        <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Propietario Verificado
+                                    </span>
+                                ` : ''}
+                                ${petFriendly ? `
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">pets</span> Apto Mascotas
+                                    </span>
+                                ` : ''}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">chair</span> ${amobladoText}
                                 </span>
+                                ${expensasIncluidas ? `
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">task_alt</span> Expensas Incluidas
+                                    </span>
+                                ` : ''}
                             `}
-                            ${verified ? `
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
-                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">verified</span> Propietario Verificado
-                                </span>
-                            ` : ''}
-                            ${petFriendly ? `
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
-                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">pets</span> Apto Mascotas
-                                </span>
-                            ` : ''}
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
-                                <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">chair</span> ${amobladoText}
-                            </span>
-                            ${expensasIncluidas ? `
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
-                                    <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">task_alt</span> Expensas Incluidas
-                                </span>
-                            ` : ''}
                         </div>
 
-                        <h1 class="font-headline text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white leading-tight tracking-tight">
-                            ${title}
-                        </h1>
+                        ${isEditing ? `
+                            <div class="space-y-1.5 pt-1">
+                                <label for="mp-inline-title" class="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">edit</span> Título de la publicación
+                                </label>
+                                <input id="mp-inline-title" type="text" value="${title.replace(/"/g, '&quot;')}" class="w-full font-headline text-xl sm:text-3xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none shadow-sm transition-all" required>
+                            </div>
+                        ` : `
+                            <h1 class="font-headline text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white leading-tight tracking-tight">
+                                ${title}
+                            </h1>
+                        `}
 
                         <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 text-sm sm:base font-medium flex-wrap">
                             <span class="material-symbols-outlined text-zinc-500 dark:text-zinc-400 shrink-0">location_on</span>
@@ -7863,42 +8375,58 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                         <!-- Architectural Luxury Spec Cards Grid -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">bed</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${dormitorios}</span>
+                                <div class="min-w-0 flex-1">
+                                    ${isEditing ? `
+                                        <input type="number" id="mp-inline-dormitorios" min="0" max="20" value="${dormitorios}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                    ` : `
+                                        <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${dormitorios}</span>
+                                    `}
                                     <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Dormitorios</span>
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">shower</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${banos}</span>
+                                <div class="min-w-0 flex-1">
+                                    ${isEditing ? `
+                                        <input type="number" id="mp-inline-banos" min="1" max="15" value="${banos}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                    ` : `
+                                        <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${banos}</span>
+                                    `}
                                     <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Baños</span>
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">square_foot</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${supCubierta || supTotal || '45'} m²</span>
+                                <div class="min-w-0 flex-1">
+                                    ${isEditing ? `
+                                        <input type="number" id="mp-inline-sup-cubierta" min="1" max="10000" value="${supCubierta || supTotal || 45}" class="w-24 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                    ` : `
+                                        <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${supCubierta || supTotal || '45'} m²</span>
+                                    `}
                                     <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">Superficie</span>
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">garage_home</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${cocheras || '0'}</span>
+                                <div class="min-w-0 flex-1">
+                                    ${isEditing ? `
+                                        <input type="number" id="mp-inline-cocheras" min="0" max="10" value="${cocheras || 0}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                    ` : `
+                                        <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${cocheras || '0'}</span>
+                                    `}
                                     <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate block">${cocheras ? 'Cocheras' : 'Sin cochera'}</span>
                                 </div>
                             </div>
@@ -7907,35 +8435,110 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                     <!-- 1. Comodidades y Amenities destacados (Items con Ticks) -->
                     <section class="space-y-4 mp-inview-item" id="mp-section-amenities">
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
                             <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                                 <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">verified</span>
                                 Comodidades y Amenities incluidos
                             </h2>
-                            <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500">${tagsList.length} amenities verificados</span>
+                            ${isEditing ? `
+                                <span id="mp-amenities-count-badge" class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-400/40 flex items-center gap-1.5 shadow-2xs">
+                                    <span class="material-symbols-outlined text-sm">checklist</span>
+                                    <span id="mp-amenities-count">${tagsList.length}</span> seleccionados
+                                </span>
+                            ` : `
+                                <span class="text-xs font-bold text-zinc-400 dark:text-zinc-500">${tagsList.length} amenities verificados</span>
+                            `}
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            ${tagsList.map(tag => `
-                                <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#111318] border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:scale-[1.02] hover:shadow-md transition-all duration-200 cursor-default group">
-                                    <div class="w-7 h-7 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 flex items-center justify-center transition-all duration-300 shrink-0 shadow-2xs">
-                                        <span class="material-symbols-outlined text-base">check</span>
-                                    </div>
-                                    <span class="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">${tag}</span>
+
+                        ${isEditing ? `
+                            <div class="bg-white dark:bg-[#111318] p-5 sm:p-6 rounded-3xl border-2 border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-2xs space-y-4">
+                                <div>
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 block">Amenities asignados a esta propiedad</span>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">Podés quitar o agregar comodidades. Al hacer clic sobre los sugeridos se activan o desactivan en tiempo real.</p>
                                 </div>
-                            `).join('')}
-                        </div>
+
+                                <!-- Contenedor de Chips Seleccionados -->
+                                <div id="mp-selected-amenities-list" class="flex flex-wrap gap-2 min-h-[42px] p-3 rounded-2xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800">
+                                    ${tagsList.map(tag => `
+                                        <span class="mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-emerald-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all" data-amenity-name="${tag.replace(/"/g, '&quot;')}">
+                                            <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">check_circle</span>
+                                            <span class="amenity-name">${tag}</span>
+                                            <button type="button" class="btn-remove-amenity text-zinc-400 hover:text-rose-500 transition-colors ml-1 p-0.5 rounded cursor-pointer" title="Quitar amenity" onclick="event.stopPropagation(); this.closest('.mp-selected-amenity-tag').remove(); window.__updateAmenitiesCount();">
+                                                <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
+                                            </button>
+                                        </span>
+                                    `).join('')}
+                                </div>
+
+                                <!-- Input para agregar nuevo amenity libre -->
+                                <div class="flex items-center gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="text" id="mp-new-amenity-input" placeholder="Escribí un nuevo amenity (ej. Jacuzzi, Quincho, Sauna)..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-white outline-none" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.__addCustomAmenity(); }">
+                                    </div>
+                                    <button type="button" id="mp-add-amenity-btn" onclick="window.__addCustomAmenity();" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">add</span>
+                                        <span>Agregar</span>
+                                    </button>
+                                </div>
+
+                                <!-- Sugerencias Populares Rápidas -->
+                                <div class="space-y-2 pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
+                                    <span class="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">Sugeridos frecuentes (hacé clic para sumar o quitar):</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        ${[
+                                            'Piscina', 'Parrilla', 'Balcón', 'Aire acondicionado', 'Calefacción',
+                                            'Ascensor', 'Gimnasio', 'Seguridad 24hs', 'SUM', 'Cochera cubierta',
+                                            'Lavadero', 'Jardín', 'Wifi / Fibra óptica', 'Placares empotrados',
+                                            'Cocina equipada', 'Luz natural', 'Baulera', 'Portón automatizado',
+                                            'Apto profesional', 'Alarma'
+                                        ].map(preset => {
+                                            const isAlreadyIn = tagsList.some(t => t.toLowerCase().trim() === preset.toLowerCase().trim());
+                                            return `
+                                                <button type="button" class="mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs ${isAlreadyIn ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold hover:border-emerald-500/60'} transition-all active:scale-95 cursor-pointer" data-preset-name="${preset.replace(/"/g, '&quot;')}" onclick="window.__toggleAmenityTag('${preset.replace(/'/g, "\\'")}');">
+                                                    <span class="material-symbols-outlined text-sm pointer-events-none">${isAlreadyIn ? 'check' : 'add'}</span>
+                                                    <span>${preset}</span>
+                                                </button>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                ${tagsList.map(tag => `
+                                    <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#111318] border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:scale-[1.02] hover:shadow-md transition-all duration-200 cursor-default group">
+                                        <div class="w-7 h-7 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-zinc-900 flex items-center justify-center transition-all duration-300 shrink-0 shadow-2xs">
+                                            <span class="material-symbols-outlined text-base">check</span>
+                                        </div>
+                                        <span class="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">${tag}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
                     </section>
 
                     <!-- 2. Descripción del Inmueble -->
                     <section class="space-y-4 mp-inview-item" id="mp-section-description">
-                        <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                            <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">description</span>
-                            Descripción del Inmueble
-                        </h2>
-                        <div class="bg-white dark:bg-[#111318] p-6 sm:p-7 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300">
-                            <div class="prose dark:prose-invert max-w-none font-body text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                                ${descriptionText}
-                            </div>
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-headline text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-zinc-700 dark:text-zinc-300">description</span>
+                                Descripción del Inmueble
+                            </h2>
+                            ${isEditing ? `
+                                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">edit</span> Editando en vivo
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div class="bg-white dark:bg-[#111318] p-5 sm:p-7 rounded-3xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300">
+                            ${isEditing ? `
+                                <textarea id="mp-inline-description" rows="6" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 rounded-2xl p-4 font-body text-zinc-800 dark:text-zinc-200 text-sm sm:text-base outline-none resize-y transition-all leading-relaxed">${descriptionText}</textarea>
+                                <p class="text-[11px] text-zinc-400 mt-2">Podés describir el inmueble, comodidades, requisitos y aclaraciones para los postulantes.</p>
+                            ` : `
+                                <div class="prose dark:prose-invert max-w-none font-body text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                                    ${descriptionText}
+                                </div>
+                            `}
                         </div>
                     </section>
 
@@ -8269,11 +8872,48 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Detalles constructivos</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Disposición: <strong class="text-zinc-900 dark:text-white">${disposicion}</strong></li>
-                                            <li>Orientación: <strong class="text-zinc-900 dark:text-white">${orientacion}</strong></li>
-                                            <li>Antigüedad: <strong class="text-zinc-900 dark:text-white">${antiguedad}</strong></li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-2.5 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-emerald-500/50 shadow-xs">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <label for="mp-inline-disposicion" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Disposición:</label>
+                                                    <select id="mp-inline-disposicion" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none">
+                                                        <option value="Frente" ${disposicion.toLowerCase().includes('frente') && !disposicion.toLowerCase().includes('contra') ? 'selected' : ''}>Frente</option>
+                                                        <option value="Contrafrente" ${disposicion.toLowerCase().includes('contra') ? 'selected' : ''}>Contrafrente</option>
+                                                        <option value="Interno" ${disposicion.toLowerCase().includes('interno') ? 'selected' : ''}>Interno</option>
+                                                        <option value="Lateral" ${disposicion.toLowerCase().includes('lateral') ? 'selected' : ''}>Lateral</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <label for="mp-inline-orientacion" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Orientación:</label>
+                                                    <select id="mp-inline-orientacion" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none">
+                                                        <option value="Norte" ${orientacion.toLowerCase() === 'norte' ? 'selected' : ''}>Norte</option>
+                                                        <option value="Sur" ${orientacion.toLowerCase() === 'sur' ? 'selected' : ''}>Sur</option>
+                                                        <option value="Este" ${orientacion.toLowerCase() === 'este' ? 'selected' : ''}>Este</option>
+                                                        <option value="Oeste" ${orientacion.toLowerCase() === 'oeste' ? 'selected' : ''}>Oeste</option>
+                                                        <option value="Noreste" ${orientacion.toLowerCase() === 'noreste' ? 'selected' : ''}>Noreste</option>
+                                                        <option value="Noroeste" ${orientacion.toLowerCase() === 'noroeste' ? 'selected' : ''}>Noroeste</option>
+                                                        <option value="Sureste" ${orientacion.toLowerCase() === 'sureste' ? 'selected' : ''}>Sureste</option>
+                                                        <option value="Suroeste" ${orientacion.toLowerCase() === 'suroeste' ? 'selected' : ''}>Suroeste</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <label for="mp-inline-antiguedad" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Antigüedad:</label>
+                                                    <select id="mp-inline-antiguedad" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none">
+                                                        <option value="A estrenar" ${antiguedad.toLowerCase().includes('estrenar') ? 'selected' : ''}>A estrenar</option>
+                                                        <option value="Menos de 5 años" ${antiguedad.toLowerCase().includes('menos de 5') || antiguedad.toLowerCase().includes('excelente') ? 'selected' : ''}>Menos de 5 años</option>
+                                                        <option value="5 a 10 años" ${antiguedad.toLowerCase().includes('5 a 10') ? 'selected' : ''}>5 a 10 años</option>
+                                                        <option value="10 a 20 años" ${antiguedad.toLowerCase().includes('10 a 20') ? 'selected' : ''}>10 a 20 años</option>
+                                                        <option value="Más de 20 años" ${antiguedad.toLowerCase().includes('más de 20') || antiguedad.toLowerCase().includes('mas de 20') ? 'selected' : ''}>Más de 20 años</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Disposición: <strong class="text-zinc-900 dark:text-white">${disposicion}</strong></li>
+                                                <li>Orientación: <strong class="text-zinc-900 dark:text-white">${orientacion}</strong></li>
+                                                <li>Antigüedad: <strong class="text-zinc-900 dark:text-white">${antiguedad}</strong></li>
+                                            </ul>
+                                        `}
                                     </div>
                                 </div>
 
@@ -8284,10 +8924,30 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Tipología y estilo</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Tipo de propiedad: <strong class="text-zinc-900 dark:text-white">${prop.subtipo_propiedad || extraInfo.subtipoPropiedad || 'Departamento'}</strong></li>
-                                            <li>Subtipo: <strong class="text-zinc-900 dark:text-white">Residencial Urbano</strong></li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-3 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-emerald-500/50 shadow-xs">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <label for="mp-inline-tipo-propiedad" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Tipo:</label>
+                                                    <select id="mp-inline-tipo-propiedad" onchange="window.__updateInlineSubtipos(this.value, 'mp-inline-subtipo-propiedad')" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+                                                        <option value="Departamento" ${canonicalTipo === 'Departamento' ? 'selected' : ''}>Departamento</option>
+                                                        <option value="Casa" ${canonicalTipo === 'Casa' ? 'selected' : ''}>Casa</option>
+                                                        <option value="PH" ${canonicalTipo === 'PH' ? 'selected' : ''}>PH</option>
+                                                        <option value="Local Comercial" ${canonicalTipo === 'Local Comercial' ? 'selected' : ''}>Local Comercial</option>
+                                                    </select>
+                                                </div>
+                                                <div id="container-inline-subtipo-propiedad" class="${(canonicalTipo === 'Casa' || canonicalTipo === 'PH') ? 'hidden' : 'flex'} items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800" ${(canonicalTipo === 'Casa' || canonicalTipo === 'PH') ? 'style="display: none;"' : ''}>
+                                                    <label for="mp-inline-subtipo-propiedad" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Subtipo:</label>
+                                                    <select id="mp-inline-subtipo-propiedad" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+                                                        <!-- Generado dinámicamente -->
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Tipo de propiedad: <strong class="text-zinc-900 dark:text-white">${canonicalTipo}</strong></li>
+                                                ${(canonicalTipo !== 'Casa' && canonicalTipo !== 'PH' && resolvedSubtipo) ? `<li>Subtipo: <strong class="text-zinc-900 dark:text-white">${resolvedSubtipo}</strong></li>` : ''}
+                                            </ul>
+                                        `}
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Edificio y Administración</h4>
@@ -8559,20 +9219,78 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <div class="bg-white dark:bg-[#111318] rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 p-6 sm:p-7 shadow-xl hover:shadow-2xl hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 space-y-6">
                         
                         <!-- Price Header -->
-                        <div class="space-y-1 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                            <span class="block text-[11px] font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Precio de alquiler</span>
-                            <div class="flex items-baseline gap-2">
-                                <span class="font-headline text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white">${priceFormatted}</span>
-                                <span class="text-sm font-bold text-zinc-500">/ mes</span>
+                        ${isEditing ? `
+                            <div class="space-y-3 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                                <span class="block text-[11px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">payments</span> Precio de alquiler mensual
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <select id="mp-inline-moneda" class="px-2.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-xs sm:text-sm text-zinc-900 dark:text-white outline-none">
+                                        <option value="ARS" ${(extraInfo.moneda || prop.moneda) !== 'USD' ? 'selected' : ''}>ARS ($)</option>
+                                        <option value="USD" ${(extraInfo.moneda || prop.moneda) === 'USD' ? 'selected' : ''}>USD (U$S)</option>
+                                    </select>
+                                    <input type="number" id="mp-inline-price" min="0" step="1000" value="${priceNum}" class="font-headline text-2xl font-black text-zinc-900 dark:text-white w-full bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 focus:border-emerald-500 rounded-xl px-3 py-1.5 outline-none">
+                                </div>
+                                <div class="space-y-2 pt-2 bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <label for="mp-inline-expensas" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Expensas ($):</label>
+                                        <input type="number" id="mp-inline-expensas" min="0" step="500" value="${expensasNum}" class="text-xs font-bold text-zinc-900 dark:text-white w-28 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1 outline-none text-right">
+                                    </div>
+                                    <label class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer pt-0.5 select-none">
+                                        <input type="checkbox" id="mp-inline-expensas-incluidas" ${expensasIncluidas ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                        <span class="font-semibold text-[11px]">Expensas incluidas en el canon</span>
+                                    </label>
+                                </div>
                             </div>
-                            <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                ${expensasNum > 0 ? `+ $${expensasNum.toLocaleString('es-AR')} expensas estimadas` : (expensasIncluidas ? 'Expensas incluidas en el canon' : 'Sin expensas')}
-                            </p>
-                        </div>
+                        ` : `
+                            <div class="space-y-1 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                                <span class="block text-[11px] font-extrabold uppercase text-zinc-400 dark:text-zinc-500 tracking-wider">Precio de alquiler</span>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-headline text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white">${priceFormatted}</span>
+                                    <span class="text-sm font-bold text-zinc-500">/ mes</span>
+                                </div>
+                                <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                    ${expensasNum > 0 ? `+ $${expensasNum.toLocaleString('es-AR')} expensas estimadas` : (expensasIncluidas ? 'Expensas incluidas en el canon' : 'Sin expensas')}
+                                </p>
+                            </div>
+                        `}
 
-                        ${isOwner ? `
+                        ${isOwner ? (isEditing ? `
+                            <!-- Owner In-Page Edit Actions -->
+                            <div class="space-y-3">
+                                <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-800/60 rounded-2xl p-4 space-y-1 text-emerald-900 dark:text-emerald-200">
+                                    <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                                        <span class="material-symbols-outlined text-base">edit_note</span>
+                                        <span>Guardar Edición</span>
+                                    </div>
+                                    <p class="text-xs leading-relaxed font-medium">
+                                        Modificaste los campos en esta pantalla. Presioná Guardar para actualizar los datos en Supabase y en Marketplace.
+                                    </p>
+                                </div>
+
+                                <button id="mp-modal-save-changes-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-emerald-600/30 active:scale-98 cursor-pointer text-sm">
+                                    <span class="material-symbols-outlined text-lg">save</span>
+                                    <span class="mp-save-label">Guardar Cambios</span>
+                                </button>
+
+                                <button id="mp-modal-cancel-edit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold py-3 px-4 rounded-2xl transition-all border border-zinc-200 dark:border-zinc-700 active:scale-98 cursor-pointer text-xs">
+                                    <span class="material-symbols-outlined text-base">close</span>
+                                    <span>Descartar y Salir de Edición</span>
+                                </button>
+                            </div>
+                        ` : `
                             <!-- Owner Actions Panel -->
                             <div class="space-y-3">
+                                <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-4 space-y-1 text-amber-900 dark:text-amber-200">
+                                    <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                        <span class="material-symbols-outlined text-base">manage_accounts</span>
+                                        <span>Tu Publicación</span>
+                                    </div>
+                                    <p class="text-xs leading-relaxed font-medium">
+                                        Esta publicación te pertenece como propietario. Podés editarla directamente desde acá o gestionar su alquiler.
+                                    </p>
+                                </div>
+
                                 <div class="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 space-y-2">
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs font-bold uppercase text-zinc-500 tracking-wider">Estado de publicación</span>
@@ -8587,22 +9305,27 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
                                 </div>
 
-                                <button id="mp-modal-pause-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 ${status === 'paused' || status === 'pausado' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-500 hover:bg-amber-600'} text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
-                                    <span class="material-symbols-outlined text-lg">${status === 'paused' || status === 'pausado' ? 'play_circle' : 'pause_circle'}</span>
-                                    <span id="mp-modal-pause-text">${status === 'paused' || status === 'pausado' ? 'Reanudar publicación' : 'Pausar publicación'}</span>
-                                </button>
-
-                                <button id="mp-modal-edit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-bold py-3.5 px-4 rounded-2xl transition-all border border-zinc-200 dark:border-zinc-700 active:scale-98 cursor-pointer text-sm">
+                                <button id="mp-modal-edit-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
                                     <span class="material-symbols-outlined text-lg">edit</span>
                                     <span>Editar Publicación</span>
                                 </button>
 
-                                <button id="mp-modal-delete-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-600 dark:text-rose-400 font-bold py-3 px-4 rounded-2xl transition-all border border-rose-200/60 dark:border-rose-900/40 active:scale-98 cursor-pointer text-xs">
-                                    <span class="material-symbols-outlined text-base">delete</span>
+                                <button id="mp-modal-view-rental-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md active:scale-98 cursor-pointer text-sm">
+                                    <span class="material-symbols-outlined text-lg">real_estate_agent</span>
+                                    <span>${isAlquilada ? 'Ver Alquiler y Contrato' : 'Ver Alquiler y Postulaciones'}</span>
+                                </button>
+
+                                <button id="mp-modal-pause-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 ${status === 'paused' || status === 'pausado' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} font-bold py-3 px-4 rounded-2xl transition-all border border-zinc-200 dark:border-zinc-700 active:scale-98 cursor-pointer text-xs">
+                                    <span class="material-symbols-outlined text-base">${status === 'paused' || status === 'pausado' ? 'play_circle' : 'pause_circle'}</span>
+                                    <span id="mp-modal-pause-text">${status === 'paused' || status === 'pausado' ? 'Reanudar publicación' : 'Pausar publicación'}</span>
+                                </button>
+
+                                <button id="mp-modal-delete-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 text-rose-600 dark:text-rose-400 font-bold py-2.5 px-4 rounded-2xl transition-all border border-rose-200/60 dark:border-rose-900/40 active:scale-98 cursor-pointer text-xs">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
                                     <span>Eliminar propiedad</span>
                                 </button>
                             </div>
-                        ` : `
+                        `) : `
                             <!-- Tenant Actions (Zillow Style CTAs) -->
                             <div class="space-y-3">
                                 ${isAlquilada ? `
@@ -8674,15 +9397,26 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         <!-- Mobile & Tablet Fixed Bottom Action Tray (Zillow Mobile Experience with Safari Safe-Area) -->
         <div id="mp-mobile-bottom-tray" class="lg:hidden sticky bottom-0 z-50 bg-white/98 dark:bg-[#111318]/98 backdrop-blur-xl border-t border-zinc-200/90 dark:border-zinc-800/90 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 shadow-2xl">
             <div class="min-w-0">
-                <span class="block text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Precio mensual</span>
-                <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white truncate block">${priceFormatted}</span>
+                <span class="block text-[10px] sm:text-xs font-bold uppercase text-zinc-400">${isEditing ? 'Modo Edición' : 'Precio mensual'}</span>
+                <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white truncate block">${isEditing ? 'Editando en detalle' : priceFormatted}</span>
             </div>
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                ${isOwner ? `
-                    <button type="button" onclick="document.getElementById('mp-modal-edit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm active:scale-95 cursor-pointer">
+                ${isOwner ? (isEditing ? `
+                    <button type="button" id="mp-mobile-cancel-btn" class="inline-flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">close</span> Cancelar
+                    </button>
+                    <button type="button" id="mp-mobile-save-btn" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        <span class="mp-save-label">Guardar</span>
+                    </button>
+                ` : `
+                    <button type="button" id="mp-mobile-view-rental-btn" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
+                        <span class="material-symbols-outlined text-base">real_estate_agent</span> Alquiler
+                    </button>
+                    <button type="button" id="mp-mobile-edit-btn" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">edit</span> Editar
                     </button>
-                ` : (isAlquilada ? `
+                `) : (isAlquilada ? `
                     <button type="button" onclick="document.getElementById('mp-modal-visit-btn')?.click()" class="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs sm:text-sm active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">calendar_month</span> Visita
                     </button>
@@ -8732,6 +9466,11 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     modal.querySelectorAll('.mp-inview-item').forEach(item => {
         item.classList.add('is-inview');
     });
+
+    // Initialize Inline Subtipos if editing
+    if (isEditing && typeof window.__updateInlineSubtipos === 'function') {
+        window.__updateInlineSubtipos(canonicalTipo, 'mp-inline-subtipo-propiedad', resolvedSubtipo);
+    }
 
     // Sub-Navigation Tab Smooth Click & ScrollSpy
     const subnavButtons = modal.querySelectorAll('.mp-subnav-btn');
@@ -9354,18 +10093,286 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             };
         }
 
+        // Inline Edit Mode Triggers
+        const enterInlineEditing = (e) => {
+            if (e) e.preventDefault();
+            const currentScroll = modal.scrollTop;
+            window.openMarketplacePropertyDetailModal(prop, {
+                ...options,
+                isOwner: true,
+                isEditing: true,
+                scrollPos: currentScroll
+            });
+        };
+
+        const topEditBtn = document.getElementById('mp-top-edit-btn');
         const editBtn = document.getElementById('mp-modal-edit-btn');
-        if (editBtn) {
-            editBtn.onclick = (e) => {
-                e.preventDefault();
-                closeModal();
-                if (window.App && typeof window.App.showPublishWizard === 'function') {
-                    window.App.showPublishWizard(prop);
-                } else {
-                    alert('Acción de edición iniciada para: ' + title);
+        const mobileEditBtn = document.getElementById('mp-mobile-edit-btn');
+        [topEditBtn, editBtn, mobileEditBtn].forEach(btn => {
+            if (btn) btn.onclick = enterInlineEditing;
+        });
+
+        // Inline Edit Cancel Triggers
+        const cancelInlineEditing = (e) => {
+            if (e) e.preventDefault();
+            const currentScroll = modal.scrollTop;
+            window.openMarketplacePropertyDetailModal(prop, {
+                ...options,
+                isOwner: true,
+                isEditing: false,
+                scrollPos: currentScroll
+            });
+        };
+
+        const topCancelBtn = document.getElementById('mp-top-cancel-btn');
+        const cancelBtn = document.getElementById('mp-modal-cancel-edit-btn');
+        const mobileCancelBtn = document.getElementById('mp-mobile-cancel-btn');
+        [topCancelBtn, cancelBtn, mobileCancelBtn].forEach(btn => {
+            if (btn) btn.onclick = cancelInlineEditing;
+        });
+
+        // Inline Edit Save Action
+        const saveInlineChanges = async (e) => {
+            if (e) e.preventDefault();
+            const titleInput = document.getElementById('mp-inline-title');
+            const priceInput = document.getElementById('mp-inline-price');
+            const monedaInput = document.getElementById('mp-inline-moneda');
+            const expensasInput = document.getElementById('mp-inline-expensas');
+            const expIncluidasInput = document.getElementById('mp-inline-expensas-incluidas');
+            const dormInput = document.getElementById('mp-inline-dormitorios');
+            const banosInput = document.getElementById('mp-inline-banos');
+            const cochInput = document.getElementById('mp-inline-cocheras');
+            const supInput = document.getElementById('mp-inline-sup-cubierta');
+            const descInput = document.getElementById('mp-inline-description');
+            const amobladoInput = document.getElementById('mp-inline-amoblado');
+            const mascotasInput = document.getElementById('mp-inline-mascotas');
+            const statusInput = document.getElementById('mp-inline-status');
+
+            const newTitle = titleInput ? titleInput.value.trim() : title;
+            if (!newTitle) {
+                alert('Por favor ingresá un título para la publicación.');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+
+            const newPrice = priceInput ? (parseFloat(priceInput.value) || 0) : priceNum;
+            const newMoneda = monedaInput ? monedaInput.value : (extraInfo.moneda || 'ARS');
+            const newExpensas = expensasInput ? (parseFloat(expensasInput.value) || 0) : expensasNum;
+            const newExpIncluidas = expIncluidasInput ? expIncluidasInput.checked : expensasIncluidas;
+            const newDorm = dormInput ? (parseInt(dormInput.value, 10) || 0) : dormitorios;
+            const newBanos = banosInput ? (parseInt(banosInput.value, 10) || 1) : banos;
+            const newCoch = cochInput ? (parseInt(cochInput.value, 10) || 0) : (cocheras || 0);
+            const newSup = supInput ? (parseFloat(supInput.value) || 45) : (supCubierta || 45);
+            const newDesc = descInput ? descInput.value.trim() : descriptionText;
+            const newAmoblado = amobladoInput ? amobladoInput.value : amobladoVal;
+            const newMascotas = mascotasInput ? (mascotasInput.value === 'true') : petFriendly;
+            const newStatus = statusInput ? statusInput.value : status;
+
+            // Collect Amenities / Características
+            let amenityTags = [];
+            const amenityTagEls = modal.querySelectorAll('#mp-selected-amenities-list .mp-selected-amenity-tag');
+            if (amenityTagEls.length > 0) {
+                amenityTagEls.forEach(el => {
+                    const name = el.dataset.amenityName || el.querySelector('.amenity-name')?.textContent || '';
+                    if (name.trim()) amenityTags.push(name.trim());
+                });
+                amenityTags = Array.from(new Set(amenityTags));
+            } else if (modal.querySelector('#mp-selected-amenities-list')) {
+                amenityTags = [];
+            } else {
+                amenityTags = Array.isArray(prop.caracteristicas) ? prop.caracteristicas : (tagsList || []);
+            }
+
+            const disposicionInput = document.getElementById('mp-inline-disposicion');
+            const orientacionInput = document.getElementById('mp-inline-orientacion');
+            const antiguedadInput = document.getElementById('mp-inline-antiguedad');
+            const tipoPropInput = document.getElementById('mp-inline-tipo-propiedad');
+            const subtipoPropInput = document.getElementById('mp-inline-subtipo-propiedad');
+
+            const newDisposicion = disposicionInput ? disposicionInput.value : disposicion;
+            const newOrientacion = orientacionInput ? orientacionInput.value : orientacion;
+            const newAntiguedad = antiguedadInput ? antiguedadInput.value : antiguedad;
+            const newTipoProp = tipoPropInput ? tipoPropInput.value : canonicalTipo;
+            let newSubtipoProp = subtipoPropInput ? subtipoPropInput.value : resolvedSubtipo;
+            if (newTipoProp === 'Casa' || newTipoProp === 'PH') {
+                newSubtipoProp = '';
+            }
+
+            const saveBtns = modal.querySelectorAll('#mp-modal-save-changes-btn, #mp-top-save-btn, #mp-mobile-save-btn');
+            saveBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'wait';
+            });
+            modal.querySelectorAll('.mp-save-label').forEach(el => {
+                el.textContent = 'Guardando...';
+            });
+
+            try {
+                const formData = {
+                    title: newTitle,
+                    price: newPrice,
+                    moneda: newMoneda,
+                    expensas: newExpensas,
+                    expensasIncluidas: newExpIncluidas,
+                    dormitorios: newDorm,
+                    banos: newBanos,
+                    cocheras: newCoch,
+                    sup_cubierta: newSup,
+                    sup_total: newSup,
+                    description: newDesc,
+                    amoblado: newAmoblado,
+                    mascotas: newMascotas,
+                    status: newStatus,
+                    caracteristicas: amenityTags,
+                    tags: amenityTags,
+                    disposicion: newDisposicion,
+                    orientacion: newOrientacion,
+                    antiguedad: newAntiguedad,
+                    tipo_propiedad: newTipoProp,
+                    subtipo_propiedad: newSubtipoProp,
+                    id_propiedad: prop.id_propiedad || prop.idPropiedad || prop.Propiedad?.id_propiedad
+                };
+
+                if (window.DataManager && typeof window.DataManager.updatePublicationDirect === 'function') {
+                    await window.DataManager.updatePublicationDirect(pubId, formData);
                 }
-            };
-        }
+
+                // Update in-memory property object
+                prop.title = formData.title;
+                prop.price = formData.price;
+                prop.precio = formData.price;
+                prop.expensas = formData.expensas;
+                prop.expensasIncluidas = formData.expensasIncluidas;
+                prop.dormitorios = formData.dormitorios;
+                prop.banos = formData.banos;
+                prop.cocheras = formData.cocheras;
+                prop.sup_cubierta = formData.sup_cubierta;
+                prop.sup_total = formData.sup_total;
+                prop.description = formData.description;
+                prop.amoblado = formData.amoblado;
+                prop.pet = formData.mascotas;
+                prop.status = formData.status;
+                prop.caracteristicas = formData.caracteristicas;
+                prop.tags = formData.caracteristicas;
+                prop.disposicion = formData.disposicion;
+                prop.orientacion = formData.orientacion;
+                prop.antiguedad = formData.antiguedad;
+                prop.tipo_propiedad = formData.tipo_propiedad;
+                prop.subtipo_propiedad = formData.subtipo_propiedad;
+                prop.type = formData.tipo_propiedad;
+                prop.subtipo = formData.subtipo_propiedad;
+
+                prop.extraInfo = {
+                    ...(prop.extraInfo || {}),
+                    moneda: formData.moneda,
+                    expensas: formData.expensas,
+                    expensasIncluidas: formData.expensasIncluidas,
+                    amoblado: formData.amoblado,
+                    mascotas: formData.mascotas,
+                    status: formData.status,
+                    dormitorios: formData.dormitorios,
+                    banos: formData.banos,
+                    cocheras: formData.cocheras,
+                    sup_cubierta: formData.sup_cubierta,
+                    sup_total: formData.sup_total,
+                    caracteristicas: formData.caracteristicas,
+                    disposicion: formData.disposicion,
+                    orientacion: formData.orientacion,
+                    antiguedad: formData.antiguedad,
+                    tipo_propiedad: formData.tipo_propiedad,
+                    subtipo_propiedad: formData.subtipo_propiedad,
+                    subtipoPropiedad: formData.subtipo_propiedad
+                };
+
+                if (typeof options.onSave === 'function') {
+                    options.onSave(prop);
+                }
+
+                if (typeof window.loadMisAvisos === 'function') window.loadMisAvisos();
+                if (typeof window.loadOwnerAvisos === 'function') window.loadOwnerAvisos();
+                if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
+                if (typeof renderLandlordAvisos === 'function') renderLandlordAvisos();
+                if (typeof window.syncDbPropertiesForSearch === 'function') window.syncDbPropertiesForSearch();
+                if (window.App && typeof window.App.refreshData === 'function') window.App.refreshData();
+
+                if (window.showCustomAlert) {
+                    await window.showCustomAlert({
+                        title: 'Publicación Actualizada',
+                        message: 'Los cambios fueron guardados exitosamente y ya están visibles.',
+                        icon: 'check_circle'
+                    });
+                }
+
+                // Stay in property detail view, transition back to read mode preserving scroll
+                const currentScroll = modal.scrollTop;
+                window.openMarketplacePropertyDetailModal(prop, {
+                    ...options,
+                    isOwner: true,
+                    isEditing: false,
+                    scrollPos: currentScroll
+                });
+
+            } catch (err) {
+                console.error('Error al guardar cambios de publicación:', err);
+                saveBtns.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                });
+                modal.querySelectorAll('.mp-save-label').forEach(el => {
+                    el.textContent = 'Guardar Cambios';
+                });
+
+                if (window.showCustomAlert) {
+                    await window.showCustomAlert({
+                        title: 'Error al Guardar',
+                        message: err.message || 'Ocurrió un error al intentar actualizar la publicación.',
+                        icon: 'error'
+                    });
+                } else {
+                    alert(err.message || 'Error al guardar los cambios');
+                }
+            }
+        };
+
+        const topSaveBtn = document.getElementById('mp-top-save-btn');
+        const saveBtn = document.getElementById('mp-modal-save-changes-btn');
+        const mobileSaveBtn = document.getElementById('mp-mobile-save-btn');
+        [topSaveBtn, saveBtn, mobileSaveBtn].forEach(btn => {
+            if (btn) btn.onclick = saveInlineChanges;
+        });
+
+        // View Rental / Postulaciones Handler
+        const topViewRentalBtn = document.getElementById('mp-top-view-rental-btn');
+        const viewRentalBtn = document.getElementById('mp-modal-view-rental-btn');
+        const mobileViewRentalBtn = document.getElementById('mp-mobile-view-rental-btn');
+
+        const handleViewRental = (e) => {
+            if (e) e.preventDefault();
+            closeModal();
+            const targetTab = isAlquilada ? 'alquiler-activo' : 'postulaciones';
+            const isPropietariosPage = window.location.pathname.includes('propietarios.html') || window.location.pathname.endsWith('/propietarios');
+            if (isPropietariosPage) {
+                if (typeof window.showMisAvisosView === 'function') {
+                    window.showMisAvisosView(targetTab);
+                } else {
+                    const misAvisosView = document.getElementById('mis-avisos-view');
+                    const landingView = document.getElementById('landing-marketplace-view') || document.getElementById('landing-propietarios-view');
+                    if (landingView) landingView.classList.add('hidden');
+                    if (misAvisosView) misAvisosView.classList.remove('hidden');
+                    const tabBtn = document.querySelector(`.avisos-tab[data-tab="${targetTab}"]`);
+                    if (tabBtn) tabBtn.click();
+                    window.scrollTo(0, 0);
+                }
+            } else {
+                window.location.href = `propietarios.html#${targetTab}`;
+            }
+        };
+
+        [topViewRentalBtn, viewRentalBtn, mobileViewRentalBtn].forEach(btn => {
+            if (btn) btn.onclick = handleViewRental;
+        });
     } else {
         // Public Action Handlers: Visit & Apply (Keep property detail open in background)
         const visitBtn = document.getElementById('mp-modal-visit-btn');
@@ -9386,6 +10393,16 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     window.openPostulacionModal(prop);
                 }
             };
+        }
+
+        // Asynchronously check if the visiting user is actually the owner of this property (updates in place)
+        if (typeof window.checkIsUserOwnerAsync === 'function') {
+            window.checkIsUserOwnerAsync(prop).then(isRealOwner => {
+                if (isRealOwner) {
+                    const scrollPos = modal.scrollTop;
+                    window.openMarketplacePropertyDetailModal(prop, { ...options, isOwner: true, scrollPos: scrollPos });
+                }
+            }).catch(() => {});
         }
 
         // Asynchronously check if user already applied to update the button if needed
@@ -10019,6 +11036,22 @@ window.openPostulacionModal = async function(prop) {
     const pubId = prop?.id_publicacion || prop?.idPublicacion || prop?.id;
     const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
 
+    // 0. Validar si el usuario es el dueño de la propiedad para no permitir auto-postulaciones
+    const isOwner = (typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop)) || 
+                    (typeof window.checkIsUserOwnerAsync === 'function' && await window.checkIsUserOwnerAsync(prop));
+    if (isOwner) {
+        if (window.showCustomAlert) {
+            await window.showCustomAlert({
+                title: 'Acción No Permitida',
+                message: 'Esta publicación te pertenece como propietario. No podés postularte a tu propio inmueble. Podés editarla directamente desde su ficha o gestionar su alquiler.',
+                icon: 'info'
+            });
+        } else {
+            alert('No podés postularte a tu propia publicación.');
+        }
+        return;
+    }
+
     // 1. Validar si el usuario ya se postuló a esta propiedad para evitar postulaciones duplicadas
     const alreadyApplied = (typeof window.hasUserAppliedToProperty === 'function' && window.hasUserAppliedToProperty(pubId, propId)) || 
                            (typeof window.checkUserAppliedToPropertyAsync === 'function' && await window.checkUserAppliedToPropertyAsync(pubId, propId));
@@ -10284,6 +11317,20 @@ window.openAgendarVisitaModal = function(prop) {
     const propTitle = prop?.title || prop?.titleAviso || (prop?.descripcion ? prop.descripcion.split(' | Detalles: ')[0] : 'Propiedad en Alquiler');
     const propAddress = prop?.address || prop?.ubicacion || `${prop?.calle || ''} ${prop?.numero || ''}`.trim() || 'Buenos Aires';
     const propId = prop?.id_propiedad || prop?.idPropiedad || prop?.id || 1;
+
+    // Validar si la propiedad pertenece al usuario
+    if (typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop)) {
+        if (window.showCustomAlert) {
+            window.showCustomAlert({
+                title: 'Propiedad Propia',
+                message: 'Esta publicación te pertenece como propietario. No podés agendar una visita a tu propio inmueble.',
+                icon: 'info'
+            });
+        } else {
+            alert('Esta propiedad te pertenece como propietario.');
+        }
+        return;
+    }
 
     let defaultName = '';
     let defaultEmail = '';
@@ -12036,6 +13083,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.loadMisAvisos = loadMisAvisos;
+
+    window.showMisAvisosView = function(targetTab = 'avisos') {
+        syncAvisosAvatar();
+        const misAvisosView = document.getElementById('mis-avisos-view');
+        const landingView = document.getElementById('landing-marketplace-view') || document.getElementById('landing-propietarios-view');
+        if (landingView) landingView.classList.add('hidden');
+        if (misAvisosView) {
+            misAvisosView.classList.remove('hidden');
+            window.scrollTo(0, 0);
+            loadMisAvisos();
+            if (targetTab && targetTab !== 'avisos') {
+                setTimeout(() => {
+                    const tabBtn = document.querySelector(`.avisos-tab[data-tab="${targetTab}"]`);
+                    if (tabBtn) tabBtn.click();
+                }, 100);
+            }
+        }
+    };
+
+    // Auto-detect landlord tabs from URL hash or query parameters
+    try {
+        const hash = window.location.hash.replace('#', '');
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewParam = urlParams.get('view');
+        const tabParam = urlParams.get('tab');
+        if (hash === 'mis-avisos' || hash === 'alquiler-activo' || hash === 'postulaciones' || hash === 'visitas' || viewParam === 'mis-avisos') {
+            const targetTab = (hash === 'alquiler-activo' || hash === 'postulaciones' || hash === 'visitas') ? hash : (tabParam || 'avisos');
+            setTimeout(() => {
+                window.showMisAvisosView(targetTab);
+            }, 50);
+        }
+    } catch (e) {}
+
     // Landlord Sub-Tabs Management
     document.querySelectorAll('.avisos-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -12624,14 +13705,12 @@ document.addEventListener('DOMContentLoaded', () => {
             try { extraInfo = { ...extraInfo, ...JSON.parse(aviso.description.split('Detalles: ')[1]) }; } catch (e) { }
         }
 
-        const tipoLabels = { 'departamento': 'Departamento', 'casa': 'Casa', 'ph': 'PH', 'terreno': 'Terreno', 'local-comercial': 'Local comercial', 'oficina-comercial': 'Oficina comercial', 'quinta-vacacional': 'Quinta Vacacional' };
-        const opLabels = { 'venta': 'Venta', 'alquiler': 'Alquiler', 'temporada': 'Temporada', 'on': 'Venta' };
-        const tipo = tipoLabels[extraInfo.tipo_propiedad || aviso.tipo_propiedad] || extraInfo.tipo_propiedad || aviso.tipo_propiedad || 'Propiedad';
+        const tipo = window.formatPropertyTypeBadge ? window.formatPropertyTypeBadge(aviso) : 'Propiedad';
         const op = opLabels[(extraInfo.operacion || aviso.operacion)?.toLowerCase()] || extraInfo.operacion || aviso.operacion || '';
         const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
         const precio = (aviso.price || aviso.precio) ? `${moneda} ${Number(aviso.price || aviso.precio).toLocaleString('es-AR')}` : 'Consultar';
-        const ubicacion = aviso.address || aviso.calle_altura || 'Sin ubicación';
-        const titulo = aviso.title || aviso.titulo_aviso || `${tipo} en ${op}`;
+        const calleNum = aviso.calle_altura || (aviso.calle && aviso.numero ? `${aviso.calle} ${aviso.numero}` : aviso.calle) || (aviso.address ? aviso.address.split(',')[0] : '') || 'Sin dirección';
+        const barrioProv = [aviso.barrio || extraInfo.barrio, aviso.provincia || aviso.province || extraInfo.provincia].filter(Boolean).join(', ') || aviso.address || 'Mendoza';
         const date = aviso.created_at ? new Date(aviso.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
         const shortId = aviso.id ? String(aviso.id).substring(0, 8) : '';
 
@@ -12651,7 +13730,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const supCubierta = extraInfo.sup_cubierta || aviso.sup_cubierta || '';
 
         // Completeness percentage
-        const fields = [titulo, (aviso.price || aviso.precio), ubicacion, tipo, op, dormitorios, banos, supCubierta, aviso.description, (aviso.images?.length || aviso.propiedad_imagenes?.length)];
+        const fields = [calleNum, (aviso.price || aviso.precio), barrioProv, tipo, op, dormitorios, banos, supCubierta, (aviso.images?.length || aviso.propiedad_imagenes?.length)];
         const filled = fields.filter(Boolean).length;
         const pct = Math.round((filled / fields.length) * 100);
         const pctColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
@@ -12664,7 +13743,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex gap-4 md:gap-5">
                 <!-- Thumbnail -->
                 <div class="w-[90px] h-[68px] sm:w-[120px] sm:h-[85px] md:w-[140px] md:h-[100px] rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0 relative">
-                    <img src="${imgSrc}" alt="${titulo}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                    <img src="${imgSrc}" alt="${calleNum}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
                 </div>
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
@@ -12675,8 +13754,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="text-xs font-bold ${st.text}">${st.label}</span>
                         </div>
                     </div>
-                    <h3 class="font-headline text-sm md:text-base font-bold text-on-background dark:text-white leading-snug line-clamp-1 mb-0.5">${titulo}</h3>
-                    <p class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-1">${ubicacion}</p>
+                    <h3 class="font-headline text-sm md:text-base font-bold text-on-background dark:text-white leading-snug line-clamp-1 mb-0.5">${calleNum}</h3>
+                    <p class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-1">${barrioProv}</p>
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">${op}</span>
                         <span class="text-sm font-bold text-on-background dark:text-white">${precio}</span>
@@ -12734,7 +13813,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnEdit) {
             btnEdit.onclick = (e) => {
                 e.stopPropagation();
-                if (window.App && typeof window.App.showPublishWizard === 'function') {
+                if (typeof window.openDirectPropertyEditModal === 'function') {
+                    window.openDirectPropertyEditModal(aviso, {
+                        onSave: () => {
+                            if (typeof loadMisAvisos === 'function') loadMisAvisos();
+                        }
+                    });
+                } else if (window.App && typeof window.App.showPublishWizard === 'function') {
                     window.App.showPublishWizard(aviso);
                 }
             };
