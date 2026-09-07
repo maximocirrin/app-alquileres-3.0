@@ -8452,10 +8452,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Caminabilidad</span>
                                     </div>
                                     <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
-                                        97 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                        ${prop.caminabilidad_score !== undefined && prop.caminabilidad_score !== null ? prop.caminabilidad_score : '--'} <span class="text-xs font-bold text-zinc-400">/ 100</span>
                                     </div>
-                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Paraíso del caminante</span>
-                                    <span class="block text-[11px] text-zinc-400 leading-tight">La mayoría de los mandados y servicios se realizan a pie sin auto.</span>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">
+                                        ${prop.caminabilidad_score >= 90 ? 'Paraíso del caminante' : (prop.caminabilidad_score >= 70 ? 'Muy caminable' : (prop.caminabilidad_score >= 50 ? 'Algo caminable' : 'Depende del auto'))}
+                                    </span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">
+                                        ${prop.caminabilidad_score >= 90 ? 'La mayoría de los mandados se realizan a pie sin auto.' : (prop.caminabilidad_score >= 70 ? 'Muchos mandados se pueden hacer a pie.' : 'Se requiere auto para la mayoría de los viajes.')}
+                                    </span>
                                 </div>
                             </div>
 
@@ -8469,10 +8473,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Transporte Público</span>
                                     </div>
                                     <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
-                                        78 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                        ${prop.transporte_score !== undefined && prop.transporte_score !== null ? prop.transporte_score : '--'} <span class="text-xs font-bold text-zinc-400">/ 100</span>
                                     </div>
-                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Excelente transporte</span>
-                                    <span class="block text-[11px] text-zinc-400 leading-tight">Acceso directo a múltiples líneas de colectivos, metrobús y trenes.</span>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">
+                                        ${prop.transporte_score >= 90 ? 'Paraíso del transporte' : (prop.transporte_score >= 70 ? 'Excelente transporte' : (prop.transporte_score >= 50 ? 'Buen transporte' : 'Transporte limitado'))}
+                                    </span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">
+                                        ${prop.transporte_score >= 70 ? 'Acceso directo a múltiples líneas de colectivos y transporte.' : 'Algunas opciones de transporte público cercanas.'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -8486,10 +8494,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <span class="font-headline text-sm font-bold text-zinc-700 dark:text-zinc-300 border-b border-dotted border-zinc-400">Apto Ciclistas</span>
                                     </div>
                                     <div class="font-headline text-2xl font-black text-zinc-900 dark:text-white leading-tight">
-                                        72 <span class="text-xs font-bold text-zinc-400">/ 100</span>
+                                        ${prop.bicicleta_score !== undefined && prop.bicicleta_score !== null ? prop.bicicleta_score : '--'} <span class="text-xs font-bold text-zinc-400">/ 100</span>
                                     </div>
-                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">Muy apto para bicis</span>
-                                    <span class="block text-[11px] text-zinc-400 leading-tight">Entorno plano con red de ciclovías conectadas y estaciones cercanas.</span>
+                                    <span class="block text-xs font-extrabold text-zinc-700 dark:text-zinc-200">
+                                        ${prop.bicicleta_score >= 90 ? 'Paraíso de las bicis' : (prop.bicicleta_score >= 70 ? 'Muy apto para bicis' : (prop.bicicleta_score >= 50 ? 'Algo apto para bicis' : 'Poco apto para bicis'))}
+                                    </span>
+                                    <span class="block text-[11px] text-zinc-400 leading-tight">
+                                        ${prop.bicicleta_score >= 70 ? 'Entorno con red de ciclovías conectadas y estaciones cercanas.' : 'Infraestructura ciclista limitada o calles compartidas.'}
+                                    </span>
                                 </div>
                             </div>
 
