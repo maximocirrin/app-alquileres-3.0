@@ -634,29 +634,34 @@ var App = window.App || {
     setTheme: (theme) => {
         const isDark = theme === 'dark';
 
+        // Evitar ejecuciones reentrantes o duplicadas en cascada
+        if (App._isSettingTheme) return;
+        App._isSettingTheme = true;
+
         if (typeof window.__vivatApplyTheme === 'function') {
             window.__vivatApplyTheme(theme);
         } else {
             const lightBg = '#f8fafc';
             const darkBg = '#09090b';
+            const r = document.documentElement;
             if (isDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.add('dark');
-                document.documentElement.style.backgroundColor = darkBg;
-                document.documentElement.style.colorScheme = 'dark';
+                r.setAttribute('data-theme', 'dark');
+                r.classList.add('dark');
+                r.style.backgroundColor = darkBg;
+                r.style.colorScheme = 'dark';
                 if (document.body) document.body.style.backgroundColor = darkBg;
             } else {
-                document.documentElement.removeAttribute('data-theme');
-                document.documentElement.classList.remove('dark');
-                document.documentElement.style.backgroundColor = lightBg;
-                document.documentElement.style.colorScheme = 'light';
+                r.removeAttribute('data-theme');
+                r.classList.remove('dark');
+                r.style.backgroundColor = lightBg;
+                r.style.colorScheme = 'light';
                 if (document.body) document.body.style.backgroundColor = lightBg;
             }
             try {
                 localStorage.setItem('theme', theme);
             } catch (e) {}
             document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
-                cb.checked = isDark;
+                if (cb.checked !== isDark) cb.checked = isDark;
             });
         }
 
@@ -676,6 +681,10 @@ var App = window.App || {
         try {
             window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme, isDark } }));
         } catch (e) {}
+
+        setTimeout(() => {
+            App._isSettingTheme = false;
+        }, 50);
     },
 
     toggleTheme: () => {
@@ -5778,6 +5787,8 @@ var App = window.App || {
 
         // Theme Switch (Checkbox)
         document.querySelectorAll('.theme-switch__checkbox').forEach(cb => {
+            if (cb._appThemeBound) return;
+            cb._appThemeBound = true;
             cb.addEventListener('change', (e) => {
                 App.setTheme(e.target.checked ? 'dark' : 'light');
             });

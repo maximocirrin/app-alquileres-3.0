@@ -615,18 +615,12 @@
                             window.dispatchEvent(new CustomEvent('vivat:new_chat_message', { detail: newMsg }));
                         })
                         .subscribe((status) => {
-                            if (status === 'SUBSCRIBED') {
-                                // Canal conectado y escuchando eventos
-                            } else if (status === 'CLOSED') {
+                            console.log('[Supabase Realtime Notifications Status]:', status);
+                            if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
                                 if (this._supabaseChannel === channel) {
                                     this._supabaseChannel = null;
                                 }
-                            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                                console.warn('[Supabase Realtime Notifications Status]:', status);
-                                if (this._supabaseChannel === channel) {
-                                    this._supabaseChannel = null;
-                                }
-                                if (document.visibilityState !== 'hidden') {
+                                if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && document.visibilityState !== 'hidden') {
                                     clearTimeout(this._reconnectTimer);
                                     this._reconnectTimer = setTimeout(() => {
                                         if (!this._supabaseChannel && document.visibilityState !== 'hidden') {

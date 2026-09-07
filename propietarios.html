@@ -310,12 +310,14 @@
             opacity: 0;
             transform: translateY(30px);
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transition-property: opacity, transform;
             will-change: opacity, transform;
         }
 
         .animate-on-scroll.is-visible {
             opacity: 1;
             transform: translateY(0);
+            transition-delay: 0s !important;
         }
 
         .delay-100 {
@@ -691,67 +693,83 @@
         }
     </style>
     <style id="marketplace-dark-overrides">
+        html.dark #landing-propietarios-view,
         html.dark #landing-marketplace-view {
             background-color: #09090b !important;
             color: #f1f1f1 !important;
         }
 
+        html.dark #landing-propietarios-view .bg-background,
         html.dark #landing-marketplace-view .bg-background {
             background-color: #09090b !important;
         }
 
+        html.dark #landing-propietarios-view .text-on-background,
         html.dark #landing-marketplace-view .text-on-background {
             color: #f1f1f1 !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-container-lowest,
         html.dark #landing-marketplace-view .bg-surface-container-lowest {
             background-color: #0c0c0e !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-container-low,
         html.dark #landing-marketplace-view .bg-surface-container-low {
             background-color: #1a1c1c !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-container,
         html.dark #landing-marketplace-view .bg-surface-container {
             background-color: #1e1e1e !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-container-high,
         html.dark #landing-marketplace-view .bg-surface-container-high {
             background-color: #282828 !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-container-highest,
         html.dark #landing-marketplace-view .bg-surface-container-highest {
             background-color: #333333 !important;
         }
 
+        html.dark #landing-propietarios-view .bg-surface-dim,
         html.dark #landing-marketplace-view .bg-surface-dim {
             background-color: #121313 !important;
         }
 
+        html.dark #landing-propietarios-view .text-on-surface,
         html.dark #landing-marketplace-view .text-on-surface {
             color: #f1f1f1 !important;
         }
 
+        html.dark #landing-propietarios-view .text-zinc-500,
         html.dark #landing-marketplace-view .text-zinc-500 {
             color: #c7c6c6 !important;
         }
 
+        html.dark #landing-propietarios-view .text-zinc-700,
         html.dark #landing-marketplace-view .text-zinc-700 {
             color: #f1f1f1 !important;
         }
 
+        html.dark #landing-propietarios-view .text-secondary,
         html.dark #landing-marketplace-view .text-secondary {
             color: #c7c6c6 !important;
         }
 
+        html.dark #landing-propietarios-view .border-outline-variant,
         html.dark #landing-marketplace-view .border-outline-variant {
             border-color: rgba(83, 67, 65, 0.5) !important;
         }
 
+        html.dark #landing-propietarios-view .shadow-2xl,
         html.dark #landing-marketplace-view .shadow-2xl {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
         }
 
+        html.dark #landing-propietarios-view nav.bg-white\/80,
         html.dark #landing-marketplace-view nav.bg-white\/80 {
             background-color: rgba(24, 24, 27, 0.8) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
