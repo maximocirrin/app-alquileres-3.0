@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Data Management Module - Supabase Production Integration
  * Connects all application features to Supabase Postgres DB
  */
