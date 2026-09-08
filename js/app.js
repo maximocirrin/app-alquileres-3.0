@@ -10235,7 +10235,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 };
 
                 if (window.DataManager && typeof window.DataManager.updatePublicationDirect === 'function') {
-                    await window.DataManager.updatePublicationDirect(pubId, formData);
+                    const updateRes = await window.DataManager.updatePublicationDirect(pubId, formData);
+                    if (updateRes && updateRes.success === false) {
+                        throw new Error(updateRes.error || 'Error al actualizar la publicación');
+                    }
                 }
 
                 // Update in-memory property object
