@@ -55,6 +55,16 @@
         const existingScript = document.getElementById(scriptId);
 
         if (existingScript || isScriptLoading) {
+            if (existingScript) {
+                existingScript.addEventListener('load', () => {
+                    if (window.google && window.google.maps) {
+                        while (pendingCallbacks.length > 0) {
+                            const cb = pendingCallbacks.shift();
+                            try { cb(); } catch (e) { console.error('[Google Maps Callback Error]:', e); }
+                        }
+                    }
+                });
+            }
             return;
         }
 

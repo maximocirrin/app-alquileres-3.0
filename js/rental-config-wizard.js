@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Vivat - Wizard de Configuración y Generación de Alquileres
  * Diseñado con la misma estructura, estética inmersiva y componentes que el
  * wizard de publicación de propiedades (publish-property-view.html).
@@ -19,40 +19,30 @@
          * @param {Object} propertyData - Datos de la publicación o propiedad
          * @param {Object} options - Opciones adicionales (ej: { tenant: applicantData })
          */
-        open: async function (propertyData = {}, options = {}) {
+        open: function (propertyData = {}, options = {}) {
             this._currentProp = propertyData;
+            this._options = options;
             this._currentStep = 1;
             this._acceptedTenant = null;
             this._tenantSource = 'manual';
             this._isBroker = Boolean(options.isBroker || options.role === 'BROKER' || window.location.pathname.includes('corredor'));
 
-            // 1. Cargar índices oficiales vigentes si no están en caché
-            if (!this._indicesData && window.DataManager?.getLatestIndices) {
-                try {
-                    this._indicesData = await window.DataManager.getLatestIndices();
-                } catch (e) {
-                    console.warn('[RentalWizard] Error obteniendo índices:', e);
-                }
-            }
-
-            // 2. Si se pasó un inquilino explícito (ej: al aceptar postulación)
+            // 1. Si se pasó un inquilino explícito (ej: al aceptar postulación)
             const explicitTenant = options.tenant || propertyData.tenant || propertyData.applicant;
             if (explicitTenant) {
-                const dniVal = explicitTenant.tenant_dni || explicitTenant.dni || '38.123.456';
+                const dniVal = String(explicitTenant.tenant_dni || explicitTenant.dni || '38.123.456');
                 this._acceptedTenant = {
                     name: explicitTenant.tenant_name || explicitTenant.applicant_name || explicitTenant.name || 'Inquilino Aceptado',
                     email: explicitTenant.tenant_email || explicitTenant.applicant_email || explicitTenant.email || 'inquilino@vivat.com.ar',
                     phone: explicitTenant.tenant_phone || explicitTenant.phone || '+54 9 261 400-0000',
                     dni: dniVal,
-                    cuil: explicitTenant.tenant_cuil || explicitTenant.cuil || (dniVal ? `20-${String(dniVal).replace(/\D/g, '')}-7` : '20-38123456-7'),
+                    cuil: explicitTenant.tenant_cuil || explicitTenant.cuil || (dniVal ? `20-${dniVal.replace(/\D/g, '')}-7` : '20-38123456-7'),
                     applicationId: explicitTenant.id || explicitTenant.id_solicitud
                 };
                 this._tenantSource = 'accepted';
-            } else {
-                // 3. Buscar si hay una postulación aceptada para esta propiedad
-                await this._lookupAcceptedTenant(propertyData);
             }
 
+            // 2. Limpiar modales previos y montar el Wizard INMEDIATAMENTE en el DOM
             this._removeExisting();
 
             const wizardEl = document.createElement('section');
@@ -67,6 +57,24 @@
             this._updateStepView();
             this._updateLiveCalculation();
             window.scrollTo(0, 0);
+
+            // 3. Cargar en segundo plano índices oficiales y postulantes si aplica (sin congelar la interfaz)
+            (async () => {
+                try {
+                    if (!this._indicesData && window.DataManager?.getLatestIndices) {
+                        this._indicesData = await window.DataManager.getLatestIndices();
+                        this._updateLiveCalculation();
+                    }
+                    if (!explicitTenant && !propertyData.isNewPublication) {
+                        await this._lookupAcceptedTenant(propertyData);
+                        if (this._acceptedTenant) {
+                            this._updateStepView();
+                        }
+                    }
+                } catch (bgErr) {
+                    console.warn('[RentalWizard] Error en carga diferida de datos:', bgErr);
+                }
+            })();
         },
 
         close: function () {
@@ -174,52 +182,58 @@
          * Busca postulantes aceptados para la propiedad
          */
         _lookupAcceptedTenant: async function (prop) {
-            const propId = String(prop.id || prop.id_propiedad || prop.property_id || '');
-            const pubId = String(prop.id_publicacion || prop.publication_id || '');
+            if (!prop || prop.isNewPublication === true) return;
+            try {
+                const propId = String(prop.id || prop.id_propiedad || prop.property_id || '');
+                const pubId = String(prop.id_publicacion || prop.publication_id || '');
 
-            let allApps = [];
-            if (window.DataManager?.getApplications) {
-                try {
-                    allApps = await window.DataManager.getApplications();
-                } catch (e) {}
-            }
-            if (!allApps || allApps.length === 0) {
-                try {
-                    const raw = localStorage.getItem('vivat_tenant_applications');
-                    if (raw) allApps = JSON.parse(raw);
-                } catch (e) {}
-            }
-
-            if (Array.isArray(allApps)) {
-                const match = allApps.find(a => {
-                    const aPid = String(a.property_id || a.propertyId || a.id_propiedad || '');
-                    const aPub = String(a.publication_id || a.publicationId || a.id_publicacion || '');
-                    const isSameProp = (propId && (aPid === propId || aPub === propId)) || (pubId && (aPub === pubId || aPid === pubId));
-                    return isSameProp && (a.status === 'aceptada' || a.status === 'approved');
-                });
-
-                if (match) {
-                    this._acceptedTenant = {
-                        name: match.tenant_name || match.applicant_name || match.name || 'Inquilino Aceptado',
-                        email: match.tenant_email || match.applicant_email || match.email || 'inquilino@vivat.com.ar',
-                        phone: match.tenant_phone || match.phone || '+54 9 261 400-0000',
-                        dni: match.tenant_dni || match.dni || '38.123.456',
-                        cuil: match.tenant_cuil || match.cuil || (match.dni ? `20-${match.dni.replace(/\D/g, '')}-7` : '20-38123456-7'),
-                        applicationId: match.id || match.id_solicitud
-                    };
-                    this._tenantSource = 'accepted';
+                let allApps = [];
+                if (window.DataManager?.getApplications) {
+                    try {
+                        allApps = await window.DataManager.getApplications();
+                    } catch (e) {}
                 }
+                if (!allApps || allApps.length === 0) {
+                    try {
+                        const raw = localStorage.getItem('vivat_tenant_applications');
+                        if (raw) allApps = JSON.parse(raw);
+                    } catch (e) {}
+                }
+
+                if (Array.isArray(allApps)) {
+                    const match = allApps.find(a => {
+                        const aPid = String(a.property_id || a.propertyId || a.id_propiedad || '');
+                        const aPub = String(a.publication_id || a.publicationId || a.id_publicacion || '');
+                        const isSameProp = (propId && (aPid === propId || aPub === propId)) || (pubId && (aPub === pubId || aPid === pubId));
+                        return isSameProp && (a.status === 'aceptada' || a.status === 'approved');
+                    });
+
+                    if (match) {
+                        const dniStr = String(match.tenant_dni || match.dni || '38.123.456');
+                        this._acceptedTenant = {
+                            name: match.tenant_name || match.applicant_name || match.name || 'Inquilino Aceptado',
+                            email: match.tenant_email || match.applicant_email || match.email || 'inquilino@vivat.com.ar',
+                            phone: match.tenant_phone || match.phone || '+54 9 261 400-0000',
+                            dni: dniStr,
+                            cuil: match.tenant_cuil || match.cuil || (dniStr ? `20-${dniStr.replace(/\D/g, '')}-7` : '20-38123456-7'),
+                            applicationId: match.id || match.id_solicitud
+                        };
+                        this._tenantSource = 'accepted';
+                    }
+                }
+            } catch (err) {
+                console.warn('[RentalWizard] Error en _lookupAcceptedTenant:', err);
             }
         },
 
         /**
          * Diálogo de confirmación post-publicación
          */
-        promptPostPublish: function (propertyData = {}) {
+        promptPostPublish: function (propertyData = {}, options = {}) {
             this._removeExisting();
 
             const p = propertyData;
-            const title = p.title || p.titulo || 'Tu nueva propiedad';
+            const title = p.title || p.titulo || p.tituloAviso || 'Tu nueva propiedad';
             const address = p.address || p.calle || p.calleAltura || 'Mendoza, Argentina';
             const price = Number(p.price || p.precio || p.monthly_rent || 0);
             const photo = (p.images && p.images[0]) || (p.photos && p.photos[0]) || 'img/hero-marketplace.jpg';
@@ -240,7 +254,7 @@
                                 ¡Aviso publicado en Marketplace!
                             </span>
                             <h3 class="font-headline text-xl sm:text-2xl font-extrabold text-on-background dark:text-[#f1f1f1] leading-snug mt-0.5">
-                                ¿Deseas activar la gestión del alquiler?
+                                ¿Deseas configurar y generar el alquiler ahora?
                             </h3>
                         </div>
                     </div>
@@ -265,8 +279,8 @@
                             Hacerlo más tarde
                         </button>
                         <button type="button" id="btn-prompt-now" class="px-6 py-3 bg-primary hover:bg-primary-hover dark:bg-[#A13333] text-white font-headline font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Configurar Alquiler</span>
-                            <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            <span class="material-symbols-outlined text-base">add_home_work</span>
+                            <span>Generar Alquiler Ahora</span>
                         </button>
                     </div>
                 </div>
@@ -282,7 +296,7 @@
             document.getElementById('btn-prompt-now')?.addEventListener('click', () => {
                 modal.remove();
                 sessionStorage.removeItem('just_published_property');
-                this.open(propertyData);
+                this.open(propertyData, options);
             });
         },
 
@@ -1259,11 +1273,12 @@
                 tenantCuil = `20-${tenantDni.replace(/\D/g, '') || '34567890'}-7`;
             }
 
-            const propTitle = p.title || p.titulo || `Propiedad en ${p.address || p.calle || 'Alquiler'}`;
+            const propTitle = p.title || p.titulo || p.tituloAviso || `Propiedad en ${p.address || p.calle || 'Alquiler'}`;
             const propAddress = p.address || p.calle || p.calleAltura || 'Mendoza, Argentina';
             const propPhotos = (p.images && p.images.length > 0) ? p.images : ((p.photos && p.photos.length > 0) ? p.photos : ['img/hero-marketplace.jpg']);
 
-            const contractId = `CTR-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+            const resolvedPropId = p.id_propiedad || p.property_id || p.propertyId || p.id;
+            const resolvedPubId = p.id_publicacion || p.publication_id || null;
             const endDate = new Date(new Date(fechaInicio).getTime() + 86400000 * 30 * duracion).toISOString().split('T')[0];
 
             let depositVal = canon;
@@ -1271,11 +1286,65 @@
             if (tipoDeposito === 'USD_500') depositVal = 500;
             if (tipoDeposito === 'SIN_DEPOSITO') depositVal = 0;
 
+            let ownerProfileId = p.id_perfil_propietario;
+            if (!ownerProfileId && window.DataManager?._getOrCreateProfile) {
+                try {
+                    ownerProfileId = await window.DataManager._getOrCreateProfile();
+                } catch (e) {}
+            }
+            if (!ownerProfileId) ownerProfileId = 6;
+
+            // 1. Si hay cliente de Supabase, persistir en Contrato
+            let dbContractId = null;
+            if (window.supabaseClient && resolvedPropId && !isNaN(Number(resolvedPropId))) {
+                try {
+                    const { data: insertedContract, error: dbErr } = await window.supabaseClient.from('Contrato').insert([{
+                        id_propiedad: Number(resolvedPropId),
+                        id_publicacion: resolvedPubId && !isNaN(Number(resolvedPubId)) ? Number(resolvedPubId) : null,
+                        id_perfil_propietario: Number(ownerProfileId),
+                        id_perfil_inquilino: 5,
+                        id_tipo_garantia: 1,
+                        id_moneda: moneda === 'USD' ? 2 : 1,
+                        id_Indice: indice === 'IPC' ? 1 : 2,
+                        fecha_firma_contrato: new Date().toISOString().split('T')[0],
+                        fecha_inicio_contrato: fechaInicio,
+                        fecha_fin_contrato: endDate,
+                        monto_cierre: canon,
+                        descuentos_aplicados: 0,
+                        periodo_aumento_meses: frecuencia,
+                        dia_vencimiento_mensual: diaVenc,
+                        monto_deposito: depositVal,
+                        deposito_devuelto: false,
+                        tasa_punitoria_diaria: tasaPunitoria,
+                        alias_cbu: aliasCbu
+                    }]).select('id_contrato').maybeSingle();
+
+                    if (!dbErr && insertedContract?.id_contrato) {
+                        dbContractId = insertedContract.id_contrato;
+                        console.log('[RentalWizard] Contrato persistido en Supabase con ID:', dbContractId);
+                    } else if (dbErr) {
+                        console.warn('[RentalWizard] Error guardando en Supabase Contrato:', dbErr);
+                    }
+                } catch (dbErr) {
+                    console.warn('[RentalWizard] Excepción guardando en Supabase Contrato:', dbErr);
+                }
+            }
+
+            const contractId = dbContractId
+                ? `CTR-2026-${String(dbContractId).padStart(4, '0')}`
+                : `CTR-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
             const newContract = {
                 id: contractId,
                 contractNumber: contractId,
-                propertyId: String(p.id || p.property_id || contractId),
-                property_id: String(p.id || p.property_id || contractId),
+                dbContractId: dbContractId,
+                id_contrato: dbContractId,
+                id_propiedad: resolvedPropId && !isNaN(Number(resolvedPropId)) ? Number(resolvedPropId) : null,
+                property_id: resolvedPropId ? String(resolvedPropId) : String(contractId),
+                propertyId: resolvedPropId ? String(resolvedPropId) : String(contractId),
+                id_publicacion: resolvedPubId && !isNaN(Number(resolvedPubId)) ? Number(resolvedPubId) : null,
+                id_perfil_propietario: Number(ownerProfileId),
+                id_perfil_inquilino: 5,
                 title: `Contrato de Locación - ${propTitle}`,
                 property_title: propTitle,
                 property_address: propAddress,
@@ -1291,6 +1360,7 @@
                 end_date: endDate,
                 endDate: endDate,
                 durationMonths: duracion,
+                duration_months: duracion,
                 payment_due_day: diaVenc,
                 paymentDueDay: diaVenc,
                 adjustment_index: indice,
@@ -1319,6 +1389,7 @@
                 tenant_name: tenantName,
                 tenant_email: tenantEmail,
                 tenant_phone: tenantPhone,
+                tenant_dni: tenantDni,
                 owner: {
                     name: 'Propietario Verificado',
                     email: 'propietario@vivat.com.ar',
@@ -1326,44 +1397,22 @@
                 }
             };
 
-            // 1. Guardar en localStorage
+            // 2. Guardar en localStorage
             try {
                 let list = [];
                 const raw = localStorage.getItem('vivat_contracts');
                 if (raw) list = JSON.parse(raw);
-                list = list.filter(c => String(c.propertyId) !== String(newContract.propertyId) && String(c.property_id) !== String(newContract.propertyId));
+                list = list.filter(c => c && String(c.id) !== String(contractId) && String(c.propertyId) !== String(newContract.propertyId) && String(c.property_id) !== String(newContract.propertyId));
                 list.unshift(newContract);
                 localStorage.setItem('vivat_contracts', JSON.stringify(list));
             } catch (e) {
                 console.warn('[RentalWizard] Error guardando en localStorage:', e);
             }
 
-            // 2. Si hay cliente de Supabase, persistir en Contrato
-            if (window.supabaseClient && p.id_propiedad) {
-                try {
-                    await window.supabaseClient.from('Contrato').insert([{
-                        id_propiedad: p.id_propiedad,
-                        id_publicacion: p.id_publicacion || null,
-                        id_perfil_propietario: p.id_perfil_propietario || 6,
-                        id_perfil_inquilino: 5,
-                        id_tipo_garantia: 1,
-                        id_moneda: moneda === 'USD' ? 2 : 1,
-                        id_Indice: indice === 'IPC' ? 1 : 2,
-                        fecha_firma_contrato: new Date().toISOString().split('T')[0],
-                        fecha_inicio_contrato: fechaInicio,
-                        fecha_fin_contrato: endDate,
-                        monto_cierre: canon,
-                        descuentos_aplicados: 0,
-                        periodo_aumento_meses: frecuencia,
-                        dia_vencimiento_mensual: diaVenc,
-                        monto_deposito: depositVal,
-                        deposito_devuelto: false,
-                        tasa_punitoria_diaria: tasaPunitoria,
-                        alias_cbu: aliasCbu
-                    }]);
-                } catch (dbErr) {
-                    console.warn('[RentalWizard] Error guardando en Supabase Contrato:', dbErr);
-                }
+            // Sincronizar en memoria si existe el mock de contratos
+            if (window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
+                window.ownerActiveContractsMock = window.ownerActiveContractsMock.filter(c => c && String(c.id) !== String(contractId) && String(c.propertyId) !== String(newContract.propertyId));
+                window.ownerActiveContractsMock.unshift(newContract);
             }
 
             // Breve espera para que el usuario aprecie el loader y el proceso se complete de forma limpia
@@ -1400,6 +1449,12 @@
                     await window.switchViewTab('alquiler-activo');
                 } else {
                     window.location.hash = 'alquiler-activo';
+                }
+                if (typeof window.loadOwnerActiveRental === 'function') {
+                    await window.loadOwnerActiveRental();
+                }
+                if (typeof window.loadOwnerAvisos === 'function') {
+                    window.loadOwnerAvisos();
                 }
             }
         }

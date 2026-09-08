@@ -2440,8 +2440,18 @@
                 }).replace(/"/g, '&quot;');
 
                 // Buscar si ya tiene un contrato activo generado
-                const activeContract = localContracts.find(c => String(c.propertyId) === String(p.id) || String(c.property_id) === String(p.id)) ||
-                    (brokerActiveRentalsMock && brokerActiveRentalsMock.find(r => String(r.id) === String(p.id) || String(r.raw_id) === String(p.id)));
+                const activeContract = localContracts.find(c => c && (
+                    String(c.propertyId) === String(p.id) || 
+                    String(c.property_id) === String(p.id) ||
+                    String(c.id_propiedad) === String(p.id) ||
+                    (p.id_propiedad && (String(c.propertyId) === String(p.id_propiedad) || String(c.property_id) === String(p.id_propiedad) || String(c.id_propiedad) === String(p.id_propiedad))) ||
+                    (c.id_publicacion && (String(c.id_publicacion) === String(p.id) || String(c.id_publicacion) === String(p.id_publicacion)))
+                )) || (brokerActiveRentalsMock && brokerActiveRentalsMock.find(r => r && (
+                    String(r.id) === String(p.id) || 
+                    String(r.raw_id) === String(p.id) ||
+                    String(r.propertyId) === String(p.id) ||
+                    (p.id_propiedad && (String(r.propertyId) === String(p.id_propiedad) || String(r.id) === String(p.id_propiedad)))
+                )));
 
                 return `
                 <div class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#121214] group cursor-pointer" onclick="if(window.App && typeof window.App.showPropertyDetail === 'function') { window.App.showPropertyDetail('${p.id}'); } else if(window.openBlindCardModal) { window.openBlindCardModal('${p.id}'); } else { window.location.href = 'propiedad-detalle.html?id=${p.id}'; }">

@@ -1094,9 +1094,10 @@
                 } catch (e) { }
 
                 if (justPublishedUrl || propData) {
-                    // Limpiar URL sin recargar
+                    // Limpiar URL sin recargar y limpiar session storage
                     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + (window.location.hash || '');
                     window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                    try { sessionStorage.removeItem('just_published_property'); } catch (e) {}
 
                     if (window.RentalConfigWizard?.promptPostPublish) {
                         window.RentalConfigWizard.promptPostPublish(propData || {});
@@ -1343,7 +1344,13 @@
                 const vistas = p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0;
                 const safePropJson = JSON.stringify(p).replace(/"/g, '&quot;');
 
-                const activeContract = (ownerActiveContractsMock || []).find(c => c && (String(c.propertyId) === String(p.id) || String(c.property_id) === String(p.id) || String(c.id_propiedad) === String(p.id)));
+                const activeContract = (ownerActiveContractsMock || []).find(c => c && (
+                    String(c.propertyId) === String(p.id) || 
+                    String(c.property_id) === String(p.id) || 
+                    String(c.id_propiedad) === String(p.id) ||
+                    (p.id_propiedad && (String(c.propertyId) === String(p.id_propiedad) || String(c.property_id) === String(p.id_propiedad) || String(c.id_propiedad) === String(p.id_propiedad))) ||
+                    (c.id_publicacion && (String(c.id_publicacion) === String(p.id) || String(c.id_publicacion) === String(p.id_publicacion)))
+                ));
 
                 return `
                 <div class="owner-prop-card glass-card rounded-2xl overflow-visible shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80 cursor-pointer relative" onclick="handleOwnerCardClick(event, ${safePropJson})">

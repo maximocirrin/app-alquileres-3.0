@@ -3483,14 +3483,32 @@ var App = window.App || {
                     App.clearPublishDraft();
                     document.getElementById('btn-back-from-publish')?.click();
 
+                    const propPhotos = (propertyData.photos && propertyData.photos.length > 0) 
+                        ? propertyData.photos 
+                        : (window.selectedPropertyPhotos || []);
+                    const propTitle = propertyData.tituloAviso || result?.title || propertyData.title || propertyData.titulo || 'Propiedad publicada';
+                    const propAddress = propertyData.calleAltura || result?.address || propertyData.address || 'Mendoza, Argentina';
+                    const propPrice = Number(propertyData.precio || propertyData.price || result?.price || 380000);
+                    const propExpenses = Number(propertyData.expensas || propertyData.expenses || 45000);
+                    const propId = result?.id_propiedad || null;
+                    const pubId = result?.id || null;
+
                     const savedPropInfo = {
-                        id: result?.id || result?.id_propiedad || Date.now(),
-                        title: propertyData.title || propertyData.titulo || 'Propiedad publicada',
-                        address: propertyData.calleAltura || propertyData.address || 'Mendoza, Argentina',
-                        price: propertyData.price || propertyData.precio || 380000,
-                        expenses: propertyData.expensas || 45000,
-                        images: window.selectedPropertyPhotos || [],
-                        photos: window.selectedPropertyPhotos || []
+                        id: propId || pubId || Date.now(),
+                        id_propiedad: propId,
+                        property_id: propId,
+                        propertyId: propId,
+                        id_publicacion: pubId,
+                        publication_id: pubId,
+                        title: propTitle,
+                        address: propAddress,
+                        price: propPrice,
+                        currency: propertyData.moneda || 'ARS',
+                        expenses: propExpenses,
+                        images: propPhotos,
+                        photos: propPhotos,
+                        condicionesContrato: propertyData.condicionesContrato || null,
+                        isNewPublication: true
                     };
                     try {
                         sessionStorage.setItem('just_published_property', JSON.stringify(savedPropInfo));
@@ -3508,7 +3526,9 @@ var App = window.App || {
                         if (typeof window.addNewBrokerPropertyFromWizard === 'function') {
                             window.addNewBrokerPropertyFromWizard(propertyData);
                         }
-                        if (typeof switchBrokerTab === 'function') {
+                        if (typeof window.RentalConfigWizard?.promptPostPublish === 'function') {
+                            window.RentalConfigWizard.promptPostPublish(savedPropInfo, { isBroker: true, role: 'BROKER' });
+                        } else if (typeof switchBrokerTab === 'function') {
                             switchBrokerTab('avisos');
                         }
                     } else {
@@ -8607,17 +8627,19 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 truncate max-w-[200px] sm:max-w-none">${fullAddress}</span>
                         </div>
 
-                        <!-- Map Preview Card with Floating Street View and Fullscreen Button -->
-                        <div class="relative w-full h-72 sm:h-88 rounded-3xl overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 shadow-md bg-zinc-100 dark:bg-zinc-800 group">
-                            <iframe 
-                                class="w-full h-full border-0 pointer-events-auto"
-                                loading="lazy"
-                                src="https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                                title="Mapa de ubicación ${title}">
-                            </iframe>
+                        <!-- Map Preview Card with Real Google Maps, Floating Street View, Reset and Fullscreen Button -->
+                        <div class="relative w-full h-72 sm:h-96 rounded-3xl overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 shadow-md bg-zinc-100 dark:bg-zinc-800 group">
+                            <!-- Contenedor Real del Mapa de Google Maps -->
+                            <div id="property-detail-map" class="w-full h-full"></div>
+
+                            <!-- Overlay de Carga -->
+                            <div id="property-detail-map-loading" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur-xs transition-opacity duration-300">
+                                <div class="w-8 h-8 rounded-full border-3 border-zinc-400 border-t-zinc-900 dark:border-zinc-600 dark:border-t-white animate-spin"></div>
+                                <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-200 mt-2.5">Cargando mapa interactivo...</span>
+                            </div>
 
                             <!-- Floating Street View Button (Top-Left) -->
-                            <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${prop.latitud || -32.8898},${prop.longitud || -68.8373}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 left-3.5 z-10 inline-flex items-center gap-2 bg-black/85 hover:bg-black text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20">
+                            <a id="property-detail-streetview-btn" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${prop.latitud || -32.8898},${prop.longitud || -68.8373}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 left-3.5 z-20 inline-flex items-center gap-2 bg-black/85 hover:bg-black text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold backdrop-blur-md shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20">
                                 <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-md overflow-hidden bg-zinc-700 shrink-0">
                                     <img src="${photos[0]}" class="w-full h-full object-cover" alt="Street view">
                                 </div>
@@ -8626,9 +8648,15 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             </a>
 
                             <!-- Floating Fullscreen Map Button (Top-Right) -->
-                            <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 right-3.5 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-800 dark:text-white shadow-xl backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-zinc-200/80 dark:border-zinc-700/80" title="Abrir en Google Maps">
+                            <a id="property-detail-fullscreen-btn" href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="absolute top-3.5 right-3.5 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/95 hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900 text-zinc-800 dark:text-white shadow-xl backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-zinc-200/80 dark:border-zinc-700/80" title="Abrir en Google Maps">
                                 <span class="material-symbols-outlined text-lg sm:text-xl">open_in_full</span>
                             </a>
+
+                            <!-- Floating Reset Route Button (Bottom-Right, visible cuando se traza una ruta) -->
+                            <button type="button" id="property-detail-map-reset-btn" class="hidden absolute bottom-3.5 right-3.5 z-20 inline-flex items-center gap-1.5 bg-white/95 dark:bg-zinc-900/95 text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md shadow-lg border border-zinc-200/80 dark:border-zinc-700/80 transition-all hover:scale-105 active:scale-95 cursor-pointer" title="Restablecer vista a la propiedad">
+                                <span class="material-symbols-outlined text-sm">my_location</span>
+                                <span>Ver propiedad</span>
+                            </button>
                         </div>
 
                         <!-- Módulo Moderno y Responsivo de Tiempos de Viaje -->
@@ -8648,9 +8676,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             <!-- Input y Botón 100% Responsivos -->
                             <div class="space-y-3.5">
                                 <div class="flex flex-col sm:flex-row gap-2.5">
-                                    <div class="relative flex-1">
+                                    <div class="relative flex-1 flex items-center">
                                         <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg pointer-events-none">search</span>
-                                        <input type="text" id="travel-time-destination-input" placeholder="Buscar destino (ej. Centro, Universidad, Trabajo...)" class="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200/90 dark:border-zinc-700/80 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 focus:border-zinc-400 dark:focus:border-zinc-500 transition-all font-body">
+                                        <input type="text" id="travel-time-destination-input" placeholder="Buscar destino (ej. Centro, Universidad, Trabajo...)" class="w-full pl-11 sm:pl-12 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200/90 dark:border-zinc-700/80 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 focus:border-zinc-400 dark:focus:border-zinc-500 transition-all font-body" style="padding-left: 2.85rem !important;" autocomplete="off">
                                     </div>
                                     <button type="button" id="travel-time-calc-btn" class="inline-flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 text-xs sm:text-sm font-bold px-5 py-3 rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0">
                                         <span class="material-symbols-outlined text-base">near_me</span>
@@ -8692,7 +8720,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         </div>
                                         <div>
                                             <span id="travel-car-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~10-15 min</span>
-                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Tránsito habitual</span>
+                                            <span id="travel-car-sub" class="text-[11px] text-zinc-400 block mt-0.5">Tránsito habitual</span>
                                         </div>
                                     </div>
 
@@ -8706,7 +8734,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         </div>
                                         <div>
                                             <span id="travel-bus-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~20-25 min</span>
-                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Líneas directas</span>
+                                            <span id="travel-bus-sub" class="text-[11px] text-zinc-400 block mt-0.5">Líneas directas</span>
                                         </div>
                                     </div>
 
@@ -8720,7 +8748,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         </div>
                                         <div>
                                             <span id="travel-bike-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~12-16 min</span>
-                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Por ciclovía</span>
+                                            <span id="travel-bike-sub" class="text-[11px] text-zinc-400 block mt-0.5">Por ciclovía</span>
                                         </div>
                                     </div>
 
@@ -8734,7 +8762,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         </div>
                                         <div>
                                             <span id="travel-walk-time" class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white block leading-tight">~30-40 min</span>
-                                            <span class="text-[11px] text-zinc-400 block mt-0.5">Ruta peatonal</span>
+                                            <span id="travel-walk-sub" class="text-[11px] text-zinc-400 block mt-0.5">Ruta peatonal</span>
                                         </div>
                                     </div>
 
@@ -8744,7 +8772,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-2 gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
                                     <div class="flex items-center gap-1.5 truncate">
                                         <span class="material-symbols-outlined text-sm text-zinc-400 dark:text-zinc-500">pin_drop</span>
-                                        <span class="truncate">Ruta estimada desde <strong class="text-zinc-700 dark:text-zinc-300">${fullAddress}</strong></span>
+                                        <span class="truncate">Ruta estimada desde <strong id="travel-origin-address-label" class="text-zinc-700 dark:text-zinc-300">${fullAddress}</strong></span>
                                     </div>
                                     <a id="travel-maps-direct-link" href="https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=Centro" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:underline shrink-0 transition-colors">
                                         <span>Ver ruta en Google Maps</span>
@@ -9564,58 +9592,425 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
         };
     }
 
-    // Interactive Travel Times Logic
+    // =========================================================================
+    // Real Google Maps Interactive Map & Travel Times API Integration
+    // =========================================================================
+    const mapContainer = document.getElementById('property-detail-map');
+    const mapLoading = document.getElementById('property-detail-map-loading');
+    const streetViewBtn = document.getElementById('property-detail-streetview-btn');
+    const fullscreenMapBtn = document.getElementById('property-detail-fullscreen-btn');
+    const mapResetBtn = document.getElementById('property-detail-map-reset-btn');
+
     const travelInput = document.getElementById('travel-time-destination-input');
     const travelCalcBtn = document.getElementById('travel-time-calc-btn');
     const travelDirectLink = document.getElementById('travel-maps-direct-link');
+    const travelOriginLabel = document.getElementById('travel-origin-address-label');
 
-    const updateTravelTimes = (destinationName) => {
-        if (!destinationName || !destinationName.trim()) return;
-        const dest = destinationName.trim();
-        
-        // Pseudo-random realistic travel estimation based on destination length/name
-        let hash = 0;
-        for (let i = 0; i < dest.length; i++) hash = ((hash << 5) - hash) + dest.charCodeAt(i);
-        hash = Math.abs(hash);
+    const carTimeEl = document.getElementById('travel-car-time');
+    const busTimeEl = document.getElementById('travel-bus-time');
+    const bikeTimeEl = document.getElementById('travel-bike-time');
+    const walkTimeEl = document.getElementById('travel-walk-time');
 
-        const carMin = 8 + (hash % 15);
-        const busMin = carMin + 10 + (hash % 10);
-        const bikeMin = Math.round(carMin * 1.3);
-        const walkMin = carMin * 3 + 10;
+    const carSubEl = document.getElementById('travel-car-sub');
+    const busSubEl = document.getElementById('travel-bus-sub');
+    const bikeSubEl = document.getElementById('travel-bike-sub');
+    const walkSubEl = document.getElementById('travel-walk-sub');
 
-        const carEl = document.getElementById('travel-car-time');
-        const busEl = document.getElementById('travel-bus-time');
-        const bikeEl = document.getElementById('travel-bike-time');
-        const walkEl = document.getElementById('travel-walk-time');
+    // Parse initial coordinates
+    let propLat = parseFloat(prop.latitud ?? prop.latitude ?? extraInfo?.latitud ?? extraInfo?.lat);
+    let propLng = parseFloat(prop.longitud ?? prop.longitude ?? extraInfo?.longitud ?? extraInfo?.lng);
+    let hasExplicitCoords = !isNaN(propLat) && !isNaN(propLng) && (propLat !== 0 || propLng !== 0);
 
-        if (carEl) carEl.textContent = `~${carMin} min`;
-        if (busEl) busEl.textContent = `~${busMin} min`;
-        if (bikeEl) bikeEl.textContent = `~${bikeMin} min`;
-        if (walkEl) walkEl.textContent = `~${walkMin} min`;
+    // Fallback default coordinates (Mendoza center)
+    if (!hasExplicitCoords) {
+        propLat = -32.8898;
+        propLng = -68.8373;
+    }
 
-        if (travelDirectLink) {
-            travelDirectLink.href = `https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=${encodeURIComponent(dest)}`;
+    let detailGoogleMap = null;
+    let detailPropMarker = null;
+    let detailDirectionsRenderer = null;
+    let detailPropPosition = { lat: propLat, lng: propLng };
+
+    // Dark & Light map styles for Google Maps
+    const darkMapStyles = [
+        { elementType: 'geometry', stylers: [{ color: '#18181b' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#18181b' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#a1a1aa' }] },
+        { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#f4f4f5' }] },
+        { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#a1a1aa' }] },
+        { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#14281d' }] },
+        { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#4ade80' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#27272a' }] },
+        { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#3f3f46' }] },
+        { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#71717a' }] },
+        { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3f3f46' }] },
+        { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#27272a' }] },
+        { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#fbbf24' }] },
+        { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#27272a' }] },
+        { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d4d4d8' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#090a0f' }] },
+        { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#52525b' }] }
+    ];
+
+    const lightMapStyles = [
+        { featureType: 'administrative', elementType: 'labels.text.fill', stylers: [{ color: '#444444' }] },
+        { featureType: 'landscape', elementType: 'all', stylers: [{ color: '#f5f5f5' }] },
+        { featureType: 'poi', elementType: 'all', stylers: [{ visibility: 'off' }] },
+        { featureType: 'road', elementType: 'all', stylers: [{ saturation: -100 }, { lightness: 45 }] },
+        { featureType: 'road.highway', elementType: 'all', stylers: [{ visibility: 'simplified' }] },
+        { featureType: 'road.arterial', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', elementType: 'all', stylers: [{ visibility: 'off' }] },
+        { featureType: 'water', elementType: 'all', stylers: [{ color: '#e0edf4' }, { visibility: 'on' }] }
+    ];
+
+    const isCurrentThemeDark = () => {
+        return document.documentElement.classList.contains('dark') ||
+               document.documentElement.getAttribute('data-theme') === 'dark' ||
+               localStorage.getItem('theme') === 'dark';
+    };
+
+    const updateMapLinks = (lat, lng) => {
+        if (streetViewBtn) {
+            streetViewBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+        }
+        if (fullscreenMapBtn) {
+            fullscreenMapBtn.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
         }
     };
 
+    const onGoogleMapsReady = () => {
+        if (!mapContainer || !window.google || !window.google.maps) return;
+
+        try {
+            // 1. Instanciar Mapa
+            detailGoogleMap = new google.maps.Map(mapContainer, {
+                center: detailPropPosition,
+                zoom: 15,
+                styles: isCurrentThemeDark() ? darkMapStyles : lightMapStyles,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControl: true,
+                gestureHandling: 'cooperative'
+            });
+
+            // 2. Marcador con Ficha InfoWindow
+            detailPropMarker = new google.maps.Marker({
+                position: detailPropPosition,
+                map: detailGoogleMap,
+                title: title,
+                animation: google.maps.Animation.DROP
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="color: #18181b; font-family: system-ui, -apple-system, sans-serif; padding: 4px 2px; max-width: 220px;">
+                        <div style="font-weight: 700; font-size: 13px; line-height: 1.2; margin-bottom: 3px;">${title}</div>
+                        <div style="font-size: 11px; color: #71717a;">${fullAddress}</div>
+                    </div>
+                `
+            });
+            detailPropMarker.addListener('click', () => {
+                infoWindow.open(detailGoogleMap, detailPropMarker);
+            });
+
+            // 3. DirectionsRenderer para trazar rutas dinámicas
+            detailDirectionsRenderer = new google.maps.DirectionsRenderer({
+                map: null,
+                suppressMarkers: false,
+                preserveViewport: false,
+                polylineOptions: {
+                    strokeColor: '#0284c7',
+                    strokeWeight: 5,
+                    strokeOpacity: 0.85
+                }
+            });
+
+            // Ocultar overlay de carga
+            if (mapLoading) mapLoading.style.display = 'none';
+
+            // Geocodificar dirección si no venían coordenadas explícitas
+            if (!hasExplicitCoords && fullAddress && window.google.maps.Geocoder) {
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: fullAddress }, (results, status) => {
+                    if (status === 'OK' && results && results[0]?.geometry?.location) {
+                        const loc = results[0].geometry.location;
+                        detailPropPosition = { lat: loc.lat(), lng: loc.lng() };
+                        detailGoogleMap.setCenter(detailPropPosition);
+                        detailPropMarker.setPosition(detailPropPosition);
+                        updateMapLinks(detailPropPosition.lat, detailPropPosition.lng);
+                    }
+                });
+            } else {
+                updateMapLinks(detailPropPosition.lat, detailPropPosition.lng);
+            }
+
+            // 4. Conectar Google Places Autocomplete en el input de destino
+            if (travelInput && window.google.maps && window.google.maps.places) {
+                try {
+                    // Omitir 'types' permite buscar tanto direcciones como puntos de interés, universidades, etc.
+                    const autocomplete = new google.maps.places.Autocomplete(travelInput, {
+                        componentRestrictions: { country: 'ar' },
+                        fields: ['formatted_address', 'geometry', 'name']
+                    });
+
+                    // Sesgar hacia la zona de la propiedad
+                    if (detailPropPosition && typeof detailPropPosition.lat === 'number') {
+                        const circle = new google.maps.Circle({
+                            center: detailPropPosition,
+                            radius: 50000 // 50 km de radio
+                        });
+                        autocomplete.setBounds(circle.getBounds());
+                    }
+
+                    autocomplete.addListener('place_changed', () => {
+                        const place = autocomplete.getPlace();
+                        if (place && (place.formatted_address || place.name)) {
+                            calculateTravelTimes(place.formatted_address || place.name, place.geometry?.location);
+                        }
+                    });
+
+                    // Sincronizar posición de .pac-container al hacer scroll en el modal
+                    modal.addEventListener('scroll', () => {
+                        const pacContainer = document.querySelector('.pac-container');
+                        if (pacContainer && document.activeElement === travelInput) {
+                            const rect = travelInput.getBoundingClientRect();
+                            pacContainer.style.top = `${rect.bottom + window.scrollY}px`;
+                            pacContainer.style.left = `${rect.left + window.scrollX}px`;
+                            pacContainer.style.width = `${rect.width}px`;
+                        }
+                    }, { passive: true });
+                } catch (e) {
+                    console.warn('[Google Places Autocomplete Error]', e);
+                }
+            }
+
+            // Botón para restablecer vista a la propiedad tras calcular ruta
+            if (mapResetBtn) {
+                mapResetBtn.onclick = (e) => {
+                    e.preventDefault();
+                    if (detailDirectionsRenderer) detailDirectionsRenderer.setMap(null);
+                    if (detailPropMarker) detailPropMarker.setVisible(true);
+                    detailGoogleMap.setCenter(detailPropPosition);
+                    detailGoogleMap.setZoom(15);
+                    mapResetBtn.classList.add('hidden');
+                };
+            }
+
+        } catch (err) {
+            console.error('[Google Maps Init Error]', err);
+            if (mapLoading) {
+                mapLoading.innerHTML = `
+                    <div class="text-center p-4">
+                        <span class="material-symbols-outlined text-zinc-400 text-3xl">map</span>
+                        <p class="text-xs text-zinc-500 mt-1">No se pudo cargar el mapa interactivo.</p>
+                        <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline mt-2">
+                            <span>Abrir en Google Maps</span>
+                            <span class="material-symbols-outlined text-xs">open_in_new</span>
+                        </a>
+                    </div>
+                `;
+            }
+        }
+    };
+
+    // Helper para consultar rutas con DirectionsService mediante Promesas
+    const queryDirections = (service, origin, destination, travelMode) => {
+        return new Promise((resolve) => {
+            service.route({
+                origin: origin,
+                destination: destination,
+                travelMode: travelMode
+            }, (result, status) => {
+                if (status === 'OK' && result?.routes?.[0]?.legs?.[0]) {
+                    const leg = result.routes[0].legs[0];
+                    resolve({
+                        status: 'OK',
+                        durationText: leg.duration.text,
+                        durationSec: leg.duration.value,
+                        distanceText: leg.distance.text,
+                        distanceMeters: leg.distance.value,
+                        result: result
+                    });
+                } else {
+                    resolve({ status: status || 'ERROR' });
+                }
+            });
+        });
+    };
+
+    // Ejecución de cálculo de tiempos con API Real de Google Maps
+    let isCalculating = false;
+    const calculateTravelTimes = async (destinationName, destinationLatLng = null) => {
+        if (!destinationName || !destinationName.trim() || isCalculating) return;
+        const dest = destinationName.trim();
+        isCalculating = true;
+
+        // Feedback visual de carga en cada tarjeta
+        const spinnerSvg = '<span class="inline-block w-3.5 h-3.5 border-2 border-zinc-400 border-t-zinc-900 dark:border-t-white rounded-full animate-spin"></span>';
+        if (carTimeEl) carTimeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-normal">${spinnerSvg} Calculando...</span>`;
+        if (busTimeEl) busTimeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-normal">${spinnerSvg} Calculando...</span>`;
+        if (bikeTimeEl) bikeTimeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-normal">${spinnerSvg} Calculando...</span>`;
+        if (walkTimeEl) walkTimeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-normal">${spinnerSvg} Calculando...</span>`;
+
+        if (carSubEl) carSubEl.textContent = 'Consultando Google...';
+        if (busSubEl) busSubEl.textContent = 'Consultando Google...';
+        if (bikeSubEl) bikeSubEl.textContent = 'Consultando Google...';
+        if (walkSubEl) walkSubEl.textContent = 'Consultando Google...';
+
+        if (travelCalcBtn) {
+            travelCalcBtn.disabled = true;
+            travelCalcBtn.classList.add('opacity-70');
+        }
+
+        // Origen y Destino
+        const origin = (window.google && window.google.maps && detailPropPosition)
+            ? new google.maps.LatLng(detailPropPosition.lat, detailPropPosition.lng)
+            : fullAddress;
+
+        let resolvedDestQuery = destinationLatLng || dest;
+        if (!destinationLatLng && typeof dest === 'string' && province && !dest.toLowerCase().includes(province.toLowerCase())) {
+            resolvedDestQuery = `${dest}, ${province}`;
+        }
+
+        try {
+            if (window.google && window.google.maps && window.google.maps.DirectionsService) {
+                const directionsService = new google.maps.DirectionsService();
+
+                // Consultar los 4 modos en paralelo
+                const [drivingRes, transitRes, bicyclingRes, walkingRes] = await Promise.all([
+                    queryDirections(directionsService, origin, resolvedDestQuery, google.maps.TravelMode.DRIVING),
+                    queryDirections(directionsService, origin, resolvedDestQuery, google.maps.TravelMode.TRANSIT),
+                    queryDirections(directionsService, origin, resolvedDestQuery, google.maps.TravelMode.BICYCLING),
+                    queryDirections(directionsService, origin, resolvedDestQuery, google.maps.TravelMode.WALKING)
+                ]);
+
+                // Distancia base en km obtenida de Google Maps
+                const drivingDistanceKm = drivingRes.status === 'OK'
+                    ? (drivingRes.distanceMeters / 1000)
+                    : (walkingRes.status === 'OK' ? (walkingRes.distanceMeters / 1000) : 5);
+
+                // 1. Auto (DRIVING)
+                if (drivingRes.status === 'OK') {
+                    if (carTimeEl) carTimeEl.textContent = drivingRes.durationText;
+                    if (carSubEl) carSubEl.textContent = `${drivingRes.distanceText} · Tránsito habitual`;
+
+                    // Trazar ruta real en el mapa interactivo
+                    if (detailDirectionsRenderer && detailGoogleMap) {
+                        detailDirectionsRenderer.setMap(detailGoogleMap);
+                        detailDirectionsRenderer.setDirections(drivingRes.result);
+                        if (mapResetBtn) mapResetBtn.classList.remove('hidden');
+                    }
+                } else {
+                    const fallbackCarMin = Math.max(5, Math.round((drivingDistanceKm / 35) * 60));
+                    if (carTimeEl) carTimeEl.textContent = `~${fallbackCarMin} min`;
+                    if (carSubEl) carSubEl.textContent = 'Estimado por distancia';
+                }
+
+                // 2. Colectivo / Transporte (TRANSIT)
+                if (transitRes.status === 'OK') {
+                    if (busTimeEl) busTimeEl.textContent = transitRes.durationText;
+                    if (busSubEl) busSubEl.textContent = `${transitRes.distanceText} · Transporte público`;
+                } else {
+                    // Si la ciudad no tiene GTFS público subido a Google, estimar con velocidad urbana promedio
+                    const estTransitMin = Math.max(12, Math.round((drivingDistanceKm / 18) * 60) + 6);
+                    if (busTimeEl) busTimeEl.textContent = `~${estTransitMin} min`;
+                    if (busSubEl) busSubEl.textContent = 'Líneas directas aprox.';
+                }
+
+                // 3. Bici (BICYCLING)
+                if (bicyclingRes.status === 'OK') {
+                    if (bikeTimeEl) bikeTimeEl.textContent = bicyclingRes.durationText;
+                    if (bikeSubEl) bikeSubEl.textContent = `${bicyclingRes.distanceText} · Por ciclovía/calle`;
+                } else {
+                    const estBikeMin = Math.max(6, Math.round((drivingDistanceKm / 15) * 60));
+                    if (bikeTimeEl) bikeTimeEl.textContent = `~${estBikeMin} min`;
+                    if (bikeSubEl) bikeSubEl.textContent = 'Aprox. por ciclovía';
+                }
+
+                // 4. Caminando (WALKING)
+                if (walkingRes.status === 'OK') {
+                    if (walkTimeEl) walkTimeEl.textContent = walkingRes.durationText;
+                    if (walkSubEl) walkSubEl.textContent = `${walkingRes.distanceText} · Ruta peatonal`;
+                } else {
+                    const estWalkMin = Math.max(8, Math.round((drivingDistanceKm / 4.5) * 60));
+                    if (walkTimeEl) walkTimeEl.textContent = `~${estWalkMin} min`;
+                    if (walkSubEl) walkSubEl.textContent = 'Ruta peatonal aprox.';
+                }
+
+            } else {
+                // Fallback por falta temporal de conexión a la API
+                const carMin = 12;
+                const busMin = 24;
+                const bikeMin = 16;
+                const walkMin = 38;
+                if (carTimeEl) carTimeEl.textContent = `~${carMin} min`;
+                if (busTimeEl) busTimeEl.textContent = `~${busMin} min`;
+                if (bikeTimeEl) bikeTimeEl.textContent = `~${bikeMin} min`;
+                if (walkTimeEl) walkTimeEl.textContent = `~${walkMin} min`;
+                if (carSubEl) carSubEl.textContent = 'Tránsito habitual';
+                if (busSubEl) busSubEl.textContent = 'Líneas directas';
+                if (bikeSubEl) bikeSubEl.textContent = 'Por ciclovía';
+                if (walkSubEl) walkSubEl.textContent = 'Ruta peatonal';
+            }
+        } catch (error) {
+            console.warn('[Travel Times Calc Error]', error);
+        } finally {
+            isCalculating = false;
+            if (travelCalcBtn) {
+                travelCalcBtn.disabled = false;
+                travelCalcBtn.classList.remove('opacity-70');
+            }
+            if (travelDirectLink) {
+                travelDirectLink.href = `https://maps.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fullAddress)}&destination=${encodeURIComponent(dest)}`;
+            }
+        }
+    };
+
+    // Eventos en Botón de Calcular e Input
     if (travelCalcBtn && travelInput) {
-        travelCalcBtn.onclick = () => updateTravelTimes(travelInput.value);
+        travelCalcBtn.onclick = (e) => {
+            e.preventDefault();
+            calculateTravelTimes(travelInput.value);
+        };
         travelInput.onkeydown = (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault();
-                updateTravelTimes(travelInput.value);
+                const pacContainer = document.querySelector('.pac-container');
+                const isItemHighlighted = pacContainer && pacContainer.querySelector('.pac-item-selected');
+                if (!isItemHighlighted) {
+                    e.preventDefault();
+                    calculateTravelTimes(travelInput.value);
+                }
             }
         };
     }
 
+    // Eventos en Chips Sugeridos
     modal.querySelectorAll('.travel-preset-chip').forEach(chip => {
         chip.onclick = (e) => {
             e.preventDefault();
-            const dest = chip.dataset.dest;
+            const dest = chip.dataset.dest || chip.textContent.trim();
             if (travelInput) travelInput.value = dest;
-            updateTravelTimes(dest);
+            calculateTravelTimes(dest);
         };
     });
+
+    // Carga segura del SDK de Google Maps e Inicialización
+    if (typeof window.loadGoogleMaps === 'function') {
+        window.loadGoogleMaps(onGoogleMapsReady, 'places');
+    } else {
+        const gmScript = document.createElement('script');
+        gmScript.src = 'js/google-maps-loader.js';
+        gmScript.onload = () => {
+            if (typeof window.loadGoogleMaps === 'function') {
+                window.loadGoogleMaps(onGoogleMapsReady, 'places');
+            } else if (window.google && window.google.maps) {
+                onGoogleMapsReady();
+            }
+        };
+        document.head.appendChild(gmScript);
+    }
 
     // Cost Calculator Pop-up Modal Trigger
     const openCalcBtn = document.getElementById('open-cost-calculator-btn');
