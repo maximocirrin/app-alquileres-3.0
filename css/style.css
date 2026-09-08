@@ -4117,3 +4117,99 @@ html.dark .checkbox-wrapper .checkbox-tick,
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
 }
+
+/* ==========================================================================
+   Google Maps Places Autocomplete Dropdown (.pac-container)
+   Asegura visualización por encima del modal con z-index 99999 y tema oscuro
+   ========================================================================== */
+.pac-container {
+    z-index: 10000000 !important;
+    background-color: #ffffff !important;
+    border-radius: 1rem !important;
+    border: 1px solid #e4e4e7 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 6px !important;
+    font-family: inherit !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+    padding: 4px 0 !important;
+}
+
+html.dark .pac-container,
+[data-theme="dark"] .pac-container,
+.dark .pac-container {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+    box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+}
+
+.pac-item {
+    padding: 10px 14px !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    color: #18181b !important;
+    border-top: 1px solid #f4f4f5 !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1.4 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+.pac-item:first-child {
+    border-top: none !important;
+}
+
+html.dark .pac-item,
+[data-theme="dark"] .pac-item,
+.dark .pac-item {
+    color: #f4f4f5 !important;
+    border-top-color: #27272a !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+    background-color: #f4f4f5 !important;
+}
+
+html.dark .pac-item:hover,
+html.dark .pac-item-selected,
+[data-theme="dark"] .pac-item:hover,
+[data-theme="dark"] .pac-item-selected,
+.dark .pac-item:hover,
+.dark .pac-item-selected {
+    background-color: #27272a !important;
+}
+
+.pac-item-query {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #09090b !important;
+    padding-right: 4px !important;
+}
+
+html.dark .pac-item-query,
+[data-theme="dark"] .pac-item-query,
+.dark .pac-item-query {
+    color: #ffffff !important;
+}
+
+.pac-matched {
+    font-weight: 800 !important;
+    color: #0284c7 !important;
+}
+
+html.dark .pac-matched,
+[data-theme="dark"] .pac-matched,
+.dark .pac-matched {
+    color: #38bdf8 !important;
+}
+
+.pac-icon {
+    margin-right: 10px !important;
+    margin-top: 0 !important;
+}
+
+.pac-logo::after {
+    margin: 8px 12px 4px !important;
+}
+
