@@ -54,7 +54,10 @@
 
                 ${SECTIONS.map(s => {
                     const isActive = s.id === activeId;
-                    const activeClasses = isActive ? 'text-white font-extrabold active' : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white';
+                    let activeClasses = isActive ? 'text-white font-extrabold active' : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white';
+                    if (!isActive && s.id === 'tu-alquiler') {
+                        activeClasses = 'text-primary dark:text-red-400 font-bold hover:text-primary-hover dark:hover:text-red-300';
+                    }
                     return `
                     <a href="${s.href}" data-tab="${s.id}" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full ${activeClasses} transition-colors cursor-pointer text-center no-underline" title="${s.label}">
                         <span class="material-symbols-outlined text-xl lg:text-2xl">${s.icon}</span>
@@ -142,9 +145,12 @@
                 const tab = btn.getAttribute('data-tab');
                 if (tab === activeId) {
                     btn.classList.add('text-white', 'font-extrabold', 'active');
-                    btn.classList.remove('text-zinc-500', 'dark:text-zinc-400');
+                    btn.classList.remove('text-zinc-500', 'dark:text-zinc-400', 'text-primary', 'dark:text-red-400');
+                } else if (tab === 'tu-alquiler') {
+                    btn.classList.remove('text-white', 'font-extrabold', 'active', 'text-zinc-500', 'dark:text-zinc-400');
+                    btn.classList.add('text-primary', 'dark:text-red-400', 'font-bold');
                 } else {
-                    btn.classList.remove('text-white', 'font-extrabold', 'active');
+                    btn.classList.remove('text-white', 'font-extrabold', 'active', 'text-primary', 'dark:text-red-400');
                     btn.classList.add('text-zinc-500', 'dark:text-zinc-400');
                 }
             });

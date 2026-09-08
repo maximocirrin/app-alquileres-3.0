@@ -229,10 +229,10 @@
 
             <button data-tab="chat-negociacion"
                 class="tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg text-emerald-500">forum</span>
+                <span class="material-symbols-outlined text-lg">forum</span>
                 <span>Mensajes & Negociación</span>
                 <span
-                    class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">CHAT</span>
+                    class="px-2 py-0.5 text-[10px] font-black rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">CHAT</span>
             </button>
         </div>
 
@@ -962,7 +962,7 @@
             <div id="dock-active-indicator" class="absolute rounded-full z-0 pointer-events-none"></div>
 
             <button type="button" data-tab="alquiler" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-white font-extrabold active transition-colors cursor-pointer text-center" title="Mi Alquiler Activo">
-                <span class="material-symbols-outlined text-xl lg:text-2xl">key</span>
+                <span class="material-symbols-outlined text-xl lg:text-2xl text-primary dark:text-red-400">key</span>
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Alquiler</span>
             </button>
 
@@ -982,7 +982,7 @@
             </button>
 
             <button type="button" data-tab="chat-negociacion" class="tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center" title="Mensajes & Chat">
-                <span class="material-symbols-outlined text-xl lg:text-2xl text-emerald-500">forum</span>
+                <span class="material-symbols-outlined text-xl lg:text-2xl">forum</span>
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight tracking-tight font-bold">Chat</span>
             </button>
         </nav>
@@ -1054,9 +1054,12 @@
 
                 // Actualizar Top Pills
                 pillBtns.forEach(btn => {
-                    const isTarget = btn.getAttribute('data-tab') === validTab;
+                    const tab = btn.getAttribute('data-tab');
+                    const isTarget = tab === validTab;
                     if (isTarget) {
                         btn.className = 'tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm';
+                    } else if (tab === 'alquiler') {
+                        btn.className = 'tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer text-primary dark:text-red-400 hover:text-primary-hover dark:hover:text-red-300 hover:bg-primary/5 dark:hover:bg-red-950/30';
                     } else {
                         btn.className = 'tenant-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800';
                     }
@@ -1064,10 +1067,13 @@
 
                 // Actualizar Botones del Dock
                 dockBtns.forEach(btn => {
-                    const isTarget = btn.getAttribute('data-tab') === validTab;
+                    const tab = btn.getAttribute('data-tab');
+                    const isTarget = tab === validTab;
                     if (isTarget) {
                         btn.className = 'tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-white font-extrabold active transition-colors cursor-pointer text-center';
                         updateSlidingIndicator(btn);
+                    } else if (tab === 'alquiler') {
+                        btn.className = 'tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-primary dark:text-red-400 font-bold hover:text-primary-hover dark:hover:text-red-300 transition-colors cursor-pointer text-center';
                     } else {
                         btn.className = 'tenant-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-white transition-colors cursor-pointer text-center';
                     }

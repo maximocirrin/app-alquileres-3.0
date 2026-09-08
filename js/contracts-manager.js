@@ -1897,86 +1897,83 @@
 
             // Pre-formatted WhatsApp text for fast negotiation
             const targetPhone = (effectiveRole === 'TENANT' ? (contract.owner?.phone || contract.ownerPhone || '') : (contract.tenant?.phone || contract.tenantPhone || '')).replace(/[^0-9]/g, '');
-            const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber} (${contract.title}) ubicado en ${contract.propertyAddress} a través de Vivat.`);
+            const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber || ''} (${contract.title || ''}) ubicado en ${contract.propertyAddress || ''} a través de Vivat.`);
             const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
+
+            const contractStatusBadge = isFullySigned(contract)
+                ? { label: 'Sellado TSA', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', dot: 'bg-emerald-500' }
+                : (hasAnySignature
+                    ? { label: 'Firma Parcial', bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', dot: 'bg-blue-500' }
+                    : { label: 'Pendiente de Firma', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
+                );
 
             const modalHtml = `
                 <div id="fullscreen-contract-modal" class="fixed inset-0 z-[100000] w-full max-w-full h-full h-[100dvh] max-h-[100dvh] bg-[#f8fafc] dark:bg-[#090a0f] text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden font-body animate-fadeIn">
                     
                     <!-- Sticky Top Header Bar -->
-                    <header class="sticky top-0 z-30 shrink-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-xs">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer shrink-0" title="Cerrar (Esc)">
+                    <header class="sticky top-0 z-30 shrink-0 w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-3 shadow-xs">
+                        
+                        <!-- Left: Volver + Contract Identity & Status -->
+                        <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                            <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="h-9 px-2.5 sm:px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs" title="Cerrar y volver (Esc)">
                                 <span class="material-symbols-outlined text-base">arrow_back</span>
                                 <span class="hidden sm:inline">Volver</span>
                             </button>
                             
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-mono font-bold text-primary dark:text-red-400">${contract.contractNumber}</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Oficial Vivat</span>
+                            <div class="h-6 w-px bg-zinc-200 dark:bg-zinc-700/80 shrink-0 hidden sm:block"></div>
+                            
+                            <div class="min-w-0 flex flex-col justify-center">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${contractStatusBadge.bg} shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full ${contractStatusBadge.dot}"></span>
+                                        ${contractStatusBadge.label}
+                                    </span>
                                 </div>
-                                <h2 class="font-headline font-black text-sm sm:text-base text-zinc-900 dark:text-white truncate">
-                                    ${contract.title}
-                                </h2>
-                                <p class="text-[11px] text-zinc-500 truncate hidden sm:block">📍 ${contract.propertyAddress}</p>
+                                <div class="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                                    <span class="material-symbols-outlined text-[13px] text-zinc-400 shrink-0">location_on</span>
+                                    <span class="truncate">${contract.propertyAddress || 'Sin dirección asignada'}</span>
+                                    ${contract.monthlyRent ? `<span class="hidden md:inline text-zinc-300 dark:text-zinc-600">•</span><span class="hidden md:inline font-semibold text-zinc-700 dark:text-zinc-300">${formatMoney(contract.monthlyRent)} ${contract.currency || 'ARS'}</span>` : ''}
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Central Tabs Switcher -->
-                        <div class="flex items-center justify-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 shrink-0 self-center md:self-auto">
-                            <button id="fs-tab-btn-document" type="button" onclick="ContractsManager.switchFullscreenTab('document')" class="px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${this._activeFullscreenTab === 'document' ? 'bg-primary text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                <span class="material-symbols-outlined text-sm">description</span>
-                                <span>Documento & Firma</span>
-                            </button>
-                            <button id="fs-tab-btn-chat" type="button" onclick="ContractsManager.switchFullscreenTab('chat')" class="px-4 py-2 rounded-xl font-headline font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${this._activeFullscreenTab === 'chat' ? 'bg-primary text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'}">
-                                <span class="material-symbols-outlined text-sm">chat</span>
-                                <span>Chat de Negociación</span>
-                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5"></span>
-                            </button>
+                        <!-- Center: Document Context Badge (Visible on large screens, hidden on mobile) -->
+                        <div class="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/70 text-xs font-semibold text-zinc-600 dark:text-zinc-300 shadow-2xs">
+                            <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">description</span>
+                            <span>Documento Oficial de Locación</span>
+                            <span class="text-zinc-300 dark:text-zinc-600">•</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                                <span class="material-symbols-outlined text-xs">verified</span> Ley N° 25.506
+                            </span>
                         </div>
 
-                        <!-- Right Quick Action Bar -->
-                        <div class="flex items-center justify-end gap-2 shrink-0 flex-wrap">
-                            ${(canEditContract) ? `
-                            <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="h-9 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Modificar Condiciones y Cláusulas del Contrato">
-                                <span class="material-symbols-outlined text-base">tune</span>
-                                <span>Editar Contrato</span>
-                            </button>
-                            ` : ''}
+                        <!-- Hidden placeholder to preserve any legacy JS calls for fs-tab-btn-document -->
+                        <span id="fs-tab-btn-document" class="hidden"></span>
 
-                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="h-9 px-3.5 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Negociar por WhatsApp">
-                                <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                                </svg>
-                                <span class="hidden sm:inline">WhatsApp</span>
-                            </a>
-                            
+                        <!-- Right Quick Action Bar -->
+                        <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
                             ${(canEditContract) ? `
-                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${contract.id}', '${contract.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="h-9 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Cargar Inventario del Inmueble (Anexo I)">
-                                <span class="material-symbols-outlined text-base">inventory</span>
-                                <span>Inventario</span>
+                            <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="h-9 px-3 sm:px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Modificar Condiciones y Cláusulas del Contrato">
+                                <span class="material-symbols-outlined text-base">tune</span>
+                                <span class="hidden sm:inline">Editar</span>
                             </button>
                             ` : ''}
                             
-                            <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="h-9 px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Descargar PDF">
-                                <span class="material-symbols-outlined text-base text-primary">download</span>
+                            ${(canEditContract) ? `
+                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${contract.id}', '${contract.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="h-9 px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Cargar Inventario del Inmueble (Anexo I)">
+                                <span class="material-symbols-outlined text-base">inventory</span>
+                                <span class="hidden sm:inline">Inventario</span>
+                            </button>
+                            ` : ''}
+                            
+                            <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="h-9 px-2.5 sm:px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Descargar PDF">
+                                <span class="material-symbols-outlined text-base text-primary dark:text-red-400">download</span>
                                 <span class="hidden sm:inline">PDF</span>
                             </button>
 
-                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-3 py-2 bg-zinc-900 hover:bg-black text-white font-headline font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Audit Trail TSA">
+                            <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id}')" class="h-9 px-2.5 sm:px-3 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border border-zinc-800 dark:border-zinc-700" title="Audit Trail TSA">
                                 <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
                                 <span class="hidden sm:inline">Audit Trail</span>
-                            </button>
-
-                            <!-- Theme Toggle Button -->
-                            <button type="button" onclick="if(window.App && typeof window.App.toggleTheme === 'function'){ window.App.toggleTheme(); } else { var isD = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isD ? 'dark' : 'light'); document.documentElement.setAttribute('data-theme', isD ? 'dark' : 'light'); }" class="h-9 w-9 p-0 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold transition-all flex items-center justify-center cursor-pointer shrink-0" title="Alternar Modo Claro / Oscuro" aria-label="Alternar Modo Claro / Oscuro">
-                                <span class="material-symbols-outlined text-lg block dark:hidden">dark_mode</span>
-                                <span class="material-symbols-outlined text-lg hidden dark:block text-amber-400">light_mode</span>
-                            </button>
-
-                            <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="h-9 w-9 p-0 rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center cursor-pointer shrink-0" title="Cerrar modal">
-                                <span class="material-symbols-outlined text-xl">close</span>
                             </button>
                         </div>
                     </header>

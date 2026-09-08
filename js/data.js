@@ -2841,6 +2841,44 @@ var DataManager = {
             let currentPub = null;
             let existingExtra = {};
 
+            const rawCaracteristicas = Array.isArray(data.caracteristicas)
+                ? data.caracteristicas
+                : (Array.isArray(data.tags) ? data.tags : null);
+            const featureNames = rawCaracteristicas !== null
+                ? Array.from(new Set(rawCaracteristicas.map(s => String(s).trim()).filter(Boolean)))
+                : null;
+
+            let propId = data.id_propiedad || null;
+            let finalTipoProp = data.tipo_propiedad || data.tipo || 'Departamento';
+            let isNoSubtype = String(finalTipoProp).toLowerCase().includes('casa') || String(finalTipoProp).toLowerCase().includes('ph');
+            let finalSubtipoProp = isNoSubtype
+                ? ''
+                : (data.subtipo_propiedad !== undefined && data.subtipo_propiedad !== null
+                    ? data.subtipo_propiedad
+                    : (data.subtipoPropiedad || 'Estándar'));
+
+            let mergedExtra = {
+                title: newTitle,
+                moneda: moneda,
+                expensas: expensas,
+                expensasIncluidas: expensasIncluidas,
+                dormitorios: dormitorios,
+                banos: banos,
+                ambientes: ambientes,
+                cocheras: cocheras,
+                supCubierta: supCubierta,
+                supTotal: supTotal,
+                amoblado: amoblado,
+                mascotas: mascotas,
+                caracteristicas: featureNames !== null ? featureNames : [],
+                disposicion: data.disposicion || 'Frente',
+                orientacion: data.orientacion || 'Norte',
+                antiguedad: data.antiguedad || 'Excelente estado',
+                tipo_propiedad: finalTipoProp,
+                subtipo_propiedad: finalSubtipoProp,
+                subtipoPropiedad: finalSubtipoProp
+            };
+
             if (window.supabaseClient) {
                 // 1. Fetch current publication
                 const { data: pubData } = await window.supabaseClient
@@ -2856,23 +2894,22 @@ var DataManager = {
                     } catch (e) {}
                 }
 
-                const rawCaracteristicas = Array.isArray(data.caracteristicas)
-                    ? data.caracteristicas
-                    : (Array.isArray(data.tags) ? data.tags : null);
-                const featureNames = rawCaracteristicas !== null
-                    ? Array.from(new Set(rawCaracteristicas.map(s => String(s).trim()).filter(Boolean)))
-                    : null;
+                if (!propId && currentPub?.id_propiedad) {
+                    propId = currentPub.id_propiedad;
+                }
 
                 // 2. Merge extra metadata
-                const finalTipoProp = data.tipo_propiedad || data.tipo || existingExtra.tipo_propiedad || existingExtra.tipo || 'Departamento';
-                const isNoSubtype = finalTipoProp.toLowerCase().includes('casa') || finalTipoProp.toLowerCase().includes('ph');
-                const finalSubtipoProp = isNoSubtype
+                if (!data.tipo_propiedad && !data.tipo && (existingExtra.tipo_propiedad || existingExtra.tipo)) {
+                    finalTipoProp = existingExtra.tipo_propiedad || existingExtra.tipo;
+                }
+                isNoSubtype = String(finalTipoProp).toLowerCase().includes('casa') || String(finalTipoProp).toLowerCase().includes('ph');
+                finalSubtipoProp = isNoSubtype
                     ? ''
                     : (data.subtipo_propiedad !== undefined && data.subtipo_propiedad !== null
                         ? data.subtipo_propiedad
                         : (existingExtra.subtipo_propiedad || existingExtra.subtipoPropiedad || existingExtra.subtipo || 'Estándar'));
 
-                const mergedExtra = {
+                mergedExtra = {
                     ...existingExtra,
                     title: newTitle,
                     moneda: moneda,
@@ -2927,7 +2964,9 @@ var DataManager = {
                 }
 
                 // 5. Update Propiedad table if id_propiedad exists
-                const propId = data.id_propiedad || currentPub?.id_propiedad;
+                if (!propId) {
+                    propId = data.id_propiedad || currentPub?.id_propiedad;
+                }
                 if (propId) {
                     try {
                         const tipoSlug = String(finalTipoProp).toLowerCase().trim();
@@ -3121,7 +3160,7 @@ var DataManager = {
                 data: {
                     id: pubId,
                     id_publicacion: pubId,
-                    id_propiedad: data.id_propiedad || currentPub?.id_propiedad,
+                    id_propiedad: propId || data.id_propiedad || currentPub?.id_propiedad,
                     title: newTitle,
                     price: newPrice,
                     moneda: moneda,

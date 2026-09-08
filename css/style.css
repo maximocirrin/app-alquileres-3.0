@@ -981,6 +981,55 @@ html.dark .floating-dock,
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
 }
 
+/* Botón Alquiler en Botonera / Dock y Pills (Rojo de la página cuando no está activo) */
+.tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white),
+.tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white) *,
+.owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white),
+.owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white) *,
+.broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white),
+.broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white) *,
+a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white),
+a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white) *,
+.tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary),
+.tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary) *,
+.owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary),
+.owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary) *,
+.broker-pill-btn[data-tab="alquileres"]:not(.bg-primary),
+.broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) * {
+    color: var(--color-primary, #811B1E) !important;
+}
+
+html.dark .tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white),
+html.dark .tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white) *,
+html.dark .owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white),
+html.dark .owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white) *,
+html.dark .broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white),
+html.dark .broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white) *,
+html.dark a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white),
+html.dark a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white) *,
+html.dark .tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary),
+html.dark .tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary) *,
+html.dark .owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary),
+html.dark .owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary) *,
+html.dark .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary),
+html.dark .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) *,
+[data-theme="dark"] .tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white),
+[data-theme="dark"] .tenant-dock-btn[data-tab="alquiler"]:not(.active):not(.text-white) *,
+[data-theme="dark"] .owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white),
+[data-theme="dark"] .owner-dock-btn[data-tab="alquiler-activo"]:not(.active):not(.text-white) *,
+[data-theme="dark"] .broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white),
+[data-theme="dark"] .broker-dock-btn[data-tab="alquileres"]:not(.active):not(.text-white) *,
+[data-theme="dark"] a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white),
+[data-theme="dark"] a.owner-dock-btn[href*="alquiler-activo"]:not(.active):not(.text-white) *,
+[data-theme="dark"] .tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary),
+[data-theme="dark"] .tenant-pill-btn[data-tab="alquiler"]:not(.bg-primary) *,
+[data-theme="dark"] .owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary),
+[data-theme="dark"] .owner-pill-btn[data-tab="alquiler-activo"]:not(.bg-primary) *,
+[data-theme="dark"] .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary),
+[data-theme="dark"] .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) * {
+    color: #f87171 !important;
+}
+
 @media (min-width: 1024px) {
     body:has(#owner-floating-dock-container) footer,
     body:has(#tenant-floating-dock-container) footer,
