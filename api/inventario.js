@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import {
   getAuthenticatedUser,
   getContractForProfile,
@@ -15,6 +16,12 @@ import {
 
 const MAX_ITEMS = 200;
 const MAX_PHOTOS_PER_ITEM = 12;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const IMAGE_TYPES = new Map([
+  ['image/jpeg', 'jpg'],
+  ['image/png', 'png'],
+  ['image/webp', 'webp']
+]);
 
 function text(value, maxLength = 2_000) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
@@ -86,6 +93,32 @@ export default async function handler(req, res) {
         items: hydratedItems.map((item) => ({ ...item, fotos_urls: item.fotos_urls.filter(Boolean) }))
       };
       return res.status(200).json({ ok: true, inventario: hydrated });
+    }
+
+    const isUpload = req.query?.action === 'upload' || body.action === 'upload' || (req.url && req.url.includes('inventario-upload'));
+    if (isUpload) {
+      const contentType = String(body.contentType || '').toLowerCase().split(';')[0].trim();
+      const size = Number(body.size);
+      const extension = IMAGE_TYPES.get(contentType);
+      if (!contractId || !extension || !Number.isSafeInteger(size) || size < 1 || size > MAX_IMAGE_BYTES) {
+        return res.status(400).json({ ok: false, error: 'Invalid inventory photo request.' });
+      }
+
+      const randomSuffix = crypto.randomBytes(12).toString('hex');
+      const path = `${contractId}/items/item_${Date.now()}_${randomSuffix}.${extension}`;
+      const { data, error } = await supabase.storage.from('contratos_firmados').createSignedUploadUrl(path);
+      if (error || !data?.token) {
+        return sendInternalError(res, 'inventario-upload', error || new Error('Upload token missing'));
+      }
+
+      return res.status(200).json({
+        ok: true,
+        data: {
+          path,
+          token: data.token,
+          signedUrl: data.signedUrl || null
+        }
+      });
     }
 
     const propertyId = parsePositiveInteger(body.id_propiedad || body.idPropiedad);

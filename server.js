@@ -91,11 +91,11 @@ app.all(['/api/firmas', '/api/firmas/:action'], (req, res) => {
   return dispatch('./api/firmas.js', req, res);
 });
 app.all('/api/inventario', (req, res) => dispatch('./api/inventario.js', req, res));
-app.post('/api/inventario-upload', (req, res) => dispatch('./api/inventario-upload.js', req, res));
-app.post('/api/garante-portal', (req, res) => dispatch('./api/garante-portal.js', req, res));
+app.post('/api/inventario-upload', (req, res) => dispatch('./api/inventario.js', req, res));
+app.post('/api/garante-portal', (req, res) => dispatch('./api/garantes.js', req, res));
 app.post('/api/garantes', (req, res) => dispatch('./api/garantes.js', req, res));
 app.post('/api/property-media-upload', (req, res) => dispatch('./api/property-media-upload.js', req, res));
-app.all(['/api/contracts', '/api/contracts/*'], (req, res) => dispatch('./api/contracts.js', req, res));
+app.all(['/api/contracts', '/api/contracts/*'], (req, res) => dispatch('./api/firmas.js', req, res));
 
 const staticOptions = { dotfiles: 'deny', index: false, maxAge: '1h', immutable: false, fallthrough: true };
 for (const folder of ['css', 'js', 'img', 'components']) {
