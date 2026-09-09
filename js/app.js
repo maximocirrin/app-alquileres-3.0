@@ -7463,16 +7463,43 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     );
     const isEditing = Boolean(isOwner && options.isEditing);
 
-    // Record view in DB when property details are opened (ONLY for non-owner visitors)
-    if (!isOwner) {
-        const pubId = prop.id_publicacion || prop.id;
-        if (pubId && window.DataManager && typeof window.DataManager.recordPublicationView === 'function') {
-            window.DataManager.recordPublicationView(pubId);
-            if (prop.cantidad_visualizaciones_total !== undefined) {
-                prop.cantidad_visualizaciones_total += 1;
-                prop.views_count = prop.cantidad_visualizaciones_total;
-                prop.views = prop.cantidad_visualizaciones_total;
-            }
+    const pubId = prop.id_publicacion || prop.id;
+
+    // Helper to dynamically update views count in open modal DOM
+    const updateViewsDOM = (count) => {
+        const liveViewsEl = document.getElementById('mp-live-views-count');
+        const liveInterestedEl = document.getElementById('mp-live-interested-count');
+        const ownerViewsEl = document.getElementById('mp-owner-views-count');
+        if (liveViewsEl) liveViewsEl.textContent = count > 0 ? count : 1;
+        if (liveInterestedEl) liveInterestedEl.textContent = Math.max(1, Math.floor((count || 1) * 0.35));
+        if (ownerViewsEl) ownerViewsEl.textContent = count;
+    };
+
+    // Live update views in DB & DOM (record view for visitors, live sync for owners)
+    if (pubId) {
+        if (!isOwner && window.DataManager && typeof window.DataManager.recordPublicationView === 'function') {
+            window.DataManager.recordPublicationView(pubId).then(freshCount => {
+                if (typeof freshCount === 'number') {
+                    prop.cantidad_visualizaciones_total = freshCount;
+                    prop.views_count = freshCount;
+                    prop.views = freshCount;
+                    updateViewsDOM(freshCount);
+                }
+            }).catch(e => console.warn('Could not record view:', e));
+        } else if (window.supabaseClient) {
+            window.supabaseClient
+                .from('Publicacion')
+                .select('cantidad_visualizaciones_total')
+                .eq('id_publicacion', pubId)
+                .maybeSingle()
+                .then(({ data }) => {
+                    if (data && typeof data.cantidad_visualizaciones_total === 'number') {
+                        prop.cantidad_visualizaciones_total = data.cantidad_visualizaciones_total;
+                        prop.views_count = data.cantidad_visualizaciones_total;
+                        prop.views = data.cantidad_visualizaciones_total;
+                        updateViewsDOM(data.cantidad_visualizaciones_total);
+                    }
+                }).catch(e => console.warn('Could not fetch live views:', e));
         }
     }
 
@@ -7481,9 +7508,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     let descriptionText = prop.description || prop.note || 'Sin descripción disponible para esta propiedad.';
     if (typeof descriptionText === 'string' && descriptionText.includes('Detalles: ')) {
         const parts = descriptionText.split('Detalles: ');
-        descriptionText = parts[0].trim();
+        descriptionText = parts[0].replace(/(\s*\|\s*)+$/, '').trim();
         try {
-            extraInfo = { ...extraInfo, ...JSON.parse(parts[1]) };
+            extraInfo = { ...JSON.parse(parts[1]), ...extraInfo };
         } catch (e) {
             console.warn('Error parsing extraInfo JSON', e);
         }
@@ -7547,12 +7574,15 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     };
 
     // Normalize property details from Wizard & DB
-    const pubId = prop.id_publicacion || prop.id;
     const propIdVal = prop.id_propiedad || prop.idPropiedad || prop.id || 1;
     const isAlreadyApplied = Boolean(typeof window.hasUserAppliedToProperty === 'function' && window.hasUserAppliedToProperty(pubId, propIdVal));
-    const title = prop.title || 'Propiedad en alquiler';
-    const address = prop.address || prop.ubicacion || 'Ubicación no especificada';
-    const province = prop.province || extraInfo.provincia || '';
+    const title = extraInfo.title || prop.title || prop.note || 'Propiedad en alquiler';
+    const address = extraInfo.address || extraInfo.direccion || prop.address || prop.ubicacion || (prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : 'Ubicación no especificada');
+    const province = prop.province || prop.provincia || extraInfo.provincia || extraInfo.province || '';
+    const city = prop.city || prop.ciudad || extraInfo.ciudad || extraInfo.city || '';
+    const barrio = prop.barrio || extraInfo.barrio || '';
+    const calle = prop.calle || extraInfo.calle || '';
+    const numero = prop.numero || extraInfo.numero || '';
     const fullAddress = (province && !address.toLowerCase().includes(province.toLowerCase()))
         ? `${address}, ${province}`
         : address;
@@ -7564,7 +7594,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const operacion = (extraInfo.operacion || prop.featured || prop.type || 'En Alquiler').toUpperCase();
     const dormitorios = prop.dormitorios || extraInfo.dormitorios || prop.bedrooms || extractTagMetric(prop.tags, ['dorm', 'habitac']) || 1;
     const banos = prop.banos || extraInfo.banos || prop.bathrooms || extractTagMetric(prop.tags, ['baño', 'bano']) || 1;
-    const toilettes = prop.toilettes || extraInfo.toilettes || null;
+    const toilettes = prop.toilettes !== undefined && prop.toilettes !== null && prop.toilettes !== '' ? prop.toilettes : (extraInfo.toilettes !== undefined && extraInfo.toilettes !== null ? extraInfo.toilettes : null);
     const ambientes = prop.ambientes || extraInfo.ambientes || dormitorios || 1;
     const cocheras = prop.cocheras !== undefined ? prop.cocheras : (extraInfo.cocheras !== undefined ? extraInfo.cocheras : null);
     const supCubierta = prop.sup_cubierta || prop.supCubierta || extraInfo.sup_cubierta || extraInfo.supCubierta || extractTagMetric(prop.tags, ['m²', 'm2']) || '';
@@ -7582,7 +7612,6 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     const antiguedad = prop.antiguedad || extraInfo.antiguedad || 'Excelente estado';
     const disposicion = prop.disposicion || extraInfo.disposicion || 'Frente';
     const orientacion = prop.orientacion || extraInfo.orientacion || 'Norte';
-    const barrio = prop.barrio || extraInfo.barrio || '';
     const status = (prop.status || extraInfo.status || prop.estado_publicacion || '').toLowerCase() || 'disponible';
     const isAlquilada = Boolean(
         status === 'alquilada' ||
@@ -7648,6 +7677,20 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
     if (tagsList.length === 0) {
         tagsList = ['Balcón', 'Cocina equipada', 'Luz natural', 'Aire acondicionado', 'Ascensor', 'Seguridad'];
     }
+
+    // Characteristics & Extended Details
+    const pisos = prop.pisos || extraInfo.pisos || 'Porcelanato / Madera pulida';
+    const ascensor = prop.ascensor !== undefined && prop.ascensor !== null ? prop.ascensor : (extraInfo.ascensor !== undefined && extraInfo.ascensor !== null ? extraInfo.ascensor : 'Sí');
+    const hogar = prop.hogar !== undefined && prop.hogar !== null ? prop.hogar : (extraInfo.hogar !== undefined && extraInfo.hogar !== null ? extraInfo.hogar : (tagsList.some(t => t.toLowerCase().includes('hogar') || t.toLowerCase().includes('chimenea')) ? 'Sí' : 'No'));
+    const calefaccion = prop.calefaccion || extraInfo.calefaccion || 'Central, Gas Natural, Radiadores / Split Frío-Calor';
+    const climatizacion = prop.climatizacion || prop.refrigeracion || extraInfo.climatizacion || extraInfo.refrigeracion || 'Aire Acondicionado, Climatizador Central / Split Inverter';
+    const equipamiento = prop.equipamiento || extraInfo.equipamiento || 'Cocina equipada, Termotanque/Caldera, Anafe y Horno, Heladera, Alacenas';
+    const lavadero = prop.lavadero || extraInfo.lavadero || 'En la unidad / Espacio para Lavarropas';
+    const cocheraTipo = prop.cochera_tipo || extraInfo.cochera_tipo || (cocheras ? 'Cochera cubierta asignada con portón automatizado' : 'Sin cochera asignada / Estacionamiento en calle');
+    const edificioNombre = prop.edificio_nombre || prop.complejo || extraInfo.edificio_nombre || extraInfo.complejo || (barrio ? `Residencial ${barrio}` : 'Edificio Vivat');
+    const instalacionesComplejo = prop.instalaciones_complejo || extraInfo.instalaciones_complejo || 'Gimnasio, Seguridad 24hs, Piscina, SUM, Parrilla';
+    const plazoContrato = prop.plazo_contrato || extraInfo.plazo_contrato || '1 a 2 Años (Ajustes según índice contractual ICL / IPC)';
+    const depositoGarantia = prop.deposito_garantia || extraInfo.deposito_garantia || '1 mes (Reembolsable)';
 
     // Extract Property Type & Subtype
     let resolvedTipo = (
@@ -7750,10 +7793,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const btnName = (btn.dataset.presetName || '').toLowerCase().trim();
             const icon = btn.querySelector('.material-symbols-outlined');
             if (selectedNames.includes(btnName)) {
-                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-xs transition-all active:scale-95 cursor-pointer';
+                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary text-white shadow-xs transition-all active:scale-95 cursor-pointer';
                 if (icon) icon.textContent = 'check';
             } else {
-                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500/60 transition-all active:scale-95 cursor-pointer';
+                btn.className = 'mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-red-500/60 transition-all active:scale-95 cursor-pointer';
                 if (icon) icon.textContent = 'add';
             }
         });
@@ -7776,10 +7819,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             existing.remove();
         } else {
             const span = document.createElement('span');
-            span.className = 'mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-emerald-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all animate-fade-in';
+            span.className = 'mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-red-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all animate-fade-in';
             span.dataset.amenityName = cleanName;
             span.innerHTML = `
-                <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">check_circle</span>
+                <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">check_circle</span>
                 <span class="amenity-name">${cleanName}</span>
                 <button type="button" class="btn-remove-amenity text-zinc-400 hover:text-rose-500 transition-colors ml-1 p-0.5 rounded cursor-pointer" title="Quitar amenity" onclick="event.stopPropagation(); this.closest('.mp-selected-amenity-tag').remove(); window.__updateAmenitiesCount();">
                     <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
@@ -8119,7 +8162,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
         ${isOwner ? (isEditing ? `
             <!-- Sticky In-Page Editor Toolbar -->
-            <div class="sticky top-[53px] sm:top-[61px] z-35 bg-emerald-600 dark:bg-emerald-700 text-white backdrop-blur-xl border-b border-emerald-500/40 px-4 sm:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3 shadow-md">
+            <div class="sticky top-[53px] sm:top-[61px] z-35 bg-gradient-to-r from-primary to-red-700 dark:from-red-900 dark:to-red-950 text-white backdrop-blur-xl border-b border-red-500/40 px-4 sm:px-8 py-2.5 flex items-center justify-between flex-wrap gap-3 shadow-md">
                 <div class="flex items-center gap-2.5">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white shadow-inner">
                         <span class="material-symbols-outlined text-lg">edit</span>
@@ -8134,7 +8177,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         <span class="material-symbols-outlined text-base">close</span>
                         <span>Cancelar</span>
                     </button>
-                    <button id="mp-top-save-btn" type="button" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-100 text-emerald-800 text-xs font-extrabold shadow-md transition-all active:scale-95 cursor-pointer">
+                    <button id="mp-top-save-btn" type="button" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-white hover:bg-red-50 text-red-700 dark:text-red-600 text-xs font-extrabold shadow-md transition-all active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">save</span>
                         <span class="mp-save-label">Guardar Cambios</span>
                     </button>
@@ -8307,8 +8350,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         <div class="flex items-center gap-2 flex-wrap">
                             ${isEditing ? `
                                 <!-- Inline Select: Estado del aviso -->
-                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
-                                    <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">sync</span>
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-red-500/40 dark:border-red-500/50 shadow-xs">
+                                    <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">sync</span>
                                     <label for="mp-inline-status" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Estado:</label>
                                     <select id="mp-inline-status" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
                                         <option value="disponible" ${status === 'disponible' || (!isAlquilada && status !== 'paused' && status !== 'pausado') ? 'selected' : ''}>🟢 Disponible</option>
@@ -8318,7 +8361,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
 
                                 <!-- Inline Select: Amoblado -->
-                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-red-500/40 dark:border-red-500/50 shadow-xs">
                                     <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">chair</span>
                                     <label for="mp-inline-amoblado" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Muebles:</label>
                                     <select id="mp-inline-amoblado" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
@@ -8329,7 +8372,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
 
                                 <!-- Inline Select: Mascotas -->
-                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-emerald-500/40 shadow-xs">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-zinc-800 border-2 border-red-500/40 dark:border-red-500/50 shadow-xs">
                                     <span class="material-symbols-outlined text-sm text-zinc-500 dark:text-zinc-400">pets</span>
                                     <label for="mp-inline-mascotas" class="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase mr-0.5">Mascotas:</label>
                                     <select id="mp-inline-mascotas" class="bg-transparent text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
@@ -8372,10 +8415,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                         ${isEditing ? `
                             <div class="space-y-1.5 pt-1">
-                                <label for="mp-inline-title" class="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                <label for="mp-inline-title" class="text-xs font-black uppercase tracking-wider text-primary dark:text-red-400 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-sm">edit</span> Título de la publicación
                                 </label>
-                                <input id="mp-inline-title" type="text" value="${title.replace(/"/g, '&quot;')}" class="w-full font-headline text-xl sm:text-3xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none shadow-sm transition-all" required>
+                                <input id="mp-inline-title" type="text" value="${title.replace(/"/g, '&quot;')}" class="w-full font-headline text-xl sm:text-3xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-900 border-2 border-red-500/60 focus:border-red-600 dark:focus:border-red-500 rounded-2xl px-4 py-3 outline-none shadow-sm transition-all" required>
                             </div>
                         ` : `
                             <h1 class="font-headline text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white leading-tight tracking-tight">
@@ -8383,25 +8426,57 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             </h1>
                         `}
 
-                        <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 text-sm sm:base font-medium flex-wrap">
-                            <span class="material-symbols-outlined text-zinc-500 dark:text-zinc-400 shrink-0">location_on</span>
-                            <span class="font-bold text-zinc-800 dark:text-zinc-200">${fullAddress}</span>
-                            ${barrio ? `<span class="text-zinc-500">· Barrio ${barrio}</span>` : ''}
-                            <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:underline ml-1 transition-colors">
-                                <span>Ver en Maps</span>
-                                <span class="material-symbols-outlined text-xs">open_in_new</span>
-                            </a>
-                        </div>
+                        ${isEditing ? `
+                            <div class="space-y-2.5 bg-white dark:bg-zinc-900/90 p-4 rounded-2xl border-2 border-red-500/60 shadow-xs mt-1">
+                                <label class="text-xs font-black uppercase tracking-wider text-primary dark:text-red-400 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">edit_location</span> Ubicación del inmueble
+                                </label>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <div class="sm:col-span-2">
+                                        <label for="mp-inline-address" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Calle y altura:</label>
+                                        <input id="mp-inline-address" type="text" value="${(address && address !== 'Ubicación no especificada' ? address : (prop.calle ? `${prop.calle} ${prop.numero || ''}`.trim() : '')).replace(/"/g, '&quot;')}" placeholder="Ej: Av. San Martín 1234" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 outline-none focus:border-red-500 transition-colors">
+                                    </div>
+                                    <div>
+                                        <label for="mp-inline-piso-dpto" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Piso / Dpto / Local:</label>
+                                        <input id="mp-inline-piso-dpto" type="text" value="${pisoDpto.replace(/"/g, '&quot;')}" placeholder="Ej: 4° B" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 outline-none focus:border-red-500 transition-colors">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <div>
+                                        <label for="mp-inline-barrio" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Barrio:</label>
+                                        <input id="mp-inline-barrio" type="text" value="${barrio.replace(/"/g, '&quot;')}" placeholder="Ej: Palermo / Bombal" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 outline-none focus:border-red-500 transition-colors">
+                                    </div>
+                                    <div>
+                                        <label for="mp-inline-city" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Ciudad / Localidad:</label>
+                                        <input id="mp-inline-city" type="text" value="${city.replace(/"/g, '&quot;')}" placeholder="Ej: Mendoza" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 outline-none focus:border-red-500 transition-colors">
+                                    </div>
+                                    <div>
+                                        <label for="mp-inline-province" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Provincia:</label>
+                                        <input id="mp-inline-province" type="text" value="${(province || 'Mendoza').replace(/"/g, '&quot;')}" placeholder="Ej: Mendoza" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 outline-none focus:border-red-500 transition-colors">
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 text-sm sm:base font-medium flex-wrap">
+                                <span class="material-symbols-outlined text-zinc-500 dark:text-zinc-400 shrink-0">location_on</span>
+                                <span class="font-bold text-zinc-800 dark:text-zinc-200">${fullAddress}</span>
+                                ${barrio ? `<span class="text-zinc-500">· Barrio ${barrio}</span>` : ''}
+                                <a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-bold text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:underline ml-1 transition-colors">
+                                    <span>Ver en Maps</span>
+                                    <span class="material-symbols-outlined text-xs">open_in_new</span>
+                                </a>
+                            </div>
+                        `}
 
                         <!-- Architectural Luxury Spec Cards Grid -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-red-500/60 dark:border-red-500/60' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">bed</span>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     ${isEditing ? `
-                                        <input type="number" id="mp-inline-dormitorios" min="0" max="20" value="${dormitorios}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                        <input type="number" id="mp-inline-dormitorios" min="0" max="20" value="${dormitorios}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-red-500/50 focus:border-red-600 rounded-xl px-2 py-0.5 outline-none text-center block">
                                     ` : `
                                         <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${dormitorios}</span>
                                     `}
@@ -8409,13 +8484,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-red-500/60 dark:border-red-500/60' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">shower</span>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     ${isEditing ? `
-                                        <input type="number" id="mp-inline-banos" min="1" max="15" value="${banos}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                        <input type="number" id="mp-inline-banos" min="1" max="15" value="${banos}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-red-500/50 focus:border-red-600 rounded-xl px-2 py-0.5 outline-none text-center block">
                                     ` : `
                                         <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${banos}</span>
                                     `}
@@ -8423,13 +8498,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-red-500/60 dark:border-red-500/60' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">square_foot</span>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     ${isEditing ? `
-                                        <input type="number" id="mp-inline-sup-cubierta" min="1" max="10000" value="${supCubierta || supTotal || 45}" class="w-24 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                        <input type="number" id="mp-inline-sup-cubierta" min="1" max="10000" value="${supCubierta || supTotal || 45}" class="w-24 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-red-500/50 focus:border-red-600 rounded-xl px-2 py-0.5 outline-none text-center block">
                                     ` : `
                                         <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${supCubierta || supTotal || '45'} m²</span>
                                     `}
@@ -8437,13 +8512,13 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 </div>
                             </div>
 
-                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
+                            <div class="bg-white dark:bg-[#111318] p-4 rounded-2xl border-2 ${isEditing ? 'border-red-500/60 dark:border-red-500/60' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:shadow-md transition-all duration-200 flex items-center gap-3.5 group">
                                 <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-xl">garage_home</span>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     ${isEditing ? `
-                                        <input type="number" id="mp-inline-cocheras" min="0" max="10" value="${cocheras || 0}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-emerald-500/50 rounded-xl px-2 py-0.5 outline-none text-center block">
+                                        <input type="number" id="mp-inline-cocheras" min="0" max="10" value="${cocheras || 0}" class="w-20 font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border-2 border-red-500/50 focus:border-red-600 rounded-xl px-2 py-0.5 outline-none text-center block">
                                     ` : `
                                         <span class="font-headline text-lg sm:text-xl font-black text-zinc-900 dark:text-white block leading-tight">${cocheras || '0'}</span>
                                     `}
@@ -8461,7 +8536,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 Comodidades y Amenities incluidos
                             </h2>
                             ${isEditing ? `
-                                <span id="mp-amenities-count-badge" class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-400/40 flex items-center gap-1.5 shadow-2xs">
+                                <span id="mp-amenities-count-badge" class="text-xs font-extrabold text-primary dark:text-red-400 bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border-2 border-red-500/60 flex items-center gap-1.5 shadow-2xs">
                                     <span class="material-symbols-outlined text-sm">checklist</span>
                                     <span id="mp-amenities-count">${tagsList.length}</span> seleccionados
                                 </span>
@@ -8471,17 +8546,17 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         </div>
 
                         ${isEditing ? `
-                            <div class="bg-white dark:bg-[#111318] p-5 sm:p-6 rounded-3xl border-2 border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-2xs space-y-4">
+                            <div class="bg-white dark:bg-[#111318] p-5 sm:p-6 rounded-3xl border-2 border-red-500/60 shadow-2xs space-y-4">
                                 <div>
-                                    <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 block">Amenities asignados a esta propiedad</span>
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-red-800 dark:text-red-300 block">Amenities asignados a esta propiedad</span>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400">Podés quitar o agregar comodidades. Al hacer clic sobre los sugeridos se activan o desactivan en tiempo real.</p>
                                 </div>
 
                                 <!-- Contenedor de Chips Seleccionados -->
                                 <div id="mp-selected-amenities-list" class="flex flex-wrap gap-2 min-h-[42px] p-3 rounded-2xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800">
                                     ${tagsList.map(tag => `
-                                        <span class="mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-emerald-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all" data-amenity-name="${tag.replace(/"/g, '&quot;')}">
-                                            <span class="material-symbols-outlined text-sm text-emerald-600 dark:text-emerald-400">check_circle</span>
+                                        <span class="mp-selected-amenity-tag inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-red-500/60 text-zinc-900 dark:text-white text-xs font-bold shadow-xs transition-all" data-amenity-name="${tag.replace(/"/g, '&quot;')}">
+                                            <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">check_circle</span>
                                             <span class="amenity-name">${tag}</span>
                                             <button type="button" class="btn-remove-amenity text-zinc-400 hover:text-rose-500 transition-colors ml-1 p-0.5 rounded cursor-pointer" title="Quitar amenity" onclick="event.stopPropagation(); this.closest('.mp-selected-amenity-tag').remove(); window.__updateAmenitiesCount();">
                                                 <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
@@ -8493,9 +8568,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <!-- Input para agregar nuevo amenity libre -->
                                 <div class="flex items-center gap-2">
                                     <div class="relative flex-1">
-                                        <input type="text" id="mp-new-amenity-input" placeholder="Escribí un nuevo amenity (ej. Jacuzzi, Quincho, Sauna)..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-white outline-none" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.__addCustomAmenity(); }">
+                                        <input type="text" id="mp-new-amenity-input" placeholder="Escribí un nuevo amenity (ej. Jacuzzi, Quincho, Sauna)..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-red-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-white outline-none" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.__addCustomAmenity(); }">
                                     </div>
-                                    <button type="button" id="mp-add-amenity-btn" onclick="window.__addCustomAmenity();" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer">
+                                    <button type="button" id="mp-add-amenity-btn" onclick="window.__addCustomAmenity();" class="inline-flex items-center gap-1 bg-primary hover:bg-red-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer">
                                         <span class="material-symbols-outlined text-base">add</span>
                                         <span>Agregar</span>
                                     </button>
@@ -8514,7 +8589,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         ].map(preset => {
                                             const isAlreadyIn = tagsList.some(t => t.toLowerCase().trim() === preset.toLowerCase().trim());
                                             return `
-                                                <button type="button" class="mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs ${isAlreadyIn ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold hover:border-emerald-500/60'} transition-all active:scale-95 cursor-pointer" data-preset-name="${preset.replace(/"/g, '&quot;')}" onclick="window.__toggleAmenityTag('${preset.replace(/'/g, "\\'")}');">
+                                                <button type="button" class="mp-preset-amenity-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs ${isAlreadyIn ? 'bg-primary text-white font-bold shadow-xs' : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold hover:border-red-500/60'} transition-all active:scale-95 cursor-pointer" data-preset-name="${preset.replace(/"/g, '&quot;')}" onclick="window.__toggleAmenityTag('${preset.replace(/'/g, "\\'")}');">
                                                     <span class="material-symbols-outlined text-sm pointer-events-none">${isAlreadyIn ? 'check' : 'add'}</span>
                                                     <span>${preset}</span>
                                                 </button>
@@ -8545,14 +8620,14 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 Descripción del Inmueble
                             </h2>
                             ${isEditing ? `
-                                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <span class="text-xs font-bold text-primary dark:text-red-400 flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm">edit</span> Editando en vivo
                                 </span>
                             ` : ''}
                         </div>
-                        <div class="bg-white dark:bg-[#111318] p-5 sm:p-7 rounded-3xl border-2 ${isEditing ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300">
+                        <div class="bg-white dark:bg-[#111318] p-5 sm:p-7 rounded-3xl border-2 ${isEditing ? 'border-red-500/60 dark:border-red-500/60' : 'border-zinc-200/80 dark:border-zinc-800'} shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300">
                             ${isEditing ? `
-                                <textarea id="mp-inline-description" rows="6" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 rounded-2xl p-4 font-body text-zinc-800 dark:text-zinc-200 text-sm sm:text-base outline-none resize-y transition-all leading-relaxed">${descriptionText}</textarea>
+                                <textarea id="mp-inline-description" rows="6" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-red-500 rounded-2xl p-4 font-body text-zinc-800 dark:text-zinc-200 text-sm sm:text-base outline-none resize-y transition-all leading-relaxed">${descriptionText}</textarea>
                                 <p class="text-[11px] text-zinc-400 mt-2">Podés describir el inmueble, comodidades, requisitos y aclaraciones para los postulantes.</p>
                             ` : `
                                 <div class="prose dark:prose-invert max-w-none font-body text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
@@ -8827,29 +8902,87 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                             <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
                                 <div>
                                     <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Dormitorios y baños</h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                        <li>Dormitorios: <strong class="text-zinc-900 dark:text-white">${dormitorios}</strong></li>
-                                        <li>Baños completos: <strong class="text-zinc-900 dark:text-white">${banos}</strong></li>
-                                        ${toilettes ? `<li>Toilettes de recepción: <strong class="text-zinc-900 dark:text-white">${toilettes}</strong></li>` : ''}
-                                        <li>Ambientes totales: <strong class="text-zinc-900 dark:text-white">${ambientes}</strong></li>
-                                    </ul>
+                                    ${isEditing ? `
+                                        <div class="space-y-2 bg-white dark:bg-zinc-900 p-3 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <label for="mp-inline-ambientes" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Ambientes totales:</label>
+                                                <input type="number" id="mp-inline-ambientes" min="1" max="20" value="${ambientes}" class="w-20 text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none text-center focus:border-red-500">
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2">
+                                                <label for="mp-inline-toilettes" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Toilettes de recepción:</label>
+                                                <input type="number" id="mp-inline-toilettes" min="0" max="10" value="${toilettes !== null && toilettes !== undefined ? toilettes : '0'}" class="w-20 text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none text-center focus:border-red-500">
+                                            </div>
+                                            <p class="text-[10px] text-zinc-400">Dormitorios y baños principales se editan en las tarjetas superiores.</p>
+                                        </div>
+                                    ` : `
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Dormitorios: <strong class="text-zinc-900 dark:text-white">${dormitorios}</strong></li>
+                                            <li>Baños completos: <strong class="text-zinc-900 dark:text-white">${banos}</strong></li>
+                                            ${toilettes ? `<li>Toilettes de recepción: <strong class="text-zinc-900 dark:text-white">${toilettes}</strong></li>` : ''}
+                                            <li>Ambientes totales: <strong class="text-zinc-900 dark:text-white">${ambientes}</strong></li>
+                                        </ul>
+                                    `}
                                 </div>
 
                                 <div>
                                     <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Terminaciones y detalles</h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                        <li>Ascensor en edificio: <strong class="text-zinc-900 dark:text-white">Sí</strong></li>
-                                        <li>Pisos: <strong class="text-zinc-900 dark:text-white">Porcelanato / Madera pulida</strong></li>
-                                        <li>Hogar a leña / Chimenea: <strong class="text-zinc-900 dark:text-white">${tagsList.some(t => t.toLowerCase().includes('hogar') || t.toLowerCase().includes('chimenea')) ? 'Sí' : 'No'}</strong></li>
-                                        <li>Mobiliario: <strong class="text-zinc-900 dark:text-white">${amobladoText}</strong></li>
-                                    </ul>
+                                    ${isEditing ? `
+                                        <div class="space-y-2 bg-white dark:bg-zinc-900 p-3 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <label for="mp-inline-ascensor" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Ascensor:</label>
+                                                <select id="mp-inline-ascensor" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none focus:border-red-500">
+                                                    <option value="Sí" ${String(ascensor).toLowerCase().includes('s') ? 'selected' : ''}>Sí</option>
+                                                    <option value="No" ${String(ascensor).toLowerCase().includes('n') ? 'selected' : ''}>No</option>
+                                                    <option value="No aplica" ${String(ascensor).toLowerCase().includes('aplica') ? 'selected' : ''}>No aplica</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2">
+                                                <label for="mp-inline-pisos" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Pisos:</label>
+                                                <select id="mp-inline-pisos" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none focus:border-red-500">
+                                                    <option value="Porcelanato / Madera pulida" ${pisos.includes('Porcelanato') ? 'selected' : ''}>Porcelanato / Madera pulida</option>
+                                                    <option value="Parquet / Madera maciza" ${pisos.includes('Parquet') ? 'selected' : ''}>Parquet / Madera maciza</option>
+                                                    <option value="Cerámica / Baldosa" ${pisos.includes('Cerámica') || pisos.includes('Ceramica') ? 'selected' : ''}>Cerámica / Baldosa</option>
+                                                    <option value="Flotante / Vinílico" ${pisos.includes('Flotante') || pisos.includes('Vinilico') ? 'selected' : ''}>Flotante / Vinílico</option>
+                                                    <option value="Microcemento / Cemento alisado" ${pisos.includes('Microcemento') || pisos.includes('alisado') ? 'selected' : ''}>Microcemento / Cemento alisado</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2">
+                                                <label for="mp-inline-hogar" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Hogar / Chimenea:</label>
+                                                <select id="mp-inline-hogar" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none focus:border-red-500">
+                                                    <option value="No" ${hogar.toLowerCase() === 'no' ? 'selected' : ''}>No</option>
+                                                    <option value="Sí" ${hogar.toLowerCase() === 'sí' || hogar.toLowerCase() === 'si' ? 'selected' : ''}>Sí</option>
+                                                    <option value="A gas / Ecológico" ${hogar.toLowerCase().includes('gas') || hogar.toLowerCase().includes('ecológico') ? 'selected' : ''}>A gas / Ecológico</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Ascensor en edificio: <strong class="text-zinc-900 dark:text-white">${ascensor}</strong></li>
+                                            <li>Pisos: <strong class="text-zinc-900 dark:text-white">${pisos}</strong></li>
+                                            <li>Hogar a leña / Chimenea: <strong class="text-zinc-900 dark:text-white">${hogar}</strong></li>
+                                            <li>Mobiliario: <strong class="text-zinc-900 dark:text-white">${amobladoText}</strong></li>
+                                        </ul>
+                                    `}
                                 </div>
 
                                 <div>
                                     <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Calefacción</h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                        <li>Central, Gas Natural, Radiadores / Split Frío-Calor</li>
-                                    </ul>
+                                    ${isEditing ? `
+                                        <div class="space-y-1.5 bg-white dark:bg-zinc-900 p-3 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                            <label for="mp-inline-calefaccion" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block">Tipo de calefacción:</label>
+                                            <select id="mp-inline-calefaccion" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                <option value="Central, Gas Natural, Radiadores / Split Frío-Calor" ${calefaccion.includes('Central') ? 'selected' : ''}>Central, Radiadores / Split Frío-Calor</option>
+                                                <option value="Losa radiante individual / caldera" ${calefaccion.includes('Losa') ? 'selected' : ''}>Losa radiante individual / caldera</option>
+                                                <option value="Estufas tiro balanceado a gas" ${calefaccion.includes('Estufa') || calefaccion.includes('balanceado') ? 'selected' : ''}>Estufas tiro balanceado a gas</option>
+                                                <option value="Split Frío-Calor eléctrico" ${calefaccion.includes('Split') && !calefaccion.includes('Central') ? 'selected' : ''}>Split Frío-Calor eléctrico</option>
+                                                <option value="Sin calefacción instalada" ${calefaccion.toLowerCase().includes('sin') ? 'selected' : ''}>Sin calefacción instalada</option>
+                                            </select>
+                                        </div>
+                                    ` : `
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>${calefaccion}</li>
+                                        </ul>
+                                    `}
                                 </div>
 
                                 <div>
@@ -8862,9 +8995,22 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                                 <div>
                                     <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Refrigeración / Climatización</h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                        <li>Aire Acondicionado, Climatizador Central / Split Inverter</li>
-                                    </ul>
+                                    ${isEditing ? `
+                                        <div class="space-y-1.5 bg-white dark:bg-zinc-900 p-3 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                            <label for="mp-inline-climatizacion" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block">Refrigeración / Aire:</label>
+                                            <select id="mp-inline-climatizacion" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                <option value="Aire Acondicionado, Climatizador Central / Split Inverter" ${climatizacion.includes('Central') || climatizacion.includes('Inverter') ? 'selected' : ''}>Aire Acondicionado Split Inverter</option>
+                                                <option value="Equipos de Aire Acondicionado Split" ${climatizacion.includes('Split') && !climatizacion.includes('Inverter') ? 'selected' : ''}>Equipos Split en ambientes principales</option>
+                                                <option value="Preinstalación para Aire Acondicionado" ${climatizacion.includes('Preinstalación') ? 'selected' : ''}>Preinstalación para Aire Acondicionado</option>
+                                                <option value="Ventiladores de techo" ${climatizacion.includes('Ventilador') ? 'selected' : ''}>Ventiladores de techo</option>
+                                                <option value="Sin refrigeración" ${climatizacion.toLowerCase().includes('sin') ? 'selected' : ''}>Sin refrigeración</option>
+                                            </select>
+                                        </div>
+                                    ` : `
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>${climatizacion}</li>
+                                        </ul>
+                                    `}
                                 </div>
 
                                 <div>
@@ -8876,10 +9022,28 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                                 <div class="sm:col-span-2">
                                     <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Equipamiento incluido</h4>
-                                    <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                        <li>Incluye: Cocina equipada, Termotanque/Caldera, Anafe y Horno, Heladera/Freezer, Microondas, Alacenas y bajo mesada</li>
-                                        <li>Lavadero: En la unidad / Espacio para Lavarropas</li>
-                                    </ul>
+                                    ${isEditing ? `
+                                        <div class="space-y-2 bg-white dark:bg-zinc-900 p-3 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                            <div>
+                                                <label for="mp-inline-equipamiento" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Equipamiento incluido:</label>
+                                                <input id="mp-inline-equipamiento" type="text" value="${equipamiento.replace(/"/g, '&quot;')}" placeholder="Ej: Cocina equipada, Termotanque, Horno, Heladera, Alacenas" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2 pt-1">
+                                                <label for="mp-inline-lavadero" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Lavadero:</label>
+                                                <select id="mp-inline-lavadero" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none focus:border-red-500">
+                                                    <option value="En la unidad / Espacio para Lavarropas" ${lavadero.includes('unidad') || lavadero.includes('Espacio') ? 'selected' : ''}>En la unidad / Conexión lavarropas</option>
+                                                    <option value="Lavadero independiente" ${lavadero.includes('independiente') ? 'selected' : ''}>Lavadero independiente</option>
+                                                    <option value="Lavadero común del edificio (Laundry)" ${lavadero.includes('Laundry') || lavadero.includes('común') ? 'selected' : ''}>Laundry común</option>
+                                                    <option value="No posee lavadero" ${lavadero.toLowerCase().includes('no') ? 'selected' : ''}>No posee</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                            <li>Incluye: ${equipamiento}</li>
+                                            <li>Lavadero: ${lavadero}</li>
+                                        </ul>
+                                    `}
                                 </div>
                             </div>
 
@@ -8893,15 +9057,29 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Estacionamiento / Cocheras</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Espacios totales: <strong class="text-zinc-900 dark:text-white">${cocheras ? cocheras : '0'}</strong></li>
-                                            <li>Características: ${cocheras ? 'Cochera cubierta asignada con portón automatizado' : 'Sin cochera asignada / Estacionamiento en calle o cocheras cercanas'}</li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-1.5 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                                <label for="mp-inline-cochera-tipo" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block">Tipo de cochera / parking:</label>
+                                                <select id="mp-inline-cochera-tipo" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                    <option value="Cochera cubierta asignada con portón automatizado" ${cocheraTipo.includes('cubierta') ? 'selected' : ''}>Cubierta asignada con portón</option>
+                                                    <option value="Cochera semicubierta" ${cocheraTipo.includes('semicubierta') ? 'selected' : ''}>Semicubierta</option>
+                                                    <option value="Cochera descubierta" ${cocheraTipo.includes('descubierta') ? 'selected' : ''}>Descubierta</option>
+                                                    <option value="Cochera móvil / rotativa" ${cocheraTipo.includes('móvil') || cocheraTipo.includes('rotativa') ? 'selected' : ''}>Móvil / Rotativa</option>
+                                                    <option value="Sin cochera asignada / Estacionamiento en calle" ${cocheraTipo.includes('Sin') ? 'selected' : ''}>Sin cochera asignada</option>
+                                                </select>
+                                                <p class="text-[10px] text-zinc-400">La cantidad de cocheras se edita arriba en las tarjetas clave.</p>
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Espacios totales: <strong class="text-zinc-900 dark:text-white">${cocheras ? cocheras : '0'}</strong></li>
+                                                <li>Características: ${cocheraTipo}</li>
+                                            </ul>
+                                        `}
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Detalles constructivos</h4>
                                         ${isEditing ? `
-                                            <div class="space-y-2.5 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-emerald-500/50 shadow-xs">
+                                            <div class="space-y-2.5 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <label for="mp-inline-disposicion" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Disposición:</label>
                                                     <select id="mp-inline-disposicion" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1 outline-none">
@@ -8953,10 +9131,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Tipología y estilo</h4>
                                         ${isEditing ? `
-                                            <div class="space-y-3 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-emerald-500/50 shadow-xs">
+                                            <div class="space-y-3 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <label for="mp-inline-tipo-propiedad" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Tipo:</label>
-                                                    <select id="mp-inline-tipo-propiedad" onchange="window.__updateInlineSubtipos(this.value, 'mp-inline-subtipo-propiedad')" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+                                                    <select id="mp-inline-tipo-propiedad" onchange="window.__updateInlineSubtipos(this.value, 'mp-inline-subtipo-propiedad')" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500 transition-colors cursor-pointer">
                                                         <option value="Departamento" ${canonicalTipo === 'Departamento' ? 'selected' : ''}>Departamento</option>
                                                         <option value="Casa" ${canonicalTipo === 'Casa' ? 'selected' : ''}>Casa</option>
                                                         <option value="PH" ${canonicalTipo === 'PH' ? 'selected' : ''}>PH</option>
@@ -8965,7 +9143,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                                 </div>
                                                 <div id="container-inline-subtipo-propiedad" class="${(canonicalTipo === 'Casa' || canonicalTipo === 'PH') ? 'hidden' : 'flex'} items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800" ${(canonicalTipo === 'Casa' || canonicalTipo === 'PH') ? 'style="display: none;"' : ''}>
                                                     <label for="mp-inline-subtipo-propiedad" class="text-xs font-bold text-zinc-600 dark:text-zinc-400">Subtipo:</label>
-                                                    <select id="mp-inline-subtipo-propiedad" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500 transition-colors cursor-pointer">
+                                                    <select id="mp-inline-subtipo-propiedad" class="text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500 transition-colors cursor-pointer">
                                                         <!-- Generado dinámicamente -->
                                                     </select>
                                                 </div>
@@ -8979,10 +9157,20 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Edificio y Administración</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Nombre del complejo / Torre: <strong class="text-zinc-900 dark:text-white">${barrio ? `Residencial ${barrio}` : 'Edificio Vivat'}</strong></li>
-                                            <li>Acepta mascotas: <strong class="text-zinc-900 dark:text-white">${petFriendly ? 'Sí (Apto Mascotas)' : 'No permitido / A consultar'}</strong></li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-2 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                                <div>
+                                                    <label for="mp-inline-edificio-nombre" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Nombre complejo / Torre:</label>
+                                                    <input id="mp-inline-edificio-nombre" type="text" value="${edificioNombre.replace(/"/g, '&quot;')}" placeholder="Ej: Torre Bellini / Residencial Bombal" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                </div>
+                                                <p class="text-[10px] text-zinc-400">Mascotas se editan arriba en las características generales.</p>
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Nombre del complejo / Torre: <strong class="text-zinc-900 dark:text-white">${edificioNombre}</strong></li>
+                                                <li>Acepta mascotas: <strong class="text-zinc-900 dark:text-white">${petFriendly ? 'Sí (Apto Mascotas)' : 'No permitido / A consultar'}</strong></li>
+                                            </ul>
+                                        `}
                                     </div>
                                 </div>
 
@@ -8993,16 +9181,23 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Instalaciones del complejo</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Instalaciones: Gimnasio, Seguridad 24hs, Piscina, SUM, Parrilla</li>
-                                            <li>Seguridad: Control de acceso electrónico, Cámaras de monitoreo</li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-1.5 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                                <label for="mp-inline-instalaciones-complejo" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block">Instalaciones / amenities comunes:</label>
+                                                <input id="mp-inline-instalaciones-complejo" type="text" value="${instalacionesComplejo.replace(/"/g, '&quot;')}" placeholder="Ej: Gimnasio, Seguridad 24hs, Piscina, SUM, Parrilla" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Instalaciones: ${instalacionesComplejo}</li>
+                                                <li>Seguridad: Control de acceso electrónico, Cámaras de monitoreo</li>
+                                            </ul>
+                                        `}
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Expensas y Administración</h4>
                                         <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
                                             <li>Servicios de expensas incluidos: Mantenimiento, Limpieza de espacios comunes, Seguridad, Iluminación</li>
-                                            <li>Ubicación: <strong class="text-zinc-900 dark:text-white">${barrio ? `${barrio}, ` : ''}${prop.city || prop.province || 'Buenos Aires'}</strong></li>
+                                            <li>Ubicación: <strong class="text-zinc-900 dark:text-white">${barrio ? `${barrio}, ` : ''}${city || province || 'Buenos Aires'}</strong></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -9014,10 +9209,34 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs sm:text-sm">
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Condiciones contractuales</h4>
-                                        <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
-                                            <li>Plazo del contrato: <strong class="text-zinc-900 dark:text-white">1 a 2 Años (Ajustes según índice contractual ICL / IPC)</strong></li>
-                                            <li>Depósito en garantía: <strong class="text-zinc-900 dark:text-white">1 mes (Reembolsable)</strong></li>
-                                        </ul>
+                                        ${isEditing ? `
+                                            <div class="space-y-2 bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border-2 border-red-500/60 shadow-xs">
+                                                <div>
+                                                    <label for="mp-inline-plazo-contrato" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Plazo del contrato:</label>
+                                                    <select id="mp-inline-plazo-contrato" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                        <option value="2 Años (Ajustes según índice contractual ICL / IPC)" ${plazoContrato.includes('2') ? 'selected' : ''}>2 Años (Ajustes según índice ICL / IPC)</option>
+                                                        <option value="1 a 2 Años (Ajustes según índice contractual ICL / IPC)" ${plazoContrato.includes('1 a 2') ? 'selected' : ''}>1 a 2 Años (Ajustes periódicos)</option>
+                                                        <option value="1 Año (Alquiler temporal / amoblado)" ${plazoContrato.includes('1 Año') || plazoContrato.includes('Temporal') ? 'selected' : ''}>1 Año (Alquiler temporal / amoblado)</option>
+                                                        <option value="3 Años (Comercial / Profesional)" ${plazoContrato.includes('3') ? 'selected' : ''}>3 Años (Comercial / Profesional)</option>
+                                                        <option value="Plazo a convenir entre partes" ${plazoContrato.toLowerCase().includes('convenir') ? 'selected' : ''}>Plazo a convenir entre partes</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label for="mp-inline-deposito-garantia" class="text-xs font-bold text-zinc-600 dark:text-zinc-400 block mb-1">Depósito en garantía:</label>
+                                                    <select id="mp-inline-deposito-garantia" class="w-full text-xs font-bold text-zinc-900 dark:text-white bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-red-500">
+                                                        <option value="1 mes (Reembolsable)" ${depositoGarantia.includes('1 mes') && !depositoGarantia.includes('USD') && !depositoGarantia.includes('dólar') ? 'selected' : ''}>1 mes (Reembolsable)</option>
+                                                        <option value="1 mes en Dólares (USD)" ${depositoGarantia.includes('USD') || depositoGarantia.includes('Dólar') || depositoGarantia.includes('dolar') ? 'selected' : ''}>1 mes en Dólares (USD)</option>
+                                                        <option value="2 meses (Reembolsable)" ${depositoGarantia.includes('2 mes') ? 'selected' : ''}>2 meses (Reembolsable)</option>
+                                                        <option value="A convenir / Seguro de caución" ${depositoGarantia.toLowerCase().includes('convenir') || depositoGarantia.toLowerCase().includes('caución') ? 'selected' : ''}>A convenir / Seguro de caución</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <ul class="space-y-1.5 text-zinc-600 dark:text-zinc-400 list-disc list-inside">
+                                                <li>Plazo del contrato: <strong class="text-zinc-900 dark:text-white">${plazoContrato}</strong></li>
+                                                <li>Depósito en garantía: <strong class="text-zinc-900 dark:text-white">${depositoGarantia}</strong></li>
+                                            </ul>
+                                        `}
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-zinc-900 dark:text-white mb-2">Disponibilidad de servicios</h4>
@@ -9201,9 +9420,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         <div class="flex items-center gap-2 text-sm text-zinc-900 dark:text-white font-extrabold flex-wrap">
                             <span class="text-base font-black">${isAlquilada ? 'Alquilada en Vivat' : (viewsCount > 20 ? 'Popular en Vivat' : 'Disponible en Vivat')}</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
-                            <span class="text-base font-black text-primary dark:text-red-400">${viewsCount > 0 ? viewsCount : 1} visualizaciones</span>
+                            <span class="text-base font-black text-primary dark:text-red-400"><span id="mp-live-views-count">${viewsCount > 0 ? viewsCount : 1}</span> visualizaciones</span>
                             <span class="text-zinc-300 dark:text-zinc-700">|</span>
-                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">${Math.max(1, Math.floor((viewsCount || 1) * 0.35))} interesados contactaron</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold"><span id="mp-live-interested-count">${Math.max(1, Math.floor((viewsCount || 1) * 0.35))}</span> interesados contactaron</span>
                         </div>
                         <div class="space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
                             <p>Disponibilidad verificada por Vivat: <strong class="text-zinc-700 dark:text-zinc-300">${isAlquilada ? 'Alquilada con contrato vigente' : 'hoy'}</strong></p>
@@ -9249,7 +9468,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         <!-- Price Header -->
                         ${isEditing ? `
                             <div class="space-y-3 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                                <span class="block text-[11px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1">
+                                <span class="block text-[11px] font-extrabold uppercase text-primary dark:text-red-400 tracking-wider flex items-center gap-1">
                                     <span class="material-symbols-outlined text-xs">payments</span> Precio de alquiler mensual
                                 </span>
                                 <div class="flex items-center gap-2">
@@ -9257,7 +9476,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <option value="ARS" ${(extraInfo.moneda || prop.moneda) !== 'USD' ? 'selected' : ''}>ARS ($)</option>
                                         <option value="USD" ${(extraInfo.moneda || prop.moneda) === 'USD' ? 'selected' : ''}>USD (U$S)</option>
                                     </select>
-                                    <input type="number" id="mp-inline-price" min="0" step="1000" value="${priceNum}" class="font-headline text-2xl font-black text-zinc-900 dark:text-white w-full bg-white dark:bg-zinc-900 border-2 border-emerald-500/60 focus:border-emerald-500 rounded-xl px-3 py-1.5 outline-none">
+                                    <input type="number" id="mp-inline-price" min="0" step="1000" value="${priceNum}" class="font-headline text-2xl font-black text-zinc-900 dark:text-white w-full bg-white dark:bg-zinc-900 border-2 border-red-500/60 focus:border-red-600 dark:focus:border-red-500 rounded-xl px-3 py-1.5 outline-none">
                                 </div>
                                 <div class="space-y-2 pt-2 bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
                                     <div class="flex items-center justify-between gap-2">
@@ -9265,7 +9484,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                         <input type="number" id="mp-inline-expensas" min="0" step="500" value="${expensasNum}" class="text-xs font-bold text-zinc-900 dark:text-white w-28 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1 outline-none text-right">
                                     </div>
                                     <label class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer pt-0.5 select-none">
-                                        <input type="checkbox" id="mp-inline-expensas-incluidas" ${expensasIncluidas ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                        <input type="checkbox" id="mp-inline-expensas-incluidas" ${expensasIncluidas ? 'checked' : ''} class="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer">
                                         <span class="font-semibold text-[11px]">Expensas incluidas en el canon</span>
                                     </label>
                                 </div>
@@ -9286,8 +9505,8 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         ${isOwner ? (isEditing ? `
                             <!-- Owner In-Page Edit Actions -->
                             <div class="space-y-3">
-                                <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/80 dark:border-emerald-800/60 rounded-2xl p-4 space-y-1 text-emerald-900 dark:text-emerald-200">
-                                    <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                                <div class="bg-zinc-50 dark:bg-zinc-900/60 border-2 border-red-500/60 rounded-2xl p-4 space-y-1 text-zinc-800 dark:text-zinc-200">
+                                    <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-primary dark:text-red-400">
                                         <span class="material-symbols-outlined text-base">edit_note</span>
                                         <span>Guardar Edición</span>
                                     </div>
@@ -9296,7 +9515,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </p>
                                 </div>
 
-                                <button id="mp-modal-save-changes-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-emerald-600/30 active:scale-98 cursor-pointer text-sm">
+                                <button id="mp-modal-save-changes-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg shadow-red-600/30 active:scale-98 cursor-pointer text-sm">
                                     <span class="material-symbols-outlined text-lg">save</span>
                                     <span class="mp-save-label">Guardar Cambios</span>
                                 </button>
@@ -9329,7 +9548,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                                     </div>
                                     <div class="text-xs text-zinc-500 flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">visibility</span>
-                                        <span><strong>${viewsCount}</strong> visualizaciones registradas</span>
+                                        <span><strong id="mp-owner-views-count">${viewsCount}</strong> visualizaciones registradas</span>
                                     </div>
                                 </div>
 
@@ -9433,7 +9652,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     <button type="button" id="mp-mobile-cancel-btn" class="inline-flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold px-3.5 py-2.5 rounded-xl text-xs active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">close</span> Cancelar
                     </button>
-                    <button type="button" id="mp-mobile-save-btn" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
+                    <button type="button" id="mp-mobile-save-btn" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-red-700 hover:from-primary-container hover:to-red-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">save</span>
                         <span class="mp-save-label">Guardar</span>
                     </button>
@@ -10543,6 +10762,29 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const mascotasInput = document.getElementById('mp-inline-mascotas');
             const statusInput = document.getElementById('mp-inline-status');
 
+            // Location inputs
+            const addressInput = document.getElementById('mp-inline-address');
+            const pisoDptoInput = document.getElementById('mp-inline-piso-dpto');
+            const barrioInput = document.getElementById('mp-inline-barrio');
+            const cityInput = document.getElementById('mp-inline-city');
+            const provinceInput = document.getElementById('mp-inline-province');
+
+            // Characteristics and details inputs
+            const ambientesInput = document.getElementById('mp-inline-ambientes');
+            const toilettesInput = document.getElementById('mp-inline-toilettes');
+            const pisosInput = document.getElementById('mp-inline-pisos');
+            const ascensorInput = document.getElementById('mp-inline-ascensor');
+            const hogarInput = document.getElementById('mp-inline-hogar');
+            const calefaccionInput = document.getElementById('mp-inline-calefaccion');
+            const climatizacionInput = document.getElementById('mp-inline-climatizacion');
+            const equipamientoInput = document.getElementById('mp-inline-equipamiento');
+            const lavaderoInput = document.getElementById('mp-inline-lavadero');
+            const cocheraTipoInput = document.getElementById('mp-inline-cochera-tipo');
+            const edificioNombreInput = document.getElementById('mp-inline-edificio-nombre');
+            const instalacionesComplejoInput = document.getElementById('mp-inline-instalaciones-complejo');
+            const plazoContratoInput = document.getElementById('mp-inline-plazo-contrato');
+            const depositoGarantiaInput = document.getElementById('mp-inline-deposito-garantia');
+
             const newTitle = titleInput ? titleInput.value.trim() : title;
             if (!newTitle) {
                 alert('Por favor ingresá un título para la publicación.');
@@ -10562,6 +10804,41 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             const newAmoblado = amobladoInput ? amobladoInput.value : amobladoVal;
             const newMascotas = mascotasInput ? (mascotasInput.value === 'true') : petFriendly;
             const newStatus = statusInput ? statusInput.value : status;
+
+            // Location resolved values
+            const newAddress = addressInput ? addressInput.value.trim() : address;
+            const newPisoDpto = pisoDptoInput ? pisoDptoInput.value.trim() : pisoDpto;
+            const newBarrio = barrioInput ? barrioInput.value.trim() : barrio;
+            const newCity = cityInput ? cityInput.value.trim() : city;
+            const newProvince = provinceInput ? provinceInput.value.trim() : (province || 'Mendoza');
+
+            let newCalle = '';
+            let newNumero = '';
+            if (newAddress && newAddress !== 'Ubicación no especificada') {
+                const match = newAddress.match(/^(.*?)(?:\s+(\d+.*))?$/);
+                if (match) {
+                    newCalle = match[1]?.trim() || newAddress;
+                    newNumero = match[2]?.trim() || '';
+                } else {
+                    newCalle = newAddress;
+                }
+            }
+
+            // Characteristics and details resolved values
+            const newAmbientes = ambientesInput ? (parseInt(ambientesInput.value, 10) || newDorm || 1) : ambientes;
+            const newToilettes = toilettesInput ? (parseInt(toilettesInput.value, 10) || 0) : (toilettes || 0);
+            const newPisos = pisosInput ? pisosInput.value : pisos;
+            const newAscensor = ascensorInput ? ascensorInput.value : ascensor;
+            const newHogar = hogarInput ? hogarInput.value : hogar;
+            const newCalefaccion = calefaccionInput ? calefaccionInput.value : calefaccion;
+            const newClimatizacion = climatizacionInput ? climatizacionInput.value : climatizacion;
+            const newEquipamiento = equipamientoInput ? equipamientoInput.value.trim() : equipamiento;
+            const newLavadero = lavaderoInput ? lavaderoInput.value : lavadero;
+            const newCocheraTipo = cocheraTipoInput ? cocheraTipoInput.value : cocheraTipo;
+            const newEdificioNombre = edificioNombreInput ? edificioNombreInput.value.trim() : edificioNombre;
+            const newInstalacionesComplejo = instalacionesComplejoInput ? instalacionesComplejoInput.value.trim() : instalacionesComplejo;
+            const newPlazoContrato = plazoContratoInput ? plazoContratoInput.value : plazoContrato;
+            const newDepositoGarantia = depositoGarantiaInput ? depositoGarantiaInput.value : depositoGarantia;
 
             // Collect Amenities / Características
             let amenityTags = [];
@@ -10604,6 +10881,7 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
             });
 
             try {
+                const isPreview = Boolean(options.isPreview || (typeof pubId === 'string' && pubId.startsWith('preview-')));
                 const formData = {
                     title: newTitle,
                     price: newPrice,
@@ -10612,7 +10890,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     expensasIncluidas: newExpIncluidas,
                     dormitorios: newDorm,
                     banos: newBanos,
+                    toilettes: newToilettes,
+                    ambientes: newAmbientes,
                     cocheras: newCoch,
+                    cochera_tipo: newCocheraTipo,
                     sup_cubierta: newSup,
                     sup_total: newSup,
                     description: newDesc,
@@ -10626,10 +10907,33 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     antiguedad: newAntiguedad,
                     tipo_propiedad: newTipoProp,
                     subtipo_propiedad: newSubtipoProp,
+                    address: newAddress,
+                    direccion: newAddress,
+                    calle: newCalle || newAddress,
+                    numero: newNumero,
+                    piso_dpto: newPisoDpto,
+                    barrio: newBarrio,
+                    city: newCity,
+                    ciudad: newCity,
+                    province: newProvince,
+                    provincia: newProvince,
+                    pisos: newPisos,
+                    ascensor: newAscensor,
+                    hogar: newHogar,
+                    calefaccion: newCalefaccion,
+                    climatizacion: newClimatizacion,
+                    refrigeracion: newClimatizacion,
+                    equipamiento: newEquipamiento,
+                    lavadero: newLavadero,
+                    edificio_nombre: newEdificioNombre,
+                    complejo: newEdificioNombre,
+                    instalaciones_complejo: newInstalacionesComplejo,
+                    plazo_contrato: newPlazoContrato,
+                    deposito_garantia: newDepositoGarantia,
                     id_propiedad: prop.id_propiedad || prop.idPropiedad || prop.Propiedad?.id_propiedad
                 };
 
-                if (window.DataManager && typeof window.DataManager.updatePublicationDirect === 'function') {
+                if (!isPreview && window.DataManager && typeof window.DataManager.updatePublicationDirect === 'function') {
                     const updateRes = await window.DataManager.updatePublicationDirect(pubId, formData);
                     if (updateRes && updateRes.success === false) {
                         throw new Error(updateRes.error || 'Error al actualizar la publicación');
@@ -10638,13 +10942,17 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
 
                 // Update in-memory property object
                 prop.title = formData.title;
+                prop.note = formData.title;
                 prop.price = formData.price;
                 prop.precio = formData.price;
                 prop.expensas = formData.expensas;
                 prop.expensasIncluidas = formData.expensasIncluidas;
                 prop.dormitorios = formData.dormitorios;
                 prop.banos = formData.banos;
+                prop.toilettes = formData.toilettes;
+                prop.ambientes = formData.ambientes;
                 prop.cocheras = formData.cocheras;
+                prop.cochera_tipo = formData.cochera_tipo;
                 prop.sup_cubierta = formData.sup_cubierta;
                 prop.sup_total = formData.sup_total;
                 prop.description = formData.description;
@@ -10660,9 +10968,33 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 prop.subtipo_propiedad = formData.subtipo_propiedad;
                 prop.type = formData.tipo_propiedad;
                 prop.subtipo = formData.subtipo_propiedad;
+                prop.address = formData.address;
+                prop.ubicacion = formData.address;
+                prop.calle = formData.calle;
+                prop.numero = formData.numero;
+                prop.piso_dpto = formData.piso_dpto;
+                prop.barrio = formData.barrio;
+                prop.city = formData.city;
+                prop.ciudad = formData.ciudad;
+                prop.province = formData.province;
+                prop.provincia = formData.provincia;
+                prop.pisos = formData.pisos;
+                prop.ascensor = formData.ascensor;
+                prop.hogar = formData.hogar;
+                prop.calefaccion = formData.calefaccion;
+                prop.climatizacion = formData.climatizacion;
+                prop.refrigeracion = formData.climatizacion;
+                prop.equipamiento = formData.equipamiento;
+                prop.lavadero = formData.lavadero;
+                prop.edificio_nombre = formData.edificio_nombre;
+                prop.complejo = formData.edificio_nombre;
+                prop.instalaciones_complejo = formData.instalaciones_complejo;
+                prop.plazo_contrato = formData.plazo_contrato;
+                prop.deposito_garantia = formData.deposito_garantia;
 
                 prop.extraInfo = {
                     ...(prop.extraInfo || {}),
+                    title: formData.title,
                     moneda: formData.moneda,
                     expensas: formData.expensas,
                     expensasIncluidas: formData.expensasIncluidas,
@@ -10671,7 +11003,10 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     status: formData.status,
                     dormitorios: formData.dormitorios,
                     banos: formData.banos,
+                    toilettes: formData.toilettes,
+                    ambientes: formData.ambientes,
                     cocheras: formData.cocheras,
+                    cochera_tipo: formData.cochera_tipo,
                     sup_cubierta: formData.sup_cubierta,
                     sup_total: formData.sup_total,
                     caracteristicas: formData.caracteristicas,
@@ -10680,8 +11015,78 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                     antiguedad: formData.antiguedad,
                     tipo_propiedad: formData.tipo_propiedad,
                     subtipo_propiedad: formData.subtipo_propiedad,
-                    subtipoPropiedad: formData.subtipo_propiedad
+                    subtipoPropiedad: formData.subtipo_propiedad,
+                    address: formData.address,
+                    direccion: formData.address,
+                    calle: formData.calle,
+                    numero: formData.numero,
+                    piso_dpto: formData.piso_dpto,
+                    barrio: formData.barrio,
+                    city: formData.city,
+                    ciudad: formData.ciudad,
+                    province: formData.province,
+                    provincia: formData.provincia,
+                    pisos: formData.pisos,
+                    ascensor: formData.ascensor,
+                    hogar: formData.hogar,
+                    calefaccion: formData.calefaccion,
+                    climatizacion: formData.climatizacion,
+                    refrigeracion: formData.climatizacion,
+                    equipamiento: formData.equipamiento,
+                    lavadero: formData.lavadero,
+                    edificio_nombre: formData.edificio_nombre,
+                    complejo: formData.edificio_nombre,
+                    instalaciones_complejo: formData.instalaciones_complejo,
+                    plazo_contrato: formData.plazo_contrato,
+                    deposito_garantia: formData.deposito_garantia
                 };
+
+                // Sync with Wizard inputs if on wizard page
+                const wCalleAltura = document.getElementById('calle-altura');
+                if (wCalleAltura && formData.address) wCalleAltura.value = formData.address;
+                const wBarrio = document.getElementById('barrio');
+                if (wBarrio && formData.barrio) {
+                    wBarrio.value = formData.barrio;
+                    window.selectedPropertyBarrio = formData.barrio;
+                }
+                const wCiudad = document.getElementById('ciudad');
+                if (wCiudad && formData.city) {
+                    wCiudad.value = formData.city;
+                    window.selectedPropertyCiudad = formData.city;
+                }
+                const wProvincia = document.getElementById('provincia');
+                if (wProvincia && formData.province) {
+                    wProvincia.value = formData.province;
+                    window.selectedPropertyProvincia = formData.province;
+                }
+
+                // Direct DOM synchronization for cards displaying this publication/property
+                const targetPubId = String(pubId || '');
+                const targetPropId = String(formData.id_propiedad || prop.id_propiedad || prop.id || '');
+                document.querySelectorAll('article, .owner-prop-card, .listing-card').forEach(card => {
+                    const cPubId = String(card.dataset.pubId || card.getAttribute('data-pub-id') || '');
+                    const cPropId = String(card.dataset.propId || card.getAttribute('data-prop-id') || '');
+                    const cardHtml = card.innerHTML;
+
+                    const matchesThis = (targetPubId && (cPubId === targetPubId || cardHtml.includes(targetPubId))) ||
+                        (targetPropId && (cPropId === targetPropId || cardHtml.includes(targetPropId)));
+
+                    if (matchesThis) {
+                        const titleEl = card.querySelector('h2, h3, .listing-title');
+                        if (titleEl) titleEl.textContent = newTitle;
+
+                        const addrSpan = card.querySelector('.listing-address, p span.text-zinc-400, p');
+                        if (addrSpan && (newAddress || newBarrio)) {
+                            const locText = [newBarrio, newProvince || newCity].filter(Boolean).join(', ') || newAddress;
+                            addrSpan.textContent = locText;
+                        }
+
+                        const priceEl = card.querySelector('[class*="font-headline"][class*="font-black"], .price-tag, .font-headline.text-lg');
+                        if (priceEl && newPrice > 0) {
+                            priceEl.textContent = `${newMoneda === 'USD' ? 'U$S' : '$'} ${newPrice.toLocaleString('es-AR')} / mes`;
+                        }
+                    }
+                });
 
                 if (typeof options.onSave === 'function') {
                     options.onSave(prop);
@@ -10692,6 +11097,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                 if (typeof loadOwnerAvisos === 'function') loadOwnerAvisos();
                 if (typeof renderLandlordAvisos === 'function') renderLandlordAvisos();
                 if (typeof window.syncDbPropertiesForSearch === 'function') window.syncDbPropertiesForSearch();
+                if (typeof window.renderNewListings === 'function') window.renderNewListings();
+                if (typeof window.renderLandingFeaturedProperties === 'function') window.renderLandingFeaturedProperties();
+                if (typeof window.renderPublishReview === 'function') window.renderPublishReview();
                 if (window.App && typeof window.App.refreshData === 'function') window.App.refreshData();
 
                 if (window.showCustomAlert) {
@@ -14104,6 +14512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const tipo = window.formatPropertyTypeBadge ? window.formatPropertyTypeBadge(aviso) : 'Propiedad';
+        const opLabels = { 'venta': 'Venta', 'alquiler': 'Alquiler', 'temporada': 'Temporada', 'on': 'Venta' };
         const op = opLabels[(extraInfo.operacion || aviso.operacion)?.toLowerCase()] || extraInfo.operacion || aviso.operacion || '';
         const moneda = (extraInfo.moneda === 'USD') ? 'U$S' : '$';
         const precio = (aviso.price || aviso.precio) ? `${moneda} ${Number(aviso.price || aviso.precio).toLocaleString('es-AR')}` : 'Consultar';
@@ -14136,6 +14545,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const strokeOffset = circumference - (pct / 100) * circumference;
 
         const card = document.createElement('div');
+        card.dataset.pubId = aviso.id_publicacion || aviso.id || '';
+        card.dataset.propId = aviso.id_propiedad || aviso.idPropiedad || (aviso.Propiedad && aviso.Propiedad.id_propiedad) || '';
         card.className = 'owner-prop-card aviso-card bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-4 md:p-5 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 group';
         card.innerHTML = `
             <div class="flex gap-4 md:gap-5">

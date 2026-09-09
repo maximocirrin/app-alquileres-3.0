@@ -1514,6 +1514,26 @@
                             console.warn("Aviso actualizando Contrato en Supabase:", dbErr);
                         }
                     }
+
+                    // Sincronizar valores hacia Publicación, Propiedad, Inquilino y vistas en memoria
+                    if (window.DataManager && typeof window.DataManager.syncRentalValues === 'function') {
+                        try {
+                            await window.DataManager.syncRentalValues({
+                                contractId: targetContract.id,
+                                propertyId: targetContract.propertyId || targetContract.property_id,
+                                publicationId: targetContract.publicationId || targetContract.id_publicacion,
+                                monthlyRent: terms.monthlyRent || targetContract.monthlyRent,
+                                expenses: terms.expenses || terms.montoExpensas || targetContract.expenses_amount || targetContract.expenses,
+                                currency: terms.currency || targetContract.currency || 'ARS',
+                                adjustmentIndex: terms.adjustmentIndex || targetContract.adjustmentIndex || 'IPC',
+                                adjustmentFrequencyMonths: terms.adjustmentFrequencyMonths || targetContract.adjustmentFrequencyMonths || 3,
+                                paymentDueDay: terms.paymentDueDay || targetContract.paymentDueDay || 10,
+                                tenant: targetContract.tenant
+                            });
+                        } catch (syncErr) {
+                            console.warn('[ContractEditorModal] Aviso sincronizando valores:', syncErr);
+                        }
+                    }
                 }
 
                 if (typeof self._currentOptions?.onConfirm === 'function') {
