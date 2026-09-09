@@ -18,15 +18,41 @@ const handlers = {
   webhook: webhookDiditHandler
 };
 
+function handleContractRoute(req, res) {
+  let path = req.query?.path;
+  if (Array.isArray(path)) path = path.join('/');
+  if (!path && req.url) {
+    const match = req.url.split('?')[0].match(/\/api\/contracts\/?(.*)/i);
+    if (match) path = match[1];
+  }
+  path = String(path || '').replace(/^\/+|\/+$/g, '');
+  const match = path.match(/^(\d+)\/start-signature$/) || (path === 'start-signature' ? [] : null);
+  if (match && req.method === 'POST') {
+    const id = match[1] || req.query?.id || req.body?.id_contrato || req.body?.contractId;
+    req.body = { ...(req.body || {}), id_contrato: id };
+    return iniciarHandler(req, res);
+  }
+
+  return res.status(410).json({
+    ok: false,
+    error: 'Gone',
+    message: 'Esta ruta de contratos fue retirada. Use el flujo de firma autenticado.'
+  });
+}
+
 export default async function handler(req, res) {
   if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  const urlPath = (req.url || '').split('?')[0];
+  if (req.query?.route === 'contracts' || urlPath.startsWith('/api/contracts')) {
+    return handleContractRoute(req, res);
+  }
+
   let action = req.query?.action;
   if (Array.isArray(action)) action = action[0];
   if (!action && req.url) {
-    const path = req.url.split('?')[0];
-    const match = path.match(/\/api\/firmas\/([^/?]+)/i);
+    const match = urlPath.match(/\/api\/firmas\/([^/?]+)/i);
     if (match) action = match[1];
   }
   const selected = handlers[String(action || '').toLowerCase().trim()];

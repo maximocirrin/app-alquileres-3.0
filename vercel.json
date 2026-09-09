@@ -46,7 +46,6 @@
     }
   ],
   "rewrites": [
-
     {
       "source": "/og-image.png",
       "destination": "/img/og-vivat.png"
@@ -61,7 +60,15 @@
     },
     {
       "source": "/api/contracts/:path*",
-      "destination": "/api/contracts?path=:path*"
+      "destination": "/api/firmas?route=contracts&path=:path*"
+    },
+    {
+      "source": "/api/inventario-upload",
+      "destination": "/api/inventario?action=upload"
+    },
+    {
+      "source": "/api/garante-portal",
+      "destination": "/api/garantes?portal=1"
     },
     {
       "source": "/contract",
