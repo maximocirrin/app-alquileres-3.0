@@ -101,7 +101,7 @@ export default async function finalizarHandler(req, res) {
       try {
         if (contrato.id_perfil_inquilino) {
           const { data: pasaportes } = await supabase
-            .from('Pasaporte_habitat')
+            .from('Pasaporte_vivat')
             .select('id_pasaporte')
             .eq('id_perfil', contrato.id_perfil_inquilino);
           

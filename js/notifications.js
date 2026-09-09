@@ -197,7 +197,16 @@
 
         createNotification: function ({ id = null, title, message, type = 'contract', link = '#', role = 'ALL', icon = null, senderRole = null, senderProfileId = null, senderEmail = null, targetRole = null, targetProfileId = null, targetEmail = null, priority = 'normal' }) {
             const finalRole = targetRole || role || 'ALL';
-            const notifId = id || ('notif_' + (type || 'gen') + '_' + title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + '_' + Date.now());
+            
+            const generateUUID = () => {
+                if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            };
+            
+            const notifId = id || generateUUID();
 
             let resolvedIcon = icon;
             if (!resolvedIcon) {

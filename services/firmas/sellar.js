@@ -188,7 +188,7 @@ export default async function sellarHandler(req, res) {
       if (contrato.id_perfil_inquilino) {
         try {
           const { data: pasaportes } = await supabase
-            .from('Pasaporte_habitat')
+            .from('Pasaporte_vivat')
             .select('id_pasaporte')
             .eq('id_perfil', contrato.id_perfil_inquilino);
           
