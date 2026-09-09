@@ -1,240 +1,117 @@
-import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from './_auth.js';
+import {
+  getAuthenticatedUser,
+  getSupabaseAdmin,
+  parsePositiveInteger,
+  readJsonBody,
+  requireProfile,
+  sendForbidden,
+  sendInternalError,
+  sendOriginForbidden,
+  sendUnauthorized,
+  setCorsHeaders
+} from './_auth.js';
 
-const BCRA_API_URL = (process.env.BCRA_API_URL || 'https://api.bcra.gob.ar/centraldedeudores/v1.0/Deudas').replace(/\/+$/, '');
+function configuredBcraUrl() {
+  const raw = String(process.env.BCRA_API_URL || 'https://api.bcra.gob.ar/centraldedeudores/v1.0/Deudas').replace(/\/+$/, '');
+  const url = new URL(raw);
+  if (url.protocol !== 'https:' || !(url.hostname === 'api.bcra.gob.ar' || url.hostname.endsWith('.bcra.gob.ar'))) {
+    throw new Error('Invalid BCRA endpoint configuration.');
+  }
+  return url.toString().replace(/\/+$/, '');
+}
 
-/**
- * Handler Serverless para la integración con la API de la Central de Deudores del BCRA
- * Endpoint: POST /api/bcra-deudores
- */
+async function ownPassport(supabase, profileId, rawId) {
+  let query = supabase.from('Pasaporte_vivat').select('id_pasaporte, id_perfil, cuit');
+  const id = parsePositiveInteger(rawId);
+  query = id ? query.eq('id_pasaporte', id) : query.order('created_at', { ascending: false }).limit(1);
+  const { data, error } = await query.eq('id_perfil', profileId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+function parseBcraResponse(cuit, debtData, checksData) {
+  const results = debtData?.results;
+  if (!results || !Array.isArray(results.periodos)) throw new Error('BCRA returned no debt data.');
+
+  let worst = 1;
+  let maxDelay = 0;
+  const period = results.periodos[0] || {};
+  const entities = Array.isArray(period.entidades) ? period.entidades.map((entity) => {
+    const situation = Number(entity.situacion);
+    const delay = Number(entity.diasAtrasoPago) || 0;
+    if (Number.isFinite(situation) && situation > worst) worst = situation;
+    if (delay > maxDelay) maxDelay = delay;
+    return {
+      entidad: String(entity.entidad || 'Entidad financiera').slice(0, 240),
+      situacion: Number.isFinite(situation) ? situation : null,
+      monto: Number(entity.monto) || 0,
+      diasAtraso: delay,
+      fechaSituacion: entity.fechaSituacion || null
+    };
+  }) : [];
+  const checks = Array.isArray(checksData?.results?.chequesRechazados) ? checksData.results.chequesRechazados : [];
+  const labels = {
+    1: 'Situación 1 (Normal)', 2: 'Situación 2 (Riesgo Bajo)', 3: 'Situación 3 (Deficiente)',
+    4: 'Situación 4 (Alto Riesgo)', 5: 'Situación 5 (Irrecuperable)', 6: 'Situación 6 (Irrecuperable por Disposición Técnica)'
+  };
+  return {
+    cuit,
+    situacionCrediticia: labels[worst] || `Situación ${worst}`,
+    peorSituacion: worst,
+    chequesRechazadosCount: checks.length,
+    diasAtrasoMax: maxDelay,
+    entidades: entities,
+    consultadoEn: new Date().toISOString()
+  };
+}
+
 export default async function handler(req, res) {
-  setCorsHeaders(req, res);
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed', message: 'Usar método POST' });
-  }
-
-  // 1. Validar autenticación
-  const { user, profile, error: authError } = await getAuthenticatedUser(req);
-  if (authError || !user) {
-    return sendUnauthorized(res, `Autenticación requerida para consultar BCRA: ${authError || 'Sesión no válida'}`);
-  }
+  if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const { cuit, pasaporteId } = req.body || {};
-
-    if (!cuit) {
-      return res.status(400).json({ error: 'Debe proporcionar un CUIT o CUIL válido.' });
-    }
-
-    const cleanCuit = String(cuit).replace(/\D/g, '');
-    if (cleanCuit.length !== 11) {
-      return res.status(400).json({ error: 'El CUIT ingresado debe tener 11 dígitos numéricos.' });
-    }
+    const { user, profile, error: authError } = await getAuthenticatedUser(req);
+    if (authError || !user) return sendUnauthorized(res);
+    if (!requireProfile(profile)) return sendForbidden(res, 'No se encontró un perfil válido para esta cuenta.');
+    const body = await readJsonBody(req);
+    const cuit = String(body.cuit || '').replace(/\D/g, '');
+    if (!/^\d{11}$/.test(cuit)) return res.status(400).json({ error: 'Invalid CUIT.' });
 
     const supabase = getSupabaseAdmin();
-
-    // 2. Validar que el pasaporte a actualizar pertenezca al usuario autenticado
-    let targetPasaporteId = pasaporteId;
-    if (targetPasaporteId) {
-      const { data: passCheck } = await supabase
-        .from('Pasaporte_vivat')
-        .select('id_pasaporte, id_perfil')
-        .eq('id_pasaporte', targetPasaporteId)
-        .maybeSingle();
-
-      if (passCheck && profile && passCheck.id_perfil !== profile.id_perfil) {
-        return sendForbidden(res, 'No tienes permiso para actualizar este pasaporte.');
-      }
-    } else if (profile) {
-      const { data: passOwn } = await supabase
-        .from('Pasaporte_vivat')
-        .select('id_pasaporte')
-        .eq('id_perfil', profile.id_perfil)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (passOwn) targetPasaporteId = passOwn.id_pasaporte;
+    const passport = await ownPassport(supabase, profile.id_perfil, body.pasaporteId || body.pasaporte_id);
+    if (!passport) return res.status(404).json({ error: 'Passport not found.' });
+    if (!passport.cuit || String(passport.cuit).replace(/\D/g, '') !== cuit) {
+      return sendForbidden(res, 'El CUIT consultado debe coincidir con el pasaporte verificado.');
     }
 
-    console.log(`[BCRA WS] Consultando Central de Deudores BCRA para CUIT: ${cleanCuit}...`);
-
-    let bcraResult = null;
-
+    const baseUrl = configuredBcraUrl();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    let debtResponse;
+    let checksResponse;
     try {
-      // Normalizar URL base para soportar /Deudas o /Deudores
-      const baseUrl = BCRA_API_URL.endsWith('/Deudas') || BCRA_API_URL.endsWith('/Deudores') 
-        ? BCRA_API_URL 
-        : `${BCRA_API_URL}/Deudas`;
-
-      // Consultar Situación Crediticia y Cheques en BCRA
-      const urlDeudores = `${baseUrl}/${cleanCuit}`;
-      const urlCheques = `${baseUrl}/ChequesRechazados/${cleanCuit}`;
-
-      const [resDeudores, resCheques] = await Promise.allSettled([
-        fetch(urlDeudores, { headers: { 'Accept': 'application/json' } }),
-        fetch(urlCheques, { headers: { 'Accept': 'application/json' } })
+      [debtResponse, checksResponse] = await Promise.all([
+        fetch(`${baseUrl}/${encodeURIComponent(cuit)}`, { headers: { Accept: 'application/json' }, signal: controller.signal }),
+        fetch(`${baseUrl}/ChequesRechazados/${encodeURIComponent(cuit)}`, { headers: { Accept: 'application/json' }, signal: controller.signal })
       ]);
-
-      let dataDeudores = null;
-      let dataCheques = null;
-
-      if (resDeudores.status === 'fulfilled' && resDeudores.value.ok) {
-        dataDeudores = await resDeudores.value.json();
-      }
-
-      if (resCheques.status === 'fulfilled' && resCheques.value.ok) {
-        dataCheques = await resCheques.value.json();
-      }
-
-      bcraResult = parsearRespuestaBCRA(cleanCuit, dataDeudores, dataCheques);
-
-    } catch (bcraErr) {
-      console.warn('[BCRA WS] Error de comunicación con API BCRA. Usando resguardo informativo:', bcraErr.message);
-      bcraResult = generarRespuestaContingenciaBCRA(cleanCuit);
+    } finally {
+      clearTimeout(timeout);
     }
+    if (!debtResponse.ok) return res.status(502).json({ error: 'BCRA service unavailable.' });
 
-    if (!bcraResult) {
-      bcraResult = generarRespuestaContingenciaBCRA(cleanCuit);
-    }
+    const debtData = await debtResponse.json();
+    const checksData = checksResponse.ok ? await checksResponse.json().catch(() => null) : null;
+    const result = parseBcraResponse(cuit, debtData, checksData);
+    const { error: updateError } = await supabase
+      .from('Pasaporte_vivat')
+      .update({ situacion_crediticia: result.situacionCrediticia, updated_at: new Date().toISOString() })
+      .eq('id_pasaporte', passport.id_pasaporte)
+      .eq('id_perfil', profile.id_perfil);
+    if (updateError) throw updateError;
 
-    // 3. Guardar en Supabase para el pasaporte validado
-    if (supabase && targetPasaporteId) {
-      try {
-        await supabase
-          .from('Pasaporte_vivat')
-          .update({
-            situacion_crediticia: bcraResult.situacionCrediticia,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id_pasaporte', targetPasaporteId);
-          
-        let participantId = null;
-        if (targetPasaporteId) {
-            const { data: pass } = await supabase.from('Pasaporte_vivat').select('id_perfil').eq('id_pasaporte', targetPasaporteId).maybeSingle();
-            if (pass) participantId = pass.id_perfil;
-        }
-
-        if (participantId) {
-            await supabase.from('atm_records').insert([{
-                participant_id: participantId,
-                has_debt: bcraResult.situacionCrediticia !== '1 - Normal',
-                total_debt_amount: bcraResult.situacionCrediticia !== '1 - Normal' ? 1000 : 0, // Mock amount for now
-                datos_bcra: bcraResult,
-                checked_at: new Date().toISOString()
-            }]);
-        }
-
-        console.log(`[BCRA WS] Audit en Supabase exitoso para Pasaporte ID: ${targetPasaporteId}`);
-      } catch (dbErr) {
-        console.warn('[BCRA WS] Aviso al guardar en Supabase:', dbErr.message);
-      }
-    }
-
-    return res.status(200).json({
-      success: true,
-      cuit: cleanCuit,
-      situacionCrediticia: bcraResult.situacionCrediticia,
-      peorSituacion: bcraResult.peorSituacion,
-      chequesRechazadosCount: bcraResult.chequesRechazadosCount,
-      diasAtrasoMax: bcraResult.diasAtrasoMax,
-      entidades: bcraResult.entidades,
-      datosBcra: bcraResult
-    });
-
+    return res.status(200).json({ success: true, ...result });
   } catch (error) {
-    console.error('[BCRA API Error Critical]:', error);
-    return res.status(500).json({
-      error: 'BCRA Service Error',
-      message: error.message || 'Error inesperado en la consulta del BCRA.'
-    });
+    return sendInternalError(res, 'bcra-deudores', error);
   }
-}
-
-/**
- * Parsea las respuestas JSON oficiales de la API del BCRA
- */
-function parsearRespuestaBCRA(cuit, dataDeudores, dataCheques) {
-  let entidadesList = [];
-  let peorSituacionNum = 1;
-  let maxDiasAtraso = 0;
-  let denominacion = `Contribuyente CUIT ${cuit}`;
-
-  if (dataDeudores && dataDeudores.results) {
-    const res = dataDeudores.results;
-    if (res.denominacion) denominacion = res.denominacion;
-
-    if (Array.isArray(res.periodos) && res.periodos.length > 0) {
-      const ultimoPeriodo = res.periodos[0];
-      if (Array.isArray(ultimoPeriodo.entidades)) {
-        entidadesList = ultimoPeriodo.entidades.map(e => {
-          const sit = Number(e.situacion) || 1;
-          const dias = Number(e.diasAtrasoPago) || 0;
-          if (sit > peorSituacionNum) peorSituacionNum = sit;
-          if (dias > maxDiasAtraso) maxDiasAtraso = dias;
-
-          return {
-            entidad: e.entidad || 'Entidad Financiera',
-            situacion: sit,
-            monto: e.monto || 0,
-            diasAtraso: dias,
-            fechaSituacion: e.fechaSituacion || null
-          };
-        });
-      }
-    }
-  }
-
-  let totalChequesRechazados = 0;
-  let chequesList = [];
-  if (dataCheques && dataCheques.results && Array.isArray(dataCheques.results.chequesRechazados)) {
-    chequesList = dataCheques.results.chequesRechazados;
-    totalChequesRechazados = chequesList.length;
-  }
-
-  const descripcionesSituacion = {
-    1: 'Situación 1 (Normal)',
-    2: 'Situación 2 (Riesgo Bajo)',
-    3: 'Situación 3 (Deficiente)',
-    4: 'Situación 4 (Alto Riesgo)',
-    5: 'Situación 5 (Irrecuperable)',
-    6: 'Situación 6 (Irrecuperable por Disposición Técnica)'
-  };
-
-  const situacionTexto = descripcionesSituacion[peorSituacionNum] || `Situación ${peorSituacionNum}`;
-
-  return {
-    cuit: cuit,
-    denominacion: denominacion,
-    situacionCrediticia: situacionTexto,
-    peorSituacion: peorSituacionNum,
-    chequesRechazadosCount: totalChequesRechazados,
-    diasAtrasoMax: maxDiasAtraso,
-    entidades: entidadesList,
-    chequesRechazados: chequesList,
-    consultadoEn: new Date().toISOString()
-  };
-}
-
-/**
- * Fallback informativo de contingencia
- */
-function generarRespuestaContingenciaBCRA(cuit) {
-  return {
-    cuit: cuit,
-    denominacion: `Contribuyente Registrado (CUIT ${cuit})`,
-    situacionCrediticia: 'Situación 1 (Normal)',
-    peorSituacion: 1,
-    chequesRechazadosCount: 0,
-    diasAtrasoMax: 0,
-    entidades: [
-      { entidad: 'Sistema Financiero Argentino (BCRA Verificado)', situacion: 1, monto: 0, diasAtraso: 0 }
-    ],
-    chequesRechazados: [],
-    consultadoEn: new Date().toISOString()
-  };
 }

@@ -9,104 +9,37 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'vivat_verified_owners';
-
-  function getVerifiedOwners() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-    } catch (e) {
-      return {};
-    }
+  // Verification is authoritative only when it came from the authenticated
+  // profile or the server-verified Didit response in the current session.
+  // localStorage, email values and browser-provided scores are never evidence.
+  function setOwnerVerified(_email, data = {}) {
+    if (data?.serverVerified !== true) return;
+    window.__vivatServerKycVerified = true;
   }
 
-  function setOwnerVerified(email, data = {}) {
-    if (!email) return;
-    const list = getVerifiedOwners();
-    list[email.toLowerCase().trim()] = {
-      verified: true,
-      verifiedAt: new Date().toISOString(),
-      sessionId: data.sessionId || `didit_kyc_${Date.now()}`,
-      scores: data.scores || { faceMatch: 98.5, liveness: 'PASSED' },
-      ...data
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  function resetVerification() {
+    window.__vivatServerKycVerified = false;
   }
 
-  function resetVerification(email = null) {
-    if (email) {
-      const list = getVerifiedOwners();
-      delete list[email.toLowerCase().trim()];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    console.log('[Didit Vivat]: Estado de verificación restablecido para pruebas.');
-  }
-
-  function isOwnerVerified(email) {
-    try {
-      // 1. Si no hay email, obtenerlo del entorno
-      const targetEmail = email || 
-        (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
-        (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
-        (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
-        null;
-
-      // 2. Verificar datos reales de pasaporte / KYC en localStorage
-      const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
-      const hasValidPassport = Boolean(
-        pData && (pData.cuit || pData.id_pasaporte || pData.codigo_pasaporte || pData.status === 'valid' || pData.status === 'verified')
-      );
-
-      const didit = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
-      const hasValidDidit = Boolean(
-        didit && (didit.documentNumber || didit.status === 'APPROVED' || didit.verified)
-      );
-
-      const user = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-      const hasValidUser = Boolean(user && user.cuenta_verificada);
-
-      // Si el usuario eliminó su pasaporte e identidad Didit, NO está verificado
-      if (!hasValidPassport && !hasValidDidit && !hasValidUser && !window.hasActivePassport && !window.currentPasaporteId) {
-        if (targetEmail) {
-          const list = getVerifiedOwners();
-          if (list[targetEmail.toLowerCase().trim()]) {
-            delete list[targetEmail.toLowerCase().trim()];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-          }
-        }
-        return false;
-      }
-
-      if (targetEmail) {
-        const list = getVerifiedOwners();
-        if (list[targetEmail.toLowerCase().trim()]?.verified) {
-          return true;
-        }
-      }
-
-      return Boolean(hasValidPassport || hasValidDidit || hasValidUser);
-    } catch (e) {
-      return false;
-    }
+  function isOwnerVerified() {
+    return Boolean(
+      window.AccountSettings?._profile?.cuenta_verificada === true ||
+      window.__vivatServerKycVerified === true
+    );
   }
 
   /**
    * Inicia el flujo de verificación de identidad con Didit KYC para el Propietario
    */
   async function iniciarVerificacionPropietario(emailParam = null) {
-    const currentEmail = emailParam || 
-      (document.getElementById('contact-email') && document.getElementById('contact-email').value.trim()) ||
-      (document.getElementById('owner-email-input') && document.getElementById('owner-email-input').value.trim()) ||
-      (localStorage.getItem('vivat_user') && JSON.parse(localStorage.getItem('vivat_user')).email) ||
-      'propietario@vivat.com.ar';
+    const currentEmail = emailParam || '';
 
     if (typeof window.iniciarKYC !== 'function') {
       alert('El servicio de verificación Didit no está disponible.');
       return { success: false };
     }
 
-    const res = await window.iniciarKYC(currentEmail, {
+    const res = await window.iniciarKYC(null, {
       mode: 'popup',
       flow: 'passport',
       isLivenessOnly: false,
@@ -114,10 +47,7 @@
     });
 
     if (res && res.status === 'APPROVED') {
-      setOwnerVerified(currentEmail, {
-        sessionId: res.sessionId,
-        scores: res.scores
-      });
+      setOwnerVerified(currentEmail, { serverVerified: true });
       return { success: true, email: currentEmail, data: res };
     }
     return { success: false, data: res };

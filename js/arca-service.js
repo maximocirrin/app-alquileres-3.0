@@ -19,7 +19,7 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
         throw new Error('El CUIT ingresado debe tener 11 dígitos numéricos.');
     }
 
-    console.log(`[ARCA Frontend] Consultando Padrón ARCA para CUIT: ${cleanCuit}...`);
+    console.info('[ARCA Frontend] Consultando padrón fiscal.');
 
     try {
         let data = null;
@@ -33,38 +33,12 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
             } catch (e) {}
         }
 
-        try {
-            const response = await fetch('/api/arca-padron', {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    cuit: cleanCuit,
-                    pasaporteId: pasaporteId || window.currentPasaporteId || null,
-                    userId: userId || null
-                })
-            });
-
-            if (response.status === 405) {
-                throw new Error('Servidor estático (HTTP 405 Method Not Allowed)');
-            }
-
-            data = await response.json();
-        } catch (fetchErr) {
-            console.warn('[ARCA Frontend] Petición API no disponible en servidor estático. Generando datos impositivos de simulación:', fetchErr.message);
-            const prefijo = cleanCuit.substring(0, 2);
-            let condicionSim = 'Monotributo Categoría H';
-            if (prefijo === '30' || prefijo === '33') condicionSim = 'Responsable Inscripto (Sociedad)';
-            else if (prefijo === '27') condicionSim = 'Monotributo Categoría F';
-
-            data = {
-                success: true,
-                cuit: cleanCuit,
-                condicionFiscal: condicionSim,
-                razonSocial: `Contribuyente Verificado (CUIT ${formatearCUIT(cleanCuit)})`,
-                estadoCuit: 'ACTIVO',
-                actividadPrincipal: 'Servicios Comerciales e Inmobiliarios'
-            };
-        }
+        const response = await fetch('/api/arca-padron', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ cuit: cleanCuit })
+        });
+        data = await response.json().catch(() => ({}));
 
         if (!data || !data.success) {
             const errorMsg = data.message || data.error || 'Error al comunicarse con los servicios de ARCA.';
@@ -72,7 +46,7 @@ async function consultarArca(cuit, pasaporteId = null, userId = null) {
             throw new Error(errorMsg);
         }
 
-        console.log('[ARCA Frontend] Respuesta procesada exitosamente:', data);
+    console.info('[ARCA Frontend] Respuesta fiscal recibida.');
 
         // Actualizar la interfaz del Pasaporte Vivat si estamos en la página
         actualizarPasaporteUI(data);
@@ -127,12 +101,18 @@ function actualizarPasaporteUI(data) {
     // 3. Auditoría detallada (Accordion)
     const elAuditCondicion = document.getElementById('audit-condicion-fiscal');
     if (elAuditCondicion) {
-        elAuditCondicion.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-extrabold">${condicion}</span>`;
+        const value = document.createElement('span');
+        value.className = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+        value.textContent = condicion;
+        elAuditCondicion.replaceChildren(value);
     }
 
     const elAuditEstado = document.getElementById('audit-estado-cuit');
     if (elAuditEstado) {
-        elAuditEstado.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-extrabold">Clave ${estadoCuit} en ARCA</span>`;
+        const value = document.createElement('span');
+        value.className = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+        value.textContent = `Clave ${estadoCuit} en ARCA`;
+        elAuditEstado.replaceChildren(value);
     }
 
     const elAuditActividad = document.getElementById('audit-actividad-arca');

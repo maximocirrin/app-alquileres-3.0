@@ -203,9 +203,10 @@ window.__vivatRetryScript = function (scriptEl, maxRetries = 2) {
         return;
     }
 
-    // Configuración para permitir iframes (ej. videos de YouTube, mapas)
+    // Do not extend DOMPurify to permit executable content. Individual callers
+    // may opt into narrowly-scoped iframe handling after validating its origin.
     const sanitizeOptions = {
-        ADD_TAGS: ['iframe', 'style', 'script'],
-        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target', 'src', 'defer', 'async', 'type']
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target', 'src']
     };
 })();

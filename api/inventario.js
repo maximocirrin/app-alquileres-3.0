@@ -1,105 +1,140 @@
-import { setCorsHeaders, getAuthenticatedUser, getSupabaseAdmin } from './_auth.js';
+import {
+  getAuthenticatedUser,
+  getContractForProfile,
+  getSupabaseAdmin,
+  isSafeStoragePath,
+  parsePositiveInteger,
+  readJsonBody,
+  requireProfile,
+  sendForbidden,
+  sendInternalError,
+  sendOriginForbidden,
+  sendUnauthorized,
+  setCorsHeaders
+} from './_auth.js';
+
+const MAX_ITEMS = 200;
+const MAX_PHOTOS_PER_ITEM = 12;
+
+function text(value, maxLength = 2_000) {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+}
+
+function normalizeItem(item, contractId) {
+  if (!item || typeof item !== 'object') return null;
+  const photos = Array.isArray(item.fotos_urls) ? item.fotos_urls : [];
+  if (photos.length > MAX_PHOTOS_PER_ITEM || !photos.every((path) => isSafeStoragePath(path, contractId))) return null;
+  const stateId = parsePositiveInteger(item.id_estado_item);
+  const itemId = parsePositiveInteger(item.id_item);
+  const ambiente = text(item.ambiente, 120);
+  if (!ambiente || !stateId) return null;
+  return {
+    ambiente,
+    id_item: itemId || 1,
+    id_estado_item: stateId,
+    observaciones: text(item.observaciones, 4_000),
+    fotos_urls: photos
+  };
+}
+
+async function signedPath(supabase, path, contractId) {
+  if (!isSafeStoragePath(path, contractId)) return null;
+  const { data, error } = await supabase.storage.from('contratos_firmados').createSignedUrl(path, 5 * 60);
+  return error ? null : data?.signedUrl || null;
+}
 
 export default async function handler(req, res) {
-  setCorsHeaders(req, res);
+  if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method Not Allowed' });
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  try {
+    const { user, profile, error: authError } = await getAuthenticatedUser(req);
+    if (authError || !user) return sendUnauthorized(res, 'Debe iniciar sesión para consultar o guardar el inventario.');
+    if (!requireProfile(profile)) return sendForbidden(res, 'No se encontró un perfil válido para esta cuenta.');
 
-  // Verificar autenticación
-  const { user, profile, error: authError } = await getAuthenticatedUser(req);
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Unauthorized', message: 'Debe iniciar sesión para guardar el inventario.' });
-  }
+    const body = req.method === 'POST' ? await readJsonBody(req) : (req.query || {});
+    const contractId = parsePositiveInteger(body.id_contrato || body.idContrato);
+    if (!contractId) return res.status(400).json({ error: 'Invalid contract id.' });
 
-  const supabase = getSupabaseAdmin();
+    const supabase = getSupabaseAdmin();
+    const { contract, role, error: contractError } = await getContractForProfile(supabase, contractId, profile.id_perfil);
+    if (contractError) throw contractError;
+    if (!contract) return res.status(404).json({ error: 'Not Found' });
+    if (!role) return sendForbidden(res, 'No eres parte de este contrato.');
 
-  if (req.method === 'GET') {
-    const id_contrato = req.query.id_contrato;
-    if (!id_contrato) {
-      return res.status(400).json({ error: 'Bad Request', message: 'id_contrato requerido.' });
-    }
-
-    try {
-      const { data, error } = await supabase
+    if (req.method === 'GET') {
+      const { data: inventory, error } = await supabase
         .from('Inventario_Digital')
-        .select(`
-          *,
-          items:Detalle_Inventario_Item (
-            *,
-            Item:id_item (nombre),
-            Estado_item:id_estado_item (nombre)
-          )
-        `)
-        .eq('id_contrato', id_contrato)
+        .select('*, items:Detalle_Inventario_Item(*, Item:id_item(nombre), Estado_item:id_estado_item(nombre))')
+        .eq('id_contrato', contractId)
         .maybeSingle();
-
       if (error) throw error;
-      return res.status(200).json({ ok: true, inventario: data });
-    } catch (e) {
-      console.error('[Inventario GET Error]:', e);
-      return res.status(500).json({ error: 'Internal Error', message: e.message });
+      if (!inventory) return res.status(200).json({ ok: true, inventario: null });
+
+      const hydratedItems = await Promise.all((inventory.items || []).map(async (item) => ({
+        ...item,
+        // Keep canonical paths for a later safe update, while exposing only
+        // short-lived URLs for display.
+        fotos_paths: (item.fotos_urls || []).filter((path) => isSafeStoragePath(path, contractId)),
+        fotos_urls: await Promise.all((item.fotos_urls || []).map((path) => signedPath(supabase, path, contractId)))
+      })));
+      const hydrated = {
+        ...inventory,
+        video_path: isSafeStoragePath(inventory.video_url, contractId) ? inventory.video_url : null,
+        video_url: await signedPath(supabase, inventory.video_url, contractId),
+        items: hydratedItems.map((item) => ({ ...item, fotos_urls: item.fotos_urls.filter(Boolean) }))
+      };
+      return res.status(200).json({ ok: true, inventario: hydrated });
     }
+
+    const propertyId = parsePositiveInteger(body.id_propiedad || body.idPropiedad);
+    if (!propertyId || Number(propertyId) !== Number(contract.id_propiedad)) {
+      return res.status(400).json({ error: 'The property does not belong to this contract.' });
+    }
+    if (!Array.isArray(body.items) || body.items.length > MAX_ITEMS) {
+      return res.status(400).json({ error: 'Invalid inventory items.' });
+    }
+    const items = body.items.map((item) => normalizeItem(item, contractId));
+    if (items.some((item) => !item)) return res.status(400).json({ error: 'Invalid inventory item.' });
+
+    const videoPath = body.video_url ? String(body.video_url) : null;
+    if (videoPath && !isSafeStoragePath(videoPath, contractId)) {
+      return res.status(400).json({ error: 'Invalid inventory media reference.' });
+    }
+    const videoHash = body.video_hash && /^[a-f0-9]{64}$/i.test(String(body.video_hash)) ? String(body.video_hash).toLowerCase() : null;
+
+    const { data: inventory, error: inventoryError } = await supabase
+      .from('Inventario_Digital')
+      .upsert({
+        id_contrato: contractId,
+        id_propiedad: propertyId,
+        id_perfil_creador: Number(profile.id_perfil),
+        fecha_inspeccion: new Date().toISOString(),
+        observaciones_generales: text(body.observaciones_generales, 10_000),
+        video_url: videoPath,
+        video_hash: videoHash
+      }, { onConflict: 'id_contrato' })
+      .select('id_inventario')
+      .single();
+    if (inventoryError || !inventory) throw inventoryError || new Error('Inventory could not be saved.');
+
+    const { error: deleteError } = await supabase
+      .from('Detalle_Inventario_Item')
+      .delete()
+      .eq('id_inventario', inventory.id_inventario);
+    if (deleteError) throw deleteError;
+
+    if (items.length) {
+      const { error: itemError } = await supabase.from('Detalle_Inventario_Item').insert(items.map((item) => ({
+        ...item,
+        id_inventario: inventory.id_inventario
+      })));
+      if (itemError) throw itemError;
+    }
+
+    return res.status(200).json({ ok: true, message: 'Inventario guardado.' });
+  } catch (error) {
+    return sendInternalError(res, 'inventario', error);
   }
-
-  if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { id_contrato, id_propiedad, observaciones_generales, items, video_url, video_hash } = body;
-
-    if (!id_contrato || !id_propiedad || !items) {
-      return res.status(400).json({ error: 'Bad Request', message: 'Faltan parámetros requeridos.' });
-    }
-
-    try {
-      // 1. Upsert Inventario_Digital
-      const { data: invBase, error: errBase } = await supabase
-        .from('Inventario_Digital')
-        .upsert({
-          id_contrato,
-          id_propiedad,
-          id_perfil_creador: profile?.id_perfil || null,
-          fecha_inspeccion: new Date().toISOString(),
-          observaciones_generales: observaciones_generales || '',
-          video_url: video_url || null,
-          video_hash: video_hash || null
-        }, { onConflict: 'id_contrato' })
-        .select()
-        .single();
-
-      if (errBase) throw errBase;
-
-      // 2. Limpiar items viejos
-      await supabase
-        .from('Detalle_Inventario_Item')
-        .delete()
-        .eq('id_inventario', invBase.id_inventario);
-
-      // 3. Insertar items nuevos
-      if (items.length > 0) {
-        // En la UI podemos usar IDs fijos para estados: 1: Nuevo, 2: Bueno, 3: Regular, 4: Malo
-        const itemsToInsert = items.map(it => ({
-          id_inventario: invBase.id_inventario,
-          ambiente: it.ambiente,
-          id_item: it.id_item || 1, // Default a un item genérico si no lo envían
-          id_estado_item: it.id_estado_item || 2, // Default a Bueno
-          observaciones: it.observaciones || '',
-          fotos_urls: it.fotos_urls || []
-        }));
-        
-        const { error: errItems } = await supabase
-          .from('Detalle_Inventario_Item')
-          .insert(itemsToInsert);
-
-        if (errItems) throw errItems;
-      }
-
-      return res.status(200).json({ ok: true, message: 'Inventario guardado exitosamente.' });
-    } catch (e) {
-      console.error('[Inventario POST Error]:', e);
-      return res.status(500).json({ error: 'Internal Error', message: e.message });
-    }
-  }
-
-  return res.status(405).json({ error: 'Method Not Allowed' });
 }

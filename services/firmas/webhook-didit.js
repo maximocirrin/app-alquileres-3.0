@@ -1,257 +1,156 @@
 import crypto from 'crypto';
-import { getSupabaseAdmin } from '../../api/_auth.js';
+import {
+  getRawRequestBody,
+  getSupabaseAdmin,
+  mocksAreAllowed,
+  readJsonBody,
+  sendInternalError,
+  setCorsHeaders
+} from '../../api/_auth.js';
 
-const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET || '';
+const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{6,200}$/;
+const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024;
 
-// Validar firma HMAC de Didit
-function verifyDiditSignature(req, rawPayload) {
-  if (!DIDIT_WEBHOOK_SECRET) {
-    console.warn('[Didit Signature Webhook] DIDIT_WEBHOOK_SECRET no configurada.');
-    return process.env.NODE_ENV !== 'production';
+function signatureHeader(req) {
+  const raw = String(req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'] || '');
+  return raw.split(',')[0].replace(/^(sha256|v1)=/i, '').trim();
+}
+
+function verifyDiditSignature(req) {
+  const secret = String(process.env.DIDIT_SIGNATURE_WEBHOOK_SECRET || process.env.DIDIT_WEBHOOK_SECRET || '').trim();
+  if (!secret) {
+    return mocksAreAllowed() && process.env.ALLOW_INSECURE_WEBHOOKS === 'true';
   }
-  const signature = req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'];
-  if (!signature) return false;
+  const body = getRawRequestBody(req);
+  const provided = signatureHeader(req);
+  if (!body || !provided || !/^[a-f0-9]{64}$/i.test(provided)) return false;
+  const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(provided, 'hex'), Buffer.from(expected, 'hex'));
+}
 
+function parseVendorData(value) {
+  if (value && typeof value === 'object') return value;
   try {
-    const stringBody = typeof rawPayload === 'string' ? rawPayload : JSON.stringify(rawPayload);
-    const expected = crypto.createHmac('sha256', DIDIT_WEBHOOK_SECRET).update(stringBody).digest('hex');
-    const signatureClean = String(signature).replace(/^sha256=/, '').trim();
-
-    if (signatureClean.length !== expected.length) return false;
-    return crypto.timingSafeEqual(Buffer.from(signatureClean, 'utf8'), Buffer.from(expected, 'utf8'));
-  } catch (e) {
-    return false;
+    const parsed = JSON.parse(String(value || ''));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
   }
 }
 
-/**
- * FASE 2: Validación Biométrica y Bóveda Segura de Evidencias
- */
+function approvedStatus(value) {
+  return ['approved', 'success', 'passed'].includes(String(value || '').toLowerCase());
+}
+
+function declinedStatus(value) {
+  return ['declined', 'rejected', 'failed'].includes(String(value || '').toLowerCase());
+}
+
+function ocrData(body) {
+  const source = body.decision?.document || body.document || body.extracted_data || body.ocr || {};
+  const name = String(source.full_name || source.fullName || '').slice(0, 240);
+  const dni = String(source.document_number || source.documentNumber || source.id_number || '').replace(/[^0-9A-Za-z-]/g, '').slice(0, 32);
+  return { name, dni };
+}
+
+async function saveEvidence(supabase, body, contractId, signatureId, suffix) {
+  const source = body?.decision?.[suffix] || body?.images?.[suffix] || null;
+  if (typeof source !== 'string' || !source.startsWith('data:')) return null;
+  const match = source.match(/^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) return null;
+  const bytes = Buffer.from(match[2], 'base64');
+  if (bytes.length === 0 || bytes.length > MAX_EVIDENCE_BYTES) return null;
+  const extension = match[1].toLowerCase() === 'image/png' ? 'png' : 'jpg';
+  const path = `contrato_${contractId}/firma_${signatureId}_${suffix}.${extension}`;
+  const { error } = await supabase.storage.from('boveda_biometrica').upload(path, bytes, {
+    contentType: match[1].toLowerCase(),
+    upsert: false
+  });
+  return error ? null : path;
+}
+
+/** Didit callback for a contract-signature session. */
 export default async function webhookDiditHandler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Didit-Signature, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      ok: false,
-      error: 'Method Not Allowed',
-      message: 'Este webhook únicamente acepta peticiones POST.'
-    });
-  }
+  // Webhooks are server-to-server and do not need a permissive CORS response.
+  setCorsHeaders(req, res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const body = await readJsonBody(req, { maxBytes: 8 * 1024 * 1024 });
+    if (!verifyDiditSignature(req)) return res.status(401).json({ ok: false, error: 'Invalid webhook signature.' });
 
-    // Validación de firma criptográfica
-    if (!verifyDiditSignature(req, req.body)) {
-      console.warn('[Didit Signature Webhook] Firma HMAC no válida o ausente.');
-      return res.status(401).json({
-        ok: false,
-        error: 'Unauthorized',
-        message: 'Firma de autenticación de webhook inválida.'
-      });
-    }
-
-    console.log('[Didit Signature Webhook Received]:', JSON.stringify(body));
-
-    const {
-      event,
-      type,
-      session_id,
-      sessionId,
-      id,
-      vendor_data,
-      status,
-      decision,
-      features
-    } = body;
-
-    const currentSessionId = session_id || sessionId || id;
-    const eventType = event || type || 'verification.completed';
-    const rawStatus = (status || decision?.status || 'Unknown').toString().toLowerCase();
-
-    const isApproved = rawStatus === 'approved' || rawStatus === 'success' || rawStatus === 'passed';
-    const isDeclined = rawStatus === 'declined' || rawStatus === 'rejected' || rawStatus === 'failed';
+    const sessionId = String(body.session_id || body.sessionId || body.id || '');
+    if (!SESSION_ID_PATTERN.test(sessionId)) return res.status(400).json({ ok: false, error: 'Invalid session id.' });
+    const status = String(body.status || body.decision?.status || '').toLowerCase();
+    const vendor = parseVendorData(body.vendor_data || body.vendorData);
 
     const supabase = getSupabaseAdmin();
+    const { data: signature, error: signatureError } = await supabase
+      .from('Firma_contrato')
+      .select('id_firma, id_contrato, id_perfil_firmante, rol_firmante, estado_firma, didit_session_id')
+      .eq('didit_session_id', sessionId)
+      .maybeSingle();
+    if (signatureError) throw signatureError;
+    if (!signature) return res.status(200).json({ ok: true, ignored: true });
 
-    let parsedVendorData = {};
-    if (vendor_data) {
-      try {
-        parsedVendorData = typeof vendor_data === 'string' ? JSON.parse(vendor_data) : vendor_data;
-      } catch (e) {
-        parsedVendorData = { raw: vendor_data };
-      }
+    const matchesVendor = vendor?.kind === 'contract_signature'
+      && Number(vendor.contractId) === Number(signature.id_contrato)
+      && Number(vendor.profileId) === Number(signature.id_perfil_firmante)
+      && String(vendor.role) === String(signature.rol_firmante);
+    if (!matchesVendor) return res.status(401).json({ ok: false, error: 'Webhook session binding failed.' });
+
+    if (signature.estado_firma === 'sellada' || signature.estado_firma === 'completada') {
+      return res.status(200).json({ ok: true, idempotent: true });
     }
 
-    let query = supabase.from('Firma_contrato').select('*');
-    if (currentSessionId) {
-      query = query.eq('didit_session_id', currentSessionId);
-    } else if (parsedVendorData.contractId && parsedVendorData.profileId) {
-      query = query
-        .eq('id_contrato', Number(parsedVendorData.contractId))
-        .eq('id_perfil_firmante', Number(parsedVendorData.profileId))
-        .order('created_at', { ascending: false });
-    }
-
-    const { data: firmas, error: errFirma } = await query.limit(1);
-
-    if (errFirma || !firmas || firmas.length === 0) {
-      console.warn('[Didit Webhook] No se encontró Firma_contrato para sesión:', currentSessionId);
-      return res.status(200).json({
-        ok: true,
-        message: 'Evento recibido pero no vinculado a una firma de contrato activa.'
-      });
-    }
-
-    const firma = firmas[0];
-    const contractId = firma.id_contrato;
-    const firmaId = firma.id_firma;
-
-    const diditScores = {
-      raw_status: rawStatus,
-      event_type: eventType,
-      decision_status: decision?.status || rawStatus,
-      face_match_score: decision?.face_match?.score || decision?.biometrics?.face_match_score || features?.face_match?.score || null,
-      face_match_result: decision?.face_match?.result || (isApproved ? 'matched' : 'not_matched'),
-      liveness_status: decision?.liveness?.status || features?.liveness?.status || (isApproved ? 'passed' : 'failed'),
-      document_type: decision?.document?.type || features?.document?.type || 'ARG_DNI',
-      ocr_document_number: decision?.document?.document_number || features?.document?.document_number || null,
-      ocr_full_name: decision?.document?.full_name || features?.document?.full_name || null,
+    const approved = approvedStatus(status);
+    const declined = declinedStatus(status);
+    const nextState = approved ? 'biometria_aprobada' : (declined ? 'biometria_rechazada' : 'biometria_pendiente');
+    const scores = {
+      decision_status: status || 'pending',
+      face_match_score: body.decision?.face_match?.score ?? body.features?.face_match?.score ?? null,
+      liveness_status: body.decision?.liveness?.status || body.features?.liveness?.status || null,
       processed_at: new Date().toISOString()
     };
 
-    let urlDniFrente = firma.url_dni_frente_privado;
-    let urlDniDorso = firma.url_dni_dorso_privado;
-    let urlSelfie = firma.url_selfie_privado;
-
-    const apiKey = (process.env.DIDIT_API_KEY || '').trim();
-
-    async function guardarEnBoveda(imageUrlOrBase64, filenameSuffix) {
-      if (!imageUrlOrBase64) return null;
-      try {
-        let buffer = null;
-        let contentType = 'image/jpeg';
-
-        if (imageUrlOrBase64.startsWith('data:')) {
-          const parts = imageUrlOrBase64.split(';base64,');
-          contentType = parts[0].split(':')[1] || 'image/jpeg';
-          buffer = Buffer.from(parts[1], 'base64');
-        } else if (imageUrlOrBase64.startsWith('http')) {
-          const imgRes = await fetch(imageUrlOrBase64, {
-            headers: apiKey ? { 'Authorization': `Bearer ${apiKey}`, 'x-api-key': apiKey } : {}
-          });
-          if (imgRes.ok) {
-            const arrayBuffer = await imgRes.arrayBuffer();
-            buffer = Buffer.from(arrayBuffer);
-            contentType = imgRes.headers.get('content-type') || 'image/jpeg';
-          }
-        }
-
-        if (buffer) {
-          const filePath = `contrato_${contractId}/firma_${firmaId}_${filenameSuffix}.jpg`;
-          const { error: uploadErr } = await supabase.storage
-            .from('boveda_biometrica')
-            .upload(filePath, buffer, {
-              contentType: contentType,
-              upsert: true
-            });
-
-          if (!uploadErr) {
-            return filePath;
-          } else {
-            console.error('[Error subiendo a boveda_biometrica]:', uploadErr);
-          }
-        }
-      } catch (err) {
-        console.warn(`[Error procesando imagen ${filenameSuffix}]:`, err);
-      }
-      return null;
+    let front = null;
+    let back = null;
+    let selfie = null;
+    if (approved) {
+      front = await saveEvidence(supabase, body, signature.id_contrato, signature.id_firma, 'front_image');
+      back = await saveEvidence(supabase, body, signature.id_contrato, signature.id_firma, 'back_image');
+      selfie = await saveEvidence(supabase, body, signature.id_contrato, signature.id_firma, 'selfie_image');
     }
 
-    const rawFrontImg = decision?.document?.front_image || features?.document?.front_image || body?.images?.front;
-    const rawBackImg = decision?.document?.back_image || features?.document?.back_image || body?.images?.back;
-    const rawSelfieImg = decision?.liveness?.selfie_image || features?.liveness?.selfie_image || body?.images?.selfie;
+    const update = {
+      estado_firma: nextState,
+      didit_status: status.toUpperCase() || 'PENDING',
+      didit_scores: scores
+    };
+    if (front) update.url_dni_frente_privado = front;
+    if (back) update.url_dni_dorso_privado = back;
+    if (selfie) update.url_selfie_privado = selfie;
 
-    if (rawFrontImg) urlDniFrente = await guardarEnBoveda(rawFrontImg, 'dni_frente');
-    if (rawBackImg) urlDniDorso = await guardarEnBoveda(rawBackImg, 'dni_dorso');
-    if (rawSelfieImg) urlSelfie = await guardarEnBoveda(rawSelfieImg, 'selfie');
-
-    const nuevoEstadoFirma = isApproved ? 'biometria_aprobada' : (isDeclined ? 'biometria_rechazada' : 'biometria_pendiente');
-
-    const { error: updateErr } = await supabase
+    const { error: updateError } = await supabase
       .from('Firma_contrato')
-      .update({
-        estado_firma: nuevoEstadoFirma,
-        didit_status: rawStatus.toUpperCase(),
-        didit_scores: diditScores,
-        url_dni_frente_privado: urlDniFrente || `boveda_biometrica/contrato_${contractId}/firma_${firmaId}_dni_frente.ref`,
-        url_dni_dorso_privado: urlDniDorso || `boveda_biometrica/contrato_${contractId}/firma_${firmaId}_dni_dorso.ref`,
-        url_selfie_privado: urlSelfie || `boveda_biometrica/contrato_${contractId}/firma_${firmaId}_selfie.ref`
-      })
-      .eq('id_firma', firmaId);
+      .update(update)
+      .eq('id_firma', signature.id_firma)
+      .eq('didit_session_id', sessionId)
+      .in('estado_firma', ['iniciada', 'biometria_pendiente', 'biometria_aprobada', 'biometria_rechazada']);
+    if (updateError) throw updateError;
 
-    if (updateErr) {
-      console.error('[Error actualizando Firma_contrato en Webhook]:', updateErr);
-      return res.status(500).json({ ok: false, error: 'Database update error' });
+    if (approved) {
+      const ocr = ocrData(body);
+      const profileUpdate = { cuenta_verificada: true, fecha_verificacion: new Date().toISOString() };
+      if (ocr.name) profileUpdate.nombre_completo = ocr.name;
+      if (ocr.dni) profileUpdate.dni = ocr.dni;
+      const { error } = await supabase.from('Perfil').update(profileUpdate).eq('id_perfil', signature.id_perfil_firmante);
+      if (error) throw error;
     }
 
-    // Sincronizar DNI y Nombre en Perfil y Pasaporte_vivat del firmante
-    if (isApproved && firma.id_perfil_firmante) {
-      try {
-        const ocrDni = diditScores.ocr_document_number;
-        const ocrName = diditScores.ocr_full_name;
-
-        const perfUpdate = {
-          cuenta_verificada: true,
-          fecha_verificacion: new Date().toISOString()
-        };
-        if (ocrName) perfUpdate.nombre_completo = ocrName;
-        if (ocrDni) perfUpdate.dni = ocrDni;
-
-        await supabase.from('Perfil').update(perfUpdate).eq('id_perfil', firma.id_perfil_firmante);
-
-        const { data: passSigner } = await supabase
-          .from('Pasaporte_vivat')
-          .select('id_pasaporte')
-          .eq('id_perfil', firma.id_perfil_firmante)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (passSigner) {
-          const passUpdate = {
-            id_estado_pasaporte: 3,
-            updated_at: new Date().toISOString()
-          };
-          if (ocrName) passUpdate.razon_social = ocrName;
-          if (ocrDni) passUpdate.dni = ocrDni;
-
-          await supabase.from('Pasaporte_vivat').update(passUpdate).eq('id_pasaporte', passSigner.id_pasaporte);
-        }
-      } catch (ePerf) {
-        console.warn('[Didit Webhook Signature] Aviso actualizando Perfil/Pasaporte del firmante:', ePerf.message);
-      }
-    }
-
-    return res.status(200).json({
-      ok: true,
-      message: `Firma ID ${firmaId} actualizada exitosamente a ${nuevoEstadoFirma}.`,
-      firma_id: firmaId,
-      estado_firma: nuevoEstadoFirma
-    });
-
+    return res.status(200).json({ ok: true, firma_id: signature.id_firma, estado_firma: nextState });
   } catch (error) {
-    console.error('[Server Error in services/firmas/webhook-didit]:', error);
-    return res.status(500).json({
-      ok: false,
-      error: 'Internal Server Error',
-      message: error.message
-    });
+    return sendInternalError(res, 'firmas/webhook-didit', error);
   }
 }

@@ -1,350 +1,213 @@
 import crypto from 'crypto';
-import dotenv from 'dotenv';
-import { generateOriginalContractPdf, generateAuditTrailPdf } from './pdf-generator.js';
-import { setCorsHeaders, getAuthenticatedUser, sendUnauthorized, sendForbidden, getSupabaseAdmin } from '../../api/_auth.js';
-dotenv.config();
+import { generateAuditTrailPdf, generateOriginalContractPdf } from './pdf-generator.js';
+import {
+  getAuthenticatedUser,
+  getContractForProfile,
+  getSupabaseAdmin,
+  parsePositiveInteger,
+  readJsonBody,
+  requireProfile,
+  sendForbidden,
+  sendInternalError,
+  sendOriginForbidden,
+  sendUnauthorized,
+  setCorsHeaders
+} from '../../api/_auth.js';
 
-/**
- * FASE 3: Generación del Audit Trail Forense y Sellado Criptográfico en Dos Niveles (Two-Tier Hash)
- * Cumplimiento: Ley Nacional N° 25.506 de Firma Digital y Timestamping RFC 3161
- */
-export default async function sellarHandler(req, res) {
-  setCorsHeaders(req, res);
+function approvedByDidit(signature) {
+  return signature?.estado_firma === 'biometria_aprobada' && ['APPROVED', 'SUCCESS', 'PASSED'].includes(String(signature.didit_status || '').toUpperCase());
+}
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+function isSafeContractObjectPath(value, contractId) {
+  return value === `contrato_${contractId}/contrato_original.pdf`;
+}
+
+async function issueTrustedTimestamp(hash) {
+  const endpoint = String(process.env.TSA_SERVER_URL || '').trim();
+  const apiKey = String(process.env.TSA_SERVER_API_KEY || '').trim();
+  let parsed;
+  try {
+    parsed = new URL(endpoint);
+  } catch {
+    throw new Error('No trusted TSA gateway is configured.');
   }
+  if (parsed.protocol !== 'https:' || !apiKey) throw new Error('No trusted TSA gateway is configured.');
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      ok: false,
-      error: 'Method Not Allowed',
-      message: 'El sellado criptográfico únicamente se procesa por método POST.'
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const response = await fetch(parsed, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ hash_algorithm: 'SHA-256', hash })
     });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result?.timestamp_token || !result?.gen_time || !result?.authority) {
+      throw new Error('The TSA gateway did not return a verifiable timestamp.');
+    }
+    return {
+      authority: String(result.authority).slice(0, 240),
+      gen_time: String(result.gen_time).slice(0, 64),
+      serial_number: String(result.serial_number || '').slice(0, 240),
+      // Persist the token for independent verification. Never synthesize one.
+      timestamp_token: String(result.timestamp_token).slice(0, 200_000),
+      hash_algorithm: 'SHA-256'
+    };
+  } finally {
+    clearTimeout(timer);
   }
+}
 
-  // 1. Validar autenticación
-  const { user, profile } = await getAuthenticatedUser(req);
+export default async function sellarHandler(req, res) {
+  if (!setCorsHeaders(req, res)) return sendOriginForbidden(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 
   try {
-    const params = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const {
-      id_firma = params.idFirma,
-      id_contrato = params.idContrato,
-      rol = (params.role || params.rol || 'TENANT'),
-      didit_session_id = params.diditSessionId,
-      didit_scores,
-      signer_name,
-      signer_dni
-    } = params;
+    const { user, profile, error: authError } = await getAuthenticatedUser(req);
+    if (authError || !user) return sendUnauthorized(res);
+    if (!requireProfile(profile)) return sendForbidden(res, 'No se encontró un perfil válido para esta cuenta.');
 
-    if (!id_firma && !id_contrato) {
-      return res.status(400).json({
-        ok: false,
-        error: 'Bad Request',
-        message: 'Debe especificar id_firma o id_contrato.'
-      });
-    }
+    const body = await readJsonBody(req);
+    const signatureId = parsePositiveInteger(body.id_firma || body.idFirma);
+    if (!signatureId) return res.status(400).json({ ok: false, error: 'Invalid signature id.' });
 
     const supabase = getSupabaseAdmin();
-
-    // 2. Obtener la Firma y datos del Contrato
-    let firma = null;
-
-    if (id_firma) {
-      const { data: fData } = await supabase.from('Firma_contrato').select(`
-        *,
-        Perfil:id_perfil_firmante (*),
-        Contrato:id_contrato (
-          *,
-          Inquilino:id_perfil_inquilino (*),
-          Propietario:id_perfil_propietario (*),
-          Propiedad (*)
-        )
-      `).eq('id_firma', Number(id_firma)).single();
-      firma = fData;
-    } else if (id_contrato) {
-      let numericContractId = Number(id_contrato);
-      if (isNaN(numericContractId)) {
-        const parsed = parseInt(String(id_contrato).replace(/\D/g, ''), 10);
-        numericContractId = !isNaN(parsed) && parsed > 0 ? parsed : null;
-      }
-
-      if (!numericContractId) {
-        return res.status(400).json({ ok: false, error: 'ID de contrato inválido.' });
-      }
-
-      const isTenant = (rol === 'TENANT' || rol === 'INQUILINO' || String(rol).toLowerCase() === 'inquilino');
-      const isGuarantor = (rol === 'GARANTE' || rol === 'GUARANTOR' || String(rol).toLowerCase() === 'garante' || String(rol).toLowerCase() === 'guarantor');
-      const dbRole = isGuarantor ? 'garante' : (isTenant ? 'inquilino' : 'propietario');
-
-      const { data: existingFirmas } = await supabase.from('Firma_contrato').select(`
-        *,
-        Perfil:id_perfil_firmante (*),
-        Contrato:id_contrato (
-          *,
-          Inquilino:id_perfil_inquilino (*),
-          Propietario:id_perfil_propietario (*),
-          Propiedad (*)
-        )
-      `).eq('id_contrato', numericContractId).in('rol_firmante', [dbRole, rol, rol.toLowerCase(), rol.toUpperCase()]).order('created_at', { ascending: false }).limit(1);
-
-      if (existingFirmas && existingFirmas.length > 0) {
-        firma = existingFirmas[0];
-      } else {
-        const { data: cData } = await supabase.from('Contrato').select(`
-          *,
-          Inquilino:id_perfil_inquilino (*),
-          Propietario:id_perfil_propietario (*),
-          Propiedad (*)
-        `).eq('id_contrato', numericContractId).maybeSingle();
-
-        if (cData) {
-          const firmanteId = dbRole === 'inquilino' 
-            ? (cData.id_perfil_inquilino || profile?.id_perfil || 15) 
-            : (dbRole === 'garante' ? (profile?.id_perfil || 14) : (cData.id_perfil_propietario || profile?.id_perfil || 6));
-
-          const { data: newFirma } = await supabase.from('Firma_contrato').insert([{
-            id_contrato: numericContractId,
-            id_perfil_firmante: firmanteId,
-            rol_firmante: dbRole,
-            estado_firma: 'iniciada',
-            didit_session_id: didit_session_id || 'didit_sess_live',
-            didit_status: 'APPROVED',
-            ip_origen: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1',
-            user_agent: req.headers['user-agent'] || 'Mozilla/5.0'
-          }]).select(`
-            *,
-            Perfil:id_perfil_firmante (*),
-            Contrato:id_contrato (
-              *,
-              Inquilino:id_perfil_inquilino (*),
-              Propietario:id_perfil_propietario (*),
-              Propiedad (*)
-            )
-          `).maybeSingle();
-
-          firma = newFirma;
-        }
-      }
+    const { data: signature, error: signatureError } = await supabase
+      .from('Firma_contrato')
+      .select('id_firma, id_contrato, id_perfil_firmante, rol_firmante, estado_firma, didit_status, didit_session_id, didit_scores, ip_origen, user_agent, url_audit_trail_pdf')
+      .eq('id_firma', signatureId)
+      .maybeSingle();
+    if (signatureError) throw signatureError;
+    if (!signature) return res.status(404).json({ ok: false, error: 'Not Found' });
+    if (Number(signature.id_perfil_firmante) !== Number(profile.id_perfil)) {
+      return sendForbidden(res, 'Solo el firmante autenticado puede completar esta firma.');
     }
 
-    if (!firma) {
-      return res.status(404).json({
-        ok: false,
-        error: 'Not Found',
-        message: 'No se encontró el contrato o registro de firma para sellar.'
-      });
+    const { contract, role, error: contractError } = await getContractForProfile(supabase, signature.id_contrato, profile.id_perfil);
+    if (contractError) throw contractError;
+    if (!contract || !role) return sendForbidden(res, 'No eres parte de este contrato.');
+    if (!approvedByDidit(signature)) {
+      return res.status(409).json({ ok: false, error: 'Verification pending.', message: 'La aprobación biométrica aún no fue confirmada por Didit.' });
     }
 
-    const contrato = firma.Contrato || {};
-    const firmante = firma.Perfil || {};
-    const propiedad = contrato.Propiedad || {};
-    const contractId = firma.id_contrato;
-    const firmaId = firma.id_firma;
+    const { data: contractDetail, error: detailError } = await supabase
+      .from('Contrato')
+      .select('*, Inquilino:id_perfil_inquilino(*), Propietario:id_perfil_propietario(*), Propiedad(*)')
+      .eq('id_contrato', signature.id_contrato)
+      .single();
+    if (detailError || !contractDetail) throw detailError || new Error('Contract not found.');
 
-    // 3. Obtener o generar el PDF del Contrato Original y calcular su Hash Base (Nivel 1)
-    let originalPdfBytes = null;
-    let originalPdfHash = contrato.hash_original_sha256 || null;
-    const originalPdfPath = `contrato_${contractId}/contrato_original.pdf`;
+    const { data: signer, error: signerError } = await supabase
+      .from('Perfil')
+      .select('id_perfil, nombre_completo, dni, mail')
+      .eq('id_perfil', profile.id_perfil)
+      .eq('user_id', user.id)
+      .single();
+    if (signerError || !signer) throw signerError || new Error('Signer profile not found.');
 
-    // Intentar recuperar el buffer original de Storage si ya existía
-    if (contrato.url_contrato_original_pdf) {
-      try {
-        const { data: downloadedBase, error: downloadErr } = await supabase.storage
-          .from('contratos_firmados')
-          .download(originalPdfPath);
-        if (!downloadErr && downloadedBase) {
-          originalPdfBytes = Buffer.from(await downloadedBase.arrayBuffer());
-          originalPdfHash = crypto.createHash('sha256').update(originalPdfBytes).digest('hex');
-        }
-      } catch (e) {
-        console.warn('[sellarHandler] Aviso al descargar PDF original de Storage:', e);
+    const contractId = Number(signature.id_contrato);
+    const originalPath = `contrato_${contractId}/contrato_original.pdf`;
+    let originalBytes;
+    let originalHash = contractDetail.hash_original_sha256 || null;
+
+    if (isSafeContractObjectPath(contractDetail.url_contrato_original_pdf, contractId)) {
+      const { data, error } = await supabase.storage.from('contratos_firmados').download(originalPath);
+      if (error || !data) throw error || new Error('Original contract file is unavailable.');
+      originalBytes = Buffer.from(await data.arrayBuffer());
+      originalHash = crypto.createHash('sha256').update(originalBytes).digest('hex');
+      if (contractDetail.hash_original_sha256 && originalHash !== contractDetail.hash_original_sha256) {
+        throw new Error('Original contract integrity check failed.');
       }
-    }
+    } else {
+      const { data: inventory } = await supabase
+        .from('Inventario_Digital')
+        .select('*, items:Detalle_Inventario_Item(*, Item:id_item(nombre), Estado_item:id_estado_item(nombre))')
+        .eq('id_contrato', contractId)
+        .maybeSingle();
 
-    // Si aún no tenemos el PDF original, generarlo y subirlo a Storage de contratos originales
-    if (!originalPdfBytes) {
-      let inventario = null;
-      try {
-        const { data: invData } = await supabase
-          .from('Inventario_Digital')
-          .select(`
-            *,
-            items:Detalle_Inventario_Item (
-              *,
-              Item:id_item (nombre),
-              Estado_item:id_estado_item (nombre)
-            )
-          `)
-          .eq('id_contrato', contractId)
-          .maybeSingle();
-        inventario = invData;
-      } catch (invErr) {
-        console.warn('[sellarHandler] Error fetching inventario:', invErr);
-      }
+      const { data: passports } = await supabase
+        .from('Pasaporte_vivat')
+        .select('id_pasaporte')
+        .eq('id_perfil', contractDetail.id_perfil_inquilino);
+      const passportIds = (passports || []).map((item) => item.id_pasaporte).filter(Boolean);
+      const { data: guarantors } = passportIds.length > 0
+        ? await supabase.from('Garante').select('*').in('id_pasaporte', passportIds)
+        : { data: [] };
 
-      let dbGarantes = [];
-      if (contrato.id_perfil_inquilino) {
-        try {
-          const { data: pasaportes } = await supabase
-            .from('Pasaporte_vivat')
-            .select('id_pasaporte')
-            .eq('id_perfil', contrato.id_perfil_inquilino);
-          
-          const pasaporteIds = (pasaportes || []).map(p => p.id_pasaporte).filter(Boolean);
-          if (pasaporteIds.length > 0) {
-            const { data: gList } = await supabase
-              .from('Garante')
-              .select('*')
-              .in('id_pasaporte', pasaporteIds);
-            if (Array.isArray(gList) && gList.length > 0) {
-              dbGarantes = gList;
-            }
-          }
-        } catch (gErr) {
-          console.warn('[sellarHandler] Error consultando garantes en BD:', gErr);
-        }
-      }
-
-      originalPdfBytes = await generateOriginalContractPdf({
+      originalBytes = await generateOriginalContractPdf({
         contractId,
-        contrato,
-        propiedad,
-        inquilino: contrato.Inquilino || {},
-        propietario: contrato.Propietario || {},
-        garantes: dbGarantes,
-        inventario
+        contrato: contractDetail,
+        propiedad: contractDetail.Propiedad || {},
+        inquilino: contractDetail.Inquilino || {},
+        propietario: contractDetail.Propietario || {},
+        garantes: guarantors || [],
+        inventario: inventory || null
       });
-
-      originalPdfHash = crypto.createHash('sha256').update(originalPdfBytes).digest('hex');
-
-      try {
-        await supabase.storage
-          .from('contratos_firmados')
-          .upload(originalPdfPath, originalPdfBytes, {
-            contentType: 'application/pdf',
-            upsert: true
-          });
-      } catch (upOrigErr) {
-        console.warn('[sellarHandler] Aviso subiendo contrato original a Storage:', upOrigErr);
-      }
-
-      // Actualizar Contrato con la referencia del contrato original congelado
-      const { error: dbErr1 } = await supabase
+      originalHash = crypto.createHash('sha256').update(originalBytes).digest('hex');
+      const { error: uploadError } = await supabase.storage.from('contratos_firmados').upload(originalPath, originalBytes, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+      if (uploadError) throw uploadError;
+      const { error: updateError } = await supabase
         .from('Contrato')
-        .update({
-          hash_original_sha256: originalPdfHash,
-          url_contrato_original_pdf: originalPdfPath
-        })
-        .eq('id_contrato', contractId);
-      if (dbErr1) console.error('[sellarHandler] Error updating Contrato (original):', dbErr1);
+        .update({ hash_original_sha256: originalHash, url_contrato_original_pdf: originalPath })
+        .eq('id_contrato', contractId)
+        .is('hash_original_sha256', null);
+      if (updateError) throw updateError;
     }
 
-    // 4. Generar el PDF del Audit Trail Forense (Solo Audit Trail)
-    let auditTrailResult;
-    try {
-      auditTrailResult = await generateAuditTrailPdf({
-        contractId,
-        firmaId,
-        propiedad,
-        rol: firma.rol_firmante || rol,
-        signerName: signer_name || firmante.nombre_completo || (['garante', 'guarantor', 'GARANTE', 'GUARANTOR'].includes(firma.rol_firmante || rol) ? 'Garante Titular' : (rol === 'OWNER' ? 'Propietario Titular' : 'Inquilino Titular')),
-        signerDni: signer_dni || firmante.dni || 'Validado por Didit KYC',
-        email: firmante.mail || '-',
-        ip: firma.ip_origen || req.headers['x-forwarded-for'] || '127.0.0.1',
-        userAgent: firma.user_agent || req.headers['user-agent'] || 'Mozilla/5.0',
-        diditSessionId: firma.didit_session_id || didit_session_id || 'didit_sess_live',
-        diditScores: firma.didit_scores || didit_scores || { face_match_score: 98.4, liveness: 'PASSED' },
-        originalPdfHash
-      });
-    } catch (pdfErr) {
-      console.warn('[sellarHandler] Error generando Audit Trail con pdf-lib:', pdfErr);
-      throw pdfErr;
-    }
+    const audit = await generateAuditTrailPdf({
+      contractId,
+      firmaId: signature.id_firma,
+      propiedad: contractDetail.Propiedad || {},
+      rol: signature.rol_firmante,
+      signerName: signer.nombre_completo || 'Firmante verificado',
+      signerDni: signer.dni || 'Verificado por Didit',
+      email: signer.mail || '-',
+      ip: signature.ip_origen || 'No disponible',
+      userAgent: signature.user_agent || 'No disponible',
+      diditSessionId: signature.didit_session_id,
+      diditScores: signature.didit_scores || {},
+      originalPdfHash: originalHash
+    });
 
-    const { auditTrailBytes, auditTrailHash } = auditTrailResult;
+    // This is deliberately a real external dependency. A locally fabricated
+    // JSON object is not an RFC 3161 timestamp and must never be presented as one.
+    const timestamp = await issueTrustedTimestamp(audit.auditTrailHash);
+    const auditPath = `contrato_${contractId}/audit_trail_firma_${signature.id_firma}.pdf`;
+    const { error: auditUploadError } = await supabase.storage.from('contratos_firmados').upload(auditPath, audit.auditTrailBytes, {
+      contentType: 'application/pdf',
+      upsert: false
+    });
+    if (auditUploadError) throw auditUploadError;
 
-    // 5. Generar token de Sello de Tiempo TSA (RFC 3161) sobre el Hash del Audit Trail
-    const tsaSerialNumber = `TSA-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-    const tsaProvider = process.env.TSA_SERVER_NAME || 'Autoridad de Sellado de Tiempo (TSA RFC 3161 Argentina)';
-    const tsaTokenPayload = {
-      status: 'GRANTED',
-      authority: tsaProvider,
-      policy: '1.3.6.1.4.1.50000.1.1.RFC3161',
-      serialNumber: tsaSerialNumber,
-      hashAlgorithm: 'SHA-256',
-      hashContratoOriginal: originalPdfHash,
-      hashedMessage: auditTrailHash,
-      genTimeUTC: new Date().toISOString(),
-      timeZone: 'America/Argentina/Buenos_Aires (UTC-3)'
-    };
-
-    // 6. Subir el Audit Trail a Supabase Storage (Bucket 'contratos_firmados')
-    const auditTrailPdfPath = `contrato_${contractId}/audit_trail_firma_${firmaId}.pdf`;
-    try {
-      await supabase.storage
-        .from('contratos_firmados')
-        .upload(auditTrailPdfPath, auditTrailBytes, {
-          contentType: 'application/pdf',
-          upsert: true
-        });
-    } catch (uploadErr) {
-      console.warn('[sellarHandler] Aviso subiendo a Storage contratos_firmados:', uploadErr);
-    }
-
-    // 7. Actualizar Firma_contrato y Contrato en la Base de Datos
-    const { data: firmaActualizada, error: errUpdate } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('Firma_contrato')
       .update({
         estado_firma: 'sellada',
-        hash_original_sha256: originalPdfHash,
-        hash_audit_trail_sha256: auditTrailHash,
-        hash_contrato_sha256: null,
-        tsa_sello_tiempo: tsaTokenPayload,
-        url_audit_trail_pdf: auditTrailPdfPath,
-        url_contrato_final_pdf: null,
+        hash_original_sha256: originalHash,
+        hash_audit_trail_sha256: audit.auditTrailHash,
+        tsa_sello_tiempo: timestamp,
+        url_audit_trail_pdf: auditPath,
         fecha_firma: new Date().toISOString()
       })
-      .eq('id_firma', firmaId)
-      .select()
-      .maybeSingle();
+      .eq('id_firma', signature.id_firma)
+      .eq('estado_firma', 'biometria_aprobada')
+      .select('id_firma, id_contrato, estado_firma, hash_original_sha256, hash_audit_trail_sha256, url_audit_trail_pdf, fecha_firma')
+      .single();
+    if (updateError) throw updateError;
 
-    if (errUpdate) {
-      console.error('[Error actualizando Firma_contrato con sellado]:', errUpdate);
-    }
-
-    const { error: dbErr2 } = await supabase
-      .from('Contrato')
-      .update({
-        hash_original_sha256: originalPdfHash,
-        url_contrato_original_pdf: originalPdfPath
-      })
-      .eq('id_contrato', contractId);
-    if (dbErr2) console.error('[sellarHandler] Error updating Contrato (final original update):', dbErr2);
-
-    return res.status(200).json({
-      ok: true,
-      message: 'Audit Trail generado y firmado criptográficamente con éxito.',
-      data: {
-        id_firma: firmaId,
-        id_contrato: contractId,
-        estado_firma: 'sellada',
-        hash_original_sha256: originalPdfHash,
-        hash_audit_trail_sha256: auditTrailHash,
-        url_contrato_original_pdf: originalPdfPath,
-        url_audit_trail_pdf: auditTrailPdfPath,
-        tsa_sello_tiempo: tsaTokenPayload,
-        fecha_firma: (firmaActualizada && firmaActualizada.fecha_firma) || new Date().toISOString()
-      }
-    });
-
+    return res.status(200).json({ ok: true, data: updated });
   } catch (error) {
-    console.error('[Server Error in services/firmas/sellar]:', error);
-    return res.status(500).json({
-      ok: false,
-      error: 'Internal Server Error',
-      message: error.message
-    });
+    if (String(error?.message || '').includes('trusted TSA gateway')) {
+      return res.status(503).json({ ok: false, error: 'Trusted timestamp service unavailable.' });
+    }
+    return sendInternalError(res, 'firmas/sellar', error);
   }
 }

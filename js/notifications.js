@@ -332,25 +332,10 @@
             // Registrar en memoria de procesados para deduplicación
             this._processedNotifIds.add(newNotif.id);
 
-            // 0. Guardar en DB asincrónicamente
-            if (window.supabaseClient) {
-                window.supabaseClient.from('Notificacion').insert({
-                    id_notificacion: newNotif.id,
-                    titulo: newNotif.title,
-                    mensaje: newNotif.message,
-                    tipo: newNotif.type,
-                    icono: newNotif.icon,
-                    enlace: newNotif.link,
-                    rol_destino: newNotif.role,
-                    rol_emisor: newNotif.senderRole,
-                    id_perfil_emisor: newNotif.senderProfileId,
-                    id_perfil_destino: newNotif.targetProfileId,
-                    leida: false,
-                    creado_en: newNotif.createdAt
-                }).then(({ error }) => {
-                    if (error) console.error('[Notificaciones] Error al guardar en DB:', error);
-                });
-            }
+            // A browser must not be able to forge a notification, select an
+            // arbitrary recipient, or impersonate its sender. Durable and
+            // cross-device notifications are created by trusted server flows;
+            // this client notification remains local/realtime only.
 
             // 1. Enviar vía BroadcastChannel para otras pestañas abiertas
             if (broadcastChannel) {
@@ -1045,27 +1030,25 @@
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
                 if (!session) return;
                 
-                let query = window.supabaseClient.from('Notificacion').select('*');
-                
-                let uLocal = {};
-                try {
-                    uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                } catch (e) {}
-                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-                const currentRole = getActiveUserRole();
-                
-                let orConditions = `rol_destino.eq.ALL`;
-                if (currentRole === 'OWNER' || currentRole === 'BROKER') {
-                    orConditions += `,rol_destino.eq.OWNER,rol_destino.eq.BROKER`;
-                } else if (currentRole === 'TENANT') {
-                    orConditions += `,rol_destino.eq.TENANT`;
-                }
-                
-                if (myProfileId) {
-                    orConditions += `,id_perfil_destino.eq.${myProfileId}`;
-                }
+                const { data: authData } = await window.supabaseClient.auth.getUser();
+                const authUser = authData?.user;
+                if (!authUser) return;
+                const { data: profile, error: profileError } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .eq('user_id', authUser.id)
+                    .maybeSingle();
+                if (profileError || !profile?.id_perfil) return;
 
-                query = query.or(orConditions).order('creado_en', { ascending: false }).limit(40);
+                // Never derive authorization from a mutable role or localStorage.
+                // Backend jobs must fan out broad announcements to individual
+                // recipients before saving them.
+                const query = window.supabaseClient
+                    .from('Notificacion')
+                    .select('*')
+                    .eq('id_perfil_destino', profile.id_perfil)
+                    .order('creado_en', { ascending: false })
+                    .limit(40);
                 
                 const { data, error } = await query;
 
@@ -1101,7 +1084,9 @@
                             targetProfileId: dbn.id_perfil_destino
                         };
                         
-                        if (!isTargetRecipient(localFormat)) return;
+                        // Authorization was enforced by the authenticated
+                        // profile filter above (and again by RLS). Do not let
+                        // mutable local role state hide or reclassify it.
                         const idx = allStored.findIndex(n => n.id === localFormat.id);
                         if (idx >= 0) {
                             if (allStored[idx].read !== localFormat.read) {
