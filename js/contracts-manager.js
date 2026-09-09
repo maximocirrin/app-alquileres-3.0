@@ -3258,10 +3258,17 @@
             }
 
             container.innerHTML = `
+                <style>
+                    @media (min-width: 1024px) {
+                        .chat-desktop-flex { display: flex !important; }
+                        .chat-desktop-static { position: static !important; inset: auto !important; }
+                        .chat-desktop-hidden { display: none !important; }
+                    }
+                </style>
                 <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col lg:flex-row h-[calc(100dvh-160px)] min-h-[400px] lg:h-[720px] lg:max-h-[82vh] font-body">
                     
                     <!-- Left Sidebar: Conversations List -->
-                    <aside class="w-full h-full overflow-hidden lg:w-96 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-800 flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 ${ContractsManager._mobileChatVisible ? 'hidden lg:flex' : 'flex'}">
+                    <aside class="w-full h-full overflow-hidden lg:w-96 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-800 flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 ${ContractsManager._mobileChatVisible ? 'hidden chat-desktop-flex' : 'flex'}">
                         <!-- Sidebar Header -->
                         <div class="p-4 border-b border-zinc-200/80 dark:border-zinc-800 space-y-3">
                             <div class="flex items-center justify-between">
@@ -3384,12 +3391,12 @@
                     </aside>
 
                     <!-- Right Pane: Active Live Chat Window -->
-                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 bottom-0 top-[64px] z-[999] lg:static lg:inset-auto lg:z-auto' : 'hidden lg:flex'}">
+                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 bottom-0 top-[64px] z-[999] chat-desktop-static' : 'hidden chat-desktop-flex'}">
                         
                         <!-- Chat Window Header -->
                         <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
                             <div class="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
-                                <button type="button" onclick="ContractsManager._mobileChatVisible = false; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' }); event.stopPropagation();" class="lg:hidden w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shrink-0">
+                                <button type="button" onclick="ContractsManager._mobileChatVisible = false; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' }); event.stopPropagation();" class="chat-desktop-hidden w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shrink-0">
                                     <span class="material-symbols-outlined">arrow_back</span>
                                 </button>
                                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-primary/10 text-primary dark:text-red-400 flex items-center justify-center shrink-0 border border-primary/20">
