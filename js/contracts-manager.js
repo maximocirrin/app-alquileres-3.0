@@ -625,17 +625,17 @@
             try {
                 const { data: gList, error: gErr } = await window.supabaseClient
                     .from('Garante')
-                    .select('*, Pasaporte_habitat:Pasaporte_habitat!fk_garante_pasaporte(*)');
+                    .select('*, Pasaporte_vivat:Pasaporte_vivat!fk_garante_pasaporte(*)');
                 if (!gErr && Array.isArray(gList) && gList.length > 0) {
                     dbGarantes = gList;
                 } else {
                     // Fallback directo: consultar tablas por separado para garantizar compatibilidad total
                     const { data: rawG } = await window.supabaseClient.from('Garante').select('*');
-                    const { data: rawP } = await window.supabaseClient.from('Pasaporte_habitat').select('id_pasaporte, id_perfil');
+                    const { data: rawP } = await window.supabaseClient.from('Pasaporte_vivat').select('id_pasaporte, id_perfil');
                     const pMap = new Map((rawP || []).map(p => [p.id_pasaporte, p]));
                     dbGarantes = (rawG || []).map(g => ({
                         ...g,
-                        Pasaporte_habitat: pMap.get(g.id_pasaporte) || null
+                        Pasaporte_vivat: pMap.get(g.id_pasaporte) || null
                     }));
                 }
             } catch (e) {
@@ -692,7 +692,7 @@
                     let contractGuarantors = [];
                     if (dbGarantes && dbGarantes.length > 0) {
                         const matchingG = dbGarantes.filter(g => {
-                            const p = g.Pasaporte_habitat;
+                            const p = g.Pasaporte_vivat;
                             const pPerfilId = p ? (Array.isArray(p) ? p[0]?.id_perfil : p.id_perfil) : null;
                             const matchesTenant = (pPerfilId && Number(pPerfilId) === Number(finalTenantProfileId)) ||
                                                   (g.id_perfil && Number(g.id_perfil) === Number(finalTenantProfileId));
@@ -1058,7 +1058,7 @@
                 try {
                     // 1. Obtener pasaportes del inquilino en Supabase
                     const { data: passList } = await window.supabaseClient
-                        .from('Pasaporte_habitat')
+                        .from('Pasaporte_vivat')
                         .select('id_pasaporte')
                         .eq('id_perfil', tenantProfileId);
                     
@@ -3493,7 +3493,7 @@
                     </aside>
 
                     <!-- Right Pane: Active Live Chat Window -->
-                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-0 z-[999] lg:static lg:inset-auto lg:z-auto' : 'hidden lg:flex'}">
+                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 bottom-0 top-[64px] z-[999] lg:static lg:inset-auto lg:z-auto' : 'hidden lg:flex'}">
                         
                         <!-- Chat Window Header -->
                         <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
@@ -3868,7 +3868,7 @@
                                     const { data: pData } = await window.supabaseClient
                                         .from('Perfil')
                                         .select('id_perfil')
-                                        .eq('id_usuario', authData.user.id)
+                                        .eq('user_id', authData.user.id)
                                         .maybeSingle();
                                     if (pData && pData.id_perfil) {
                                         currentProfileId = pData.id_perfil;
@@ -4239,7 +4239,6 @@
 
                         if (role === 'TENANT') {
                             window.NotificationManager.createNotification({
-                                id: `notif_firma_tenant_${cidNum}`,
                                 title: '✍️ ¡El inquilino firmó el contrato!',
                                 message: `${c.tenant.name} completó su validación biométrica y firmó el contrato para "${c.title}". Ahora es tu turno de firmar como propietario.`,
                                 type: 'contract',
@@ -4252,7 +4251,6 @@
                             });
                         } else {
                             window.NotificationManager.createNotification({
-                                id: `notif_firma_owner_${cidNum}`,
                                 title: '✍️ ¡El propietario firmó el contrato!',
                                 message: `${c.owner.name} firmó y selló el contrato para "${c.title}". El contrato de locación se encuentra 100% perfeccionado.`,
                                 type: 'contract',

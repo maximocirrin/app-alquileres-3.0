@@ -212,7 +212,7 @@
                         if (data.id_pasaporte) {
                             try {
                                 const { data: pass } = await window.supabaseClient
-                                    .from('Pasaporte_habitat')
+                                    .from('Pasaporte_vivat')
                                     .select('id_pasaporte, id_perfil, razon_social, Perfil(id_perfil, nombre_completo, mail, telefono)')
                                     .eq('id_pasaporte', data.id_pasaporte)
                                     .maybeSingle();
@@ -310,7 +310,7 @@
 
                 if (!pId && userProfile && userProfile.id_perfil) {
                     const { data: pass } = await window.supabaseClient
-                        .from('Pasaporte_habitat')
+                        .from('Pasaporte_vivat')
                         .select('id_pasaporte')
                         .eq('id_perfil', userProfile.id_perfil)
                         .order('created_at', { ascending: false })
@@ -399,7 +399,7 @@
                             if (passIds.length > 0) {
                                 try {
                                     const { data: passList } = await window.supabaseClient
-                                        .from('Pasaporte_habitat')
+                                        .from('Pasaporte_vivat')
                                         .select('id_pasaporte, id_perfil, razon_social, Perfil(id_perfil, nombre_completo, mail, telefono, dni)')
                                         .in('id_pasaporte', passIds);
 
@@ -537,7 +537,7 @@
 
                         if (targetProfileId) {
                             const { data: pasaportes } = await window.supabaseClient
-                                .from('Pasaporte_habitat')
+                                .from('Pasaporte_vivat')
                                 .select('id_pasaporte')
                                 .eq('id_perfil', targetProfileId)
                                 .order('created_at', { ascending: false })
@@ -671,7 +671,7 @@
 
                         if (targetProfileId) {
                             const { data: pasaportes } = await window.supabaseClient
-                                .from('Pasaporte_habitat')
+                                .from('Pasaporte_vivat')
                                 .select('id_pasaporte')
                                 .eq('id_perfil', targetProfileId)
                                 .order('created_at', { ascending: false })
@@ -1584,12 +1584,12 @@
                     if (session?.user) {
                         const { data: p } = await window.supabaseClient
                             .from('Perfil')
-                            .select('id_perfil, nombre_completo, dni, mail, telefono, Pasaporte_habitat(*)')
+                            .select('id_perfil, nombre_completo, dni, mail, telefono, Pasaporte_vivat(*)')
                             .eq('user_id', session.user.id)
                             .maybeSingle();
                         if (p) {
                             userProfile = p;
-                            const passList = p.Pasaporte_habitat;
+                            const passList = p.Pasaporte_vivat;
                             userPassport = Array.isArray(passList) ? passList[0] : passList;
                             if (p.nombre_completo && (!garante.nombre_completo || garante.nombre_completo === 'Garante')) {
                                 garante.nombre_completo = p.nombre_completo;
@@ -2112,13 +2112,13 @@
                         if (session?.user) {
                             const { data: perfil } = await window.supabaseClient
                                 .from('Perfil')
-                                .select('id_perfil, dni, nombre_completo, Pasaporte_habitat(id_pasaporte)')
+                                .select('id_perfil, dni, nombre_completo, Pasaporte_vivat(id_pasaporte)')
                                 .eq('user_id', session.user.id)
                                 .maybeSingle();
                             if (perfil) {
                                 if (perfil.dni) updatePayload.dni = perfil.dni;
                                 if (perfil.nombre_completo) updatePayload.nombre_completo = perfil.nombre_completo;
-                                const userPass = perfil.Pasaporte_habitat;
+                                const userPass = perfil.Pasaporte_vivat;
                                 const userPassId = Array.isArray(userPass) ? userPass[0]?.id_pasaporte : userPass?.id_pasaporte;
                                 if (userPassId) {
                                     updatePayload.id_pasaporte_garante = userPassId;
