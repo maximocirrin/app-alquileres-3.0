@@ -408,18 +408,18 @@
                     AVISOS</span>
             </button>
 
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')"
+                class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer text-primary dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">payments</span>
+                <span>Alquileres</span>
+            </button>
+
             <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')"
                 class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <span class="material-symbols-outlined text-lg text-amber-500">how_to_reg</span>
                 <span>Candidatos & Visitas</span>
                 <span id="broker-badge-top-apps"
                     class="px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-white">0</span>
-            </button>
-
-            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')"
-                class="broker-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer text-primary dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <span class="material-symbols-outlined text-lg">payments</span>
-                <span>Alquileres</span>
             </button>
 
             <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')"
@@ -954,7 +954,12 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 3: CANDIDATOS & VISITAS (CONSOLIDA POSTULACIONES + CALENDARIO Y OPERACIONES) -->
+            <!-- PESTAÑA 3: ALQUILERES & COBROS (CONSOLIDADOS) -->
+            <div id="panel-content-alquileres" class="tab-content space-y-6">
+                <div id="broker-container-active-rental" class="space-y-6"></div>
+            </div>
+
+            <!-- PESTAÑA 4: CANDIDATOS & VISITAS (CONSOLIDA POSTULACIONES + CALENDARIO Y OPERACIONES) -->
             <div id="panel-content-candidatos" class="tab-content space-y-6">
                 <!-- Sub-Navbar Píldoras para Candidatos & Visitas -->
                 <div
@@ -1225,10 +1230,7 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 4: ALQUILERES & COBROS (CONSOLIDADOS) -->
-            <div id="panel-content-alquileres" class="tab-content space-y-6">
-                <div id="broker-container-active-rental" class="space-y-6"></div>
-            </div>
+
 
             <!-- PESTAÑA 5: MENSAJES & NEGOCIACIÓN CHAT -->
             <div id="panel-content-chat-negociacion" class="tab-content space-y-6">
@@ -1256,15 +1258,15 @@
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Cartera</span>
             </button>
 
+            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-primary dark:text-red-400 font-bold hover:text-primary-hover dark:hover:text-red-300 transition-colors cursor-pointer text-center" title="Alquileres Activos">
+                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">payments</span>
+                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Alquileres</span>
+            </button>
+
             <button data-tab="candidatos" onclick="switchBrokerTab('candidatos')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Candidatos & Visitas">
                 <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">how_to_reg</span>
                 <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Candidatos</span>
                 <span id="broker-badge-dock-apps" class="absolute top-1 right-1 lg:top-1.5 lg:right-3 w-2 h-2 rounded-full bg-amber-500"></span>
-            </button>
-
-            <button data-tab="alquileres" onclick="switchBrokerTab('alquileres')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-primary dark:text-red-400 font-bold hover:text-primary-hover dark:hover:text-red-300 transition-colors cursor-pointer text-center" title="Alquileres Activos">
-                <span class="material-symbols-outlined text-lg sm:text-xl lg:text-2xl">payments</span>
-                <span class="text-[9px] sm:text-[10px] lg:text-[11px] truncate w-full leading-tight font-bold tracking-tight">Alquileres</span>
             </button>
 
             <button data-tab="chat-negociacion" onclick="switchBrokerTab('chat-negociacion')" class="broker-dock-btn relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-1 sm:py-1.5 sm:px-2 rounded-full text-zinc-500 dark:text-zinc-400 font-medium transition-colors cursor-pointer text-center" title="Mensajes & Chat">
@@ -2226,6 +2228,10 @@
                 if (window.ContractsManager && typeof window.ContractsManager.renderEmbeddedChat === 'function') {
                     window.ContractsManager.renderEmbeddedChat('broker-chat-section-container', { role: 'BROKER' });
                 }
+            }
+
+            if (normalizedTab !== 'chat-negociacion' && window.ContractsManager) {
+                window.ContractsManager.resetMobileChatState?.();
             }
 
             if (window.location.hash.replace('#', '') !== normalizedTab) {

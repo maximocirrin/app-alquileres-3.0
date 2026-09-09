@@ -2293,7 +2293,8 @@ var DataManager = {
                     ),
                     Inquilino:Perfil!id_perfil_inquilino (*),
                     Propietario:Perfil!id_perfil_propietario (*),
-                    Firma_contrato (*)
+                    Firma_contrato (*),
+                    Historial_Estado_Contrato (*)
                 `)
                 .order('id_contrato', { ascending: false })
                 .eq('id_perfil_propietario', profileId);
@@ -2365,6 +2366,23 @@ var DataManager = {
                     const aliasFromDb = item.alias_cbu || extraClauses.aliasCbu || 'VIVAT.ALQUILER.MP';
                     const rentFromDb = Number(item.monto_cierre || extraClauses.monthlyRent || pub?.precio || 450000);
 
+                    // Detectar historial y finalización
+                    const histList = Array.isArray(item.Historial_Estado_Contrato) ? item.Historial_Estado_Contrato : [];
+                    const latestHist = histList.slice().sort((a, b) => (Number(b.id_historial_contrato) || 0) - (Number(a.id_historial_contrato) || 0))[0];
+                    const idEstadoContrato = latestHist ? Number(latestHist.id_estado_contrato) : Number(extraClauses.id_estado_contrato || (status === 'SIGNED_AND_SEALED' ? 1 : 5));
+
+                    const isFinalized = Boolean(
+                        idEstadoContrato === 2 ||
+                        idEstadoContrato === 3 ||
+                        extraClauses.is_finalized ||
+                        extraClauses.status === 'finalizado' ||
+                        item.status === 'finalizado'
+                    );
+
+                    if (isFinalized) {
+                        status = 'finalizado';
+                    }
+
                     return {
                         id: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
@@ -2393,12 +2411,10 @@ var DataManager = {
                         adjustment_frequency_months: freqFromDb,
                         paymentDueDay: dueDayFromDb,
                         payment_due_day: dueDayFromDb,
-                        payment_due_day: dueDayFromDb,
                         aliasCbu: aliasFromDb,
                         alias_cbu: aliasFromDb,
                         cbu_alias: aliasFromDb,
                         expenses_amount: Number(prop.expensas_mensuales || 0),
-                        payment_due_day: dueDayFromDb,
                         punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
                         broker_commission_percent: 4.15,
                         start_date: item.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
@@ -2414,6 +2430,13 @@ var DataManager = {
                         tenant_has_signed: tenantFirmado,
                         owner_has_signed: ownerFirmado,
                         status: status,
+                        id_estado_contrato: isFinalized ? 2 : idEstadoContrato,
+                        is_finalized: isFinalized,
+                        isFinalized: isFinalized,
+                        finalized_at: extraClauses.finalized_at || (isFinalized ? (item.fecha_fin_contrato || latestHist?.fecha_inicio || null) : null),
+                        termination_reason: extraClauses.termination_reason || null,
+                        termination_notes: extraClauses.termination_notes || null,
+                        deposit_status: extraClauses.deposit_status || (item.deposito_devuelto ? 'devuelto_total' : null),
                         url_contrato_final_pdf: item.url_contrato_final_pdf || null,
                         url_contrato_original_pdf: item.url_contrato_original_pdf || null,
                         hash_original_sha256: item.hash_original_sha256 || null,
@@ -2462,10 +2485,20 @@ var DataManager = {
                     if (c && c.id) {
                         if (mergedMap.has(String(c.id))) {
                             const local = mergedMap.get(String(c.id)) || {};
+                            const localFinalized = Boolean(local.is_finalized || local.isFinalized || local.status === 'finalizado' || local.id_estado_contrato === 2);
+                            const finalIsFinalized = c.is_finalized || localFinalized;
                             const mergedItem = {
                                 ...local,
                                 ...c,
                                 dbContractId: c.dbContractId,
+                                is_finalized: finalIsFinalized,
+                                isFinalized: finalIsFinalized,
+                                status: finalIsFinalized ? 'finalizado' : (c.status || local.status),
+                                id_estado_contrato: finalIsFinalized ? 2 : (c.id_estado_contrato || local.id_estado_contrato),
+                                finalized_at: c.finalized_at || local.finalized_at || null,
+                                termination_reason: c.termination_reason || local.termination_reason || null,
+                                termination_notes: c.termination_notes || local.termination_notes || null,
+                                deposit_status: c.deposit_status || local.deposit_status || null,
                                 clauses: (c.clauses && Object.keys(c.clauses).length > 0) ? c.clauses : (local.clauses || local.clausulas_adicionales || {}),
                                 customClauses: (c.customClauses && c.customClauses.length > 0) ? c.customClauses : (local.customClauses || []),
                                 activeClausesList: (c.activeClausesList && c.activeClausesList.length > 0) ? c.activeClausesList : (local.activeClausesList || []),
@@ -2484,10 +2517,12 @@ var DataManager = {
                     }
                 });
 
-                // Deduplicar por propiedad física priorizando contratos firmados y más recientes
-                const propSeen = new Set();
                 const uniqueOwnerContracts = [];
+                const seenContractIds = new Set();
                 const sortedContracts = Array.from(mergedMap.values()).sort((a, b) => {
+                    const aFinalized = Boolean(a.is_finalized || a.status === 'finalizado') ? 1 : 0;
+                    const bFinalized = Boolean(b.is_finalized || b.status === 'finalizado') ? 1 : 0;
+                    if (aFinalized !== bFinalized) return aFinalized - bFinalized; // Activos primero
                     const aSigned = a.status === 'SIGNED_AND_SEALED' || a.tenant_has_signed || a.owner_has_signed ? 1 : 0;
                     const bSigned = b.status === 'SIGNED_AND_SEALED' || b.tenant_has_signed || b.owner_has_signed ? 1 : 0;
                     if (bSigned !== aSigned) return bSigned - aSigned;
@@ -2495,11 +2530,9 @@ var DataManager = {
                 });
 
                 for (const c of sortedContracts) {
-                    const pKey = String(c.property_id || c.propertyId || c.id_propiedad || '');
-                    if (pKey && propSeen.has(pKey)) {
-                        continue;
-                    }
-                    if (pKey) propSeen.add(pKey);
+                    const cKey = String(c.id || c.dbContractId || '');
+                    if (cKey && seenContractIds.has(cKey)) continue;
+                    if (cKey) seenContractIds.add(cKey);
                     uniqueOwnerContracts.push(c);
                 }
                 return uniqueOwnerContracts;
@@ -2508,7 +2541,284 @@ var DataManager = {
             console.error("Error in getOwnerContracts:", e);
         }
 
-        return contractsList;
+        // Si no hubo datos de supabase o falló, normalizar lista local
+        return (contractsList || []).map(c => {
+            const isFin = Boolean(c.is_finalized || c.isFinalized || c.status === 'finalizado' || c.id_estado_contrato === 2);
+            return {
+                ...c,
+                is_finalized: isFin,
+                isFinalized: isFin,
+                status: isFin ? 'finalizado' : (c.status || 'SIGNED_AND_SEALED'),
+                        id_estado_contrato: isFin ? 2 : (c.id_estado_contrato || 1)
+            };
+        });
+    },
+
+    finalizeRental: async function (contractId, details = {}) {
+        try {
+            const now = new Date();
+            const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const terminationDate = details.fecha_fin || todayLocal;
+            const reason = details.motivo || 'Cumplimiento regular de contrato';
+            const depositStatus = details.deposito_estado || 'devuelto_total';
+            const notes = details.observaciones || '';
+
+            let numericDbId = null;
+            if (typeof contractId === 'number') numericDbId = contractId;
+            else if (typeof contractId === 'string') {
+                const match = contractId.match(/\d+/g);
+                if (match) numericDbId = parseInt(match[match.length - 1], 10);
+            }
+
+            let propertyId = null;
+
+            // 1. Supabase
+            if (window.supabaseClient && numericDbId) {
+                try {
+                    const { data: currentContract } = await window.supabaseClient
+                        .from('Contrato')
+                        .select('id_contrato, id_propiedad, clausulas_adicionales')
+                        .eq('id_contrato', numericDbId)
+                        .maybeSingle();
+
+                    if (currentContract) {
+                        propertyId = currentContract.id_propiedad;
+                        let extra = currentContract.clausulas_adicionales || {};
+                        if (typeof extra === 'string') {
+                            try { extra = JSON.parse(extra); } catch (e) { extra = {}; }
+                        }
+                        const updatedClauses = {
+                            ...extra,
+                            is_finalized: true,
+                            finalized_at: terminationDate,
+                            termination_reason: reason,
+                            termination_notes: notes,
+                            deposit_status: depositStatus,
+                            id_estado_contrato: 2
+                        };
+
+                        await window.supabaseClient
+                            .from('Contrato')
+                            .update({
+                                fecha_fin_contrato: terminationDate,
+                                clausulas_adicionales: updatedClauses,
+                                deposito_devuelto: depositStatus === 'devuelto_total'
+                            })
+                            .eq('id_contrato', numericDbId);
+
+                        // Cerrar registros anteriores en Historial_Estado_Contrato
+                        const { data: activeHist } = await window.supabaseClient
+                            .from('Historial_Estado_Contrato')
+                            .select('id_historial_contrato')
+                            .eq('id_contrato', numericDbId)
+                            .is('fecha_fin', null);
+
+                        if (Array.isArray(activeHist)) {
+                            for (const h of activeHist) {
+                                await window.supabaseClient
+                                    .from('Historial_Estado_Contrato')
+                                    .update({ fecha_fin: new Date().toISOString() })
+                                    .eq('id_historial_contrato', h.id_historial_contrato);
+                            }
+                        }
+
+                        // Insertar nuevo registro con estado 2 (finalizado)
+                        await window.supabaseClient
+                            .from('Historial_Estado_Contrato')
+                            .insert([{
+                                id_contrato: numericDbId,
+                                id_estado_contrato: 2,
+                                fecha_inicio: new Date().toISOString()
+                            }]);
+
+                        // Si hay propiedad asociada, cerrar su estado actual y pasarla a Disponible (2)
+                        if (propertyId) {
+                            try {
+                                const { data: propHists } = await window.supabaseClient
+                                    .from('Historial_estado_propiedad')
+                                    .select('id_historial_estado_propiedad')
+                                    .eq('id_propiedad', propertyId)
+                                    .is('fecha_fin', null);
+
+                                if (Array.isArray(propHists)) {
+                                    for (const ph of propHists) {
+                                        await window.supabaseClient
+                                            .from('Historial_estado_propiedad')
+                                            .update({ fecha_fin: new Date().toISOString() })
+                                            .eq('id_historial_estado_propiedad', ph.id_historial_estado_propiedad);
+                                    }
+                                }
+
+                                await window.supabaseClient
+                                    .from('Historial_estado_propiedad')
+                                    .insert([{
+                                        id_propiedad: propertyId,
+                                        id_estado_propiedad: 2, // Disponible
+                                        fecha_inicio: new Date().toISOString()
+                                    }]);
+                            } catch (pe) {
+                                console.warn("Aviso al actualizar Historial_estado_propiedad:", pe);
+                            }
+                        }
+                    }
+                } catch (dbErr) {
+                    console.warn("Aviso al actualizar Supabase para finalizar contrato:", dbErr);
+                }
+            }
+
+            // 2. localStorage
+            try {
+                let local = JSON.parse(localStorage.getItem('vivat_contracts') || '[]');
+                let found = false;
+                local = local.map(c => {
+                    const cNum = (c.id || '').match(/\d+/g);
+                    const matchNumeric = cNum && numericDbId && parseInt(cNum[cNum.length - 1], 10) === numericDbId;
+                    if (c.id === contractId || String(c.dbContractId) === String(contractId) || matchNumeric) {
+                        found = true;
+                        return {
+                            ...c,
+                            is_finalized: true,
+                            isFinalized: true,
+                            status: 'finalizado',
+                            id_estado_contrato: 2,
+                            finalized_at: terminationDate,
+                            fecha_fin: terminationDate,
+                            fecha_fin_contrato: terminationDate,
+                            termination_reason: reason,
+                            termination_notes: notes,
+                            deposit_status: depositStatus,
+                            clausulas_adicionales: {
+                                ...(c.clausulas_adicionales || {}),
+                                is_finalized: true,
+                                finalized_at: terminationDate,
+                                termination_reason: reason,
+                                termination_notes: notes,
+                                deposit_status: depositStatus
+                            }
+                        };
+                    }
+                    return c;
+                });
+
+                if (!found && contractId) {
+                    local.push({
+                        id: String(contractId),
+                        dbContractId: numericDbId,
+                        is_finalized: true,
+                        isFinalized: true,
+                        status: 'finalizado',
+                        id_estado_contrato: 2,
+                        finalized_at: terminationDate,
+                        termination_reason: reason,
+                        termination_notes: notes,
+                        deposit_status: depositStatus
+                    });
+                }
+                localStorage.setItem('vivat_contracts', JSON.stringify(local));
+            } catch (e) {
+                console.warn("Aviso al guardar en localStorage vivat_contracts:", e);
+            }
+
+            return { success: true, contractId, terminationDate };
+        } catch (err) {
+            console.error("Error en finalizeRental:", err);
+            throw err;
+        }
+    },
+
+    reactivateRental: async function (contractId) {
+        try {
+            let numericDbId = null;
+            if (typeof contractId === 'number') numericDbId = contractId;
+            else if (typeof contractId === 'string') {
+                const match = contractId.match(/\d+/g);
+                if (match) numericDbId = parseInt(match[match.length - 1], 10);
+            }
+
+            // 1. Supabase
+            if (window.supabaseClient && numericDbId) {
+                try {
+                    const { data: currentContract } = await window.supabaseClient
+                        .from('Contrato')
+                        .select('id_contrato, id_propiedad, clausulas_adicionales')
+                        .eq('id_contrato', numericDbId)
+                        .maybeSingle();
+
+                    if (currentContract) {
+                        let extra = currentContract.clausulas_adicionales || {};
+                        if (typeof extra === 'string') {
+                            try { extra = JSON.parse(extra); } catch (e) { extra = {}; }
+                        }
+                        delete extra.is_finalized;
+                        delete extra.finalized_at;
+                        delete extra.termination_reason;
+                        delete extra.termination_notes;
+                        extra.id_estado_contrato = 1;
+
+                        await window.supabaseClient
+                            .from('Contrato')
+                            .update({ clausulas_adicionales: extra })
+                            .eq('id_contrato', numericDbId);
+
+                        // Cerrar registro 2 en Historial_Estado_Contrato
+                        await window.supabaseClient
+                            .from('Historial_Estado_Contrato')
+                            .update({ fecha_fin: new Date().toISOString() })
+                            .eq('id_contrato', numericDbId)
+                            .is('fecha_fin', null);
+
+                        // Insertar estado 1 (activo)
+                        await window.supabaseClient
+                            .from('Historial_Estado_Contrato')
+                            .insert([{
+                                id_contrato: numericDbId,
+                                id_estado_contrato: 1,
+                                fecha_inicio: new Date().toISOString()
+                            }]);
+
+                        if (currentContract.id_propiedad) {
+                            await window.supabaseClient
+                                .from('Historial_estado_propiedad')
+                                .insert([{
+                                    id_propiedad: currentContract.id_propiedad,
+                                    id_estado_propiedad: 4, // Alquilada
+                                    fecha_inicio: new Date().toISOString()
+                                }]);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Aviso al reactivar en Supabase:", e);
+                }
+            }
+
+            // 2. localStorage
+            try {
+                let local = JSON.parse(localStorage.getItem('vivat_contracts') || '[]');
+                local = local.map(c => {
+                    const cNum = (c.id || '').match(/\d+/g);
+                    const matchNumeric = cNum && numericDbId && parseInt(cNum[cNum.length - 1], 10) === numericDbId;
+                    if (c.id === contractId || String(c.dbContractId) === String(contractId) || matchNumeric) {
+                        return {
+                            ...c,
+                            is_finalized: false,
+                            isFinalized: false,
+                            status: 'SIGNED_AND_SEALED',
+                            id_estado_contrato: 1,
+                            finalized_at: null,
+                            termination_reason: null,
+                            termination_notes: null
+                        };
+                    }
+                    return c;
+                });
+                localStorage.setItem('vivat_contracts', JSON.stringify(local));
+            } catch (e) { }
+
+            return { success: true };
+        } catch (err) {
+            console.error("Error en reactivateRental:", err);
+            throw err;
+        }
     },
 
     getTenantContracts: async function (tenantProfileId = null) {
@@ -2630,6 +2940,19 @@ var DataManager = {
                 const canon = Number(c.monthly_rent || c.monthlyRent || 380000);
                 const exp = Number(c.expenses_amount || c.expenses || 48000);
                 const cKey = String(c.id);
+                const hasContractVal = (c.has_contract !== undefined) ? Boolean(c.has_contract) : (
+                    (c.hasContract !== undefined) ? Boolean(c.hasContract) : Boolean(
+                        c.url_contrato_final_pdf ||
+                        c.url_contrato_original_pdf ||
+                        c.hash_original_sha256 ||
+                        (c.clausulas_adicionales && typeof c.clausulas_adicionales === 'object' && Object.keys(c.clausulas_adicionales).length > 0) ||
+                        (c.customClauses && c.customClauses.length > 0) ||
+                        c.tenant_signed ||
+                        c.tenant_has_signed ||
+                        c.owner_has_signed ||
+                        c.status === 'SIGNED_AND_SEALED'
+                    )
+                );
                 contractsMap.set(cKey, {
                     id: c.id,
                     dbContractId: c.dbContractId || c.id,
@@ -2643,6 +2966,10 @@ var DataManager = {
                     expenses: exp,
                     currency: c.currency || 'ARS',
                     status: c.status || 'WAITING_TENANT',
+                    has_contract: hasContractVal,
+                    hasContract: hasContractVal,
+                    clausulas_adicionales: c.clausulas_adicionales || c.clauses || {},
+                    customClauses: c.customClauses || [],
                     tenant_signed: Boolean(c.tenant?.hasSigned || c.tenant_signed || c.status === 'SIGNED_AND_SEALED'),
                     start_date: c.start_date || c.startDate || '2026-08-01',
                     end_date: c.end_date || c.endDate || '2028-08-01',
@@ -2711,6 +3038,19 @@ var DataManager = {
                             const canon = Number(item.monto_cierre || localMatch.monthly_rent || pub?.precio || 380000);
                             const exp = Number(prop.expensas_mensuales || localMatch.expenses || 48000);
 
+                            let extraCfg = item.clausulas_adicionales || {};
+                            if (typeof extraCfg === 'string') {
+                                try { extraCfg = JSON.parse(extraCfg); } catch (e) { extraCfg = {}; }
+                            }
+                            const dbHasContract = Boolean(
+                                localMatch.has_contract || localMatch.hasContract ||
+                                item.url_contrato_final_pdf ||
+                                item.url_contrato_original_pdf ||
+                                item.hash_original_sha256 ||
+                                (extraCfg && typeof extraCfg === 'object' && Object.keys(extraCfg).length > 0) ||
+                                item.Firma_contrato?.length > 0
+                            );
+
                             const mergedObj = {
                                 id: item.id_contrato,
                                 dbContractId: item.id_contrato,
@@ -2745,6 +3085,9 @@ var DataManager = {
                                 landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
                                 description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Vivat.',
                                 caracteristicas: dbCaracteristicas,
+                                has_contract: dbHasContract,
+                                hasContract: dbHasContract,
+                                clausulas_adicionales: extraCfg,
                                 status: item.Firma_contrato?.length > 0 ? 'SIGNED_AND_SEALED' : (localMatch.status || 'WAITING_TENANT'),
                                 tenant_signed: Boolean(localMatch.tenant_signed || item.Firma_contrato?.length > 0)
                             };

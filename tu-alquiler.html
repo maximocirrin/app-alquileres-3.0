@@ -1109,6 +1109,10 @@
                     }
                 }
 
+                if (validTab !== 'chat-negociacion' && window.ContractsManager) {
+                    window.ContractsManager.resetMobileChatState?.();
+                }
+
                 // Sincronizar URL hash
                 if (window.location.hash !== '#' + validTab) {
                     history.replaceState(null, null, '#' + validTab);
@@ -1512,6 +1516,7 @@
                     : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
                 const baseMonthlyRent = Number(contract.monthly_rent || contract.monthlyRent || (payment ? payment.amount_base : 380000));
                 const estimatedNewRent = Math.round(baseMonthlyRent * (1 + defaultRate / 100));
+                const isContractGen = contract.has_contract === true || contract.hasContract === true || (window.ContractsManager && typeof window.ContractsManager.isContractGenerated === 'function' ? window.ContractsManager.isContractGenerated(contract) : false);
 
                 // Construir datos enriquecidos de la propiedad / publicación con datos reales
                 const propertyImages = (Array.isArray(contract.photos) && contract.photos.length > 0)
@@ -1653,8 +1658,8 @@
                         <div class="bg-zinc-100 dark:bg-zinc-800/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div class="space-y-2">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                                        Contrato Digital Activo
+                                    <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full ${isContractGen ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">
+                                        ${isContractGen ? 'Contrato Digital Activo' : 'Contrato No Generado'}
                                     </span>
                                     <span class="text-xs font-bold text-zinc-500">
                                         Ajuste ${contract.adjustment_index || 'IPC'} (${freqMonths} meses)
@@ -1663,6 +1668,12 @@
                                 <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
                                     ${contract.property_title}
                                 </h2>
+                                ${!isContractGen ? `
+                                <div class="p-2.5 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center gap-2 text-xs text-amber-800 dark:text-amber-300">
+                                    <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-base shrink-0">pending_actions</span>
+                                    <span><b>Contrato pendiente de generación:</b> El locador aún no ha formalizado ni subido el contrato digital. Puedes consultar por chat.</span>
+                                </div>
+                                ` : ''}
                                 <div class="flex flex-wrap items-center gap-2 pt-1">
                                     <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'chat')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir chat y acordar condiciones con el propietario">
                                         <span class="material-symbols-outlined text-sm">chat</span>
@@ -1672,16 +1683,18 @@
                                         <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">shield_person</span>
                                         <span>Garantías & Garantes</span>
                                     </button>
-                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'document')" class="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'description' : 'draw'}</span>
-                                        <span>${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'Ver Contrato' : 'Firma Digital & Biometría Didit'}</span>
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'document')" class="px-3.5 py-2 ${isContractGen ? 'bg-primary hover:bg-primary-container text-white' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30'} text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">${!isContractGen ? 'pending_actions' : ((contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'description' : 'draw')}</span>
+                                        <span>${!isContractGen ? 'Contrato No Generado' : ((contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'Ver Contrato' : 'Firma Digital & Biometría Didit')}</span>
                                     </button>
+                                    ${isContractGen ? `
                                     <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || ''}')" class="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-all flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm">download</span> PDF
                                     </button>
                                     <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || ''}')" class="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-800 text-xs font-bold rounded-xl hover:bg-black transition-all flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm text-emerald-400">verified_user</span> Audit Trail
                                     </button>
+                                    ` : ''}
                                     ${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? `
                                     <button type="button" onclick="window.InventoryManager && window.InventoryManager.openModal('${contract.id || ''}', '${contract.property_id || ''}', true)" class="px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all flex items-center gap-1 cursor-pointer">
                                         <span class="material-symbols-outlined text-sm">inventory</span> Ver Inventario
@@ -2365,6 +2378,11 @@
             }
 
             const hasTenantSigned = Boolean(foundC && (foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed));
+            const isContractGen = Boolean(foundC && (
+                foundC.has_contract === true || 
+                foundC.hasContract === true || 
+                (window.ContractsManager && typeof window.ContractsManager.isContractGenerated === 'function' && window.ContractsManager.isContractGenerated(foundC))
+            ));
             const stNorm = String(app.status || '').toLowerCase().trim();
             const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
             const isRejected = stNorm === 'rechazada';
@@ -2389,7 +2407,7 @@
             const step2Complete = isAccepted || hasTenantSigned;
             const step2Active = !isAccepted && !isRejected;
             const step3Complete = isAccepted || hasTenantSigned;
-            const step4Complete = Boolean(foundC) || hasTenantSigned;
+            const step4Complete = isContractGen || hasTenantSigned;
             const step5Complete = hasTenantSigned;
 
             let modal = document.getElementById('tenant-rental-detail-modal');
@@ -2483,7 +2501,7 @@
                                     </div>
                                     <div class="min-w-0">
                                         <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Contrato</p>
-                                        <p class="text-[10px] text-zinc-400 truncate">${step4Complete ? 'Listo' : 'Pendiente'}</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${step4Complete ? 'Listo' : 'No Generado'}</p>
                                     </div>
                                 </div>
 
@@ -2581,12 +2599,19 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            ${isAccepted ? `
+                            ${isAccepted ? (
+                                isContractGen ? `
                                 <button type="button" onclick="window.closeTenantRentalDetailModal(); window.openTenantContractModal('${app.id}', '${targetContractId}', 'document');" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
                                     <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
                                     <span>${hasTenantSigned ? 'Consultar Contrato' : 'Ir a Firmar Contrato Digital'}</span>
                                 </button>
-                            ` : ''}
+                                ` : `
+                                <button type="button" onclick="window.closeTenantRentalDetailModal(); window.openTenantContractModal('${app.id}', '${targetContractId}', 'document');" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 font-headline font-black text-xs shadow-xs transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">pending_actions</span>
+                                    <span>Esperando contrato del propietario</span>
+                                </button>
+                                `
+                            ) : ''}
                             <button type="button" onclick="window.closeTenantRentalDetailModal()" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer text-center">
                                 Cerrar
                             </button>
@@ -2796,19 +2821,26 @@
                     } catch (e) { }
                 }
 
+                let isContractGen = false;
                 if (foundC) {
                     targetContractId = foundC.id;
                     hasTenantSigned = Boolean(foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed);
+                    isContractGen = Boolean(foundC.has_contract === true || foundC.hasContract === true || (window.ContractsManager && typeof window.ContractsManager.isContractGenerated === 'function' && window.ContractsManager.isContractGenerated(foundC)));
                 }
 
                 if (!targetContractId) {
                     targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').padStart(4, '0') || '1042');
                 }
 
-                if (!hasTenantSigned && window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
+                if (window.ContractsManager && typeof window.ContractsManager.getContractById === 'function') {
                     const cmContract = window.ContractsManager.getContractById(targetContractId);
                     if (cmContract) {
-                        hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
+                        if (!hasTenantSigned) {
+                            hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
+                        }
+                        if (!isContractGen) {
+                            isContractGen = Boolean(cmContract.has_contract === true || cmContract.hasContract === true || window.ContractsManager.isContractGenerated(cmContract));
+                        }
                     }
                 }
 
@@ -2890,23 +2922,23 @@
 
                                     <!-- Banner Destacado si fue Aceptado -->
                                     ${isAccepted ? `
-                                        <div class="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/40 dark:via-emerald-900/20 border border-emerald-500/30 dark:border-emerald-700/50 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                        <div class="bg-gradient-to-r ${isContractGen ? 'from-emerald-500/10 via-emerald-500/5 dark:from-emerald-950/40 dark:via-emerald-900/20 border-emerald-500/30 dark:border-emerald-700/50' : 'from-amber-500/10 via-amber-500/5 dark:from-amber-950/40 dark:via-amber-900/20 border-amber-500/30 dark:border-amber-700/50'} to-transparent border rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                                             <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                                    <span class="material-symbols-outlined text-xl">${hasTenantSigned ? 'verified_user' : 'celebration'}</span>
+                                                <div class="w-10 h-10 rounded-xl ${isContractGen ? 'bg-emerald-600' : 'bg-amber-600'} text-white flex items-center justify-center shrink-0 shadow-xs">
+                                                    <span class="material-symbols-outlined text-xl">${hasTenantSigned ? 'verified_user' : (isContractGen ? 'celebration' : 'pending_actions')}</span>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-headline font-black text-xs sm:text-sm text-emerald-950 dark:text-emerald-200">
-                                                        ${hasTenantSigned ? '¡Contrato firmado digitalmente! ✅' : '¡El propietario aceptó tu postulación! 🎉'}
+                                                    <h4 class="font-headline font-black text-xs sm:text-sm ${isContractGen ? 'text-emerald-950 dark:text-emerald-200' : 'text-amber-950 dark:text-amber-200'}">
+                                                        ${hasTenantSigned ? '¡Contrato firmado digitalmente! ✅' : (isContractGen ? '¡El propietario aceptó tu postulación! 🎉' : '¡Postulación Aceptada! Esperando generación del contrato ⏳')}
                                                     </h4>
-                                                    <p class="font-body text-[11px] text-emerald-800 dark:text-emerald-400">
-                                                        ${hasTenantSigned ? 'Ya has completado tu firma biométrica con Didit KYC. Puedes consultar el contrato y su certificado legal cuando quieras.' : 'Ya puedes revisar los términos y firmar el contrato digital con verificación facial Didit.'}
+                                                    <p class="font-body text-[11px] ${isContractGen ? 'text-emerald-800 dark:text-emerald-400' : 'text-amber-800 dark:text-amber-300'}">
+                                                        ${hasTenantSigned ? 'Ya has completado tu firma biométrica con Didit KYC. Puedes consultar el contrato y su certificado legal cuando quieras.' : (isContractGen ? 'Ya puedes revisar los términos y firmar el contrato digital con verificación facial Didit.' : 'El locador aprobó tu postulación y está confeccionando los términos del contrato. Podrás firmarlo en cuanto esté listo.')}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
-                                                <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
-                                                <span>${hasTenantSigned ? 'Ver Contrato' : 'Firmar Contrato'}</span>
+                                            <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center justify-center gap-1.5 ${isContractGen ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 border border-amber-500/40 shadow-xs'} active:scale-95 font-headline font-black text-xs py-2.5 px-4 rounded-xl transition-all cursor-pointer shrink-0 hover:scale-[1.02]">
+                                                <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : (isContractGen ? 'draw' : 'pending_actions')}</span>
+                                                <span>${hasTenantSigned ? 'Ver Contrato' : (isContractGen ? 'Firmar Contrato' : 'Contrato No Generado')}</span>
                                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                             </button>
                                         </div>
@@ -2973,9 +3005,9 @@
                                             </button>
 
                                             ${isAccepted ? `
-                                                <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md hover:shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
-                                                    <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
-                                                    <span>${hasTenantSigned ? 'Ver Contrato' : 'Ir a Firmar Contrato (Didit Liveness)'}</span>
+                                                <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'document')" class="inline-flex items-center gap-2 ${isContractGen ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-emerald-600/30' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 shadow-xs'} font-headline font-black text-xs sm:text-sm py-2.5 px-5 rounded-xl transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+                                                    <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : (isContractGen ? 'draw' : 'pending_actions')}</span>
+                                                    <span>${hasTenantSigned ? 'Ver Contrato' : (isContractGen ? 'Ir a Firmar Contrato (Didit Liveness)' : 'Contrato No Generado')}</span>
                                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                                 </button>
                                             ` : ''}
