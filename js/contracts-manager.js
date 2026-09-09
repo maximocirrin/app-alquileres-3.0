@@ -3391,7 +3391,7 @@
                     </aside>
 
                     <!-- Right Pane: Active Live Chat Window -->
-                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 bottom-0 top-[64px] z-[999] chat-desktop-static' : 'hidden chat-desktop-flex'}">
+                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-0 z-[120] chat-desktop-static' : 'hidden chat-desktop-flex'}">
                         
                         <!-- Chat Window Header -->
                         <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
