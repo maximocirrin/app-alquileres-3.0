@@ -584,6 +584,7 @@ var DataManager = {
                 numero = match[2];
             }
         }
+
         if (!numero && window.selectedPropertyStreetNumber) {
             numero = window.selectedPropertyStreetNumber;
         }
@@ -1474,6 +1475,26 @@ var DataManager = {
 
                     // 4. Notificar en tiempo real al PROPIETARIO
                     try {
+                        let ownerTargetId = null;
+                        if (pubIdNum) {
+                            const { data: pubData } = await window.supabaseClient
+                                .from('Publicacion')
+                                .select('id_propiedad, Propiedad(id_perfil_propietario)')
+                                .eq('id_publicacion', pubIdNum)
+                                .maybeSingle();
+                            if (pubData && pubData.Propiedad) {
+                                ownerTargetId = pubData.Propiedad.id_perfil_propietario;
+                            }
+                        } else if (appData.propertyId || appData.id_propiedad) {
+                            try {
+                                const propIdVal = appData.propertyId || appData.id_propiedad;
+                                const localProps = JSON.parse(localStorage.getItem('vivat_properties') || '[]');
+                                const prop = localProps.find(p => String(p.id) === String(propIdVal));
+                                if (prop && prop.id_perfil_propietario) {
+                                    ownerTargetId = Number(prop.id_perfil_propietario);
+                                }
+                            } catch (e) {}
+                        }
                         if (window.NotificationManager) {
                             const notifFn = window.NotificationManager.createNotification || window.NotificationManager.add;
                             if (typeof notifFn === 'function') {
@@ -1486,7 +1507,8 @@ var DataManager = {
                                     link: 'administrador.html#postulaciones',
                                     role: 'OWNER',
                                     senderRole: 'TENANT',
-                                    senderProfileId: profileId
+                                    senderProfileId: profileId,
+                                    targetProfileId: ownerTargetId
                                 });
                             }
                         }
@@ -1975,7 +1997,8 @@ var DataManager = {
                 type: 'contract',
                 link: `contratos.html?contract=${contractId}&sign=1&role=OWNER`,
                 role: 'OWNER',
-                senderRole: 'OWNER'
+                senderRole: 'OWNER',
+                targetProfileId: Number(prop?.id_perfil_propietario || profileId || 6)
             });
             window.NotificationManager.createNotification({
                 id: `notif_accept_tenant_${appId}_${contractId}`,
@@ -1984,7 +2007,8 @@ var DataManager = {
                 type: 'contract',
                 link: `contratos.html?contract=${contractId}&sign=1&role=TENANT`,
                 role: 'TENANT',
-                senderRole: 'OWNER'
+                senderRole: 'OWNER',
+                targetProfileId: solPerfilId
             });
         }
 
@@ -2000,8 +2024,18 @@ var DataManager = {
 
     rejectApplication: async function (appId) {
         let propTitle = 'la propiedad';
+        let targetProfileId = null;
         if (window.supabaseClient && appId) {
             try {
+                const { data: sol } = await window.supabaseClient
+                    .from('Solicitud')
+                    .select('id_perfil')
+                    .eq('id_solicitud', appId)
+                    .maybeSingle();
+                if (sol) {
+                    targetProfileId = sol.id_perfil;
+                }
+                
                 await window.supabaseClient.from('Historial_estado_solicitud').insert([{
                     id_solicitud: appId,
                     id_estado_solicitud: 3, // Rechazada
@@ -2021,6 +2055,7 @@ var DataManager = {
                     if (String(a.id) === String(appId)) {
                         a.status = 'rechazada';
                         if (a.property_title) propTitle = a.property_title;
+                        if (a.tenant_id || a.id_perfil) targetProfileId = targetProfileId || Number(a.tenant_id || a.id_perfil);
                     }
                 });
                 localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
@@ -2035,7 +2070,8 @@ var DataManager = {
                 type: 'rejection',
                 link: 'index.html',
                 role: 'TENANT',
-                senderRole: 'OWNER'
+                senderRole: 'OWNER',
+                targetProfileId: targetProfileId
             });
         }
 
