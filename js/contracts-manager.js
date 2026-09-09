@@ -889,7 +889,7 @@
                 const matchIdx = merged.findIndex(m => 
                     String(m.id).toLowerCase() === String(loc.id).toLowerCase() || 
                     (m.dbContractId && loc.dbContractId && String(m.dbContractId) === String(loc.dbContractId)) ||
-                    (m.propertyId && loc.propertyId && String(m.propertyId) === String(loc.propertyId) && String(m.publicationId) === String(loc.publicationId))
+                    (m.propertyId && loc.propertyId && String(m.propertyId) === String(loc.propertyId) && (!m.publicationId || !loc.publicationId || String(m.publicationId) === String(loc.publicationId)))
                 );
                 if (matchIdx >= 0) {
                     const dbItem = merged[matchIdx];
@@ -3807,9 +3807,26 @@
                         try {
                             const origHash = contractObj.originalHash || await computeContractSha256(contractObj);
                             const finalHash = await computeContractSha256({ ...contractObj, signedRole: dbRole, session: currentSessionId, time: Date.now() });
-                            const profileId = isTenantRole 
+                            let currentProfileId = null;
+                            try {
+                                const { data: authData } = await window.supabaseClient.auth.getUser();
+                                if (authData && authData.user) {
+                                    const { data: pData } = await window.supabaseClient
+                                        .from('Perfil')
+                                        .select('id_perfil')
+                                        .eq('id_usuario', authData.user.id)
+                                        .maybeSingle();
+                                    if (pData && pData.id_perfil) {
+                                        currentProfileId = pData.id_perfil;
+                                    }
+                                }
+                            } catch(eAuth) {
+                                console.warn("[ContractsManager] Error fetching current user profile ID:", eAuth);
+                            }
+
+                            const profileId = currentProfileId || (isTenantRole 
                                 ? (contractObj.tenant?.id_perfil || contractObj.tenant?.profileId || 14) 
-                                : (contractObj.owner?.id_perfil || contractObj.owner?.profileId || 6);
+                                : (contractObj.owner?.id_perfil || contractObj.owner?.profileId || 6));
 
                             const finalContractPdfPath = `contrato_${dbContractId}/contrato_definitivo_firmado_${dbRole}.pdf`;
                             const origContractPdfPath = `contrato_${dbContractId}/contrato_original.pdf`;
@@ -3871,7 +3888,7 @@
 
                             let firmaRes = null;
                             if (existingFirma) {
-                                const { data: upF } = await window.supabaseClient
+                                const { data: upF, error: upFErr } = await window.supabaseClient
                                     .from('Firma_contrato')
                                     .update({
                                         estado_firma: 'sellada',
@@ -3888,9 +3905,10 @@
                                     .eq('id_firma', existingFirma.id_firma)
                                     .select()
                                     .maybeSingle();
+                                if (upFErr) console.error("[ContractsManager] Error al actualizar Firma_contrato:", upFErr);
                                 firmaRes = upF;
                             } else {
-                                const { data: inF } = await window.supabaseClient
+                                const { data: inF, error: inFErr } = await window.supabaseClient
                                     .from('Firma_contrato')
                                     .insert([{
                                         id_contrato: dbContractId,
@@ -3909,6 +3927,7 @@
                                     }])
                                     .select()
                                     .maybeSingle();
+                                if (inFErr) console.error("[ContractsManager] Error al insertar Firma_contrato:", inFErr);
                                 firmaRes = inF;
                             }
 
@@ -4730,8 +4749,8 @@
             if (!contract) return;
 
             // 0. Verificar si todas las partes han firmado
-            const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
-            const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
+            const ownerSigned = Boolean(contract.owner?.hasSigned || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
+            const tenantSigned = Boolean(contract.tenant?.hasSigned || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
 
             const printGuarantors = (typeof this.resolveContractGuarantors === 'function')
                 ? this.resolveContractGuarantors(contract)
@@ -5171,8 +5190,8 @@
                 ? this.resolveContractGuarantors(contract)
                 : (contract.guarantors || []);
 
-            const ownerSigned = Boolean(contract.owner?.hasSigned || contract.owner_signed || contract.has_signed || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
-            const tenantSigned = Boolean(contract.tenant?.hasSigned || contract.tenant_signed || contract.has_signed || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
+            const ownerSigned = Boolean(contract.owner?.hasSigned || (contract.owner?.signedAt && String(contract.owner.signedAt).length > 5));
+            const tenantSigned = Boolean(contract.tenant?.hasSigned || (contract.tenant?.signedAt && String(contract.tenant.signedAt).length > 5));
             const signedGuarantors = printGuarantors.filter(g => Boolean(g.hasSigned || (g.signedAt && String(g.signedAt).length > 5) || g.estado_firma === 'sellada' || g.estado_firma === 'firmada' || g.estado_firma === 'completada'));
             const isFullySigned = Boolean(ownerSigned && tenantSigned && signedGuarantors.length === printGuarantors.length);
 

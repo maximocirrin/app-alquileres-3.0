@@ -174,22 +174,7 @@
                 }
             } catch (e) { }
 
-            if (storedList.length === 0) {
-                return [...DEFAULT_NOTIFICATIONS];
-            }
-
-            const currentRole = getActiveUserRole();
-            return storedList.filter(n => {
-                if (!n.role || n.role === 'ALL') return true;
-                const targetRole = n.role.toUpperCase();
-                if (currentRole === 'OWNER' || currentRole === 'BROKER') {
-                    return targetRole === 'OWNER' || targetRole === 'BROKER' || targetRole === 'ALL';
-                }
-                if (currentRole === 'TENANT') {
-                    return targetRole === 'TENANT' || targetRole === 'ALL';
-                }
-                return true;
-            });
+            return storedList.filter(n => isTargetRecipient(n));
         },
 
         // Guardar lista completa en almacenamiento
@@ -259,6 +244,26 @@
 
             // Registrar en memoria de procesados para deduplicación
             this._processedNotifIds.add(newNotif.id);
+
+            // 0. Guardar en DB asincrónicamente
+            if (window.supabaseClient) {
+                window.supabaseClient.from('Notificacion').insert({
+                    id_notificacion: newNotif.id,
+                    titulo: newNotif.title,
+                    mensaje: newNotif.message,
+                    tipo: newNotif.type,
+                    icono: newNotif.icon,
+                    enlace: newNotif.link,
+                    rol_destino: newNotif.role,
+                    rol_emisor: newNotif.senderRole,
+                    id_perfil_emisor: newNotif.senderProfileId,
+                    id_perfil_destino: newNotif.targetProfileId,
+                    leida: false,
+                    creado_en: newNotif.createdAt
+                }).then(({ error }) => {
+                    if (error) console.error('[Notificaciones] Error al guardar en DB:', error);
+                });
+            }
 
             // 1. Enviar vía BroadcastChannel para otras pestañas abiertas
             if (broadcastChannel) {
@@ -675,6 +680,10 @@
             if (target) {
                 target.read = true;
                 this.saveAll(allStored);
+                
+                if (window.supabaseClient) {
+                    window.supabaseClient.from('Notificacion').update({ leida: true }).eq('id_notificacion', notifId).then();
+                }
             }
         },
 
@@ -689,12 +698,18 @@
             } catch (e) { }
 
             const activeRole = getActiveUserRole();
+            let unreadIds = [];
             allStored.forEach(n => {
-                if (n.role === 'ALL' || n.role === activeRole) {
+                if ((n.role === 'ALL' || n.role === activeRole) && !n.read) {
                     n.read = true;
+                    unreadIds.push(n.id);
                 }
             });
             this.saveAll(allStored);
+            
+            if (window.supabaseClient && unreadIds.length > 0) {
+                window.supabaseClient.from('Notificacion').update({ leida: true }).in('id_notificacion', unreadIds).then();
+            }
         },
 
         _activeToastKeys: new Set(),
@@ -891,6 +906,96 @@
             this.updateBadge();
         },
 
+        fetchFromDB: async function () {
+            if (!window.supabaseClient) return;
+            
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) return;
+                
+                let query = window.supabaseClient.from('Notificacion').select('*');
+                
+                let uLocal = {};
+                try {
+                    uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                } catch (e) {}
+                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+                const currentRole = getActiveUserRole();
+                
+                let orConditions = `rol_destino.eq.ALL`;
+                if (currentRole === 'OWNER' || currentRole === 'BROKER') {
+                    orConditions += `,rol_destino.eq.OWNER,rol_destino.eq.BROKER`;
+                } else if (currentRole === 'TENANT') {
+                    orConditions += `,rol_destino.eq.TENANT`;
+                }
+                
+                if (myProfileId) {
+                    orConditions += `,id_perfil_destino.eq.${myProfileId}`;
+                }
+
+                query = query.or(orConditions).order('creado_en', { ascending: false }).limit(40);
+                
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error('[Notificaciones] Error al descargar de DB:', error);
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    let allStored = [];
+                    try {
+                        const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) allStored = parsed;
+                        }
+                    } catch (e) { }
+
+                    let hasNew = false;
+                    data.reverse().forEach(dbn => {
+                        const localFormat = {
+                            id: dbn.id_notificacion,
+                            title: dbn.titulo,
+                            message: dbn.mensaje,
+                            type: dbn.tipo,
+                            icon: dbn.icono,
+                            link: dbn.enlace,
+                            role: dbn.rol_destino,
+                            read: dbn.leida,
+                            createdAt: dbn.creado_en,
+                            senderRole: dbn.rol_emisor,
+                            senderProfileId: dbn.id_perfil_emisor,
+                            targetProfileId: dbn.id_perfil_destino
+                        };
+                        
+                        if (!isTargetRecipient(localFormat)) return;
+                        const idx = allStored.findIndex(n => n.id === localFormat.id);
+                        if (idx >= 0) {
+                            if (allStored[idx].read !== localFormat.read) {
+                                allStored[idx].read = localFormat.read;
+                                hasNew = true;
+                            }
+                        } else {
+                            allStored.unshift(localFormat);
+                            this._processedNotifIds.add(localFormat.id);
+                            hasNew = true;
+                        }
+                    });
+                    
+                    if (hasNew) {
+                        allStored.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                        if (allStored.length > 40) allStored = allStored.slice(0, 40);
+                        localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
+                        this.updateBadge();
+                        this.renderDropdown();
+                    }
+                }
+            } catch (err) {
+                console.error('[Notificaciones] Exception fetchFromDB:', err);
+            }
+        },
+
         initUI: function () {
             // Vincular botones existentes
             const desktopBell = document.getElementById('vivat-notif-bell-btn');
@@ -950,6 +1055,7 @@
 
             this.updateBadge();
             this.initRealtimeWebSockets();
+            this.fetchFromDB();
         }
     };
 
