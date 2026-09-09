@@ -340,33 +340,9 @@
             let tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
             let ownerDni = property.owner_dni || contract.owner?.dni || '';
 
-            // 🤖 INTELLIGENT AUTOCOMPLETADO (Data Fetching for DNI/CUIT/CBU/Domicilio)
-            if (window.supabaseClient) {
-                try {
-                    if (tenantDni) {
-                        const { data: tenData } = await window.supabaseClient.from('Perfil').select('*').eq('dni', tenantDni.replace(/\D/g,'')).maybeSingle();
-                        if (tenData) {
-                            applicant.tenant_name = tenData.nombre_completo || applicant.tenant_name;
-                            applicant.tenant_email = tenData.email || applicant.tenant_email;
-                            applicant.tenant_cuit = tenData.cuil_cuit || applicant.tenant_cuit;
-                            applicant.tenant_domicilio = tenData.domicilio_real || applicant.tenant_domicilio;
-                            applicant.tenant_estado_civil = tenData.estado_civil;
-                        }
-                    }
-                    if (ownerDni) {
-                        const { data: ownData } = await window.supabaseClient.from('Perfil').select('*').eq('dni', ownerDni.replace(/\D/g,'')).maybeSingle();
-                        if (ownData) {
-                            property.owner_name = ownData.nombre_completo || property.owner_name;
-                            property.owner_email = ownData.email || property.owner_email;
-                            property.owner_cuit = ownData.cuil_cuit || property.owner_cuit;
-                            property.owner_domicilio = ownData.domicilio_real || property.owner_domicilio;
-                            if (ownData.cbu_alias && !contract.aliasCbu) contract.aliasCbu = ownData.cbu_alias;
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Aviso: Fallo en autocompletado inteligente de perfiles.", e);
-                }
-            }
+            // Never resolve another person's identity, address, CBU or contact
+            // data from a DNI in the browser. Contract participants are resolved
+            // by the server when the contract is created.
 
             const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
             tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
@@ -1298,18 +1274,7 @@
                 if (dniInput) {
                     dniInput.addEventListener('blur', async (e) => {
                         const val = e.target.value.replace(/\D/g, '');
-                        if (val.length >= 7 && window.supabaseClient) {
-                            try {
-                                const { data } = await window.supabaseClient.from('Perfil').select('*').eq('dni', val).maybeSingle();
-                                if (data) {
-                                    const nomEl = document.getElementById(`editor-codeudor${num}-nombre`);
-                                    const domEl = document.getElementById(`editor-codeudor${num}-domicilio`);
-                                    if (nomEl && !nomEl.value) nomEl.value = data.nombre_completo || '';
-                                    if (domEl && !domEl.value) domEl.value = data.domicilio_real || '';
-                                    triggerPreview(`editor-codeudor${num}-dni`); // Actualizar vista previa
-                                }
-                            } catch (err) { }
-                        }
+                        if (val.length >= 7) triggerPreview(`editor-codeudor${num}-dni`);
                     });
                 }
             });

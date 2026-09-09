@@ -5,6 +5,7 @@ const InventoryManager = {
     items: [],
     videoFile: null,
     videoUrl: null,
+    videoPreviewUrl: null,
     videoHash: null,
     isReadOnly: false,
 
@@ -90,7 +91,7 @@ const InventoryManager = {
                                     <label class="block text-xs font-bold text-zinc-500 uppercase mb-1">Video Panorámico (Opcional)</label>
                                     <div id="video-upload-area">
                                         <input type="file" id="inv-video" accept="video/*" onchange="window.InventoryManager.handleVideoSelect(event)" class="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-500/10 file:text-blue-600 hover:file:bg-blue-500/20 transition-all cursor-pointer">
-                                        <p class="text-[10px] text-zinc-400 mt-1">Máximo recomendado: 250MB. Se calculará el Hash SHA-256 localmente.</p>
+                                        <p class="text-[10px] text-zinc-400 mt-1">Máximo: 100 MB (MP4 o WebM). Se calculará el Hash SHA-256 localmente.</p>
                                     </div>
                                     <div id="video-info-area" class="hidden mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                                         <div class="flex items-center justify-between">
@@ -132,6 +133,7 @@ const InventoryManager = {
         this.items = [];
         this.videoFile = null;
         this.videoUrl = null;
+        this.videoPreviewUrl = null;
         this.videoHash = null;
         this.isReadOnly = isReadOnly;
         
@@ -178,7 +180,8 @@ const InventoryManager = {
                 document.getElementById('inv-generales').value = data.inventario.observaciones_generales || '';
                 
                 if (data.inventario.video_url) {
-                    this.videoUrl = data.inventario.video_url;
+                    this.videoUrl = data.inventario.video_path || null;
+                    this.videoPreviewUrl = data.inventario.video_url || null;
                     this.videoHash = data.inventario.video_hash;
                     document.getElementById('video-info-area').classList.remove('hidden');
                     if(videoUploadArea) videoUploadArea.style.display = 'none';
@@ -195,7 +198,8 @@ const InventoryManager = {
                         nombre: it.Item?.nombre || 'Elemento',
                         id_estado_item: it.id_estado_item,
                         observaciones: it.observaciones,
-                        fotos_urls: it.fotos_urls || [],
+                        fotos_urls: it.fotos_paths || [],
+                        fotos_preview_urls: it.fotos_urls || [],
                         fotosFiles: []
                     }));
                 }
@@ -221,6 +225,7 @@ const InventoryManager = {
 
         this.videoFile = file;
         this.videoUrl = null;
+        this.videoPreviewUrl = null;
         this.videoHash = null;
 
         document.getElementById('video-upload-area').style.display = 'none';
@@ -241,6 +246,7 @@ const InventoryManager = {
     removeVideo() {
         this.videoFile = null;
         this.videoUrl = null;
+        this.videoPreviewUrl = null;
         this.videoHash = null;
         const videoInput = document.getElementById('inv-video');
         if(videoInput) videoInput.value = '';
@@ -322,26 +328,38 @@ const InventoryManager = {
 
         const estados = {1: 'Nuevo', 2: 'Bueno', 3: 'Regular', 4: 'Malo'};
         const colores = {1: 'text-emerald-600 bg-emerald-50', 2: 'text-blue-600 bg-blue-50', 3: 'text-amber-600 bg-amber-50', 4: 'text-red-600 bg-red-50'};
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[char]));
+        const safePreviewUrl = (value) => {
+            try {
+                const url = new URL(String(value), window.location.origin);
+                return ['https:', 'blob:'].includes(url.protocol) ? url.href : '';
+            } catch (_) {
+                return '';
+            }
+        };
 
         let html = '';
         for (const [amb, items] of Object.entries(porAmbiente)) {
-            html += `<div class="mb-4"><h4 class="font-bold text-xs text-zinc-800 dark:text-zinc-200 uppercase mb-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg">${amb}</h4><div class="space-y-2">`;
+            html += `<div class="mb-4"><h4 class="font-bold text-xs text-zinc-800 dark:text-zinc-200 uppercase mb-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg">${escapeHtml(amb)}</h4><div class="space-y-2">`;
             items.forEach(it => {
                 const badgeColor = colores[it.id_estado_item] || 'text-zinc-600 bg-zinc-100';
                 const hasPhotos = (it.fotosFiles && it.fotosFiles.length > 0) || (it.fotos_urls && it.fotos_urls.length > 0);
+                const previewUrls = (it.fotos_preview_urls || []).map(safePreviewUrl).filter(Boolean);
                 
                 html += `
                     <div class="flex items-start justify-between p-3 rounded-xl bg-white dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700/50 shadow-xs hover:border-zinc-300 transition-colors">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm text-zinc-900 dark:text-white">${it.nombre}</span>
+                                <span class="font-bold text-sm text-zinc-900 dark:text-white">${escapeHtml(it.nombre)}</span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeColor}">${estados[it.id_estado_item] || 'Bueno'}</span>
                                 ${hasPhotos ? '<span class="material-symbols-outlined text-xs text-zinc-400" title="Contiene fotos adjuntas">photo_camera</span>' : ''}
                             </div>
-                            ${it.observaciones ? `<p class="text-xs text-zinc-500 mt-1">${it.observaciones}</p>` : ''}
-                            ${(it.fotos_urls && it.fotos_urls.length > 0) ? `
+                            ${it.observaciones ? `<p class="text-xs text-zinc-500 mt-1">${escapeHtml(it.observaciones)}</p>` : ''}
+                            ${previewUrls.length > 0 ? `
                             <div class="flex gap-2 mt-2 overflow-x-auto pb-1">
-                                ${it.fotos_urls.map(url => `<img src="${url}" class="h-10 w-10 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700">`).join('')}
+                                ${previewUrls.map(url => `<img src="${escapeHtml(url)}" alt="Foto de inventario" class="h-10 w-10 object-cover rounded-lg border border-zinc-200 dark:border-zinc-700">`).join('')}
                             </div>
                             ` : ''}
                             ${(it.fotosFiles && it.fotosFiles.length > 0) ? `
@@ -351,7 +369,7 @@ const InventoryManager = {
                             ` : ''}
                         </div>
                         ${this.isReadOnly ? '' : `
-                        <button type="button" onclick="window.InventoryManager.removeItem('${it.id}')" class="text-red-500 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
+                        <button type="button" onclick="window.InventoryManager.removeItem('${escapeHtml(it.id)}')" class="text-red-500 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
                             <span class="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                         `}
@@ -381,17 +399,7 @@ const InventoryManager = {
             // Upload Video si hay
             if (this.videoFile) {
                 progressText.innerText = 'Subiendo video...';
-                const ext = this.videoFile.name.split('.').pop();
-                const path = `${this.currentContractId}/inventario/video_${crypto.randomUUID()}.${ext}`;
-                
-                const { data, error } = await window.supabaseClient.storage
-                    .from('contratos_firmados')
-                    .upload(path, this.videoFile, { upsert: true });
-
-                if (error) throw error;
-                
-                const { data: publicUrlData } = window.supabaseClient.storage.from('contratos_firmados').getPublicUrl(path);
-                this.videoUrl = publicUrlData.publicUrl;
+                this.videoUrl = await this.uploadInventoryMedia(this.videoFile, 'video');
             }
 
             // Upload Fotos por item
@@ -401,16 +409,10 @@ const InventoryManager = {
                     for (let j = 0; j < item.fotosFiles.length; j++) {
                         progressText.innerText = `Subiendo fotos... (${i+1}/${this.items.length})`;
                         const file = item.fotosFiles[j];
-                        const path = `${this.currentContractId}/inventario/foto_${crypto.randomUUID()}.jpg`;
-                        
-                        const { data, error } = await window.supabaseClient.storage
-                            .from('contratos_firmados')
-                            .upload(path, file, { contentType: 'image/jpeg', upsert: true });
-
-                        if (error) throw error;
-                        
-                        const { data: publicUrlData } = window.supabaseClient.storage.from('contratos_firmados').getPublicUrl(path);
-                        item.fotos_urls.push(publicUrlData.publicUrl);
+                        const path = await this.uploadInventoryMedia(file, 'photo');
+                        item.fotos_urls.push(path);
+                        item.fotos_preview_urls = item.fotos_preview_urls || [];
+                        item.fotos_preview_urls.push(URL.createObjectURL(file));
                     }
                     item.fotosFiles = []; // Clear them after successful upload
                 }
@@ -462,6 +464,49 @@ const InventoryManager = {
     },
 
     // --- Helpers Técnicos ---
+
+    async uploadInventoryMedia(file, kind) {
+        const allowed = kind === 'photo'
+            ? ['image/jpeg', 'image/png', 'image/webp']
+            : ['video/mp4', 'video/webm'];
+        const maxBytes = kind === 'photo' ? 8 * 1024 * 1024 : 100 * 1024 * 1024;
+        if (!(file instanceof File) || !allowed.includes(file.type) || file.size < 1 || file.size > maxBytes) {
+            throw new Error(kind === 'photo'
+                ? 'La foto debe ser JPG, PNG o WebP y pesar como máximo 8 MB.'
+                : 'El video debe ser MP4 o WebM y pesar como máximo 100 MB.');
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        if (!token) throw new Error('Debés iniciar sesión para subir archivos.');
+        headers.Authorization = `Bearer ${token}`;
+
+        const capabilityResponse = await fetch('/api/inventario-upload', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                id_contrato: Number(this.currentContractId),
+                kind,
+                contentType: file.type,
+                size: file.size
+            })
+        });
+        const capability = await capabilityResponse.json().catch(() => ({}));
+        if (!capabilityResponse.ok || !capability.ok || !capability.data?.path || !capability.data?.token) {
+            throw new Error(capability.message || capability.error || 'No se pudo autorizar la carga del archivo.');
+        }
+
+        const { error } = await window.supabaseClient.storage
+            .from('contratos_firmados')
+            .uploadToSignedUrl(capability.data.path, capability.data.token, file, {
+                contentType: capability.data.contentType,
+                upsert: false,
+                cacheControl: '3600'
+            });
+        if (error) throw error;
+        return capability.data.path;
+    },
 
     async computeFileHash(file) {
         return new Promise((resolve, reject) => {

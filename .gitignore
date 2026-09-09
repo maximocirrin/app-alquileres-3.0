@@ -4,8 +4,15 @@ node_modules/
 # Environment variables and secrets
 db_config.js
 .env
+.env.*
+!.env.example
 *.key
 *.csr
+*.pem
+*.p12
+*.pfx
+*.pkcs12
+supabase/.temp/
 
 # Uploaded files
 uploads/
@@ -16,3 +23,4 @@ Thumbs.db
 
 # Database backups
 *.sql
+!supabase/migrations/*.sql

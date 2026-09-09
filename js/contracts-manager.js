@@ -24,60 +24,24 @@
     }
 
     async function ensureUserProfileResolved() {
-        if (window._currentUserProfileId) return window._currentUserProfileId;
-
-        // 1. Verificar localStorage
-        try {
-            const stored = localStorage.getItem('vivat_profile_id');
-            if (stored && !isNaN(Number(stored))) {
-                window._currentUserProfileId = Number(stored);
-                if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
-                return window._currentUserProfileId;
-            }
-            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-            const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
-            if (pId && !isNaN(Number(pId))) {
-                window._currentUserProfileId = Number(pId);
-                if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
-                localStorage.setItem('vivat_profile_id', String(pId));
-                return window._currentUserProfileId;
-            }
-        } catch (e) {}
-
-        // 2. Consultar Supabase Auth & Perfil
+        // Resolve the profile only from the authenticated session. Values from
+        // localStorage can be modified by any script and are not authorization.
         if (window.supabaseClient) {
             try {
-                let authUser = null;
                 const { data: uData } = await window.supabaseClient.auth.getUser();
-                authUser = uData?.user;
-                if (!authUser) {
-                    const { data: sData } = await window.supabaseClient.auth.getSession();
-                    authUser = sData?.session?.user;
-                }
+                const authUser = uData?.user;
 
                 if (authUser) {
-                    const { data: profiles } = await window.supabaseClient
+                    const { data: profile } = await window.supabaseClient
                         .from('Perfil')
                         .select('id_perfil, mail, dni, nombre_completo, user_id')
-                        .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
-                        .limit(1);
+                        .eq('user_id', authUser.id)
+                        .maybeSingle();
 
-                    if (profiles && profiles.length > 0) {
-                        const p = profiles[0];
+                    if (profile) {
+                        const p = profile;
                         window._currentUserProfileId = Number(p.id_perfil);
                         if (window.ContractsManager) window.ContractsManager._currentProfileId = window._currentUserProfileId;
-                        localStorage.setItem('vivat_profile_id', String(p.id_perfil));
-                        
-                        try {
-                            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                            uLocal.id_perfil = p.id_perfil;
-                            uLocal.email = p.mail || authUser.email;
-                            uLocal.dni = p.dni || uLocal.dni;
-                            uLocal.nombre_completo = p.nombre_completo || uLocal.nombre_completo;
-                            uLocal.user_id = authUser.id || p.user_id;
-                            localStorage.setItem('vivat_user', JSON.stringify(uLocal));
-                        } catch (e) {}
-
                         return window._currentUserProfileId;
                     }
                 }
@@ -114,75 +78,13 @@
     function isUserOwnerOfContract(contract, options = {}) {
         if (!contract && !options) return false;
         const c = contract || options.contract || {};
-        const prop = options.property || c.property || {};
-        const applicant = options.applicant || {};
-
         const contractOwnerProfileId = getContractOwnerProfileId(c, options);
-
-        // Obtener el id_perfil del usuario actual en Supabase
-        let userProfileId = window._currentUserProfileId ||
-                            window.ContractsManager?._currentProfileId ||
-                            null;
-
-        if (userProfileId === null) {
-            try {
-                const storedProfileId = localStorage.getItem('vivat_profile_id');
-                if (storedProfileId && !isNaN(Number(storedProfileId))) {
-                    userProfileId = Number(storedProfileId);
-                } else {
-                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                    const pId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
-                    if (pId && !isNaN(Number(pId))) {
-                        userProfileId = Number(pId);
-                    }
-                }
-            } catch (e) {}
-        }
-
-        // Si el id_perfil numérico coincide
-        if (userProfileId !== null && contractOwnerProfileId !== null && contractOwnerProfileId > 0) {
-            if (Number(userProfileId) === Number(contractOwnerProfileId)) {
-                return true;
-            }
-        }
-
-        // Respaldo por email autenticado
-        let userEmail = '';
-        try {
-            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-            userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-        } catch (e) {}
-
-        const ownerEmail = (c.owner?.email || c.owner_email || prop.owner_email || prop.ownerEmail || prop.mail || '').toLowerCase().trim();
-        const tenantEmail = (c.tenant?.email || c.tenant_email || applicant.tenant_email || applicant.email || '').toLowerCase().trim();
-
-        if (userEmail && tenantEmail && userEmail === tenantEmail && userEmail !== ownerEmail) {
-            return false;
-        }
-        if (userEmail && ownerEmail && userEmail === ownerEmail) {
-            return true;
-        }
-
-        // Si se está editando / generando desde el panel del propietario o corredor para una postulación
-        const isOwnerPanel = window.location.pathname.includes('administrador') ||
-                             window.location.pathname.includes('panel-corredor') ||
-                             window.location.pathname.includes('propietarios') ||
-                             (options.role && ['OWNER', 'PROPIETARIO', 'BROKER', 'CORREDOR', 'ADMIN'].includes(options.role.toUpperCase()));
-
-        if (isOwnerPanel) {
-            return true;
-        }
-
-        const activeRole = (localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || '').toUpperCase();
-        if (['OWNER', 'PROPIETARIO', 'CORREDOR', 'BROKER'].includes(activeRole)) {
-            return true;
-        }
-
-        if (!userEmail || !tenantEmail || userEmail !== tenantEmail) {
-            return true;
-        }
-
-        return false;
+        const userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
+        return Boolean(
+            Number.isSafeInteger(Number(userProfileId)) &&
+            Number.isSafeInteger(Number(contractOwnerProfileId)) &&
+            Number(userProfileId) === Number(contractOwnerProfileId)
+        );
     }
 
     async function getApiAuthHeaders() {
@@ -196,17 +98,6 @@
                 }
             } catch (e) {}
         }
-        try {
-            const storedProfileId = localStorage.getItem('vivat_profile_id') || window._currentUserProfileId;
-            if (storedProfileId) {
-                headers['x-profile-id'] = String(storedProfileId);
-            }
-            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-            const email = uLocal.email || uLocal.mail;
-            if (email) {
-                headers['x-user-email'] = email;
-            }
-        } catch (e) {}
         return headers;
     }
 
@@ -1761,7 +1652,7 @@
                                                 <span class="material-symbols-outlined text-sm">tune</span>
                                                 <span class="hidden sm:inline">Editar</span>
                                             </button>
-                                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${c.id}', '${c.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-700 hover:text-white dark:bg-emerald-950/40 dark:text-emerald-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer shrink-0" title="Generar Inventario (Anexo I)">
+                                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${c.dbContractId || ''}', '${c.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-700 hover:text-white dark:bg-emerald-950/40 dark:text-emerald-300 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer shrink-0" title="Generar Inventario (Anexo I)">
                                                 <span class="material-symbols-outlined text-sm">inventory</span>
                                                 <span class="hidden sm:inline">Inventario</span>
                                             </button>
@@ -1960,7 +1851,7 @@
                             ` : ''}
                             
                             ${(canEditContract) ? `
-                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${contract.id}', '${contract.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="h-9 px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Cargar Inventario del Inmueble (Anexo I)">
+                            <button type="button" onclick="try{ event.stopPropagation(); window.InventoryManager.openModal('${contract.dbContractId || ''}', '${contract.propertyId || ''}'); }catch(e){ alert('Error al abrir inventario: ' + e.message); }" class="h-9 px-3 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-headline font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Cargar Inventario del Inmueble (Anexo I)">
                                 <span class="material-symbols-outlined text-base">inventory</span>
                                 <span class="hidden sm:inline">Inventario</span>
                             </button>
@@ -3590,64 +3481,125 @@
             this.initChatForContract(activeContractId);
         },
 
-        executeSignatureWithDidit: function (contractId, explicitRole) {
+        executeSignatureWithDidit: async function (contractId, explicitRole) {
             const contractObj = ContractsManager.getContractById(contractId);
             if (!contractObj) {
                 alert('No se encontró el contrato especificado para firmar.');
                 return;
             }
-            const role = explicitRole || detectActiveUserRole(contractObj) || this.currentUserRole;
-            this.currentUserRole = role;
             const consentCheckbox = document.getElementById('legal-inpage-consent');
             if (consentCheckbox && !consentCheckbox.checked) {
                 alert('Debe aceptar el consentimiento expreso de firma digital para continuar.');
                 return;
             }
+            const dbContractId = Number(contractObj.dbContractId);
+            if (!Number.isSafeInteger(dbContractId) || dbContractId <= 0) {
+                alert('Este contrato todavía no está listo para firma segura. Actualizá la lista e intentá nuevamente.');
+                return;
+            }
+            if (!window.DataManager?.iniciarFirmaContrato || !window.DiditKYC?.renderDiditIframeModal) {
+                alert('El servicio de firma segura no está disponible.');
+                return;
+            }
+            if (this._signatureFlowInProgress) return;
 
-            const emailInput = document.getElementById('signer-didit-email');
-            const signerEmail = (emailInput && emailInput.value.trim()) || (role === 'TENANT' ? contractObj.tenant?.email : contractObj.owner?.email) || 'usuario@vivat.com.ar';
-
-            // 1. Recuperar datos oficiales de Didit KYC registrados previamente en el Pasaporte / Identidad Digital
-            let diditIdentity = null;
+            this._signatureFlowInProgress = true;
             try {
-                diditIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || 'null');
-            } catch (e) {}
+                const callback = new URL(window.location.href);
+                callback.hash = '';
+                ['status', 'didit_status', 'verification_status', 'session_id', 'sessionId'].forEach((key) => callback.searchParams.delete(key));
+                const started = await window.DataManager.iniciarFirmaContrato(
+                    dbContractId,
+                    { consentGiven: true },
+                    callback.toString()
+                );
+                if (!started?.id_firma || !started?.didit_session_url || !started?.didit_session_id) {
+                    throw new Error('El servidor no devolvió una sesión de firma válida.');
+                }
 
-            let passportData = null;
-            try {
-                passportData = JSON.parse(localStorage.getItem('vivat_passport_data') || 'null');
-            } catch (e) {}
+                const decision = await window.DiditKYC.renderDiditIframeModal(
+                    started.didit_session_url,
+                    started.didit_session_id,
+                    { fetchDecision: () => ContractsManager.getSignatureDecisionFromServer(started.id_firma) }
+                );
+                if (decision?.status === 'DECLINED') {
+                    throw new Error('La verificación biométrica fue rechazada por el proveedor.');
+                }
+                if (decision?.status !== 'APPROVED') {
+                    if (window.ToastManager) {
+                        window.ToastManager.show({
+                            title: 'Verificación pendiente',
+                            message: 'La firma queda pendiente hasta que el proveedor confirme la verificación.',
+                            type: 'info',
+                            duration: 6000
+                        });
+                    }
+                    return;
+                }
 
-            let userLocal = null;
-            try {
-                userLocal = JSON.parse(localStorage.getItem('vivat_user') || 'null');
-            } catch (e) {}
+                const sealed = await window.DataManager.sellarFirmaContrato(started.id_firma);
+                const finalization = await window.DataManager.finalizarYObtenerDocumentosContrato(dbContractId);
+                const serverRole = String(started.rol_firmante || explicitRole || '').toUpperCase();
+                const summary = finalization?.resumen_firmas || {};
+                if (contractObj.tenant) contractObj.tenant.hasSigned = Boolean(summary.inquilino?.firmo);
+                if (contractObj.owner) contractObj.owner.hasSigned = Boolean(summary.propietario?.firmo);
+                contractObj.status = finalization?.contrato_activo ? 'SIGNED_AND_SEALED' : 'PENDING_SIGNATURES';
+                contractObj.originalHash = sealed?.hash_original_sha256 || contractObj.originalHash;
+                contractObj.finalHash = finalization?.hash_final_sha256 || contractObj.finalHash;
+                contractObj.urlContratoFinal = finalization?.documentos?.contrato_final || contractObj.urlContratoFinal;
+                contractObj.auditTrailUrl = sealed?.url_audit_trail_pdf || contractObj.auditTrailUrl;
+                saveContracts();
 
-            const dni = diditIdentity?.documentNumber || diditIdentity?.dni || passportData?.dni || userLocal?.dni || '42.189.341';
-            const fullName = diditIdentity?.fullName || (diditIdentity?.firstName ? `${diditIdentity.firstName} ${diditIdentity.lastName || ''}`.trim() : null) || passportData?.fullName || passportData?.nombre || userLocal?.nombre_completo || userLocal?.nombre || (role === 'TENANT' ? contractObj.tenant?.name : contractObj.owner?.name) || 'Titular Verificado';
-            const diditSessionId = diditIdentity?.sessionId || `didit_passport_${Date.now()}`;
-
-            const passportDiditResult = {
-                status: 'APPROVED',
-                sessionId: diditSessionId,
-                document: {
-                    documentNumber: dni,
-                    dni: dni,
-                    fullName: fullName,
-                    status: 'APPROVED'
-                },
-                signerName: fullName,
-                signerDni: dni,
-                isPassportData: true
-            };
-
-            console.log('[ContractsManager] Usando datos de Didit KYC del Pasaporte para la firma:', passportDiditResult);
-
-            // Iniciar sellado criptográfico directamente con los datos de Didit del Pasaporte
-            ContractsManager.startCryptographicStep(contractObj.id, role, passportDiditResult);
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Firma sellada',
+                        message: finalization?.contrato_activo
+                            ? 'Las firmas requeridas fueron confirmadas por el servidor.'
+                            : 'Tu firma fue sellada. Falta la confirmación de la otra parte.',
+                        type: 'success',
+                        duration: 6000
+                    });
+                }
+                ContractsManager.renderDashboard('contracts-dashboard-container');
+                if (finalization?.contrato_activo) ContractsManager.showSignatureSuccessModal(contractObj.id, serverRole);
+            } catch (error) {
+                console.error('[ContractsManager] Error en el flujo seguro de firma:', error);
+                alert(error.message || 'No se pudo completar la firma segura.');
+            } finally {
+                this._signatureFlowInProgress = false;
+            }
         },
 
-        startCryptographicStep: function (contractId, role, diditSessionData = {}) {
+        getSignatureDecisionFromServer: async function (signatureId) {
+            const response = await fetch(`/api/firmas/estado?id_firma=${encodeURIComponent(Number(signatureId))}`, {
+                headers: await getApiAuthHeaders()
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok || !result.data) {
+                throw new Error(result.message || result.error || 'No se pudo consultar el estado de la firma.');
+            }
+            const state = result.data;
+            const normalized = String(state.estado_firma || '').toLowerCase();
+            const diditStatus = String(state.didit_status || '').toUpperCase();
+            if (state.canSeal) return { status: 'APPROVED', serverState: state };
+            if (['biometria_rechazada', 'rechazada', 'cancelada', 'fallida'].includes(normalized) || ['DECLINED', 'REJECTED', 'FAILED', 'CANCELLED'].includes(diditStatus)) {
+                return { status: 'DECLINED', serverState: state };
+            }
+            return { status: 'IN_PROGRESS', serverState: state };
+        },
+
+        // Kept only to fail closed if an obsolete cached script calls it. All active
+        // signing now goes through executeSignatureWithDidit and server endpoints.
+        legacyUnsafeStartCryptographicStep_DISABLED: function () {
+            throw new Error('El flujo local de firma fue deshabilitado por seguridad.');
+        },
+
+        legacyUnsafeStartCryptographicStepSource_DISABLED: function (contractId, role, diditSessionData = {}) {
+            // This source is retained temporarily for audit traceability only.
+            // It must never run: it used browser-controlled approval, direct DB
+            // writes and fabricated timestamp evidence.
+            throw new Error('El flujo local de firma fue deshabilitado por seguridad.');
+
             const currentSessionId = diditSessionData.sessionId || `didit_sess_${Date.now()}`;
             const shortSessionId = currentSessionId.length > 22 ? currentSessionId.substring(0, 22) + '...' : currentSessionId;
             const signerName = diditSessionData.signerName || diditSessionData.document?.fullName || (role === 'TENANT' ? 'Inquilino Titular' : 'Propietario Titular');
@@ -5446,18 +5398,13 @@
                 ContractsManager.renderDashboard('contracts-dashboard-container');
             }
 
-            // Detectar retorno de redirección desde Didit con validación aprobada
+            // El retorno del proveedor no es evidencia de aprobación. El webhook y
+            // el servidor actualizan el estado; evitamos ejecutar flujos locales.
             if (contractParam && (statusParam === 'Approved' || statusParam === 'COMPLETED' || statusParam === 'approved') && sessionParam) {
                 const targetC = ContractsManager.getContractById(contractParam);
                 if (targetC) {
-                    setTimeout(() => {
-                        ContractsManager.startCryptographicStep(targetC.id, roleParam, {
-                            sessionId: sessionParam,
-                            status: 'APPROVED'
-                        });
-                        const cleanUrl = window.location.pathname + `?contract=${targetC.id}&role=${roleParam}`;
-                        window.history.replaceState({}, document.title, cleanUrl);
-                    }, 400);
+                    const cleanUrl = window.location.pathname + `?contract=${encodeURIComponent(targetC.id)}`;
+                    window.history.replaceState({}, document.title, cleanUrl);
                 }
             }
         }

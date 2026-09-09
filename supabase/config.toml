@@ -1,0 +1,7 @@
+[functions.get-walk-score]
+verify_jwt = true
+
+# This scheduled worker accepts no browser traffic. Its scheduler must send the
+# BCRA_SYNC_SECRET through x-bcra-sync-secret; see the function source.
+[functions.sync-indices-bcra]
+verify_jwt = false

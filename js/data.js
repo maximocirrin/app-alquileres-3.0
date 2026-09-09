@@ -33,99 +33,83 @@ function base64ToBlob(base64Data, contentType = 'image/jpeg') {
     }
 }
 
+async function authenticatedApiHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const { data } = await window.supabaseClient?.auth.getSession();
+    const accessToken = data?.session?.access_token;
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    return headers;
+}
+
+async function uploadPropertyImageSecurely(publicationId, file) {
+    if (!(file instanceof Blob) || !window.supabaseClient?.storage) {
+        throw new Error('No se recibió una imagen válida.');
+    }
+    const contentType = String(file.type || '').toLowerCase().split(';')[0].trim();
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType) || file.size < 1 || file.size > 10 * 1024 * 1024) {
+        throw new Error('Cada imagen debe ser JPG, PNG o WEBP y no superar los 10 MB.');
+    }
+
+    const grantResponse = await fetch('/api/property-media-upload', {
+        method: 'POST',
+        headers: await authenticatedApiHeaders(),
+        body: JSON.stringify({
+            id_publicacion: publicationId,
+            contentType,
+            size: file.size
+        })
+    });
+    const grantPayload = await grantResponse.json().catch(() => ({}));
+    if (!grantResponse.ok || !grantPayload?.ok || !grantPayload.data?.path || !grantPayload.data?.token) {
+        throw new Error(grantPayload?.message || grantPayload?.error || 'No se pudo autorizar la carga de la imagen.');
+    }
+
+    const grant = grantPayload.data;
+    const { error } = await window.supabaseClient.storage
+        .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
+        .uploadToSignedUrl(grant.path, grant.token, file, { contentType: grant.contentType });
+    if (error) throw error;
+
+    const { data: publicData } = window.supabaseClient.storage
+        .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
+        .getPublicUrl(grant.path);
+    if (!publicData?.publicUrl) throw new Error('No se pudo obtener la URL pública de la imagen.');
+    return publicData.publicUrl;
+}
+
+function safeExternalImageUrl(value) {
+    if (typeof value !== 'string') return null;
+    if (value.startsWith('img/')) return value;
+    try {
+        const url = new URL(value);
+        return url.protocol === 'https:' ? url.toString() : null;
+    } catch (_) {
+        return null;
+    }
+}
+
 var DataManager = {
-    // Helper: Get or Create Profile ID for current user
-    _getOrCreateProfile: async function (userHint = null) {
+    // Resolve only a server-provisioned profile tied to the immutable Auth ID.
+    // Browser code must never create a profile, assign a role, or mark KYC valid.
+    _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
         try {
-            let authUser = null;
-            try {
-                const { data: userData } = await window.supabaseClient.auth.getUser();
-                authUser = userData?.user;
-            } catch (e) {}
+            const { data: userData, error: userError } = await window.supabaseClient.auth.getUser();
+            const authUser = userData?.user;
+            if (userError || !authUser) return null;
 
-            if (!authUser) {
-                try {
-                    const { data: sessionData } = await window.supabaseClient.auth.getSession();
-                    authUser = sessionData?.session?.user;
-                } catch (e) {}
+            const { data: profile, error } = await window.supabaseClient
+                .from('Perfil')
+                .select('id_perfil')
+                .eq('user_id', authUser.id)
+                .maybeSingle();
+            if (error) {
+                console.warn('No se pudo resolver el perfil autenticado.');
+                return null;
             }
-
-            if (authUser) {
-                const { data: existing } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil')
-                    .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
-                    .limit(1);
-
-                if (existing && existing.length > 0) {
-                    return existing[0].id_perfil;
-                }
-
-                const { data: newProfile, error } = await window.supabaseClient
-                    .from('Perfil')
-                    .insert([{
-                        user_id: authUser.id,
-                        mail: authUser.email,
-                        nombre_completo: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
-                        id_tipo_perfil: 1,
-                        cuenta_verificada: true
-                    }])
-                    .select('id_perfil')
-                    .single();
-
-                if (!error && newProfile) {
-                    return newProfile.id_perfil;
-                }
-            }
-
-            // Fallback for explicit userHint (e.g. from publication wizard contact info)
-            if (userHint) {
-                try {
-                    let localEmail = null;
-                    let localName = 'Usuario Vivat';
-                    if (typeof userHint === 'object') {
-                        localEmail = userHint.email || userHint.mail || userHint.contactEmail;
-                        localName = userHint.nombre || userHint.contactNombre || localName;
-                    } else if (typeof userHint === 'string' && userHint.includes('@')) {
-                        localEmail = userHint;
-                    }
-
-                    if (localEmail) {
-                        localEmail = localEmail.trim().toLowerCase();
-                        const { data: matched } = await window.supabaseClient
-                            .from('Perfil')
-                            .select('id_perfil')
-                            .ilike('mail', localEmail)
-                            .limit(1);
-
-                        if (matched && matched.length > 0) {
-                            return matched[0].id_perfil;
-                        }
-
-                        const { data: createdProf, error: createErr } = await window.supabaseClient
-                            .from('Perfil')
-                            .insert([{
-                                mail: localEmail,
-                                nombre_completo: localName,
-                                id_tipo_perfil: 1,
-                                cuenta_verificada: false
-                            }])
-                            .select('id_perfil')
-                            .single();
-
-                        if (!createErr && createdProf) {
-                            return createdProf.id_perfil;
-                        }
-                    }
-                } catch (localErr) {
-                    console.warn("Fallback profile lookup error:", localErr);
-                }
-            }
-
-            return null;
+            return profile?.id_perfil || null;
         } catch (e) {
-            console.error("Error in _getOrCreateProfile:", e);
+            console.error('Error al resolver el perfil autenticado:', e);
             return null;
         }
     },
@@ -153,16 +137,8 @@ var DataManager = {
             console.error("Signup error:", error);
             throw error;
         }
-        if (data.user) {
-            await window.supabaseClient
-                .from('Perfil')
-                .insert([{
-                    user_id: data.user.id,
-                    mail: email,
-                    nombre_completo: fullName || email.split('@')[0],
-                    id_tipo_perfil: 1
-                }]);
-        }
+        // El perfil se aprovisiona del lado servidor y queda ligado a auth.users.
+        // No se permite al navegador elegir roles ni campos de verificación.
         return data.user;
     },
 
@@ -948,49 +924,21 @@ var DataManager = {
 
             try {
                 if (item instanceof File || item instanceof Blob) {
-                    const ext = item.name ? item.name.split('.').pop() : 'webp';
-                    const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.${ext}`;
-                    const { data: uploadResult, error: uploadErr } = await window.supabaseClient
-                        .storage
-                        .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                        .upload(filePath, item, { contentType: item.type || 'image/webp', upsert: true });
-
-                    if (!uploadErr) {
-                        const { data: urlRes } = window.supabaseClient
-                            .storage
-                            .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                            .getPublicUrl(filePath);
-                        publicUrl = urlRes?.publicUrl;
-                    } else {
-                        console.error("Storage upload error:", uploadErr);
-                    }
+                    publicUrl = await uploadPropertyImageSecurely(pubData.id_publicacion, item);
                 } else if (typeof item === 'string' && item.startsWith('data:')) {
                     const blob = base64ToBlob(item);
                     if (blob) {
-                        const filePath = `prop-${pubData.id_publicacion}-${Date.now()}-${idx}.webp`;
-                        const { data: uploadResult, error: uploadErr } = await window.supabaseClient
-                            .storage
-                            .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                            .upload(filePath, blob, { contentType: 'image/webp', upsert: true });
-
-                        if (!uploadErr) {
-                            const { data: urlRes } = window.supabaseClient
-                                .storage
-                                .from(window.STORAGE_BUCKETS.PROPIEDADES_MULTIMEDIA)
-                                .getPublicUrl(filePath);
-                            publicUrl = urlRes?.publicUrl;
-                        }
+                        publicUrl = await uploadPropertyImageSecurely(pubData.id_publicacion, blob);
                     }
-                    if (!publicUrl) publicUrl = item;
                 } else if (typeof item === 'string') {
-                    publicUrl = item;
+                    publicUrl = safeExternalImageUrl(item);
                 }
             } catch (imgErr) {
                 console.warn("Storage upload exception:", imgErr);
             }
 
             if (!publicUrl && typeof item === 'string') {
-                publicUrl = item;
+                publicUrl = safeExternalImageUrl(item);
             }
 
             if (publicUrl && !seenUrls.has(publicUrl)) {
@@ -4054,22 +4002,9 @@ var DataManager = {
 
     // Índices de Actualización BCRA (IPC & ICL)
     syncIndicesFromBcra: async function () {
-        if (!window.supabaseClient) {
-            throw new Error('Supabase client no disponible.');
-        }
-        try {
-            console.log('[DataManager] Solicitando sincronización en vivo con API BCRA...');
-            const { data, error } = await window.supabaseClient.functions.invoke('sync-indices-bcra');
-            if (error) {
-                console.error('[DataManager] Error al invocar sync-indices-bcra:', error);
-                throw error;
-            }
-            console.log('[DataManager] Sincronización con BCRA exitosa:', data);
-            return data;
-        } catch (err) {
-            console.error('[DataManager] Falló la sincronización con BCRA:', err);
-            throw err;
-        }
+        // This privileged operation is performed by a server-side scheduler.
+        // A browser session must never invoke a service-role BCRA synchronizer.
+        throw new Error('La sincronización de índices se ejecuta automáticamente desde el servidor.');
     },
 
     getLatestIndices: async function () {
@@ -4867,99 +4802,25 @@ var DataManager = {
 
     // Storage Upload Helpers per Bucket
     uploadProfileAvatar: async function (fileOrBase64, userId) {
-        if (!window.supabaseClient) return null;
-        try {
-            let blob = fileOrBase64;
-            if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
-                blob = base64ToBlob(fileOrBase64);
-            }
-            if (!blob) return null;
-
-            const ext = blob.name ? blob.name.split('.').pop() : 'jpg';
-            const filePath = `avatars/user-${userId || Date.now()}.${ext}`;
-
-            const { data, error } = await window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.FOTOS_DE_PERFIL)
-                .upload(filePath, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
-
-            if (error) {
-                console.error("Error uploading to fotos_de_perfil:", error);
-                return null;
-            }
-
-            const { data: urlRes } = window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.FOTOS_DE_PERFIL)
-                .getPublicUrl(filePath);
-
-            return urlRes?.publicUrl || null;
-        } catch (e) {
-            console.error("Exception in uploadProfileAvatar:", e);
-            return null;
-        }
+        // Kept for compatibility with old callers. A browser must not choose an
+        // avatar path or write directly to Storage because that enabled account
+        // impersonation via arbitrary user ids.
+        console.warn('La carga directa de avatares fue deshabilitada; requiere un endpoint autenticado.');
+        return null;
     },
 
     uploadInventoryPhotoFile: async function (fileOrBase64, inventoryId, itemId) {
-        if (!window.supabaseClient) return null;
-        try {
-            let blob = fileOrBase64;
-            if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
-                blob = base64ToBlob(fileOrBase64);
-            }
-            if (!blob) return null;
-
-            const ext = blob.name ? blob.name.split('.').pop() : 'jpg';
-            const filePath = `inv-${inventoryId || 0}/item-${itemId || 0}-${Date.now()}.${ext}`;
-
-            const { data, error } = await window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.INVENTARIO_DIGITAL)
-                .upload(filePath, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
-
-            if (error) {
-                console.error("Error uploading to inventario_digital:", error);
-                return null;
-            }
-
-            const { data: urlRes } = window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.INVENTARIO_DIGITAL)
-                .getPublicUrl(filePath);
-
-            return urlRes?.publicUrl || null;
-        } catch (e) {
-            console.error("Exception in uploadInventoryPhotoFile:", e);
-            return null;
-        }
+        // Inventory uploads use /api/inventario-upload and a path-scoped signed
+        // URL in inventory-manager.js. Do not revive the unrestricted helper.
+        console.warn('La carga directa de inventario fue deshabilitada por seguridad.');
+        return null;
     },
 
     uploadRAGDocumentFile: async function (fileOrBlob, documentName) {
-        if (!window.supabaseClient) return null;
-        try {
-            const fileName = documentName || fileOrBlob.name || `doc-${Date.now()}.pdf`;
-            const filePath = `rag-docs/${fileName}`;
-
-            const { data, error } = await window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.RAG_DOCUMENTS)
-                .upload(filePath, fileOrBlob, { contentType: fileOrBlob.type || 'application/pdf', upsert: true });
-
-            if (error) {
-                console.error("Error uploading to rag-documents:", error);
-                return null;
-            }
-
-            const { data: urlRes } = window.supabaseClient
-                .storage
-                .from(window.STORAGE_BUCKETS.RAG_DOCUMENTS)
-                .getPublicUrl(filePath);
-
-            return urlRes?.publicUrl || null;
-        } catch (e) {
-            console.error("Exception in uploadRAGDocumentFile:", e);
-            return null;
-        }
+        // RAG material can include private source documents. It is deliberately
+        // server-only until an admin-reviewed upload route exists.
+        console.warn('La carga directa de documentos RAG fue deshabilitada por seguridad.');
+        return null;
     },
 
     getTenants: async function() {
@@ -5021,17 +4882,16 @@ var DataManager = {
      * @returns {Promise<Object>} Resultado con id_firma, estado y didit_session_url
      */
     iniciarFirmaContrato: async function (idContrato, metadata = {}, callbackUrl = '') {
-        const profileId = await this._getOrCreateProfile();
-        
         const payload = {
             id_contrato: Number(idContrato),
-            id_perfil: profileId,
+            consentGiven: metadata.consentGiven === true,
             metadata: {
                 userAgent: navigator.userAgent,
                 geolocation: metadata.geolocation || null,
                 screenResolution: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                ...metadata
+                ...metadata,
+                consentGiven: undefined
             },
             callbackUrl: callbackUrl || window.location.href
         };
@@ -5066,17 +4926,6 @@ var DataManager = {
                 }
             } catch (e) {}
         }
-        try {
-            const storedProfileId = localStorage.getItem('vivat_profile_id') || window._currentUserProfileId;
-            if (storedProfileId) {
-                headers['x-profile-id'] = String(storedProfileId);
-            }
-            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-            const email = uLocal.email || uLocal.mail;
-            if (email) {
-                headers['x-user-email'] = email;
-            }
-        } catch (e) {}
         return headers;
     },
 
@@ -5086,16 +4935,19 @@ var DataManager = {
      * @returns {Promise<Array>} Lista de firmas con perfiles y estados
      */
     getFirmasContrato: async function (idContrato) {
-        if (!window.supabaseClient || !idContrato) return [];
+        if (!idContrato) return [];
         try {
-            const { data, error } = await window.supabaseClient
-                .from('Firma_contrato')
-                .select('*, Perfil(*)')
-                .eq('id_contrato', Number(idContrato))
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-            return data || [];
+            const authHeaders = await this._getAuthHeaders();
+            const response = await fetch(`/api/firmas/finalizar?id_contrato=${encodeURIComponent(Number(idContrato))}`, {
+                headers: authHeaders
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.message || result.error || 'No se pudo consultar las firmas.');
+            const summary = result.data?.resumen_firmas || {};
+            return [
+                { rol_firmante: 'inquilino', estado_firma: summary.inquilino?.estado || 'pendiente', fecha_firma: summary.inquilino?.fecha || null },
+                { rol_firmante: 'propietario', estado_firma: summary.propietario?.estado || 'pendiente', fecha_firma: summary.propietario?.fecha || null }
+            ];
         } catch (err) {
             console.error("Error al consultar firmas de contrato:", err);
             return [];
@@ -5108,16 +4960,15 @@ var DataManager = {
      * @returns {Promise<Object|null>} Datos de la firma y scores biométricos
      */
     consultarEstadoFirma: async function (idFirma) {
-        if (!window.supabaseClient || !idFirma) return null;
+        if (!idFirma) return null;
         try {
-            const { data, error } = await window.supabaseClient
-                .from('Firma_contrato')
-                .select('*')
-                .eq('id_firma', Number(idFirma))
-                .single();
-
-            if (error) throw error;
-            return data;
+            const authHeaders = await this._getAuthHeaders();
+            const response = await fetch(`/api/firmas/estado?id_firma=${encodeURIComponent(Number(idFirma))}`, {
+                headers: authHeaders
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.message || result.error || 'No se pudo consultar la firma.');
+            return result.data || null;
         } catch (err) {
             console.error("Error al consultar estado de firma individual:", err);
             return null;
@@ -5157,8 +5008,10 @@ var DataManager = {
     finalizarYObtenerDocumentosContrato: async function (idContrato) {
         try {
             const authHeaders = await this._getAuthHeaders();
-            const response = await fetch(`/api/firmas/finalizar?id_contrato=${Number(idContrato)}`, {
-                headers: authHeaders
+            const response = await fetch('/api/firmas/finalizar', {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ id_contrato: Number(idContrato) })
             });
             const result = await response.json();
             if (!response.ok || !result.ok) {

@@ -47,35 +47,20 @@
                     }
                 }
 
-                // Fallback a localStorage
+                // Local storage is a presentation cache only; it is never an
+                // identity, role, or KYC authority.
                 const localUser = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-
-                if (!authUser && !localUser?.email && !localUser?.id) {
-                    this._user = {
-                        id: 'usr_guest_demo',
-                        email: 'usuario@vivat.com.ar',
-                        user_metadata: { full_name: 'Usuario Vivat' }
-                    };
-                } else {
-                    this._user = authUser || {
-                        id: localUser.id || localUser.user_id || 'usr_local',
-                        email: localUser.email || 'usuario@vivat.com.ar',
-                        user_metadata: { full_name: localUser.name || localUser.nombre_completo || 'Usuario Vivat' }
-                    };
-                }
+                this._user = authUser || { id: null, email: null, user_metadata: { full_name: 'Usuario' } };
 
                 // Obtener registro de la tabla 'Perfil' en Supabase
                 let profileData = null;
-                if (window.supabaseClient && (this._user.id || this._user.email)) {
+                if (window.supabaseClient && authUser?.id) {
                     try {
-                        let query = window.supabaseClient.from('Perfil').select('*');
-                        if (this._user.id && this._user.id !== 'usr_guest_demo' && this._user.id !== 'usr_local') {
-                            query = query.or(`user_id.eq.${this._user.id},mail.eq.${this._user.email}`);
-                        } else if (this._user.email) {
-                            query = query.eq('mail', this._user.email);
-                        }
-
-                        const { data: profiles, error } = await query.limit(1);
+                        const { data: profiles, error } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil, user_id, mail, nombre_completo, nombre_usuario, telefono, avatar_url, cuenta_verificada, fecha_verificacion, id_tipo_perfil, fecha_baja')
+                            .eq('user_id', authUser.id)
+                            .limit(1);
                         if (!error && profiles && profiles.length > 0) {
                             profileData = profiles[0];
                         }
@@ -87,13 +72,14 @@
                 // Si no existe fila en Perfil, construir objeto por defecto con fallback
                 if (!profileData) {
                     profileData = {
-                        nombre_completo: localUser.name || localUser.nombre_completo || this._user.user_metadata?.full_name || this._user.email?.split('@')[0] || 'Maximo Cirrincione',
-                        nombre_usuario: localUser.username || this._user.user_metadata?.nombre_usuario || this._user.email?.split('@')[0] || 'maximocirrin',
-                        mail: this._user.email || localUser.email || 'maximocirrin@gmail.com',
-                        telefono: localUser.phone || localUser.telefono || '+54 9 11 4589-2231',
-                        cuenta_verificada: localUser.cuenta_verificada ?? true,
-                        fecha_verificacion: localUser.fecha_verificacion || new Date().toISOString(),
-                        avatar_url: localUser.avatar_url || null
+                        user_id: authUser?.id || null,
+                        nombre_completo: this._user.user_metadata?.full_name || this._user.email?.split('@')[0] || 'Usuario',
+                        nombre_usuario: this._user.user_metadata?.nombre_usuario || this._user.email?.split('@')[0] || '',
+                        mail: this._user.email || '',
+                        telefono: '',
+                        cuenta_verificada: false,
+                        fecha_verificacion: null,
+                        avatar_url: null
                     };
                 }
 
@@ -111,8 +97,8 @@
                     username: profileData.nombre_usuario,
                     phone: profileData.telefono,
                     telefono: profileData.telefono,
-                    id_tipo_perfil: profileData.id_tipo_perfil || localUser.id_tipo_perfil || 1,
-                    cuenta_verificada: profileData.cuenta_verificada
+                    id_tipo_perfil: profileData.id_tipo_perfil || 1,
+                    cuenta_verificada: profileData.cuenta_verificada === true
                 };
                 localStorage.setItem('vivat_user', JSON.stringify(syncData));
 
@@ -169,7 +155,7 @@
             }
 
             // KYC Status Badge
-            const isVerified = Boolean(p.cuenta_verificada || localStorage.getItem('vivat_didit_identity'));
+            const isVerified = p.cuenta_verificada === true;
             if (heroKycBadgeEl) {
                 if (isVerified) {
                     heroKycBadgeEl.innerHTML = `
@@ -551,7 +537,7 @@
                 }
 
                 // 1. Actualizar en Supabase Auth User Metadata
-                if (window.supabaseClient && this._user && this._user.id && this._user.id !== 'usr_guest_demo') {
+                if (window.supabaseClient && this._user?.id) {
                     try {
                         await window.supabaseClient.auth.updateUser({
                             data: {
@@ -576,15 +562,11 @@
                 let savedOk = false;
                 if (window.supabaseClient) {
                     try {
-                        let query = window.supabaseClient.from('Perfil');
-                        if (this._profile?.id_perfil) {
-                            const { error: errUp } = await query.update(updatePayload).eq('id_perfil', this._profile.id_perfil);
-                            if (!errUp) savedOk = true;
-                        } else if (this._user?.id && this._user.id !== 'usr_guest_demo') {
-                            const { error: errUp } = await query.update(updatePayload).eq('user_id', this._user.id);
-                            if (!errUp) savedOk = true;
-                        } else if (this._profile?.mail) {
-                            const { error: errUp } = await query.update(updatePayload).eq('mail', this._profile.mail);
+                        if (this._user?.id) {
+                            const { error: errUp } = await window.supabaseClient
+                                .from('Perfil')
+                                .update(updatePayload)
+                                .eq('user_id', this._user.id);
                             if (!errUp) savedOk = true;
                         }
                     } catch (eSql) {
@@ -900,11 +882,11 @@
             modal.querySelector('#btn-cancel-deactivate')?.addEventListener('click', () => modal.remove());
             modal.querySelector('#btn-confirm-deactivate')?.addEventListener('click', async () => {
                 try {
-                    if (window.supabaseClient && AccountSettings._profile?.id_perfil) {
+                    if (window.supabaseClient && AccountSettings._user?.id) {
                         await window.supabaseClient
                             .from('Perfil')
                             .update({ fecha_baja: new Date().toISOString() })
-                            .eq('id_perfil', AccountSettings._profile.id_perfil);
+                            .eq('user_id', AccountSettings._user.id);
                     }
                 } catch (e) {
                     console.warn('[AccountSettings] Error actualizando fecha_baja en Supabase:', e);

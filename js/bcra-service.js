@@ -19,7 +19,7 @@ async function consultarBcra(cuit, pasaporteId = null, userId = null) {
         throw new Error('El CUIT ingresado debe tener 11 dígitos numéricos.');
     }
 
-    console.log(`[BCRA Frontend] Consultando Central de Deudores BCRA para CUIT: ${cleanCuit}...`);
+    console.info('[BCRA Frontend] Consultando Central de Deudores.');
 
     let data = null;
     let headers = { 'Content-Type': 'application/json' };
@@ -36,31 +36,12 @@ async function consultarBcra(cuit, pasaporteId = null, userId = null) {
         const response = await fetch('/api/bcra-deudores', {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({
-                cuit: cleanCuit,
-                pasaporteId: pasaporteId || window.currentPasaporteId || null,
-                userId: userId || null
-            })
+        body: JSON.stringify({ cuit: cleanCuit })
         });
 
-        if (response.status === 405) {
-            throw new Error('Servidor estático (HTTP 405 Method Not Allowed)');
-        }
-
-        data = await response.json();
+        data = await response.json().catch(() => ({}));
     } catch (fetchErr) {
-        console.warn('[BCRA Frontend] Petición API no disponible en servidor estático. Generando datos BCRA de simulación:', fetchErr.message);
-        data = {
-            success: true,
-            cuit: cleanCuit,
-            situacionCrediticia: 'Situación 1 (Normal)',
-            peorSituacion: 1,
-            chequesRechazadosCount: 0,
-            diasAtrasoMax: 0,
-            entidades: [
-                { entidad: 'Banco de la Nación Argentina', situacion: 1, monto: 0, diasAtraso: 0 }
-            ]
-        };
+        throw new Error('No se pudo comunicar con la Central de Deudores BCRA.');
     }
 
     if (!data || !data.success) {
@@ -69,7 +50,7 @@ async function consultarBcra(cuit, pasaporteId = null, userId = null) {
         throw new Error(errorMsg);
     }
 
-    console.log('[BCRA Frontend] Respuesta procesada exitosamente:', data);
+    console.info('[BCRA Frontend] Respuesta crediticia recibida.');
 
     // Actualizar la interfaz del Pasaporte Vivat si estamos en la página
     actualizarBcraUI(data);

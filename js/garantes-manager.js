@@ -74,6 +74,12 @@
 
     const STORAGE_KEY = 'vivat_garantes_state_v2';
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[character]));
+    }
+
     function loadLocalState() {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
@@ -188,85 +194,19 @@
         },
 
         getGaranteByToken: async function (token) {
-            if (!token) return null;
-            let defaultInquilinoName = 'Inquilino Solicitante';
+            if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,256}$/.test(token)) return null;
             try {
-                const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
-                const dIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
-                const userObj = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                defaultInquilinoName = pData.razon_social || pData.nombre_completo || dIdentity.fullName || userObj.nombre || 'Nicolás Rossi (Inquilino)';
-            } catch (e) {}
-
-            if (window.supabaseClient) {
-                try {
-                    const { data, error } = await window.supabaseClient
-                        .from('Garante')
-                        .select('*, Documento_garante(*), Tipo_garantia(*), Estado_garante(*)')
-                        .eq('token_invitacion', token)
-                        .maybeSingle();
-
-                    if (!error && data) {
-                        let inquilinoNombre = defaultInquilinoName;
-                        let inquilinoEmail = '';
-
-                        if (data.id_pasaporte) {
-                            try {
-                                const { data: pass } = await window.supabaseClient
-                                    .from('Pasaporte_vivat')
-                                    .select('id_pasaporte, id_perfil, razon_social, Perfil(id_perfil, nombre_completo, mail, telefono)')
-                                    .eq('id_pasaporte', data.id_pasaporte)
-                                    .maybeSingle();
-
-                                if (pass) {
-                                    inquilinoNombre = pass.razon_social || pass.Perfil?.nombre_completo || defaultInquilinoName;
-                                    inquilinoEmail = pass.Perfil?.mail || '';
-                                }
-                            } catch (ePass) {}
-                        }
-
-                        return {
-                            id: String(data.id_garante),
-                            id_garante: data.id_garante,
-                            id_pasaporte: data.id_pasaporte,
-                            id_pasaporte_garante: data.id_pasaporte_garante,
-                            id_tipo_garantia: data.id_tipo_garantia || 3,
-                            nombre_completo: data.nombre_completo || 'Garante',
-                            email: data.email || '',
-                            telefono: data.telefono || '',
-                            relacion_inquilino: data.relacion_inquilino || 'Familiar',
-                            token_invitacion: data.token_invitacion,
-                            id_estado_garante: data.id_estado_garante || 1,
-                            kyc_verificado: Boolean(data.kyc_verificado),
-                            dni: data.dni || '',
-                            cuit: data.cuit || '',
-                            scoring: data.scoring || 10.0,
-                            datos_garantia: data.datos_garantia || {},
-                            inquilino_nombre: inquilinoNombre,
-                            inquilino_email: inquilinoEmail,
-                            documentos: (data.Documento_garante || []).map(d => ({
-                                id: String(d.id_documento),
-                                tipo_documento: d.tipo_documento,
-                                nombre_archivo: d.nombre_archivo,
-                                tamano_bytes: d.tamano_bytes,
-                                archivo_url: d.archivo_url,
-                                estado_documento: d.estado_documento || 'PENDIENTE'
-                            })),
-                            created_at: data.created_at
-                        };
-                    }
-                } catch (e) {
-                    console.warn('[GarantesManager] Error fetching garante by token:', e);
-                }
+                const response = await fetch('/api/garante-portal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'view', token })
+                });
+                const payload = await response.json().catch(() => ({}));
+                return response.ok && payload?.ok && payload.data ? payload.data : null;
+            } catch (error) {
+                console.warn('[GarantesManager] No se pudo abrir el portal seguro del garante:', error);
+                return null;
             }
-            const garantes = loadLocalState();
-            const localG = garantes.find(g => g.token_invitacion === token || g.token === token);
-            if (localG) {
-                return {
-                    ...localG,
-                    inquilino_nombre: localG.inquilino_nombre || defaultInquilinoName
-                };
-            }
-            return null;
         },
 
         /**
@@ -277,7 +217,9 @@
         syncWithSupabase: async function (pasaporteId) {
             if (!window.supabaseClient) return loadLocalState();
             try {
-                let pId = pasaporteId || window.currentPasaporteId || null;
+                // Never trust a passport id supplied by URL, localStorage, or a
+                // global variable. Resolve the current user's passport below.
+                let pId = null;
                 let userProfile = null;
                 let sessionUser = null;
 
@@ -290,20 +232,7 @@
                         .eq('user_id', sessionUser.id)
                         .maybeSingle();
 
-                    if (perf) {
-                        userProfile = perf;
-                    } else if (sessionUser.email) {
-                        const { data: perfMail } = await window.supabaseClient
-                            .from('Perfil')
-                            .select('*')
-                            .eq('mail', sessionUser.email)
-                            .maybeSingle();
-                        userProfile = perfMail;
-                    }
-                }
-
-                if (!userProfile && window._tenantProfileIdForGuarantor) {
-                    userProfile = { id_perfil: window._tenantProfileIdForGuarantor };
+                    if (perf) userProfile = perf;
                 }
 
                 this.currentUserProfile = userProfile;
@@ -366,18 +295,6 @@
                 const orConditions = [];
                 if (pId) orConditions.push(`id_pasaporte_garante.eq.${pId}`);
                 if (userProfile && userProfile.id_perfil) orConditions.push(`id_perfil.eq.${userProfile.id_perfil}`);
-                if (userProfile && userProfile.dni) {
-                    const cleanDni = String(userProfile.dni).replace(/\D/g, '');
-                    if (cleanDni) orConditions.push(`dni.eq.${cleanDni}`);
-                }
-                if (sessionUser && sessionUser.email) {
-                    const cleanMail = sessionUser.email.trim();
-                    if (cleanMail) orConditions.push(`email.ilike.${cleanMail}`);
-                }
-                if (userProfile && userProfile.mail && (!sessionUser || userProfile.mail.toLowerCase() !== sessionUser.email.toLowerCase())) {
-                    const cleanMail = userProfile.mail.trim();
-                    if (cleanMail) orConditions.push(`email.ilike.${cleanMail}`);
-                }
 
                 if (orConditions.length > 0) {
                     try {
@@ -502,8 +419,6 @@
         onInviteGarante: async function (dto) {
             console.log('[GarantesManager] onInviteGarante called with:', dto);
             const garantes = loadLocalState();
-            const newToken = 'tok_gar_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
-            let idGaranteBd = null;
 
             const tipoGarantiaId = parseInt(dto.idTipoGarantia || dto.id_tipo_garantia || 3, 10);
             const alias = (dto.alias || dto.nombreCompleto || dto.nombre || '').trim();
@@ -517,99 +432,49 @@
             }
 
             const nombreTemporal = alias || (tipoGarantiaId === 1 ? 'Garante Propietario (Pendiente KYC)' : 'Garante con Recibo (Pendiente KYC)');
-
-            if (window.supabaseClient) {
-                try {
-                    let pasaporteId = window.currentPasaporteId || null;
-                    if (!pasaporteId) {
-                        let targetProfileId = window._tenantProfileIdForGuarantor || null;
-                        if (!targetProfileId) {
-                            const { data: { user } } = await window.supabaseClient.auth.getUser();
-                            if (user) {
-                                const { data: perf } = await window.supabaseClient
-                                    .from('Perfil')
-                                    .select('id_perfil')
-                                    .eq('user_id', user.id)
-                                    .maybeSingle();
-                                if (perf) targetProfileId = perf.id_perfil;
-                            }
-                        }
-
-                        if (targetProfileId) {
-                            const { data: pasaportes } = await window.supabaseClient
-                                .from('Pasaporte_vivat')
-                                .select('id_pasaporte')
-                                .eq('id_perfil', targetProfileId)
-                                .order('created_at', { ascending: false })
-                                .limit(1);
-
-                            if (pasaportes && pasaportes.length > 0) {
-                                pasaporteId = pasaportes[0].id_pasaporte;
-                            }
-                        }
-                    }
-
-                    if (pasaporteId) {
-                        const insertPayload = {
-                            id_pasaporte: pasaporteId,
-                            id_tipo_garantia: tipoGarantiaId,
-                            id_estado_garante: 2, // 2: INVITADO
-                            nombre_completo: nombreTemporal,
-                            email: email || null,
-                            telefono: telefono || null,
-                            relacion_inquilino: relacion,
-                            token_invitacion: newToken,
-                            datos_garantia: datosGarantia,
-                            kyc_verificado: false,
-                            scoring: 10.0
-                        };
-
-                        const { data: inserted, error } = await window.supabaseClient
-                            .from('Garante')
-                            .insert([insertPayload])
-                            .select()
-                            .single();
-
-                        if (!error && inserted) {
-                            idGaranteBd = inserted.id_garante;
-                        } else if (error) {
-                            console.warn('[GarantesManager] Error al insertar garante en Supabase:', error);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[GarantesManager] Excepción al guardar garante en Supabase:', e);
-                }
+            if (!window.supabaseClient?.auth) throw new Error('El servicio de sesión no está disponible.');
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            const accessToken = sessionData?.session?.access_token;
+            if (!accessToken) throw new Error('Debés iniciar sesión para invitar un garante.');
+            const response = await fetch('/api/garantes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    action: 'invite',
+                    id_tipo_garantia: tipoGarantiaId,
+                    nombre_completo: nombreTemporal,
+                    email,
+                    telefono,
+                    relacion_inquilino: relacion,
+                    datosGarantia
+                })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload?.ok || !payload.data?.id_garante || !payload.data?.token_invitacion) {
+                throw new Error(payload?.message || payload?.error || 'No se pudo crear la invitación de forma segura.');
             }
-
-            let currentTenantName = 'Inquilino Solicitante';
-            try {
-                const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
-                const dIdentity = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
-                const userObj = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                currentTenantName = pData.razon_social || pData.nombre_completo || dIdentity.fullName || userObj.nombre || 'Nicolás Rossi (Inquilino)';
-            } catch (e) {}
+            const inserted = payload.data;
 
             const newGarante = {
-                id: idGaranteBd ? String(idGaranteBd) : 'gar_' + Date.now(),
-                id_garante: idGaranteBd || ('gar_' + Date.now()),
-                id_tipo_garantia: tipoGarantiaId,
-                nombre_completo: nombreTemporal,
-                nombre: nombreTemporal,
+                id: String(inserted.id_garante),
+                id_garante: inserted.id_garante,
+                id_tipo_garantia: inserted.id_tipo_garantia,
+                nombre_completo: inserted.nombre_completo,
+                nombre: inserted.nombre_completo,
                 alias: alias,
-                email: email,
-                telefono: telefono,
-                relacion_inquilino: relacion,
-                relacion: relacion,
-                token_invitacion: newToken,
-                token: newToken,
-                id_estado_garante: 2, // INVITADO
+                email: inserted.email || '',
+                telefono: inserted.telefono || '',
+                relacion_inquilino: inserted.relacion_inquilino,
+                relacion: inserted.relacion_inquilino,
+                token_invitacion: inserted.token_invitacion,
+                token: inserted.token_invitacion,
+                id_estado_garante: inserted.id_estado_garante,
                 estado: 'invitado',
-                kyc_verificado: false,
-                scoring: 10.0,
-                inquilino_nombre: currentTenantName,
-                datos_garantia: datosGarantia,
+                kyc_verificado: Boolean(inserted.kyc_verificado),
+                scoring: null,
+                datos_garantia: {},
                 documentos: [],
-                created_at: new Date().toISOString().split('T')[0]
+                created_at: inserted.created_at ? inserted.created_at.split('T')[0] : new Date().toISOString().split('T')[0]
             };
 
             garantes.push(newGarante);
@@ -626,6 +491,11 @@
          * Guardar directamente Seguro de Caución / Aval sin invitar garante personal
          */
         onAddSeguroCaucion: async function (dto) {
+            // The old implementation accepted a browser-supplied policy and
+            // marked it KYC-approved. A real insurer/provider verification
+            // endpoint is required before this flow may create a guarantee.
+            throw new Error('El seguro de caución debe verificarse con el proveedor antes de registrarse.');
+
             console.log('[GarantesManager] onAddSeguroCaucion called with:', dto);
             const garantes = loadLocalState();
             let idGaranteBd = null;
@@ -760,15 +630,21 @@
          */
         onDeleteGarante: async function (id) {
             console.log('[GarantesManager] onDeleteGarante ID:', id);
-            if (window.supabaseClient && !String(id).startsWith('gar_')) {
-                try {
-                    await window.supabaseClient
-                        .from('Garante')
-                        .delete()
-                        .eq('id_garante', parseInt(id, 10));
-                } catch (e) {
-                    console.warn('[GarantesManager] Error al eliminar garante en Supabase:', e);
-                }
+            if (String(id).startsWith('gar_')) {
+                throw new Error('No se puede cancelar una invitación que no fue guardada de forma segura.');
+            }
+            if (!window.supabaseClient?.auth) throw new Error('El servicio de sesión no está disponible.');
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            const accessToken = sessionData?.session?.access_token;
+            if (!accessToken) throw new Error('Debés iniciar sesión para cancelar una invitación.');
+            const response = await fetch('/api/garantes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({ action: 'cancel', id_garante: id })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload?.ok) {
+                throw new Error(payload?.message || payload?.error || 'No se pudo cancelar la invitación.');
             }
 
             let garantes = loadLocalState();
@@ -1575,43 +1451,16 @@
                 return;
             }
 
-            // Si hay usuario autenticado, consultar su perfil y pasaporte para auto-completar datos
-            let userProfile = null;
-            let userPassport = null;
-            if (window.supabaseClient) {
-                try {
-                    const session = authUser ? { user: authUser } : (await window.supabaseClient.auth.getSession())?.data?.session;
-                    if (session?.user) {
-                        const { data: p } = await window.supabaseClient
-                            .from('Perfil')
-                            .select('id_perfil, nombre_completo, dni, mail, telefono, Pasaporte_vivat(*)')
-                            .eq('user_id', session.user.id)
-                            .maybeSingle();
-                        if (p) {
-                            userProfile = p;
-                            const passList = p.Pasaporte_vivat;
-                            userPassport = Array.isArray(passList) ? passList[0] : passList;
-                            if (p.nombre_completo && (!garante.nombre_completo || garante.nombre_completo === 'Garante')) {
-                                garante.nombre_completo = p.nombre_completo;
-                            }
-                            if (p.dni && !garante.dni) {
-                                garante.dni = p.dni;
-                            }
-                            if (userPassport?.didit_status === 'APPROVED' || userPassport?.estado_scoring === 'APROBADO' || p.dni) {
-                                garante.kyc_verificado = true;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[GarantesManager] Aviso cargando perfil del garante logueado:', e);
-                }
-            }
-
             const tipoId = garante.id_tipo_garantia || 3;
             const tipoObj = TIPOS_GARANTIA[tipoId] || TIPOS_GARANTIA[3];
-            const inquilinoNombre = garante.inquilino_nombre || "Nicolás Rossi (Inquilino)";
+            // The portal must never infer approval from browser profile data.
+            // KYC state comes exclusively from the server-bound Didit decision.
+            const garanteNombre = escapeHtml(garante.nombre_completo || 'Garante');
+            const garanteRelacion = escapeHtml(garante.relacion_inquilino || 'Codeudor solidario');
+            const inquilinoNombre = 'la persona que te invitó';
             const inquilinoInitial = (inquilinoNombre.trim().charAt(0) || 'I').toUpperCase();
             const isInsidePanel = Boolean(panelContainer);
+            this.portalSelectedFiles = [];
 
             targetContainer.innerHTML = `
                 <div class="${isInsidePanel ? 'w-full mb-8' : 'max-w-[840px] mx-auto px-4 sm:px-6 pt-6 pb-24'} font-body">
@@ -1648,7 +1497,7 @@
                                     ${inquilinoNombre}
                                 </h2>
                                 <p class="font-body text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                    Te ha invitado como <strong>garante de confianza (${garante.relacion_inquilino || 'Codeudor Solidario'})</strong> para respaldar su postulación de alquiler.
+                                    Te ha invitado como <strong>garante de confianza (${garanteRelacion})</strong> para respaldar su postulación de alquiler.
                                 </p>
                             </div>
                         </div>
@@ -1670,7 +1519,7 @@
                                 Validación de Garantía y Respaldo Digital
                             </h1>
                             <p class="font-body text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 max-w-xl mx-auto">
-                                Hola <strong>${garante.nombre_completo || 'Garante'}</strong>. Al respaldar a <strong>${inquilinoNombre}</strong> completás tu validación biométrica y documentación requerida de forma 100% digital.
+                                Hola <strong>${garanteNombre}</strong>. Al respaldar a <strong>${inquilinoNombre}</strong> completás tu validación biométrica y documentación requerida de forma 100% digital.
                             </p>
                         </div>
 
@@ -1703,7 +1552,7 @@
                                     </div>
                                     <div class="flex items-center justify-between text-xs py-1">
                                         <span class="text-zinc-500">Documentos Adjuntos:</span>
-                                        <strong class="text-zinc-800 dark:text-zinc-200">${garante.documentos ? garante.documentos.length : 0} archivos</strong>
+                                        <strong class="text-zinc-800 dark:text-zinc-200">${Number(garante.documentos_count || 0)} archivos</strong>
                                     </div>
                                 </div>
                                 <p class="text-xs text-zinc-400 pt-2">Podés cerrar esta pestaña o volver a tu panel de garantías.</p>
@@ -1747,8 +1596,8 @@
                                         <div class="flex items-center gap-2.5">
                                             <span class="material-symbols-outlined text-emerald-500 text-xl">badge</span>
                                             <div>
-                                                <p class="font-headline font-extrabold text-zinc-900 dark:text-white" id="kyc-guarantor-name">${garante.nombre_completo}</p>
-                                                <p class="text-[11px] text-zinc-500" id="kyc-guarantor-dni">${garante.dni ? `DNI: ${garante.dni}` : 'Identidad validada digitalmente'}</p>
+                                                <p class="font-headline font-extrabold text-zinc-900 dark:text-white" id="kyc-guarantor-name">${garanteNombre}</p>
+                                                <p class="text-[11px] text-zinc-500" id="kyc-guarantor-dni">Identidad validada digitalmente</p>
                                             </div>
                                         </div>
                                         <span class="text-emerald-600 dark:text-emerald-400 font-headline font-black text-[11px] uppercase">Legítimo</span>
@@ -1917,11 +1766,16 @@
                     alert('Podés subir hasta un máximo de 6 archivos de respaldo.');
                     return;
                 }
+                const contentType = String(f.type || '').toLowerCase().split(';')[0].trim();
+                if (!['application/pdf', 'image/jpeg', 'image/png'].includes(contentType) || f.size < 1 || f.size > 10 * 1024 * 1024) {
+                    alert(`El archivo ${f.name} debe ser PDF, JPG o PNG y no superar los 10 MB.`);
+                    return;
+                }
                 if (!this.portalSelectedFiles.some(item => item.file.name === f.name && item.file.size === f.size)) {
                     this.portalSelectedFiles.push({
                         file: f,
                         nombre: f.name,
-                        tipo: f.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                        tipo: contentType,
                         tamano: f.size
                     });
                 }
@@ -1952,7 +1806,7 @@
                                 ${item.tipo.includes('pdf') ? 'picture_as_pdf' : 'image'}
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-headline font-bold text-zinc-900 dark:text-white truncate">${item.nombre}</p>
+                                <p class="text-xs font-headline font-bold text-zinc-900 dark:text-white truncate">${escapeHtml(item.nombre)}</p>
                                 <p class="text-[10px] text-zinc-400">${(item.tamano / (1024 * 1024)).toFixed(2)} MB</p>
                             </div>
                         </div>
@@ -1975,50 +1829,24 @@
             }
 
             try {
-                // 1. Crear sesión en Didit pasando el garanteToken
-                const resp = await fetch('/api/create-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        garanteToken: token,
-                        callbackUrl: window.location.href
-                    })
+                if (!window.DiditKYC?.createDiditSession || !window.DiditKYC?.renderDiditIframeModal) {
+                    throw new Error('El módulo de verificación no está disponible.');
+                }
+                const session = await window.DiditKYC.createDiditSession(null, {
+                    garanteToken: token,
+                    callbackUrl: window.location.href.split('#')[0]
                 });
-
-                const data = await resp.json();
-                if (data && data.url && data.sessionId) {
-                    // Abrir modal iframe de Didit a pantalla completa
-                    if (window.DiditKYC && window.DiditKYC.renderDiditIframeModal) {
-                        const decision = await window.DiditKYC.renderDiditIframeModal(data.url, data.sessionId);
-                        await this.handleKycCompletedSuccess(token, data.sessionId, decision);
-                    } else {
-                        // Fallback iframe
-                        window.open(data.url, '_blank');
-                        alert('Por favor completa la verificación biométrica en la pestaña de Didit y regresa aquí.');
-                    }
+                const decision = await window.DiditKYC.renderDiditIframeModal(session.url, session.sessionId, { garanteToken: token });
+                if (decision?.status === 'APPROVED') {
+                    await this.handleKycCompletedSuccess(session.sessionId, decision);
+                } else if (decision?.status === 'DECLINED') {
+                    alert('La verificación de identidad fue rechazada. Revisá los datos e intentá nuevamente si corresponde.');
                 } else {
-                    // Fallback simulado para entorno local
-                    const mockDecision = {
-                        success: true,
-                        document: {
-                            fullName: 'Garante Verificado',
-                            documentNumber: '28' + Math.floor(100000 + Math.random() * 900000),
-                            dni: '28' + Math.floor(100000 + Math.random() * 900000)
-                        }
-                    };
-                    await this.handleKycCompletedSuccess(token, 'sess_mock_' + Date.now(), mockDecision);
+                    alert('La verificación sigue pendiente. Cuando Didit la confirme, volvé a esta pantalla para continuar.');
                 }
             } catch (err) {
-                console.warn('[GarantesManager] KYC Didit error, usando fallback simulado:', err);
-                const mockDecision = {
-                    success: true,
-                    document: {
-                        fullName: 'Garante Verificado',
-                        documentNumber: '30' + Math.floor(100000 + Math.random() * 900000),
-                        dni: '30' + Math.floor(100000 + Math.random() * 900000)
-                    }
-                };
-                await this.handleKycCompletedSuccess(token, 'sess_mock_' + Date.now(), mockDecision);
+                console.warn('[GarantesManager] KYC Didit error:', err);
+                alert(err.message || 'No se pudo iniciar la verificación de identidad.');
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -2027,13 +1855,13 @@
             }
         },
 
-        handleKycCompletedSuccess: async function (token, sessionId, decision) {
+        handleKycCompletedSuccess: async function (sessionId, decision) {
             const badgeContainer = document.getElementById('kyc-guarantor-badge-container');
             const detailsBox = document.getElementById('kyc-guarantor-extracted-details');
             const nameEl = document.getElementById('kyc-guarantor-name');
             const dniEl = document.getElementById('kyc-guarantor-dni');
 
-            const fullName = decision?.document?.fullName || 'Garante Verificado';
+            const fullName = decision?.document?.fullName || 'Identidad verificada';
             const dni = decision?.document?.documentNumber || decision?.document?.dni || '';
 
             if (badgeContainer) {
@@ -2049,11 +1877,43 @@
                 if (nameEl) nameEl.textContent = fullName;
                 if (dniEl) dniEl.textContent = dni ? `DNI: ${dni} • Biometría Facial Aprobada` : 'Identidad biométrica verificada';
             }
+        },
 
-            // Consultar decision en backend para sincronizar DB
-            try {
-                await fetch(`/api/session-decision?session_id=${sessionId}&garanteToken=${token}`);
-            } catch (e) {}
+        uploadPortalFiles: async function (token) {
+            if (!window.supabaseClient?.storage) {
+                throw new Error('El servicio seguro de archivos no está disponible.');
+            }
+
+            const uploaded = [];
+            for (const item of this.portalSelectedFiles) {
+                const grantResponse = await fetch('/api/garante-portal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'upload',
+                        token,
+                        contentType: item.tipo,
+                        size: item.tamano
+                    })
+                });
+                const grantPayload = await grantResponse.json().catch(() => ({}));
+                if (!grantResponse.ok || !grantPayload?.ok || !grantPayload.data?.path || !grantPayload.data?.token) {
+                    throw new Error(grantPayload?.message || grantPayload?.error || 'No se pudo autorizar la carga de un documento.');
+                }
+
+                const grant = grantPayload.data;
+                const { error } = await window.supabaseClient.storage
+                    .from('contratos_firmados')
+                    .uploadToSignedUrl(grant.path, grant.token, item.file, { contentType: grant.contentType });
+                if (error) throw error;
+                uploaded.push({
+                    path: grant.path,
+                    name: item.nombre,
+                    size: item.tamano,
+                    contentType: grant.contentType
+                });
+            }
+            return uploaded;
         },
 
         handleGuarantorPortalSubmit: async function (e, token) {
@@ -2078,7 +1938,11 @@
 
             try {
                 const garante = await this.getGaranteByToken(token);
-                const tipoId = garante ? (garante.id_tipo_garantia || 3) : 3;
+                if (!garante) throw new Error('El enlace de garantía no es válido.');
+                if (!garante.kyc_verificado || Number(garante.id_estado_garante) !== 4) {
+                    throw new Error('Primero debés completar la validación de identidad con Didit.');
+                }
+                const tipoId = garante.id_tipo_garantia || 3;
 
                 const extractedData = {};
                 if (tipoId === 1) {
@@ -2097,75 +1961,26 @@
                     extractedData.ingreso_neto_mensual = document.getElementById('garante_sueldo_neto')?.value;
                 }
 
-                // Guardar en Supabase
-                if (window.supabaseClient && garante && garante.id_garante) {
-                    const updatePayload = {
-                        id_estado_garante: 5, // 5: EN_REVISION
-                        datos_garantia: extractedData,
-                        acepto_consentimiento: true,
-                        fecha_consentimiento: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    };
-
-                    try {
-                        const { data: { session } } = await window.supabaseClient.auth.getSession();
-                        if (session?.user) {
-                            const { data: perfil } = await window.supabaseClient
-                                .from('Perfil')
-                                .select('id_perfil, dni, nombre_completo, Pasaporte_vivat(id_pasaporte)')
-                                .eq('user_id', session.user.id)
-                                .maybeSingle();
-                            if (perfil) {
-                                if (perfil.dni) updatePayload.dni = perfil.dni;
-                                if (perfil.nombre_completo) updatePayload.nombre_completo = perfil.nombre_completo;
-                                const userPass = perfil.Pasaporte_vivat;
-                                const userPassId = Array.isArray(userPass) ? userPass[0]?.id_pasaporte : userPass?.id_pasaporte;
-                                if (userPassId) {
-                                    updatePayload.id_pasaporte_garante = userPassId;
-                                }
-                            }
-                        }
-                    } catch(eAuth) {}
-
-                    await window.supabaseClient
-                        .from('Garante')
-                        .update(updatePayload)
-                        .eq('id_garante', garante.id_garante);
-
-                    // Insertar documentos
-                    for (const item of this.portalSelectedFiles) {
-                        await window.supabaseClient
-                            .from('Documento_garante')
-                            .insert([{
-                                id_garante: garante.id_garante,
-                                tipo_documento: item.file.name.includes('recibo') ? 'recibo_sueldo' : (item.file.name.includes('escritura') ? 'escritura' : 'poliza_caucion'),
-                                archivo_url: 'https://storage.vivat.com.ar/garantes/' + encodeURIComponent(item.nombre),
-                                nombre_archivo: item.nombre,
-                                tamano_bytes: item.tamano,
-                                estado_documento: 'PENDIENTE'
-                            }]);
-                    }
+                const files = await this.uploadPortalFiles(token);
+                const response = await fetch('/api/garante-portal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'submit',
+                        token,
+                        consent: true,
+                        datosGarantia: extractedData,
+                        files
+                    })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || !payload?.ok) {
+                    throw new Error(payload?.message || payload?.error || 'No se pudo enviar la garantía.');
                 }
 
-                // Actualizar estado local
-                const garantes = loadLocalState();
-                const found = garantes.find(g => g.token_invitacion === token || g.token === token);
-                if (found) {
-                    found.id_estado_garante = 5; // EN_REVISION
-                    found.estado = 'cargado';
-                    found.datos_garantia = extractedData;
-                    found.documentos = this.portalSelectedFiles.map(f => ({
-                        id: 'doc_' + Date.now(),
-                        nombre_archivo: f.nombre,
-                        tamano_bytes: f.tamano,
-                        archivo_url: '#',
-                        estado_documento: 'PENDIENTE'
-                    }));
-                    saveLocalState(garantes);
-                }
-
-                window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
-                this.renderPublicGuarantorView(token);
+                this.portalSelectedFiles = [];
+                window.dispatchEvent(new CustomEvent('vivat:garantes_updated'));
+                await this.renderPublicGuarantorView(token);
 
             } catch (err) {
                 console.error('[GarantesManager] Error submit portal garante:', err);
@@ -2317,32 +2132,12 @@
         },
 
         setGuarantorStatus: async function (idGarante, newStatusId) {
-            if (window.supabaseClient && !String(idGarante).startsWith('gar_')) {
-                try {
-                    await window.supabaseClient
-                        .from('Garante')
-                        .update({
-                            id_estado_garante: newStatusId,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id_garante', parseInt(idGarante, 10));
-                } catch (e) {
-                    console.warn('[GarantesManager] Error actualizando estado en Supabase:', e);
-                }
-            }
-
-            const garantes = loadLocalState();
-            const found = garantes.find(g => String(g.id) === String(idGarante) || String(g.id_garante) === String(idGarante));
-            if (found) {
-                found.id_estado_garante = newStatusId;
-                found.estado = newStatusId === 6 ? 'cargado' : (newStatusId === 7 ? 'rechazado' : 'pendiente');
-                saveLocalState(garantes);
-            }
-
-            document.getElementById('modal-auditoria-garante')?.remove();
-            this.renderTenantSection();
-            window.dispatchEvent(new CustomEvent('vivat:garantes_updated', { detail: { garantes } }));
-            alert(newStatusId === 6 ? '¡Garantía aprobada con éxito!' : 'Garantía marcada como rechazada.');
+            // Approval changes legal and financial eligibility. It must be made
+            // by a server-side reviewer role, never by an arbitrary browser or
+            // by mutable local state. Until that back-office route is deployed,
+            // fail closed instead of creating a client-side privilege escalation.
+            console.warn('[GarantesManager] Revisión bloqueada en el cliente.', { idGarante, newStatusId });
+            alert('La aprobación o rechazo de una garantía sólo puede realizarse desde el back-office autorizado.');
         },
 
         // Router de Inicialización
@@ -2358,23 +2153,10 @@
                     return;
                 }
 
-                // El garante debe iniciar sesión (su cuenta es como la de cualquier inquilino)
-                let session = null;
-                if (window.supabaseClient && window.supabaseClient.auth) {
-                    try {
-                        const { data } = await window.supabaseClient.auth.getSession();
-                        session = data?.session;
-                    } catch (e) {}
-                }
-
-                if (!session || !session.user) {
-                    // Guardar URL actual para volver después del login
-                    const target = encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
-                    window.location.href = `login.html?redirect=${target}`;
-                    return;
-                }
-
-                await this.renderPublicGuarantorView(token, session.user);
+                // The opaque invitation and server-bound Didit session are the
+                // only portal credentials. Do not place a bearer invitation in
+                // a login redirect URL or infer identity from a browser session.
+                await this.renderPublicGuarantorView(token);
             } else {
                 const container = document.getElementById('garantes-tenant-container');
                 if (container) {

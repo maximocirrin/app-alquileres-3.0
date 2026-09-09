@@ -1,16 +1,10 @@
 (function () {
-    const DEFAULT_KEY = "AIzaSyAdp8M6rgF6dB-KYmC8B1JLlpP37Yf0pI8";
     const pendingCallbacks = [];
     let isScriptLoading = false;
 
     async function getApiKey() {
         if (window.GOOGLE_MAPS_API_KEY) {
             return window.GOOGLE_MAPS_API_KEY;
-        }
-        const hostname = window.location.hostname || '';
-        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.') || window.location.protocol === 'file:';
-        if (isLocal) {
-            return DEFAULT_KEY;
         }
         try {
             const controller = new AbortController();
@@ -25,9 +19,9 @@
                 }
             }
         } catch (e) {
-            // Silently fallback to default key
+            console.warn('[Google Maps SDK] No se pudo obtener la clave configurada por el servidor.');
         }
-        return DEFAULT_KEY;
+        return null;
     }
 
     /**
@@ -70,6 +64,13 @@
 
         isScriptLoading = true;
         const apiKey = await getApiKey();
+        if (!apiKey) {
+            isScriptLoading = false;
+            const error = new Error('Google Maps no está configurado en el servidor.');
+            console.warn('[Google Maps SDK]', error.message);
+            window.dispatchEvent(new CustomEvent('vivat:google_maps_error', { detail: error }));
+            return;
+        }
 
         window.__vivatGoogleMapsGlobalReady = function () {
             isScriptLoading = false;
