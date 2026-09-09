@@ -1417,6 +1417,8 @@
                 monthlyRent: canon,
                 currency: moneda,
                 status: 'WAITING_TENANT',
+                has_contract: false,
+                hasContract: false,
                 start_date: fechaInicio,
                 startDate: fechaInicio,
                 end_date: endDate,

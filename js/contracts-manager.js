@@ -673,6 +673,17 @@
                     const aliasFromDb = dbC.alias_cbu || extraCfg.aliasCbu || 'VIVAT.ALQUILER.MP';
                     const rentFromDb = Number(dbC.monto_cierre) || Number(extraCfg.monthlyRent) || Number(pub?.precio) || 0;
 
+                    const dbHasContract = Boolean(
+                        dbC.url_contrato_final_pdf ||
+                        dbC.url_contrato_original_pdf ||
+                        (dbC.hash_original_sha256 && !dbC.hash_original_sha256.startsWith('e3b0c442')) ||
+                        (extraCfg && typeof extraCfg === 'object' && Object.keys(extraCfg).length > 0) ||
+                        (customClausesFromDb && customClausesFromDb.length > 0) ||
+                        tenantFirmado ||
+                        ownerFirmado ||
+                        status === 'SIGNED_AND_SEALED'
+                    );
+
                     loadedContracts.push({
                         id: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
                         contractNumber: `CTR-2026-${String(dbC.id_contrato).padStart(4, '0')}`,
@@ -690,6 +701,8 @@
                         monthly_rent: rentFromDb,
                         currency: currencyFromDb,
                         status: status,
+                        has_contract: dbHasContract,
+                        hasContract: dbHasContract,
                         startDate: dbC.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
                         endDate: dbC.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
                         durationMonths: durationFromDb,
@@ -807,8 +820,13 @@
                         dbItem.monthlyRent = loc.monthlyRent;
                         dbItem.monthly_rent = loc.monthlyRent;
                     }
-                    if (loc.has_contract) dbItem.has_contract = true;
-                    if (loc.hasContract) dbItem.hasContract = true;
+                    if (loc.has_contract !== undefined) {
+                        dbItem.has_contract = Boolean(loc.has_contract);
+                        dbItem.hasContract = Boolean(loc.hasContract ?? loc.has_contract);
+                    } else if (loc.hasContract !== undefined) {
+                        dbItem.has_contract = Boolean(loc.hasContract);
+                        dbItem.hasContract = Boolean(loc.hasContract);
+                    }
                     if (loc.guarantors && (!dbItem.guarantors || dbItem.guarantors.length === 0)) {
                         dbItem.guarantors = loc.guarantors;
                         dbItem.garantes = loc.guarantors;
@@ -878,6 +896,27 @@
         _chatChannel: null,
         _chatMessages: {},
         _isChatLoading: false,
+
+        isContractGenerated: function (contract) {
+            if (!contract) return false;
+            if (contract.has_contract !== undefined) return Boolean(contract.has_contract);
+            if (contract.hasContract !== undefined) return Boolean(contract.hasContract);
+            return Boolean(
+                contract.url_contrato_final_pdf ||
+                contract.url_contrato_original_pdf ||
+                contract.urlContratoOriginal ||
+                contract.urlContratoFinal ||
+                (contract.hash_original_sha256 && !contract.hash_original_sha256.startsWith('e3b0c442')) ||
+                (contract.clausulas_adicionales && typeof contract.clausulas_adicionales === 'object' && Object.keys(contract.clausulas_adicionales).length > 0) ||
+                (contract.customClauses && contract.customClauses.length > 0) ||
+                contract.tenant_signed ||
+                contract.tenant_has_signed ||
+                contract.tenant?.hasSigned ||
+                contract.owner_has_signed ||
+                contract.owner?.hasSigned ||
+                contract.status === 'SIGNED_AND_SEALED'
+            );
+        },
 
         getContracts: function () {
             return contracts;
@@ -1205,6 +1244,8 @@
                 monthlyRent: monthlyRent,
                 currency: 'ARS',
                 status: 'WAITING_TENANT',
+                has_contract: Boolean(app.has_contract || app.hasContract),
+                hasContract: Boolean(app.has_contract || app.hasContract),
                 startDate: todayStr,
                 endDate: nextYearStr,
                 durationMonths: 24,
@@ -1586,8 +1627,12 @@
                                     </p>
                                 </div>
                             ` : list.map(c => {
+                                const isGen = ContractsManager.isContractGenerated(c);
+                                const isTenantUngenerated = role === 'TENANT' && !isGen;
                                 let statusBadge = '';
-                                if (c.status === 'WAITING_TENANT') {
+                                if (isTenantUngenerated) {
+                                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Contrato No Generado</span>';
+                                } else if (c.status === 'WAITING_TENANT') {
                                     statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Firma Inquilino</span>';
                                 } else if (c.status === 'WAITING_OWNER') {
                                     statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Firma Propietario</span>';
@@ -1639,9 +1684,9 @@
 
                                         <!-- Action Buttons Grid inside card -->
                                         <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2" onclick="event.stopPropagation()">
-                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${c.id}', 'document')" class="flex-1 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
-                                                <span class="material-symbols-outlined text-sm">description</span>
-                                                <span>Ver y Firmar</span>
+                                            <button type="button" onclick="ContractsManager.openContractFullscreen('${c.id}', 'document')" class="flex-1 py-2.5 px-3 rounded-xl ${isTenantUngenerated ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30' : 'bg-primary hover:bg-primary-container text-white'} font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+                                                <span class="material-symbols-outlined text-sm">${isTenantUngenerated ? 'pending_actions' : 'description'}</span>
+                                                <span>${isTenantUngenerated ? 'Contrato No Generado' : 'Ver y Firmar'}</span>
                                             </button>
                                             <button type="button" onclick="ContractsManager.openContractFullscreen('${c.id}', 'chat')" class="flex-1 py-2.5 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
                                                 <span class="material-symbols-outlined text-sm text-emerald-500">chat</span>
@@ -1751,6 +1796,9 @@
 
             const isFullySigned = (c) => c.status === 'SIGNED_AND_SEALED' || (c.tenant?.hasSigned && c.owner?.hasSigned);
             const hasAnySignature = Boolean(contract.tenant?.hasSigned || contract.owner?.hasSigned || contract.status === 'SIGNED_AND_SEALED');
+            const isContractGen = (typeof this.isContractGenerated === 'function')
+                ? this.isContractGenerated(contract)
+                : Boolean(contract.has_contract || contract.hasContract);
             const isOwner = isUserOwnerOfContract(contract);
             const canEditContract = (!hasAnySignature) && isOwner;
             const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
@@ -1791,11 +1839,14 @@
             const waText = encodeURIComponent(`Hola! Me contacto respecto a la negociación del contrato ${contract.contractNumber || ''} (${contract.title || ''}) ubicado en ${contract.propertyAddress || ''} a través de Vivat.`);
             const waUrl = targetPhone ? `https://wa.me/${targetPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
 
-            const contractStatusBadge = isFullySigned(contract)
-                ? { label: 'Sellado TSA', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', dot: 'bg-emerald-500' }
-                : (hasAnySignature
-                    ? { label: 'Firma Parcial', bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', dot: 'bg-blue-500' }
-                    : { label: 'Pendiente de Firma', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
+            const contractStatusBadge = (effectiveRole === 'TENANT' && !isContractGen)
+                ? { label: 'Contrato No Generado', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
+                : (isFullySigned(contract)
+                    ? { label: 'Sellado TSA', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', dot: 'bg-emerald-500' }
+                    : (hasAnySignature
+                        ? { label: 'Firma Parcial', bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', dot: 'bg-blue-500' }
+                        : { label: 'Pendiente de Firma', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500 animate-pulse' }
+                    )
                 );
 
             const modalHtml = `
@@ -1857,6 +1908,7 @@
                             </button>
                             ` : ''}
                             
+                            ${(isContractGen) ? `
                             <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id}')" class="h-9 px-2.5 sm:px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Descargar PDF">
                                 <span class="material-symbols-outlined text-base text-primary dark:text-red-400">download</span>
                                 <span class="hidden sm:inline">PDF</span>
@@ -1866,11 +1918,73 @@
                                 <span class="material-symbols-outlined text-base text-emerald-400">verified_user</span>
                                 <span class="hidden sm:inline">Audit Trail</span>
                             </button>
+                            ` : `
+                            <button type="button" onclick="ContractsManager.switchFullscreenTab('chat')" class="h-9 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-headline font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0" title="Consultar con el propietario por chat">
+                                <span class="material-symbols-outlined text-base">forum</span>
+                                <span class="hidden sm:inline">Chat con Propietario</span>
+                            </button>
+                            `}
                         </div>
                     </header>
 
                     <!-- Tab 1: Full Document & Legal Signer -->
                     <main id="fs-tab-document-content" class="flex-1 overflow-y-auto ${this._activeFullscreenTab === 'document' ? 'block' : 'hidden'}">
+                        ${(effectiveRole === 'TENANT' && !isContractGen) ? `
+                        <div class="max-w-3xl mx-auto p-4 sm:p-10 my-6">
+                            <div class="p-6 sm:p-10 rounded-3xl bg-white dark:bg-zinc-900 border border-amber-200/80 dark:border-amber-900/50 shadow-sm text-center space-y-6">
+                                <div class="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center border border-amber-200 dark:border-amber-800/60">
+                                    <span class="material-symbols-outlined text-3xl">pending_actions</span>
+                                </div>
+                                <div class="space-y-2 max-w-lg mx-auto">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Contrato pendiente de generación
+                                    </span>
+                                    <h2 class="text-xl sm:text-2xl font-headline font-bold text-zinc-900 dark:text-white">
+                                        Esperando a que el propietario genere o suba el contrato
+                                    </h2>
+                                    <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                        Tu postulación para <b>${contract.propertyAddress || contract.title || 'el inmueble'}</b> fue aprobada, pero el locador aún no ha formalizado las cláusulas o subido el documento contractual definitivo.
+                                    </p>
+                                </div>
+
+                                <!-- Stepper informativo -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+                                    <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800">
+                                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                                            <span class="material-symbols-outlined text-base">check_circle</span>
+                                            <span>1. Postulación</span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-500 mt-1">Aprobada y confirmada.</p>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                                        <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                                            <span class="material-symbols-outlined text-base animate-spin">sync</span>
+                                            <span>2. Confección</span>
+                                        </div>
+                                        <p class="text-[11px] text-amber-700 dark:text-amber-300 mt-1">El locador debe generar el contrato.</p>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 opacity-60">
+                                        <div class="flex items-center gap-2 text-zinc-500 font-bold text-xs">
+                                            <span class="material-symbols-outlined text-base">draw</span>
+                                            <span>3. Firma Digital</span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-400 mt-1">Habilitada una vez generado.</p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <button type="button" onclick="ContractsManager.switchFullscreenTab('chat')" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-headline font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">forum</span>
+                                        <span>Consultar con el Propietario por Chat</span>
+                                    </button>
+                                    <button type="button" onclick="ContractsManager.closeContractFullscreen()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>Volver a Mis Alquileres</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        ` : `
                         <div class="max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
                             
                             <!-- Financial & Contract Specs Bar -->
@@ -2257,9 +2371,10 @@
                             </div>
 
                         </div>
+                        `}
 
                         <!-- Floating Action Button to scroll to signature -->
-                        ${(!isFullySigned(contract) && isContractPendingForMe) ? `
+                        ${(!isFullySigned(contract) && isContractPendingForMe && isContractGen) ? `
                         <button type="button" onclick="document.getElementById('signature-section').scrollIntoView({ behavior: 'smooth', block: 'center' })" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] p-4 bg-primary text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(129,27,30,0.4)] hover:bg-primary-container hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group border border-white/20" title="Ir a Firmar Contrato">
                             <span class="material-symbols-outlined text-2xl animate-[pulse_2s_ease-in-out_infinite]">draw</span>
                             <span class="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-in-out font-headline font-bold text-sm">Ir a Firmar</span>
@@ -3136,7 +3251,7 @@
                 
                 return `
                     <div 
-                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
+                        onclick="ContractsManager._embeddedActiveContractId = '${c.id}'; ContractsManager._mobileChatVisible = true; ContractsManager.renderEmbeddedChat('${containerId}', { role: '${role}' });"
                         class="p-3.5 sm:p-4 transition-all cursor-pointer flex items-start gap-3 group ${isSelected ? 'bg-primary/5 dark:bg-primary/10 border-l-4 border-primary' : 'hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'}"
                     >
                         <div class="relative w-11 h-11 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
@@ -3163,6 +3278,24 @@
                     </div>
                 `;
             }).join('');
+        },
+
+        resetMobileChatState: function () {
+            this._mobileChatVisible = false;
+            document.body.classList.remove('overflow-hidden');
+            document.querySelectorAll('footer').forEach(f => f.style.display = '');
+            document.querySelectorAll('#tenant-floating-dock-container, #broker-floating-dock-container, #owner-floating-dock-container').forEach(d => {
+                d.classList.remove('is-hidden');
+                d.style.display = '';
+            });
+            const chatContainers = document.querySelectorAll('#tenant-chat-section-container, #broker-chat-section-container, #owner-chat-section-container');
+            chatContainers.forEach(c => {
+                const parentTab = c.closest('.tab-content');
+                if (parentTab) {
+                    parentTab.style.transform = '';
+                    parentTab.style.transition = '';
+                }
+            });
         },
 
         renderEmbeddedChat: async function (containerId, options = {}) {
@@ -3248,17 +3381,29 @@
             if (ContractsManager._mobileChatVisible && window.innerWidth < 1024) {
                 document.body.classList.add('overflow-hidden');
                 footers.forEach(f => f.style.display = 'none');
-                docks.forEach(d => d.classList.add('is-hidden'));
-                if (parentTabContent) parentTabContent.style.transform = 'none';
+                docks.forEach(d => {
+                    d.classList.add('is-hidden');
+                    d.style.display = 'none';
+                });
+                if (parentTabContent) {
+                    parentTabContent.style.transform = 'none';
+                    parentTabContent.style.transition = 'none';
+                }
             } else {
                 document.body.classList.remove('overflow-hidden');
                 footers.forEach(f => f.style.display = '');
-                docks.forEach(d => d.classList.remove('is-hidden'));
-                if (parentTabContent) parentTabContent.style.transform = '';
+                docks.forEach(d => {
+                    d.classList.remove('is-hidden');
+                    d.style.display = '';
+                });
+                if (parentTabContent) {
+                    parentTabContent.style.transform = '';
+                    parentTabContent.style.transition = '';
+                }
             }
 
             container.innerHTML = `
-                <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col lg:flex-row h-[calc(100dvh-160px)] min-h-[400px] lg:h-[720px] lg:max-h-[82vh] font-body">
+                <div class="w-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm ${ContractsManager._mobileChatVisible ? 'overflow-visible lg:overflow-hidden' : 'overflow-hidden'} flex flex-col lg:flex-row h-[calc(100dvh-160px)] min-h-[400px] lg:h-[720px] lg:max-h-[calc(100dvh-180px)] font-body">
                     
                     <!-- Left Sidebar: Conversations List -->
                     <aside class="w-full h-full overflow-hidden lg:w-96 border-b lg:border-b-0 lg:border-r border-zinc-200 dark:border-zinc-800 flex-col bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 ${ContractsManager._mobileChatVisible ? 'hidden lg:flex' : 'flex'}">
@@ -3384,7 +3529,7 @@
                     </aside>
 
                     <!-- Right Pane: Active Live Chat Window -->
-                    <section class="flex-1 flex-col h-[100dvh] lg:h-full overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 bottom-0 top-[64px] z-[999] lg:static lg:inset-auto lg:z-auto' : 'hidden lg:flex'}">
+                    <section class="flex-1 flex-col overflow-hidden bg-white dark:bg-[#0c0d14] ${ContractsManager._mobileChatVisible ? 'flex fixed inset-x-0 top-[64px] bottom-0 z-[999] h-[calc(100dvh-64px)] lg:static lg:top-auto lg:bottom-auto lg:left-auto lg:right-auto lg:inset-auto lg:h-full lg:z-auto' : 'hidden lg:flex lg:h-full'}">
                         
                         <!-- Chat Window Header -->
                         <header class="p-3.5 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 shadow-2xs">
@@ -3405,7 +3550,7 @@
                                         </span>
                                     </div>
                                     <p class="text-[11px] text-zinc-400 truncate">
-                                        Inquilino: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.tenant.name}</b> • Propietario: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.owner.name}</b>
+                                        Inquilino: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.tenant?.name || 'Inquilino'}</b> • Propietario: <b class="text-zinc-700 dark:text-zinc-300">${activeContract.owner?.name || 'Propietario'}</b>
                                     </p>
                                 </div>
                             </div>
@@ -3438,7 +3583,7 @@
                         </div>
 
                         <!-- Composer Box -->
-                        <div class="p-2 sm:p-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 shrink-0">
+                        <div class="p-2.5 sm:p-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
 
                             
                             <!-- Input Row -->
@@ -3448,13 +3593,13 @@
                                     id="embedded-chat-input" 
                                     placeholder="Escribe un mensaje para acordar términos o condiciones..."
                                     onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
-                                    class="flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
+                                    class="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
                                 >
                                 <button 
                                     type="button" 
                                     id="embedded-chat-send-btn"
                                     onclick="ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
-                                    class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+                                    class="h-10 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
                                 >
                                     <span class="material-symbols-outlined text-base">send</span>
                                     <span class="hidden sm:inline">Enviar</span>
