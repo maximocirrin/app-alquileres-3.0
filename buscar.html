@@ -1226,6 +1226,7 @@
                             }
 
                             function renderNewListings() {
+                                window.renderNewListings = renderNewListings;
                                 visibleRentals = getVisibleRentals();
                                 gridEl.innerHTML = '';
 
@@ -1241,6 +1242,8 @@
 
                                 visibleRentals.forEach((rental) => {
                                     const card = document.createElement('article');
+                                    card.dataset.pubId = rental.id_publicacion || rental.id || '';
+                                    card.dataset.propId = rental.id_propiedad || rental.idPropiedad || (rental.Propiedad && rental.Propiedad.id_propiedad) || '';
                                     card.className = 'listing-card cursor-pointer group transition-all duration-300';
                                     card.style.cursor = 'pointer';
                                     card.onclick = (e) => {

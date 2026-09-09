@@ -2431,7 +2431,7 @@
                                         onkeydown="if(event.key === 'Enter') ContractsManager.sendContractMessage('${contract.id}')"
                                         class="flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs sm:text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-primary font-medium"
                                     >
-                                    <button type="button" onclick="ContractsManager.sendContractMessage('${contract.id}')" class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
+                                    <button type="button" id="fs-chat-send-btn" onclick="ContractsManager.sendContractMessage('${contract.id}')" class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0">
                                         <span class="material-symbols-outlined text-base">send</span>
                                         <span class="hidden sm:inline">Enviar</span>
                                     </button>
@@ -2985,88 +2985,141 @@
             }
         },
 
+        _chatSendCooldownUntil: 0,
+        _isSendingMessage: false,
+
+        _setSendButtonCooldown: function (cooldownMs = 1000) {
+            this._chatSendCooldownUntil = Date.now() + cooldownMs;
+            const buttons = [
+                document.getElementById('fs-chat-send-btn'),
+                document.getElementById('embedded-chat-send-btn')
+            ];
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.classList.remove('cursor-pointer', 'hover:bg-primary-container');
+                }
+            });
+
+            setTimeout(() => {
+                if (Date.now() >= this._chatSendCooldownUntil) {
+                    buttons.forEach(btn => {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            btn.classList.add('cursor-pointer', 'hover:bg-primary-container');
+                        }
+                    });
+                }
+            }, cooldownMs);
+        },
+
         sendContractMessage: async function (contractId, customText = null, proposalData = null, inputElementId = null) {
+            // Cooldown de 1 segundo estilo WhatsApp: ignora silenciosamente envíos sucesivos sin borrar el texto
+            const now = Date.now();
+            if (now < this._chatSendCooldownUntil || this._isSendingMessage) {
+                return;
+            }
+
             const inputId = inputElementId || (document.getElementById('embedded-chat-input') ? 'embedded-chat-input' : 'fs-chat-input');
             const input = document.getElementById(inputId);
             const text = (customText || (input ? input.value : '')).trim();
             if (!text && !proposalData) return;
 
+            // Iniciar cooldown de 1 segundo de inmediato y bloquear botón
+            this._setSendButtonCooldown(1000);
+            this._isSendingMessage = true;
+
             if (input && !customText) input.value = '';
 
-            const contract = this.getContractById(contractId);
-            const currentUser = this.resolveCurrentUserInfo(contract);
+            try {
+                const contract = this.getContractById(contractId);
+                const currentUser = this.resolveCurrentUserInfo(contract);
 
-            if (!currentUser.profileId && window.DataManager && window.DataManager._getOrCreateProfile) {
-                try {
-                    currentUser.profileId = await window.DataManager._getOrCreateProfile();
-                } catch (e) {
-                    console.warn("[Chat] No se pudo obtener el id_perfil:", e);
+                if (!currentUser.profileId && window.DataManager && window.DataManager._getOrCreateProfile) {
+                    try {
+                        currentUser.profileId = await window.DataManager._getOrCreateProfile();
+                    } catch (e) {
+                        console.warn("[Chat] No se pudo obtener el id_perfil:", e);
+                    }
                 }
-            }
 
-            const messageId = this._generateUUID();
-            const nowIso = new Date().toISOString();
+                const messageId = this._generateUUID();
+                const nowIso = new Date().toISOString();
 
-            const msgObj = {
-                id_mensaje: messageId,
-                id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
-                contract_ref_id: String(contractId),
-                id_perfil: currentUser.profileId,
-                remitente_nombre: currentUser.name,
-                remitente_rol: currentUser.role,
-                remitente_email: currentUser.email,
-                mensaje: text,
-                propuesta_json: proposalData || null,
-                created_at: nowIso
-            };
-
-            // Immediate optimistic UI update
-            this.appendIncomingMessage(contractId, msgObj);
-
-            // Save to Supabase Mensaje_Contrato table with the exact same UUID & profileId
-            if (window.supabaseClient) {
-                try {
-                    const safeDbContractId = (contract && contract.dbContractId && String(contract.dbContractId) !== 'undefined' && String(contract.dbContractId) !== 'null') ? parseInt(contract.dbContractId) : null;
-                    const safeProfileId = (currentUser && currentUser.profileId && String(currentUser.profileId) !== 'undefined' && String(currentUser.profileId) !== 'null') ? parseInt(currentUser.profileId) : null;
-                    
-                    const dbPayload = {
-                        id_mensaje: messageId,
-                        id_contrato: isNaN(safeDbContractId) ? null : safeDbContractId,
-                        contract_ref_id: String(contractId),
-                        id_perfil: isNaN(safeProfileId) ? null : safeProfileId,
-                        remitente_nombre: currentUser.name,
-                        remitente_rol: currentUser.role,
-                        remitente_email: currentUser.email,
-                        mensaje: text,
-                        propuesta_json: proposalData || null,
-                        created_at: nowIso
-                    };
-
-                    await window.supabaseClient
-                        .from('Mensaje_Contrato')
-                        .insert([dbPayload]);
-                } catch (err) {
-                    console.warn("[Chat] Fallback guardando en Supabase:", err);
+                // Registrar ID propio para evitar cualquier auto-notificación sonora o visual
+                if (window.NotificationManager && typeof window.NotificationManager.registerOwnMessage === 'function') {
+                    window.NotificationManager.registerOwnMessage(messageId);
                 }
-            }
 
-            // Transmitir notificación instantánea in-app para el destinatario
-            if (window.NotificationManager && typeof window.NotificationManager.broadcastSupabaseRealtime === 'function') {
-                try {
-                    const senderName = currentUser.name || (currentUser.role ? `Usuario (${currentUser.role})` : 'Contraparte');
-                    const msgSnippet = text ? (text.length > 80 ? text.substring(0, 80) + '...' : text) : 'Nueva propuesta de negociación enviada.';
-                    window.NotificationManager.broadcastSupabaseRealtime({
-                        id: `notif_msg_${messageId}`,
-                        title: `💬 Mensaje de ${senderName}`,
-                        message: msgSnippet,
-                        type: 'chat',
-                        icon: 'forum',
-                        link: '#chat-negociacion',
-                        role: 'ALL',
-                        senderEmail: currentUser.email,
-                        senderProfileId: currentUser.profileId
-                    });
-                } catch (e) {}
+                const msgObj = {
+                    id_mensaje: messageId,
+                    id_contrato: contract?.dbContractId ? Number(contract.dbContractId) : null,
+                    contract_ref_id: String(contractId),
+                    id_perfil: currentUser.profileId,
+                    remitente_nombre: currentUser.name,
+                    remitente_rol: currentUser.role,
+                    remitente_email: currentUser.email,
+                    mensaje: text,
+                    propuesta_json: proposalData || null,
+                    created_at: nowIso
+                };
+
+                // Immediate optimistic UI update
+                this.appendIncomingMessage(contractId, msgObj);
+
+                // Save to Supabase Mensaje_Contrato table with the exact same UUID & profileId
+                if (window.supabaseClient) {
+                    try {
+                        const safeDbContractId = (contract && contract.dbContractId && String(contract.dbContractId) !== 'undefined' && String(contract.dbContractId) !== 'null') ? parseInt(contract.dbContractId) : null;
+                        const safeProfileId = (currentUser && currentUser.profileId && String(currentUser.profileId) !== 'undefined' && String(currentUser.profileId) !== 'null') ? parseInt(currentUser.profileId) : null;
+                        
+                        const dbPayload = {
+                            id_mensaje: messageId,
+                            id_contrato: isNaN(safeDbContractId) ? null : safeDbContractId,
+                            contract_ref_id: String(contractId),
+                            id_perfil: isNaN(safeProfileId) ? null : safeProfileId,
+                            remitente_nombre: currentUser.name,
+                            remitente_rol: currentUser.role,
+                            remitente_email: currentUser.email,
+                            mensaje: text,
+                            propuesta_json: proposalData || null,
+                            created_at: nowIso
+                        };
+
+                        await window.supabaseClient
+                            .from('Mensaje_Contrato')
+                            .insert([dbPayload]);
+                    } catch (err) {
+                        console.warn("[Chat] Fallback guardando en Supabase:", err);
+                    }
+                }
+
+                // Transmitir notificación instantánea in-app exclusivamente para la contraparte
+                if (window.NotificationManager && typeof window.NotificationManager.broadcastSupabaseRealtime === 'function') {
+                    try {
+                        const senderName = currentUser.name || (currentUser.role ? `Usuario (${currentUser.role})` : 'Contraparte');
+                        const msgSnippet = text ? (text.length > 80 ? text.substring(0, 80) + '...' : text) : 'Nueva propuesta de negociación enviada.';
+                        const targetRole = currentUser.role === 'TENANT' ? 'OWNER' : 'TENANT';
+                        window.NotificationManager.broadcastSupabaseRealtime({
+                            id: `notif_msg_${messageId}`,
+                            title: `💬 Mensaje de ${senderName}`,
+                            message: msgSnippet,
+                            type: 'chat',
+                            icon: 'forum',
+                            link: '#chat-negociacion',
+                            role: targetRole,
+                            targetRole: targetRole,
+                            senderRole: currentUser.role,
+                            senderEmail: currentUser.email,
+                            senderProfileId: currentUser.profileId,
+                            senderName: currentUser.name
+                        });
+                    } catch (e) {}
+                }
+            } finally {
+                this._isSendingMessage = false;
             }
         },
 
@@ -3508,6 +3561,7 @@
                                 >
                                 <button 
                                     type="button" 
+                                    id="embedded-chat-send-btn"
                                     onclick="ContractsManager.sendContractMessage('${activeContractId}', null, null, 'embedded-chat-input')"
                                     class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
                                 >

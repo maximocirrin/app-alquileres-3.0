@@ -1311,6 +1311,8 @@
                         const pVal = prop.price ? Number(prop.price) : 0;
                         const priceFormatted = pVal ? `$${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
                         const card = document.createElement('article');
+                        card.dataset.pubId = prop.id_publicacion || prop.id || '';
+                        card.dataset.propId = prop.id_propiedad || prop.idPropiedad || (prop.Propiedad && prop.Propiedad.id_propiedad) || '';
                         card.className = 'snap-start shrink-0 w-[280px] sm:w-[320px] md:w-[340px] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer';
 
                         card.onclick = (e) => {
@@ -1421,6 +1423,7 @@
                     setupFeaturedMouseDrag();
                     setTimeout(updateFeaturedArrowsState, 150);
                 }
+                window.renderLandingFeaturedProperties = renderLandingFeaturedProperties;
                 document.addEventListener('DOMContentLoaded', renderLandingFeaturedProperties);
                 window.addEventListener('load', renderLandingFeaturedProperties);
             </script>

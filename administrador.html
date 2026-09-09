@@ -1344,16 +1344,42 @@
                 const vistas = p.cantidad_visualizaciones_total ?? p.views_count ?? p.views ?? 0;
                 const safePropJson = JSON.stringify(p).replace(/"/g, '&quot;');
 
-                const activeContract = (ownerActiveContractsMock || []).find(c => c && (
-                    String(c.propertyId) === String(p.id) || 
-                    String(c.property_id) === String(p.id) || 
-                    String(c.id_propiedad) === String(p.id) ||
-                    (p.id_propiedad && (String(c.propertyId) === String(p.id_propiedad) || String(c.property_id) === String(p.id_propiedad) || String(c.id_propiedad) === String(p.id_propiedad))) ||
-                    (c.id_publicacion && (String(c.id_publicacion) === String(p.id) || String(c.id_publicacion) === String(p.id_publicacion)))
-                ));
+                const pubId = String(p.id_publicacion || p.id || '');
+                const propId = String(p.id_propiedad || p.property_id || p.propertyId || '');
+
+                const activeContract = (ownerActiveContractsMock || []).find(c => {
+                    if (!c) return false;
+                    const cStatus = String(c.status || '').toUpperCase();
+                    if (['CANCELLED', 'FINALIZED', 'TERMINATED', 'RESCINDIDO', 'VENCIDO'].includes(cStatus)) return false;
+
+                    const cPubId = String(c.id_publicacion || c.publication_id || c.publicationId || '');
+                    const cPropId = String(c.id_propiedad || c.property_id || c.propertyId || '');
+
+                    // 1. Si ambos tienen ID de publicación, deben coincidir exactamente
+                    if (cPubId && pubId) {
+                        return cPubId === pubId;
+                    }
+
+                    // 2. Si el contrato está explícitamente asociado a otra publicación, no pertenece a este aviso
+                    if (cPubId && pubId && cPubId !== pubId) {
+                        return false;
+                    }
+
+                    // 3. Coincidencia por id de propiedad (NUNCA comparar cPropId con p.id que es publicación)
+                    if (cPropId && propId && cPropId === propId) {
+                        const rawEnd = c.end_date || c.endDate || c.fecha_fin_contrato;
+                        if (rawEnd) {
+                            const endD = new Date(rawEnd);
+                            if (!isNaN(endD.getTime()) && endD < new Date()) return false;
+                        }
+                        return true;
+                    }
+
+                    return false;
+                });
 
                 return `
-                <div class="owner-prop-card glass-card rounded-2xl overflow-visible shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80 cursor-pointer relative" onclick="handleOwnerCardClick(event, ${safePropJson})">
+                <div class="owner-prop-card glass-card rounded-2xl overflow-visible shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-zinc-200/80 dark:border-zinc-800/80 cursor-pointer relative" data-pub-id="${p.id}" data-prop-id="${p.id_propiedad || p.id}" onclick="handleOwnerCardClick(event, ${safePropJson})">
                     <div class="relative aspect-[16/10] w-full min-h-[210px] bg-zinc-100 dark:bg-zinc-800 rounded-t-2xl">
                         <div class="absolute inset-0 overflow-hidden rounded-t-2xl">
                             <img src="${p.images?.[0] || 'img/hero-marketplace.jpg'}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
@@ -1430,7 +1456,7 @@
 
                             <div class="mt-4 flex items-baseline justify-between">
                                 <div class="flex items-baseline gap-1">
-                                    <span class="text-2xl font-black text-zinc-900 dark:text-white">$ ${Number(p.price || 0).toLocaleString('es-AR')}</span>
+                                    <span class="text-2xl font-black text-zinc-900 dark:text-white">${(p.moneda === 'USD' || (activeContract && activeContract.currency === 'USD')) ? 'USD $' : '$'} ${Number((activeContract && (activeContract.monthly_rent || activeContract.monthlyRent)) || p.price || 0).toLocaleString('es-AR')}</span>
                                     <span class="text-xs text-zinc-400">/ mes</span>
                                 </div>
                                 <span class="text-xs font-semibold text-zinc-500 flex items-center gap-1">
@@ -2199,7 +2225,17 @@
             const rentalCardsHtml = ownerActiveContractsMock.map(c => {
                 const isSelected = c.id === activeSelectedContractId;
                 const cleanTitle = (c.property_title || 'Propiedad').split(' - ')[0].split(' | ')[0];
-                const matchedProp = (ownerRawProperties || []).find(p => String(p.id) === String(c.property_id || c.propertyId) || (p.title && c.property_title && p.title.toLowerCase().includes(cleanTitle.toLowerCase())));
+                const matchedProp = (ownerRawProperties || []).find(p => {
+                    const pPropId = String(p.id_propiedad || p.property_id || p.propertyId || '');
+                    const pPubId = String(p.id_publicacion || p.id || '');
+                    const cPropId = String(c.id_propiedad || c.property_id || c.propertyId || '');
+                    const cPubId = String(c.id_publicacion || c.publication_id || c.publicationId || '');
+
+                    if (cPubId && pPubId && cPubId === pPubId) return true;
+                    if (cPropId && pPropId && cPropId === pPropId) return true;
+                    if (p.title && c.property_title && p.title.toLowerCase().includes(cleanTitle.toLowerCase())) return true;
+                    return false;
+                });
                 const imgUrl = c.image || c.imagen || (c.images && c.images[0]) || (matchedProp && matchedProp.images && matchedProp.images[0]) || (matchedProp && (matchedProp.imagen || matchedProp.image)) || 'img/hero-marketplace.jpg';
                 const rentFmt = `$ ${Number(c.monthly_rent || 0).toLocaleString('es-AR')}`;
 
@@ -4671,10 +4707,35 @@
             if (typeof loadOwnerActiveRental === 'function') {
                 loadOwnerActiveRental();
             }
+            if (typeof loadOwnerAvisos === 'function') {
+                loadOwnerAvisos();
+            }
         });
         window.addEventListener('vivat:contract_updated', () => {
             if (typeof loadOwnerActiveRental === 'function') {
                 loadOwnerActiveRental();
+            }
+            if (typeof loadOwnerAvisos === 'function') {
+                loadOwnerAvisos();
+            }
+            if (typeof loadOwnerApplications === 'function') {
+                loadOwnerApplications();
+            }
+        });
+        window.addEventListener('vivat:rental_created', () => {
+            if (typeof loadOwnerActiveRental === 'function') {
+                loadOwnerActiveRental();
+            }
+            if (typeof loadOwnerAvisos === 'function') {
+                loadOwnerAvisos();
+            }
+            if (typeof loadOwnerApplications === 'function') {
+                loadOwnerApplications();
+            }
+        });
+        window.addEventListener('vivat:publication_updated', () => {
+            if (typeof loadOwnerAvisos === 'function') {
+                loadOwnerAvisos();
             }
         });
     </script>

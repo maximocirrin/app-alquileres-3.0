@@ -1294,6 +1294,28 @@
             }
             if (!ownerProfileId) ownerProfileId = 6;
 
+            // Resolver perfil del inquilino en Supabase si coincide
+            let tenantProfileId = 5;
+            if (window.supabaseClient && (tenantEmail || tenantDni)) {
+                try {
+                    const cleanDni = (tenantDni || '').replace(/\D/g, '');
+                    let orQuery = [];
+                    if (tenantEmail) orQuery.push(`mail.eq.${tenantEmail}`);
+                    if (cleanDni) orQuery.push(`dni.eq.${cleanDni}`);
+                    if (orQuery.length > 0) {
+                        const { data: tPerf } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil')
+                            .or(orQuery.join(','))
+                            .limit(1)
+                            .maybeSingle();
+                        if (tPerf?.id_perfil) {
+                            tenantProfileId = tPerf.id_perfil;
+                        }
+                    }
+                } catch (e) {}
+            }
+
             // 1. Si hay cliente de Supabase, persistir en Contrato
             let dbContractId = null;
             if (window.supabaseClient && resolvedPropId && !isNaN(Number(resolvedPropId))) {
@@ -1302,7 +1324,7 @@
                         id_propiedad: Number(resolvedPropId),
                         id_publicacion: resolvedPubId && !isNaN(Number(resolvedPubId)) ? Number(resolvedPubId) : null,
                         id_perfil_propietario: Number(ownerProfileId),
-                        id_perfil_inquilino: 5,
+                        id_perfil_inquilino: tenantProfileId,
                         id_tipo_garantia: 1,
                         id_moneda: moneda === 'USD' ? 2 : 1,
                         id_Indice: indice === 'IPC' ? 1 : 2,
@@ -1409,10 +1431,70 @@
                 console.warn('[RentalWizard] Error guardando en localStorage:', e);
             }
 
-            // Sincronizar en memoria si existe el mock de contratos
+            // Sincronizar en memoria si existe el mock de contratos del propietario
             if (window.ownerActiveContractsMock && Array.isArray(window.ownerActiveContractsMock)) {
                 window.ownerActiveContractsMock = window.ownerActiveContractsMock.filter(c => c && String(c.id) !== String(contractId) && String(c.propertyId) !== String(newContract.propertyId));
                 window.ownerActiveContractsMock.unshift(newContract);
+            }
+
+            // Sincronizar en memoria si existe el mock de contratos del corredor
+            if (window.brokerActiveRentalsMock && Array.isArray(window.brokerActiveRentalsMock)) {
+                window.brokerActiveRentalsMock = window.brokerActiveRentalsMock.filter(c => c && String(c.id) !== String(contractId) && String(c.propertyId) !== String(newContract.propertyId));
+                window.brokerActiveRentalsMock.unshift({
+                    ...newContract,
+                    contractCode: contractId,
+                    monthlyRent: canon,
+                    expenses: montoExpensas,
+                    propertyTitle: propTitle,
+                    propertyAddress: propAddress,
+                    tenantName: tenantName,
+                    tenantEmail: tenantEmail,
+                    tenantPhone: tenantPhone
+                });
+            }
+
+            // Sincronizar en ContractsManager si está cargado
+            if (window.ContractsManager && typeof window.ContractsManager.getContracts === 'function') {
+                try {
+                    const cList = window.ContractsManager.getContracts();
+                    if (Array.isArray(cList)) {
+                        const existingIdx = cList.findIndex(item => item && (
+                            String(item.id) === String(contractId) ||
+                            (item.dbContractId && String(item.dbContractId) === String(newContract.dbContractId)) ||
+                            (newContract.propertyId && String(item.propertyId) === String(newContract.propertyId))
+                        ));
+                        if (existingIdx >= 0) {
+                            cList[existingIdx] = { ...cList[existingIdx], ...newContract };
+                        } else {
+                            cList.unshift(newContract);
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 2.1 Sincronización completa hacia Publicación, Propiedad, Inquilino y vistas
+            if (window.DataManager && typeof window.DataManager.syncRentalValues === 'function') {
+                try {
+                    await window.DataManager.syncRentalValues({
+                        contractId: contractId,
+                        propertyId: resolvedPropId,
+                        publicationId: resolvedPubId,
+                        monthlyRent: canon,
+                        expenses: montoExpensas,
+                        currency: moneda,
+                        adjustmentIndex: indice,
+                        adjustmentFrequencyMonths: frecuencia,
+                        paymentDueDay: diaVenc,
+                        tenant: {
+                            name: tenantName,
+                            email: tenantEmail,
+                            phone: tenantPhone,
+                            dni: tenantDni
+                        }
+                    });
+                } catch (syncErr) {
+                    console.warn('[RentalWizard] Aviso sincronizando valores:', syncErr);
+                }
             }
 
             // Breve espera para que el usuario aprecie el loader y el proceso se complete de forma limpia
@@ -1626,6 +1708,26 @@
                         }).eq('id_contrato', c.dbContractId);
                     } catch(dbErr) {
                         console.warn('[openContractEditorForRental] Aviso actualizando Contrato Supabase:', dbErr);
+                    }
+                }
+
+                // 4. Sincronizar valores hacia publicación, inquilino y propiedades
+                if (window.DataManager && typeof window.DataManager.syncRentalValues === 'function') {
+                    try {
+                        await window.DataManager.syncRentalValues({
+                            contractId: c.id,
+                            propertyId: c.propertyId || c.property_id,
+                            publicationId: c.id_publicacion || c.publicationId,
+                            monthlyRent: terms.monthlyRent || c.monthly_rent,
+                            expenses: terms.expenses || terms.montoExpensas || c.expenses_amount || c.expenses,
+                            currency: terms.currency || c.currency || 'ARS',
+                            adjustmentIndex: terms.adjustmentIndex || c.adjustmentIndex || 'IPC',
+                            adjustmentFrequencyMonths: terms.adjustmentFrequencyMonths || c.adjustmentFrequencyMonths || 3,
+                            paymentDueDay: terms.paymentDueDay || c.paymentDueDay || 10,
+                            tenant: c.tenant
+                        });
+                    } catch (syncErr) {
+                        console.warn('[openContractEditorForRental] Aviso sincronizando valores:', syncErr);
                     }
                 }
 

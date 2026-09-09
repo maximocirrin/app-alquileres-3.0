@@ -1262,13 +1262,177 @@
         // -------------------------------------------------------------
         // FUNCIONALIDAD: 1. DASHBOARD DE ALQUILER ACTIVO & PAGOS
         // -------------------------------------------------------------
-        async function renderTenantDashboard() {
+        window.selectTenantRental = function (contractId) {
+            window._selectedTenantContractId = contractId;
+            renderTenantDashboard(contractId);
+        };
+
+        async function renderTenantDashboard(targetContractId = null) {
             const container = document.getElementById('tenant-rental-dashboard');
             if (!container) return;
 
+            // 1. LOADER INMEDIATO: para que al cambiar de alquiler o al cargar la pantalla no parezca trabado
+            container.innerHTML = `
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-3xl p-10 sm:p-14 text-center space-y-4 shadow-sm animate-pulse">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-red-400 flex items-center justify-center mx-auto">
+                        <span class="material-symbols-outlined text-3xl animate-spin">progress_activity</span>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white">Cargando datos del alquiler...</h4>
+                        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">Sincronizando canon locativo, vencimientos y detalles del inmueble.</p>
+                    </div>
+                </div>
+            `;
+
             try {
-                const contract = window.DataManager ? await window.DataManager.getActiveContract() : null;
-                if (!contract) {
+                // 2. Asegurar que las postulaciones del usuario estén cargadas
+                if (!window._allTenantApplications || window._allTenantApplications.length === 0) {
+                    if (typeof loadTenantApplications === 'function') {
+                        try {
+                            await loadTenantApplications();
+                        } catch (eApp) {
+                            console.warn("[TenantDashboard] Aviso cargando postulaciones:", eApp);
+                        }
+                    }
+                }
+                const myApps = window._allTenantApplications || [];
+
+                // 3. Consultar contratos generados y vigentes estrictamente para este inquilino
+                const tenantContracts = (window.DataManager && typeof window.DataManager.getTenantContracts === 'function')
+                    ? await window.DataManager.getTenantContracts()
+                    : [];
+
+                // Breve espera mínima para que la animación de carga se aprecie de forma fluida
+                await new Promise(r => setTimeout(r, 200));
+
+                // 4. Si NO hay contratos generados para el inquilino:
+                if (!tenantContracts || tenantContracts.length === 0) {
+                    // CASO A: El inquilino se postuló pero el propietario aún NO generó el alquiler
+                    if (myApps.length > 0) {
+                        container.innerHTML = `
+                            <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-8 animate-fadeIn">
+                                <!-- Header de Estado con Badge Ámbar y Pulso -->
+                                <div class="text-center space-y-3 max-w-2xl mx-auto">
+                                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 text-xs font-black uppercase tracking-wider shadow-xs">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        <span>Postulación en Revisión • Aguardando al Propietario</span>
+                                    </div>
+                                    <h3 class="font-headline text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                        Aguardando que el propietario genere el alquiler
+                                    </h3>
+                                    <p class="font-body text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                        Te has postulado con éxito a <strong>${myApps.length === 1 ? (myApps[0].property_title || 'esta propiedad') : `${myApps.length} propiedades`}</strong>. El propietario o corredor inmobiliario está evaluando tu Pasaporte Vivat y garantías. En cuanto configure y emita las condiciones del alquiler (canon locativo, expensas y fechas de inicio), tu panel completo de pagos, recibos y firma biométrica se habilitará aquí automáticamente.
+                                    </p>
+                                </div>
+
+                                <!-- Stepper de Proceso Transparente (3 Pasos) -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60">
+                                    <div class="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shadow-2xs">
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Paso 1 • Completado</span>
+                                            <h5 class="font-headline text-xs font-black text-zinc-900 dark:text-white">Postulación Presentada</h5>
+                                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Pasaporte Vivat e identidad validados.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-3 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/80 shadow-2xs ring-1 ring-amber-500/20">
+                                        <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">Paso 2 • En Proceso</span>
+                                            <h5 class="font-headline text-xs font-black text-zinc-900 dark:text-white">Aguardando al Propietario</h5>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400">El propietario debe emitir las condiciones.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-3 p-3 rounded-xl bg-white/60 dark:bg-zinc-900/50 border border-zinc-200/40 dark:border-zinc-800/50 opacity-60">
+                                        <div class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-xl">lock</span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-zinc-400">Paso 3 • Bloqueado</span>
+                                            <h5 class="font-headline text-xs font-black text-zinc-700 dark:text-zinc-300">Panel de Pagos y Firma</h5>
+                                            <p class="text-[11px] text-zinc-500">Se desbloqueará al generarse el alquiler.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de Propiedades a las que se postuló -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between px-1">
+                                        <h4 class="font-headline text-xs sm:text-sm font-black text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-base text-primary">apartment</span>
+                                            Tus postulaciones en espera (${myApps.length})
+                                        </h4>
+                                        <button type="button" onclick="window.switchTenantTab('postulaciones')" class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                                            <span>Gestionar en Postulaciones</span>
+                                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 ${myApps.length > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : ''} gap-4">
+                                        ${myApps.map(app => {
+                                            const appImg = app.property_image || (app.property_photos && app.property_photos[0]) || 'img/hero-marketplace.jpg';
+                                            const appPrice = Number(app.property_price || app.propertyPrice || app.price || 0);
+                                            const appCur = app.currency === 'USD' ? 'USD $' : '$';
+                                            return `
+                                                <div class="flex flex-col rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3.5 shadow-xs space-y-3">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700">
+                                                            <img src="${appImg}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/50">
+                                                                En Evaluación
+                                                            </span>
+                                                            <h5 class="font-headline text-xs font-black text-zinc-900 dark:text-white truncate mt-1">${app.property_title || 'Propiedad en Alquiler'}</h5>
+                                                            <p class="text-[11px] text-zinc-500 truncate">${app.property_address || 'Mendoza, Argentina'}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs">
+                                                        <span class="text-zinc-500 text-[11px]">Canon solicitado:</span>
+                                                        <span class="font-black text-zinc-900 dark:text-white">${appCur} ${appPrice > 0 ? appPrice.toLocaleString('es-AR') : 'A convenir'}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 pt-1">
+                                                        <button type="button" onclick="window.switchTenantTab('postulaciones')" class="flex-1 py-2 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs transition-colors cursor-pointer text-center">
+                                                            Ver Detalle
+                                                        </button>
+                                                        <button type="button" onclick="window.openTenantContractModal('${app.id}', null, 'chat')" class="py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1" title="Enviar mensaje al propietario">
+                                                            <span class="material-symbols-outlined text-sm">chat</span>
+                                                            <span>Chat</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+
+                                <!-- Footer Acciones -->
+                                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-200/80 dark:border-zinc-800">
+                                    <div class="text-xs text-zinc-500 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-sm text-emerald-500">notifications_active</span>
+                                        <span>Te notificaremos por correo y en la app cuando el propietario genere el contrato.</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                                        <button type="button" onclick="window.switchTenantTab('postulaciones')" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white font-headline font-bold text-xs transition-all shadow-sm text-center cursor-pointer">
+                                            Ir a Mis Postulaciones
+                                        </button>
+                                        <a href="index.html" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs transition-all text-center">
+                                            Ver más Propiedades
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // CASO B: No tiene ni contratos ni postulaciones
                     container.innerHTML = `
                         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-4 shadow-sm">
                             <div class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/50 text-primary dark:text-red-400 flex items-center justify-center mx-auto">
@@ -1282,11 +1446,39 @@
                     return;
                 }
 
-                const payment = await window.DataManager.getCurrentPayment(contract.id);
-                const punitives = window.DataManager.calculatePunitiveInterests(contract, payment);
+                // 5. Contrato activo generado por el propietario
+                const activeTargetId = targetContractId || window._selectedTenantContractId || (tenantContracts[0] ? tenantContracts[0].id : null);
+                let contract = tenantContracts.find(c => c && (
+                    String(c.id) === String(activeTargetId) ||
+                    String(c.contract_number) === String(activeTargetId) ||
+                    String(c.contractNumber) === String(activeTargetId) ||
+                    String(c.dbContractId) === String(activeTargetId) ||
+                    String(c.property_id) === String(activeTargetId) ||
+                    String(c.propertyId) === String(activeTargetId)
+                ));
+                if (!contract) contract = tenantContracts[0];
 
+                if (contract.id) {
+                    window._selectedTenantContractId = contract.id;
+                }
+
+                const payment = await window.DataManager.getCurrentPayment(contract.id, contract);
                 const isPaid = payment && payment.status === 'pagado';
                 const isWaived = payment && payment.is_punitive_waived;
+
+                // Asegurar que para pagos pendientes el canon base coincida siempre con el contrato activo
+                if (payment && !isPaid) {
+                    const contractCanon = Number(contract.monthly_rent || contract.monthlyRent || 0);
+                    if (contractCanon > 0) {
+                        payment.amount_base = contractCanon;
+                    }
+                    if (contract.currency) {
+                        payment.currency = contract.currency;
+                    }
+                }
+
+                const punitives = window.DataManager.calculatePunitiveInterests(contract, payment);
+                const currSym = (contract.currency === 'USD' || contract.id_moneda === 2) ? 'USD $' : '$';
 
                 let indicesData = {
                     ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
@@ -1307,7 +1499,8 @@
                 const defaultRate = isIpc
                     ? (freqMonths >= 6 ? indicesData.ipc.tasaSugeridaSemestral : indicesData.ipc.tasaSugeridaTrimestral)
                     : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
-                const estimatedNewRent = Math.round((contract.monthly_rent || 380000) * (1 + defaultRate / 100));
+                const baseMonthlyRent = Number(contract.monthly_rent || contract.monthlyRent || (payment ? payment.amount_base : 380000));
+                const estimatedNewRent = Math.round(baseMonthlyRent * (1 + defaultRate / 100));
 
                 // Construir datos enriquecidos de la propiedad / publicación con datos reales
                 const propertyImages = (Array.isArray(contract.photos) && contract.photos.length > 0)
@@ -1320,7 +1513,7 @@
                     address: contract.property_address || 'Mendoza, Argentina',
                     status: 'alquilada',
                     contractEndDate: contract.end_date || contract.fecha_fin || contract.fecha_fin_contrato || null,
-                    price: contract.monthly_rent || 380000,
+                    price: baseMonthlyRent,
                     expenses: contract.expenses || 48000,
                     m2_cubiertos: contract.m2_cubiertos || 75,
                     m2_totales: contract.m2_totales || 85,
@@ -1352,7 +1545,63 @@
                     landlord_role: 'Propietario Directo / Administrador Matriculado'
                 };
 
+                const pendingOwnerApps = myApps.filter(a => !tenantContracts.some(c => String(c.property_id || c.propertyId) === String(a.property_id || a.propertyId)));
+
                 container.innerHTML = `
+                    ${pendingOwnerApps.length > 0 ? `
+                        <!-- AVISO DE POSTULACIONES ADICIONALES EN ESPERA DEL PROPIETARIO -->
+                        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 px-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-base">hourglass_top</span>
+                                <span>Tienes <strong>${pendingOwnerApps.length} postulación(es) adicional(es)</strong> en evaluación aguardando que el propietario defina las condiciones.</span>
+                            </div>
+                            <button type="button" onclick="window.switchTenantTab('postulaciones')" class="font-bold underline text-amber-800 dark:text-amber-300 hover:text-amber-950 shrink-0 self-start sm:self-auto cursor-pointer">
+                                Ver postulaciones en espera →
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${(tenantContracts && tenantContracts.length > 1) ? `
+                        <!-- SELECTOR MINIMALISTA DE ALQUILERES ACTIVOS DEL INQUILINO -->
+                        <div class="mb-6 p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 shadow-sm">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 px-1">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-red-400 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-base font-bold">real_estate_agent</span>
+                                    </div>
+                                    <span class="text-xs font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-200 font-headline">Tus Alquileres Activos (${tenantContracts.length})</span>
+                                </div>
+                                <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Selecciona una propiedad para alternar su panel de pagos y gestión</span>
+                            </div>
+                            <div class="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin">
+                                ${tenantContracts.map(cItem => {
+                                    const isSelected = String(cItem.id) === String(contract.id);
+                                    const cCanon = Number(cItem.monthly_rent || cItem.monthlyRent || 0);
+                                    const cSym = (cItem.currency === 'USD' || cItem.id_moneda === 2) ? 'USD $' : '$';
+                                    const cImg = cItem.property_image || (cItem.photos && cItem.photos[0]) || 'img/hero-marketplace.jpg';
+                                    return `
+                                        <button type="button" onclick="window.selectTenantRental('${cItem.id}')" class="group flex items-center gap-3 p-2.5 pr-4 rounded-2xl border transition-all cursor-pointer text-left shrink-0 ${isSelected ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-950 dark:border-white shadow-md' : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200/80 dark:border-zinc-700/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'}">
+                                            <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-zinc-200 dark:bg-zinc-700 border border-white/10">
+                                                <img src="${cImg}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs font-headline font-black truncate max-w-[170px] sm:max-w-[210px]">${cItem.property_title || 'Alquiler'}</span>
+                                                    ${isSelected ? '<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>' : ''}
+                                                </div>
+                                                <div class="text-[11px] ${isSelected ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'} flex items-center gap-1.5">
+                                                    <span class="font-bold">${cSym} ${cCanon.toLocaleString('es-AR')}</span>
+                                                    <span>•</span>
+                                                    <span class="truncate max-w-[120px]">${cItem.property_address || 'Mendoza'}</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
                     <!-- BANNER DESTACADO DE PRÓXIMA ACTUALIZACIÓN PARA EL INQUILINO -->
                     <div class="p-6 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-zinc-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-blue-500/30 mb-6 sm:mb-8">
                         <div class="flex items-start sm:items-center gap-4">
@@ -1377,7 +1626,7 @@
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full sm:w-auto">
                             <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-left sm:text-right">
                                 <span class="block text-[10px] uppercase font-bold text-blue-200">Nuevo Canon Estimado (+${Number(defaultRate).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)</span>
-                                <span class="text-xl sm:text-2xl font-black font-headline text-emerald-300 font-mono block">$ ${estimatedNewRent.toLocaleString('es-AR')}</span>
+                                <span class="text-xl sm:text-2xl font-black font-headline text-emerald-300 font-mono block">${currSym} ${estimatedNewRent.toLocaleString('es-AR')}</span>
                                 <span class="block text-[10px] text-blue-200/80">Regirá desde ${nextAdj.nextDate} • Datos oficiales publicados</span>
                             </div>
                             <button type="button" onclick="openBcraIndicesTableModal('${isIpc ? 'IPC' : 'ICL'}')" class="px-4 py-2.5 bg-white text-blue-950 hover:bg-blue-50 font-headline font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
@@ -1431,7 +1680,7 @@
                             </div>
                             <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-right shrink-0 shadow-2xs">
                                 <span class="block text-[10px] uppercase font-bold text-zinc-400">Canon Locativo Mensual Actual</span>
-                                <span class="text-2xl font-black text-zinc-900 dark:text-white">$ ${Number(contract.monthly_rent).toLocaleString('es-AR')}</span>
+                                <span class="text-2xl font-black text-zinc-900 dark:text-white">${currSym} ${baseMonthlyRent.toLocaleString('es-AR')}</span>
                             </div>
                         </div>
 
@@ -1461,27 +1710,27 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
                                     <span class="block text-xs font-bold uppercase text-zinc-400">Alquiler Base</span>
-                                    <span class="text-lg font-extrabold text-zinc-900 dark:text-white">$ ${Number(payment ? payment.amount_base : contract.monthly_rent).toLocaleString('es-AR')}</span>
+                                    <span class="text-lg font-extrabold text-zinc-900 dark:text-white">${currSym} ${Number(payment ? payment.amount_base : baseMonthlyRent).toLocaleString('es-AR')}</span>
                                 </div>
 
                                 <div class="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50">
                                     <span class="block text-xs font-bold uppercase text-zinc-400">Intereses Punitorios</span>
                                     ${isWaived ? `
                                         <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
-                                            <span class="material-symbols-outlined text-base">verified</span> Perdonados ($0)
+                                            <span class="material-symbols-outlined text-base">verified</span> Perdonados (${currSym} 0)
                                         </span>
                                     ` : (punitives.punitiveAmount > 0 ? `
-                                        <span class="text-lg font-extrabold text-rose-600 dark:text-rose-400">+$ ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
+                                        <span class="text-lg font-extrabold text-rose-600 dark:text-rose-400">+${currSym} ${Number(punitives.punitiveAmount).toLocaleString('es-AR')}</span>
                                         <span class="block text-[11px] text-rose-500 font-medium">(${punitives.daysLate} días de mora a ${punitives.dailyRate}% diario)</span>
                                     ` : `
-                                        <span class="text-lg font-extrabold text-zinc-700 dark:text-zinc-300">$ 0</span>
+                                        <span class="text-lg font-extrabold text-zinc-700 dark:text-zinc-300">${currSym} 0</span>
                                         <span class="block text-[11px] text-emerald-600 font-medium">Sin recargos</span>
                                     `)}
                                 </div>
 
                                 <div class="bg-zinc-50 dark:bg-zinc-800/80 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700">
                                     <span class="block text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400">Total Final a Pagar</span>
-                                    <span class="text-xl font-black text-zinc-900 dark:text-white">$ ${Number(isPaid ? (payment.amount_base) : punitives.totalAmount).toLocaleString('es-AR')}</span>
+                                    <span class="text-xl font-black text-zinc-900 dark:text-white">${currSym} ${Number(isPaid ? (payment.amount_base) : punitives.totalAmount).toLocaleString('es-AR')}</span>
                                 </div>
                             </div>
 
@@ -1771,6 +2020,8 @@
                 document.body.appendChild(modal);
             }
 
+            const currSym = (payment && payment.currency === 'USD') ? 'USD $' : '$';
+
             modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300 font-body';
             modal.style.display = 'flex';
 
@@ -1786,7 +2037,7 @@
                     <div class="space-y-4 text-xs">
                         <div class="bg-zinc-50 dark:bg-zinc-800 p-3.5 rounded-xl space-y-1">
                             <p class="text-zinc-500">Monto total a informar:</p>
-                            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">$ ${Number(totalAmount).toLocaleString('es-AR')}</p>
+                            <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">${currSym} ${Number(totalAmount).toLocaleString('es-AR')}</p>
                         </div>
 
                         <div>
@@ -2015,6 +2266,326 @@
             }
         };
 
+        window.openMarketplaceForApp = function (appId) {
+            let app = (window._allTenantApplications || []).find(a => String(a.id) === String(appId));
+            if (!app) {
+                try {
+                    const raw = localStorage.getItem('vivat_tenant_applications');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        app = parsed.find(a => String(a.id) === String(appId));
+                    }
+                } catch (e) { }
+            }
+            if (!app) return;
+            if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                window.openMarketplacePropertyDetailModal({
+                    id: app.property_id || app.id,
+                    title: app.property_title || 'Inmueble en Alquiler',
+                    address: app.property_address || 'Mendoza',
+                    price: app.property_price || app.propertyPrice || app.price || 420000,
+                    expenses: app.property_expenses ?? app.propertyExpenses ?? app.expensas ?? 45000,
+                    ambientes: app.property_rooms || app.ambientes || 2,
+                    dormitorios: app.property_beds || app.dormitorios || 1,
+                    banos: app.property_baths || app.banos || 1,
+                    m2_totales: app.property_m2 || app.superficie_total || 68,
+                    images: app.property_image ? [app.property_image] : (app.property_photos || ['img/hero-marketplace.jpg'])
+                });
+            }
+        };
+
+        window.closeTenantRentalDetailModal = function () {
+            const modal = document.getElementById('tenant-rental-detail-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.openTenantRentalDetailModal = function (appId) {
+            let app = (window._allTenantApplications || []).find(a => String(a.id) === String(appId));
+            if (!app) {
+                try {
+                    const raw = localStorage.getItem('vivat_tenant_applications');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        app = parsed.find(a => String(a.id) === String(appId));
+                    }
+                } catch (e) { }
+            }
+
+            if (!app) {
+                console.warn("No se encontró la postulación solicitada:", appId);
+                return;
+            }
+
+            // Buscar contrato asociado
+            let targetContractId = app.contract_id || app.contractId;
+            let foundC = null;
+            const allContractsList = (window.ContractsManager && typeof window.ContractsManager.getContracts === 'function')
+                ? window.ContractsManager.getContracts()
+                : [];
+
+            if (allContractsList && allContractsList.length > 0) {
+                foundC = allContractsList.find(c => c && (
+                    (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
+                    (app.property_id && (String(c.propertyId) === String(app.property_id) || String(c.property_id) === String(app.property_id))) ||
+                    (app.publication_id && (String(c.publicationId) === String(app.publication_id) || String(c.id_publicacion) === String(app.publication_id))) ||
+                    (app.id && (String(c.propertyId) === String(app.id) || String(c.applicationId) === String(app.id)))
+                ));
+            }
+
+            if (!foundC) {
+                try {
+                    const rawContr = localStorage.getItem('vivat_contracts');
+                    if (rawContr) {
+                        const cList = JSON.parse(rawContr);
+                        foundC = cList.find(c => c && (
+                            (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
+                            (app.property_id && (String(c.propertyId) === String(app.property_id) || String(c.property_id) === String(app.property_id))) ||
+                            (app.publication_id && (String(c.publicationId) === String(app.publication_id) || String(c.id_publicacion) === String(app.publication_id))) ||
+                            (app.id && (String(c.propertyId) === String(app.id) || String(c.applicationId) === String(app.id)))
+                        ));
+                    }
+                } catch (e) { }
+            }
+
+            if (foundC) {
+                targetContractId = foundC.id;
+            } else if (!targetContractId) {
+                targetContractId = 'CTR-2026-' + (String(app.id).replace(/\D/g, '').padStart(4, '0') || '1042');
+            }
+
+            const hasTenantSigned = Boolean(foundC && (foundC.tenant?.hasSigned || foundC.status === 'SIGNED_AND_SEALED' || foundC.tenant_signed));
+            const stNorm = String(app.status || '').toLowerCase().trim();
+            const isAccepted = stNorm === 'aceptada' || stNorm === 'aprobada';
+            const isRejected = stNorm === 'rechazada';
+
+            const propPrice = (foundC && (foundC.monthly_rent || foundC.monthlyRent)) || app.property_price || app.propertyPrice || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
+            const propExpenses = (foundC && (foundC.expenses_amount !== undefined ? foundC.expenses_amount : foundC.expenses)) ?? (app.property_expenses ?? app.propertyExpenses ?? app.expensas ?? 45000);
+            const propCurrency = (foundC && foundC.currency) || app.currency || 'ARS';
+            const currSym = propCurrency === 'USD' ? 'USD $' : '$';
+
+            const photoSrc = app.property_image || (app.property_photos && app.property_photos[0]) || 'img/hero-marketplace.jpg';
+            const createdDate = new Date(app.created_at || Date.now());
+            const dateStr = createdDate.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+            const m2Tot = app.property_m2 || app.superficie_total || 68;
+            const rooms = app.property_rooms || app.ambientes || 2;
+            const beds = app.property_beds || app.dormitorios || 1;
+            const baths = app.property_baths || app.banos || 1;
+            const garage = app.cochera || (app.cocheras ? `${app.cocheras} Cochera(s)` : '1 Cubierta');
+
+            // Determinar estados del Stepper de Progreso
+            const step1Complete = true;
+            const step2Complete = isAccepted || hasTenantSigned;
+            const step2Active = !isAccepted && !isRejected;
+            const step3Complete = isAccepted || hasTenantSigned;
+            const step4Complete = Boolean(foundC) || hasTenantSigned;
+            const step5Complete = hasTenantSigned;
+
+            let modal = document.getElementById('tenant-rental-detail-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'tenant-rental-detail-modal';
+                document.body.appendChild(modal);
+            }
+
+            modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md transition-opacity duration-300 font-body';
+            modal.style.display = 'flex';
+            modal.onclick = (e) => { if (e.target === modal) window.closeTenantRentalDetailModal(); };
+
+            modal.innerHTML = `
+                <div class="relative w-full max-w-3xl max-h-[92vh] bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+                    
+                    <!-- Header Visual con Imagen de Fondo y Botón Cerrar -->
+                    <div class="relative h-48 sm:h-56 w-full shrink-0 bg-zinc-800 overflow-hidden">
+                        <img src="${photoSrc}" alt="${app.property_title}" class="w-full h-full object-cover" onerror="this.src='img/hero-marketplace.jpg'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20"></div>
+
+                        <button type="button" onclick="window.closeTenantRentalDetailModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all cursor-pointer shadow-lg" title="Cerrar modal">
+                            <span class="material-symbols-outlined text-lg">close</span>
+                        </button>
+
+                        <div class="absolute bottom-4 left-4 right-4 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                            <div class="space-y-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${isAccepted ? 'bg-emerald-500 text-white' : (isRejected ? 'bg-rose-500 text-white' : 'bg-amber-400 text-zinc-950')} shadow-xs">
+                                        ${isAccepted ? 'Postulación Aprobada' : (isRejected ? 'No Seleccionada' : 'En Evaluación')}
+                                    </span>
+                                    <span class="text-xs text-white/80 font-mono">ID: PROP-${app.property_id || app.id}</span>
+                                </div>
+                                <h2 class="font-headline text-xl sm:text-2xl font-black text-white truncate drop-shadow">
+                                    ${app.property_title}
+                                </h2>
+                                <p class="text-xs text-white/80 flex items-center gap-1 truncate">
+                                    <span class="material-symbols-outlined text-sm text-amber-300">location_on</span>
+                                    <span>${app.property_address || 'Mendoza, Argentina'}</span>
+                                </p>
+                            </div>
+                            <div class="text-left sm:text-right shrink-0 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/15">
+                                <span class="block text-[10px] uppercase font-bold text-white/70">Canon Mensual</span>
+                                <span class="text-xl sm:text-2xl font-headline font-black text-emerald-300 font-mono">${currSym} ${Number(propPrice).toLocaleString('es-AR')}</span>
+                                <span class="block text-[10px] text-white/70">+ ${currSym} ${Number(propExpenses).toLocaleString('es-AR')} expensas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenido Scrolleable -->
+                    <div class="p-5 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin">
+                        
+                        <!-- 1. Pipeline de Estado Minimalista -->
+                        <div class="bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl p-4 sm:p-5 border border-zinc-200/80 dark:border-zinc-700/60">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-3">Progreso de la Postulación</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                        <span class="material-symbols-outlined text-sm font-black">check</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Enviada</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${dateStr.split(' ')[0]}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full ${step2Complete ? 'bg-emerald-500 text-white' : (step2Active ? 'bg-amber-500 text-white animate-pulse' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400')} flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                        <span class="material-symbols-outlined text-sm font-black">${step2Complete ? 'check' : 'visibility'}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Evaluación</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${step2Complete ? 'Superada' : 'En proceso'}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full ${step3Complete ? 'bg-emerald-500 text-white' : (isRejected ? 'bg-rose-500 text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400')} flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                        <span class="material-symbols-outlined text-sm font-black">${step3Complete ? 'check' : (isRejected ? 'close' : 'how_to_reg')}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Aprobación</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${step3Complete ? '¡Aprobada!' : (isRejected ? 'Rechazada' : 'Pendiente')}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full ${step4Complete ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'} flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                        <span class="material-symbols-outlined text-sm font-black">${step4Complete ? 'check' : 'description'}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Contrato</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${step4Complete ? 'Listo' : 'Pendiente'}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full ${step5Complete ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'} flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                        <span class="material-symbols-outlined text-sm font-black">${step5Complete ? 'verified_user' : 'draw'}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-headline font-black text-zinc-900 dark:text-white leading-tight">Firma Didit</p>
+                                        <p class="text-[10px] text-zinc-400 truncate">${step5Complete ? 'Firmado' : 'Pendiente'}</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- 2. Condiciones Económicas -->
+                        <div class="space-y-2.5">
+                            <h3 class="font-headline text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm text-primary">payments</span>
+                                Condiciones Económicas del Alquiler
+                            </h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Canon Locativo</span>
+                                    <span class="text-sm sm:text-base font-black text-zinc-900 dark:text-white font-mono">${currSym} ${Number(propPrice).toLocaleString('es-AR')}</span>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Expensas</span>
+                                    <span class="text-sm sm:text-base font-black text-zinc-900 dark:text-white font-mono">${currSym} ${Number(propExpenses).toLocaleString('es-AR')}</span>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Ajuste Periódico</span>
+                                    <span class="text-xs sm:text-sm font-black text-zinc-900 dark:text-white">${foundC?.adjustment_index || 'IPC Oficial'} (${foundC?.adjustment_frequency_months || 3}m)</span>
+                                </div>
+                                <div class="bg-zinc-50 dark:bg-zinc-800/40 p-3.5 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="block text-[10px] font-bold uppercase text-zinc-400">Vencimiento</span>
+                                    <span class="text-xs sm:text-sm font-black text-zinc-900 dark:text-white">Día ${foundC?.payment_due_day || 10} del mes</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Especificaciones del Inmueble -->
+                        <div class="space-y-2.5">
+                            <h3 class="font-headline text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm text-primary">apartment</span>
+                                Características de la Propiedad
+                            </h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div class="flex items-center gap-2 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-primary text-base">square_foot</span>
+                                    <span><b>${m2Tot} m²</b> totales</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-primary text-base">meeting_room</span>
+                                    <span><b>${rooms}</b> ambientes</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-primary text-base">bed</span>
+                                    <span><b>${beds}</b> dormitorios</span>
+                                </div>
+                                <div class="flex items-center gap-2 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-700/60">
+                                    <span class="material-symbols-outlined text-primary text-base">directions_car</span>
+                                    <span><b>${garage}</b></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Respaldo Presentado (Pasaporte Vivat) -->
+                        <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-700/60 space-y-2 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm text-emerald-500">task_alt</span>
+                                    Documentación de Respaldo Presentada
+                                </span>
+                                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">Validada</span>
+                            </div>
+                            <p class="text-zinc-600 dark:text-zinc-400"><strong>Comprobante adjuntado:</strong> ${app.income_proof || 'Recibo de Haberes + Verificación Biométrica Didit'}</p>
+                            ${app.message ? `<p class="italic text-zinc-500 bg-white dark:bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-200/50 dark:border-zinc-700/50">"${app.message}"</p>` : ''}
+                        </div>
+
+                    </div>
+
+                    <!-- Footer con Botones de Acción -->
+                    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="window.closeTenantRentalDetailModal(); window.openTenantContractModal('${app.id}', '${targetContractId}', 'chat');" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-headline font-bold text-xs shadow-xs transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">chat</span>
+                                <span>Chat de Negociación</span>
+                            </button>
+                            <button type="button" onclick="window.closeTenantRentalDetailModal(); window.openMarketplaceForApp('${app.id}');" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                <span>Ver Aviso</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            ${isAccepted ? `
+                                <button type="button" onclick="window.closeTenantRentalDetailModal(); window.openTenantContractModal('${app.id}', '${targetContractId}', 'document');" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-headline font-black text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+                                    <span class="material-symbols-outlined text-base">${hasTenantSigned ? 'description' : 'draw'}</span>
+                                    <span>${hasTenantSigned ? 'Consultar Contrato' : 'Ir a Firmar Contrato Digital'}</span>
+                                </button>
+                            ` : ''}
+                            <button type="button" onclick="window.closeTenantRentalDetailModal()" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-headline font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer text-center">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        };
+
         function setTenantAppsFilter(filter) {
             window._currentTenantAppsFilter = filter;
 
@@ -2096,12 +2667,77 @@
                 'img/feature-3.jpg'
             ];
 
+            const showMultiSelector = Array.isArray(applications) && applications.length > 1;
+
             container.innerHTML = `
                 <div class="space-y-6">
+                    ${showMultiSelector ? `
+                        <!-- MULTI-POSTULACIÓN: SELECTOR RÁPIDO MINIMALISTA -->
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-red-400 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-lg font-bold">domain_verification</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-headline font-black text-sm text-zinc-900 dark:text-white uppercase tracking-wider">Tus Postulaciones de Alquiler (${applications.length})</h4>
+                                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Selecciona o pulsa cualquier propiedad para inspeccionar sus detalles y condiciones</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-black px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 self-start sm:self-auto uppercase tracking-wider">
+                                    Vista Multialquiler
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                                ${applications.map((item, qIdx) => {
+                                    const qPhoto = item.property_image || (item.property_photos && item.property_photos[0]) || propertyImages[qIdx % propertyImages.length];
+                                    const qSt = String(item.status || '').toLowerCase().trim();
+                                    const qIsAccepted = qSt === 'aceptada' || qSt === 'aprobada';
+                                    const qIsRejected = qSt === 'rechazada';
+                                    const qPrice = item.property_price || item.propertyPrice || item.price || 420000;
+                                    const qCurr = item.currency === 'USD' ? 'USD $' : '$';
+
+                                    let badgeColor = 'bg-amber-500';
+                                    let badgeText = 'En Evaluación';
+                                    if (qIsAccepted) {
+                                        badgeColor = 'bg-emerald-500';
+                                        badgeText = 'Aprobada';
+                                    } else if (qIsRejected) {
+                                        badgeColor = 'bg-rose-500';
+                                        badgeText = 'No seleccionada';
+                                    }
+
+                                    return `
+                                        <div onclick="window.openTenantRentalDetailModal('${item.id}')" class="group p-3 rounded-2xl border transition-all cursor-pointer hover:shadow-md flex items-center gap-3 bg-zinc-50/70 hover:bg-zinc-100/90 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/80 border-zinc-200/80 dark:border-zinc-700/60 hover:border-zinc-300 dark:hover:border-zinc-600">
+                                            <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-zinc-200 dark:bg-zinc-700 relative">
+                                                <img src="${qPhoto}" alt="${item.property_title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='img/hero-marketplace.jpg'">
+                                            </div>
+                                            <div class="min-w-0 flex-1 space-y-0.5">
+                                                <div class="flex items-center justify-between gap-1">
+                                                    <span class="text-xs font-headline font-black text-zinc-900 dark:text-white truncate">${item.property_title}</span>
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold ${qIsAccepted ? 'text-emerald-600 dark:text-emerald-400' : (qIsRejected ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400')}">
+                                                        <span class="w-1.5 h-1.5 rounded-full ${badgeColor} ${!qIsAccepted && !qIsRejected ? 'animate-pulse' : ''}"></span>
+                                                        ${badgeText}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">${item.property_address || 'Mendoza'}</p>
+                                                <div class="flex items-center justify-between text-[11px] pt-1">
+                                                    <span class="font-bold text-zinc-900 dark:text-zinc-100 font-mono">${qCurr} ${Number(qPrice).toLocaleString('es-AR')}</span>
+                                                    <span class="text-primary dark:text-red-400 font-bold group-hover:underline flex items-center gap-0.5">
+                                                        Ver detalles <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
                     ${filtered.map((app, idx) => {
                 const photoSrc = app.property_image || (app.property_photos && app.property_photos[0]) || propertyImages[idx % propertyImages.length];
-                const propPrice = app.property_price || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
-                const propExpenses = app.property_expenses || app.expensas || 45000;
                 const createdDate = new Date(app.created_at || Date.now());
                 const dateStr = createdDate.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -2128,10 +2764,9 @@
                 if (allContractsList && allContractsList.length > 0) {
                     foundC = allContractsList.find(c => c && (
                         (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
-                        (app.property_id && String(c.propertyId) === String(app.property_id)) ||
-                        (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
-                        (app.id && String(c.propertyId) === String(app.id)) ||
-                        (app.id && String(c.applicationId) === String(app.id))
+                        (app.property_id && (String(c.propertyId) === String(app.property_id) || String(c.property_id) === String(app.property_id))) ||
+                        (app.publication_id && (String(c.publicationId) === String(app.publication_id) || String(c.id_publicacion) === String(app.publication_id))) ||
+                        (app.id && (String(c.propertyId) === String(app.id) || String(c.applicationId) === String(app.id)))
                     ));
                 }
 
@@ -2142,10 +2777,9 @@
                             const cList = JSON.parse(rawContr);
                             foundC = cList.find(c => c && (
                                 (targetContractId && (String(c.id).toLowerCase() === String(targetContractId).toLowerCase() || String(c.contractNumber || '').toLowerCase() === String(targetContractId).toLowerCase() || String(c.dbContractId) === String(targetContractId))) ||
-                                (app.property_id && String(c.propertyId) === String(app.property_id)) ||
-                                (app.publication_id && String(c.publicationId) === String(app.publication_id)) ||
-                                (app.id && String(c.propertyId) === String(app.id)) ||
-                                (app.id && String(c.applicationId) === String(app.id))
+                                (app.property_id && (String(c.propertyId) === String(app.property_id) || String(c.property_id) === String(app.property_id))) ||
+                                (app.publication_id && (String(c.publicationId) === String(app.publication_id) || String(c.id_publicacion) === String(app.publication_id))) ||
+                                (app.id && (String(c.propertyId) === String(app.id) || String(c.applicationId) === String(app.id)))
                             ));
                         }
                     } catch (e) { }
@@ -2166,6 +2800,12 @@
                         hasTenantSigned = Boolean(cmContract.tenant?.hasSigned || cmContract.status === 'SIGNED_AND_SEALED');
                     }
                 }
+
+                // Determinar el canon locativo y expensas reales, priorizando los valores acordados en el Contrato
+                const propPrice = (foundC && (foundC.monthly_rent || foundC.monthlyRent)) || app.property_price || app.propertyPrice || app.price || (app.monthly_income ? Math.round(app.monthly_income * 0.42) : 420000);
+                const propExpenses = (foundC && (foundC.expenses_amount !== undefined ? foundC.expenses_amount : foundC.expenses)) ?? (app.property_expenses ?? app.propertyExpenses ?? app.expensas ?? 45000);
+                const propCurrency = (foundC && foundC.currency) || app.currency || 'ARS';
+                const currSym = propCurrency === 'USD' ? 'USD $' : '$';
 
                 // Badge de estado moderno
                 let statusBadgeHtml = '';
@@ -2211,8 +2851,8 @@
                                     <div class="absolute bottom-4 left-4 right-4 text-white">
                                         <span class="text-[10px] font-bold uppercase tracking-wider text-white/80 block">Canon Locativo</span>
                                         <div class="flex items-baseline gap-1.5">
-                                            <span class="font-headline font-black text-2xl text-white drop-shadow-md">$ ${Number(propPrice).toLocaleString('es-AR')}</span>
-                                            <span class="text-xs text-white/80 font-medium">+ $ ${Number(propExpenses).toLocaleString('es-AR')} exp.</span>
+                                            <span class="font-headline font-black text-2xl text-white drop-shadow-md">${currSym} ${Number(propPrice).toLocaleString('es-AR')}</span>
+                                            <span class="text-xs text-white/80 font-medium">+ ${currSym} ${Number(propExpenses).toLocaleString('es-AR')} exp.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2308,11 +2948,15 @@
                                         </div>
 
                                         <div class="flex items-center gap-2.5 flex-wrap">
+                                            <button type="button" onclick="window.openTenantRentalDetailModal('${app.id}')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-headline font-bold transition-all cursor-pointer shadow-xs hover:scale-[1.02] active:scale-95" title="Ver detalles completos, condiciones financieras y estado de esta postulación">
+                                                <span class="material-symbols-outlined text-sm text-primary dark:text-red-500">info</span>
+                                                <span>Ver Detalles</span>
+                                            </button>
                                             <button type="button" onclick="window.openTenantContractModal('${app.id}', '${targetContractId}', 'chat')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs" title="Abrir canal de chat y negociación">
                                                 <span class="material-symbols-outlined text-sm">chat</span>
                                                 <span>Chat Negociación</span>
                                             </button>
-                                            <button type="button" onclick="window.openMarketplacePropertyDetailModal ? window.openMarketplacePropertyDetailModal({ id: ${app.property_id || (idx + 101)}, title: '${(app.property_title || '').replace(/'/g, "\\'")}', address: '${(app.property_address || '').replace(/'/g, "\\'")}', price: ${propPrice}, expenses: ${propExpenses}, ambientes: ${rooms}, dormitorios: ${beds}, banos: ${baths}, m2_totales: ${m2Tot}, images: ['${photoSrc}'] }) : alert('Cargando ficha...');" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
+                                            <button type="button" onclick="window.openMarketplaceForApp('${app.id}')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-headline font-bold transition-all cursor-pointer shadow-2xs">
                                                 <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">visibility</span>
                                                 <span>Ver Publicación</span>
                                             </button>
@@ -3304,6 +3948,17 @@
         window.addEventListener('vivat:contract_updated', () => {
             if (typeof renderTenantDashboard === 'function') {
                 renderTenantDashboard();
+            }
+            if (typeof renderTenantApplications === 'function') {
+                renderTenantApplications();
+            }
+        });
+        window.addEventListener('vivat:rental_created', () => {
+            if (typeof renderTenantDashboard === 'function') {
+                renderTenantDashboard();
+            }
+            if (typeof renderTenantApplications === 'function') {
+                renderTenantApplications();
             }
         });
         window.addEventListener('vivat:garantes_updated', () => {

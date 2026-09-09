@@ -375,9 +375,10 @@ var DataManager = {
                     ]));
                 }
 
-                const cleanTitle = pub.descripcion
-                    ? pub.descripcion.split(' | Detalles: ')[0].substring(0, 70)
-                    : `Propiedad en ${address}`;
+                const rawDescPrefix = pub.descripcion
+                    ? pub.descripcion.split(' | Detalles: ')[0].split('Detalles: ')[0].replace(/(\s*\|\s*)+$/, '').trim()
+                    : '';
+                const cleanTitle = extraInfo.title || (rawDescPrefix ? rawDescPrefix.substring(0, 70) : `Propiedad en ${address}`);
 
                 const lat = prop.latitud ? parseFloat(prop.latitud) : -32.8898;
                 const lng = prop.longitud ? parseFloat(prop.longitud) : -68.8373;
@@ -453,7 +454,7 @@ var DataManager = {
                     owner_email: extraInfo.ownerEmail || extraInfo.owner_email || '',
                     owner_name: extraInfo.ownerName || extraInfo.owner_name || '',
                     title: cleanTitle,
-                    description: pub.descripcion || '',
+                    description: rawDescPrefix || pub.descripcion || '',
                     address: address,
                     province: dbProvincia || extraInfo.provincia || 'Mendoza',
                     city: dbDepartamento || extraInfo.ciudad || 'Mendoza',
@@ -490,7 +491,9 @@ var DataManager = {
                     status: currentPropStatus,
                     contractEndDate: contractEndDate,
                     expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
-                    expensas: extraInfo.expensas || 0,
+                    expensas: (extraInfo.expensas !== undefined) ? Number(extraInfo.expensas) : (Number(prop.expensas_mensuales) || 0),
+                    currency: extraInfo.moneda || extraInfo.currency || (pub.id_moneda === 2 ? 'USD' : 'ARS'),
+                    id_moneda: pub.id_moneda || (extraInfo.moneda === 'USD' ? 2 : 1),
                     featured: (extraInfo.operacion || 'ALQUILER').toUpperCase(),
                     created_at: pub.created_at,
                     cantidad_visualizaciones_total: pub.cantidad_visualizaciones_total || 0,
@@ -536,7 +539,7 @@ var DataManager = {
                 }
             } catch (e) {}
 
-            // 1. Insert row into Registro_visualizacion
+            // 1. Insert row into Registro_visualizacion (trigger automatically updates Publicacion.cantidad_visualizaciones_total)
             const { error: insertErr } = await window.supabaseClient
                 .from('Registro_visualizacion')
                 .insert([{ id_publicacion: id_publicacion, id_perfil: profileId }]);
@@ -545,19 +548,14 @@ var DataManager = {
                 console.warn("Could not insert Registro_visualizacion:", insertErr);
             }
 
-            // 2. Fetch current views count and update Publicacion table
+            // 2. Fetch fresh views count from Publicacion
             const { data: pubData } = await window.supabaseClient
                 .from('Publicacion')
                 .select('cantidad_visualizaciones_total')
                 .eq('id_publicacion', id_publicacion)
                 .maybeSingle();
 
-            const newTotal = (pubData?.cantidad_visualizaciones_total || 0) + 1;
-
-            await window.supabaseClient
-                .from('Publicacion')
-                .update({ cantidad_visualizaciones_total: newTotal })
-                .eq('id_publicacion', id_publicacion);
+            return pubData?.cantidad_visualizaciones_total;
 
         } catch (err) {
             console.error("Error recording publication view:", err);
@@ -2388,8 +2386,12 @@ var DataManager = {
                         contractNumber: `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`,
                         dbContractId: item.id_contrato,
                         id_contrato: item.id_contrato,
+                        id_propiedad: item.id_propiedad,
                         property_id: item.id_propiedad,
                         propertyId: String(item.id_propiedad),
+                        id_publicacion: item.id_publicacion || pub?.id_publicacion || null,
+                        publication_id: item.id_publicacion || pub?.id_publicacion || null,
+                        publicationId: item.id_publicacion || pub?.id_publicacion || null,
                         id_perfil_propietario: finalOwnerProfileId,
                         id_perfil_inquilino: finalTenantProfileId,
                         property_title: cleanTitle,
@@ -2506,101 +2508,283 @@ var DataManager = {
         return contractsList;
     },
 
-    getActiveContract: async function () {
-        // 1. Revisar si hay un contrato firmado en vivat_contracts de localStorage
+    getTenantContracts: async function (tenantProfileId = null) {
         let localContracts = [];
         try {
             localContracts = JSON.parse(localStorage.getItem('vivat_contracts') || '[]');
         } catch (e) {}
 
-        const activeLocal = localContracts.find(c => c && (c.status === 'SIGNED_AND_SEALED' || c.status === 'WAITING_OWNER' || c.status === 'WAITING_TENANT' || c.tenant?.hasSigned));
+        // 1. Obtener la identidad del inquilino autenticado
+        let currentUserId = null;
+        let currentUserEmail = null;
+        let currentProfileId = tenantProfileId ? Number(tenantProfileId) : null;
+        let currentDni = null;
 
-        if (!window.supabaseClient) {
-            if (activeLocal) return activeLocal;
-            return null;
+        if (window.supabaseClient) {
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    currentUserId = session.user.id;
+                    currentUserEmail = (session.user.email || '').toLowerCase().trim();
+                    if (!currentProfileId) {
+                        const { data: perfil } = await window.supabaseClient
+                            .from('Perfil')
+                            .select('id_perfil, dni, mail')
+                            .eq('user_id', currentUserId)
+                            .maybeSingle();
+                        if (perfil) {
+                            currentProfileId = perfil.id_perfil;
+                            if (perfil.dni) currentDni = perfil.dni;
+                            if (perfil.mail) currentUserEmail = perfil.mail.toLowerCase().trim();
+                        }
+                    }
+                }
+            } catch (e) {}
         }
 
+        if (!currentUserEmail) {
+            try {
+                const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                currentUserEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                if (uLocal.dni) currentDni = uLocal.dni;
+                if (uLocal.id && !currentUserId) currentUserId = uLocal.id;
+            } catch (e) {}
+        }
+
+        const diditIdent = JSON.parse(localStorage.getItem('vivat_didit_identity') || '{}');
+        if (!currentDni && diditIdent.documentNumber) currentDni = diditIdent.documentNumber;
+
+        // 2. Extraer postulaciones presentadas por este inquilino
+        let tenantApplications = [];
         try {
-            // 2. Consultar el contrato más reciente en Supabase con todas las relaciones completas
-            const { data, error } = await window.supabaseClient
-                .from('Contrato')
-                .select(`
-                    *,
-                    Propiedad (
-                        *,
-                        Publicacion (*, Multimedia (*)),
-                        Propiedad_caracteristica (
-                            Caracteristica (*)
-                        )
-                    ),
-                    Inquilino:Perfil!id_perfil_inquilino (*),
-                    Propietario:Perfil!id_perfil_propietario (*),
-                    Firma_contrato (*)
-                `)
-                .order('id_contrato', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (!error && data) {
-                const prop = data.Propiedad || {};
-                const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
-                const media = pub?.Multimedia || [];
-                const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
-                const inq = data.Inquilino || {};
-                const propOwner = data.Propietario || {};
-
-                // Extraer características de la base de datos
-                const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
-
-                const cleanTitle = pub?.descripcion 
-                    ? pub.descripcion.split(' | Detalles: ')[0] 
-                    : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
-
-                const cleanAddress = `${prop.calle || 'Calle'} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim();
-
-                return {
-                    id: data.id_contrato,
-                    dbContractId: data.id_contrato,
-                    contract_number: `CTR-2026-${String(data.id_contrato).padStart(4, '0')}`,
-                    property_id: data.id_propiedad,
-                    property_title: cleanTitle,
-                    property_address: cleanAddress,
-                    property_image: photos[0] || 'img/hero-marketplace.jpg',
-                    photos: photos,
-                    monthly_rent: Number(data.monto_cierre || pub?.precio || 380000),
-                    expenses: Number(prop.expensas_mensuales || 48000),
-                    m2_cubiertos: prop.superficie_cubierta || 75,
-                    m2_totales: prop.superficie_total || 85,
-                    ambientes: prop.ambientes || 3,
-                    dormitorios: prop.dormitorios || 2,
-                    banos: prop.banos || 1,
-                    cocheras: prop.cocheras || 1,
-                    cochera: prop.cocheras ? `${prop.cocheras} Cubierta fija` : 'Sin cochera',
-                    start_date: data.fecha_inicio_contrato || '2026-08-01',
-                    end_date: data.fecha_fin_contrato || '2027-08-01',
-                    payment_due_day: data.dia_vencimiento_mensual || 10,
-                    punitive_daily_rate: Number(data.tasa_punitoria_diaria || 0.5),
-                    adjustment_index: data.indice_ajuste || 'IPC',
-                    adjustment_frequency_months: data.periodo_aumento_meses || 3,
-                    cbu_alias: data.alias_cbu || 'VIVAT.PAGOS.ALQUILER',
-                    tenant_name: inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : 'Inquilino Verificado'),
-                    tenant_email: inq.mail || 'inquilino@vivat.com.ar',
-                    tenant_phone: inq.telefono || '+54 9 261 412-3456',
-                    landlord_name: propOwner.nombre_completo || (propOwner.nombre && propOwner.apellido ? `${propOwner.nombre} ${propOwner.apellido}` : 'Propietario Verificado'),
-                    landlord_email: propOwner.mail || 'propietario@vivat.com.ar',
-                    landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
-                    description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Vivat.',
-                    caracteristicas: dbCaracteristicas
-                };
+            const rawApps = localStorage.getItem('vivat_tenant_applications');
+            if (rawApps) {
+                const parsed = JSON.parse(rawApps);
+                if (Array.isArray(parsed)) tenantApplications.push(...parsed);
             }
+        } catch (e) {}
 
-            if (activeLocal) return activeLocal;
-
-            return null;
-        } catch (e) {
-            console.error("Error in getActiveContract:", e);
-            return activeLocal || null;
+        if (typeof this.getApplications === 'function') {
+            try {
+                const allDbApps = await this.getApplications();
+                if (Array.isArray(allDbApps)) tenantApplications.push(...allDbApps);
+            } catch (e) {
+                console.warn('[DataManager] Error obteniendo solicitudes:', e);
+            }
         }
+
+        const appliedPropertyIds = new Set();
+        const appliedContractIds = new Set();
+        tenantApplications.forEach(a => {
+            if (!a) return;
+            const isMockApp = String(a.id || '').startsWith('app-00') || String(a.property_title || '').includes('Carlos Gómez');
+            if (isMockApp && (!currentUserEmail || !currentUserEmail.includes('carlos'))) return;
+
+            const matchUserId = currentUserId && (String(a.tenant_user_id || a.user_id) === String(currentUserId));
+            const matchProfileId = currentProfileId && (Number(a.tenant_id || a.id_perfil_inquilino) === Number(currentProfileId));
+            const matchEmail = currentUserEmail && (String(a.tenant_email || a.mail || '').toLowerCase().trim() === currentUserEmail);
+            const matchDni = currentDni && (String(a.tenant_dni || a.dni || '').replace(/\D/g, '') === String(currentDni).replace(/\D/g, ''));
+
+            if (matchUserId || matchProfileId || matchEmail || matchDni) {
+                const propId = a.property_id || a.propertyId || a.id_propiedad;
+                if (propId) appliedPropertyIds.add(String(propId));
+                const cId = a.contract_id || a.contractId || a.id_contrato;
+                if (cId) appliedContractIds.add(String(cId));
+            }
+        });
+
+        // Verificador estricto: el contrato debe pertenecer a este inquilino
+        const isTenantContract = (c) => {
+            if (!c) return false;
+            const isMock = ['CTR-2026-0891', 'CTR-2026-0742', 'CTR-2026-0610', 'CTR-2026-0925', 'CTR-2026-0518', 'CTR-2026-1041', 'CTR-2026-0001'].includes(String(c.id))
+                || (c.tenant?.name === 'Carlos Gómez' && (!currentUserEmail || !currentUserEmail.includes('carlos')))
+                || (c.tenant?.name === 'Lucía Fernández' && (!currentUserEmail || !currentUserEmail.includes('lucia')));
+
+            const cTenantEmail = (c.tenant_email || c.tenant?.email || '').toLowerCase().trim();
+            const cTenantDni = (c.tenant_dni || c.tenant?.dni || '').replace(/\D/g, '');
+            const cTenantProfileId = c.id_perfil_inquilino || c.tenant_id || c.tenantProfileId;
+            const cTenantUserId = c.tenant_user_id || c.tenant?.id;
+            const cPropId = String(c.property_id || c.propertyId || c.id_propiedad || '');
+            const cContractId = String(c.id || c.dbContractId || c.contract_number || '');
+
+            const matchProfile = currentProfileId && cTenantProfileId && Number(cTenantProfileId) === Number(currentProfileId);
+            const matchEmail = currentUserEmail && cTenantEmail && cTenantEmail === currentUserEmail;
+            const matchDni = currentDni && cTenantDni && cTenantDni === String(currentDni).replace(/\D/g, '');
+            const matchUser = currentUserId && cTenantUserId && String(cTenantUserId) === String(currentUserId);
+            const matchAppliedProp = cPropId && appliedPropertyIds.has(cPropId);
+            const matchAppliedContract = cContractId && (appliedContractIds.has(cContractId) || appliedContractIds.has(String(c.id)));
+
+            if (isMock && !matchEmail && !matchProfile) return false;
+
+            return Boolean(matchProfile || matchEmail || matchDni || matchUser || matchAppliedProp || matchAppliedContract);
+        };
+
+        const contractsMap = new Map();
+
+        // 3. Procesar contratos locales compatibles con este inquilino
+        localContracts.filter(isTenantContract).forEach(c => {
+            if (c && c.id) {
+                const canon = Number(c.monthly_rent || c.monthlyRent || 380000);
+                const exp = Number(c.expenses_amount || c.expenses || 48000);
+                const cKey = String(c.id);
+                contractsMap.set(cKey, {
+                    id: c.id,
+                    dbContractId: c.dbContractId || c.id,
+                    contract_number: c.contractNumber || c.id,
+                    property_id: c.propertyId || c.property_id,
+                    property_title: c.property_title || c.title || 'Inmueble en Alquiler',
+                    property_address: c.property_address || c.propertyAddress || 'Buenos Aires',
+                    property_image: c.propertyImage || (c.propertyPhotos && c.propertyPhotos[0]) || 'img/hero-marketplace.jpg',
+                    photos: c.propertyPhotos || (c.propertyImage ? [c.propertyImage] : ['img/hero-marketplace.jpg']),
+                    monthly_rent: canon,
+                    expenses: exp,
+                    currency: c.currency || 'ARS',
+                    status: c.status || 'WAITING_TENANT',
+                    tenant_signed: Boolean(c.tenant?.hasSigned || c.tenant_signed || c.status === 'SIGNED_AND_SEALED'),
+                    start_date: c.start_date || c.startDate || '2026-08-01',
+                    end_date: c.end_date || c.endDate || '2028-08-01',
+                    payment_due_day: c.payment_due_day || c.paymentDueDay || 10,
+                    adjustment_index: c.adjustment_index || c.adjustmentIndex || 'IPC',
+                    adjustment_frequency_months: c.adjustment_frequency_months || c.adjustmentFrequencyMonths || 3,
+                    cbu_alias: c.alias_cbu || c.aliasCbu || 'VIVAT.ALQUILER.MP',
+                    landlord_name: c.owner?.name || c.landlord_name || 'Propietario Verificado',
+                    landlord_phone: c.owner?.phone || c.landlord_phone || '+54 9 261 598-7654',
+                    landlord_email: c.owner?.email || c.landlord_email || 'propietario@vivat.com.ar'
+                });
+            }
+        });
+
+        // 4. Si hay Supabase, consultar contratos vinculados al perfil o propiedades postuladas
+        if (window.supabaseClient) {
+            try {
+                let query = window.supabaseClient
+                    .from('Contrato')
+                    .select(`
+                        *,
+                        Propiedad (
+                            *,
+                            Publicacion (*, Multimedia (*)),
+                            Propiedad_caracteristica (
+                                Caracteristica (*)
+                            )
+                        ),
+                        Inquilino:Perfil!id_perfil_inquilino (*),
+                        Propietario:Perfil!id_perfil_propietario (*),
+                        Firma_contrato (*)
+                    `)
+                    .order('id_contrato', { ascending: false });
+
+                if (currentProfileId) {
+                    query = query.eq('id_perfil_inquilino', Number(currentProfileId));
+                } else if (appliedPropertyIds.size > 0) {
+                    const validPropIds = Array.from(appliedPropertyIds).map(Number).filter(n => !isNaN(n) && n > 0);
+                    if (validPropIds.length > 0) {
+                        query = query.in('id_propiedad', validPropIds);
+                    } else {
+                        query = null;
+                    }
+                } else {
+                    query = null; // Evitar traer contratos ajenos de la BD
+                }
+
+                if (query) {
+                    const { data, error } = await query;
+                    if (!error && Array.isArray(data)) {
+                        data.forEach(item => {
+                            const prop = item.Propiedad || {};
+                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            const media = pub?.Multimedia || [];
+                            const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
+                            const propOwner = item.Propietario || {};
+                            const inq = item.Inquilino || {};
+                            const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
+
+                            const cleanTitle = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
+                            const cleanAddress = `${prop.calle || 'Calle'} ${prop.numero || ''}${prop.piso_dpto ? ', ' + prop.piso_dpto : ''}, Mendoza`.trim();
+
+                            const cKey = `CTR-2026-${String(item.id_contrato).padStart(4, '0')}`;
+                            const localMatch = contractsMap.get(cKey) || contractsMap.get(String(item.id_contrato)) || {};
+
+                            const canon = Number(item.monto_cierre || localMatch.monthly_rent || pub?.precio || 380000);
+                            const exp = Number(prop.expensas_mensuales || localMatch.expenses || 48000);
+
+                            const mergedObj = {
+                                id: item.id_contrato,
+                                dbContractId: item.id_contrato,
+                                contract_number: cKey,
+                                property_id: item.id_propiedad,
+                                property_title: cleanTitle,
+                                property_address: cleanAddress,
+                                property_image: photos[0] || 'img/hero-marketplace.jpg',
+                                photos: photos,
+                                monthly_rent: canon,
+                                expenses: exp,
+                                currency: (item.id_moneda === 2 || localMatch.currency === 'USD') ? 'USD' : 'ARS',
+                                m2_cubiertos: prop.superficie_cubierta || 75,
+                                m2_totales: prop.superficie_total || 85,
+                                ambientes: prop.ambientes || 3,
+                                dormitorios: prop.dormitorios || 2,
+                                banos: prop.banos || 1,
+                                cocheras: prop.cocheras || 1,
+                                cochera: prop.cocheras ? `${prop.cocheras} Cubierta fija` : 'Sin cochera',
+                                start_date: item.fecha_inicio_contrato || '2026-08-01',
+                                end_date: item.fecha_fin_contrato || '2027-08-01',
+                                payment_due_day: item.dia_vencimiento_mensual || 10,
+                                punitive_daily_rate: Number(item.tasa_punitoria_diaria || 0.5),
+                                adjustment_index: item.indice_ajuste || 'IPC',
+                                adjustment_frequency_months: item.periodo_aumento_meses || 3,
+                                cbu_alias: item.alias_cbu || 'VIVAT.PAGOS.ALQUILER',
+                                tenant_name: inq.nombre_completo || (inq.nombre && inq.apellido ? `${inq.nombre} ${inq.apellido}` : 'Inquilino Verificado'),
+                                tenant_email: inq.mail || 'inquilino@vivat.com.ar',
+                                tenant_phone: inq.telefono || '+54 9 261 412-3456',
+                                landlord_name: propOwner.nombre_completo || (propOwner.nombre && propOwner.apellido ? `${propOwner.nombre} ${propOwner.apellido}` : 'Propietario Verificado'),
+                                landlord_email: propOwner.mail || 'propietario@vivat.com.ar',
+                                landlord_phone: propOwner.telefono || '+54 9 261 598-7654',
+                                description: pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : 'Propiedad en alquiler administrada bajo contrato digital en Vivat.',
+                                caracteristicas: dbCaracteristicas,
+                                status: item.Firma_contrato?.length > 0 ? 'SIGNED_AND_SEALED' : (localMatch.status || 'WAITING_TENANT'),
+                                tenant_signed: Boolean(localMatch.tenant_signed || item.Firma_contrato?.length > 0)
+                            };
+
+                            contractsMap.set(String(item.id_contrato), mergedObj);
+                            contractsMap.set(cKey, mergedObj);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('[DataManager] Error obteniendo Contratos de Supabase:', err);
+            }
+        }
+
+        const unique = [];
+        const seen = new Set();
+        for (const val of contractsMap.values()) {
+            const key = String(val.dbContractId || val.id || val.property_id);
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(val);
+            }
+        }
+        return unique;
+    },
+
+    getActiveContract: async function (targetId = null, tenantProfileId = null) {
+        const contracts = await this.getTenantContracts(tenantProfileId);
+        if (!contracts || contracts.length === 0) {
+            return null;
+        }
+        if (targetId) {
+            const found = contracts.find(c => c && (
+                String(c.id) === String(targetId) ||
+                String(c.contract_number) === String(targetId) ||
+                String(c.contractNumber) === String(targetId) ||
+                String(c.dbContractId) === String(targetId) ||
+                String(c.property_id) === String(targetId) ||
+                String(c.propertyId) === String(targetId)
+            ));
+            if (found) return found;
+        }
+        return contracts[0] || null;
     },
 
     _getStoredPaymentState: function (contractId) {
@@ -2621,7 +2805,7 @@ var DataManager = {
         } catch (e) { }
     },
 
-    getCurrentPayment: async function (contractId) {
+    getCurrentPayment: async function (contractId, fallbackContract = null) {
         const isNumeric = contractId !== null && contractId !== undefined && (typeof contractId === 'number' || (typeof contractId === 'string' && /^\d+$/.test(contractId.trim())));
         
         const now = new Date();
@@ -2632,12 +2816,41 @@ var DataManager = {
 
         const stored = this._getStoredPaymentState(contractId);
 
+        // Buscar canon real del contrato para evitar fallbacks desactualizados
+        let contractCanon = null;
+        let contractCurrency = 'ARS';
+        if (fallbackContract) {
+            contractCanon = Number(fallbackContract.monthly_rent || fallbackContract.monthlyRent || fallbackContract.price || 0);
+            contractCurrency = fallbackContract.currency || ((fallbackContract.id_moneda === 2) ? 'USD' : 'ARS');
+        }
+        if (!contractCanon || contractCanon <= 0) {
+            try {
+                const rawC = localStorage.getItem('vivat_contracts');
+                if (rawC) {
+                    const cList = JSON.parse(rawC);
+                    const match = cList.find(c => c && (
+                        String(c.id) === String(contractId) ||
+                        String(c.dbContractId) === String(contractId) ||
+                        String(c.propertyId) === String(contractId) ||
+                        String(c.property_id) === String(contractId)
+                    ));
+                    if (match) {
+                        contractCanon = Number(match.monthly_rent || match.monthlyRent || match.canon || match.monto_mensual || 0);
+                        if (match.currency) contractCurrency = match.currency;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        const effectiveBase = Number(stored?.amount_base || contractCanon || 380000);
+
         if (!isNumeric) {
             return {
                 id: 'pay-' + (contractId || 'current'),
                 contract_id: contractId,
                 period: stored?.period || currentPeriod,
-                amount_base: stored?.amount_base || 380000,
+                amount_base: effectiveBase,
+                currency: contractCurrency,
                 due_date: stored?.due_date || defaultDueDate,
                 status: stored?.status || 'pendiente',
                 is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
@@ -2649,7 +2862,8 @@ var DataManager = {
                 id: 'pay-' + (contractId || 'current'),
                 contract_id: contractId,
                 period: stored?.period || currentPeriod,
-                amount_base: stored?.amount_base || 380000,
+                amount_base: effectiveBase,
+                currency: contractCurrency,
                 due_date: stored?.due_date || defaultDueDate,
                 status: stored?.status || 'pendiente',
                 is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
@@ -2670,7 +2884,8 @@ var DataManager = {
                     id: 'pay-' + contractId,
                     contract_id: contractId,
                     period: stored?.period || currentPeriod,
-                    amount_base: stored?.amount_base || 380000,
+                    amount_base: effectiveBase,
+                    currency: contractCurrency,
                     due_date: stored?.due_date || defaultDueDate,
                     status: stored?.status || 'pendiente',
                     is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
@@ -2681,12 +2896,14 @@ var DataManager = {
             const isWaived = (stored && stored.is_punitive_waived !== undefined) ? stored.is_punitive_waived : dbWaived;
             const dbStatus = data.fecha_pago ? 'pagado' : 'pendiente';
             const status = (stored && stored.status) ? stored.status : dbStatus;
+            const amountBase = dbStatus === 'pagado' ? Number(data.monto || effectiveBase) : effectiveBase;
 
             return {
                 id: data.id_pago,
                 contract_id: data.id_contrato,
                 period: data.periodo || currentPeriod,
-                amount_base: data.monto || 380000,
+                amount_base: amountBase,
+                currency: contractCurrency,
                 due_date: data.fecha_vencimiento || defaultDueDate,
                 status: status,
                 is_punitive_waived: isWaived
@@ -2696,7 +2913,8 @@ var DataManager = {
                 id: 'pay-' + (contractId || 'current'),
                 contract_id: contractId,
                 period: stored?.period || currentPeriod,
-                amount_base: stored?.amount_base || 380000,
+                amount_base: effectiveBase,
+                currency: contractCurrency,
                 due_date: stored?.due_date || defaultDueDate,
                 status: stored?.status || 'pendiente',
                 is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
@@ -2789,6 +3007,261 @@ var DataManager = {
         return { id: paymentId, status: 'pagado', payment_method: method };
     },
 
+    syncRentalValues: async function ({
+        contractId = null,
+        propertyId = null,
+        publicationId = null,
+        monthlyRent = null,
+        expenses = null,
+        currency = 'ARS',
+        adjustmentIndex = 'IPC',
+        adjustmentFrequencyMonths = 3,
+        paymentDueDay = 10,
+        tenant = null
+    } = {}) {
+        let propId = propertyId ? Number(propertyId) : null;
+        let pubId = publicationId ? Number(publicationId) : null;
+
+        if (window.supabaseClient) {
+            // 1. Resolver IDs si falta alguno
+            if (!pubId && propId) {
+                try {
+                    const { data: pubData } = await window.supabaseClient
+                        .from('Publicacion')
+                        .select('id_publicacion')
+                        .eq('id_propiedad', propId)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    if (pubData?.id_publicacion) pubId = pubData.id_publicacion;
+                } catch (e) {}
+            }
+            if (!propId && pubId) {
+                try {
+                    const { data: pubData } = await window.supabaseClient
+                        .from('Publicacion')
+                        .select('id_propiedad')
+                        .eq('id_publicacion', pubId)
+                        .maybeSingle();
+                    if (pubData?.id_propiedad) propId = pubData.id_propiedad;
+                } catch (e) {}
+            }
+
+            // 2. Actualizar Publicacion en Supabase
+            if (pubId && monthlyRent !== null && monthlyRent !== undefined) {
+                try {
+                    const { data: curPub } = await window.supabaseClient
+                        .from('Publicacion')
+                        .select('precio, descripcion')
+                        .eq('id_publicacion', pubId)
+                        .maybeSingle();
+
+                    const oldPrice = curPub?.precio || 0;
+                    let desc = curPub?.descripcion || '';
+                    let cleanDesc = desc;
+                    let extraInfo = {};
+
+                    if (desc.includes('Detalles: ')) {
+                        const parts = desc.split('Detalles: ');
+                        cleanDesc = parts[0].replace(/(\s*\|\s*)+$/, '').trim();
+                        try { extraInfo = JSON.parse(parts[1]); } catch (e) {}
+                    }
+
+                    extraInfo.price = Number(monthlyRent);
+                    extraInfo.precio = Number(monthlyRent);
+                    if (expenses !== null && expenses !== undefined) {
+                        extraInfo.expensas = Number(expenses);
+                    }
+                    extraInfo.moneda = currency || 'ARS';
+
+                    const formattedDesc = `${cleanDesc} | Detalles: ${JSON.stringify(extraInfo)}`;
+
+                    await window.supabaseClient
+                        .from('Publicacion')
+                        .update({
+                            precio: Number(monthlyRent),
+                            id_moneda: currency === 'USD' ? 2 : 1,
+                            descripcion: formattedDesc
+                        })
+                        .eq('id_publicacion', pubId);
+
+                    // Insertar en Historial_Precio si cambió
+                    if (Number(oldPrice) !== Number(monthlyRent)) {
+                        try {
+                            await window.supabaseClient.from('Historial_Precio').insert([{
+                                id_publicacion: pubId,
+                                precio_antiguo: oldPrice,
+                                precio_nuevo: Number(monthlyRent),
+                                fecha_cambio: new Date().toISOString()
+                            }]);
+                        } catch (hpErr) {}
+                    }
+                } catch (pubErr) {
+                    console.warn('[DataManager.syncRentalValues] Error actualizando Publicacion:', pubErr);
+                }
+            }
+
+            // 3. Actualizar Propiedad (expensas_mensuales) en Supabase
+            if (propId && expenses !== null && expenses !== undefined) {
+                try {
+                    await window.supabaseClient
+                        .from('Propiedad')
+                        .update({ expensas_mensuales: Number(expenses) })
+                        .eq('id_propiedad', propId);
+                } catch (propErr) {
+                    console.warn('[DataManager.syncRentalValues] Error actualizando Propiedad:', propErr);
+                }
+            }
+        }
+
+        // 4. Sincronizar vivat_tenant_applications en localStorage
+        try {
+            const rawApps = localStorage.getItem('vivat_tenant_applications');
+            if (rawApps) {
+                let appsList = JSON.parse(rawApps);
+                let anyUpdated = false;
+                appsList = appsList.map(a => {
+                    if (!a) return a;
+                    const matchProp = (propId && (String(a.property_id) === String(propId) || String(a.propertyId) === String(propId) || String(a.id_propiedad) === String(propId))) ||
+                                      (pubId && (String(a.publication_id) === String(pubId) || String(a.publicationId) === String(pubId) || String(a.id_publicacion) === String(pubId)));
+                    const matchContract = contractId && (String(a.contract_id) === String(contractId) || String(a.contractId) === String(contractId));
+                    const matchTenant = tenant && (
+                        (tenant.email && a.tenant_email && String(a.tenant_email).toLowerCase() === String(tenant.email).toLowerCase()) ||
+                        (tenant.dni && a.tenant_dni && String(a.tenant_dni).replace(/\D/g, '') === String(tenant.dni).replace(/\D/g, ''))
+                    );
+
+                    if (matchContract || matchProp || matchTenant) {
+                        anyUpdated = true;
+                        return {
+                            ...a,
+                            property_price: Number(monthlyRent || a.property_price),
+                            propertyPrice: Number(monthlyRent || a.propertyPrice),
+                            price: Number(monthlyRent || a.price),
+                            property_expenses: (expenses !== null && expenses !== undefined) ? Number(expenses) : (a.property_expenses ?? 45000),
+                            propertyExpenses: (expenses !== null && expenses !== undefined) ? Number(expenses) : (a.propertyExpenses ?? 45000),
+                            expensas: (expenses !== null && expenses !== undefined) ? Number(expenses) : (a.expensas ?? 45000),
+                            currency: currency || a.currency || 'ARS',
+                            status: 'aceptada',
+                            contract_id: contractId || a.contract_id,
+                            contractId: contractId || a.contractId
+                        };
+                    }
+                    return a;
+                });
+                if (anyUpdated) {
+                    localStorage.setItem('vivat_tenant_applications', JSON.stringify(appsList));
+                }
+            }
+        } catch (e) {}
+
+        // 5. Sincronizar vivat_contracts en localStorage
+        try {
+            const rawC = localStorage.getItem('vivat_contracts');
+            if (rawC) {
+                let cList = JSON.parse(rawC);
+                let anyUpdatedC = false;
+                cList = cList.map(c => {
+                    if (!c) return c;
+                    const matchC = (contractId && (String(c.id) === String(contractId) || String(c.contractNumber) === String(contractId) || String(c.dbContractId) === String(contractId))) ||
+                                   (propId && (String(c.propertyId) === String(propId) || String(c.property_id) === String(propId) || String(c.id_propiedad) === String(propId)));
+                    if (matchC) {
+                        anyUpdatedC = true;
+                        return {
+                            ...c,
+                            monthly_rent: Number(monthlyRent || c.monthly_rent),
+                            monthlyRent: Number(monthlyRent || c.monthlyRent),
+                            expenses_amount: (expenses !== null && expenses !== undefined) ? Number(expenses) : (c.expenses_amount ?? 45000),
+                            expenses: (expenses !== null && expenses !== undefined) ? Number(expenses) : (c.expenses ?? 45000),
+                            currency: currency || c.currency || 'ARS',
+                            adjustment_index: adjustmentIndex || c.adjustment_index || 'IPC',
+                            adjustmentIndex: adjustmentIndex || c.adjustmentIndex || 'IPC',
+                            adjustment_frequency_months: adjustmentFrequencyMonths || c.adjustment_frequency_months || 3,
+                            payment_due_day: paymentDueDay || c.payment_due_day || 10
+                        };
+                    }
+                    return c;
+                });
+                if (anyUpdatedC) {
+                    localStorage.setItem('vivat_contracts', JSON.stringify(cList));
+                }
+            }
+        } catch (e) {}
+
+        // 5.1 Sincronizar estado de pagos almacenados (para evitar desfase en "Alquiler Base" y "Total Final a Pagar")
+        if (monthlyRent) {
+            const rentNum = Number(monthlyRent);
+            if (contractId) this._setStoredPaymentState(contractId, { amount_base: rentNum, currency });
+            if (propId) this._setStoredPaymentState(propId, { amount_base: rentNum, currency });
+            if (contractId && String(contractId).startsWith('CTR-')) {
+                const numOnly = String(contractId).replace(/\D/g, '');
+                if (numOnly) this._setStoredPaymentState(Number(numOnly), { amount_base: rentNum, currency });
+            }
+
+            if (window.supabaseClient) {
+                let dbCId = null;
+                if (contractId && !isNaN(Number(contractId))) dbCId = Number(contractId);
+                else if (contractId && String(contractId).startsWith('CTR-')) {
+                    const n = String(contractId).replace(/\D/g, '');
+                    if (n && !isNaN(Number(n))) dbCId = Number(n);
+                }
+                if (dbCId) {
+                    try {
+                        window.supabaseClient
+                            .from('Pago')
+                            .update({ monto: rentNum })
+                            .eq('id_contrato', dbCId)
+                            .is('fecha_pago', null)
+                            .then(() => {})
+                            .catch(() => {});
+                    } catch (pErr) {}
+                }
+            }
+        }
+
+        // 6. Actualizar colecciones en memoria de publicaciones y propiedades
+        if (window.ownerAvisosState && Array.isArray(window.ownerAvisosState)) {
+            const av = window.ownerAvisosState.find(a => a && (
+                (pubId && (String(a.id) === String(pubId) || String(a.id_publicacion) === String(pubId))) ||
+                (propId && (String(a.id_propiedad) === String(propId) || String(a.property_id) === String(propId)))
+            ));
+            if (av) {
+                if (monthlyRent !== null && monthlyRent !== undefined) av.price = Number(monthlyRent);
+                if (expenses !== null && expenses !== undefined) av.expensas = Number(expenses);
+                if (currency) av.moneda = currency;
+            }
+        }
+        if (window.ownerRawProperties && Array.isArray(window.ownerRawProperties)) {
+            const rp = window.ownerRawProperties.find(p => p && (
+                (pubId && (String(p.id) === String(pubId) || String(p.id_publicacion) === String(pubId))) ||
+                (propId && (String(p.id_propiedad) === String(propId) || String(p.id) === String(propId)))
+            ));
+            if (rp) {
+                if (monthlyRent !== null && monthlyRent !== undefined) rp.price = Number(monthlyRent);
+                if (expenses !== null && expenses !== undefined) rp.expensas = Number(expenses);
+                if (currency) rp.moneda = currency;
+            }
+        }
+        if (window.currentBrokerProperties && Array.isArray(window.currentBrokerProperties)) {
+            const bp = window.currentBrokerProperties.find(p => p && (
+                (pubId && String(p.id) === String(pubId)) ||
+                (propId && (String(p.id) === String(propId) || String(p.id_propiedad) === String(propId)))
+            ));
+            if (bp) {
+                if (monthlyRent !== null && monthlyRent !== undefined) bp.price = Number(monthlyRent);
+                if (expenses !== null && expenses !== undefined) bp.expensas = Number(expenses);
+                if (currency) bp.moneda = currency;
+            }
+        }
+
+        // 7. Notificar a todas las vistas mediante eventos globales
+        window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: { contractId, propertyId: propId, publicationId: pubId, monthlyRent, expenses, currency } }));
+        window.dispatchEvent(new CustomEvent('vivat:rental_created', { detail: { contractId, propertyId: propId, publicationId: pubId, monthlyRent, expenses, currency } }));
+        window.dispatchEvent(new CustomEvent('vivat:application_updated', { detail: { propertyId: propId, publicationId: pubId, monthlyRent, expenses, currency } }));
+        window.dispatchEvent(new CustomEvent('vivat:publication_updated', { detail: { id_publicacion: pubId, id_propiedad: propId, price: monthlyRent, expensas: expenses, moneda: currency } }));
+
+        return { success: true, propId, pubId, monthlyRent, expenses, currency };
+    },
+
     updatePublicationPrice: async function (id_publicacion, newPrice) {
         if (!window.supabaseClient || !id_publicacion) return null;
         try {
@@ -2824,7 +3297,12 @@ var DataManager = {
         try {
             const newPrice = Number(data.price) || 0;
             const newTitle = (data.title || '').trim();
-            const cleanDesc = (data.description || '').trim();
+            let cleanDesc = (data.description || '').trim();
+            if (cleanDesc.includes('Detalles: ')) {
+                cleanDesc = cleanDesc.split('Detalles: ')[0].trim();
+            }
+            cleanDesc = cleanDesc.replace(/(\s*\|\s*)+$/, '').trim();
+
             const moneda = data.moneda === 'USD' ? 'USD' : 'ARS';
             const expensas = Number(data.expensas) || 0;
             const expensasIncluidas = Boolean(data.expensasIncluidas);
@@ -2879,23 +3357,44 @@ var DataManager = {
                 subtipoPropiedad: finalSubtipoProp
             };
 
+            let resolvedPubId = Number(pubId) || pubId;
+            let resolvedPropId = Number(propId) || null;
+            let targetPropId = resolvedPropId || (data.id_propiedad ? Number(data.id_propiedad) : null);
+
             if (window.supabaseClient) {
-                // 1. Fetch current publication
-                const { data: pubData } = await window.supabaseClient
+                // 1. Fetch current publication to get details and resolve IDs
+                let { data: pubData } = await window.supabaseClient
                     .from('Publicacion')
                     .select('id_publicacion, id_propiedad, precio, descripcion, id_moneda')
-                    .eq('id_publicacion', pubId)
+                    .eq('id_publicacion', resolvedPubId)
                     .maybeSingle();
 
-                currentPub = pubData;
-                if (currentPub && currentPub.descripcion && currentPub.descripcion.includes('Detalles: ')) {
-                    try {
-                        existingExtra = JSON.parse(currentPub.descripcion.split('Detalles: ')[1]);
-                    } catch (e) {}
+                if (!pubData && (data.id_propiedad || pubId)) {
+                    // Try by id_propiedad in case pubId was a property ID
+                    const lookupPropId = data.id_propiedad || pubId;
+                    const { data: pubByProp } = await window.supabaseClient
+                        .from('Publicacion')
+                        .select('id_publicacion, id_propiedad, precio, descripcion, id_moneda')
+                        .eq('id_propiedad', lookupPropId)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    if (pubByProp) pubData = pubByProp;
                 }
 
-                if (!propId && currentPub?.id_propiedad) {
-                    propId = currentPub.id_propiedad;
+                currentPub = pubData;
+                if (currentPub) {
+                    resolvedPubId = currentPub.id_publicacion;
+                    resolvedPropId = currentPub.id_propiedad || resolvedPropId;
+                    if (currentPub.descripcion && currentPub.descripcion.includes('Detalles: ')) {
+                        try {
+                            existingExtra = JSON.parse(currentPub.descripcion.split('Detalles: ')[1]);
+                        } catch (e) {}
+                    }
+                }
+
+                if (!resolvedPropId && currentPub?.id_propiedad) {
+                    resolvedPropId = currentPub.id_propiedad;
                 }
 
                 // 2. Merge extra metadata
@@ -2918,7 +3417,9 @@ var DataManager = {
                     dormitorios: dormitorios,
                     banos: banos,
                     ambientes: ambientes,
+                    toilettes: data.toilettes !== undefined ? data.toilettes : existingExtra.toilettes,
                     cocheras: cocheras,
+                    cochera_tipo: data.cochera_tipo || existingExtra.cochera_tipo,
                     supCubierta: supCubierta,
                     supTotal: supTotal,
                     amoblado: amoblado,
@@ -2929,31 +3430,108 @@ var DataManager = {
                     antiguedad: data.antiguedad || existingExtra.antiguedad || 'Excelente estado',
                     tipo_propiedad: finalTipoProp,
                     subtipo_propiedad: finalSubtipoProp,
-                    subtipoPropiedad: finalSubtipoProp
+                    subtipoPropiedad: finalSubtipoProp,
+                    // Ubicación
+                    address: data.address || data.direccion || existingExtra.address || existingExtra.direccion,
+                    direccion: data.address || data.direccion || existingExtra.address || existingExtra.direccion,
+                    calle: data.calle || existingExtra.calle,
+                    numero: data.numero !== undefined ? data.numero : existingExtra.numero,
+                    piso_dpto: data.piso_dpto !== undefined ? data.piso_dpto : existingExtra.piso_dpto,
+                    barrio: data.barrio || existingExtra.barrio,
+                    ciudad: data.city || data.ciudad || existingExtra.ciudad || existingExtra.city,
+                    city: data.city || data.ciudad || existingExtra.ciudad || existingExtra.city,
+                    provincia: data.province || data.provincia || existingExtra.provincia || existingExtra.province,
+                    province: data.province || data.provincia || existingExtra.provincia || existingExtra.province,
+                    // Detalles constructivos y características adicionales
+                    pisos: data.pisos || existingExtra.pisos,
+                    ascensor: data.ascensor || existingExtra.ascensor,
+                    hogar: data.hogar || existingExtra.hogar,
+                    calefaccion: data.calefaccion || existingExtra.calefaccion,
+                    climatizacion: data.climatizacion || data.refrigeracion || existingExtra.climatizacion || existingExtra.refrigeracion,
+                    equipamiento: data.equipamiento || existingExtra.equipamiento,
+                    lavadero: data.lavadero || existingExtra.lavadero,
+                    edificio_nombre: data.edificio_nombre || data.complejo || existingExtra.edificio_nombre || existingExtra.complejo,
+                    complejo: data.edificio_nombre || data.complejo || existingExtra.edificio_nombre || existingExtra.complejo,
+                    instalaciones_complejo: data.instalaciones_complejo || existingExtra.instalaciones_complejo,
+                    plazo_contrato: data.plazo_contrato || existingExtra.plazo_contrato,
+                    deposito_garantia: data.deposito_garantia || existingExtra.deposito_garantia
                 };
 
                 const formattedDesc = `${cleanDesc} | Detalles: ${JSON.stringify(mergedExtra)}`;
 
-                // 3. Update Publicacion
-                const { error: pubUpdateErr } = await window.supabaseClient
-                    .from('Publicacion')
-                    .update({
-                        precio: newPrice,
-                        id_moneda: moneda === 'USD' ? 2 : 1,
-                        descripcion: formattedDesc
-                    })
-                    .eq('id_publicacion', pubId);
+                // 3. Update via RPC function (atomic, SECURITY DEFINER)
+                let rpcSucceeded = false;
+                if (typeof window.supabaseClient.rpc === 'function') {
+                    try {
+                        const tipoSlug = String(finalTipoProp).toLowerCase().trim();
+                        const tipoMap = {
+                            'departamento': 1,
+                            'casa': 2,
+                            'ph': 3,
+                            'lote': 4,
+                            'terreno': 4,
+                            'oficina': 5,
+                            'local': 6,
+                            'local comercial': 6,
+                            'local-comercial': 6,
+                            'cochera': 7
+                        };
+                        const idTipoPropiedad = tipoMap[tipoSlug] || 1;
 
-                if (pubUpdateErr) {
-                    console.error("Error updating Publicacion:", pubUpdateErr);
-                    throw pubUpdateErr;
+                        let idEstadoPub = null;
+                        if (status === 'paused' || status === 'pausado') idEstadoPub = 4;
+                        else if (status === 'alquilada' || status === 'alquilado') idEstadoPub = 2;
+                        else if (status === 'disponible') idEstadoPub = 1;
+
+                        const { data: rpcRes, error: rpcErr } = await window.supabaseClient.rpc('update_marketplace_publication', {
+                            p_id_publicacion: resolvedPubId,
+                            p_precio: newPrice,
+                            p_id_moneda: moneda === 'USD' ? 2 : 1,
+                            p_descripcion: formattedDesc,
+                            p_dormitorios: dormitorios,
+                            p_banos: banos,
+                            p_ambientes: ambientes,
+                            p_cocheras: cocheras,
+                            p_sup_cubierta: supCubierta,
+                            p_sup_lote: supTotal,
+                            p_expensas: expensasIncluidas ? 0 : expensas,
+                            p_id_tipo_propiedad: idTipoPropiedad,
+                            p_id_subtipo_propiedad: null,
+                            p_id_estado_publicacion: idEstadoPub
+                        });
+
+                        if (!rpcErr && rpcRes && rpcRes.success !== false) {
+                            rpcSucceeded = true;
+                            if (rpcRes.id_publicacion) resolvedPubId = rpcRes.id_publicacion;
+                            if (rpcRes.id_propiedad) resolvedPropId = rpcRes.id_propiedad;
+                        }
+                    } catch (rpcEx) {
+                        console.warn("update_marketplace_publication RPC failed, using fallback:", rpcEx);
+                    }
                 }
 
-                // 4. Update Price History if changed
-                if (currentPub && Number(currentPub.precio) !== newPrice) {
+                // Fallback to direct tables update if RPC was unavailable
+                if (!rpcSucceeded) {
+                    const { error: pubUpdateErr } = await window.supabaseClient
+                        .from('Publicacion')
+                        .update({
+                            precio: newPrice,
+                            id_moneda: moneda === 'USD' ? 2 : 1,
+                            descripcion: formattedDesc
+                        })
+                        .eq('id_publicacion', resolvedPubId);
+
+                    if (pubUpdateErr) {
+                        console.error("Error updating Publicacion:", pubUpdateErr);
+                        throw pubUpdateErr;
+                    }
+                }
+
+                // 4. Update Price History if changed (if fallback used)
+                if (!rpcSucceeded && currentPub && Number(currentPub.precio) !== newPrice) {
                     try {
                         await window.supabaseClient.from('Historial_Precio').insert([{
-                            id_publicacion: pubId,
+                            id_publicacion: resolvedPubId,
                             precio_antiguo: currentPub.precio || 0,
                             precio_nuevo: newPrice,
                             fecha_cambio: new Date().toISOString()
@@ -2964,10 +3542,8 @@ var DataManager = {
                 }
 
                 // 5. Update Propiedad table if id_propiedad exists
-                if (!propId) {
-                    propId = data.id_propiedad || currentPub?.id_propiedad;
-                }
-                if (propId) {
+                targetPropId = resolvedPropId || propId || data.id_propiedad || currentPub?.id_propiedad || targetPropId;
+                if (targetPropId) {
                     try {
                         const tipoSlug = String(finalTipoProp).toLowerCase().trim();
                         const tipoMap = {
@@ -3016,11 +3592,14 @@ var DataManager = {
                             id_tipo_propiedad: idTipoPropiedad,
                             id_subtipo_propiedad: idSubtipoPropiedad || null
                         };
+                        if (data.calle) propUpdatePayload.calle = data.calle;
+                        if (data.numero !== undefined) propUpdatePayload.numero = data.numero;
+                        if (data.piso_dpto !== undefined) propUpdatePayload.piso_dpto = data.piso_dpto;
 
                         await window.supabaseClient
                             .from('Propiedad')
                             .update(propUpdatePayload)
-                            .eq('id_propiedad', propId);
+                            .eq('id_propiedad', targetPropId);
                     } catch (propErr) {
                         console.warn("Could not update Propiedad table:", propErr);
                     }
@@ -3030,7 +3609,7 @@ var DataManager = {
                         try {
                             if (featureNames.length > 0) {
                                 // Fetch existing characteristics matching these names
-                                const { data: existingFeats, error: selectErr } = await window.supabaseClient
+                                const { data: existingFeats } = await window.supabaseClient
                                     .from('Caracteristica')
                                     .select('id_caracteristica, nombre')
                                     .in('nombre', featureNames);
@@ -3059,14 +3638,14 @@ var DataManager = {
                                 await window.supabaseClient
                                     .from('Propiedad_caracteristica')
                                     .delete()
-                                    .eq('id_propiedad', propId);
+                                    .eq('id_propiedad', targetPropId);
 
                                 // Insert updated characteristic associations
                                 const propFeatRows = featureNames
                                     .map(name => existingMap.get(name.toLowerCase().trim()))
                                     .filter(Boolean)
                                     .map(id_caracteristica => ({
-                                        id_propiedad: propId,
+                                        id_propiedad: targetPropId,
                                         id_caracteristica: id_caracteristica
                                     }));
 
@@ -3080,7 +3659,7 @@ var DataManager = {
                                 await window.supabaseClient
                                     .from('Propiedad_caracteristica')
                                     .delete()
-                                    .eq('id_propiedad', propId);
+                                    .eq('id_propiedad', targetPropId);
                             }
                         } catch (featErr) {
                             console.warn("Could not sync Propiedad_caracteristica table:", featErr);
@@ -3088,8 +3667,8 @@ var DataManager = {
                     }
                 }
 
-                // 6. Update Status if specified
-                if (status === 'paused' || status === 'disponible') {
+                // 6. Update Status if specified (if fallback used)
+                if (!rpcSucceeded && (status === 'paused' || status === 'disponible')) {
                     try {
                         const isPaused = status === 'paused';
                         const newEstadoId = isPaused ? 4 : 1;
@@ -3098,13 +3677,13 @@ var DataManager = {
                         await window.supabaseClient
                             .from('Historial_Estado_Publicacion')
                             .update({ fecha_fin: nowIso })
-                            .eq('id_publicacion', pubId)
+                            .eq('id_publicacion', resolvedPubId)
                             .is('fecha_fin', null);
 
                         await window.supabaseClient
                             .from('Historial_Estado_Publicacion')
                             .insert([{
-                                id_publicacion: pubId,
+                                id_publicacion: resolvedPubId,
                                 id_estado_publicacion: newEstadoId,
                                 fecha_inicio: nowIso
                             }]);
@@ -3114,53 +3693,12 @@ var DataManager = {
                 }
             }
 
-            // Sync localStorage cache if present
-            try {
-                const localPropsKey = 'vivat_properties_db';
-                const cached = JSON.parse(localStorage.getItem(localPropsKey) || '[]');
-                const idx = cached.findIndex(p => String(p.id) === String(pubId) || String(p.id_publicacion) === String(pubId) || (propId && String(p.id_propiedad) === String(propId)));
-                if (idx !== -1) {
-                    cached[idx] = {
-                        ...cached[idx],
-                        title: newTitle,
-                        price: newPrice,
-                        precio: newPrice,
-                        moneda: moneda,
-                        expensas: expensas,
-                        expensasIncluidas: expensasIncluidas,
-                        status: status,
-                        description: cleanDesc,
-                        dormitorios: dormitorios,
-                        banos: banos,
-                        ambientes: ambientes,
-                        cocheras: cocheras,
-                        sup_cubierta: supCubierta,
-                        sup_total: supTotal,
-                        amoblado: amoblado,
-                        mascotas: mascotas,
-                        caracteristicas: featureNames !== null ? featureNames : (cached[idx].caracteristicas || []),
-                        tags: featureNames !== null ? featureNames : (cached[idx].tags || []),
-                        disposicion: mergedExtra.disposicion,
-                        orientacion: mergedExtra.orientacion,
-                        antiguedad: mergedExtra.antiguedad,
-                        tipo_propiedad: mergedExtra.tipo_propiedad,
-                        type: mergedExtra.tipo_propiedad,
-                        subtipo_propiedad: mergedExtra.subtipo_propiedad,
-                        extraInfo: {
-                            ...(cached[idx].extraInfo || {}),
-                            ...mergedExtra
-                        }
-                    };
-                    localStorage.setItem(localPropsKey, JSON.stringify(cached));
-                }
-            } catch (cacheErr) {}
-
             return {
                 success: true,
                 data: {
-                    id: pubId,
-                    id_publicacion: pubId,
-                    id_propiedad: propId || data.id_propiedad || currentPub?.id_propiedad,
+                    id: resolvedPubId,
+                    id_publicacion: resolvedPubId,
+                    id_propiedad: targetPropId || data.id_propiedad || currentPub?.id_propiedad,
                     title: newTitle,
                     price: newPrice,
                     moneda: moneda,
@@ -3171,7 +3709,9 @@ var DataManager = {
                     dormitorios: dormitorios,
                     banos: banos,
                     ambientes: ambientes,
+                    toilettes: mergedExtra.toilettes,
                     cocheras: cocheras,
+                    cochera_tipo: mergedExtra.cochera_tipo,
                     sup_cubierta: supCubierta,
                     sup_total: supTotal,
                     amoblado: amoblado,
@@ -3182,7 +3722,32 @@ var DataManager = {
                     disposicion: mergedExtra.disposicion,
                     orientacion: mergedExtra.orientacion,
                     antiguedad: mergedExtra.antiguedad,
+                    tipo_propiedad: finalTipoProp,
+                    subtipo_propiedad: finalSubtipoProp,
                     subtipoPropiedad: mergedExtra.subtipoPropiedad,
+                    address: mergedExtra.address,
+                    direccion: mergedExtra.direccion,
+                    calle: mergedExtra.calle,
+                    numero: mergedExtra.numero,
+                    piso_dpto: mergedExtra.piso_dpto,
+                    barrio: mergedExtra.barrio,
+                    city: mergedExtra.city,
+                    ciudad: mergedExtra.ciudad,
+                    province: mergedExtra.province,
+                    provincia: mergedExtra.provincia,
+                    pisos: mergedExtra.pisos,
+                    ascensor: mergedExtra.ascensor,
+                    hogar: mergedExtra.hogar,
+                    calefaccion: mergedExtra.calefaccion,
+                    climatizacion: mergedExtra.climatizacion,
+                    refrigeracion: mergedExtra.climatizacion,
+                    equipamiento: mergedExtra.equipamiento,
+                    lavadero: mergedExtra.lavadero,
+                    edificio_nombre: mergedExtra.edificio_nombre,
+                    complejo: mergedExtra.complejo,
+                    instalaciones_complejo: mergedExtra.instalaciones_complejo,
+                    plazo_contrato: mergedExtra.plazo_contrato,
+                    deposito_garantia: mergedExtra.deposito_garantia,
                     extraInfo: mergedExtra
                 }
             };

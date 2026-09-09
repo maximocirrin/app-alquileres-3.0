@@ -70,8 +70,16 @@
         try {
             uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
         } catch (e) {}
-        const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-        const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+        let myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+        let myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+
+        if (!myEmail && window.ContractsManager && typeof window.ContractsManager.resolveCurrentUserInfo === 'function') {
+            try {
+                const cUser = window.ContractsManager.resolveCurrentUserInfo();
+                if (cUser?.email) myEmail = cUser.email.toLowerCase().trim();
+                if (cUser?.profileId && !myProfileId) myProfileId = cUser.profileId;
+            } catch(e) {}
+        }
 
         // Si la notificación apunta a un perfil o email específico:
         if (notif.targetProfileId && myProfileId && String(notif.targetProfileId) !== String(myProfileId)) {
@@ -81,13 +89,34 @@
             return false;
         }
 
+        // Si es un mensaje de chat: nunca mostrar notificación si proviene de mí mismo
+        if (notif.type === 'chat' || notif.type === 'message') {
+            if (NotificationManager && typeof NotificationManager.isOwnMessage === 'function' && NotificationManager.isOwnMessage(notif.id || notif.messageId)) {
+                return false;
+            }
+            if (notif.senderEmail && myEmail && notif.senderEmail.toLowerCase().trim() === myEmail) {
+                return false;
+            }
+            if (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId)) {
+                return false;
+            }
+            // Inquilino no recibe notificaciones de mensajes emitidos por Inquilino (y viceversa)
+            if (notif.senderRole && notif.senderRole.toUpperCase() === currentRole) {
+                return false;
+            }
+        }
+
         // Si viene remitente explícito y coincide con el usuario activo:
         const isSender = (notif.senderTabId && notif.senderTabId === TAB_ID) ||
                          (notif.senderEmail && myEmail && notif.senderEmail.toLowerCase().trim() === myEmail) ||
-                         (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId));
+                         (notif.senderProfileId && myProfileId && String(notif.senderProfileId) === String(myProfileId)) ||
+                         (NotificationManager && typeof NotificationManager.isOwnMessage === 'function' && NotificationManager.isOwnMessage(notif.id));
 
-        // Si fui yo quien la envió y está dirigida al rol opuesto, no mostrarla en mi propia sesión
+        // Si fui yo quien la envió, nunca auto-notificarme
         if (isSender) {
+            if (notif.type === 'chat' || notif.type === 'message') {
+                return false;
+            }
             if (notif.senderRole && notif.role && notif.role !== 'ALL' && notif.role !== notif.senderRole) {
                 return false;
             }
@@ -160,6 +189,55 @@
     const NotificationManager = {
         _realtimeInitialized: false,
         _processedNotifIds: new Set(),
+        _mySentMessageIds: new Set(),
+
+        registerOwnMessage: function (msgId) {
+            if (!msgId) return;
+            const raw = String(msgId);
+            const cleanId = raw.replace('notif_msg_', '');
+            this._mySentMessageIds.add(cleanId);
+            this._mySentMessageIds.add(raw);
+            this._processedNotifIds.add(`notif_msg_${cleanId}`);
+            this._processedNotifIds.add(raw);
+            try {
+                const stored = JSON.parse(sessionStorage.getItem('vivat_my_sent_messages') || '[]');
+                if (!stored.includes(cleanId)) {
+                    stored.push(cleanId);
+                    if (stored.length > 100) stored.shift();
+                    sessionStorage.setItem('vivat_my_sent_messages', JSON.stringify(stored));
+                }
+            } catch (e) {}
+        },
+
+        isOwnMessage: function (msgId) {
+            if (!msgId) return false;
+            const raw = String(msgId);
+            const cleanId = raw.replace('notif_msg_', '');
+            if (this._mySentMessageIds.has(cleanId) || this._mySentMessageIds.has(raw)) {
+                return true;
+            }
+            try {
+                const stored = JSON.parse(sessionStorage.getItem('vivat_my_sent_messages') || '[]');
+                if (stored.includes(cleanId) || stored.includes(raw)) {
+                    this._mySentMessageIds.add(cleanId);
+                    this._mySentMessageIds.add(raw);
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        },
+
+        initMySentMessages: function () {
+            try {
+                const stored = JSON.parse(sessionStorage.getItem('vivat_my_sent_messages') || '[]');
+                if (Array.isArray(stored)) {
+                    stored.forEach(id => {
+                        this._mySentMessageIds.add(id);
+                        this._processedNotifIds.add(`notif_msg_${id}`);
+                    });
+                }
+            } catch (e) {}
+        },
 
         // Obtener todas las notificaciones del usuario de manera global y filtradas por rol activo
         getAll: function () {
@@ -317,13 +395,19 @@
 
         receiveIncomingNotification: function (payload) {
             if (!payload) return;
-            const senderTabId = payload.senderTabId;
+            const senderTabId = payload.senderTabId || payload.notification?.senderTabId;
             const notif = payload.notification || payload;
 
             // Ignorar si provino de esta misma pestaña (evita loop de eco)
             if (senderTabId && senderTabId === TAB_ID) return;
             if (!notif || !notif.id) return;
             if (this._processedNotifIds.has(notif.id)) return;
+
+            // Si es un mensaje de chat enviado por mí mismo en cualquier pestaña, silenciar
+            if ((notif.type === 'chat' || notif.type === 'message') && this.isOwnMessage(notif.id)) {
+                this._processedNotifIds.add(notif.id);
+                return;
+            }
 
             // Comprobar si soy el destinatario legítimo
             if (!isTargetRecipient(notif)) {
@@ -373,6 +457,7 @@
         broadcastSupabaseRealtime: function (notif) {
             if (this._supabaseChannel && typeof this._supabaseChannel.send === 'function') {
                 try {
+                    if (notif) notif.senderTabId = TAB_ID;
                     this._supabaseChannel.send({
                         type: 'broadcast',
                         event: 'vivat_notification',
@@ -381,6 +466,7 @@
                             senderRole: notif.senderRole,
                             senderProfileId: notif.senderProfileId,
                             senderEmail: notif.senderEmail,
+                            senderName: notif.senderName,
                             notification: notif
                         }
                     }).catch(() => { });
@@ -429,7 +515,9 @@
                         }
                     }
 
-                    const channel = window.supabaseClient.channel('vivat-realtime-global-channel');
+                    const channel = window.supabaseClient.channel('vivat-realtime-global-channel', {
+                        config: { broadcast: { self: false } }
+                    });
                     channel
                         // 1. Mensajes directos Broadcast
                         .on('broadcast', { event: 'vivat_notification' }, ({ payload }) => {
@@ -565,28 +653,58 @@
                             const newMsg = payload.new;
                             if (!newMsg) return;
 
-                            // Comprobar si el mensaje fue enviado por el usuario actual
-                            let isMe = false;
-                            try {
-                                const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                                const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-                                const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+                            // 1. Notificar siempre al visor de chat local para actualizar mensajes en vivo entre pestañas
+                            window.dispatchEvent(new CustomEvent('vivat:new_chat_message', { detail: newMsg }));
 
-                                if (myEmail && newMsg.remitente_email && myEmail === newMsg.remitente_email.toLowerCase().trim()) {
-                                    isMe = true;
-                                }
-                                if (myProfileId && newMsg.id_perfil && String(myProfileId) === String(newMsg.id_perfil)) {
-                                    isMe = true;
-                                }
-                                if (window.supabaseClient) {
-                                    const { data: { session } } = await window.supabaseClient.auth.getSession();
-                                    if (session?.user?.email && newMsg.remitente_email && session.user.email.toLowerCase().trim() === newMsg.remitente_email.toLowerCase().trim()) {
+                            // 2. Comprobar si el mensaje fue enviado por el usuario actual
+                            let isMe = false;
+                            if (newMsg.id_mensaje && NotificationManager.isOwnMessage(newMsg.id_mensaje)) {
+                                isMe = true;
+                            }
+
+                            if (!isMe) {
+                                try {
+                                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                                    let myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+                                    let myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
+
+                                    if (!myEmail && window.ContractsManager && typeof window.ContractsManager.resolveCurrentUserInfo === 'function') {
+                                        const cUser = window.ContractsManager.resolveCurrentUserInfo();
+                                        if (cUser) {
+                                            if (cUser.email) myEmail = cUser.email.toLowerCase().trim();
+                                            if (cUser.profileId && !myProfileId) myProfileId = cUser.profileId;
+                                        }
+                                    }
+
+                                    const msgEmail = (newMsg.remitente_email || '').toLowerCase().trim();
+                                    if (myEmail && msgEmail && myEmail === msgEmail) {
                                         isMe = true;
                                     }
-                                }
-                            } catch (e) {}
+                                    if (myProfileId && newMsg.id_perfil && String(myProfileId) === String(newMsg.id_perfil)) {
+                                        isMe = true;
+                                    }
 
-                            if (isMe) return; // No generar notificación de mi propio mensaje
+                                    // Mismo rol activo en el contrato: inquilino no recibe notificaciones de mensajes de inquilino
+                                    const activeRole = getActiveUserRole();
+                                    if (newMsg.remitente_rol && activeRole && newMsg.remitente_rol.toUpperCase() === activeRole.toUpperCase()) {
+                                        isMe = true;
+                                    }
+
+                                    if (!isMe && window.supabaseClient) {
+                                        const { data: { session } } = await window.supabaseClient.auth.getSession();
+                                        if (session?.user?.email && msgEmail && session.user.email.toLowerCase().trim() === msgEmail) {
+                                            isMe = true;
+                                        }
+                                    }
+                                } catch (e) {}
+                            }
+
+                            if (isMe) {
+                                if (newMsg.id_mensaje) {
+                                    NotificationManager.registerOwnMessage(newMsg.id_mensaje);
+                                }
+                                return; // No generar alerta sonora ni visual de mi propio mensaje
+                            }
 
                             const senderName = newMsg.remitente_nombre || (newMsg.remitente_rol ? `Usuario (${newMsg.remitente_rol})` : 'Nuevo mensaje');
                             const msgSnippet = newMsg.mensaje ? (newMsg.mensaje.length > 80 ? newMsg.mensaje.substring(0, 80) + '...' : newMsg.mensaje) : 'Nueva propuesta en el contrato';
@@ -602,6 +720,8 @@
                                 chatLink = `contratos.html?id=${newMsg.contract_ref_id}&tab=chat`;
                             }
 
+                            const targetRole = newMsg.remitente_rol === 'TENANT' ? 'OWNER' : (newMsg.remitente_rol === 'OWNER' ? 'TENANT' : 'ALL');
+
                             NotificationManager.receiveIncomingNotification({
                                 id: `notif_msg_${newMsg.id_mensaje || Date.now()}`,
                                 title: `💬 Mensaje de ${senderName}`,
@@ -609,10 +729,13 @@
                                 type: 'chat',
                                 icon: 'forum',
                                 link: chatLink,
-                                role: 'ALL'
+                                role: targetRole,
+                                targetRole: targetRole,
+                                senderRole: newMsg.remitente_rol,
+                                senderEmail: newMsg.remitente_email,
+                                senderProfileId: newMsg.id_perfil,
+                                senderName: newMsg.remitente_nombre
                             });
-
-                            window.dispatchEvent(new CustomEvent('vivat:new_chat_message', { detail: newMsg }));
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
@@ -892,6 +1015,8 @@
         },
 
         initUI: function () {
+            this.initMySentMessages();
+
             // Vincular botones existentes
             const desktopBell = document.getElementById('vivat-notif-bell-btn');
             if (desktopBell && !desktopBell.__notifBound) {
