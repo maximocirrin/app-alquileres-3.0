@@ -1320,7 +1320,16 @@
             let dbContractId = null;
             if (window.supabaseClient && resolvedPropId && !isNaN(Number(resolvedPropId))) {
                 try {
-                    const { data: insertedContract, error: dbErr } = await window.supabaseClient.from('Contrato').insert([{
+                    // Verificar si ya existe un contrato activo para esta propiedad
+                    const { data: existingC } = await window.supabaseClient
+                        .from('Contrato')
+                        .select('id_contrato')
+                        .eq('id_propiedad', Number(resolvedPropId))
+                        .order('id_contrato', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    const contractPayload = {
                         id_propiedad: Number(resolvedPropId),
                         id_publicacion: resolvedPubId && !isNaN(Number(resolvedPubId)) ? Number(resolvedPubId) : null,
                         id_perfil_propietario: Number(ownerProfileId),
@@ -1328,7 +1337,6 @@
                         id_tipo_garantia: 1,
                         id_moneda: moneda === 'USD' ? 2 : 1,
                         id_Indice: indice === 'IPC' ? 1 : 2,
-                        fecha_firma_contrato: new Date().toISOString().split('T')[0],
                         fecha_inicio_contrato: fechaInicio,
                         fecha_fin_contrato: endDate,
                         monto_cierre: canon,
@@ -1338,14 +1346,46 @@
                         monto_deposito: depositVal,
                         deposito_devuelto: false,
                         tasa_punitoria_diaria: tasaPunitoria,
-                        alias_cbu: aliasCbu
-                    }]).select('id_contrato').maybeSingle();
+                        alias_cbu: aliasCbu,
+                        clausulas_adicionales: {
+                            aliasCbu: aliasCbu,
+                            currency: moneda,
+                            monthlyRent: canon,
+                            paymentDueDay: diaVenc,
+                            durationMonths: duracion,
+                            adjustmentIndex: indice,
+                            adjustmentFrequencyMonths: frecuencia,
+                            customClauses: [],
+                            activeClausesList: []
+                        }
+                    };
 
-                    if (!dbErr && insertedContract?.id_contrato) {
-                        dbContractId = insertedContract.id_contrato;
-                        console.log('[RentalWizard] Contrato persistido en Supabase con ID:', dbContractId);
-                    } else if (dbErr) {
-                        console.warn('[RentalWizard] Error guardando en Supabase Contrato:', dbErr);
+                    if (existingC && existingC.id_contrato) {
+                        const { error: updErr } = await window.supabaseClient
+                            .from('Contrato')
+                            .update(contractPayload)
+                            .eq('id_contrato', existingC.id_contrato);
+
+                        if (!updErr) {
+                            dbContractId = existingC.id_contrato;
+                            console.log('[RentalWizard] Contrato existente actualizado en Supabase con ID:', dbContractId);
+                        } else {
+                            console.warn('[RentalWizard] Error actualizando Contrato en Supabase:', updErr);
+                        }
+                    } else {
+                        contractPayload.fecha_firma_contrato = new Date().toISOString().split('T')[0];
+                        const { data: insertedContract, error: dbErr } = await window.supabaseClient
+                            .from('Contrato')
+                            .insert([contractPayload])
+                            .select('id_contrato')
+                            .maybeSingle();
+
+                        if (!dbErr && insertedContract?.id_contrato) {
+                            dbContractId = insertedContract.id_contrato;
+                            console.log('[RentalWizard] Contrato persistido en Supabase con ID:', dbContractId);
+                        } else if (dbErr) {
+                            console.warn('[RentalWizard] Error guardando en Supabase Contrato:', dbErr);
+                        }
                     }
                 } catch (dbErr) {
                     console.warn('[RentalWizard] Excepción guardando en Supabase Contrato:', dbErr);

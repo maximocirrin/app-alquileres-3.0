@@ -2499,7 +2499,26 @@ var DataManager = {
                         }
                     }
                 });
-                return Array.from(mergedMap.values());
+
+                // Deduplicar por propiedad física priorizando contratos firmados y más recientes
+                const propSeen = new Set();
+                const uniqueOwnerContracts = [];
+                const sortedContracts = Array.from(mergedMap.values()).sort((a, b) => {
+                    const aSigned = a.status === 'SIGNED_AND_SEALED' || a.tenant_has_signed || a.owner_has_signed ? 1 : 0;
+                    const bSigned = b.status === 'SIGNED_AND_SEALED' || b.tenant_has_signed || b.owner_has_signed ? 1 : 0;
+                    if (bSigned !== aSigned) return bSigned - aSigned;
+                    return (Number(b.dbContractId || b.id_contrato || 0)) - (Number(a.dbContractId || a.id_contrato || 0));
+                });
+
+                for (const c of sortedContracts) {
+                    const pKey = String(c.property_id || c.propertyId || c.id_propiedad || '');
+                    if (pKey && propSeen.has(pKey)) {
+                        continue;
+                    }
+                    if (pKey) propSeen.add(pKey);
+                    uniqueOwnerContracts.push(c);
+                }
+                return uniqueOwnerContracts;
             }
         } catch(e) {
             console.error("Error in getOwnerContracts:", e);
@@ -2757,13 +2776,32 @@ var DataManager = {
         }
 
         const unique = [];
-        const seen = new Set();
-        for (const val of contractsMap.values()) {
-            const key = String(val.dbContractId || val.id || val.property_id);
-            if (!seen.has(key)) {
-                seen.add(key);
-                unique.push(val);
+        const seenProps = new Set();
+        const seenContractIds = new Set();
+
+        // Ordenar dando prioridad a contratos firmados y con ID de contrato más reciente
+        const sortedContracts = Array.from(contractsMap.values()).sort((a, b) => {
+            const aSigned = a.tenant_signed || a.status === 'SIGNED_AND_SEALED' ? 1 : 0;
+            const bSigned = b.tenant_signed || b.status === 'SIGNED_AND_SEALED' ? 1 : 0;
+            if (bSigned !== aSigned) return bSigned - aSigned;
+            return (Number(b.dbContractId || b.id || 0)) - (Number(a.dbContractId || a.id || 0));
+        });
+
+        for (const val of sortedContracts) {
+            const propKey = String(val.property_id || val.propertyId || val.id_propiedad || '');
+            const idKey = String(val.dbContractId || val.id || '');
+
+            // Si ya tenemos un contrato más reciente/firmado para esta propiedad física, no duplicarlo
+            if (propKey && seenProps.has(propKey)) {
+                continue;
             }
+            if (idKey && seenContractIds.has(idKey)) {
+                continue;
+            }
+
+            if (propKey) seenProps.add(propKey);
+            if (idKey) seenContractIds.add(idKey);
+            unique.push(val);
         }
         return unique;
     },

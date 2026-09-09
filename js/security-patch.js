@@ -131,8 +131,25 @@ window.__vivatRetryScript = function (scriptEl, maxRetries = 2) {
 // Silenciar excepciones no controladas de extensiones de navegador o librerías de rendimiento externas (Web Vitals / reportAllChanges / startTime)
 (function () {
     function isExternalIgnorableError(msg, err) {
-        var text = (String(msg || '') + ' ' + String(err?.message || '') + ' ' + String(err?.stack || '')).toLowerCase();
+        var text = (String(msg || '') + ' ' + String(err?.message || '') + ' ' + String(err?.stack || '') + ' ' + String(err || '')).toLowerCase();
         return text.includes('starttime') || text.includes('reportallchanges') || text.includes('reportall') || (text.includes('autocomplete') && text.includes('placeautocompleteelement'));
+    }
+
+    // Interceptar requestIdleCallback donde se ejecutan los cálculos asíncronos de Web Vitals / reportAllChanges
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+        var origRequestIdleCallback = window.requestIdleCallback;
+        window.requestIdleCallback = function (cb, options) {
+            return origRequestIdleCallback.call(window, function (deadline) {
+                try {
+                    return cb(deadline);
+                } catch (err) {
+                    if (isExternalIgnorableError(err?.message, err)) {
+                        return; // Suprimir silenciosamente el error de la librería externa
+                    }
+                    throw err;
+                }
+            }, options);
+        };
     }
 
     var prevOnError = window.onerror;
@@ -163,6 +180,7 @@ window.__vivatRetryScript = function (scriptEl, maxRetries = 2) {
         }
     }, true);
 })();
+
 
 // Redirección canónica automática al nuevo dominio oficial vivat.com.ar
 (function() {

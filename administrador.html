@@ -3379,6 +3379,17 @@
                     };
                 }).filter(Boolean);
 
+                // Deduplicar defensivamente por propiedad física
+                const seenPropOwner = new Set();
+                ownerActiveContractsMock = ownerActiveContractsMock.filter(c => {
+                    if (!c) return false;
+                    const pKey = String(c.property_id || c.propertyId || c.id_propiedad || c.id || '');
+                    if (!pKey) return true;
+                    if (seenPropOwner.has(pKey)) return false;
+                    seenPropOwner.add(pKey);
+                    return true;
+                });
+
                 if (!activeSelectedContractId && ownerActiveContractsMock.length > 0) {
                     activeSelectedContractId = ownerActiveContractsMock[0].id;
                 }
