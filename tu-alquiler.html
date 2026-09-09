@@ -1298,9 +1298,20 @@
                 const myApps = window._allTenantApplications || [];
 
                 // 3. Consultar contratos generados y vigentes estrictamente para este inquilino
-                const tenantContracts = (window.DataManager && typeof window.DataManager.getTenantContracts === 'function')
+                const rawTenantContracts = (window.DataManager && typeof window.DataManager.getTenantContracts === 'function')
                     ? await window.DataManager.getTenantContracts()
                     : [];
+
+                // Deduplicar defensivamente por propiedad física para evitar mostrar el mismo alquiler dos veces
+                const seenPropKeys = new Set();
+                const tenantContracts = (rawTenantContracts || []).filter(c => {
+                    if (!c) return false;
+                    const pKey = String(c.property_id || c.propertyId || c.id_propiedad || c.id || '');
+                    if (!pKey) return true;
+                    if (seenPropKeys.has(pKey)) return false;
+                    seenPropKeys.add(pKey);
+                    return true;
+                });
 
                 // Breve espera mínima para que la animación de carga se aprecie de forma fluida
                 await new Promise(r => setTimeout(r, 200));
