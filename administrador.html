@@ -24,7 +24,7 @@
         (function () {
             try {
                 var theme = localStorage.getItem('theme');
-                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var isDark = theme === 'dark';
                 var root = document.documentElement;
                 if (isDark) {
                     root.setAttribute('data-theme', 'dark');
@@ -79,6 +79,11 @@
     <script src="js/supabaseClient.js"></script>
     <script>
         (function () {
+            var hash = window.location.hash || '';
+            var search = window.location.search || '';
+            var isOAuthRedirect = hash.includes('access_token') || hash.includes('refresh_token') || hash.includes('error') ||
+                                  search.includes('code=') || search.includes('error=');
+
             // Verificación inmediata de token de sesión en localStorage
             var hasSessionToken = false;
             try {
@@ -94,24 +99,71 @@
                 }
             } catch (e) { }
 
-            if (!hasSessionToken) {
+            if (!hasSessionToken && !isOAuthRedirect) {
                 window.location.replace('login.html?redirect=admin&role=propietario');
                 return;
             }
 
-            if (window.supabaseClient && window.supabaseClient.auth) {
-                window.supabaseClient.auth.getSession().then(function (res) {
-                    var session = res && res.data ? res.data.session : null;
-                    if (!session || !session.user) {
-                        window.location.replace('login.html?redirect=admin&role=propietario');
-                    } else {
-                        document.documentElement.classList.remove('owner-auth-checking');
-                        var guard = document.getElementById('owner-auth-guard-style');
-                        if (guard) guard.remove();
+            function clearGuard() {
+                document.documentElement.classList.remove('owner-auth-checking');
+                var guard = document.getElementById('owner-auth-guard-style');
+                if (guard) guard.remove();
+            }
+
+            function redirectToLogin() {
+                window.location.replace('login.html?redirect=admin&role=propietario');
+            }
+
+            function verifySession() {
+                if (window.supabaseClient && window.supabaseClient.auth) {
+                    window.supabaseClient.auth.getSession().then(function (res) {
+                        var session = res && res.data ? res.data.session : null;
+                        if (session && session.user) {
+                            clearGuard();
+                        } else if (!isOAuthRedirect) {
+                            redirectToLogin();
+                        }
+                    }).catch(function () {
+                        if (!isOAuthRedirect) redirectToLogin();
+                    });
+                } else {
+                    setTimeout(verifySession, 50);
+                }
+            }
+
+            if (isOAuthRedirect) {
+                var sessionResolved = false;
+                var timeoutHandle = setTimeout(function () {
+                    if (!sessionResolved) {
+                        if (window.supabaseClient && window.supabaseClient.auth) {
+                            window.supabaseClient.auth.getSession().then(function (res) {
+                                if (res && res.data && res.data.session && res.data.session.user) {
+                                    clearGuard();
+                                } else {
+                                    redirectToLogin();
+                                }
+                            }).catch(redirectToLogin);
+                        } else {
+                            redirectToLogin();
+                        }
                     }
-                }).catch(function () {
-                    window.location.replace('login.html?redirect=admin&role=propietario');
-                });
+                }, 4000);
+
+                var waitForClient = setInterval(function () {
+                    if (window.supabaseClient && window.supabaseClient.auth && window.supabaseClient.auth.onAuthStateChange) {
+                        clearInterval(waitForClient);
+                        window.supabaseClient.auth.onAuthStateChange(function (event, session) {
+                            if (session && session.user) {
+                                sessionResolved = true;
+                                clearTimeout(timeoutHandle);
+                                clearGuard();
+                            }
+                        });
+                        verifySession();
+                    }
+                }, 40);
+            } else {
+                verifySession();
             }
         })();
     </script>
@@ -1087,6 +1139,17 @@
                     user = await window.DataManager.getCurrentUser();
                 }
                 if (!user) {
+                    const hash = window.location.hash || '';
+                    const search = window.location.search || '';
+                    if (hash.includes('access_token') || search.includes('code=')) {
+                        for (let attempt = 0; attempt < 6; attempt++) {
+                            await new Promise(r => setTimeout(r, 400));
+                            const retryRes = await window.supabaseClient.auth.getSession();
+                            if (retryRes?.data?.session?.user) {
+                                return true;
+                            }
+                        }
+                    }
                     window.location.replace('login.html?redirect=admin&role=propietario');
                     return false;
                 }
