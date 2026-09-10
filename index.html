@@ -1325,9 +1325,9 @@
 
                     try {
                         if (window.DataManager && window.DataManager.getFeaturedMarketplaceProperties) {
-                            displayProperties = await window.DataManager.getFeaturedMarketplaceProperties(8);
+                            displayProperties = await window.DataManager.getFeaturedMarketplaceProperties(20);
                         } else if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
-                            const dbProps = await window.DataManager.getPublicMarketplaceProperties(8, false, false, { orderBy: 'views', prioritizeAvailable: true });
+                            const dbProps = await window.DataManager.getPublicMarketplaceProperties(20, false, false, { orderBy: 'views', prioritizeAvailable: true });
                             if (dbProps && dbProps.length > 0) {
                                 displayProperties = dbProps;
                             }
@@ -1342,7 +1342,7 @@
                         return;
                     }
 
-                    displayProperties.slice(0, 8).forEach(prop => {
+                    displayProperties.slice(0, 20).forEach(prop => {
                         const pVal = prop.price ? Number(prop.price) : 0;
                         const priceFormatted = pVal ? `$${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
                         const card = document.createElement('article');
@@ -2055,7 +2055,7 @@
                         grid.innerHTML = '';
                         grid.scrollLeft = 0;
 
-                        filtered.forEach(prop => {
+                        filtered.slice(0, 20).forEach(prop => {
                             const pVal = prop.price ? Number(prop.price) : 0;
                             const currencySymbol = prop.currency === 'USD' ? 'USD ' : '$';
                             const priceFormatted = pVal ? `${currencySymbol}${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
