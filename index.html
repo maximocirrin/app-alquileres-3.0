@@ -1094,102 +1094,110 @@
         <main class="pt-16 lg:pt-20">
             <!-- Hero Section -->
             <section
-                class="relative min-h-[600px] flex flex-col items-center justify-center overflow-hidden pt-8 pb-28 sm:pt-0 sm:pb-24 bg-transparent dark:bg-black">
-                <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none"
-                    style="mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 40%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.35) 82%, transparent 100%);">
-                    <img alt="Luxury Estate"
-                        class="w-full h-full object-cover object-center scale-[1.03] transform-gpu brightness-75 dark:brightness-[0.65]"
+                class="relative min-h-[580px] lg:min-h-[640px] flex flex-col items-center justify-center overflow-hidden pt-10 pb-24 sm:pt-12 sm:pb-28 bg-[#09090b]">
+                <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                    <img alt="Vivat Alquileres"
+                        class="w-full h-full object-cover object-center scale-[1.02] transform-gpu brightness-[0.70] dark:brightness-[0.55] filter contrast-[1.05]"
                         src="img/hero-marketplace.jpg" />
-                    <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent"></div>
+                    <!-- Cinematic gradient vignette -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-[#09090b]/95"></div>
+                    <!-- Ambient subtle warm/crimson glow behind center content -->
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(129,27,30,0.22),transparent_70%)]"></div>
                 </div>
 
-                <!-- Bottom diffuse blend layer into page background (pure black in dark mode) -->
+                <!-- Smooth diffuse blend layer into bottom section -->
                 <div
-                    class="absolute inset-x-0 bottom-0 h-44 sm:h-64 bg-gradient-to-b from-transparent via-background/60 to-background dark:from-transparent dark:via-black/80 dark:to-black pointer-events-none z-[5]">
+                    class="absolute inset-x-0 bottom-0 h-36 sm:h-48 bg-gradient-to-t from-background dark:from-[#09090b] to-transparent pointer-events-none z-[5]">
                 </div>
 
-                <!-- Persona Selector -->
-                <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 sm:mt-10 bg-transparent">
-                    <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-4 justify-center w-full">
+                <!-- Persona Selector (Segmented Pill) -->
+                <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
+                    <nav class="inline-flex items-center p-1 rounded-full bg-black/40 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-lg" aria-label="Seleccionar perfil">
                         <a href="index.html"
-                            class="bg-primary text-on-primary px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-md whitespace-nowrap transition-all flex-shrink-0 border border-primary">
+                            class="bg-primary text-white px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-bold shadow-sm whitespace-nowrap transition-all duration-200">
                             Soy Inquilino
                         </a>
                         <a href="propietarios.html"
-                            class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
+                            class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
                             Soy Propietario
                         </a>
                         <a href="corredores.html"
-                            class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
-                            Soy inmobiliaria
+                            class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
+                            Soy Inmobiliaria
                         </a>
-                    </div>
+                    </nav>
                 </div>
 
-                <div class="relative z-10 w-full max-w-4xl px-6 text-center">
+                <div class="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
                     <h1
-                        class="font-headline text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tighter leading-tight animate-on-scroll">
+                        class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1] animate-on-scroll">
                         Alquilar nunca fue tan rápido, transparente y 100% digital.
                     </h1>
                     <div
-                        class="font-body text-lg md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-on-scroll delay-100">
+                        class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal animate-on-scroll delay-100">
                         Vivat elimina la burocracia analógica. Buscá, validá tu identidad, firmá y gestioná tu
                         alquiler directamente desde el celular, sin costos ocultos.
                     </div>
                     <div class="max-w-2xl mx-auto animate-on-scroll delay-200">
                         <form action="buscar.html" method="GET" class="w-full m-0" id="hero-search-form">
-                            <div
-                                class="bg-surface-container-lowest dark:bg-zinc-900/95 p-1.5 sm:p-2 pl-3.5 sm:pl-5 rounded-full shadow-2xl flex items-center w-full backdrop-blur-md border border-white/20 dark:border-zinc-800 gap-1 sm:gap-2">
-                                <div class="flex-1 flex items-center gap-2 min-w-0 bg-transparent">
-                                    <span class="material-symbols-outlined text-[#7f1d1d] text-xl sm:text-2xl shrink-0"
-                                        style="color: rgb(127 29 29 / var(--tw-bg-opacity, 1)) !important;">search</span>
-                                    <input id="index-location-search" name="location"
-                                        class="w-full !bg-transparent text-on-surface dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
-                                        style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
-                                        placeholder="¿Dónde quieres vivir?" type="text" autocomplete="off" />
+                            <div class="relative group">
+                                <!-- Ambient soft glow behind search capsule on focus/hover -->
+                                <div class="absolute -inset-1 bg-gradient-to-r from-primary/30 to-red-500/20 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition duration-500 pointer-events-none"></div>
+
+                                <div
+                                    class="relative bg-white/95 dark:bg-zinc-900/90 backdrop-blur-xl p-1.5 sm:p-2 pl-4 sm:pl-6 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-white/40 dark:border-zinc-700/60 flex items-center w-full gap-2 transition-all duration-300 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
+                                    <div class="flex-1 flex items-center gap-2.5 min-w-0 bg-transparent">
+                                        <span class="material-symbols-outlined text-primary text-xl sm:text-2xl shrink-0 opacity-90"
+                                            style="color: #811b1e !important;">search</span>
+                                        <input id="index-location-search" name="location"
+                                            class="w-full !bg-transparent text-zinc-900 dark:text-white py-2 font-body text-sm sm:text-base placeholder-zinc-400 dark:placeholder-zinc-500 !border-0 !border-none !outline-none !ring-0 focus:!ring-0 focus:!outline-none focus:!border-none shadow-none truncate"
+                                            style="background: transparent !important; background-color: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; height: auto !important; -webkit-appearance: none;"
+                                            placeholder="¿Dónde quieres vivir? (ej. Palermo, Belgrano...)" type="text" autocomplete="off" />
+                                    </div>
+
+                                    <input type="hidden" id="hero-filter-input" name="filter" value="all" />
+                                    <input type="hidden" id="hero-operation-input" name="operation" value="all" />
+                                    <input type="hidden" id="hero-rooms-input" name="rooms" value="all" />
+                                    <input type="hidden" id="hero-minprice-input" name="minPrice" value="" />
+                                    <input type="hidden" id="hero-maxprice-input" name="maxPrice" value="" />
+                                    <input type="hidden" id="hero-amenities-input" name="amenities" value="" />
+
+                                    <button type="button" id="open-hero-filter-btn" onclick="openFilterModal()"
+                                        class="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-white bg-zinc-100/90 dark:bg-zinc-800/80 hover:bg-zinc-200/90 dark:hover:bg-zinc-700 transition-all shrink-0 cursor-pointer active:scale-95 border-0 outline-none"
+                                        aria-label="Filtros" title="Filtros">
+                                        <span
+                                            class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
+                                        <span id="hero-filter-indicator"
+                                            class="hidden absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
+                                    </button>
+
+                                    <button type="submit"
+                                        class="bg-primary hover:bg-[#9a2226] text-white h-10 sm:h-11 px-4 sm:px-6 rounded-full font-bold text-xs sm:text-sm md:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 border-none outline-none">
+                                        <span class="material-symbols-outlined text-lg sm:text-xl">search</span>
+                                        <span class="hidden sm:inline">Buscar</span>
+                                    </button>
                                 </div>
-
-                                <input type="hidden" id="hero-filter-input" name="filter" value="all" />
-                                <input type="hidden" id="hero-operation-input" name="operation" value="all" />
-                                <input type="hidden" id="hero-rooms-input" name="rooms" value="all" />
-                                <input type="hidden" id="hero-minprice-input" name="minPrice" value="" />
-                                <input type="hidden" id="hero-maxprice-input" name="maxPrice" value="" />
-                                <input type="hidden" id="hero-amenities-input" name="amenities" value="" />
-
-                                <button type="button" id="open-hero-filter-btn" onclick="openFilterModal()"
-                                    class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all shrink-0 cursor-pointer active:scale-95 border-0 bg-transparent p-0 outline-none"
-                                    aria-label="Filtros" title="Filtros">
-                                    <span
-                                        class="material-symbols-outlined text-xl sm:text-2xl pointer-events-none">tune</span>
-                                    <span id="hero-filter-indicator"
-                                        class="hidden absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white dark:border-zinc-900 pointer-events-none"></span>
-                                </button>
-
-                                <button type="submit"
-                                    class="bg-primary hover:bg-primary-container text-on-primary w-9 h-9 sm:w-auto sm:h-auto sm:px-6 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm md:text-base transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 border-none outline-none">
-                                    <span class="material-symbols-outlined text-lg sm:text-xl">search</span>
-                                    <span class="hidden sm:inline">Buscar</span>
-                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             </section>
 
-            <section class="max-w-[1280px] mx-auto px-4 md:px-8 relative z-20 animate-on-scroll">
+            <!-- Hero Stats Section -->
+            <section class="max-w-[1060px] mx-auto px-4 sm:px-6 relative z-20 animate-on-scroll">
                 <div
-                    class="-mt-12 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+50</p>
-                        <p class="text-xs font-bold opacity-90">Propietarios ya publicando</p>
+                    class="-mt-10 sm:-mt-12 relative z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-zinc-100 rounded-2xl sm:rounded-full px-6 sm:px-10 py-5 sm:py-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 text-center shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-zinc-200/80 dark:border-zinc-800 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/70 dark:divide-zinc-800/80">
+                    <div class="pt-2 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+50</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Propietarios ya publicando</p>
                     </div>
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+2.000</p>
-                        <p class="text-xs font-bold opacity-90">Inquilinos buscando cada mes</p>
+                    <div class="pt-4 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+2.000</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Inquilinos buscando cada mes</p>
                     </div>
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">98%</p>
-                        <p class="text-xs font-bold opacity-90">Tasa de satisfacción del propietario</p>
+                    <div class="pt-4 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">98%</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Tasa de satisfacción del propietario</p>
                     </div>
                 </div>
             </section>

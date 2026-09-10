@@ -523,8 +523,8 @@
 
     <main class="flex-grow pt-24 pb-32 lg:pb-12 px-4 sm:px-6 lg:pl-28 lg:pr-8 xl:pl-32 xl:pr-12 max-w-[1380px] mx-auto w-full flex flex-col space-y-6">
 
-        <!-- Pestañas Superiores (Tablet Pills Limpias) -->
-        <div class="hidden sm:flex lg:hidden items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar">
+        <!-- Pestañas Superiores (Ocultas: en tablet y móvil se utiliza la botonera dock inferior de vista mobile, y en desktop la barra lateral) -->
+        <div class="panel-top-tabs-bar hidden items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto scrollbar-hide no-scrollbar" style="display: none !important;">
             <button data-tab="avisos" class="owner-pill-btn py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer bg-primary text-white shadow-sm">
                 <span class="material-symbols-outlined text-lg">dashboard</span>
                 <span>Inicio</span>
