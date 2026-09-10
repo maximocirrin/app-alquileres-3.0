@@ -956,7 +956,61 @@
 
             <!-- PESTAÑA 3: ALQUILERES & COBROS (CONSOLIDADOS) -->
             <div id="panel-content-alquileres" class="tab-content space-y-6">
-                <div id="broker-container-active-rental" class="space-y-6"></div>
+                <div id="broker-container-active-rental" class="space-y-6 font-body">
+                    <!-- Skeleton Banner -->
+                    <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800/80 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-md">
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-700/60 rounded-full w-1/3"></div>
+                                <div class="h-5 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            </div>
+                        </div>
+                        <div class="w-32 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 hidden sm:block shrink-0"></div>
+                    </div>
+
+                    <!-- Skeleton Preview Card -->
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 animate-pulse flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-5 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                    </div>
+
+                    <!-- Skeleton Metrics -->
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-7 space-y-6 animate-pulse">
+                        <div class="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-5">
+                            <div class="space-y-2 flex-1">
+                                <div class="h-4 w-36 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-6 w-60 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- PESTAÑA 4: CANDIDATOS & VISITAS (CONSOLIDA POSTULACIONES + CALENDARIO Y OPERACIONES) -->
@@ -1024,7 +1078,32 @@
 
                     <!-- Lista de Postulaciones -->
                     <div id="broker-list-apps" class="space-y-4">
-                        <div class="p-8 text-center text-zinc-400">Cargando postulaciones...</div>
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4 flex-1">
+                                <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                                <div class="space-y-2 flex-1 max-w-sm">
+                                    <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                                    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                        </div>
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4 flex-1">
+                                <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                                <div class="space-y-2 flex-1 max-w-sm">
+                                    <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                                    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2207,13 +2286,22 @@
             if (normalizedTab === 'general') {
                 setTimeout(initBrokerCharts, 50);
             } else if (normalizedTab === 'cartera') {
-                const carteraTable = document.getElementById('broker-table-properties-tbody');
-                if (carteraTable && (!carteraTable.children.length || carteraTable.innerHTML.includes('Cargando'))) {
-                    if (typeof renderBrokerProperties === 'function') renderBrokerProperties();
+                const gridCont = document.getElementById('container-grid-view');
+                if (gridCont && (!gridCont.children.length || gridCont.innerHTML.includes('Cargando'))) {
+                    if (typeof getBrokerPropertiesSkeletonHtml === 'function') {
+                        gridCont.innerHTML = getBrokerPropertiesSkeletonHtml();
+                    }
+                    setTimeout(() => {
+                        if (typeof renderBrokerPropertiesGrid === 'function') renderBrokerPropertiesGrid();
+                        if (typeof renderBrokerPropertiesRows === 'function') renderBrokerPropertiesRows();
+                    }, 120);
                 }
             } else if (normalizedTab === 'candidatos') {
                 const appsContainer = document.getElementById('broker-list-apps');
                 if (appsContainer && (!appsContainer.children.length || appsContainer.innerHTML.includes('Cargando'))) {
+                    if (typeof getBrokerAppsSkeletonHtml === 'function') {
+                        appsContainer.innerHTML = getBrokerAppsSkeletonHtml();
+                    }
                     if (typeof renderBrokerApplications === 'function') renderBrokerApplications();
                     if (typeof renderBrokerCalendar === 'function') renderBrokerCalendar();
                     if (typeof renderBrokerValuations === 'function') renderBrokerValuations();
@@ -2222,7 +2310,12 @@
             } else if (normalizedTab === 'alquileres') {
                 const rentalContainer = document.getElementById('broker-container-active-rental');
                 if (rentalContainer && (!rentalContainer.children.length || rentalContainer.innerHTML.includes('Cargando'))) {
-                    if (typeof renderBrokerActiveRental === 'function') renderBrokerActiveRental();
+                    if (typeof getBrokerRentalSkeletonHtml === 'function') {
+                        rentalContainer.innerHTML = getBrokerRentalSkeletonHtml();
+                    }
+                    setTimeout(() => {
+                        if (typeof renderBrokerActiveRental === 'function') renderBrokerActiveRental();
+                    }, 120);
                 }
             } else if (normalizedTab === 'chat-negociacion') {
                 if (window.ContractsManager && typeof window.ContractsManager.renderEmbeddedChat === 'function') {
@@ -3148,6 +3241,10 @@
             const badgeSubtab = document.getElementById('broker-badge-subtab-apps');
             const badgeDock = document.getElementById('broker-badge-dock-apps');
             if (!list) return;
+
+            if (!list.querySelector('.animate-pulse') && !list.querySelector('.glass-card')) {
+                list.innerHTML = getBrokerAppsSkeletonHtml();
+            }
 
             try {
                 let dbApps = [];
@@ -4410,10 +4507,175 @@
             }
         }
 
+        // Generadores de Skeleton Loaders para Corredor Inmobiliario
+        function getBrokerRentalSkeletonHtml() {
+            return `
+                <div class="space-y-6 font-body">
+                    <!-- Skeleton Banner -->
+                    <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800/80 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-md">
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-700/60 rounded-full w-1/3"></div>
+                                <div class="h-5 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            </div>
+                        </div>
+                        <div class="w-32 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 hidden sm:block shrink-0"></div>
+                    </div>
+
+                    <!-- Skeleton Preview Card -->
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 animate-pulse flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-5 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                    </div>
+
+                    <!-- Skeleton Metrics -->
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-7 space-y-6 animate-pulse">
+                        <div class="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-5">
+                            <div class="space-y-2 flex-1">
+                                <div class="h-4 w-36 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-6 w-60 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getBrokerRentalSkeletonHtml = getBrokerRentalSkeletonHtml;
+
+        function getBrokerAppsSkeletonHtml() {
+            return `
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                    </div>
+                </div>
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getBrokerAppsSkeletonHtml = getBrokerAppsSkeletonHtml;
+
+        function getBrokerVisitsSkeletonHtml() {
+            return `
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                </div>
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                </div>
+            `;
+        }
+        window.getBrokerVisitsSkeletonHtml = getBrokerVisitsSkeletonHtml;
+
+        function getBrokerPropertiesSkeletonHtml() {
+            return `
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse shadow-sm">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden md:block shadow-sm">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden lg:block shadow-sm">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getBrokerPropertiesSkeletonHtml = getBrokerPropertiesSkeletonHtml;
+
         // Render Alquiler Activo & Cobros (Lista de Alquileres + Vista Detallada)
         function selectBrokerRental(rentalId) {
             selectedBrokerRentalId = rentalId;
-            renderBrokerActiveRental();
+            const container = document.getElementById('broker-container-active-rental');
+            if (container) {
+                container.innerHTML = getBrokerRentalSkeletonHtml();
+            }
+            setTimeout(() => {
+                renderBrokerActiveRental();
+            }, 240);
         }
         window.selectBrokerRental = selectBrokerRental;
         window.selectBrokerRentalContract = selectBrokerRental;
