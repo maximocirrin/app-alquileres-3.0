@@ -947,86 +947,89 @@
         <!-- TopNavBar Component -->
         <script src="js/navbar.js?v=4"></script>
 
-        <main class="pt-20 pb-20">
-            <!-- Persona Selector -->
-            <div class="w-full flex justify-center py-3 bg-transparent mb-6 sm:mt-10">
-                <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-4 justify-center w-full">
-                    <a href="index.html"
-                        class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
-                        Soy Inquilino
-                    </a>
-                    <a href="propietarios.html"
-                        class="bg-primary text-on-primary px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-md whitespace-nowrap transition-all flex-shrink-0 border border-primary">
-                        Soy Propietario
-                    </a>
-                    <a href="corredores.html"
-                        class="bg-surface-container-lowest dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:text-primary dark:hover:text-red-400 px-4 py-2 text-xs sm:text-sm md:text-base rounded-full font-bold shadow-sm border border-outline-variant/30 dark:border-zinc-700 whitespace-nowrap transition-all flex-shrink-0">
-                        Soy inmobiliaria
-                    </a>
+        <main class="pt-16 lg:pt-20 pb-20">
+            <!-- Hero Section -->
+            <section
+                class="relative min-h-[560px] lg:min-h-[620px] flex flex-col items-center justify-center overflow-hidden pt-10 pb-24 sm:pt-12 sm:pb-28 bg-[#09090b]">
+                <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                    <img alt="Vivat Propietarios"
+                        class="w-full h-full object-cover object-center scale-[1.02] transform-gpu brightness-[0.70] dark:brightness-[0.55] filter contrast-[1.05]"
+                        src="img/hero-marketplace.jpg" />
+                    <!-- Cinematic gradient vignette -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-[#09090b]/95"></div>
+                    <!-- Ambient subtle warm/crimson glow behind center content -->
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(129,27,30,0.22),transparent_70%)]"></div>
                 </div>
-            </div>
 
-            <section class="max-w-[1280px] mx-auto px-4 md:px-8 pt-4">
+                <!-- Smooth diffuse blend layer into bottom section -->
                 <div
-                    class="relative overflow-hidden rounded-2xl bg-surface-container-low dark:bg-zinc-900 min-h-[330px] md:min-h-[360px] flex items-center justify-center px-5 py-12 md:py-16 border border-outline-variant/30 dark:border-zinc-800">
-                    <div class="absolute left-0 bottom-0 w-56 h-44 opacity-70 hidden md:block">
-                        <div
-                            class="absolute left-3 bottom-0 w-28 h-36 border-l border-t border-primary/35 dark:border-red-400/30 grid grid-cols-3 gap-3 p-4">
-                            <span class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span>
-                            <span class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span>
-                            <span class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span><span
-                                class="bg-white/80 dark:bg-zinc-700/70"></span>
-                        </div>
-                        <div
-                            class="absolute left-12 bottom-0 w-32 h-24 bg-white/90 dark:bg-zinc-800 rounded-t-[40px] border border-outline-variant/20 dark:border-zinc-700">
-                        </div>
-                    </div>
+                    class="absolute inset-x-0 bottom-0 h-36 sm:h-48 bg-gradient-to-t from-background dark:from-[#09090b] to-transparent pointer-events-none z-[5]">
+                </div>
+
+                <!-- Persona Selector (Segmented Pill) -->
+                <div class="relative z-20 w-full flex justify-center mb-6 sm:mb-8 pt-2 sm:pt-4">
+                    <nav class="inline-flex items-center p-1 rounded-full bg-black/40 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-lg" aria-label="Seleccionar perfil">
+                        <a href="index.html"
+                            class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
+                            Soy Inquilino
+                        </a>
+                        <a href="propietarios.html"
+                            class="bg-primary text-white px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-bold shadow-sm whitespace-nowrap transition-all duration-200">
+                            Soy Propietario
+                        </a>
+                        <a href="corredores.html"
+                            class="text-white/80 hover:text-white hover:bg-white/10 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200">
+                            Soy Inmobiliaria
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
+                    <h1
+                        class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-extrabold text-white mb-4 sm:mb-5 tracking-[-0.03em] leading-[1.1] animate-on-scroll">
+                        Tu propiedad en piloto automático: publicá, alquilá y gestioná.
+                    </h1>
                     <div
-                        class="absolute right-6 bottom-0 hidden sm:block w-44 h-28 rounded-t-full bg-white/90 dark:bg-zinc-800 border-t border-l border-primary/25 dark:border-red-400/20">
+                        class="font-body text-base sm:text-lg md:text-xl text-zinc-200/90 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal animate-on-scroll delay-100">
+                        Olvidate del papeleo. Encontrá inquilinos verificados, firmá contratos digitales y recibí tus cobros en fecha, 100% online y sin costos ocultos.
                     </div>
-                    <div class="relative z-10 text-center max-w-3xl">
-
-                        <h1
-                            class="font-headline text-4xl md:text-6xl font-extrabold text-on-background dark:text-white tracking-tight leading-[0.95] mb-5">
-                            Tu propiedad en piloto automático: publicá, alquilá y gestioná desde un solo lugar.</h1>
-                        <p class="font-body text-sm md:text-base text-zinc-600 dark:text-zinc-300 mb-8">Olvidate del
-                            papeleo. Encontrá inquilinos verificados, firmá contratos, generá inventarios digitales y
-                            calculá aumentos automáticamente. La gestión total de tu alquiler, ahora en tu bolsillo..
-                        </p>
+                    <div class="flex flex-col items-center justify-center animate-on-scroll delay-200">
                         <button id="btn-publicar-propietarios-hero"
-                            class="bg-primary text-on-primary px-7 py-3.5 rounded-lg font-bold text-sm hover:bg-primary-container transition-all shadow-lg active:scale-95">Publica
-                            tu propiedad gratis</button>
-                        <p class="mt-4 text-xs text-zinc-600 dark:text-zinc-400">¿Ya tienes una cuenta? <button
-                                id="btn-administrar-propietarios-link"
-                                class="text-primary dark:text-red-400 underline underline-offset-2">Inicia
-                                sesión</button></p>
-                    </div>
-                </div>
-
-                <div
-                    class="-mt-5 relative z-20 bg-primary dark:bg-[#7f1d1d] text-on-primary rounded-2xl px-6 py-7 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center shadow-xl">
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+50</p>
-                        <p class="text-xs font-bold opacity-90">Propietarios ya publicando</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">+2.000</p>
-                        <p class="text-xs font-bold opacity-90">Inquilinos buscando cada mes</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl md:text-3xl font-headline font-extrabold">98%</p>
-                        <p class="text-xs font-bold opacity-90">Tasa de satisfacción del propietario</p>
+                            class="bg-primary hover:bg-[#9a2226] text-white px-8 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary/25 active:scale-95 inline-flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                            <span>Publicá tu propiedad gratis</span>
+                            <span class="material-symbols-outlined text-lg sm:text-xl">arrow_forward</span>
+                        </button>
+                        <p class="mt-4 text-xs sm:text-sm text-zinc-300 font-medium">
+                            ¿Ya tenés una cuenta?
+                            <button id="btn-administrar-propietarios-link"
+                                class="text-white hover:text-primary-fixed-dim font-bold underline underline-offset-4 transition-colors cursor-pointer bg-transparent border-0 p-0 ml-1">
+                                Iniciar sesión
+                            </button>
+                        </p>
                     </div>
                 </div>
             </section>
 
+            <!-- Hero Stats Section -->
+            <section class="max-w-[1060px] mx-auto px-4 sm:px-6 relative z-20 animate-on-scroll">
+                <div
+                    class="-mt-10 sm:-mt-12 relative z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-zinc-100 rounded-2xl sm:rounded-full px-6 sm:px-10 py-5 sm:py-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 text-center shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-zinc-200/80 dark:border-zinc-800 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/70 dark:divide-zinc-800/80">
+                    <div class="pt-2 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+50</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Propietarios ya publicando</p>
+                    </div>
+                    <div class="pt-4 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">+2.000</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Inquilinos buscando cada mes</p>
+                    </div>
+                    <div class="pt-4 sm:pt-0">
+                        <p class="text-2xl sm:text-3xl font-headline font-extrabold text-primary dark:text-red-400 tracking-tight">98%</p>
+                        <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-0.5">Tasa de satisfacción del propietario</p>
+                    </div>
+                </div>
+            </section>
 
-            <section class="max-w-[1280px] mx-auto px-4 md:px-8 pb-16 md:pb-24">
+            <section class="max-w-[1280px] mx-auto px-4 md:px-8 pt-16 pb-16 md:pb-24">
                 <div class="text-center max-w-3xl mx-auto mb-10 md:mb-12 animate-on-scroll">
                     <div class="relative inline-flex items-center justify-center mb-8 h-28 w-64">
                         <img src="img/tenant-profile-2.jpg" alt="Inquilino verificado"

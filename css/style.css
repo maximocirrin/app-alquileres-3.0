@@ -1029,6 +1029,10 @@ html.dark .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) *,
 [data-theme="dark"] .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) * {
     color: #f87171 !important;
 }
+/* Ocultar barra superior de pestañas redundante en paneles (en tablet y móvil se utiliza la botonera dock inferior de vista mobile) */
+.panel-top-tabs-bar {
+    display: none !important;
+}
 
 @media (min-width: 1024px) {
     body:has(#owner-floating-dock-container) footer,
