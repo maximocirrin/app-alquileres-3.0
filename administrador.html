@@ -844,7 +844,22 @@
             <!-- PESTAÑA 3: ALQUILER ACTIVO -->
             <div id="panel-content-alquiler-activo" class="tab-content space-y-6">
                 <div id="owner-container-active-rental">
-                    <div class="p-8 text-center text-zinc-400">Cargando gestión de contrato activo...</div>
+                    <div class="glass-card rounded-3xl p-8 sm:p-14 border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-center space-y-4 my-2 shadow-xs transition-all min-h-[360px]">
+                        <div class="relative flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-red-950/50 flex items-center justify-center border border-primary/20 animate-pulse">
+                                <span class="material-symbols-outlined text-3xl text-primary dark:text-red-400">home_work</span>
+                            </div>
+                            <div class="absolute -inset-2.5 rounded-3xl border-2 border-transparent border-t-primary dark:border-t-red-400 animate-spin"></div>
+                        </div>
+                        <div class="space-y-1.5 max-w-sm">
+                            <h3 class="font-headline font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white">Cargando gestión de alquileres...</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Sincronizando cobranzas, métricas, contrato y reajustes oficiales.</p>
+                        </div>
+                        <div class="w-full max-w-xs pt-2 space-y-2.5">
+                            <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse w-3/4 mx-auto"></div>
+                            <div class="h-2 bg-zinc-100 dark:bg-zinc-800/60 rounded-full animate-pulse w-1/2 mx-auto"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2547,6 +2562,29 @@
             renderFilteredOwnerApplications();
         };
 
+        window.showOwnerRentalLoader = function (message = 'Cargando información del alquiler...') {
+            const container = document.getElementById('owner-container-active-rental');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="glass-card rounded-3xl p-8 sm:p-14 border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-center space-y-4 my-2 shadow-xs transition-all animate-fade-in min-h-[360px]">
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-red-950/50 flex items-center justify-center border border-primary/20 animate-pulse">
+                            <span class="material-symbols-outlined text-3xl text-primary dark:text-red-400">home_work</span>
+                        </div>
+                        <div class="absolute -inset-2.5 rounded-3xl border-2 border-transparent border-t-primary dark:border-t-red-400 animate-spin"></div>
+                    </div>
+                    <div class="space-y-1.5 max-w-sm">
+                        <h3 class="font-headline font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white">${message}</h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Sincronizando contrato, estado de cobranzas, expensas y reajustes oficiales.</p>
+                    </div>
+                    <div class="w-full max-w-xs pt-2 space-y-2.5">
+                        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse w-3/4 mx-auto"></div>
+                        <div class="h-2 bg-zinc-100 dark:bg-zinc-800/60 rounded-full animate-pulse w-1/2 mx-auto"></div>
+                    </div>
+                </div>
+            `;
+        };
+
         window.ownerRentalModalActiveTab = 'activos';
 
         window.switchOwnerRentalModalTab = function (tab) {
@@ -2564,6 +2602,18 @@
 
             modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-detail-open font-body';
             modal.style.display = 'flex';
+            modal.onclick = function (e) {
+                if (e.target === modal) closeOwnerRentalFilterModal();
+            };
+
+            if (!ownerRawProperties || ownerRawProperties.length === 0) {
+                try {
+                    const localProps = JSON.parse(localStorage.getItem('vivat_marketplace_properties') || localStorage.getItem('vivat_properties') || '[]');
+                    if (Array.isArray(localProps) && localProps.length > 0) {
+                        ownerRawProperties = localProps;
+                    }
+                } catch (e) { }
+            }
 
             const isFin = window.isFinalizedContract || (c => c && (c.is_finalized || c.status === 'finalizado' || c.id_estado_contrato === 2));
             const activeContracts = (ownerActiveContractsMock || []).filter(c => !isFin(c));
@@ -2742,10 +2792,15 @@
             if (modal) modal.style.display = 'none';
         };
 
-        window.selectOwnerRentalContract = function (contractId) {
+        window.selectOwnerRentalContract = async function (contractId) {
             activeSelectedContractId = contractId;
             closeOwnerRentalFilterModal();
-            loadOwnerActiveRental();
+            if (typeof showOwnerRentalLoader === 'function') {
+                showOwnerRentalLoader('Cambiando de alquiler...');
+            }
+            // Breve espera para asegurar una transición visual pulida e intuitiva
+            await new Promise(r => setTimeout(r, 220));
+            await loadOwnerActiveRental(false);
         };
 
         window.toggleOwnerRejectedCandidates = function () {
@@ -3764,13 +3819,27 @@
 
         function selectOwnerActiveContract(contractId) {
             activeSelectedContractId = contractId;
-            return loadOwnerActiveRental();
+            if (typeof showOwnerRentalLoader === 'function') {
+                showOwnerRentalLoader('Cambiando de alquiler...');
+            }
+            return new Promise(resolve => {
+                setTimeout(async () => {
+                    await loadOwnerActiveRental(false);
+                    resolve();
+                }, 220);
+            });
         }
         window.selectOwnerActiveContract = selectOwnerActiveContract;
 
-        async function loadOwnerActiveRental() {
+        async function loadOwnerActiveRental(showLoader = false) {
             const container = document.getElementById('owner-container-active-rental');
             if (!container) return;
+
+            if (showLoader || !container.children.length || container.querySelector('.text-zinc-400')) {
+                if (typeof showOwnerRentalLoader === 'function') {
+                    showOwnerRentalLoader('Cargando gestión de alquileres...');
+                }
+            }
 
             try {
                 // Cargar contratos reales de la base de datos o localStorage
@@ -3860,6 +3929,26 @@
                     return true;
                 });
 
+                // Asegurar que las publicaciones/propiedades de la cartera estén disponibles para resolver imágenes y fotos
+                if (!ownerRawProperties || ownerRawProperties.length === 0) {
+                    if (window.DataManager && typeof window.DataManager.getUserMarketplaceProperties === 'function') {
+                        try {
+                            const fetchedProps = await window.DataManager.getUserMarketplaceProperties();
+                            if (Array.isArray(fetchedProps) && fetchedProps.length > 0) {
+                                ownerRawProperties = fetchedProps;
+                            }
+                        } catch (e) { }
+                    }
+                    if (!ownerRawProperties || ownerRawProperties.length === 0) {
+                        try {
+                            const localProps = JSON.parse(localStorage.getItem('vivat_marketplace_properties') || localStorage.getItem('vivat_properties') || '[]');
+                            if (Array.isArray(localProps) && localProps.length > 0) {
+                                ownerRawProperties = localProps;
+                            }
+                        } catch (e) { }
+                    }
+                }
+
                 const isFin = window.isFinalizedContract || (c => c && (c.is_finalized || c.status === 'finalizado' || c.id_estado_contrato === 2));
                 const activeList = ownerActiveContractsMock.filter(c => !isFin(c));
                 const finalizedList = ownerActiveContractsMock.filter(c => isFin(c));
@@ -3940,6 +4029,21 @@
                     : (freqMonths >= 6 ? indicesData.icl.tasaSugeridaSemestral : indicesData.icl.tasaSugeridaTrimestral);
                 const estimatedNewRent = Math.round(contract.monthly_rent * (1 + defaultRate / 100));
 
+                const cleanTitle = (contract.property_title || 'Propiedad').split(' - ')[0].split(' | ')[0];
+                const matchedProp = (ownerRawProperties || []).find(p => {
+                    if (!p) return false;
+                    const pPropId = String(p.id_propiedad || p.property_id || p.propertyId || '');
+                    const pPubId = String(p.id_publicacion || p.id || '');
+                    const cPropId = String(contract.id_propiedad || contract.property_id || contract.propertyId || '');
+                    const cPubId = String(contract.id_publicacion || contract.publication_id || contract.publicationId || '');
+
+                    if (cPubId && pPubId && cPubId === pPubId) return true;
+                    if (cPropId && pPropId && cPropId === pPropId) return true;
+                    if (p.title && contract.property_title && p.title.toLowerCase().includes(cleanTitle.toLowerCase())) return true;
+                    return false;
+                });
+                const contractImgUrl = contract.image || contract.imagen || (contract.images && contract.images[0]) || contract.publication_image || (matchedProp && matchedProp.images && matchedProp.images[0]) || (matchedProp && (matchedProp.imagen || matchedProp.image || matchedProp.foto)) || 'img/hero-marketplace.jpg';
+
                 container.innerHTML = `
                     <div class="space-y-6 font-body">
                         ${isFinalized ? `
@@ -4003,32 +4107,86 @@
                         </div>
                         `}
 
-                        <!-- Selector Moderno de Propiedades en Alquiler -->
-                        <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-200 dark:border-zinc-800">
+                        <!-- Cabecera de Sección -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
                                 <h2 class="font-headline text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
                                     <span class="material-symbols-outlined text-primary dark:text-red-400 text-2xl">payments</span>
-                                    Gestión de Alquileres & Cobranzas
+                                    Gestión de Alquileres &amp; Cobranzas
                                 </h2>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Administra montos, expensas, intereses punitorios y comisiones de tus propiedades alquiladas.</p>
                             </div>
+                        </div>
 
-                            <!-- Botón moderno para abrir el Pop-Up de selección de propiedad en alquiler -->
-                            <button type="button" onclick="openOwnerRentalFilterModal()" id="btn-open-rental-filter" class="flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 bg-zinc-100/90 hover:bg-zinc-200/90 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/90 border border-zinc-200 dark:border-zinc-700 rounded-2xl cursor-pointer transition-all duration-200 shadow-xs hover:shadow-md group text-left w-full sm:w-auto min-w-[240px]">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-8 h-8 rounded-xl ${isFinalized ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700' : 'bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 border border-primary/20'} flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-lg">${isFinalized ? 'archive' : 'home_work'}</span>
+                        <!-- Card Preview del Alquiler Seleccionado (Clickeable para cambiar de propiedad) -->
+                        <div onclick="openOwnerRentalFilterModal()" id="btn-open-rental-filter" role="button" tabindex="0" title="Haz clic para seleccionar otro alquiler o consultar contratos finalizados" class="glass-card p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-lg border border-zinc-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-red-500/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md cursor-pointer transition-all duration-200 group flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden ring-0 hover:ring-2 hover:ring-primary/10 dark:hover:ring-red-500/10">
+                            <!-- Barra superior de acento con gradiente animada en hover -->
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-rose-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                            <div class="flex items-center gap-3.5 sm:gap-4.5 min-w-0 flex-1">
+                                <!-- Foto de publicación de la propiedad con badges -->
+                                <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 shadow-2xs group-hover:shadow-md transition-all">
+                                    <img src="${contractImgUrl}" alt="${cleanTitle}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isFinalized ? 'grayscale-[35%]' : ''}" onerror="this.onerror=null;this.src='img/hero-marketplace.jpg'">
+                                    ${isFinalized ? `
+                                        <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-zinc-950/85 backdrop-blur-xs text-white text-[8px] font-black uppercase tracking-wider">Cerrado</span>
+                                    ` : `
+                                        <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-emerald-600/90 backdrop-blur-xs text-white text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+                                            <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>
+                                            Activo
+                                        </span>
+                                    `}
+                                    <span class="absolute bottom-1 left-1 right-1 px-1 py-0.5 rounded-md bg-black/80 backdrop-blur-xs text-white text-[9px] font-mono font-bold text-center truncate">
+                                        $ ${Number(contract.monthly_rent || 0).toLocaleString('es-AR')}/m
+                                    </span>
+                                </div>
+
+                                <!-- Datos mínimos de la propiedad -->
+                                <div class="min-w-0 flex-1 space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-[10px] font-headline font-black uppercase tracking-wider text-primary dark:text-red-400 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">home_work</span>
+                                            ${isFinalized ? 'Alquiler Finalizado Seleccionado' : 'Alquiler Seleccionado'}
+                                        </span>
+                                        <span class="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
+                                        <span class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline-flex items-center gap-0.5">
+                                            <span class="material-symbols-outlined text-[11px]">touch_app</span> Clic para cambiar
+                                        </span>
                                     </div>
-                                    <div class="min-w-0">
-                                        <span class="block text-[10px] font-headline font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">${isFinalized ? 'Alquiler Finalizado' : 'Alquiler Seleccionado'}</span>
-                                        <span id="owner-active-rental-filter-label" class="block text-xs sm:text-sm font-headline font-extrabold text-zinc-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">${(contract.property_title || 'Propiedad').split(' - ')[0]}</span>
+
+                                    <h3 id="owner-active-rental-filter-label" class="font-headline text-base sm:text-lg font-extrabold text-zinc-900 dark:text-white truncate group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
+                                        ${cleanTitle}
+                                    </h3>
+
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span class="inline-flex items-center gap-1 font-medium truncate max-w-[210px] sm:max-w-xs" title="${contract.property_address || ''}">
+                                            <span class="material-symbols-outlined text-xs ${isFinalized ? 'text-zinc-400' : 'text-rose-500'} shrink-0">location_on</span>
+                                            <span class="truncate">${contract.property_address || 'Mendoza, Argentina'}</span>
+                                        </span>
+                                        <span class="text-zinc-300 dark:text-zinc-700">•</span>
+                                        <span class="inline-flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[170px]">
+                                            <span class="material-symbols-outlined text-xs text-zinc-400 shrink-0">person</span>
+                                            <span class="truncate">${contract.tenant_name || 'Inquilino'}</span>
+                                        </span>
+                                        <span class="hidden lg:inline text-zinc-300 dark:text-zinc-700">•</span>
+                                        <span class="hidden lg:inline-flex items-center gap-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                                            <span class="material-symbols-outlined text-xs text-zinc-400">sync</span>
+                                            Ajuste ${contract.adjustment_index || 'IPC'} (${contract.adjustment_frequency_months || 3}m)
+                                        </span>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5 shrink-0 pl-1">
-                                    <span class="px-2 py-0.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-black">${activeList.length} act.${finalizedList.length > 0 ? ` · ${finalizedList.length} fin.` : ''}</span>
-                                    <span class="material-symbols-outlined text-zinc-400 group-hover:text-primary dark:group-hover:text-red-400 transition-transform group-hover:translate-y-0.5 text-lg">expand_more</span>
+                            </div>
+
+                            <!-- Botón e indicador para cambiar de alquiler -->
+                            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2.5 md:pt-0 border-t md:border-t-0 border-zinc-100 dark:border-zinc-800">
+                                <span class="px-2.5 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-black border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs">
+                                    ${activeList.length} act.${finalizedList.length > 0 ? ` · ${finalizedList.length} fin.` : ''}
+                                </span>
+                                <div class="inline-flex items-center gap-2 px-3.5 py-2 sm:py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-headline font-bold text-xs border border-zinc-200 dark:border-zinc-700 shadow-2xs group-hover:bg-primary group-hover:text-white group-hover:border-primary dark:group-hover:bg-primary dark:group-hover:text-white transition-all">
+                                    <span class="material-symbols-outlined text-base transition-transform group-hover:rotate-180 duration-300">swap_horiz</span>
+                                    <span>Cambiar Alquiler</span>
+                                    <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-0.5">expand_more</span>
                                 </div>
-                            </button>
+                            </div>
                         </div>
 
                         <!-- Card Principal del Alquiler Seleccionado -->
