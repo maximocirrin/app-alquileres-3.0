@@ -24,7 +24,7 @@
         (function () {
             try {
                 var theme = localStorage.getItem('theme');
-                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var isDark = theme === 'dark';
                 var root = document.documentElement;
                 if (isDark) {
                     root.setAttribute('data-theme', 'dark');
@@ -296,7 +296,79 @@
             <!-- Sub-Contenido 1.1: Dashboard Alquiler Activo -->
             <div id="subcontent-alquiler" class="w-full space-y-6">
                 <div id="tenant-rental-dashboard">
-                    <div class="p-8 text-center text-zinc-500">Cargando detalles del alquiler activo...</div>
+                    <div class="space-y-6 font-body">
+                        <!-- Skeleton Selector / Carrusel de Alquileres -->
+                        <div class="glass-card p-3 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex items-center gap-3 overflow-hidden">
+                            <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                            <div class="space-y-1.5 flex-1 max-w-xs">
+                                <div class="h-3.5 bg-zinc-300 dark:bg-zinc-700 rounded-md w-3/4"></div>
+                                <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <div class="w-32 sm:w-40 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                <div class="w-28 sm:w-36 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 hidden sm:block"></div>
+                            </div>
+                        </div>
+
+                        <!-- Skeleton Banner Principal -->
+                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm animate-pulse">
+                            <div class="bg-zinc-100 dark:bg-zinc-800/60 p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
+                                <div class="space-y-3 flex-1 w-full max-w-xl">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="h-5 w-32 bg-zinc-200 dark:bg-zinc-700 rounded-full"></div>
+                                        <div class="h-4 w-28 bg-zinc-200 dark:bg-zinc-700 rounded-full"></div>
+                                    </div>
+                                    <div class="h-7 sm:h-8 bg-zinc-300 dark:bg-zinc-700 rounded-xl w-3/4"></div>
+                                    <div class="flex items-center gap-2 pt-1 flex-wrap">
+                                        <div class="h-9 w-28 sm:w-32 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                        <div class="h-9 w-36 sm:w-40 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                        <div class="h-9 w-24 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 w-full md:w-auto h-20 flex flex-col justify-center space-y-2 shrink-0 text-left md:text-right">
+                                    <div class="h-3 w-32 bg-zinc-200 dark:bg-zinc-700 rounded-full md:ml-auto"></div>
+                                    <div class="h-6 w-28 bg-zinc-300 dark:bg-zinc-700 rounded-lg md:ml-auto"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Skeleton Métricas / 3 Tarjetas -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="h-4 w-28 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                </div>
+                                <div class="space-y-2 py-2">
+                                    <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                </div>
+                                <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                            </div>
+                            <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="h-4 w-32 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                </div>
+                                <div class="space-y-2 py-2">
+                                    <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                </div>
+                                <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                            </div>
+                            <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="h-4 w-32 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                                </div>
+                                <div class="space-y-2 py-2">
+                                    <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                </div>
+                                <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -453,7 +525,34 @@
 
             <!-- Contenedor Dinámico de Postulaciones -->
             <div id="postulaciones-container" class="w-full">
-                <!-- Se carga dinámicamente desde JS -->
+                <div class="space-y-4 font-body">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/3"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/3"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -491,7 +590,28 @@
                 <div class="p-6 md:p-8">
                     <!-- Visitas Próximas -->
                     <div id="content-visitas-upcoming" class="space-y-4">
-                        <div class="p-8 text-center text-zinc-500 text-sm">Cargando agenda de visitas...</div>
+                        <div class="space-y-4 font-body">
+                            <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-center gap-4 flex-1">
+                                    <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                                    <div class="space-y-2 flex-1 max-w-sm">
+                                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            </div>
+                            <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-center gap-4 flex-1">
+                                    <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                                    <div class="space-y-2 flex-1 max-w-sm">
+                                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                    </div>
+                                </div>
+                                <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Visitas Pasadas -->
@@ -1266,27 +1386,166 @@
         // -------------------------------------------------------------
         // FUNCIONALIDAD: 1. DASHBOARD DE ALQUILER ACTIVO & PAGOS
         // -------------------------------------------------------------
+        function getTenantRentalSkeletonHtml() {
+            return `
+                <div class="space-y-6 font-body">
+                    <!-- Skeleton Selector / Carrusel de Alquileres -->
+                    <div class="glass-card p-3 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex items-center gap-3 overflow-hidden">
+                        <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                        <div class="space-y-1.5 flex-1 max-w-xs">
+                            <div class="h-3.5 bg-zinc-300 dark:bg-zinc-700 rounded-md w-3/4"></div>
+                            <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-32 sm:w-40 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            <div class="w-28 sm:w-36 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 hidden sm:block"></div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Banner Principal -->
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm animate-pulse">
+                        <div class="bg-zinc-100 dark:bg-zinc-800/60 p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
+                            <div class="space-y-3 flex-1 w-full max-w-xl">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="h-5 w-32 bg-zinc-200 dark:bg-zinc-700 rounded-full"></div>
+                                    <div class="h-4 w-28 bg-zinc-200 dark:bg-zinc-700 rounded-full"></div>
+                                </div>
+                                <div class="h-7 sm:h-8 bg-zinc-300 dark:bg-zinc-700 rounded-xl w-3/4"></div>
+                                <div class="flex items-center gap-2 pt-1 flex-wrap">
+                                    <div class="h-9 w-28 sm:w-32 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                    <div class="h-9 w-36 sm:w-40 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                    <div class="h-9 w-24 bg-zinc-200 dark:bg-zinc-700 rounded-xl"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 w-full md:w-auto h-20 flex flex-col justify-center space-y-2 shrink-0 text-left md:text-right">
+                                <div class="h-3 w-32 bg-zinc-200 dark:bg-zinc-700 rounded-full md:ml-auto"></div>
+                                <div class="h-6 w-28 bg-zinc-300 dark:bg-zinc-700 rounded-lg md:ml-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Métricas / 3 Tarjetas de Pagos & Estado -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="h-4 w-28 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                            <div class="space-y-2 py-2">
+                                <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                            <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                        </div>
+                        <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="h-4 w-32 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                            <div class="space-y-2 py-2">
+                                <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                            <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                        </div>
+                        <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 animate-pulse shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="h-4 w-32 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                            <div class="space-y-2 py-2">
+                                <div class="h-6 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                            <div class="h-9 w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getTenantRentalSkeletonHtml = getTenantRentalSkeletonHtml;
+
+        function getTenantAppsSkeletonHtml() {
+            return `
+                <div class="space-y-4 font-body">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/3"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/3"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getTenantAppsSkeletonHtml = getTenantAppsSkeletonHtml;
+
+        function getTenantVisitsSkeletonHtml() {
+            return `
+                <div class="space-y-4 font-body">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                    </div>
+                </div>
+            `;
+        }
+        window.getTenantVisitsSkeletonHtml = getTenantVisitsSkeletonHtml;
+
         window.selectTenantRental = function (contractId) {
             window._selectedTenantContractId = contractId;
-            renderTenantDashboard(contractId);
+            const container = document.getElementById('tenant-rental-dashboard');
+            if (container) {
+                container.innerHTML = getTenantRentalSkeletonHtml();
+            }
+            setTimeout(() => {
+                renderTenantDashboard(contractId);
+            }, 240);
         };
 
         async function renderTenantDashboard(targetContractId = null) {
             const container = document.getElementById('tenant-rental-dashboard');
             if (!container) return;
 
-            // 1. LOADER INMEDIATO: para que al cambiar de alquiler o al cargar la pantalla no parezca trabado
-            container.innerHTML = `
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-3xl p-10 sm:p-14 text-center space-y-4 shadow-sm animate-pulse">
-                    <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-red-400 flex items-center justify-center mx-auto">
-                        <span class="material-symbols-outlined text-3xl animate-spin">progress_activity</span>
-                    </div>
-                    <div class="space-y-1">
-                        <h4 class="font-headline font-black text-base sm:text-lg text-zinc-900 dark:text-white">Cargando datos del alquiler...</h4>
-                        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">Sincronizando canon locativo, vencimientos y detalles del inmueble.</p>
-                    </div>
-                </div>
-            `;
+            // 1. LOADER SKELETON: feedback visual fluido idéntico al panel de propietarios
+            if (!container.querySelector('.animate-pulse')) {
+                container.innerHTML = getTenantRentalSkeletonHtml();
+            }
 
             try {
                 // 2. Asegurar que las postulaciones del usuario estén cargadas
@@ -1517,6 +1776,7 @@
                 const baseMonthlyRent = Number(contract.monthly_rent || contract.monthlyRent || (payment ? payment.amount_base : 380000));
                 const estimatedNewRent = Math.round(baseMonthlyRent * (1 + defaultRate / 100));
                 const isContractGen = contract.has_contract === true || contract.hasContract === true || (window.ContractsManager && typeof window.ContractsManager.isContractGenerated === 'function' ? window.ContractsManager.isContractGenerated(contract) : false);
+                const hasTenantSigned = Boolean(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned);
 
                 // Construir datos enriquecidos de la propiedad / publicación con datos reales
                 const propertyImages = (Array.isArray(contract.photos) && contract.photos.length > 0)
@@ -1655,8 +1915,8 @@
                     <!-- 1. Tarjeta de Contrato Activo y Pagos -->
                     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
                         <!-- Top Banner: Propiedad Alquilada -->
-                        <div class="bg-zinc-100 dark:bg-zinc-800/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                            <div class="space-y-2">
+                        <div class="bg-zinc-100 dark:bg-zinc-800/60 p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-6">
+                            <div class="space-y-2.5 max-w-full flex-1">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full ${isContractGen ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">
                                         ${isContractGen ? 'Contrato Digital Activo' : 'Contrato No Generado'}
@@ -1665,7 +1925,7 @@
                                         Ajuste ${contract.adjustment_index || 'IPC'} (${freqMonths} meses)
                                     </span>
                                 </div>
-                                <h2 class="font-headline text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
+                                <h2 class="font-headline text-xl sm:text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white">
                                     ${contract.property_title}
                                 </h2>
                                 ${!isContractGen ? `
@@ -1674,35 +1934,44 @@
                                     <span><b>Contrato pendiente de generación:</b> El locador aún no ha formalizado ni subido el contrato digital. Puedes consultar por chat.</span>
                                 </div>
                                 ` : ''}
-                                <div class="flex flex-wrap items-center gap-2 pt-1">
-                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'chat')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Abrir chat y acordar condiciones con el propietario">
-                                        <span class="material-symbols-outlined text-sm">chat</span>
+                                <div class="flex flex-wrap items-center gap-2 pt-1.5 w-full">
+                                    <!-- Botón Principal: Ver/Firmar Contrato -->
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'document')" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 ${isContractGen ? (hasTenantSigned ? 'bg-primary hover:bg-primary-hover text-white shadow-xs' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md animate-pulse') : 'bg-zinc-200 dark:bg-zinc-700/60 text-zinc-500 dark:text-zinc-400 cursor-not-allowed'} text-xs font-headline font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer active:scale-95">
+                                        <span class="material-symbols-outlined text-base">${!isContractGen ? 'pending_actions' : (hasTenantSigned ? 'description' : 'draw')}</span>
+                                        <span>${!isContractGen ? 'Contrato Pendiente' : (hasTenantSigned ? 'Ver Contrato' : 'Firmar Contrato')}</span>
+                                    </button>
+
+                                    <!-- Chat de Negociación -->
+                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'chat')" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700/80 text-zinc-700 dark:text-zinc-200 border border-zinc-200/90 dark:border-zinc-700/90 text-xs font-headline font-semibold rounded-xl shadow-2xs hover:shadow-xs active:scale-95 transition-all whitespace-nowrap cursor-pointer" title="Abrir chat y acordar condiciones con el propietario">
+                                        <span class="material-symbols-outlined text-base text-blue-600 dark:text-blue-400">chat</span>
                                         <span>Chat de Negociación</span>
                                     </button>
-                                    <button type="button" onclick="window.openTenantGarantesSubtab ? window.openTenantGarantesSubtab() : (window.location.hash = '#alquiler')" class="px-3.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Ver y gestionar las garantías y garantes de este contrato">
-                                        <span class="material-symbols-outlined text-sm text-primary dark:text-red-400">shield_person</span>
-                                        <span>Garantías & Garantes</span>
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.openContractFullscreen('${contract.id || ''}', 'document')" class="px-3.5 py-2 ${isContractGen ? 'bg-primary hover:bg-primary-container text-white' : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30'} text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">${!isContractGen ? 'pending_actions' : ((contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'description' : 'draw')}</span>
-                                        <span>${!isContractGen ? 'Contrato No Generado' : ((contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? 'Ver Contrato' : 'Firma Digital & Biometría Didit')}</span>
-                                    </button>
-                                    ${isContractGen ? `
-                                    <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || ''}')" class="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-all flex items-center gap-1 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">download</span> PDF
-                                    </button>
-                                    <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || ''}')" class="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-800 text-xs font-bold rounded-xl hover:bg-black transition-all flex items-center gap-1 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm text-emerald-400">verified_user</span> Audit Trail
+
+                                    <!-- Ver Inventario -->
+                                    ${hasTenantSigned ? `
+                                    <button type="button" onclick="window.InventoryManager && window.InventoryManager.openModal('${contract.id || ''}', '${contract.property_id || ''}', true)" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700/80 text-zinc-700 dark:text-zinc-200 border border-zinc-200/90 dark:border-zinc-700/90 text-xs font-headline font-semibold rounded-xl shadow-2xs hover:shadow-xs active:scale-95 transition-all whitespace-nowrap cursor-pointer" title="Ver acta digital de inventario de la propiedad">
+                                        <span class="material-symbols-outlined text-base text-amber-500 dark:text-amber-400">inventory_2</span>
+                                        <span>Inventario</span>
                                     </button>
                                     ` : ''}
-                                    ${(contract.status === 'SIGNED_AND_SEALED' || contract.tenant_signed || contract.has_signed || contract.tenant?.hasSigned) ? `
-                                    <button type="button" onclick="window.InventoryManager && window.InventoryManager.openModal('${contract.id || ''}', '${contract.property_id || ''}', true)" class="px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all flex items-center gap-1 cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">inventory</span> Ver Inventario
-                                    </button>
+
+                                    <!-- Segmented Group: Documentos (PDF + Audit Trail) -->
+                                    ${isContractGen ? `
+                                    <div class="inline-flex items-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200/90 dark:border-zinc-700/90 p-0.5 shadow-2xs whitespace-nowrap">
+                                        <button type="button" onclick="ContractsManager.downloadSignedContract('${contract.id || ''}')" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg text-xs font-headline font-semibold transition-colors cursor-pointer" title="Descargar contrato en formato PDF">
+                                            <span class="material-symbols-outlined text-sm text-zinc-400">download</span>
+                                            <span>PDF</span>
+                                        </button>
+                                        <div class="w-px h-3.5 bg-zinc-200 dark:bg-zinc-700"></div>
+                                        <button type="button" onclick="ContractsManager.downloadAuditTrail('${contract.id || ''}')" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg text-xs font-headline font-semibold transition-colors cursor-pointer" title="Descargar certificado forense de evidencia Audit Trail">
+                                            <span class="material-symbols-outlined text-sm text-emerald-500">verified_user</span>
+                                            <span>Audit Trail</span>
+                                        </button>
+                                    </div>
                                     ` : ''}
                                 </div>
                             </div>
-                            <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-right shrink-0 shadow-2xs">
+                            <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-left md:text-right shrink-0 shadow-2xs w-full md:w-auto">
                                 <span class="block text-[10px] uppercase font-bold text-zinc-400">Canon Locativo Mensual Actual</span>
                                 <span class="text-2xl font-black text-zinc-900 dark:text-white">${currSym} ${baseMonthlyRent.toLocaleString('es-AR')}</span>
                             </div>
@@ -3024,6 +3293,10 @@
 
         async function loadTenantApplications() {
             const kpiCount = document.getElementById('postulaciones-kpi-count');
+            const appsContainer = document.getElementById('postulaciones-container');
+            if (appsContainer && (!appsContainer.children.length || (!appsContainer.querySelector('.animate-pulse') && !appsContainer.querySelector('.glass-card')))) {
+                appsContainer.innerHTML = getTenantAppsSkeletonHtml();
+            }
 
             try {
                 // 1. Obtener datos del usuario logueado
@@ -3163,6 +3436,10 @@
             const contentUpcoming = document.getElementById('content-visitas-upcoming');
             const contentPast = document.getElementById('content-visitas-past');
             if (!contentUpcoming || !contentPast) return;
+
+            if (!contentUpcoming.querySelector('.animate-pulse') && !contentUpcoming.querySelector('.rounded-2xl')) {
+                contentUpcoming.innerHTML = getTenantVisitsSkeletonHtml();
+            }
 
             try {
                 const visits = window.DataManager ? await window.DataManager.getVisits() : [];

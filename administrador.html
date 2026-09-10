@@ -24,7 +24,7 @@
         (function () {
             try {
                 var theme = localStorage.getItem('theme');
-                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var isDark = theme === 'dark';
                 var root = document.documentElement;
                 if (isDark) {
                     root.setAttribute('data-theme', 'dark');
@@ -79,6 +79,11 @@
     <script src="js/supabaseClient.js"></script>
     <script>
         (function () {
+            var hash = window.location.hash || '';
+            var search = window.location.search || '';
+            var isOAuthRedirect = hash.includes('access_token') || hash.includes('refresh_token') || hash.includes('error') ||
+                                  search.includes('code=') || search.includes('error=');
+
             // Verificación inmediata de token de sesión en localStorage
             var hasSessionToken = false;
             try {
@@ -94,24 +99,71 @@
                 }
             } catch (e) { }
 
-            if (!hasSessionToken) {
+            if (!hasSessionToken && !isOAuthRedirect) {
                 window.location.replace('login.html?redirect=admin&role=propietario');
                 return;
             }
 
-            if (window.supabaseClient && window.supabaseClient.auth) {
-                window.supabaseClient.auth.getSession().then(function (res) {
-                    var session = res && res.data ? res.data.session : null;
-                    if (!session || !session.user) {
-                        window.location.replace('login.html?redirect=admin&role=propietario');
-                    } else {
-                        document.documentElement.classList.remove('owner-auth-checking');
-                        var guard = document.getElementById('owner-auth-guard-style');
-                        if (guard) guard.remove();
+            function clearGuard() {
+                document.documentElement.classList.remove('owner-auth-checking');
+                var guard = document.getElementById('owner-auth-guard-style');
+                if (guard) guard.remove();
+            }
+
+            function redirectToLogin() {
+                window.location.replace('login.html?redirect=admin&role=propietario');
+            }
+
+            function verifySession() {
+                if (window.supabaseClient && window.supabaseClient.auth) {
+                    window.supabaseClient.auth.getSession().then(function (res) {
+                        var session = res && res.data ? res.data.session : null;
+                        if (session && session.user) {
+                            clearGuard();
+                        } else if (!isOAuthRedirect) {
+                            redirectToLogin();
+                        }
+                    }).catch(function () {
+                        if (!isOAuthRedirect) redirectToLogin();
+                    });
+                } else {
+                    setTimeout(verifySession, 50);
+                }
+            }
+
+            if (isOAuthRedirect) {
+                var sessionResolved = false;
+                var timeoutHandle = setTimeout(function () {
+                    if (!sessionResolved) {
+                        if (window.supabaseClient && window.supabaseClient.auth) {
+                            window.supabaseClient.auth.getSession().then(function (res) {
+                                if (res && res.data && res.data.session && res.data.session.user) {
+                                    clearGuard();
+                                } else {
+                                    redirectToLogin();
+                                }
+                            }).catch(redirectToLogin);
+                        } else {
+                            redirectToLogin();
+                        }
                     }
-                }).catch(function () {
-                    window.location.replace('login.html?redirect=admin&role=propietario');
-                });
+                }, 4000);
+
+                var waitForClient = setInterval(function () {
+                    if (window.supabaseClient && window.supabaseClient.auth && window.supabaseClient.auth.onAuthStateChange) {
+                        clearInterval(waitForClient);
+                        window.supabaseClient.auth.onAuthStateChange(function (event, session) {
+                            if (session && session.user) {
+                                sessionResolved = true;
+                                clearTimeout(timeoutHandle);
+                                clearGuard();
+                            }
+                        });
+                        verifySession();
+                    }
+                }, 40);
+            } else {
+                verifySession();
             }
         })();
     </script>
@@ -572,11 +624,18 @@
                                 </div>
                             </div>
 
-                            <!-- Fila Inferior: Monto -->
-                            <div class="relative z-10 mt-6 sm:mt-8">
-                                <span id="balance-total-rent" class="text-3xl sm:text-4xl lg:text-[44px] font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline truncate block">
-                                    $ 0
-                                </span>
+                            <!-- Fila Inferior: Montos (Pesos y Dólares si aplica) -->
+                            <div id="balance-amounts-container" class="relative z-10 mt-6 sm:mt-8 flex flex-col justify-end">
+                                <div id="balance-ars-wrapper">
+                                    <span id="balance-total-rent" class="text-3xl sm:text-4xl lg:text-[44px] font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline truncate block">
+                                        $ 0
+                                    </span>
+                                </div>
+                                <div id="balance-usd-wrapper" class="hidden mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                                    <span id="balance-total-rent-usd" class="text-2xl sm:text-3xl lg:text-[32px] font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline truncate block">
+                                        USD $ 0
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -789,7 +848,39 @@
 
                 <!-- Grid de Tarjetas de Publicaciones -->
                 <div id="owner-grid-props" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="p-8 text-center text-zinc-400 col-span-full">Cargando avisos...</div>
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse">
+                        <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                            <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden md:block">
+                        <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                            <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden lg:block">
+                        <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                            <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -837,27 +928,91 @@
                 </div>
 
                 <div id="owner-list-apps" class="space-y-4">
-                    <div class="p-8 text-center text-zinc-400">Cargando postulaciones...</div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- PESTAÑA 3: ALQUILER ACTIVO -->
             <div id="panel-content-alquiler-activo" class="tab-content space-y-6">
                 <div id="owner-container-active-rental">
-                    <div class="glass-card rounded-3xl p-8 sm:p-14 border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-center space-y-4 my-2 shadow-xs transition-all min-h-[360px]">
-                        <div class="relative flex items-center justify-center">
-                            <div class="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-red-950/50 flex items-center justify-center border border-primary/20 animate-pulse">
-                                <span class="material-symbols-outlined text-3xl text-primary dark:text-red-400">home_work</span>
+                    <div class="space-y-6 font-body">
+                        <!-- Skeleton Banner -->
+                        <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800/80 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4 flex-1">
+                                <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                                <div class="space-y-2 flex-1 max-w-md">
+                                    <div class="h-3 bg-zinc-200 dark:bg-zinc-700/60 rounded-full w-1/3"></div>
+                                    <div class="h-5 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                </div>
                             </div>
-                            <div class="absolute -inset-2.5 rounded-3xl border-2 border-transparent border-t-primary dark:border-t-red-400 animate-spin"></div>
+                            <div class="w-32 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 hidden sm:block shrink-0"></div>
                         </div>
-                        <div class="space-y-1.5 max-w-sm">
-                            <h3 class="font-headline font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white">Cargando gestión de alquileres...</h3>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Sincronizando cobranzas, métricas, contrato y reajustes oficiales.</p>
+
+                        <!-- Skeleton Preview Card -->
+                        <div class="glass-card p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 animate-pulse flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4 flex-1">
+                                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                                <div class="space-y-2.5 flex-1 max-w-sm">
+                                    <div class="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                    <div class="h-5 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                    <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                </div>
+                            </div>
+                            <div class="w-28 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
                         </div>
-                        <div class="w-full max-w-xs pt-2 space-y-2.5">
-                            <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse w-3/4 mx-auto"></div>
-                            <div class="h-2 bg-zinc-100 dark:bg-zinc-800/60 rounded-full animate-pulse w-1/2 mx-auto"></div>
+
+                        <!-- Skeleton Metrics -->
+                        <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-7 space-y-6 animate-pulse">
+                            <div class="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-5">
+                                <div class="space-y-2 flex-1">
+                                    <div class="h-4 w-36 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                    <div class="h-6 w-60 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                </div>
+                                <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                    <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                    <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                </div>
+                                <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                    <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                    <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                </div>
+                                <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                    <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                    <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                </div>
+                                <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                    <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                    <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -987,7 +1142,18 @@
                 </div>
 
                 <!-- Listado Detallado de Citas -->
-                <div id="owner-list-visits" class="space-y-4"></div>
+                <div id="owner-list-visits" class="space-y-4">
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-sm">
+                                <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                    </div>
+                </div>
             </div>
 
 
@@ -1087,6 +1253,17 @@
                     user = await window.DataManager.getCurrentUser();
                 }
                 if (!user) {
+                    const hash = window.location.hash || '';
+                    const search = window.location.search || '';
+                    if (hash.includes('access_token') || search.includes('code=')) {
+                        for (let attempt = 0; attempt < 6; attempt++) {
+                            await new Promise(r => setTimeout(r, 400));
+                            const retryRes = await window.supabaseClient.auth.getSession();
+                            if (retryRes?.data?.session?.user) {
+                                return true;
+                            }
+                        }
+                    }
                     window.location.replace('login.html?redirect=admin&role=propietario');
                     return false;
                 }
@@ -1215,9 +1392,25 @@
 
                 // Render Content
                 let renderPromise = Promise.resolve();
-                if (target === 'avisos') renderPromise = loadOwnerAvisos();
-                if (target === 'postulaciones') renderPromise = loadOwnerApplications();
+                if (target === 'avisos') {
+                    const grid = document.getElementById('owner-grid-props');
+                    if (grid && !grid.querySelector('.owner-prop-card')) {
+                        grid.innerHTML = getOwnerAvisosSkeletonHtml();
+                    }
+                    renderPromise = loadOwnerAvisos();
+                }
+                if (target === 'postulaciones') {
+                    const list = document.getElementById('owner-list-apps');
+                    if (list && !list.querySelector('.owner-application-card')) {
+                        list.innerHTML = getOwnerAppsSkeletonHtml();
+                    }
+                    renderPromise = loadOwnerApplications();
+                }
                 if (target === 'visitas') {
+                    const list = document.getElementById('owner-list-visits');
+                    if (list && !list.querySelector('.owner-visit-card')) {
+                        list.innerHTML = getOwnerVisitsSkeletonHtml();
+                    }
                     const nowCal = new Date();
                     ownerCurrentCalendarYear = nowCal.getFullYear();
                     ownerCurrentCalendarMonth = nowCal.getMonth();
@@ -1225,7 +1418,13 @@
                     ownerSelectedCalendarDay = null;
                     renderPromise = loadOwnerVisits();
                 }
-                if (target === 'alquiler-activo') renderPromise = loadOwnerActiveRental();
+                if (target === 'alquiler-activo') {
+                    const container = document.getElementById('owner-container-active-rental');
+                    if (container && (!container.querySelector('.owner-inview-card') && !container.querySelector('#btn-open-rental-filter'))) {
+                        showOwnerRentalLoader();
+                    }
+                    renderPromise = loadOwnerActiveRental();
+                }
                 if (target === 'chat-negociacion') renderPromise = loadOwnerChatSection();
 
                 if (target !== 'chat-negociacion' && window.ContractsManager) {
@@ -1899,7 +2098,9 @@
             const grid = document.getElementById('owner-grid-props');
             if (!grid || !window.DataManager) return;
 
-            grid.innerHTML = '<div class="p-8 text-center text-zinc-400 col-span-full"><span class="material-symbols-outlined text-2xl animate-spin inline-block mb-2">sync</span><p>Cargando avisos...</p></div>';
+            if (!grid.querySelector('.owner-prop-card')) {
+                grid.innerHTML = getOwnerAvisosSkeletonHtml();
+            }
 
             try {
                 ownerAvisosState = await window.DataManager.getUserMarketplaceProperties(100);
@@ -1953,31 +2154,97 @@
             }
         }
 
+        function isContractInDollars(contract) {
+            if (!contract) return false;
+            const cur = String(contract.currency || contract.moneda || '').toUpperCase();
+            if (cur === 'USD' || cur === 'DOLARES' || cur === 'DÓLARES' || cur === 'U$S' || cur === 'US$') return true;
+            if (Number(contract.id_moneda) === 2) return true;
+
+            // Revisar clausulas adicionales
+            if (contract.clausulas_adicionales) {
+                let extra = contract.clausulas_adicionales;
+                if (typeof extra === 'string') {
+                    try { extra = JSON.parse(extra); } catch (e) { extra = {}; }
+                }
+                const extraCur = String(extra.currency || extra.moneda || '').toUpperCase();
+                if (extraCur === 'USD' || extraCur === 'DOLARES' || extraCur === 'DÓLARES' || Number(extra.id_moneda) === 2) return true;
+            }
+
+            // Revisar propiedad anidada
+            if (contract.property) {
+                const pCur = String(contract.property.currency || contract.property.moneda || '').toUpperCase();
+                if (pCur === 'USD' || pCur === 'DOLARES' || pCur === 'DÓLARES' || Number(contract.property.id_moneda) === 2) return true;
+            }
+            if (contract.Propiedad) {
+                const pCur = String(contract.Propiedad.currency || contract.Propiedad.moneda || '').toUpperCase();
+                if (pCur === 'USD' || pCur === 'DOLARES' || pCur === 'DÓLARES' || Number(contract.Propiedad.id_moneda) === 2) return true;
+            }
+
+            // Revisar propiedad vinculada en memoria
+            const propId = String(contract.id_propiedad || contract.property_id || contract.propertyId || '');
+            const pubId = String(contract.id_publicacion || contract.publication_id || contract.publicationId || '');
+            const allProps = [
+                ...(typeof ownerAvisosState !== 'undefined' && Array.isArray(ownerAvisosState) ? ownerAvisosState : []),
+                ...(typeof ownerRawProperties !== 'undefined' && Array.isArray(ownerRawProperties) ? ownerRawProperties : [])
+            ];
+            const matched = allProps.find(p => p && (
+                (propId && (String(p.id_propiedad || p.property_id || p.id || '') === propId)) ||
+                (pubId && (String(p.id_publicacion || p.publication_id || p.id || '') === pubId))
+            ));
+            if (matched) {
+                const pCur = String(matched.currency || matched.moneda || '').toUpperCase();
+                if (pCur === 'USD' || pCur === 'DOLARES' || pCur === 'DÓLARES' || Number(matched.id_moneda) === 2) return true;
+            }
+
+            return false;
+        }
+        window.isContractInDollars = isContractInDollars;
+
         async function updateOwnerBalanceSummary() {
             try {
                 // 1. Contratos y Alquileres
                 let rawContracts = ownerActiveContractsMock || [];
-                if ((!rawContracts || rawContracts.length === 0) && window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
-                    try {
-                        rawContracts = await window.DataManager.getOwnerContracts();
-                        ownerActiveContractsMock = rawContracts || [];
-                    } catch (e) { }
+                if (!rawContracts || rawContracts.length === 0) {
+                    if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
+                        try {
+                            rawContracts = await window.DataManager.getOwnerContracts();
+                            ownerActiveContractsMock = rawContracts || [];
+                        } catch (e) { }
+                    }
+                    if (!rawContracts || rawContracts.length === 0) {
+                        try {
+                            const raw = localStorage.getItem('vivat_contracts');
+                            if (raw) rawContracts = JSON.parse(raw);
+                            ownerActiveContractsMock = rawContracts || [];
+                        } catch (e) { }
+                    }
                 }
 
                 // Considerar solo alquileres vigentes/activos (excluyendo finalizados)
                 const isFin = window.isFinalizedContract || (c => c && (c.is_finalized || c.status === 'finalizado' || c.id_estado_contrato === 2));
                 const contracts = (rawContracts || []).filter(c => !isFin(c));
 
-                let totalMonthlyRent = 0;
-                let totalCollected = 0;
-                let totalPending = 0;
+                let totalMonthlyRentArs = 0;
+                let totalMonthlyRentUsd = 0;
+                let totalCollectedArs = 0;
+                let totalCollectedUsd = 0;
+                let totalPendingArs = 0;
+                let totalPendingUsd = 0;
+                let hasUsd = false;
                 let delinquentCount = 0;
                 const now = new Date();
                 const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
                 for (const contract of contracts) {
                     const rent = Number(contract.monthly_rent || contract.monthlyRent || 0);
-                    totalMonthlyRent += rent;
+                    const isUsd = isContractInDollars(contract);
+
+                    if (isUsd) {
+                        hasUsd = true;
+                        totalMonthlyRentUsd += rent;
+                    } else {
+                        totalMonthlyRentArs += rent;
+                    }
 
                     // Obtener pago del periodo actual
                     let payment = null;
@@ -1987,10 +2254,20 @@
                         } catch (e) { }
                     }
 
+                    const paidAmount = Number(payment?.amount_base || rent);
+
                     if (payment && payment.status === 'pagado') {
-                        totalCollected += Number(payment.amount_base || rent);
+                        if (isUsd) {
+                            totalCollectedUsd += paidAmount;
+                        } else {
+                            totalCollectedArs += paidAmount;
+                        }
                     } else {
-                        totalPending += rent;
+                        if (isUsd) {
+                            totalPendingUsd += rent;
+                        } else {
+                            totalPendingArs += rent;
+                        }
                         // Verificar si está en mora
                         if (payment && payment.due_date) {
                             const dueDate = new Date(payment.due_date);
@@ -2042,16 +2319,49 @@
                 }
 
                 // Actualizar DOM
-                const formatMoney = (val) => '$ ' + Number(val || 0).toLocaleString('es-AR');
+                const formatMoneyArs = (val) => '$ ' + Number(val || 0).toLocaleString('es-AR');
+                const formatMoneyUsd = (val) => 'USD $ ' + Number(val || 0).toLocaleString('es-AR');
 
                 const elTotalRent = document.getElementById('balance-total-rent');
+                const elTotalRentUsd = document.getElementById('balance-total-rent-usd');
+                const elUsdWrapper = document.getElementById('balance-usd-wrapper');
+                const elAmountsContainer = document.getElementById('balance-amounts-container');
+
                 const elActiveRentals = document.getElementById('balance-active-rentals-count');
                 const elMoraCount = document.getElementById('balance-mora-count');
                 const elPropsCount = document.getElementById('balance-props-count');
                 const elTicketsCount = document.getElementById('balance-tickets-count');
                 const elAppsCount = document.getElementById('balance-apps-count');
 
-                if (elTotalRent) elTotalRent.textContent = formatMoney(totalMonthlyRent);
+                if (elTotalRent) {
+                    elTotalRent.textContent = formatMoneyArs(totalMonthlyRentArs);
+                }
+
+                if (hasUsd) {
+                    if (elTotalRentUsd) {
+                        elTotalRentUsd.textContent = formatMoneyUsd(totalMonthlyRentUsd);
+                    }
+                    if (elUsdWrapper) {
+                        elUsdWrapper.classList.remove('hidden');
+                    }
+                    if (elTotalRent) {
+                        elTotalRent.className = 'text-2xl sm:text-3xl lg:text-[34px] font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline truncate block';
+                    }
+                    if (elAmountsContainer) {
+                        elAmountsContainer.className = 'relative z-10 mt-3 sm:mt-4 flex flex-col justify-end';
+                    }
+                } else {
+                    if (elUsdWrapper) {
+                        elUsdWrapper.classList.add('hidden');
+                    }
+                    if (elTotalRent) {
+                        elTotalRent.className = 'text-3xl sm:text-4xl lg:text-[44px] font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline truncate block';
+                    }
+                    if (elAmountsContainer) {
+                        elAmountsContainer.className = 'relative z-10 mt-6 sm:mt-8 flex flex-col justify-end';
+                    }
+                }
+
                 if (elActiveRentals) elActiveRentals.textContent = contracts.length;
                 if (elMoraCount) elMoraCount.textContent = delinquentCount;
                 if (elPropsCount) elPropsCount.textContent = totalProps;
@@ -2061,7 +2371,14 @@
                 // Tooltips informativos al pasar el cursor (mantiene la tarjeta 100% limpia y minimalista)
                 const cardTotalRent = document.getElementById('card-balance-total-rent');
                 if (cardTotalRent) {
-                    cardTotalRent.title = totalMonthlyRent > 0 ? `${formatMoney(totalCollected)} cobrado • ${formatMoney(totalPending)} por cobrar` : 'Ingresos mensuales contratados';
+                    if (hasUsd) {
+                        let titleParts = [];
+                        titleParts.push(`Pesos: ${formatMoneyArs(totalMonthlyRentArs)} (${formatMoneyArs(totalCollectedArs)} cobrado • ${formatMoneyArs(totalPendingArs)} por cobrar)`);
+                        titleParts.push(`Dólares: ${formatMoneyUsd(totalMonthlyRentUsd)} (${formatMoneyUsd(totalCollectedUsd)} cobrado • ${formatMoneyUsd(totalPendingUsd)} por cobrar)`);
+                        cardTotalRent.title = titleParts.join(' | ');
+                    } else {
+                        cardTotalRent.title = totalMonthlyRentArs > 0 ? `${formatMoneyArs(totalCollectedArs)} cobrado • ${formatMoneyArs(totalPendingArs)} por cobrar` : 'Ingresos mensuales contratados';
+                    }
                 }
                 const cardActiveRentals = document.getElementById('card-balance-active-rentals');
                 if (cardActiveRentals) {
@@ -2336,6 +2653,10 @@
             const badgeDock = document.getElementById('badge-dock-apps');
             if (!list || !window.DataManager) return;
 
+            if (!list.querySelector('.owner-application-card')) {
+                list.innerHTML = getOwnerAppsSkeletonHtml();
+            }
+
             try {
                 const [apps, props] = await Promise.all([
                     window.DataManager.getApplications(null, true),
@@ -2562,27 +2883,164 @@
             renderFilteredOwnerApplications();
         };
 
-        window.showOwnerRentalLoader = function (message = 'Cargando información del alquiler...') {
-            const container = document.getElementById('owner-container-active-rental');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="glass-card rounded-3xl p-8 sm:p-14 border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-center space-y-4 my-2 shadow-xs transition-all animate-fade-in min-h-[360px]">
-                    <div class="relative flex items-center justify-center">
-                        <div class="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-red-950/50 flex items-center justify-center border border-primary/20 animate-pulse">
-                            <span class="material-symbols-outlined text-3xl text-primary dark:text-red-400">home_work</span>
+        function getOwnerRentalSkeletonHtml() {
+            return `
+                <div class="space-y-6 font-body animate-fade-in">
+                    <!-- Skeleton Banner -->
+                    <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800/80 animate-pulse flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-700/60 shrink-0"></div>
+                            <div class="space-y-2 flex-1 max-w-md">
+                                <div class="h-3 bg-zinc-200 dark:bg-zinc-700/60 rounded-full w-1/3"></div>
+                                <div class="h-5 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            </div>
                         </div>
-                        <div class="absolute -inset-2.5 rounded-3xl border-2 border-transparent border-t-primary dark:border-t-red-400 animate-spin"></div>
+                        <div class="w-32 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 hidden sm:block shrink-0"></div>
                     </div>
-                    <div class="space-y-1.5 max-w-sm">
-                        <h3 class="font-headline font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white">${message}</h3>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">Sincronizando contrato, estado de cobranzas, expensas y reajustes oficiales.</p>
+
+                    <!-- Skeleton Preview Card -->
+                    <div class="glass-card p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 animate-pulse flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                            <div class="space-y-2.5 flex-1 max-w-sm">
+                                <div class="h-3 w-28 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-5 w-3/4 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                                <div class="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="w-28 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
                     </div>
-                    <div class="w-full max-w-xs pt-2 space-y-2.5">
-                        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse w-3/4 mx-auto"></div>
-                        <div class="h-2 bg-zinc-100 dark:bg-zinc-800/60 rounded-full animate-pulse w-1/2 mx-auto"></div>
+
+                    <!-- Skeleton Metrics -->
+                    <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-7 space-y-6 animate-pulse">
+                        <div class="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-5">
+                            <div class="space-y-2 flex-1">
+                                <div class="h-4 w-36 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                                <div class="h-6 w-60 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                            <div class="h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-2">
+                                <div class="h-3 w-16 bg-zinc-200 dark:bg-zinc-700/60 rounded-full"></div>
+                                <div class="h-5 w-24 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        function getOwnerAvisosSkeletonHtml() {
+            return `
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden md:block">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 space-y-4 animate-pulse hidden lg:block">
+                    <div class="h-44 sm:h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 w-full"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24"></div>
+                        <div class="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-20"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getOwnerAppsSkeletonHtml() {
+            return `
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                    </div>
+                </div>
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-2/3"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                        <div class="w-24 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getOwnerVisitsSkeletonHtml() {
+            return `
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                </div>
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                        <div class="space-y-2 flex-1 max-w-sm">
+                            <div class="h-4 bg-zinc-300 dark:bg-zinc-700 rounded-lg w-3/4"></div>
+                            <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full w-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="w-28 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+                </div>
+            `;
+        }
+
+        window.showOwnerRentalLoader = function () {
+            const container = document.getElementById('owner-container-active-rental');
+            if (!container) return;
+            container.innerHTML = getOwnerRentalSkeletonHtml();
         };
 
         window.ownerRentalModalActiveTab = 'activos';
@@ -2796,10 +3254,10 @@
             activeSelectedContractId = contractId;
             closeOwnerRentalFilterModal();
             if (typeof showOwnerRentalLoader === 'function') {
-                showOwnerRentalLoader('Cambiando de alquiler...');
+                showOwnerRentalLoader();
             }
-            // Breve espera para asegurar una transición visual pulida e intuitiva
-            await new Promise(r => setTimeout(r, 220));
+            // Pequeña espera para feedback visual fluido y suave con skeleton
+            await new Promise(r => setTimeout(r, 240));
             await loadOwnerActiveRental(false);
         };
 
@@ -3629,6 +4087,10 @@
             const list = document.getElementById('owner-list-visits');
             if (!list) return;
 
+            if (!list.querySelector('.owner-visit-card')) {
+                list.innerHTML = getOwnerVisitsSkeletonHtml();
+            }
+
             const monthPadded = (ownerCurrentCalendarMonth + 1) < 10 ? `0${ownerCurrentCalendarMonth + 1}` : `${ownerCurrentCalendarMonth + 1}`;
 
             let visitsList = ownerEventsMock;
@@ -3820,13 +4282,13 @@
         function selectOwnerActiveContract(contractId) {
             activeSelectedContractId = contractId;
             if (typeof showOwnerRentalLoader === 'function') {
-                showOwnerRentalLoader('Cambiando de alquiler...');
+                showOwnerRentalLoader();
             }
             return new Promise(resolve => {
                 setTimeout(async () => {
                     await loadOwnerActiveRental(false);
                     resolve();
-                }, 220);
+                }, 240);
             });
         }
         window.selectOwnerActiveContract = selectOwnerActiveContract;
@@ -3837,7 +4299,7 @@
 
             if (showLoader || !container.children.length || container.querySelector('.text-zinc-400')) {
                 if (typeof showOwnerRentalLoader === 'function') {
-                    showOwnerRentalLoader('Cargando gestión de alquileres...');
+                    showOwnerRentalLoader();
                 }
             }
 
@@ -3902,8 +4364,8 @@
                         has_contract: hasContractVal,
                         hasContract: hasContractVal,
                         durationMonths: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
-                        duration_months: c.durationMonths || c.duration_months || c.clausulas_adicionales?.durationMonths || 24,
-                        currency: c.currency || c.clausulas_adicionales?.currency || 'ARS',
+                        currency: (typeof isContractInDollars === 'function' && isContractInDollars(c) ? 'USD' : (c.currency || c.clausulas_adicionales?.currency || 'ARS')),
+                        id_moneda: (typeof isContractInDollars === 'function' && isContractInDollars(c) ? 2 : (c.id_moneda || 1)),
                         aliasCbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
                         alias_cbu: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
                         cbu_alias: c.aliasCbu || c.alias_cbu || c.cbu_alias || c.clausulas_adicionales?.aliasCbu || 'VIVAT.ALQUILER.MP',
@@ -4869,6 +5331,9 @@
                     message: 'Los valores del canon, expensas, vencimiento y tasa punitoria se actualizaron correctamente.',
                     icon: 'check_circle'
                 });
+            }
+            if (typeof updateOwnerBalanceSummary === 'function') {
+                updateOwnerBalanceSummary();
             }
             loadOwnerActiveRental();
         }

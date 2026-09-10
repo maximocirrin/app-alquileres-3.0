@@ -321,33 +321,163 @@ var DataManager = {
         return this.getProperties(targetProfileId, true);
     },
 
-    getPublicMarketplaceProperties: async (limit = 50, includeAllStatuses = false, filterByUser = false) => {
+    _mapPublicationRecord: function (pub) {
+        const prop = pub.Propiedad || {};
+        const media = pub.Multimedia || [];
+        const imageUrls = media.length > 0
+            ? Array.from(new Set(media.map(m => (typeof m === 'string' ? m : (m.url_archivo || m.url || m.url_foto || m.url_multimedia))).filter(Boolean)))
+            : ['img/hero-marketplace.jpg'];
+        if (imageUrls.length === 0) imageUrls.push('img/hero-marketplace.jpg');
+        const firstImage = imageUrls[0];
+        const address = `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim();
+
+        // Extract details from JSON suffix or fallback to Propiedad table columns
+        let extraInfo = {};
+        if (pub.descripcion && pub.descripcion.includes('Detalles: ')) {
+            try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) { }
+        }
+
+        const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
+        if (dbCaracteristicas.length > 0) {
+            extraInfo.caracteristicas = Array.from(new Set([
+                ...(extraInfo.caracteristicas || []),
+                ...dbCaracteristicas
+            ]));
+        }
+
+        const rawDescPrefix = pub.descripcion
+            ? pub.descripcion.split(' | Detalles: ')[0].split('Detalles: ')[0].replace(/(\s*\|\s*)+$/, '').trim()
+            : '';
+        const cleanTitle = extraInfo.title || (rawDescPrefix ? rawDescPrefix.substring(0, 70) : `Propiedad en ${address}`);
+
+        const lat = prop.latitud ? parseFloat(prop.latitud) : -32.8898;
+        const lng = prop.longitud ? parseFloat(prop.longitud) : -68.8373;
+        const dormitorios = prop.dormitorios || extraInfo.dormitorios || 1;
+        const banos = prop.banos_completos || extraInfo.banos || 1;
+        const ambientes = prop.habitaciones_total || extraInfo.ambientes || dormitorios;
+        const cocheras = prop.cantidad_cocheras || extraInfo.cocheras || 0;
+        const supCubierta = prop.superficie_cubierta || extraInfo.supCubierta || 0;
+        const isVerifiedOwner = Boolean(
+            extraInfo.isVerifiedOwner ||
+            extraInfo.verified ||
+            (pub.descripcion && pub.descripcion.includes('"isVerifiedOwner":true'))
+        );
+
+        const tags = [
+            dormitorios ? `${dormitorios} dorm.` : null,
+            banos ? `${banos} bañ.` : null,
+            ambientes ? `${ambientes} amb.` : null,
+            cocheras ? `${cocheras} coch.` : null,
+            supCubierta ? `${supCubierta} m²` : null,
+            isVerifiedOwner ? 'Propietario Verificado' : null
+        ].filter(Boolean);
+
+        const dbBarrio = prop.Barrio?.nombre;
+        const dbDepartamento = prop.Barrio?.Departamento?.nombre;
+        const dbProvincia = prop.Barrio?.Departamento?.Provincia?.nombre;
+        const dbSubtipo = prop.Subtipo_propiedad?.subtipo;
+        const dbAntiguedad = prop.Antiguedad?.nombre;
+
+        // Resolve current active status from Historial_Estado_Publicacion
+        let currentPropStatus = 'disponible';
+        if (pub.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
+            const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
+            const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
+            const estadoNombre = (activeHist.Estado_Publicacion?.nombre || '').toLowerCase();
+            if (estadoNombre === 'pausada' || estadoNombre === 'pausado' || activeHist.id_estado_publicacion === 4) {
+                currentPropStatus = 'paused';
+            } else if (estadoNombre === 'eliminada' || estadoNombre === 'eliminado' || activeHist.id_estado_publicacion === 5) {
+                currentPropStatus = 'deleted';
+            } else if (estadoNombre === 'alquilada' || estadoNombre === 'alquilado' || activeHist.id_estado_publicacion === 2) {
+                currentPropStatus = 'alquilada';
+            } else if (estadoNombre === 'vendida' || estadoNombre === 'vendido' || activeHist.id_estado_publicacion === 3) {
+                currentPropStatus = 'vendida';
+            } else if (estadoNombre === 'borrador' || estadoNombre === 'draft' || activeHist.id_estado_publicacion === 6) {
+                currentPropStatus = 'draft';
+            } else if (estadoNombre === 'mantenimiento') {
+                currentPropStatus = 'mantenimiento';
+            } else {
+                currentPropStatus = 'disponible';
+            }
+        } else if (pub.status || pub.estado) {
+            const st = (pub.status || pub.estado).toLowerCase();
+            if (st.includes('paus')) currentPropStatus = 'paused';
+            else if (st.includes('alquil')) currentPropStatus = 'alquilada';
+            else if (st.includes('vend')) currentPropStatus = 'vendida';
+            else if (st.includes('borr') || st.includes('draft')) currentPropStatus = 'draft';
+            else if (st.includes('mant')) currentPropStatus = 'mantenimiento';
+            else currentPropStatus = 'disponible';
+        }
+
+        // Check active contract for rental end date if rented
+        const contractsList = Array.isArray(prop.Contrato) ? prop.Contrato : (prop.Contrato ? [prop.Contrato] : []);
+        const latestContract = contractsList.sort((a, b) => (b.id_contrato || 0) - (a.id_contrato || 0))[0];
+        const contractEndDate = latestContract?.fecha_fin_contrato || extraInfo.contractEndDate || extraInfo.fecha_fin_contrato || null;
+
+        return {
+            id: pub.id_publicacion,
+            id_propiedad: pub.id_propiedad,
+            id_publicacion: pub.id_publicacion,
+            id_perfil_propietario: prop.id_perfil_propietario || pub.id_perfil || null,
+            owner_profile_id: prop.id_perfil_propietario || pub.id_perfil || null,
+            id_perfil: pub.id_perfil || prop.id_perfil_propietario || null,
+            owner_email: extraInfo.ownerEmail || extraInfo.owner_email || '',
+            owner_name: extraInfo.ownerName || extraInfo.owner_name || '',
+            title: cleanTitle,
+            description: rawDescPrefix || pub.descripcion || '',
+            address: address,
+            province: dbProvincia || extraInfo.provincia || 'Mendoza',
+            city: dbDepartamento || extraInfo.ciudad || 'Mendoza',
+            price: parseFloat(pub.precio || 0),
+            images: imageUrls,
+            photoUrl: firstImage,
+            image: firstImage,
+            coords: [lat, lng],
+            latitud: lat,
+            longitud: lng,
+            dormitorios: dormitorios,
+            banos: banos,
+            toilettes: extraInfo.toilettes || prop.toilettes || 0,
+            ambientes: ambientes,
+            cocheras: cocheras,
+            sup_cubierta: supCubierta,
+            sup_total: prop.superficie_lote || extraInfo.supTotal || extraInfo.sup_total || 0,
+            piso_dpto: prop.piso_dpto || extraInfo.piso_dpto || '',
+            numero_local: prop.numero_local || extraInfo.numero_local || '',
+            antiguedad: dbAntiguedad || extraInfo.antiguedad || '',
+            disposicion: extraInfo.disposicion || '',
+            orientacion: extraInfo.orientacion || '',
+            barrio: dbBarrio || extraInfo.barrio || '',
+            subtipo_propiedad: dbSubtipo || extraInfo.subtipoPropiedad || extraInfo.subtipo_propiedad || '',
+            caracteristicas: extraInfo.caracteristicas || dbCaracteristicas || [],
+            tags: tags,
+            note: cleanTitle,
+            tipo_propiedad: extraInfo.tipo_propiedad || extraInfo.tipo || (prop.id_tipo_propiedad === 2 ? 'Casa' : (prop.id_tipo_propiedad === 3 ? 'PH' : (prop.id_tipo_propiedad === 6 ? 'Local comercial' : 'Departamento'))),
+            type: extraInfo.tipo || extraInfo.tipo_propiedad || (prop.id_tipo_propiedad === 2 ? 'casa' : (prop.id_tipo_propiedad === 3 ? 'ph' : (prop.id_tipo_propiedad === 6 ? 'local-comercial' : 'departamento'))),
+            id_tipo_propiedad: prop.id_tipo_propiedad,
+            pet: extraInfo.mascotas || false,
+            verified: isVerifiedOwner,
+            isVerifiedOwner: isVerifiedOwner,
+            status: currentPropStatus,
+            contractEndDate: contractEndDate,
+            expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
+            expensas: (extraInfo.expensas !== undefined) ? Number(extraInfo.expensas) : (Number(prop.expensas_mensuales) || 0),
+            currency: extraInfo.moneda || extraInfo.currency || (pub.id_moneda === 2 ? 'USD' : 'ARS'),
+            id_moneda: pub.id_moneda || (extraInfo.moneda === 'USD' ? 2 : 1),
+            featured: (extraInfo.operacion || 'ALQUILER').toUpperCase(),
+            created_at: pub.created_at,
+            cantidad_visualizaciones_total: pub.cantidad_visualizaciones_total || 0,
+            views_count: pub.cantidad_visualizaciones_total || 0,
+            views: pub.cantidad_visualizaciones_total || 0,
+            historial: pub.Historial_Estado_Publicacion || [],
+            extraInfo: extraInfo,
+            Propiedad: prop
+        };
+    },
+
+    getPublicMarketplaceProperties: async function (limit = 50, includeAllStatuses = false, filterByUser = false, options = {}) {
         if (!window.supabaseClient) return [];
         try {
-            let query = window.supabaseClient
-                .from('Publicacion')
-                .select(`
-                    *,
-                    Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
-                    Propiedad (
-                        *,
-                        Contrato (*),
-                        Antiguedad (*),
-                        Subtipo_propiedad (*),
-                        Barrio (
-                            *,
-                            Departamento (
-                                *,
-                                Provincia (*)
-                            )
-                        ),
-                        Propiedad_caracteristica (
-                            Caracteristica (*)
-                        )
-                    ),
-                    Multimedia (*)
-                `);
-
             let profileId = null;
             if (filterByUser) {
                 if (window.DataManager && window.DataManager._getOrCreateProfile) {
@@ -356,184 +486,145 @@ var DataManager = {
                 if (!profileId) {
                     return [];
                 }
-                query = query.eq('id_perfil', profileId);
             }
 
-            const { data: publications, error } = await query
-                .order('created_at', { ascending: false })
-                .limit(limit);
+            const { orderBy = 'created_at', maxPool = 300, prioritizeAvailable = false } = (typeof options === 'object' && options !== null ? options : {});
+            const isOrderByViews = (orderBy === 'views' || orderBy === 'visualizaciones');
 
-            if (error) {
-                console.error("Error fetching Publicacion:", error);
-                return [];
-            }
+            const availableProps = [];
+            const rentedProps = [];
+            const otherProps = [];
+            const seenPubIds = new Set();
+            const batchSize = Math.max(Math.min(limit * 3, 50), 30);
+            let offset = 0;
+            let hasMore = true;
 
-            return (publications || []).map(pub => {
-                const prop = pub.Propiedad || {};
-                const media = pub.Multimedia || [];
-                const imageUrls = media.length > 0
-                    ? Array.from(new Set(media.map(m => (typeof m === 'string' ? m : (m.url_archivo || m.url || m.url_foto || m.url_multimedia))).filter(Boolean)))
-                    : ['img/hero-marketplace.jpg'];
-                if (imageUrls.length === 0) imageUrls.push('img/hero-marketplace.jpg');
-                const firstImage = imageUrls[0];
-                const address = `${prop.calle || 'Mendoza'} ${prop.numero || ''}`.trim();
-
-                // Extract details from JSON suffix or fallback to Propiedad table columns
-                let extraInfo = {};
-                if (pub.descripcion && pub.descripcion.includes('Detalles: ')) {
-                    try { extraInfo = JSON.parse(pub.descripcion.split('Detalles: ')[1]); } catch (e) { }
+            // Búsqueda progresiva hacia atrás en lotes si no se llega a la cantidad requerida
+            while (hasMore && offset < maxPool) {
+                // Si no priorizamos disponibles, frenamos al alcanzar el total requerido
+                if (!prioritizeAvailable && (availableProps.length + rentedProps.length + otherProps.length) >= limit) {
+                    break;
+                }
+                // Si priorizamos disponibles, frenamos si ya juntamos suficientes disponibles
+                if (prioritizeAvailable && availableProps.length >= limit) {
+                    break;
                 }
 
-                const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
-                if (dbCaracteristicas.length > 0) {
-                    extraInfo.caracteristicas = Array.from(new Set([
-                        ...(extraInfo.caracteristicas || []),
-                        ...dbCaracteristicas
-                    ]));
-                }
+                let query = window.supabaseClient
+                    .from('Publicacion')
+                    .select(`
+                        *,
+                        Historial_Estado_Publicacion (*, Estado_Publicacion (*)),
+                        Propiedad (
+                            *,
+                            Contrato (*),
+                            Antiguedad (*),
+                            Subtipo_propiedad (*),
+                            Barrio (
+                                *,
+                                Departamento (
+                                    *,
+                                    Provincia (*)
+                                )
+                            ),
+                            Propiedad_caracteristica (
+                                Caracteristica (*)
+                            )
+                        ),
+                        Multimedia (*)
+                    `);
 
-                const rawDescPrefix = pub.descripcion
-                    ? pub.descripcion.split(' | Detalles: ')[0].split('Detalles: ')[0].replace(/(\s*\|\s*)+$/, '').trim()
-                    : '';
-                const cleanTitle = extraInfo.title || (rawDescPrefix ? rawDescPrefix.substring(0, 70) : `Propiedad en ${address}`);
-
-                const lat = prop.latitud ? parseFloat(prop.latitud) : -32.8898;
-                const lng = prop.longitud ? parseFloat(prop.longitud) : -68.8373;
-                const dormitorios = prop.dormitorios || extraInfo.dormitorios || 1;
-                const banos = prop.banos_completos || extraInfo.banos || 1;
-                const ambientes = prop.habitaciones_total || extraInfo.ambientes || dormitorios;
-                const cocheras = prop.cantidad_cocheras || extraInfo.cocheras || 0;
-                const supCubierta = prop.superficie_cubierta || extraInfo.supCubierta || 0;
-                const isVerifiedOwner = Boolean(
-                    extraInfo.isVerifiedOwner ||
-                    extraInfo.verified ||
-                    (pub.descripcion && pub.descripcion.includes('"isVerifiedOwner":true'))
-                );
-
-                const tags = [
-                    dormitorios ? `${dormitorios} dorm.` : null,
-                    banos ? `${banos} bañ.` : null,
-                    ambientes ? `${ambientes} amb.` : null,
-                    cocheras ? `${cocheras} coch.` : null,
-                    supCubierta ? `${supCubierta} m²` : null,
-                    isVerifiedOwner ? 'Propietario Verificado' : null
-                ].filter(Boolean);
-
-                const dbBarrio = prop.Barrio?.nombre;
-                const dbDepartamento = prop.Barrio?.Departamento?.nombre;
-                const dbProvincia = prop.Barrio?.Departamento?.Provincia?.nombre;
-                const dbSubtipo = prop.Subtipo_propiedad?.subtipo;
-                const dbAntiguedad = prop.Antiguedad?.nombre;
-
-                // Resolve current active status from Historial_Estado_Publicacion
-                let currentPropStatus = 'disponible';
-                if (pub.Historial_Estado_Publicacion && pub.Historial_Estado_Publicacion.length > 0) {
-                    const sortedHist = [...pub.Historial_Estado_Publicacion].sort((a, b) => new Date(b.fecha_inicio || b.created_at) - new Date(a.fecha_inicio || a.created_at));
-                    const activeHist = sortedHist.find(h => !h.fecha_fin) || sortedHist[0];
-                    const estadoNombre = (activeHist.Estado_Publicacion?.nombre || '').toLowerCase();
-                    if (estadoNombre === 'pausada' || estadoNombre === 'pausado' || activeHist.id_estado_publicacion === 4) {
-                        currentPropStatus = 'paused';
-                    } else if (estadoNombre === 'eliminada' || estadoNombre === 'eliminado' || activeHist.id_estado_publicacion === 5) {
-                        currentPropStatus = 'deleted';
-                    } else if (estadoNombre === 'alquilada' || estadoNombre === 'alquilado' || activeHist.id_estado_publicacion === 2) {
-                        currentPropStatus = 'alquilada';
-                    } else if (estadoNombre === 'vendida' || estadoNombre === 'vendido' || activeHist.id_estado_publicacion === 3) {
-                        currentPropStatus = 'vendida';
-                    } else if (estadoNombre === 'borrador' || estadoNombre === 'draft' || activeHist.id_estado_publicacion === 6) {
-                        currentPropStatus = 'draft';
-                    } else if (estadoNombre === 'mantenimiento') {
-                        currentPropStatus = 'mantenimiento';
-                    } else {
-                        currentPropStatus = 'disponible';
-                    }
-                } else if (pub.status || pub.estado) {
-                    const st = (pub.status || pub.estado).toLowerCase();
-                    if (st.includes('paus')) currentPropStatus = 'paused';
-                    else if (st.includes('alquil')) currentPropStatus = 'alquilada';
-                    else if (st.includes('vend')) currentPropStatus = 'vendida';
-                    else if (st.includes('borr') || st.includes('draft')) currentPropStatus = 'draft';
-                    else if (st.includes('mant')) currentPropStatus = 'mantenimiento';
-                    else currentPropStatus = 'disponible';
-                }
-
-                // Check active contract for rental end date if rented
-                const contractsList = Array.isArray(prop.Contrato) ? prop.Contrato : (prop.Contrato ? [prop.Contrato] : []);
-                const latestContract = contractsList.sort((a, b) => (b.id_contrato || 0) - (a.id_contrato || 0))[0];
-                const contractEndDate = latestContract?.fecha_fin_contrato || extraInfo.contractEndDate || extraInfo.fecha_fin_contrato || null;
-
-                return {
-                    id: pub.id_publicacion,
-                    id_propiedad: pub.id_propiedad,
-                    id_publicacion: pub.id_publicacion,
-                    id_perfil_propietario: prop.id_perfil_propietario || pub.id_perfil || null,
-                    owner_profile_id: prop.id_perfil_propietario || pub.id_perfil || null,
-                    id_perfil: pub.id_perfil || prop.id_perfil_propietario || null,
-                    owner_email: extraInfo.ownerEmail || extraInfo.owner_email || '',
-                    owner_name: extraInfo.ownerName || extraInfo.owner_name || '',
-                    title: cleanTitle,
-                    description: rawDescPrefix || pub.descripcion || '',
-                    address: address,
-                    province: dbProvincia || extraInfo.provincia || 'Mendoza',
-                    city: dbDepartamento || extraInfo.ciudad || 'Mendoza',
-                    price: parseFloat(pub.precio || 0),
-                    images: imageUrls,
-                    photoUrl: firstImage,
-                    image: firstImage,
-                    coords: [lat, lng],
-                    latitud: lat,
-                    longitud: lng,
-                    dormitorios: dormitorios,
-                    banos: banos,
-                    toilettes: extraInfo.toilettes || prop.toilettes || 0,
-                    ambientes: ambientes,
-                    cocheras: cocheras,
-                    sup_cubierta: supCubierta,
-                    sup_total: prop.superficie_lote || extraInfo.supTotal || extraInfo.sup_total || 0,
-                    piso_dpto: prop.piso_dpto || extraInfo.piso_dpto || '',
-                    numero_local: prop.numero_local || extraInfo.numero_local || '',
-                    antiguedad: dbAntiguedad || extraInfo.antiguedad || '',
-                    disposicion: extraInfo.disposicion || '',
-                    orientacion: extraInfo.orientacion || '',
-                    barrio: dbBarrio || extraInfo.barrio || '',
-                    subtipo_propiedad: dbSubtipo || extraInfo.subtipoPropiedad || extraInfo.subtipo_propiedad || '',
-                    caracteristicas: extraInfo.caracteristicas || dbCaracteristicas || [],
-                    tags: tags,
-                    note: cleanTitle,
-                    tipo_propiedad: extraInfo.tipo_propiedad || extraInfo.tipo || (prop.id_tipo_propiedad === 2 ? 'Casa' : (prop.id_tipo_propiedad === 3 ? 'PH' : (prop.id_tipo_propiedad === 6 ? 'Local comercial' : 'Departamento'))),
-                    type: extraInfo.tipo || extraInfo.tipo_propiedad || (prop.id_tipo_propiedad === 2 ? 'casa' : (prop.id_tipo_propiedad === 3 ? 'ph' : (prop.id_tipo_propiedad === 6 ? 'local-comercial' : 'departamento'))),
-                    id_tipo_propiedad: prop.id_tipo_propiedad,
-                    pet: extraInfo.mascotas || false,
-                    verified: isVerifiedOwner,
-                    isVerifiedOwner: isVerifiedOwner,
-                    status: currentPropStatus,
-                    contractEndDate: contractEndDate,
-                    expensasIncluidas: extraInfo.expensasIncluidas !== undefined ? extraInfo.expensasIncluidas : true,
-                    expensas: (extraInfo.expensas !== undefined) ? Number(extraInfo.expensas) : (Number(prop.expensas_mensuales) || 0),
-                    currency: extraInfo.moneda || extraInfo.currency || (pub.id_moneda === 2 ? 'USD' : 'ARS'),
-                    id_moneda: pub.id_moneda || (extraInfo.moneda === 'USD' ? 2 : 1),
-                    featured: (extraInfo.operacion || 'ALQUILER').toUpperCase(),
-                    created_at: pub.created_at,
-                    cantidad_visualizaciones_total: pub.cantidad_visualizaciones_total || 0,
-                    views_count: pub.cantidad_visualizaciones_total || 0,
-                    views: pub.cantidad_visualizaciones_total || 0,
-                    historial: pub.Historial_Estado_Publicacion || [],
-                    extraInfo: extraInfo,
-                    Propiedad: prop
-                };
-            }).filter(p => {
-                if (p.status === 'deleted') return false;
                 if (filterByUser && profileId) {
-                    const isAuthor = Number(p.id_perfil) === Number(profileId);
-                    const isOwner = Number(p.id_perfil_propietario) === Number(profileId);
-                    if (!isAuthor && !isOwner) return false;
+                    query = query.eq('id_perfil', profileId);
                 }
-                if (includeAllStatuses) return true;
-                return p.status === 'disponible' || p.status === 'alquilada';
-            });
+
+                if (isOrderByViews) {
+                    query = query
+                        .order('cantidad_visualizaciones_total', { ascending: false, nullsFirst: false })
+                        .order('created_at', { ascending: false });
+                } else {
+                    query = query.order('created_at', { ascending: false });
+                }
+
+                const { data: publications, error } = await query
+                    .range(offset, offset + batchSize - 1);
+
+                if (error) {
+                    console.error("Error fetching Publicacion:", error);
+                    break;
+                }
+
+                if (!publications || publications.length === 0) {
+                    hasMore = false;
+                    break;
+                }
+
+                if (publications.length < batchSize) {
+                    hasMore = false;
+                }
+
+                const mappedBatch = publications.map(pub => {
+                    return (window.DataManager && window.DataManager._mapPublicationRecord)
+                        ? window.DataManager._mapPublicationRecord(pub)
+                        : pub;
+                }).filter(p => {
+                    if (p.status === 'deleted') return false;
+                    if (filterByUser && profileId) {
+                        const isAuthor = Number(p.id_perfil) === Number(profileId);
+                        const isOwner = Number(p.id_perfil_propietario) === Number(profileId);
+                        if (!isAuthor && !isOwner) return false;
+                    }
+                    if (includeAllStatuses) return true;
+                    return p.status === 'disponible' || p.status === 'alquilada';
+                });
+
+                for (const p of mappedBatch) {
+                    if (!seenPubIds.has(p.id_publicacion)) {
+                        seenPubIds.add(p.id_publicacion);
+                        if (p.status === 'disponible') {
+                            availableProps.push(p);
+                        } else if (p.status === 'alquilada') {
+                            rentedProps.push(p);
+                        } else {
+                            otherProps.push(p);
+                        }
+                    }
+                }
+
+                offset += batchSize;
+            }
+
+            const sortFn = (a, b) => {
+                if (isOrderByViews) {
+                    const vA = Number(a.cantidad_visualizaciones_total || a.views_count || a.views || 0);
+                    const vB = Number(b.cantidad_visualizaciones_total || b.views_count || b.views || 0);
+                    if (vB !== vA) return vB - vA;
+                }
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            };
+
+            availableProps.sort(sortFn);
+            rentedProps.sort(sortFn);
+            otherProps.sort(sortFn);
+
+            let result = [];
+            if (prioritizeAvailable) {
+                // Primero las disponibles (no alquiladas), y si no alcanzan el límite, completamos con alquiladas
+                result = [...availableProps, ...rentedProps, ...otherProps];
+            } else {
+                result = [...availableProps, ...rentedProps, ...otherProps];
+                result.sort(sortFn);
+            }
+
+            return result.slice(0, limit);
         } catch (e) {
             console.error("Error in getPublicMarketplaceProperties:", e);
             return [];
         }
+    },
+
+    getFeaturedMarketplaceProperties: async function (limit = 8) {
+        return this.getPublicMarketplaceProperties(limit, false, false, { orderBy: 'views', prioritizeAvailable: true });
     },
 
     getUserMarketplaceProperties: async (limit = 100) => {

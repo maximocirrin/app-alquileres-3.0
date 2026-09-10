@@ -64,7 +64,7 @@
         (function () {
             try {
                 var theme = localStorage.getItem('theme');
-                var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var isDark = theme === 'dark';
                 var root = document.documentElement;
                 if (isDark) {
                     root.setAttribute('data-theme', 'dark');
@@ -127,7 +127,7 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
-    <link rel="stylesheet" href="css/style.css?v=14">
+    <link rel="stylesheet" href="css/style.css?v=15">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         if (typeof tailwind !== 'undefined') {
@@ -201,6 +201,67 @@
         }
     </script>
     <style>
+        /* Flechas Laterales de Carruseles en Modo Escritorio */
+        .desktop-carousel-arrow {
+            display: none !important;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 9999px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #ffffff;
+            color: #18181b;
+            border: 2px solid #e4e4e7;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .desktop-carousel-arrow.arrow-left {
+            left: -12px;
+        }
+        .desktop-carousel-arrow.arrow-right {
+            right: -12px;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-carousel-arrow {
+                display: flex !important;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .desktop-carousel-arrow.arrow-left {
+                left: -24px;
+            }
+            .desktop-carousel-arrow.arrow-right {
+                right: -24px;
+            }
+        }
+
+        html.dark .desktop-carousel-arrow,
+        [data-theme="dark"] .desktop-carousel-arrow,
+        .dark .desktop-carousel-arrow {
+            background-color: #27272a;
+            color: #f4f4f5;
+            border-color: #3f3f46;
+        }
+
+        .desktop-carousel-arrow:hover {
+            background-color: rgb(129, 27, 30) !important;
+            color: #ffffff !important;
+            border-color: rgb(129, 27, 30) !important;
+            transform: translateY(-50%) scale(1.08);
+        }
+
+        .desktop-carousel-arrow:active {
+            transform: translateY(-50%) scale(0.94);
+        }
+
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -1136,46 +1197,29 @@
             <!-- Marketplace Featured Properties Section -->
             <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 pb-6 animate-on-scroll"
                 id="landing-featured-properties-section">
-                <!-- Header con Título y Flechas de Navegación para Escritorio -->
+                <!-- Header con Título -->
                 <div class="flex items-end justify-between mb-8 gap-4">
                     <div>
-
                         <h2
                             class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
                             Destacadas
                         </h2>
                     </div>
-
-                    <!-- Botones de Navegación Flechas para Escritorio -->
-                    <div class="hidden sm:flex items-center gap-2 shrink-0">
-                        <button type="button" id="marketplace-scroll-prev-btn"
-                            onclick="window.scrollFeaturedMarketplace(-1)"
-                            aria-label="Ver anteriores propiedades destacadas"
-                            class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
-                            <span class="material-symbols-outlined text-2xl">arrow_back</span>
-                        </button>
-                        <button type="button" id="marketplace-scroll-next-btn"
-                            onclick="window.scrollFeaturedMarketplace(1)"
-                            aria-label="Ver siguientes propiedades destacadas"
-                            class="w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer disabled:opacity-30 disabled:pointer-events-none">
-                            <span class="material-symbols-outlined text-2xl">arrow_forward</span>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Horizontal scrolling row of property cards -->
                 <div class="relative group/carousel">
-                    <!-- Flecha Flotante Izquierda -->
+                    <!-- Flecha Costado Izquierda (Modo Escritorio) -->
                     <button type="button" id="marketplace-scroll-left" onclick="window.scrollFeaturedMarketplace(-1)"
-                        class="hidden md:flex absolute -left-4 lg:-left-6 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100 shadow-xl items-center justify-center hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-                        aria-label="Anterior">
-                        <span class="material-symbols-outlined text-2xl">chevron_left</span>
+                        class="desktop-carousel-arrow arrow-left"
+                        aria-label="Ver anteriores propiedades destacadas">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <!-- Flecha Flotante Derecha -->
+                    <!-- Flecha Costado Derecha (Modo Escritorio) -->
                     <button type="button" id="marketplace-scroll-right" onclick="window.scrollFeaturedMarketplace(1)"
-                        class="hidden md:flex absolute -right-4 lg:-right-6 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100 shadow-xl items-center justify-center hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-red-700 dark:hover:border-red-700 hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-                        aria-label="Siguiente">
-                        <span class="material-symbols-outlined text-2xl">chevron_right</span>
+                        class="desktop-carousel-arrow arrow-right"
+                        aria-label="Ver siguientes propiedades destacadas">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                     </button>
 
                     <!-- Scroll container -->
@@ -1202,7 +1246,14 @@
                     if (!grid) return;
                     const card = grid.querySelector('article');
                     const step = card ? (card.offsetWidth + 24) * (window.innerWidth > 1024 ? 2 : 1) : 360;
-                    grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+
+                    if (direction > 0 && grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 20) {
+                        grid.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else if (direction < 0 && grid.scrollLeft <= 10) {
+                        grid.scrollTo({ left: grid.scrollWidth, behavior: 'smooth' });
+                    } else {
+                        grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+                    }
                 };
 
                 function updateFeaturedArrowsState() {
@@ -1210,31 +1261,13 @@
                     if (!grid) return;
                     const prevBtn = document.getElementById('marketplace-scroll-prev-btn');
                     const nextBtn = document.getElementById('marketplace-scroll-next-btn');
-                    const leftFloatBtn = document.getElementById('marketplace-scroll-left');
-                    const rightFloatBtn = document.getElementById('marketplace-scroll-right');
 
+                    const hasScroll = grid.scrollWidth > grid.clientWidth + 10;
                     const isAtStart = grid.scrollLeft <= 8;
                     const isAtEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 12;
 
-                    [prevBtn, leftFloatBtn].forEach(btn => {
-                        if (btn) {
-                            btn.disabled = isAtStart;
-                            if (btn === leftFloatBtn) {
-                                btn.style.opacity = isAtStart ? '0' : '1';
-                                btn.style.pointerEvents = isAtStart ? 'none' : 'auto';
-                            }
-                        }
-                    });
-
-                    [nextBtn, rightFloatBtn].forEach(btn => {
-                        if (btn) {
-                            btn.disabled = isAtEnd;
-                            if (btn === rightFloatBtn) {
-                                btn.style.opacity = isAtEnd ? '0' : '1';
-                                btn.style.pointerEvents = isAtEnd ? 'none' : 'auto';
-                            }
-                        }
-                    });
+                    if (prevBtn) prevBtn.disabled = !hasScroll || isAtStart;
+                    if (nextBtn) nextBtn.disabled = !hasScroll || isAtEnd;
                 }
 
                 function setupFeaturedMouseDrag() {
@@ -1291,8 +1324,10 @@
                     let displayProperties = [];
 
                     try {
-                        if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
-                            const dbProps = await window.DataManager.getPublicMarketplaceProperties(10);
+                        if (window.DataManager && window.DataManager.getFeaturedMarketplaceProperties) {
+                            displayProperties = await window.DataManager.getFeaturedMarketplaceProperties(8);
+                        } else if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
+                            const dbProps = await window.DataManager.getPublicMarketplaceProperties(8, false, false, { orderBy: 'views', prioritizeAvailable: true });
                             if (dbProps && dbProps.length > 0) {
                                 displayProperties = dbProps;
                             }
@@ -1382,6 +1417,12 @@
                                         <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">photo_camera</span>
                                             ${photosCount} fotos
+                                        </div>
+                                    ` : ''}
+                                    ${(prop.views_count > 0 || prop.cantidad_visualizaciones_total > 0) ? `
+                                        <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1" title="${prop.views_count || prop.cantidad_visualizaciones_total} visualizaciones">
+                                            <span class="material-symbols-outlined text-xs">visibility</span>
+                                            ${prop.views_count || prop.cantidad_visualizaciones_total} vistas
                                         </div>
                                     ` : ''}
                                 </div>
@@ -1630,73 +1671,73 @@
                 </h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Card 1: Pisos -->
-                    <article
-                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/pisos-inquilinos.jpg" alt="Pisos en alquiler"
-                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                    <!-- Card 1: Casas -->
+                    <a href="buscar.html?filter=casa"
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
+                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                            <img src="img/casas-inquilinos.jpg" alt="Casas en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
-                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
-                            Pisos
+                            class="inline-flex items-center text-white px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider shadow-xs"
+                            style="background-color: rgb(129, 27, 30);">
+                            Casas
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Descubre los mejores pisos en alquiler en las principales capitales europeas. ¡Apartamentos
-                            de todos los tamaños y para todos los gustos!
+                            Espacios amplios, comodidades para toda la familia, jardín y la tranquilidad que buscas para tu próximo hogar.
                         </p>
-                    </article>
+                    </a>
 
-                    <!-- Card 2: Habitaciones -->
-                    <article
-                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/habitaciones-inquilinos.jpg" alt="Habitaciones en alquiler"
-                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                    <!-- Card 2: Departamentos -->
+                    <a href="buscar.html?filter=departamento"
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
+                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                            <img src="img/pisos-inquilinos.jpg" alt="Departamentos en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
-                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
-                            Habitaciones
+                            class="inline-flex items-center text-white px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider shadow-xs"
+                            style="background-color: rgb(129, 27, 30);">
+                            Departamentos
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Encuentra habitaciones en alquiler en pisos compartidos. ¡Comienza tu aventura en una nueva
-                            ciudad con el apoyo de tus compañeros de piso!
+                            Descubre departamentos en ubicaciones estratégicas, con excelente conectividad, diseño moderno y todos los servicios.
                         </p>
-                    </article>
+                    </a>
 
-                    <!-- Card 3: Estudios -->
-                    <article
-                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/estudios-inquilinos.jpg" alt="Estudios en alquiler"
-                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                    <!-- Card 3: Locales comerciales -->
+                    <a href="buscar.html?filter=local-comercial"
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
+                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                            <img src="img/locales-comerciales.jpg" alt="Locales comerciales en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
-                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
-                            Estudios
+                            class="inline-flex items-center text-white px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider shadow-xs"
+                            style="background-color: rgb(129, 27, 30);">
+                            Locales comerciales
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Disfruta de tu propio espacio alquilando un estudio desde el que explorar la ciudad.
-                            ¡Modernos y céntricos lofts a tu disposición!
+                            Inmuebles comerciales y oficinas en zonas de alto tránsito para hacer despegar tu negocio, marca o emprendimiento.
                         </p>
-                    </article>
+                    </a>
 
-                    <!-- Card 4: Residencias -->
-                    <article
-                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1">
-                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0">
-                            <img src="img/residencias-inquilinos.jpg" alt="Residencias en alquiler"
-                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                    <!-- Card 4: Monoambientes -->
+                    <a href="buscar.html?filter=monoambiente"
+                        class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-5 flex flex-col shadow-[0_10px_25px_-12px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 group">
+                        <div class="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                            <img src="img/estudios-inquilinos.jpg" alt="Monoambientes en alquiler"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         </div>
                         <span
-                            class="inline-flex items-center bg-[#fdf0f5] dark:bg-red-950/30 text-[#a32d5f] dark:text-red-400 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider">
-                            Residencias
+                            class="inline-flex items-center text-white px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold w-fit uppercase mb-4 tracking-wider shadow-xs"
+                            style="background-color: rgb(129, 27, 30);">
+                            Monoambientes
                         </span>
                         <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            Vive la mejor experiencia mientras estudias alquilando una habitación en una residencia de
-                            estudiantes. ¡Intimidad y nuevos compañeros a partes iguales!
+                            Unidades prácticas, funcionales y versátiles, pensadas para quienes buscan confort, independencia o estancias ejecutivas.
                         </p>
-                    </article>
+                    </a>
                 </div>
             </section>
 
@@ -1724,184 +1765,468 @@
                 </div>
             </section>
 
-            <!-- Cities Section -->
-            <section
-                class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-24 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
-                <div class="text-center max-w-3xl mx-auto mb-16">
-                    <span
-                        class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-3 block">
-                        Presencia Local
-                    </span>
-                    <h2
-                        class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
-                        Nuestras ciudades
-                    </h2>
+            <!-- City Properties Section (Publicaciones por ciudad en Carrusel) -->
+            <section id="landing-city-properties-section"
+                class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-16 pb-12 border-b border-zinc-200/40 dark:border-zinc-800/40 animate-on-scroll">
+                <!-- Header de la sección con Título -->
+                <div class="flex items-end justify-between mb-8 gap-4">
+                    <div>
+                        <span
+                            class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-2 block">
+                            Alquileres por Destino
+                        </span>
+                        <h2
+                            class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-background dark:text-white tracking-tight leading-tight">
+                            Publicaciones por ciudad
+                        </h2>
+                    </div>
                 </div>
 
-                <div
-                    class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-[1280px] mx-auto bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden shadow-[0_15px_35px_-12px_rgba(0,0,0,0.02)] dark:shadow-none">
-                    <!-- Image Column -->
-                    <div class="lg:col-span-7 h-[300px] sm:h-[400px] lg:h-auto relative overflow-hidden shrink-0">
-                        <img src="img/mendoza-inquilinos.jpg" alt="Mendoza, Argentina"
-                            class="w-full h-full object-cover transition-transform duration-750 hover:scale-102" />
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent lg:hidden">
-                        </div>
-                        <span
-                            class="absolute top-6 left-6 inline-flex items-center gap-1.5 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold text-zinc-800 dark:text-zinc-200 border border-white/20 dark:border-zinc-800 shadow-md">
-                            <span
-                                class="material-symbols-outlined text-base text-primary dark:text-red-400">location_on</span>
-                            Mendoza, Argentina
-                        </span>
-                    </div>
-
-                    <!-- Content Column -->
-                    <div class="lg:col-span-5 p-8 sm:p-12 flex flex-col justify-center space-y-6">
-                        <span
-                            class="inline-flex items-center bg-red-50 dark:bg-red-950/20 text-primary dark:text-red-400 px-3.5 py-1.5 rounded-full text-xs font-bold w-fit uppercase tracking-wider">
-                            Actualmente en
-                        </span>
-
-                        <h3
-                            class="font-headline text-3xl sm:text-4xl font-extrabold text-on-background dark:text-white tracking-tight">
-                            Mendoza
-                        </h3>
-
-                        <p class="font-body text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed">
-                            ¿Vienes a estudiar o trabajar por unos meses? Descubre residencias, habitaciones y
-                            departamentos con la flexibilidad que necesitas. Tu próxima aventura en Mendoza empieza
-                            aquí.
-                        </p>
-
-                        <!-- Neighborhood tags -->
-                        <div class="space-y-3 pt-2">
-                            <p class="text-xs font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">Zonas
-                                destacadas</p>
-                            <div class="flex flex-wrap gap-2">
-                                <span
-                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Quinta
-                                    Sección</span>
-                                <span
-                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Sexta
-                                    Sección</span>
-                                <span
-                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Godoy
-                                    Cruz</span>
-                                <span
-                                    class="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50">Chacras
-                                    de Coria</span>
-                            </div>
-                        </div>
-
-                        <!-- CTA Button to scroll/interact -->
-                        <div class="pt-4">
-                            <button
-                                onclick="document.querySelector('#landing-marketplace-view main').scrollIntoView({ behavior: 'smooth' })"
-                                class="inline-flex items-center justify-center bg-primary hover:bg-primary-container text-white px-6 py-3.5 rounded-xl font-body font-bold text-sm shadow-md transition-all active:scale-[0.98]">
-                                Ver propiedades disponibles
-                            </button>
+                <!-- Tabs selector de Ciudades (Pills horizontales) -->
+                <div class="relative mb-8 pb-1 overflow-x-auto scrollbar-none">
+                    <div id="city-section-tabs-container" class="flex items-center gap-2.5 min-w-max py-1">
+                        <!-- Generado dinámicamente -->
+                        <div class="flex gap-2">
+                            <div class="h-10 w-28 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full animate-pulse"></div>
+                            <div class="h-10 w-36 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full animate-pulse"></div>
+                            <div class="h-10 w-32 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full animate-pulse"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Upcoming Destinations -->
-                <div class="mt-20 max-w-[1280px] mx-auto animate-on-scroll">
-                    <div
-                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 border-b border-zinc-200/40 dark:border-zinc-800/40 pb-6">
-                        <div>
-                            <h3
-                                class="font-headline text-2xl font-extrabold text-on-background dark:text-white tracking-tight">
-                                Próximamente en más destinos
-                            </h3>
-                            <p class="font-body text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                                Estamos expandiéndonos a las provincias y ciudades más habitadas de Argentina.
-                            </p>
-                        </div>
+                <!-- Carrusel horizontal de tarjetas de propiedades -->
+                <div id="city-section-carousel-wrapper" class="relative group/carousel">
+                    <!-- Flecha Flotante Izquierda (Modo Escritorio) -->
+                    <button type="button" id="city-scroll-left" onclick="window.scrollCityMarketplace(-1)"
+                        class="desktop-carousel-arrow arrow-left"
+                        aria-label="Anterior">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <!-- Flecha Flotante Derecha (Modo Escritorio) -->
+                    <button type="button" id="city-scroll-right" onclick="window.scrollCityMarketplace(1)"
+                        class="desktop-carousel-arrow arrow-right"
+                        aria-label="Siguiente">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+
+                    <!-- Scroll container -->
+                    <div id="city-section-properties-grid"
+                        class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-2 scrollbar-none scroll-smooth cursor-grab active:cursor-grabbing select-none">
+                        <!-- Populated dynamically -->
                     </div>
+                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-                        <!-- Buenos Aires -->
-                        <div
-                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span
-                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
-                                Próximamente
-                            </span>
-                            <h4
-                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                                Buenos Aires
-                            </h4>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
-                                CABA, La Plata y las principales zonas residenciales de la provincia.
-                            </p>
-                        </div>
-
-                        <!-- Córdoba -->
-                        <div
-                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span
-                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
-                                Próximamente
-                            </span>
-                            <h4
-                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                                Córdoba
-                            </h4>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
-                                Córdoba Capital, Villa Carlos Paz y zonas turísticas clave de las sierras.
-                            </p>
-                        </div>
-
-                        <!-- Santa Fe -->
-                        <div
-                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span
-                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
-                                Próximamente
-                            </span>
-                            <h4
-                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                                Santa Fe
-                            </h4>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
-                                Rosario, Santa Fe Capital y principales polos industriales del Litoral.
-                            </p>
-                        </div>
-
-                        <!-- Tucumán -->
-                        <div
-                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span
-                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
-                                Próximamente
-                            </span>
-                            <h4
-                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                                Tucumán
-                            </h4>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
-                                San Miguel de Tucumán, Yerba Buena y los hermosos valles calchaquíes.
-                            </p>
-                        </div>
-
-                        <!-- Salta -->
-                        <div
-                            class="bg-zinc-50/50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col transition-all duration-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md dark:hover:shadow-none group relative overflow-hidden">
-                            <span
-                                class="inline-flex items-center bg-red-50/50 dark:bg-red-950/20 text-primary dark:text-red-400 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-red-100/50 dark:border-red-900/30 w-fit">
-                                Próximamente
-                            </span>
-                            <h4
-                                class="font-headline text-lg font-extrabold text-on-background dark:text-white group-hover:text-primary dark:group-hover:text-red-400 transition-colors">
-                                Salta
-                            </h4>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-body mt-2 leading-relaxed">
-                                Salta Capital, Cafayate y las regiones turísticas del Noroeste Argentino.
-                            </p>
-                        </div>
+                <!-- Estado vacío cuando una ciudad seleccionada no tiene publicaciones -->
+                <div id="city-section-empty-state" class="hidden text-center py-16 px-4 bg-zinc-50 dark:bg-zinc-900/40 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60">
+                    <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/30 text-primary dark:text-red-400 flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-3xl">location_city</span>
                     </div>
+                    <h3 class="font-headline text-xl font-bold text-zinc-900 dark:text-white mb-2">
+                        Próximamente más inmuebles en esta ciudad
+                    </h3>
+                    <p class="font-body text-zinc-500 dark:text-zinc-400 text-sm max-w-md mx-auto mb-6">
+                        Estamos sumando nuevos alquileres constantemente. ¿Tenés una propiedad aquí? Publicala en Vivat y encontrá inquilinos calificados.
+                    </p>
+                    <a href="propietarios.html"
+                        class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-[0.98]">
+                        <span class="material-symbols-outlined text-base">add_home</span>
+                        <span>Publicar mi propiedad</span>
+                    </a>
+                </div>
+
+                <!-- Pie de sección con botón de acción al buscador -->
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-200/40 dark:border-zinc-800/40">
+                    <div class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base text-primary dark:text-red-400">verified</span>
+                        <span>Contratos 100% digitales y gestión transparente con Vivat</span>
+                    </div>
+                    <a id="city-section-view-more-btn" href="buscar.html"
+                        class="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-full font-body font-bold text-sm transition-all shadow-md active:scale-[0.98]">
+                        <span id="city-section-view-more-text">Ver todas las propiedades</span>
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </a>
                 </div>
             </section>
+
+            <script>
+                (function () {
+                    let cityPropsData = [];
+                    let activeCityFilter = 'Todas';
+
+                    // Función global para desplazar el carrusel de ciudades
+                    window.scrollCityMarketplace = function (direction) {
+                        const grid = document.getElementById('city-section-properties-grid');
+                        if (!grid) return;
+                        const card = grid.querySelector('article');
+                        const step = card ? (card.offsetWidth + 24) * (window.innerWidth > 1024 ? 2 : 1) : 360;
+
+                        if (direction > 0 && grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 20) {
+                            grid.scrollTo({ left: 0, behavior: 'smooth' });
+                        } else if (direction < 0 && grid.scrollLeft <= 10) {
+                            grid.scrollTo({ left: grid.scrollWidth, behavior: 'smooth' });
+                        } else {
+                            grid.scrollBy({ left: step * direction, behavior: 'smooth' });
+                        }
+                    };
+
+                    function updateCityArrowsState() {
+                        const grid = document.getElementById('city-section-properties-grid');
+                        if (!grid) return;
+                        const prevBtn = document.getElementById('city-scroll-prev-btn');
+                        const nextBtn = document.getElementById('city-scroll-next-btn');
+
+                        const hasScroll = grid.scrollWidth > grid.clientWidth + 10;
+                        const isAtStart = grid.scrollLeft <= 8;
+                        const isAtEnd = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 12;
+
+                        if (prevBtn) prevBtn.disabled = !hasScroll || isAtStart;
+                        if (nextBtn) nextBtn.disabled = !hasScroll || isAtEnd;
+                    }
+
+                    function setupCityMouseDrag() {
+                        const grid = document.getElementById('city-section-properties-grid');
+                        if (!grid || grid._dragInitialized) return;
+                        grid._dragInitialized = true;
+
+                        let isDown = false;
+                        let startX = 0;
+                        let scrollLeftVal = 0;
+                        let hasMoved = false;
+
+                        grid.addEventListener('mousedown', (e) => {
+                            if (e.target.closest('button, a, .btn-favorite')) return;
+                            isDown = true;
+                            hasMoved = false;
+                            startX = e.pageX - grid.offsetLeft;
+                            scrollLeftVal = grid.scrollLeft;
+                            grid.classList.remove('scroll-smooth', 'snap-x', 'snap-mandatory');
+                        });
+
+                        window.addEventListener('mouseup', () => {
+                            if (!isDown) return;
+                            isDown = false;
+                            grid.classList.add('scroll-smooth', 'snap-x', 'snap-mandatory');
+                            setTimeout(() => { hasMoved = false; }, 50);
+                        });
+
+                        grid.addEventListener('mouseleave', () => {
+                            if (!isDown) return;
+                            isDown = false;
+                            grid.classList.add('scroll-smooth', 'snap-x', 'snap-mandatory');
+                        });
+
+                        grid.addEventListener('mousemove', (e) => {
+                            if (!isDown) return;
+                            e.preventDefault();
+                            const x = e.pageX - grid.offsetLeft;
+                            const walk = (x - startX) * 1.5;
+                            if (Math.abs(walk) > 5) {
+                                hasMoved = true;
+                                grid.scrollLeft = scrollLeftVal - walk;
+                            }
+                        });
+
+                        grid.addEventListener('click', (e) => {
+                            if (hasMoved) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                hasMoved = false;
+                            }
+                        }, true);
+
+                        grid.addEventListener('scroll', updateCityArrowsState, { passive: true });
+                    }
+
+                    function getCanonicalCityName(prop) {
+                        const prov = (prop.province || prop.extraInfo?.provincia || '').toLowerCase();
+                        const city = (prop.city || prop.extraInfo?.ciudad || '').toLowerCase();
+                        const addr = (prop.address || '').toLowerCase();
+
+                        if (prov.includes('mendoza') || city.includes('mendoza') || ['capital', 'godoy cruz', 'guaymallén', 'guaymallen', 'las heras', 'luján de cuyo', 'lujan de cuyo', 'maipú', 'maipu', 'san rafael'].includes(city)) {
+                            return 'Mendoza';
+                        }
+                        if (prov.includes('buenos aires') || city.includes('buenos aires') || city.includes('vicente lópez') || city.includes('vicente lopez') || city.includes('bahía blanca') || city.includes('bahia blanca') || city.includes('caba') || city.includes('capital federal') || addr.includes('buenos aires')) {
+                            return 'Buenos Aires';
+                        }
+                        if (prov.includes('santa fe') || city.includes('rosario')) {
+                            return 'Rosario';
+                        }
+                        if (prov.includes('chubut') || city.includes('madryn') || city.includes('puerto madryn')) {
+                            return 'Puerto Madryn';
+                        }
+                        if (prov.includes('córdoba') || prov.includes('cordoba') || city.includes('córdoba') || city.includes('cordoba')) {
+                            return 'Córdoba';
+                        }
+                        if (prov.includes('salta') || city.includes('salta')) {
+                            return 'Salta';
+                        }
+                        const raw = prop.city || prop.province || 'Otras';
+                        return raw.charAt(0).toUpperCase() + raw.slice(1);
+                    }
+
+                    function renderCityTabs(citiesWithCounts) {
+                        const tabsContainer = document.getElementById('city-section-tabs-container');
+                        if (!tabsContainer) return;
+                        tabsContainer.innerHTML = '';
+
+                        // Todas las ciudades tab
+                        const totalCount = cityPropsData.length;
+                        const allTab = createCityTabButton('Todas', `Todas (${totalCount})`, activeCityFilter === 'Todas');
+                        tabsContainer.appendChild(allTab);
+
+                        citiesWithCounts.forEach(({ city, count }) => {
+                            const btn = createCityTabButton(city, `${city} (${count})`, activeCityFilter === city);
+                            tabsContainer.appendChild(btn);
+                        });
+                    }
+
+                    function createCityTabButton(cityKey, labelText, isActive) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = `inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer select-none shrink-0 ${
+                            isActive
+                                ? 'bg-primary text-white shadow-md scale-100'
+                                : 'bg-white dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 shadow-2xs hover:-translate-y-0.5'
+                        }`;
+                        btn.innerHTML = `
+                            <span class="material-symbols-outlined text-sm ${isActive ? 'text-white' : 'text-primary dark:text-red-400'}">location_on</span>
+                            <span>${labelText}</span>
+                        `;
+                        btn.onclick = () => {
+                            activeCityFilter = cityKey;
+                            updateActiveTabsUI();
+                            renderCityPropertiesGrid();
+                        };
+                        btn.dataset.cityKey = cityKey;
+                        return btn;
+                    }
+
+                    function updateActiveTabsUI() {
+                        const tabs = document.querySelectorAll('#city-section-tabs-container button');
+                        tabs.forEach(tab => {
+                            const isAct = tab.dataset.cityKey === activeCityFilter;
+                            if (isAct) {
+                                tab.className = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer select-none shrink-0 bg-primary text-white shadow-md scale-100';
+                                const icon = tab.querySelector('.material-symbols-outlined');
+                                if (icon) icon.className = 'material-symbols-outlined text-sm text-white';
+                            } else {
+                                tab.className = 'inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer select-none shrink-0 bg-white dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 shadow-2xs hover:-translate-y-0.5';
+                                const icon = tab.querySelector('.material-symbols-outlined');
+                                if (icon) icon.className = 'material-symbols-outlined text-sm text-primary dark:text-red-400';
+                            }
+                        });
+                    }
+
+                    function renderCityPropertiesGrid() {
+                        const grid = document.getElementById('city-section-properties-grid');
+                        const carouselWrapper = document.getElementById('city-section-carousel-wrapper');
+                        const emptyState = document.getElementById('city-section-empty-state');
+                        const viewMoreBtn = document.getElementById('city-section-view-more-btn');
+                        const viewMoreText = document.getElementById('city-section-view-more-text');
+
+                        if (!grid) return;
+
+                        let filtered = [];
+                        if (activeCityFilter === 'Todas') {
+                            filtered = cityPropsData;
+                        } else {
+                            filtered = cityPropsData.filter(p => getCanonicalCityName(p) === activeCityFilter);
+                        }
+
+                        // Actualizar link inferior
+                        if (activeCityFilter === 'Todas') {
+                            if (viewMoreText) viewMoreText.textContent = 'Ver todas las propiedades';
+                            if (viewMoreBtn) viewMoreBtn.href = 'buscar.html';
+                        } else {
+                            if (viewMoreText) viewMoreText.textContent = `Ver más en ${activeCityFilter}`;
+                            const searchUrl = `buscar.html?location=${encodeURIComponent(activeCityFilter)}`;
+                            if (viewMoreBtn) viewMoreBtn.href = searchUrl;
+                        }
+
+                        if (!filtered || filtered.length === 0) {
+                            grid.innerHTML = '';
+                            if (carouselWrapper) carouselWrapper.classList.add('hidden');
+                            if (emptyState) emptyState.classList.remove('hidden');
+                            return;
+                        }
+
+                        if (emptyState) emptyState.classList.add('hidden');
+                        if (carouselWrapper) carouselWrapper.classList.remove('hidden');
+                        grid.innerHTML = '';
+                        grid.scrollLeft = 0;
+
+                        filtered.forEach(prop => {
+                            const pVal = prop.price ? Number(prop.price) : 0;
+                            const currencySymbol = prop.currency === 'USD' ? 'USD ' : '$';
+                            const priceFormatted = pVal ? `${currencySymbol}${pVal.toLocaleString('es-AR')} / mes` : 'Consultar precio';
+                            const card = document.createElement('article');
+                            card.dataset.pubId = prop.id_publicacion || prop.id || '';
+                            card.dataset.propId = prop.id_propiedad || prop.idPropiedad || (prop.Propiedad && prop.Propiedad.id_propiedad) || '';
+                            card.className = 'snap-start shrink-0 w-[280px] sm:w-[320px] md:w-[340px] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer';
+
+                            card.onclick = (e) => {
+                                if (e.target.closest('.btn-favorite, .favorite-btn')) return;
+                                if (typeof window.openMarketplacePropertyDetailModal === 'function') {
+                                    window.openMarketplacePropertyDetailModal(prop);
+                                } else {
+                                    window.location.href = 'buscar.html';
+                                }
+                            };
+
+                            const photosCount = prop.images ? prop.images.length : 1;
+                            const isIncluidas = prop.expensasIncluidas;
+                            const expensasNum = prop.expensas ? Number(prop.expensas) : 0;
+                            const expensasVal = expensasNum ? `$${expensasNum.toLocaleString('es-AR')}` : '';
+                            const expensasText = isIncluidas ? 'Incluye expensas' : (expensasVal ? `+ ${expensasVal} expensas` : '+ expensas');
+                            const isVerified = Boolean(prop.isVerifiedOwner || prop.verified || (prop.tags && prop.tags.includes('Propietario Verificado')));
+                            const isAlquilada = prop.status === 'alquilada' || prop.status === 'alquilado';
+                            let formattedEndDate = '';
+                            if (prop.contractEndDate) {
+                                try {
+                                    const d = new Date(prop.contractEndDate);
+                                    formattedEndDate = d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+                                } catch (e) { }
+                            }
+
+                            const tipoLabels = {
+                                'departamento': 'Departamento',
+                                'apartment': 'Departamento',
+                                'casa': 'Casa',
+                                'house': 'Casa',
+                                'ph': 'PH',
+                                'ph-townhouse': 'PH',
+                                'terreno': 'Terreno',
+                                'local': 'Local comercial',
+                                'local-comercial': 'Local comercial',
+                                'commercial': 'Local comercial',
+                                'oficina': 'Oficina',
+                                'oficina-comercial': 'Oficina',
+                                'quinta-vacacional': 'Quinta Vacacional',
+                                'cochera': 'Cochera',
+                                'habitacion': 'Habitación'
+                            };
+                            const rawType = prop.subtipo_propiedad || prop.tipo_propiedad || prop.type || prop.extraInfo?.tipo_propiedad || prop.extraInfo?.tipo || 'Departamento';
+                            const propertyType = (typeof window.formatPropertyTypeBadge === 'function')
+                                ? window.formatPropertyTypeBadge(prop)
+                                : (tipoLabels[String(rawType).toLowerCase()] || rawType);
+                            const calleNum = (prop.calle && prop.numero) ? `${prop.calle} ${prop.numero}` : (prop.calle_altura || prop.calle || prop.address || prop.title);
+                            const cityName = getCanonicalCityName(prop);
+                            const barrioProv = [prop.barrio || prop.extraInfo?.barrio, cityName].filter(Boolean).join(', ') || prop.address;
+                            const pubId = prop.id_publicacion || prop.id || '';
+                            const isFav = window.FavoritesManager ? window.FavoritesManager.isFavorite(pubId) : false;
+                            const isMyProp = typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop);
+                            const favStyle = isFav ? "font-variation-settings: 'FILL' 1;" : "";
+
+                            card.innerHTML = `
+                                <div>
+                                    <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
+                                        <img src="${prop.image || 'img/hero-marketplace.jpg'}" alt="${calleNum}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        ${isAlquilada ? `
+                                            <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
+                                                <span class="material-symbols-outlined text-xs">key</span> Alquilada
+                                            </div>
+                                        ` : ''}
+                                        <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite('${pubId}', event);" title="Guardar en favoritos">
+                                            <span class="material-symbols-outlined text-xl ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all" style="${favStyle}">favorite</span>
+                                        </button>
+                                        ${photosCount > 1 ? `
+                                            <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-xs">photo_camera</span>
+                                                ${photosCount} fotos
+                                            </div>
+                                        ` : ''}
+                                        <div class="absolute bottom-2 right-2 bg-primary/90 text-white backdrop-blur-md text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">location_on</span>
+                                            ${cityName}
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                        ${propertyType}
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                                        <strong class="text-base sm:text-lg font-black text-zinc-900 dark:text-white">${priceFormatted}</strong>
+                                        <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${isIncluidas ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-200'}">
+                                            ${expensasText}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors flex items-center gap-1.5">
+                                        <span>${calleNum}</span>
+                                        ${isVerified ? `
+                                            <span class="text-emerald-600 dark:text-emerald-400 inline-flex items-center shrink-0" title="Propietario Verificado">
+                                                <span class="material-symbols-outlined text-base">verified</span>
+                                            </span>
+                                        ` : ''}
+                                    </h3>
+                                    <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
+                                        <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
+                                        ${barrioProv}
+                                    </p>
+                                    <div class="flex flex-wrap gap-1.5 mb-4">
+                                        ${(prop.tags || []).filter(t => t !== 'Propietario Verificado').slice(0, 3).map(tag => `
+                                            <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
+                                                ${tag}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <button type="button" class="w-full ${isAlquilada ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300' : 'bg-zinc-100 dark:bg-zinc-800/80 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white group-hover:bg-primary group-hover:text-white dark:group-hover:bg-red-700 text-zinc-800 dark:text-zinc-200'} py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-2xs hover:shadow-md active:scale-[0.98] cursor-pointer group/btn">
+                                    <span class="material-symbols-outlined text-base transition-transform duration-300 group-hover/btn:scale-110">visibility</span>
+                                    <span>${isMyProp ? 'Administrar mi publicación' : (isAlquilada ? 'Ver detalle de alquiler' : 'Ver detalle y postularse')}</span>
+                                </button>
+                            `;
+
+                            grid.appendChild(card);
+                        });
+
+                        setupCityMouseDrag();
+                        setTimeout(updateCityArrowsState, 150);
+
+                        if (window.FavoritesManager?.updateAllHeartIcons) {
+                            window.FavoritesManager.updateAllHeartIcons();
+                        }
+                    }
+
+                    async function initCityPropertiesSection() {
+                        try {
+                            if (window.DataManager && window.DataManager.getPublicMarketplaceProperties) {
+                                const dbProps = await window.DataManager.getPublicMarketplaceProperties(100, false, false, { prioritizeAvailable: true });
+                                if (dbProps && dbProps.length > 0) {
+                                    cityPropsData = dbProps;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Could not fetch properties for city section:", e);
+                        }
+
+                        // Calcular conteos por ciudad
+                        const cityMap = {};
+                        cityPropsData.forEach(p => {
+                            const cName = getCanonicalCityName(p);
+                            cityMap[cName] = (cityMap[cName] || 0) + 1;
+                        });
+
+                        // Ordenar ciudades por cantidad de propiedades descendente
+                        const sortedCities = Object.keys(cityMap)
+                            .map(city => ({ city, count: cityMap[city] }))
+                            .sort((a, b) => b.count - a.count);
+
+                        // Si Mendoza tiene propiedades, empezar en Mendoza o la que más tenga
+                        if (sortedCities.length > 0) {
+                            const mendozaItem = sortedCities.find(c => c.city === 'Mendoza');
+                            activeCityFilter = mendozaItem ? 'Mendoza' : sortedCities[0].city;
+                        } else {
+                            activeCityFilter = 'Todas';
+                        }
+
+                        renderCityTabs(sortedCities);
+                        renderCityPropertiesGrid();
+                    }
+
+                    window.initCityPropertiesSection = initCityPropertiesSection;
+                    document.addEventListener('DOMContentLoaded', initCityPropertiesSection);
+                    window.addEventListener('load', initCityPropertiesSection);
+                })();
+            </script>
 
             <!-- Renter FAQ Section -->
             <section

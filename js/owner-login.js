@@ -394,10 +394,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Listen for background session changes (e.g. user clicked confirmation link in email)
+    // Check if session already exists or was restored from OAuth
+    if (window.supabaseClient && window.supabaseClient.auth) {
+        window.supabaseClient.auth.getSession().then(({ data }) => {
+            if (data && data.session && data.session.user) {
+                redirectToTarget();
+            }
+        }).catch(() => {});
+    }
+
+    // Listen for background session changes (e.g. user clicked confirmation link in email or OAuth callback)
     if (window.supabaseClient && window.supabaseClient.auth.onAuthStateChange) {
         window.supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+            if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
                 redirectToTarget();
             }
         });
