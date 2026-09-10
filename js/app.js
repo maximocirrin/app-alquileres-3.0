@@ -338,49 +338,140 @@ window.resolvePostalCode = function (address, provincia, ciudad, googlePostalCod
 
 // Favorites Manager System
 window.FavoritesManager = {
-    favoritesSet: new Set(),
+    // Synchronously populate from localStorage at declaration so icons are immediate from millisecond zero
+    favoritesSet: (function () {
+        const s = new Set();
+        try {
+            const raw = localStorage.getItem('vivat_favorites');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(id => {
+                        const n = Number(id);
+                        if (n && !isNaN(n)) s.add(n);
+                    });
+                }
+            }
+        } catch (e) { }
+        return s;
+    })(),
+
+    _authListenerAttached: false,
+    _delegatesAttached: false,
+
+    _resolveProfileId: async function () {
+        if (!window.supabaseClient) return null;
+        try {
+            if (window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function') {
+                const pid = await window.DataManager._getOrCreateProfile();
+                if (pid) return pid;
+            }
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const authUser = session?.user;
+            if (!authUser) return null;
+
+            const { data: profile } = await window.supabaseClient
+                .from('Perfil')
+                .select('id_perfil')
+                .or(`user_id.eq.${authUser.id},mail.eq.${authUser.email}`)
+                .maybeSingle();
+
+            return profile?.id_perfil || null;
+        } catch (e) {
+            console.warn("Could not resolve profile for favorites:", e);
+            return null;
+        }
+    },
 
     init: async function () {
+        // Re-read local storage in case another tab or window updated it
         try {
-            const local = JSON.parse(localStorage.getItem('vivat_favorites') || '[]');
-            (local || []).forEach(id => window.FavoritesManager.favoritesSet.add(Number(id)));
+            const raw = localStorage.getItem('vivat_favorites');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(id => {
+                        const n = Number(id);
+                        if (n && !isNaN(n)) window.FavoritesManager.favoritesSet.add(n);
+                    });
+                }
+            }
         } catch (e) { }
 
-        if (window.supabaseClient) {
+        // Update UI immediately with current state
+        window.FavoritesManager.updateAllHeartIcons();
+        window.FavoritesManager._setupGlobalDelegates();
+
+        // Listen for Supabase auth state changes to auto-sync favorites when user logs in/out
+        if (window.supabaseClient && !window.FavoritesManager._authListenerAttached) {
+            window.FavoritesManager._authListenerAttached = true;
             try {
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    const profileId = (window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function')
-                        ? await window.DataManager._getOrCreateProfile()
-                        : null;
-
-                    if (profileId) {
-                        const { data: favs } = await window.supabaseClient
-                            .from('Favorito')
-                            .select('id_publicacion')
-                            .eq('id_perfil', profileId);
-
-                        if (favs && favs.length > 0) {
-                            favs.forEach(f => window.FavoritesManager.favoritesSet.add(Number(f.id_publicacion)));
-                        }
+                window.supabaseClient.auth.onAuthStateChange((event) => {
+                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+                        window.FavoritesManager.syncWithDatabase();
                     }
-                }
-            } catch (err) {
-                console.warn("Error syncing favorites from DB:", err);
-            }
+                });
+            } catch (e) { }
         }
 
-        window.FavoritesManager.saveLocal();
-        window.FavoritesManager.updateAllHeartIcons();
+        await window.FavoritesManager.syncWithDatabase();
+    },
+
+    syncWithDatabase: async function () {
+        if (!window.supabaseClient) return;
+        try {
+            const profileId = await window.FavoritesManager._resolveProfileId();
+            if (!profileId) return;
+
+            // Fetch DB favorites for this user
+            const { data: favs, error } = await window.supabaseClient
+                .from('Favorito')
+                .select('id_publicacion')
+                .eq('id_perfil', profileId);
+
+            if (error) {
+                console.warn("Error fetching favorites from DB:", error);
+                return;
+            }
+
+            const dbIds = new Set((favs || []).map(f => Number(f.id_publicacion)).filter(Boolean));
+
+            // Merge DB favorites into current set
+            dbIds.forEach(id => window.FavoritesManager.favoritesSet.add(id));
+
+            // Push any local favorites that were saved offline or before login
+            const missingInDb = Array.from(window.FavoritesManager.favoritesSet).filter(id => !dbIds.has(id));
+            if (missingInDb.length > 0) {
+                const rows = missingInDb.map(pubId => ({
+                    id_perfil: profileId,
+                    id_publicacion: pubId
+                }));
+                const { error: insErr } = await window.supabaseClient
+                    .from('Favorito')
+                    .upsert(rows, { onConflict: 'id_perfil,id_publicacion' });
+                if (insErr) {
+                    console.warn("Error pushing local favorites to DB:", insErr);
+                }
+            }
+
+            window.FavoritesManager.saveLocal();
+            window.FavoritesManager.updateAllHeartIcons();
+        } catch (err) {
+            console.warn("Error in syncWithDatabase:", err);
+        }
     },
 
     saveLocal: function () {
-        const arr = Array.from(window.FavoritesManager.favoritesSet);
-        localStorage.setItem('vivat_favorites', JSON.stringify(arr));
+        try {
+            const arr = Array.from(window.FavoritesManager.favoritesSet);
+            localStorage.setItem('vivat_favorites', JSON.stringify(arr));
+        } catch (e) { }
     },
 
     isFavorite: function (id_publicacion) {
-        return window.FavoritesManager.favoritesSet.has(Number(id_publicacion));
+        const n = Number(id_publicacion);
+        if (!n || isNaN(n)) return false;
+        return window.FavoritesManager.favoritesSet.has(n);
     },
 
     toggleFavorite: async function (id_publicacion, event = null) {
@@ -389,25 +480,12 @@ window.FavoritesManager = {
             event.preventDefault();
         }
 
-        // Require authentication before favoriting
-        let session = null;
-        if (window.supabaseClient) {
-            try {
-                const res = await window.supabaseClient.auth.getSession();
-                session = res.data?.session;
-            } catch (err) { }
-        }
-
-        if (!session) {
-            window.location.href = 'login.html?redirect=favorites';
-            return false;
-        }
-
         const pubId = Number(id_publicacion);
-        if (!pubId) return false;
+        if (!pubId || isNaN(pubId)) return false;
 
         const isFav = window.FavoritesManager.isFavorite(pubId);
 
+        // Optimistic UI state update immediately
         if (isFav) {
             window.FavoritesManager.favoritesSet.delete(pubId);
         } else {
@@ -417,29 +495,65 @@ window.FavoritesManager = {
         window.FavoritesManager.saveLocal();
         window.FavoritesManager.updateAllHeartIcons();
 
+        // If inside favorites modal, smoothly handle removal
+        const modal = document.getElementById('favorites-modal');
+        if (modal && modal.style.display !== 'none' && isFav) {
+            const cardInModal = modal.querySelector(`[data-pub-id="${pubId}"]`)?.closest('article');
+            if (cardInModal) {
+                cardInModal.style.transition = 'all 0.3s ease-out';
+                cardInModal.style.opacity = '0';
+                cardInModal.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    cardInModal.remove();
+                    const remainingCards = modal.querySelectorAll('#fav-modal-grid article');
+                    const counterHeader = modal.querySelector('#fav-modal-count-text');
+                    if (counterHeader) {
+                        counterHeader.textContent = `${remainingCards.length} ${remainingCards.length === 1 ? 'propiedad guardada' : 'propiedades guardadas'}`;
+                    }
+                    if (remainingCards.length === 0) {
+                        const body = modal.querySelector('.fav-modal-body');
+                        if (body) {
+                            body.innerHTML = `
+                                <div class="text-center py-16 space-y-4">
+                                    <div class="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-400 mx-auto flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-3xl">favorite_border</span>
+                                    </div>
+                                    <h4 class="font-headline font-bold text-base text-zinc-800 dark:text-zinc-200">Aún no guardaste propiedades en favoritos</h4>
+                                    <p class="text-xs text-zinc-500 max-w-sm mx-auto">Explorá el Marketplace y tocá el ícono del corazón en cualquier aviso para guardarlo aquí y consultarlo cuando quieras.</p>
+                                    <div class="pt-2">
+                                        <a href="buscar.html" class="inline-flex items-center gap-2 bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-primary-container transition-all shadow-md">
+                                            <span>Explorar Alquileres</span>
+                                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                }, 300);
+            }
+        }
+
+        // Sync with Supabase database
         if (window.supabaseClient) {
             try {
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    const profileId = (window.DataManager && typeof window.DataManager._getOrCreateProfile === 'function')
-                        ? await window.DataManager._getOrCreateProfile()
-                        : null;
-
-                    if (profileId) {
-                        if (isFav) {
-                            await window.supabaseClient
-                                .from('Favorito')
-                                .delete()
-                                .eq('id_publicacion', pubId)
-                                .eq('id_perfil', profileId);
-                        } else {
-                            await window.supabaseClient
-                                .from('Favorito')
-                                .insert([{
-                                    id_perfil: profileId,
-                                    id_publicacion: pubId
-                                }]);
-                        }
+                const profileId = await window.FavoritesManager._resolveProfileId();
+                if (profileId) {
+                    if (isFav) {
+                        const { error } = await window.supabaseClient
+                            .from('Favorito')
+                            .delete()
+                            .eq('id_publicacion', pubId)
+                            .eq('id_perfil', profileId);
+                        if (error) console.warn("Error removing favorite from DB:", error);
+                    } else {
+                        const { error } = await window.supabaseClient
+                            .from('Favorito')
+                            .upsert([{
+                                id_perfil: profileId,
+                                id_publicacion: pubId
+                            }], { onConflict: 'id_perfil,id_publicacion' });
+                        if (error) console.warn("Error saving favorite to DB:", error);
                     }
                 }
             } catch (err) {
@@ -451,25 +565,94 @@ window.FavoritesManager = {
     },
 
     updateAllHeartIcons: function () {
-        document.querySelectorAll('.btn-favorite').forEach(btn => {
-            const pubId = Number(btn.dataset.pubId);
+        const buttons = document.querySelectorAll('.btn-favorite, .favorite-btn');
+        buttons.forEach(btn => {
+            const rawId = btn.dataset.pubId ||
+                btn.getAttribute('data-pub-id') ||
+                btn.closest('[data-pub-id]')?.dataset?.pubId ||
+                btn.closest('[data-pub-id]')?.getAttribute('data-pub-id');
+
+            const pubId = Number(rawId);
+            if (!pubId || isNaN(pubId)) return;
+
             const isFav = window.FavoritesManager.isFavorite(pubId);
-            const icon = btn.querySelector('.material-symbols-outlined');
+            const icon = btn.querySelector('.material-symbols-outlined, .material-symbols-rounded, [class*="material-symbols"]');
 
             if (isFav) {
                 btn.classList.add('is-favorite');
+                btn.setAttribute('title', 'Quitar de favoritos');
                 if (icon) {
                     icon.textContent = 'favorite';
-                    icon.className = 'material-symbols-outlined text-xl text-rose-500 fill-1 transition-all duration-200 scale-110';
+                    icon.classList.add('text-rose-500', 'fill-1');
+                    icon.classList.remove('text-white/90', 'text-zinc-500', 'text-zinc-400');
+                    try { icon.style.fontVariationSettings = "'FILL' 1, 'wght' 600"; } catch (e) { }
                 }
-                btn.setAttribute('title', 'Quitar de favoritos');
+                const label = btn.querySelector('.fav-btn-label');
+                if (label) label.textContent = 'Guardado';
             } else {
                 btn.classList.remove('is-favorite');
+                btn.setAttribute('title', 'Guardar en favoritos');
                 if (icon) {
                     icon.textContent = 'favorite';
-                    icon.className = 'material-symbols-outlined text-xl text-white/90 hover:text-rose-500 transition-all duration-200';
+                    icon.classList.remove('text-rose-500', 'fill-1');
+                    if (btn.classList.contains('bg-black/40') || btn.classList.contains('favorite-btn') || btn.classList.contains('bg-black/60')) {
+                        icon.classList.add('text-white/90');
+                    } else {
+                        icon.classList.add('text-zinc-500');
+                    }
+                    try { icon.style.fontVariationSettings = "'FILL' 0, 'wght' 400"; } catch (e) { }
                 }
-                btn.setAttribute('title', 'Guardar en favoritos');
+                const label = btn.querySelector('.fav-btn-label');
+                if (label) label.textContent = 'Guardar';
+            }
+        });
+
+        // Update badge counters across the site
+        const count = window.FavoritesManager.favoritesSet.size;
+        document.querySelectorAll('[data-favorites-counter]').forEach(el => {
+            el.textContent = count;
+            if (count > 0) {
+                el.classList.remove('hidden');
+                el.style.display = 'inline-flex';
+            } else {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+            }
+        });
+    },
+
+    _setupGlobalDelegates: function () {
+        if (window.FavoritesManager._delegatesAttached) return;
+        window.FavoritesManager._delegatesAttached = true;
+
+        document.addEventListener('click', async (e) => {
+            const target = e.target.closest('a, button, [data-action="favorites"], [data-desktop-nav-action="favorites"], [data-menu-action="favorites"]');
+            if (!target) return;
+
+            // Ignore favorite heart buttons and inside the favorites modal
+            if (target.closest('#favorites-modal') || target.classList.contains('btn-favorite') || target.classList.contains('favorite-btn')) return;
+
+            const txt = (target.textContent || '').trim().toLowerCase();
+            const href = (target.getAttribute('href') || '').toLowerCase();
+            const id = (target.id || '').toLowerCase();
+            const action = target.dataset.action || target.dataset.menuAction || target.dataset.desktopNavAction || '';
+
+            if (
+                action === 'favorites' ||
+                txt === 'favoritos' ||
+                txt.includes('mis favoritos') ||
+                href.includes('favorites') ||
+                href.includes('fav=1') ||
+                id === 'nav-favorites-btn'
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (typeof window.closeLandingMenu === 'function') window.closeLandingMenu();
+                const mobMenu = document.getElementById('mobile-menu');
+                if (mobMenu) mobMenu.classList.add('hidden');
+
+                await window.FavoritesManager.showFavoritesModal();
             }
         });
     },
@@ -479,10 +662,57 @@ window.FavoritesManager = {
 
         let allProperties = [];
         if (window.DataManager && typeof window.DataManager.getPublicMarketplaceProperties === 'function') {
-            allProperties = await window.DataManager.getPublicMarketplaceProperties();
+            try {
+                allProperties = await window.DataManager.getPublicMarketplaceProperties(100, true);
+            } catch (e) { }
         }
 
-        const favProperties = allProperties.filter(p => favIds.includes(Number(p.id || p.id_publicacion)));
+        let favProperties = (allProperties || []).filter(p => favIds.includes(Number(p.id || p.id_publicacion)));
+
+        // If any favorites were not found in the initial batch, fetch them directly from Supabase
+        const foundIds = new Set(favProperties.map(p => Number(p.id || p.id_publicacion)));
+        const missingIds = favIds.filter(id => !foundIds.has(id));
+
+        if (missingIds.length > 0 && window.supabaseClient) {
+            try {
+                const { data: missingPubs } = await window.supabaseClient
+                    .from('Publicacion')
+                    .select(`
+                        *,
+                        Propiedad (
+                            *,
+                            Barrio (*, Departamento (*, Provincia (*)))
+                        ),
+                        Multimedia (*)
+                    `)
+                    .in('id_publicacion', missingIds);
+
+                if (missingPubs && missingPubs.length > 0) {
+                    missingPubs.forEach(pub => {
+                        const prop = pub.Propiedad || {};
+                        const media = pub.Multimedia || [];
+                        const imageUrls = media.length > 0
+                            ? Array.from(new Set(media.map(m => (typeof m === 'string' ? m : (m.url_archivo || m.url || m.url_foto || m.url_multimedia))).filter(Boolean)))
+                            : ['img/hero-marketplace.jpg'];
+                        const firstImage = imageUrls[0] || 'img/hero-marketplace.jpg';
+                        const address = `${prop.calle || ''} ${prop.numero || ''}`.trim() || 'Propiedad en alquiler';
+                        favProperties.push({
+                            id: pub.id_publicacion,
+                            id_publicacion: pub.id_publicacion,
+                            id_propiedad: pub.id_propiedad,
+                            title: pub.descripcion ? pub.descripcion.substring(0, 60) : `Propiedad en ${address}`,
+                            address: address,
+                            price: parseFloat(pub.precio || 0),
+                            image: firstImage,
+                            images: imageUrls,
+                            raw: pub
+                        });
+                    });
+                }
+            } catch (e) {
+                console.warn("Could not fetch missing favorites:", e);
+            }
+        }
 
         let modal = document.getElementById('favorites-modal');
         if (!modal) {
@@ -503,15 +733,15 @@ window.FavoritesManager = {
                         </div>
                         <div>
                             <h3 class="font-headline text-lg font-extrabold text-zinc-900 dark:text-white">Mis Propiedades Favoritas</h3>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">${favProperties.length} ${favProperties.length === 1 ? 'propiedad guardada' : 'propiedades guardadas'}</p>
+                            <p id="fav-modal-count-text" class="text-xs text-zinc-500 dark:text-zinc-400">${favProperties.length} ${favProperties.length === 1 ? 'propiedad guardada' : 'propiedades guardadas'}</p>
                         </div>
                     </div>
-                    <button type="button" id="close-fav-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer">
+                    <button type="button" id="close-fav-modal" class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer" aria-label="Cerrar modal">
                         <span class="material-symbols-outlined text-xl">close</span>
                     </button>
                 </div>
 
-                <div class="p-6 overflow-y-auto flex-1">
+                <div class="fav-modal-body p-6 overflow-y-auto flex-1">
                     ${favProperties.length === 0 ? `
                         <div class="text-center py-16 space-y-4">
                             <div class="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-400 mx-auto flex items-center justify-center">
@@ -519,6 +749,12 @@ window.FavoritesManager = {
                             </div>
                             <h4 class="font-headline font-bold text-base text-zinc-800 dark:text-zinc-200">Aún no guardaste propiedades en favoritos</h4>
                             <p class="text-xs text-zinc-500 max-w-sm mx-auto">Explorá el Marketplace y tocá el ícono del corazón en cualquier aviso para guardarlo aquí y consultarlo cuando quieras.</p>
+                            <div class="pt-2">
+                                <a href="buscar.html" class="inline-flex items-center gap-2 bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-primary-container transition-all shadow-md">
+                                    <span>Explorar Alquileres</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
                         </div>
                     ` : `
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="fav-modal-grid">
@@ -532,15 +768,20 @@ window.FavoritesManager = {
             modal.style.display = 'none';
         };
 
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
+
         if (favProperties.length > 0) {
             const grid = document.getElementById('fav-modal-grid');
             favProperties.forEach(prop => {
                 const card = document.createElement('article');
+                card.dataset.pubId = prop.id || prop.id_publicacion;
                 card.className = 'bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between cursor-pointer group relative';
                 card.onclick = () => {
                     modal.style.display = 'none';
                     if (typeof window.openMarketplacePropertyDetailModal === 'function') {
-                        window.openMarketplacePropertyDetailModal(prop);
+                        window.openMarketplacePropertyDetailModal(prop.raw || prop);
                     }
                 };
 
@@ -550,7 +791,7 @@ window.FavoritesManager = {
                     <div>
                         <div class="relative h-44 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
                             <img src="${prop.image || 'img/hero-marketplace.jpg'}" alt="${prop.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='img/hero-marketplace.jpg'">
-                            <button type="button" class="btn-favorite ${isFav ? 'is-favorite' : ''} absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${prop.id || prop.id_publicacion}" onclick="event.stopPropagation(); window.FavoritesManager.toggleFavorite(${prop.id || prop.id_publicacion}, event);">
+                            <button type="button" class="btn-favorite ${isFav ? 'is-favorite' : ''} absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${prop.id || prop.id_publicacion}" onclick="event.stopPropagation(); window.FavoritesManager.toggleFavorite(${prop.id || prop.id_publicacion}, event);" title="Quitar de favoritos">
                                 <span class="material-symbols-outlined text-lg ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'}">favorite</span>
                             </button>
                         </div>
@@ -564,6 +805,13 @@ window.FavoritesManager = {
         }
     }
 };
+
+// Immediate global delegates setup
+try {
+    if (typeof window !== 'undefined' && window.FavoritesManager) {
+        window.FavoritesManager._setupGlobalDelegates();
+    }
+} catch (e) { }
 
 var App = window.App || {
     state: {
@@ -8120,9 +8368,9 @@ window.openMarketplacePropertyDetailModal = function (prop, options = {}) {
                         <span class="hidden sm:inline">Compartir</span>
                     </button>
                     
-                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(pubId) ? 'is-favorite' : ''} inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${pubId}, event);">
-                        <span class="material-symbols-outlined text-base ${window.FavoritesManager?.isFavorite(pubId) ? 'text-rose-500 fill-1' : 'text-zinc-500 hover:text-rose-500'}">favorite</span>
-                        <span class="hidden sm:inline">Guardar</span>
+                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(pubId) ? 'is-favorite' : ''} inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite('${pubId}', event);">
+                        <span class="material-symbols-outlined text-base ${window.FavoritesManager?.isFavorite(pubId) ? 'text-rose-500 fill-1' : 'text-zinc-500 hover:text-rose-500'}" style="${window.FavoritesManager?.isFavorite(pubId) ? 'font-variation-settings: \'FILL\' 1;' : ''}">favorite</span>
+                        <span class="fav-btn-label hidden sm:inline">${window.FavoritesManager?.isFavorite(pubId) ? 'Guardado' : 'Guardar'}</span>
                     </button>
 
                     <button id="close-marketplace-x-btn" type="button" aria-label="Cerrar vista" title="Cerrar (ESC)" class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors flex items-center justify-center cursor-pointer">
@@ -14721,6 +14969,9 @@ window.clearPublishDraft = function() {
 
 // Auto-initialize Theme and Scroll to top button across pages
 function autoInitAppBasics() {
+    if (window.FavoritesManager && typeof window.FavoritesManager.init === 'function') {
+        window.FavoritesManager.init();
+    }
     if (window.App) {
         if (typeof window.App.setupTheme === 'function') {
             window.App.setupTheme();

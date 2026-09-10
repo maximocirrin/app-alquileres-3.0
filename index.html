@@ -1316,6 +1316,7 @@
                         card.className = 'snap-start shrink-0 w-[280px] sm:w-[320px] md:w-[340px] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer';
 
                         card.onclick = (e) => {
+                            if (e.target.closest('.btn-favorite, .favorite-btn')) return;
                             if (typeof window.openMarketplacePropertyDetailModal === 'function') {
                                 window.openMarketplacePropertyDetailModal(prop);
                             } else {
@@ -1361,6 +1362,8 @@
                             : (tipoLabels[String(rawType).toLowerCase()] || rawType);
                         const calleNum = (prop.calle && prop.numero) ? `${prop.calle} ${prop.numero}` : (prop.calle_altura || prop.calle || prop.address || prop.title);
                         const barrioProv = [prop.barrio || prop.extraInfo?.barrio, prop.provincia || prop.province || prop.extraInfo?.provincia].filter(Boolean).join(', ') || prop.address;
+                        const pubId = prop.id_publicacion || prop.id || '';
+                        const isFav = window.FavoritesManager ? window.FavoritesManager.isFavorite(pubId) : false;
 
                             const isMyProp = typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop);
                             card.innerHTML = `
@@ -1372,8 +1375,8 @@
                                             <span class="material-symbols-outlined text-xs">key</span> Alquilada
                                         </div>
                                     ` : ''}
-                                    <button type="button" class="btn-favorite ${window.FavoritesManager?.isFavorite(prop.id) ? 'is-favorite' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${prop.id}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite(${prop.id}, event);">
-                                        <span class="material-symbols-outlined text-xl ${window.FavoritesManager?.isFavorite(prop.id) ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all">favorite</span>
+                                    <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite('${pubId}', event);" title="Guardar en favoritos">
+                                        <span class="material-symbols-outlined text-xl ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all" style="${isFav ? 'font-variation-settings: \'FILL\' 1;' : ''}">favorite</span>
                                     </button>
                                     ${photosCount > 1 ? `
                                         <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
@@ -1422,6 +1425,9 @@
 
                     setupFeaturedMouseDrag();
                     setTimeout(updateFeaturedArrowsState, 150);
+                    if (window.FavoritesManager?.updateAllHeartIcons) {
+                        window.FavoritesManager.updateAllHeartIcons();
+                    }
                 }
                 window.renderLandingFeaturedProperties = renderLandingFeaturedProperties;
                 document.addEventListener('DOMContentLoaded', renderLandingFeaturedProperties);

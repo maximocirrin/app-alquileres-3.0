@@ -98,16 +98,57 @@ var DataManager = {
             const authUser = userData?.user;
             if (userError || !authUser) return null;
 
-            const { data: profile, error } = await window.supabaseClient
+            // 1. Resolve by authenticated user_id
+            let { data: profile, error } = await window.supabaseClient
                 .from('Perfil')
                 .select('id_perfil')
                 .eq('user_id', authUser.id)
                 .maybeSingle();
-            if (error) {
-                console.warn('No se pudo resolver el perfil autenticado.');
-                return null;
+
+            if (profile?.id_perfil) {
+                return profile.id_perfil;
             }
-            return profile?.id_perfil || null;
+
+            // 2. Fallback: match by email and link user_id
+            if (authUser.email) {
+                const { data: profByEmail } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil, user_id')
+                    .eq('mail', authUser.email)
+                    .maybeSingle();
+
+                if (profByEmail?.id_perfil) {
+                    if (!profByEmail.user_id) {
+                        try {
+                            await window.supabaseClient
+                                .from('Perfil')
+                                .update({ user_id: authUser.id })
+                                .eq('id_perfil', profByEmail.id_perfil);
+                        } catch (e) { }
+                    }
+                    return profByEmail.id_perfil;
+                }
+            }
+
+            // 3. Fallback: provision basic client profile tied to this auth user
+            try {
+                const { data: newProf } = await window.supabaseClient
+                    .from('Perfil')
+                    .insert([{
+                        user_id: authUser.id,
+                        mail: authUser.email,
+                        nombre_completo: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario',
+                        id_tipo_perfil: 1
+                    }])
+                    .select('id_perfil')
+                    .maybeSingle();
+
+                if (newProf?.id_perfil) {
+                    return newProf.id_perfil;
+                }
+            } catch (e) { }
+
+            return null;
         } catch (e) {
             console.error('Error al resolver el perfil autenticado:', e);
             return null;

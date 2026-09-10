@@ -34,6 +34,7 @@
                 </a>
                 <button class="text-zinc-500 dark:text-zinc-300 hover:text-primary dark:hover:text-red-900 transition-colors cursor-pointer text-[12px] xl:text-[12.5px] 2xl:text-[14.5px] flex items-center gap-1" type="button" data-desktop-nav-action="favorites">
                     <span class="material-symbols-outlined text-rose-500 text-sm">favorite</span> Favoritos
+                    <span data-favorites-counter class="hidden bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span>
                 </button>
 
                 <!-- Botón Publicar Propiedad (Ubicado a la derecha de Favoritos) -->
@@ -231,6 +232,10 @@
                         <a href="tu-alquiler.html#visitas" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-zinc-500 text-base">calendar_month</span> Visitas Agendadas
                         </a>
+                        <button type="button" onclick="window.FavoritesManager?.showFavoritesModal()" class="w-full text-left px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined text-rose-500 text-base">favorite</span> Mis Favoritos
+                            <span data-favorites-counter class="hidden bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-auto">0</span>
+                        </button>
                         <hr class="my-1 border-zinc-200 dark:border-zinc-700">
                         <a href="configuracion.html" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-zinc-500 text-base">settings</span> Configuración de cuenta
@@ -282,6 +287,10 @@
                         <a href="tu-alquiler.html#visitas" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-zinc-500 text-base">calendar_month</span> Visitas Agendadas
                         </a>
+                        <button type="button" onclick="window.FavoritesManager?.showFavoritesModal()" class="w-full text-left px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined text-rose-500 text-base">favorite</span> Mis Favoritos
+                            <span data-favorites-counter class="hidden bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-auto">0</span>
+                        </button>
                         <hr class="my-1 border-zinc-200 dark:border-zinc-700">
                         <a href="configuracion.html" class="px-4 py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-left flex items-center gap-2">
                             <span class="material-symbols-outlined text-zinc-500 text-base">settings</span> Configuración de cuenta
