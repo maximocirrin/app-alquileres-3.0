@@ -162,7 +162,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
       cuil: '20-26491028-7',
       hasSigned: true,
       signedAt: '2026-06-29T16:40:00Z',
-      ipAddress: '186.138.89.210',
+      ipAddress: 'No registrada',
     },
     broker: {
       name: 'Martín Palermo',
@@ -202,7 +202,7 @@ const INITIAL_MOCK_CONTRACTS: Contract[] = [
         action: 'FIRMA_PROPIETARIO_COMPLETADA',
         actorRole: 'OWNER',
         actorName: 'Gonzalo Benítez',
-        actorIp: '186.138.89.210',
+        actorIp: 'No registrada',
         details: 'Biometría Didit aprobada y consentimiento asentado.',
       },
       {
