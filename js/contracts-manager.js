@@ -549,14 +549,17 @@
                     const propOwnerId = prop.id_perfil_propietario || dbC.id_perfil_propietario;
                     const ownerPerfil = profilesMap.get(dbC.id_perfil_propietario) || (propOwnerId ? profilesMap.get(propOwnerId) : null) || {};
 
-                    const tenantFirmado = (dbC.Firma_contrato || []).some(f => 
+                    const tenantSignature = (dbC.Firma_contrato || []).find(f => 
                         ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) && 
                         (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
-                    );
-                    const ownerFirmado = (dbC.Firma_contrato || []).some(f => 
+                    ) || (dbC.Firma_contrato || []).find(f => ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante));
+                    const tenantFirmado = Boolean(tenantSignature && (tenantSignature.estado_firma === 'sellada' || tenantSignature.estado_firma === 'firmada' || tenantSignature.estado_firma === 'completada' || tenantSignature.didit_status === 'APPROVED'));
+
+                    const ownerSignature = (dbC.Firma_contrato || []).find(f => 
                         ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) && 
                         (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
-                    );
+                    ) || (dbC.Firma_contrato || []).find(f => ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante));
+                    const ownerFirmado = Boolean(ownerSignature && (ownerSignature.estado_firma === 'sellada' || ownerSignature.estado_firma === 'firmada' || ownerSignature.estado_firma === 'completada' || ownerSignature.didit_status === 'APPROVED'));
 
                     const tenantName = inqPerfil.nombre_completo || 'Inquilino Titular';
                     const tenantDni = inqPerfil.dni || '';
@@ -593,10 +596,13 @@
                             contractGuarantors = matchingG.map((g, idx) => {
                                 const gDni = g.dni || '';
                                 const gCuil = g.cuit || (typeof window.calcularCUIL === 'function' && gDni ? window.calcularCUIL(gDni, 'M') : (gDni ? `20-${gDni.replace(/\D/g,'')}-7` : ''));
-                                const gSigned = (dbC.Firma_contrato || []).some(f => 
+                                const gSignature = (dbC.Firma_contrato || []).find(f => 
                                     ['GARANTE', 'garante', 'codeudor', 'guarantor'].includes(String(f.rol_firmante || '').toLowerCase()) && 
-                                    (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
+                                    f.id_perfil_firmante === g.id_perfil
+                                ) || (dbC.Firma_contrato || []).find(f => 
+                                    ['GARANTE', 'garante', 'codeudor', 'guarantor'].includes(String(f.rol_firmante || '').toLowerCase())
                                 );
+                                const gSigned = Boolean(gSignature && (gSignature.estado_firma === 'sellada' || gSignature.estado_firma === 'firmada' || gSignature.estado_firma === 'completada' || gSignature.didit_status === 'APPROVED'));
                                 let tipoDesc = g.tipo || '';
                                 if (!tipoDesc) {
                                     if (g.id_tipo_garantia === 1) tipoDesc = 'Garantía Propietaria';
@@ -620,6 +626,9 @@
                                     id_tipo_garantia: g.id_tipo_garantia || 3,
                                     token_invitacion: g.token_invitacion || g.token || '',
                                     token: g.token_invitacion || g.token || '',
+                                    ip: gSignature?.ip_origen || '',
+                                    userAgent: gSignature?.user_agent || '',
+                                    signedAt: gSignature?.created_at || '',
                                     isKycVerified: Boolean(g.kyc_verificado || g.ingresos_validados || g.id_estado_garante === 6),
                                     id_estado_garante: g.id_estado_garante || 1,
                                     hasSigned: gSigned
@@ -652,6 +661,9 @@
                                     email: pf.mail || '',
                                     role: 'GUARANTOR',
                                     roleLabel: `Garante ${idx + 1} (Codeudor Solidario)`,
+                                    ip: f.ip_origen || '',
+                                    userAgent: f.user_agent || '',
+                                    signedAt: f.created_at || '',
                                     isKycVerified: Boolean(f.didit_status === 'APPROVED'),
                                     hasSigned: (f.estado_firma === 'sellada' || f.estado_firma === 'firmada' || f.estado_firma === 'completada' || f.didit_status === 'APPROVED')
                                 };
@@ -730,6 +742,9 @@
                             phone: inqPerfil.telefono || sol?.telefono || '+54 9 11',
                             cuil: tenantCuil,
                             dni: tenantDni,
+                            ip: tenantSignature?.ip_origen || '',
+                            userAgent: tenantSignature?.user_agent || '',
+                            signedAt: tenantSignature?.created_at || '',
                             hasSigned: tenantFirmado,
                             isKycVerified: true
                         },
@@ -742,6 +757,9 @@
                             email: ownerEmail,
                             cuil: ownerCuil,
                             dni: ownerDni,
+                            ip: ownerSignature?.ip_origen || '',
+                            userAgent: ownerSignature?.user_agent || '',
+                            signedAt: ownerSignature?.created_at || '',
                             hasSigned: ownerFirmado,
                             isKycVerified: true
                         },
@@ -2151,29 +2169,6 @@
                                     <span>Verificar Hash</span>
                                 </button>
                             </div>
-                            ` : (canEditContract) ? `
-                            <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-amber-950/20 border-2 border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-                                <div class="flex items-start sm:items-center gap-3.5 min-w-0">
-                                    <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
-                                        <span class="material-symbols-outlined text-2xl">edit_document</span>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <h4 class="font-headline font-black text-sm sm:text-base text-zinc-900 dark:text-white">
-                                                Modificar Condiciones y Cláusulas del Contrato
-                                            </h4>
-                                            <span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] font-black uppercase tracking-wider">Borrador Editable</span>
-                                        </div>
-                                        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
-                                            Ajuste el valor del canon locativo mensual, índice de actualización (ICL / IPC / Casa Propia), periodicidad, fecha límite de pago o agregue cláusulas legales personalizadas antes de firmar.
-                                        </p>
-                                    </div>
-                                </div>
-                                <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="w-full sm:w-auto px-5 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-headline font-extrabold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0">
-                                    <span class="material-symbols-outlined text-lg">tune</span>
-                                    <span>Abrir Editor de Contrato</span>
-                                </button>
-                            </div>
                             ` : ''}
 
                             <!-- Full Legal Contract Document Sheet -->
@@ -2187,12 +2182,6 @@
                                             Conforme a la Ley Nacional N° 25.506 de Firma Digital y Arts. 1187 y concordantes del Código Civil y Comercial de la Nación
                                         </p>
                                     </div>
-                                    ${(canEditContract) ? `
-                                    <button type="button" onclick="ContractsManager.editContractConditions('${contract.id}')" class="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-700 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 font-headline font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
-                                        <span class="material-symbols-outlined text-sm">edit</span>
-                                        <span>Editar Cláusulas</span>
-                                    </button>
-                                    ` : ''}
                                 </div>
 
                                 <p>
@@ -5002,9 +4991,9 @@
                 guarantors: printGuarantors
             };
 
-            const tenantIp = contract.tenant?.ip || contract.ip_origen || '186.138.89.210';
+            const tenantIp = contract.tenant?.ip || contract.ip_origen || 'No registrada';
             const tenantUserAgent = contract.tenant?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-            const ownerIp = contract.owner?.ip || contract.ip_origen || '186.138.89.210';
+            const ownerIp = contract.owner?.ip || contract.ip_origen || 'No registrada';
             const ownerUserAgent = contract.owner?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
 
             const htmlContent = `
@@ -5077,7 +5066,7 @@
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
                                 <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${tenantIp}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${tenantUserAgent}</td></tr>
-                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>${Intl.DateTimeFormat().resolvedOptions().timeZone}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
@@ -5141,7 +5130,7 @@
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
                                 <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${ownerIp}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${ownerUserAgent}</td></tr>
-                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>${Intl.DateTimeFormat().resolvedOptions().timeZone}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
@@ -5180,7 +5169,7 @@
                         if (signedGuarantors.length === 0) return '';
 
                         return signedGuarantors.map((g, idx) => {
-                            const gIp = g.ip || '186.138.89.210';
+                            const gIp = g.ip || 'No registrada';
                             const gUserAgent = g.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
                             const gSignedDate = g.signedAt ? new Date(g.signedAt).toLocaleString('es-AR') : new Date().toLocaleString('es-AR');
                             return `
@@ -5216,7 +5205,7 @@
                             <table style="width: 100%; font-size: 11px; line-height: 1.6;">
                                 <tr><td style="width: 35%; font-weight: bold; color: #000000;">Dirección IP de Origen:</td><td style="font-family: monospace;">${gIp}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">User-Agent (Navegador):</td><td style="font-family: monospace; font-size: 10px;">${gUserAgent}</td></tr>
-                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>America/Argentina/Buenos_Aires (UTC-3)</td></tr>
+                                <tr><td style="font-weight: bold; color: #000000;">Zona Horaria Registrada:</td><td>${Intl.DateTimeFormat().resolvedOptions().timeZone}</td></tr>
                                 <tr><td style="font-weight: bold; color: #000000;">Canal Criptográfico:</td><td>TLS 1.3 / HTTPS SHA-256 Digest</td></tr>
                             </table>
                         </div>
@@ -5394,9 +5383,9 @@
                 `;
             });
 
-            const tIp = contract.tenant?.ip || contract.ip_origen || '186.138.89.210';
+            const tIp = contract.tenant?.ip || contract.ip_origen || 'No registrada';
             const tUa = contract.tenant?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0');
-            const oIp = contract.owner?.ip || contract.ip_origen || '186.138.89.210';
+            const oIp = contract.owner?.ip || contract.ip_origen || 'No registrada';
             const oUa = contract.owner?.userAgent || contract.user_agent || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Mozilla/5.0');
 
             const htmlContent = `
@@ -5483,7 +5472,7 @@
                             <span style="font-size: 10px; font-weight: 800; color: #000000; text-transform: uppercase;">${g.roleLabel || `Garante ${idx + 1} (Codeudor Solidario)`}</span>
                             <div style="font-size: 13px; font-weight: 800; margin-top: 2px;">${g.name}</div>
                             <div style="font-size: 11px; color: #333333;"><b>DNI:</b> ${g.dni} • <b>CUIL:</b> ${g.cuil}</div>
-                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">${isGSigned ? `IP: ${g.ip || '186.138.89.210'} • ${(g.userAgent || 'Mozilla/5.0').substring(0, 38)}...` : 'IP: Pendiente de conexión'}</div>
+                            <div style="font-size: 10px; color: #333333; margin-top: 4px; font-family: monospace;">${isGSigned ? `IP: ${g.ip || 'No registrada'} • ${(g.userAgent || 'Mozilla/5.0').substring(0, 38)}...` : 'IP: Pendiente de conexión'}</div>
                             <div style="font-size: 10.5px; font-weight: bold; margin-top: 6px;">
                                 ${isGSigned ? '<span style="color: #000000;">✓ Didit KYC & Liveness 3D Aprobado</span>' : '<span style="color: #b45309;">⏳ Pendiente de Firma y Validación Biométrica</span>'}
                             </div>

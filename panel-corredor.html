@@ -2831,7 +2831,7 @@
 
             const name = a.tenant_name || a.name || 'Postulante';
             const email = a.tenant_email || a.email || '';
-            const phone = a.tenant_phone || a.telefono || a.phone || '';
+            let phone = a.tenant_phone || a.telefono || a.phone || '';
             let rawIncome = a.monthly_income ?? a.ingreso_mensual_declarado ?? a.income;
             if (rawIncome === undefined || rawIncome === null || rawIncome === '') {
                 rawIncome = a.property_price || a.propertyPrice || 450000;
@@ -2920,6 +2920,14 @@
                         if (localUser.email === email || localUser.mail === email) {
                             rawCondicion = localUser.condicion_fiscal || localUser.condicionFiscal || localUser.actividad;
                         }
+                    }
+                }
+                if (!phone || phone === '+54 9 261 412-3456' || phone === '+54 9 11 0000-0000' || phone === '+54 11 4455-8899' || phone.includes('4589-2231')) {
+                    if (localUser.email === email || localUser.mail === email || localPass.razon_social === name) {
+                        phone = localPass.telefono || localUser.telefono || phone;
+                    }
+                    if (!phone || phone === '+54 9 261 412-3456' || phone === '+54 9 11 0000-0000' || phone === '+54 11 4455-8899' || phone.includes('4589-2231')) {
+                        phone = 'No informado';
                     }
                 }
             } catch (e) { }

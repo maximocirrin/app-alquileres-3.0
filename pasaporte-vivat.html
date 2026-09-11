@@ -1339,12 +1339,14 @@
 
             // Leer ingresos previos si existen
             let prevIncome = 850000;
+            let prevPhone = '';
             try {
                 const uData = JSON.parse(localStorage.getItem('vivat_user') || '{}');
                 const pData = JSON.parse(localStorage.getItem('vivat_passport_data') || '{}');
                 if (pData.monthly_income || pData.ingreso_mensual || uData.monthly_income) {
                     prevIncome = pData.monthly_income || pData.ingreso_mensual || uData.monthly_income;
                 }
+                prevPhone = pData.telefono || uData.telefono || '';
             } catch (e) { }
 
             modal = document.createElement('div');
@@ -1434,6 +1436,27 @@
                                     </select>
                                 </div>
                                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Se certificará y mostrará en tu credencial para los propietarios.</p>
+                            </div>
+
+                            <!-- Campo Nuevo: Número de Teléfono -->
+                            <div>
+                                <label for="input-telefono-pasaporte" class="block text-xs font-headline font-extrabold text-zinc-800 dark:text-zinc-200 mb-1.5">
+                                    Número de Teléfono (Celular)
+                                </label>
+                                <div class="relative flex items-center">
+                                    <span class="absolute left-3.5 text-zinc-400 dark:text-zinc-500 pointer-events-none flex items-center">
+                                        <span class="material-symbols-outlined text-lg">phone_iphone</span>
+                                    </span>
+                                    <input 
+                                        type="tel" 
+                                        id="input-telefono-pasaporte" 
+                                        required 
+                                        placeholder="+54 9 11 1234-5678"
+                                        value="${prevPhone}"
+                                        class="w-full pl-10 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700/80 rounded-xl text-xs sm:text-sm font-body text-zinc-900 dark:text-white focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                                    >
+                                </div>
+                                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">Necesario para contactarte si tu solicitud es aprobada.</p>
                             </div>
 
                             <!-- Campo 2: Ingresos Mensuales Demostrables (En lugar de CUIT) -->
@@ -1543,6 +1566,7 @@
             e.preventDefault();
 
             const inputIngresos = document.getElementById('input-ingresos-pasaporte');
+            const inputTelefono = document.getElementById('input-telefono-pasaporte');
             const selectCondicion = document.getElementById('select-condicion-pasaporte');
             const checkTerminos = document.getElementById('check-terminos-pasaporte');
             const btn = document.getElementById('btn-confirmar-pago-simulado');
@@ -1613,7 +1637,8 @@
                                 .from('Perfil')
                                 .update({
                                     acepto_terminos: true,
-                                    fecha_aceptacion_terminos: new Date().toISOString()
+                                    fecha_aceptacion_terminos: new Date().toISOString(),
+                                    telefono: inputTelefono ? inputTelefono.value : undefined
                                 })
                                 .eq('id_perfil', idPerfil);
                         }
@@ -1645,6 +1670,7 @@
                     pDataLocal.monthly_income = ingresosVal;
                     pDataLocal.ingreso_mensual = ingresosVal;
                     if (bonoAdjuntado) pDataLocal.bono_sueldo = bonoAdjuntado;
+                    if (inputTelefono) pDataLocal.telefono = inputTelefono.value;
                     pDataLocal.datos_ingresos = datosIngresosObj;
                     localStorage.setItem('vivat_passport_data', JSON.stringify(pDataLocal));
 
@@ -1654,6 +1680,7 @@
                     uDataLocal.actividad = condicionElegida;
                     uDataLocal.monthly_income = ingresosVal;
                     uDataLocal.ingreso_mensual = ingresosVal;
+                    if (inputTelefono) uDataLocal.telefono = inputTelefono.value;
                     if (bonoAdjuntado) uDataLocal.bono_sueldo = bonoAdjuntado;
                     localStorage.setItem('vivat_user', JSON.stringify(uDataLocal));
                 } catch (eLoc) { }
