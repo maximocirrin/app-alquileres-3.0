@@ -303,6 +303,6 @@ export function sendInternalError(res, context, error) {
   return res.status(500).json({
     ok: false,
     error: 'Internal Server Error',
-    message: 'Ocurrió un error interno al procesar la solicitud.'
+    message: error?.message || 'Ocurrió un error interno al procesar la solicitud.'
   });
 }
