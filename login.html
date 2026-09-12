@@ -33,7 +33,7 @@
                 } else {
                     root.removeAttribute('data-theme');
                     root.classList.remove('dark');
-                    root.style.backgroundColor = '#ffffff';
+                    root.style.backgroundColor = '#f9f9f9';
                     root.style.colorScheme = 'light';
                 }
             } catch (e) { }
@@ -87,6 +87,13 @@
         rel="stylesheet">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
     <link rel="stylesheet" href="css/style.css?v=14">
+    <script>
+        const originalWarn = console.warn;
+        console.warn = function () {
+            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, arguments);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
         tailwind.config = {
@@ -94,14 +101,17 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
                         headline: ['Manrope', 'sans-serif'],
                         body: ['Inter', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
                         "primary": "#811b1e",
-                        "primary-hover": "#992125",
-                        "on-primary": "#ffffff",
+                        "primary-hover": "#9e2226",
+                        "primary-light": "rgba(129, 27, 30, 0.08)",
+                        "background": "#f9f9f9",
+                        "surface": "#ffffff",
+                        "on-background": "#1a1c1c",
                     }
                 }
             }
@@ -109,31 +119,27 @@
     </script>
     <style>
         :root {
-            --background: #f8fafc;
+            --background: #f9f9f9;
             --surface: #ffffff;
-            --surface-soft: #f1f5f9;
-            --text: #0f172a;
+            --text: #1a1c1c;
             --muted: #64748b;
             --border: #e2e8f0;
             --primary: #811b1e;
-            --primary-hover: #9b2226;
+            --primary-hover: #9e2226;
             --primary-soft: rgba(129, 27, 30, 0.08);
-            --shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04);
-            --glow: radial-gradient(circle at 50% -20%, rgba(129, 27, 30, 0.12), transparent 70%);
+            --glow: radial-gradient(circle at 50% -12%, rgba(129, 27, 30, 0.10), transparent 60%);
         }
 
         html.dark {
             --background: #09090b;
             --surface: #121215;
-            --surface-soft: #1c1c21;
-            --text: #f8fafc;
-            --muted: #94a3b8;
+            --text: #f1f1f1;
+            --muted: #a1a1aa;
             --border: #27272a;
-            --primary: #9b2226;
-            --primary-hover: #b82a2e;
-            --primary-soft: rgba(155, 34, 38, 0.18);
-            --shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-            --glow: radial-gradient(circle at 50% -20%, rgba(155, 34, 38, 0.25), transparent 75%);
+            --primary: #811b1e;
+            --primary-hover: #9e2226;
+            --primary-soft: rgba(129, 27, 30, 0.22);
+            --glow: radial-gradient(circle at 50% -12%, rgba(129, 27, 30, 0.22), transparent 65%);
         }
 
         * {
@@ -141,26 +147,19 @@
         }
 
         body {
+            margin: 0;
+            min-height: 100vh;
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            background-image: var(--glow);
+            background-attachment: fixed;
+            color: var(--text);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        input,
-        button,
-        select,
-        textarea {
-            font-family: inherit;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
         .font-headline {
-            font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
         .font-body {
@@ -185,320 +184,24 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background-color: var(--background);
-            background-image: var(--glow);
-            background-attachment: fixed;
-            color: var(--text);
-        }
-
-        .owner-auth-header {
-            height: 84px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 clamp(20px, 4vw, 64px);
-            border-bottom: 1px solid var(--border);
-            background: color-mix(in srgb, var(--surface) 80%, transparent);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .owner-auth-logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text);
-            text-decoration: none;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: clamp(24px, 4vw, 32px);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-        }
-
-        .owner-auth-logo img {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .owner-auth-main {
-            min-height: calc(100vh - 84px);
-            display: grid;
-            place-items: center;
-            padding: 40px 16px 60px;
-        }
-
-        .owner-auth-card {
-            width: min(100%, 540px);
-            border: 1px solid var(--border);
-            border-radius: 32px;
-            background: color-mix(in srgb, var(--surface) 96%, transparent);
-            box-shadow: var(--shadow);
-            padding: clamp(28px, 5vw, 44px);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .owner-auth-card::before {
+        /* Ambient subtle highlight on auth card top */
+        .auth-card-highlight::before {
             content: "";
             position: absolute;
             top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+            left: 2rem;
+            right: 2rem;
+            height: 2px;
             background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0.8;
-        }
-
-        .owner-auth-title {
-            margin: 0 0 10px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: clamp(28px, 5vw, 38px);
-            font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.03em;
-            text-align: center;
-            color: var(--text);
-        }
-
-        .owner-auth-subtitle {
-            margin: 0 0 28px;
-            color: var(--muted);
-            font-size: clamp(14px, 2.5vw, 16px);
-            line-height: 1.5;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .owner-auth-google {
-            width: 100%;
-            min-height: 56px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background: var(--surface);
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-        }
-
-        .owner-auth-google:hover {
-            transform: translateY(-1px);
-            border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-            background: var(--surface-soft);
-        }
-
-        .owner-auth-google:active {
-            transform: translateY(0);
-        }
-
-        .owner-auth-divider {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 16px;
-            align-items: center;
-            color: var(--muted);
-            margin: 24px 0 24px;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .owner-auth-divider::before,
-        .owner-auth-divider::after {
-            content: "";
-            height: 1px;
-            background: var(--border);
-        }
-
-        .owner-auth-form {
-            display: grid;
-            gap: 18px;
-        }
-
-        .owner-auth-field {
-            display: grid;
-            gap: 6px;
-        }
-
-        .owner-auth-field label {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: 0.01em;
-        }
-
-        .owner-auth-field input {
-            width: 100%;
-            min-height: 52px;
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            background: var(--surface);
-            color: var(--text);
-            padding: 0 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            font-weight: 500;
-            outline: none;
-            transition: all 180ms ease;
-        }
-
-        .owner-auth-field input::placeholder {
-            color: var(--muted);
-            opacity: 0.7;
-        }
-
-        .owner-auth-field input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px var(--primary-soft);
-            background: var(--surface);
-        }
-
-        .owner-auth-submit {
-            width: 100%;
-            min-height: 56px;
-            border: 0;
-            border-radius: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-            color: #ffffff;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 0.01em;
-            cursor: pointer;
-            margin-top: 6px;
-            box-shadow: 0 6px 20px var(--primary-soft);
-            transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .owner-auth-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(129, 27, 30, 0.3);
-            filter: brightness(1.05);
-        }
-
-        .owner-auth-submit:active {
-            transform: translateY(0);
-        }
-
-        .owner-auth-submit:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .owner-auth-switch {
-            margin: 22px 0 0;
-            text-align: center;
-            color: var(--muted);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .owner-auth-switch button {
-            border: 0;
-            padding: 0;
-            background: transparent;
-            color: var(--primary);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            text-decoration: underline;
-            text-underline-offset: 4px;
-            cursor: pointer;
-            margin-left: 4px;
-            transition: color 150ms ease;
-        }
-
-        .owner-auth-switch button:hover {
-            color: var(--primary-hover);
-        }
-
-        .owner-auth-fineprint {
-            margin: 24px auto 0;
-            max-width: 480px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-            opacity: 0.85;
-        }
-
-        .owner-auth-fineprint a {
-            color: var(--muted);
-            text-decoration: underline;
-            text-underline-offset: 3px;
+            opacity: 0.9;
         }
 
         .owner-auth-message {
             display: none;
-            border-radius: 14px;
-            padding: 12px 16px;
-            background: var(--primary-soft);
-            color: var(--text);
-            font-size: 14px;
-            line-height: 1.45;
-            font-weight: 500;
-            border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
         }
 
         .owner-auth-message.is-visible {
-            display: block;
-        }
-
-        /* Role selector pills */
-        .role-select-btn {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        @media (max-width: 640px) {
-            .owner-auth-header {
-                height: 72px;
-                padding: 0 16px;
-            }
-
-            .owner-auth-logo img {
-                width: 34px;
-                height: 34px;
-            }
-
-            .owner-auth-main {
-                min-height: calc(100vh - 72px);
-                padding: 20px 12px 40px;
-            }
-
-            .owner-auth-card {
-                border-radius: 24px;
-                padding: 24px 16px;
-            }
-
-            .owner-auth-google,
-            .owner-auth-submit,
-            .owner-auth-field input {
-                min-height: 50px;
-                border-radius: 14px;
-                font-size: 15px;
-            }
+            display: flex;
         }
     </style>
 
@@ -514,78 +217,93 @@
     </script>
 </head>
 
-<body>
-    <!-- Header enfocado estilo Navbar para Login / Registro -->
-    <header
-        class="owner-auth-header bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800">
-        <!-- Izquierda: Switch de Modo Oscuro / Claro estilo Navbar -->
-        <div class="flex items-center">
-            <label class="theme-switch flex-shrink-0 cursor-pointer"
-                style="transform: scale(0.68); transform-origin: left center;">
-                <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
-                <div class="theme-switch__container">
-                    <div class="theme-switch__clouds"></div>
-                    <div class="theme-switch__stars-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
-                                fill="currentColor"></path>
-                        </svg>
-                    </div>
-                    <div class="theme-switch__circle-container">
-                        <div class="theme-switch__sun-moon-container">
-                            <div class="theme-switch__moon">
-                                <div class="theme-switch__spot"></div>
-                                <div class="theme-switch__spot"></div>
-                                <div class="theme-switch__spot"></div>
+<body class="flex flex-col min-h-screen">
+    <!-- Navbar / Header con coherencia visual idéntica al resto de Vivat -->
+    <header class="sticky top-0 z-50 w-full h-16 lg:h-20 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-[0_12px_40px_0_rgba(26,28,28,0.03)]">
+        <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <!-- Izquierda: Switch de Modo Oscuro / Claro estilo Navbar Vivat -->
+            <div class="flex items-center">
+                <label class="theme-switch flex-shrink-0 cursor-pointer"
+                    style="transform: scale(0.68); transform-origin: left center;"
+                    title="Alternar modo claro / oscuro">
+                    <input type="checkbox" class="theme-switch__checkbox" style="display: none;">
+                    <div class="theme-switch__container">
+                        <div class="theme-switch__clouds"></div>
+                        <div class="theme-switch__stars-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
+                                    fill="currentColor"></path>
+                            </svg>
+                        </div>
+                        <div class="theme-switch__circle-container">
+                            <div class="theme-switch__sun-moon-container">
+                                <div class="theme-switch__moon">
+                                    <div class="theme-switch__spot"></div>
+                                    <div class="theme-switch__spot"></div>
+                                    <div class="theme-switch__spot"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </label>
+                </label>
+            </div>
+
+            <!-- Centro: Logo principal de Vivat con Manrope / Estilo Navbar -->
+            <div class="flex items-center justify-center">
+                <a href="index.html" class="flex items-center gap-2 group transition-transform hover:scale-[1.02]">
+                    <img src="img/logo-lite.png" alt="Vivat Logo"
+                        class="h-11 sm:h-13 md:h-14 lg:h-[58px] w-auto object-contain transition-all">
+                </a>
+            </div>
+
+            <!-- Derecha: Botón Volver al inicio estilo Vivat -->
+            <div class="flex items-center justify-end">
+                <a href="index.html"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-headline font-bold text-zinc-600 dark:text-zinc-300 hover:text-primary dark:hover:text-white bg-zinc-100/90 dark:bg-zinc-800/80 hover:bg-zinc-200/90 dark:hover:bg-zinc-700/80 border border-zinc-200/80 dark:border-zinc-700/80 transition-all shadow-xs group">
+                    <span class="material-symbols-outlined text-base sm:text-lg transition-transform group-hover:-translate-x-0.5">arrow_back</span>
+                    <span class="hidden sm:inline">Volver al inicio</span>
+                    <span class="sm:hidden">Volver</span>
+                </a>
+            </div>
         </div>
-
-        <!-- Centro: Logo principal de Vivat -->
-        <a href="index.html" class="flex items-center gap-1.5 lg:gap-2 group">
-            <img src="img/logo-lite.png" alt="Vivat Logo"
-                class="h-12 sm:h-14 md:h-[58px] lg:h-[68px] w-auto object-contain transition-all">
-        </a>
-
-        <!-- Derecha: Botón Volver al inicio -->
-        <a href="index.html"
-            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-headline font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-all no-underline border border-zinc-200 dark:border-zinc-700/80 shadow-xs">
-            <span class="material-symbols-outlined text-lg">arrow_back</span>
-            <span class="hidden sm:inline">Volver al inicio</span>
-            <span class="sm:hidden">Volver</span>
-        </a>
     </header>
 
-    <main class="owner-auth-main">
-        <section class="owner-auth-card" aria-labelledby="owner-auth-title">
+    <!-- Contenido Principal: Centrado con tarjeta estilizada Vivat -->
+    <main class="flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6">
+        <section class="auth-card-highlight relative w-full max-w-[490px] rounded-3xl bg-white/95 dark:bg-[#121215]/95 backdrop-blur-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-[0_20px_50px_rgba(26,28,28,0.06)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)] p-6 sm:p-9 overflow-hidden" aria-labelledby="owner-auth-title">
+            
+            <!-- Vista 1: Formulario de Login / Registro -->
             <div id="owner-auth-form-container">
-                <!-- Selector de Tipo de Usuario / Rol (Particular vs Corredor) -->
-                <div
-                    class="grid grid-cols-2 gap-1.5 p-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-2xl mb-6 border border-zinc-200/80 dark:border-zinc-700/80">
+                <!-- Selector Segmentado de Tipo de Usuario / Rol (Particular vs Corredor) -->
+                <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-zinc-100/90 dark:bg-zinc-800/70 rounded-2xl mb-7 border border-zinc-200/70 dark:border-zinc-700/60 shadow-inner">
                     <button type="button" id="role-btn-inquilino"
-                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-xs cursor-pointer"
+                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-sm cursor-pointer"
                         data-role="inquilino" data-role-id="1">
                         <span class="material-symbols-outlined text-base sm:text-lg">person</span>
                         <span>Usuario Particular</span>
                     </button>
                     <button type="button" id="role-btn-profesional"
-                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                        class="role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-bold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
                         data-role="profesional" data-role-id="3">
                         <span class="material-symbols-outlined text-base sm:text-lg">real_estate_agent</span>
                         <span>Soy Corredor</span>
                     </button>
                 </div>
 
-                <h1 id="owner-auth-title" class="owner-auth-title">Crea tu cuenta de inquilino</h1>
-                <p id="owner-auth-subtitle" class="owner-auth-subtitle">Alquila sin garantías tradicionales y gestiona
-                    tus contratos.</p>
+                <!-- Título y Subtítulo -->
+                <div class="text-center mb-6">
+                    <h1 id="owner-auth-title" class="font-headline font-black text-2xl sm:text-3xl text-zinc-900 dark:text-white tracking-tight leading-tight mb-2">
+                        Crea tu cuenta en Vivat
+                    </h1>
+                    <p id="owner-auth-subtitle" class="font-body text-sm sm:text-base text-zinc-500 dark:text-zinc-400 font-normal leading-relaxed">
+                        Alquila, publica tus propiedades y gestiona tus contratos.
+                    </p>
+                </div>
 
-                <button id="owner-google-btn" class="owner-auth-google" type="button">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                <!-- Botón de Continuar con Google -->
+                <button id="owner-google-btn" class="w-full h-12 sm:h-13 rounded-xl border border-zinc-200/90 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/60 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 font-headline font-bold text-sm sm:text-base flex items-center justify-center gap-3 transition-all duration-200 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-600 active:scale-[0.99] cursor-pointer mb-6" type="button">
+                    <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4"
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853"
@@ -598,132 +316,189 @@
                     <span>Continuar con Google</span>
                 </button>
 
-                <div class="owner-auth-divider">O usa tu correo electr&oacute;nico</div>
+                <!-- Divisor con línea sutil -->
+                <div class="relative my-6 text-center">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase tracking-wider font-headline font-bold">
+                        <span class="bg-white dark:bg-[#121215] px-3 text-zinc-400 dark:text-zinc-500">O usa tu correo electr&oacute;nico</span>
+                    </div>
+                </div>
 
-                <form id="owner-auth-form" class="owner-auth-form">
-                    <div id="owner-name-field" class="owner-auth-field">
-                        <label for="owner-name">Nombre completo</label>
+                <!-- Formulario de Correo & Contraseña -->
+                <form id="owner-auth-form" class="space-y-4">
+                    <div id="owner-name-field" class="space-y-1.5">
+                        <label for="owner-name" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Nombre completo
+                        </label>
                         <input id="owner-name" name="name" type="text" autocomplete="name"
-                            placeholder="Tu nombre y apellido">
+                            placeholder="Tu nombre y apellido"
+                            class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                     </div>
 
-                    <div id="owner-username-field" class="owner-auth-field" style="display: none;">
-                        <label for="owner-username">Nombre de usuario</label>
+                    <div id="owner-username-field" class="space-y-1.5" style="display: none;">
+                        <label for="owner-username" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Nombre de usuario
+                        </label>
                         <input id="owner-username" name="username" type="text" autocomplete="username"
-                            placeholder="Ej: juanperez123">
+                            placeholder="Ej: juanperez123"
+                            class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                     </div>
 
                     <!-- Campos Profesionales exclusivos para Corredores (Ocultos por defecto) -->
-                    <div id="broker-fields-container" style="display: none;" class="grid gap-3">
-                        <div class="owner-auth-field">
-                            <label for="broker-company">Nombre de la Inmobiliaria / Firma</label>
-                            <input id="broker-company" name="company" type="text" placeholder="Ej: Cirrini Propiedades">
+                    <div id="broker-fields-container" style="display: none;" class="space-y-4 pt-1">
+                        <div class="space-y-1.5">
+                            <label for="broker-company" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                                Inmobiliaria / Firma comercial
+                            </label>
+                            <input id="broker-company" name="company" type="text" placeholder="Ej: Cirrini Propiedades"
+                                class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="owner-auth-field">
-                                <label for="broker-matricula">N° Matr&iacute;cula profesional *</label>
-                                <input id="broker-matricula" name="matricula" type="text"
-                                    placeholder="Ej: CUCICBA 4521">
+                            <div class="space-y-1.5">
+                                <label for="broker-matricula" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                                    N° Matr&iacute;cula *
+                                </label>
+                                <input id="broker-matricula" name="matricula" type="text" placeholder="Ej: CUCICBA 4521"
+                                    class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                             </div>
-                            <div class="owner-auth-field">
-                                <label for="broker-phone">Tel&eacute;fono comercial *</label>
-                                <input id="broker-phone" name="phone" type="tel" placeholder="Ej: 11 2345-6789">
+                            <div class="space-y-1.5">
+                                <label for="broker-phone" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                                    Tel&eacute;fono *
+                                </label>
+                                <input id="broker-phone" name="phone" type="tel" placeholder="Ej: 11 2345-6789"
+                                    class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                             </div>
                         </div>
                     </div>
 
-                    <div class="owner-auth-field">
-                        <label for="owner-email">Correo electr&oacute;nico</label>
+                    <div class="space-y-1.5">
+                        <label for="owner-email" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Correo electr&oacute;nico
+                        </label>
                         <input id="owner-email" name="email" type="email" autocomplete="email"
-                            placeholder="tu@email.com" required>
+                            placeholder="tu@email.com" required
+                            class="w-full h-12 px-4 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                     </div>
 
-                    <div class="owner-auth-field">
-                        <label for="owner-password">Contrase&ntilde;a</label>
+                    <div class="space-y-1.5">
+                        <label for="owner-password" class="block font-headline font-bold text-xs uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Contrase&ntilde;a
+                        </label>
                         <div class="relative flex items-center">
                             <input id="owner-password" name="password" type="password" autocomplete="new-password"
-                                placeholder="M&iacute;nimo 6 caracteres" minlength="6" required class="pr-12">
+                                placeholder="M&iacute;nimo 6 caracteres" minlength="6" required
+                                class="w-full h-12 pl-4 pr-12 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-900 dark:text-white font-body text-sm font-medium focus:bg-white dark:focus:bg-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs">
                             <button type="button" id="toggle-password-btn"
-                                class="absolute right-3.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer flex items-center justify-center p-1"
-                                title="Mostrar/ocultar contraseña">
+                                class="absolute right-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
+                                title="Mostrar / ocultar contraseña">
                                 <span class="material-symbols-outlined text-xl">visibility</span>
                             </button>
                         </div>
                     </div>
 
-                    <p id="owner-auth-message" class="owner-auth-message" role="status"></p>
+                    <!-- Aceptación obligatoria de Términos y Condiciones y Política de Privacidad (Exclusivo Registro) -->
+                    <div id="terms-privacy-container" class="space-y-2.5 pt-1.5 pb-1">
+                        <label class="flex items-start gap-2.5 cursor-pointer text-xs font-body text-zinc-600 dark:text-zinc-400 select-none group">
+                            <input type="checkbox" id="owner-accept-terms" name="accept_terms" required
+                                class="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-primary focus:ring-primary/20 bg-white dark:bg-zinc-900 cursor-pointer">
+                            <span>Acepto los <a href="terminos.html" target="_blank" class="text-primary dark:text-red-400 hover:underline font-bold">T&eacute;rminos y Condiciones</a> del servicio *</span>
+                        </label>
+                        <label class="flex items-start gap-2.5 cursor-pointer text-xs font-body text-zinc-600 dark:text-zinc-400 select-none group">
+                            <input type="checkbox" id="owner-accept-privacy" name="accept_privacy" required
+                                class="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-primary focus:ring-primary/20 bg-white dark:bg-zinc-900 cursor-pointer">
+                            <span>Acepto la <a href="terminos.html" target="_blank" class="text-primary dark:text-red-400 hover:underline font-bold">Pol&iacute;tica de Privacidad</a> y tratamiento de mis datos *</span>
+                        </label>
+                    </div>
 
-                    <button id="owner-auth-submit" class="owner-auth-submit" type="submit">Continuar</button>
+                    <!-- hCaptcha Antispam (Exclusivo Registro) -->
+                    <div id="hcaptcha-container" class="pt-1 pb-1 flex justify-center min-h-[78px]">
+                        <div id="hcaptcha-widget"></div>
+                    </div>
+
+                    <!-- Mensaje de Alerta / Error -->
+                    <p id="owner-auth-message" class="owner-auth-message rounded-xl p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300 text-sm font-body font-medium leading-snug" role="status"></p>
+
+                    <!-- Botón de Envío -->
+                    <button id="owner-auth-submit" class="w-full h-12 sm:h-13 rounded-xl bg-primary hover:bg-[#9e2226] text-white font-headline font-extrabold text-sm sm:text-base tracking-wide shadow-[0_4px_16px_rgba(129,27,30,0.25)] hover:shadow-[0_6px_22px_rgba(129,27,30,0.38)] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" type="submit">
+                        Continuar
+                    </button>
                 </form>
 
-                <p class="owner-auth-switch">
+                <!-- Alternar entre Iniciar sesión y Registrarse -->
+                <p class="text-center text-sm font-body text-zinc-500 dark:text-zinc-400 mt-5">
                     <span id="owner-auth-switch-copy">&iquest;Ya tienes una?</span>
-                    <button id="owner-auth-mode-btn" type="button">Iniciar sesi&oacute;n</button>
+                    <button id="owner-auth-mode-btn" type="button" class="font-headline font-bold text-primary hover:text-primary-hover underline underline-offset-4 cursor-pointer ml-1 transition-colors">
+                        Iniciar sesi&oacute;n
+                    </button>
                 </p>
 
-                <p class="owner-auth-fineprint">
+                <!-- Pie legal -->
+                <p class="text-center text-xs font-body text-zinc-400 dark:text-zinc-500 mt-6 leading-relaxed max-w-sm mx-auto">
                     Este sitio est&aacute; protegido por reCAPTCHA y se aplican la
-                    <a href="#">Pol&iacute;tica de Privacidad</a> y los
-                    <a href="#">T&eacute;rminos del Servicio</a> de Google.
+                    <a href="terminos.html" class="underline text-zinc-500 dark:text-zinc-400 hover:text-primary transition-colors">Pol&iacute;tica de Privacidad</a> y los
+                    <a href="terminos.html" class="underline text-zinc-500 dark:text-zinc-400 hover:text-primary transition-colors">T&eacute;rminos del Servicio</a>.
                 </p>
             </div>
 
-            <!-- Contenedor de Verificación de Código OTP (Oculto por defecto) -->
-            <div id="owner-otp-container" style="display: none;" class="flex-col items-center text-center">
-                <div
-                    class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/40 text-primary dark:text-red-400 flex items-center justify-center mb-5 mx-auto">
+            <!-- Vista 2: Contenedor de Verificación de Código OTP (Exactamente 6 dígitos) -->
+            <div id="owner-otp-container" style="display: none;" class="flex flex-col items-center text-center">
+                <!-- Icono destacado con estética Vivat -->
+                <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/50 text-primary dark:text-red-400 flex items-center justify-center mb-5 mx-auto border border-red-100 dark:border-red-900/40 shadow-xs">
                     <span class="material-symbols-outlined text-3xl">mark_email_read</span>
                 </div>
-                <h2 class="owner-auth-title" style="font-size: clamp(26px, 5vw, 36px); margin-bottom: 10px;">
-                    Verific&aacute; tu correo</h2>
-                <p class="owner-auth-subtitle" style="font-size: 16px; margin-bottom: 24px;">
-                    Enviamos un correo de confirmaci&oacute;n a <strong id="otp-user-email"
-                        class="text-zinc-900 dark:text-white font-bold"></strong>. Pod&eacute;s hacer clic en el enlace
-                    del mail o ingresar el c&oacute;digo de verificaci&oacute;n.<br><span
-                        class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1 inline-block">&#9888;&#65039;
-                        Revis&aacute; tu casilla de Spam / Correo no deseado</span>
+
+                <h2 class="font-headline font-black text-2xl sm:text-3xl text-zinc-900 dark:text-white tracking-tight mb-2">
+                    Verific&aacute; tu correo
+                </h2>
+                
+                <p class="font-body text-sm sm:text-base text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed max-w-sm">
+                    Enviamos un c&oacute;digo de 6 d&iacute;gitos a <strong id="otp-user-email" class="text-zinc-900 dark:text-white font-bold"></strong>.<br>
+                    Ingresalo para activar tu cuenta.<br>
+                    <span class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-2.5 inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-900/40">
+                        <span class="material-symbols-outlined text-sm">info</span> Revis&aacute; tambi&eacute;n tu casilla de Spam
+                    </span>
                 </p>
 
-                <div class="flex justify-center gap-1.5 sm:gap-2 mb-6" id="otp-inputs-container">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                <!-- Grid de 6 dígitos para el código OTP -->
+                <div class="grid grid-cols-6 gap-2 sm:gap-2.5 max-w-[340px] sm:max-w-[390px] w-full mx-auto mb-6" id="otp-inputs-container">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="0" autocomplete="one-time-code">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="1">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="2">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="3">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="4">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                        class="otp-digit-input w-full aspect-square text-center text-xl sm:text-2xl font-headline font-black rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50/60 dark:bg-zinc-900/90 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all shadow-xs"
                         data-index="5">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                        data-index="6">
-                    <input type="text" maxlength="1" inputmode="numeric"
-                        class="otp-digit-input w-8 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                        data-index="7">
                 </div>
 
-                <p id="otp-auth-message" class="owner-auth-message mb-4" role="status"></p>
+                <!-- Mensaje de error de OTP -->
+                <p id="otp-auth-message" class="owner-auth-message w-full rounded-xl p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300 text-sm font-body font-medium leading-snug mb-4" role="status"></p>
 
-                <button id="otp-verify-submit" type="button" class="owner-auth-submit w-full mb-4">Verificar
-                    c&oacute;digo</button>
+                <!-- Botón de Verificar -->
+                <button id="otp-verify-submit" type="button" class="w-full h-12 sm:h-13 rounded-xl bg-primary hover:bg-[#9e2226] text-white font-headline font-extrabold text-sm sm:text-base tracking-wide shadow-[0_4px_16px_rgba(129,27,30,0.25)] hover:shadow-[0_6px_22px_rgba(129,27,30,0.38)] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center mb-4 disabled:opacity-60 disabled:cursor-not-allowed">
+                    Verificar c&oacute;digo
+                </button>
 
-                <div
-                    class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-zinc-500 dark:text-zinc-400 w-full mt-2">
+                <!-- Acciones secundarias: Reenviar y Volver -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm font-body text-zinc-500 dark:text-zinc-400 w-full pt-2">
                     <button id="otp-resend-btn" type="button"
-                        class="hover:text-primary dark:hover:text-red-400 font-medium transition-colors cursor-pointer">
+                        class="hover:text-primary dark:hover:text-red-400 font-medium transition-colors cursor-pointer text-xs sm:text-sm">
                         &iquest;No recibiste el c&oacute;digo? <span class="underline font-bold">Reenviar</span>
                     </button>
                     <button id="otp-back-btn" type="button"
-                        class="hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer">
+                        class="hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm font-medium">
                         Cambiar correo / Volver
                     </button>
                 </div>
@@ -731,6 +506,7 @@
         </section>
     </main>
 
+    <script src="https://js.hcaptcha.com/1/api.js?onload=onHcaptchaLoaded&render=explicit&hl=es" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/owner-login.js"></script>

@@ -167,12 +167,23 @@ var DataManager = {
         return data.user;
     },
 
-    signUp: async (email, password, fullName) => {
+    signUp: async (email, password, fullName, metadata = {}) => {
         if (!window.supabaseClient) return null;
+        const nowIso = new Date().toISOString();
         const { data, error } = await window.supabaseClient.auth.signUp({
             email,
             password,
-            options: { data: { full_name: fullName } }
+            options: {
+                data: {
+                    full_name: fullName,
+                    acepto_terminos: true,
+                    fecha_aceptacion_terminos: nowIso,
+                    acepto_politica_privacidad: true,
+                    acepto_privacidad: true,
+                    fecha_aceptacion_privacidad: nowIso,
+                    ...metadata
+                }
+            }
         });
         if (error) {
             console.error("Signup error:", error);

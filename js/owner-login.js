@@ -106,6 +106,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     const brokerCompanyInput = document.getElementById('broker-company');
     const brokerMatriculaInput = document.getElementById('broker-matricula');
     const brokerPhoneInput = document.getElementById('broker-phone');
+    const termsPrivacyContainer = document.getElementById('terms-privacy-container');
+    const acceptTermsInput = document.getElementById('owner-accept-terms');
+    const acceptPrivacyInput = document.getElementById('owner-accept-privacy');
+    const hcaptchaContainer = document.getElementById('hcaptcha-container');
+    const HCAPTCHA_SITE_KEY = '9650bd2a-c2d6-43a8-a28c-da941c180a8c';
+    let hcaptchaWidgetId = null;
+    let hcaptchaVerifiedToken = '';
+
+    const resetHcaptcha = () => {
+        hcaptchaVerifiedToken = '';
+        if (window.hcaptcha && hcaptchaWidgetId !== null) {
+            try { window.hcaptcha.reset(hcaptchaWidgetId); } catch (_) {}
+        }
+    };
+
+    const renderHcaptcha = () => {
+        if (!hcaptchaContainer || !window.hcaptcha) return;
+        if (hcaptchaWidgetId !== null) return;
+        const target = document.getElementById('hcaptcha-widget');
+        if (!target) return;
+        try {
+            const isDark = document.documentElement.classList.contains('dark');
+            hcaptchaWidgetId = window.hcaptcha.render('hcaptcha-widget', {
+                sitekey: HCAPTCHA_SITE_KEY,
+                theme: isDark ? 'dark' : 'light',
+                size: 'normal',
+                callback: (token) => {
+                    hcaptchaVerifiedToken = token;
+                    clearMessage();
+                },
+                'expired-callback': () => {
+                    hcaptchaVerifiedToken = '';
+                },
+                'error-callback': () => {
+                    hcaptchaVerifiedToken = '';
+                }
+            });
+        } catch (e) {
+            console.warn('Error al renderizar hCaptcha:', e);
+        }
+    };
+
+    window.onHcaptchaLoaded = () => {
+        if (mode === 'signup') {
+            renderHcaptcha();
+        }
+    };
+
     const message = document.getElementById('owner-auth-message');
     const roleButtons = document.querySelectorAll('.role-select-btn');
 
@@ -139,6 +187,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         submitBtn.textContent = isLoading ? 'Procesando...' : 'Continuar';
     };
 
+    const syncPerfilAcceptance = async (userId) => {
+        if (!userId || !window.supabaseClient) return;
+        try {
+            const nowIso = new Date().toISOString();
+            await window.supabaseClient
+                .from('Perfil')
+                .update({
+                    acepto_terminos: true,
+                    fecha_aceptacion_terminos: nowIso,
+                    acepto_politica_privacidad: true,
+                    acepto_privacidad: true,
+                    fecha_aceptacion_privacidad: nowIso
+                })
+                .eq('user_id', userId);
+        } catch (e) {
+            console.warn('Sync Perfil acceptance notice:', e);
+        }
+    };
+
     const syncUI = () => {
         const roleData = ROLES[currentRole];
         const isSignup = mode === 'signup';
@@ -155,6 +222,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (usernameInput) usernameInput.required = isSignup;
         passwordInput.autocomplete = isSignup ? 'new-password' : 'current-password';
 
+        // Terms & Privacy Acceptance (Signup only)
+        if (termsPrivacyContainer) termsPrivacyContainer.style.display = isSignup ? 'block' : 'none';
+        if (acceptTermsInput) acceptTermsInput.required = isSignup;
+        if (acceptPrivacyInput) acceptPrivacyInput.required = isSignup;
+
+        // hCaptcha (Signup only)
+        if (hcaptchaContainer) {
+            hcaptchaContainer.style.display = isSignup ? 'flex' : 'none';
+            if (isSignup) {
+                renderHcaptcha();
+            } else {
+                resetHcaptcha();
+            }
+        }
+
         // Broker exclusive fields
         if (brokerFieldsContainer) {
             brokerFieldsContainer.style.display = (isSignup && isBroker) ? 'grid' : 'none';
@@ -166,9 +248,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         roleButtons.forEach(btn => {
             const role = btn.dataset.role;
             if (role === currentRole) {
-                btn.className = 'role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-xs cursor-pointer';
+                btn.className = 'role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all bg-primary text-white shadow-sm cursor-pointer';
             } else {
-                btn.className = 'role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-extrabold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer';
+                btn.className = 'role-select-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-headline font-bold text-xs sm:text-sm transition-all text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer';
             }
         });
 
@@ -198,7 +280,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     modeBtn.addEventListener('click', () => {
         mode = mode === 'signup' ? 'login' : 'signup';
         syncUI();
-    });    // OTP View Elements
+    });
+
+    // OTP View Elements (6 dígitos)
     const authFormContainer = document.getElementById('owner-auth-form-container');
     const otpContainer = document.getElementById('owner-otp-container');
     const otpUserEmail = document.getElementById('otp-user-email');
@@ -279,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearMessage();
     };
 
-    // OTP Digit Inputs auto-focus & keyboard navigation
+    // OTP Digit Inputs auto-focus & keyboard navigation (6 dígitos)
     otpDigitInputs.forEach((input, index) => {
         input.addEventListener('input', (e) => {
             const val = e.target.value;
@@ -288,11 +372,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.value && index < otpDigitInputs.length - 1) {
                 otpDigitInputs[index + 1].focus();
             }
+
+            // Si se completa el 6to dígito, autoverificar
+            if (e.target.value) {
+                const fullCode = Array.from(otpDigitInputs).map(i => i.value.trim()).join('');
+                if (fullCode.length === 6) {
+                    otpVerifySubmit.click();
+                }
+            }
         });
 
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !input.value && index > 0) {
+            if (e.key === 'Backspace') {
+                if (!input.value && index > 0) {
+                    otpDigitInputs[index - 1].focus();
+                    otpDigitInputs[index - 1].value = '';
+                }
+            } else if (e.key === 'ArrowLeft' && index > 0) {
                 otpDigitInputs[index - 1].focus();
+            } else if (e.key === 'ArrowRight' && index < otpDigitInputs.length - 1) {
+                otpDigitInputs[index + 1].focus();
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 otpVerifySubmit.click();
@@ -303,7 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
             const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
             if (pastedData) {
-                const digits = pastedData.split('');
+                const digits = pastedData.slice(0, 6).split('');
                 otpDigitInputs.forEach((digitInput, idx) => {
                     if (digits[idx]) {
                         digitInput.value = digits[idx];
@@ -312,7 +411,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const focusIdx = Math.min(digits.length, otpDigitInputs.length - 1);
                 otpDigitInputs[focusIdx].focus();
                 
-                // If 6 or 8 digits pasted, trigger submit automatically
+                // Si se pegan 6 dígitos, autoverificar
                 if (digits.length >= 6) {
                     otpVerifySubmit.click();
                 }
@@ -320,26 +419,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Verify OTP Handler
+    // Verify OTP Handler (Exactamente 6 dígitos)
     if (otpVerifySubmit) {
         otpVerifySubmit.addEventListener('click', async () => {
             clearOtpMessage();
             const code = Array.from(otpDigitInputs).map(i => i.value.trim()).join('');
-            if (code.length < 6) {
-                showOtpMessage('Por favor ingresá el código de verificación.');
+            if (code.length !== 6) {
+                showOtpMessage('Por favor ingresá los 6 dígitos del código de verificación.');
                 return;
             }
 
             setOtpLoading(true);
 
             try {
-                const { data, error } = await window.supabaseClient.auth.verifyOtp({
+                let { data, error } = await window.supabaseClient.auth.verifyOtp({
                     email: pendingUserEmail,
                     token: code,
                     type: 'signup'
                 });
 
+                // Fallback a tipo 'email' si el template de Supabase fue emitido como email OTP genérico
+                if (error && (error.message.includes('expired') || error.message.includes('Token') || error.message.includes('invalid') || error.message.includes('not found'))) {
+                    const fallback = await window.supabaseClient.auth.verifyOtp({
+                        email: pendingUserEmail,
+                        token: code,
+                        type: 'email'
+                    });
+                    if (!fallback.error) {
+                        data = fallback.data;
+                        error = null;
+                    }
+                }
+
                 if (error) throw error;
+
+                const verifiedUserId = (data.user && data.user.id) || (data.session && data.session.user && data.session.user.id);
+                if (verifiedUserId) {
+                    await syncPerfilAcceptance(verifiedUserId);
+                }
 
                 if (data.session || data.user) {
                     redirectToTarget();
@@ -461,13 +578,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             if (mode === 'signup') {
+                if (acceptTermsInput && !acceptTermsInput.checked) {
+                    showMessage('Debes aceptar los Términos y Condiciones para crear tu cuenta.');
+                    setLoading(false);
+                    return;
+                }
+                if (acceptPrivacyInput && !acceptPrivacyInput.checked) {
+                    showMessage('Debes aceptar la Política de Privacidad para crear tu cuenta.');
+                    setLoading(false);
+                    return;
+                }
+
+                // Validación de hCaptcha
+                let captchaToken = hcaptchaVerifiedToken;
+                if (!captchaToken && window.hcaptcha && hcaptchaWidgetId !== null) {
+                    captchaToken = window.hcaptcha.getResponse(hcaptchaWidgetId);
+                }
+                if (!captchaToken) {
+                    const hiddenResp = document.querySelector('[name="h-captcha-response"]');
+                    if (hiddenResp && hiddenResp.value) captchaToken = hiddenResp.value;
+                }
+
+                if (!captchaToken) {
+                    showMessage('Por favor completa la verificación de seguridad (captcha).');
+                    setLoading(false);
+                    return;
+                }
+
                 const isBroker = currentRole === 'profesional';
+                const nowIso = new Date().toISOString();
                 const signUpData = {
                     full_name: fullName,
                     name: fullName,
                     nombre_usuario: username,
                     role: roleData.roleName,
-                    id_tipo_perfil: roleData.id
+                    id_tipo_perfil: roleData.id,
+                    acepto_terminos: true,
+                    fecha_aceptacion_terminos: nowIso,
+                    acepto_politica_privacidad: true,
+                    acepto_privacidad: true,
+                    fecha_aceptacion_privacidad: nowIso
                 };
 
                 if (isBroker) {
@@ -481,6 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     password,
                     options: {
                         emailRedirectTo: getRedirectUrl(),
+                        captchaToken: captchaToken,
                         data: signUpData
                     }
                 });
@@ -503,8 +654,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (error) throw error;
 
-                // Si la sesión ya se creó inmediatamente (ej. verificación de mail desactivada), redirigir
+                // Si la sesión ya se creó inmediatamente (ej. verificación de mail desactivada), sincronizar y redirigir
                 if (data.session) {
+                    if (data.session.user) {
+                        await syncPerfilAcceptance(data.session.user.id);
+                    }
                     redirectToTarget();
                     return;
                 }
@@ -525,6 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error('Error en autenticación:', error);
+            resetHcaptcha();
             const msg = (error.message || '').toLowerCase();
             if (error.status === 429 || msg.includes('rate limit') || msg.includes('for security purposes') || msg.includes('too many requests') || msg.includes('once every')) {
                 showMessage('Por seguridad y límite de envíos de Supabase, debes esperar 60 segundos antes de solicitar otro correo. Por favor intentá en 1 minuto.');
