@@ -1046,7 +1046,6 @@ var App = window.App || {
         if (page === 'inquilinos.html' || page === 'inquilinos' || page === 'index.html' || page === 'index' || page === '') return 'inquilinos';
 
         const publicPages = [
-            'como-funciona.html', 'como-funciona',
             'pasaporte-vivat.html', 'pasaporte-vivat',
             'detalles-garantia.html', 'detalles-garantia',
             'consultar-valor.html', 'consultar-valor',
@@ -1108,7 +1107,6 @@ var App = window.App || {
             'index.html', 'index',
             'propietarios.html', 'propietarios',
             'corredores.html', 'corredores',
-            'como-funciona.html', 'como-funciona',
             'detalles-garantia.html', 'detalles-garantia'
         ];
 
@@ -13004,10 +13002,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <a href="buscar.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">search</span>
                                 <span>Buscar</span>
-                            </a>
-                            <a href="como-funciona.html" class="menu-item-clean">
-                                <span class="material-symbols-outlined text-zinc-500 text-xl">info</span>
-                                <span>Cómo funciona</span>
                             </a>
                             <a href="pasaporte-vivat.html" class="menu-item-clean">
                                 <span class="material-symbols-outlined text-primary dark:text-red-400 text-xl">badge</span>
