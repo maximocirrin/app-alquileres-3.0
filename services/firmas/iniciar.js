@@ -34,7 +34,10 @@ async function createDiditSignatureSession(apiKey, payload) {
   let response = await fetch('https://verification.didit.me/v3/session/', options);
   if (response.status === 404) response = await fetch('https://api.didit.me/v1/session/', options);
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`Didit rejected the signature session (${response.status}).`);
+  if (!response.ok) {
+    const errorMsg = data?.message || data?.error || JSON.stringify(data);
+    throw new Error(`Didit rejected the signature session (${response.status}): ${errorMsg}`);
+  }
 
   const sessionId = data.session_id || data.sessionId || data.id;
   const url = data.url || data.session_url || data.verification_url;
