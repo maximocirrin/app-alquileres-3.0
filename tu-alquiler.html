@@ -1168,6 +1168,7 @@
                 }
             }
 
+            window.switchTenantTab = switchTenantTab;
             function switchTenantTab(targetTab) {
                 const normalized = targetTab.replace('#', '') || 'alquiler';
                 const validTab = contents[normalized] ? normalized : 'alquiler';
