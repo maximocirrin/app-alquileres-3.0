@@ -2061,6 +2061,20 @@ html.dark .broker-pill-btn[data-tab="alquileres"]:not(.bg-primary) *,
     display: block;
 }
 
+/* Ensure property publishing wizard step containers and substeps are strictly hidden when marked .hidden */
+#publish-property-view [id^="wizard-step-"].hidden,
+#publish-property-view #step-operacion.hidden,
+#publish-property-view #step-ubicacion.hidden,
+#publish-property-view #step-caracteristicas.hidden {
+    display: none !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
 .form-step h3 {
     margin-bottom: var(--spacing-md);
     color: var(--primary-dark);
