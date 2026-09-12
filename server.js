@@ -22,16 +22,19 @@ function securityHeaders(req, res, next) {
     'https://unpkg.com',
     'https://www.googletagmanager.com',
     'https://*.googletagmanager.com',
-    'https://maps.googleapis.com'
+    'https://maps.googleapis.com',
+    'https://js.hcaptcha.com',
+    'https://newassets.hcaptcha.com',
+    'https://*.hcaptcha.com'
   ].join(' ');
   const policy = [
     "default-src 'self'",
     `script-src ${scriptSources}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https://images.unsplash.com https://api.qrserver.com https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.google.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://js.hcaptcha.com https://newassets.hcaptcha.com",
+    "img-src 'self' data: blob: https: https://images.unsplash.com https://api.qrserver.com https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.google.com https://*.hcaptcha.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verification.didit.me https://api.didit.me https://maps.googleapis.com https://*.googleapis.com https://api.bcra.gob.ar https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://*.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
-    "frame-src https://didit.me https://*.didit.me",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verification.didit.me https://api.didit.me https://maps.googleapis.com https://*.googleapis.com https://api.bcra.gob.ar https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://*.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://api.hcaptcha.com https://api2.hcaptcha.com https://*.hcaptcha.com",
+    "frame-src https://didit.me https://*.didit.me https://js.hcaptcha.com https://newassets.hcaptcha.com https://*.hcaptcha.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
