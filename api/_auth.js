@@ -172,7 +172,7 @@ export function getClientIp(req) {
 export function getAppUrl() {
   const configured = normalizeOrigin(process.env.APP_URL || process.env.PUBLIC_APP_URL || '');
   if (configured) return configured;
-  return isProduction() ? null : 'http://localhost:3000';
+  return isProduction() ? 'https://vivat.com.ar' : 'http://localhost:3000';
 }
 
 export function getSafeCallbackUrl(callbackUrl) {
