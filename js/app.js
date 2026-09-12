@@ -1887,7 +1887,6 @@ var App = window.App || {
                     console.log('¡Datos Características completos y validados! Transicionando al paso 2: Multimedia...');
 
                     const step1Container = document.getElementById('wizard-step-1-container');
-                    const step2Container = document.getElementById('wizard-step-2-container');
                     const title = document.getElementById('publish-main-title');
                     const subtitle = document.getElementById('paso-subtitle');
 
@@ -1902,49 +1901,10 @@ var App = window.App || {
                     }
 
                     setTimeout(() => {
-                        if (step1Container) {
-                            step1Container.classList.add('hidden');
-                            step1Container.style.height = '0';
+                        if (typeof window.goToWizardStep === 'function') {
+                            window.goToWizardStep(2);
                         }
-
-                        // Update Progress Indicator
-                        updateHeaderProgress(2);
-
-                        if (step2Container) {
-                            // Show Step 2
-                            step2Container.classList.remove('hidden');
-
-                            // Update titles
-                            if (title) title.textContent = 'Agregá fotos y videos';
-                            if (subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
-
-                            // Trigger reflow
-                            void step2Container.offsetWidth;
-
-                            // Fade in Step 2 and titles
-                            if (title) title.style.opacity = '1';
-                            if (subtitle) subtitle.style.opacity = '1';
-
-                            step2Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                            step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                            step2Container.style.height = 'auto';
-                            step2Container.style.opacity = '1';
-                            step2Container.style.display = 'block';
-
-                            // Scroll up if necessary
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                            // Change action buttons text/behavior if needed
-                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                                btn.textContent = 'Continuar';
-                                btn.setAttribute('form', 'form-multimedia');
-                            });
-
-                            // Set global state
-                            window.currentWizardStep = 2;
-                        }
-
-                    }, 400); // 400ms is close to the 500ms duration but slightly less to feel snappy
+                    }, 200);
                 }
             });
         }
@@ -2364,12 +2324,34 @@ var App = window.App || {
 
             if (!stepOperacion || !stepUbicacion || !stepCaracteristicas) return;
 
-            stepOperacion.classList.add('hidden');
-            stepOperacion.classList.remove('block');
-            stepUbicacion.classList.add('hidden');
-            stepUbicacion.classList.remove('block');
-            stepCaracteristicas.classList.add('hidden');
-            stepCaracteristicas.classList.remove('block');
+            // Ensure Step 1 container is shown and containers 2-6 are hidden
+            const step1Container = document.getElementById('wizard-step-1-container');
+            if (step1Container) {
+                step1Container.classList.remove('hidden', 'opacity-0', 'scale-95');
+                step1Container.classList.add('opacity-100', 'scale-100');
+                step1Container.style.display = 'block';
+                step1Container.style.height = 'auto';
+                step1Container.style.opacity = '1';
+                step1Container.style.pointerEvents = 'auto';
+            }
+            for (let i = 2; i <= 6; i++) {
+                const c = document.getElementById(`wizard-step-${i}-container`);
+                if (c) {
+                    c.classList.add('hidden', 'opacity-0', 'scale-95');
+                    c.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
+                    c.style.display = 'none';
+                    c.style.height = '0';
+                    c.style.opacity = '0';
+                    c.style.pointerEvents = 'none';
+                }
+            }
+
+            // Hide all 3 sub-steps first
+            [stepOperacion, stepUbicacion, stepCaracteristicas].forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('block');
+                s.style.display = 'none';
+            });
 
             const inactiveClass = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-outline-variant/30 pointer-events-auto';
             const activeClass = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap active-tab pointer-events-none';
@@ -2381,6 +2363,7 @@ var App = window.App || {
             if (subStepNum === 1) {
                 stepOperacion.classList.remove('hidden');
                 stepOperacion.classList.add('block');
+                stepOperacion.style.display = 'block';
                 if (tabOperacion) tabOperacion.className = activeClass;
                 if (publishMainTitle) {
                     publishMainTitle.textContent = '¡Empecemos a crear tu aviso!';
@@ -2401,6 +2384,7 @@ var App = window.App || {
             } else if (subStepNum === 2) {
                 stepUbicacion.classList.remove('hidden');
                 stepUbicacion.classList.add('block');
+                stepUbicacion.style.display = 'block';
                 if (tabUbicacion) tabUbicacion.className = activeClass;
                 if (pasoSubtitle) pasoSubtitle.textContent = '¿Dónde está ubicada tu propiedad?';
                 updateHeaderProgress(1, 2);
@@ -2433,6 +2417,7 @@ var App = window.App || {
             } else if (subStepNum === 3) {
                 stepCaracteristicas.classList.remove('hidden');
                 stepCaracteristicas.classList.add('block');
+                stepCaracteristicas.style.display = 'block';
                 if (tabCaracteristicas) tabCaracteristicas.className = activeClass;
                 if (pasoSubtitle) pasoSubtitle.textContent = 'Detalles de tu propiedad';
                 updateHeaderProgress(1, 3);
@@ -2482,56 +2467,23 @@ var App = window.App || {
 
                 if (isValid) {
                     console.log('¡Datos Multimedia completos! Transicionando al paso 3: Extras...');
-
-                    const step2Container = document.getElementById('wizard-step-2-container');
-                    const step3Container = document.getElementById('wizard-step-3-container');
+                    const currentContainer = document.getElementById('wizard-step-2-container');
                     const title = document.getElementById('publish-main-title');
                     const subtitle = document.getElementById('paso-subtitle');
 
                     if (title) title.style.opacity = '0';
                     if (subtitle) subtitle.style.opacity = '0';
 
-                    if (step2Container) {
-                        step2Container.classList.remove('opacity-100', 'scale-100');
-                        step2Container.classList.add('opacity-0', 'scale-95');
+                    if (currentContainer) {
+                        currentContainer.classList.remove('opacity-100', 'scale-100');
+                        currentContainer.classList.add('opacity-0', 'scale-95');
                     }
 
                     setTimeout(() => {
-                        if (step2Container) {
-                            step2Container.classList.add('hidden');
-                            step2Container.style.height = '0';
+                        if (typeof window.goToWizardStep === 'function') {
+                            window.goToWizardStep(3);
                         }
-
-                        updateHeaderProgress(3);
-
-                        if (step3Container) {
-                            step3Container.classList.remove('hidden');
-
-                            if (title) title.textContent = '¡Agregá los amenities de tu propiedad!';
-                            if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
-
-                            void step3Container.offsetWidth;
-
-                            if (title) title.style.opacity = '1';
-                            if (subtitle) subtitle.style.opacity = '1';
-
-                            step3Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                            step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                            step3Container.style.height = 'auto';
-                            step3Container.style.opacity = '1';
-                            step3Container.style.display = 'block';
-
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                                btn.textContent = 'Continuar';
-                                btn.setAttribute('form', 'form-extras');
-                            });
-
-                            window.currentWizardStep = 3;
-                        }
-
-                    }, 400);
+                    }, 200);
                 }
             }
 
@@ -2539,122 +2491,48 @@ var App = window.App || {
             if (e.target.id === 'form-extras') {
                 e.preventDefault();
 
-                let isValid = true;
+                console.log('¡Datos Extras completos! Transicionando al paso 4: Preferencias...');
+                const currentContainer = document.getElementById('wizard-step-3-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
 
-                if (isValid) {
-                    console.log('¡Datos Extras completos! Transicionando al paso 4: Preferencias...');
+                if (title) title.style.opacity = '0';
+                if (subtitle) subtitle.style.opacity = '0';
 
-                    const step3Container = document.getElementById('wizard-step-3-container');
-                    const step4Container = document.getElementById('wizard-step-4-container');
-                    const title = document.getElementById('publish-main-title');
-                    const subtitle = document.getElementById('paso-subtitle');
-
-                    if (title) title.style.opacity = '0';
-                    if (subtitle) subtitle.style.opacity = '0';
-
-                    if (step3Container) {
-                        step3Container.classList.remove('opacity-100', 'scale-100');
-                        step3Container.classList.add('opacity-0', 'scale-95');
-                    }
-
-                    setTimeout(() => {
-                        if (step3Container) {
-                            step3Container.classList.add('hidden');
-                            step3Container.style.height = '0';
-                        }
-
-                        updateHeaderProgress(4);
-
-                        if (step4Container) {
-                            step4Container.classList.remove('hidden');
-
-                            if (title) title.textContent = 'Preferencias de alquiler';
-                            if (subtitle) subtitle.textContent = 'Configurá las condiciones para tus futuros inquilinos';
-
-                            void step4Container.offsetWidth;
-
-                            if (title) title.style.opacity = '1';
-                            if (subtitle) subtitle.style.opacity = '1';
-
-                            step4Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                            step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                            step4Container.style.height = 'auto';
-                            step4Container.style.opacity = '1';
-                            step4Container.style.display = 'block';
-
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                                btn.textContent = 'Continuar';
-                                btn.setAttribute('form', 'form-preferencias');
-                            });
-
-                            window.currentWizardStep = 4;
-                        }
-
-                    }, 400);
+                if (currentContainer) {
+                    currentContainer.classList.remove('opacity-100', 'scale-100');
+                    currentContainer.classList.add('opacity-0', 'scale-95');
                 }
+
+                setTimeout(() => {
+                    if (typeof window.goToWizardStep === 'function') {
+                        window.goToWizardStep(4);
+                    }
+                }, 200);
             }
 
             // Form 4: Preferencias -> Step 5 (Visitas Presenciales)
             if (e.target.id === 'form-preferencias') {
                 e.preventDefault();
 
-                let isValid = true;
+                console.log('¡Datos Preferencias completos! Transicionando al paso 5: Visitas...');
+                const currentContainer = document.getElementById('wizard-step-4-container');
+                const title = document.getElementById('publish-main-title');
+                const subtitle = document.getElementById('paso-subtitle');
 
-                if (isValid) {
-                    console.log('¡Datos Preferencias completos! Transicionando al paso 5: Visitas...');
+                if (title) title.style.opacity = '0';
+                if (subtitle) subtitle.style.opacity = '0';
 
-                    const step4Container = document.getElementById('wizard-step-4-container');
-                    const step5Container = document.getElementById('wizard-step-5-container');
-                    const title = document.getElementById('publish-main-title');
-                    const subtitle = document.getElementById('paso-subtitle');
-
-                    if (title) title.style.opacity = '0';
-                    if (subtitle) subtitle.style.opacity = '0';
-
-                    if (step4Container) {
-                        step4Container.classList.remove('opacity-100', 'scale-100');
-                        step4Container.classList.add('opacity-0', 'scale-95');
-                    }
-
-                    setTimeout(() => {
-                        if (step4Container) {
-                            step4Container.classList.add('hidden');
-                            step4Container.style.height = '0';
-                        }
-
-                        updateHeaderProgress(5);
-
-                        if (step5Container) {
-                            step5Container.classList.remove('hidden');
-
-                            if (title) title.textContent = 'Agenda de Visitas y Tours Presenciales';
-                            if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad';
-
-                            void step5Container.offsetWidth;
-
-                            if (title) title.style.opacity = '1';
-                            if (subtitle) subtitle.style.opacity = '1';
-
-                            step5Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                            step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                            step5Container.style.height = 'auto';
-                            step5Container.style.opacity = '1';
-                            step5Container.style.display = 'block';
-
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                            document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                                btn.textContent = 'Continuar';
-                                btn.setAttribute('form', 'form-visitas');
-                            });
-
-                            window.currentWizardStep = 5;
-                        }
-
-                    }, 400);
+                if (currentContainer) {
+                    currentContainer.classList.remove('opacity-100', 'scale-100');
+                    currentContainer.classList.add('opacity-0', 'scale-95');
                 }
+
+                setTimeout(() => {
+                    if (typeof window.goToWizardStep === 'function') {
+                        window.goToWizardStep(5);
+                    }
+                }, 200);
             }
 
             // Form 5: Visitas -> Step 6 (Publicar/Planes)
@@ -2662,60 +2540,23 @@ var App = window.App || {
                 e.preventDefault();
 
                 console.log('¡Datos Visitas completos! Transicionando al paso 6: Publicar...');
-
-                const step5Container = document.getElementById('wizard-step-5-container');
-                const step6Container = document.getElementById('wizard-step-6-container');
+                const currentContainer = document.getElementById('wizard-step-5-container');
                 const title = document.getElementById('publish-main-title');
                 const subtitle = document.getElementById('paso-subtitle');
 
                 if (title) title.style.opacity = '0';
                 if (subtitle) subtitle.style.opacity = '0';
 
-                if (step5Container) {
-                    step5Container.classList.remove('opacity-100', 'scale-100');
-                    step5Container.classList.add('opacity-0', 'scale-95');
+                if (currentContainer) {
+                    currentContainer.classList.remove('opacity-100', 'scale-100');
+                    currentContainer.classList.add('opacity-0', 'scale-95');
                 }
 
                 setTimeout(() => {
-                    if (step5Container) {
-                        step5Container.classList.add('hidden');
-                        step5Container.style.height = '0';
+                    if (typeof window.goToWizardStep === 'function') {
+                        window.goToWizardStep(6);
                     }
-
-                    updateHeaderProgress(6);
-
-                    if (step6Container) {
-                        step6Container.classList.remove('hidden');
-
-                        if (title) title.textContent = '¡Revisá y confirmá tu publicación!';
-                        if (subtitle) subtitle.textContent = 'Verificá cómo verán los inquilinos tu aviso y editá cualquier detalle antes de publicar.';
-
-                        void step6Container.offsetWidth;
-
-                        if (title) title.style.opacity = '1';
-                        if (subtitle) subtitle.style.opacity = '1';
-
-                        step6Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                        step6Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                        step6Container.style.height = 'auto';
-                        step6Container.style.opacity = '1';
-                        step6Container.style.display = 'block';
-
-                        if (typeof window.renderPublishReview === 'function') {
-                            window.renderPublishReview();
-                        }
-
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                        document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                            btn.textContent = 'Publicar Aviso';
-                            btn.setAttribute('form', 'form-planes');
-                        });
-
-                        window.currentWizardStep = 6;
-                    }
-
-                }, 400);
+                }, 200);
             }
         });
 
@@ -2726,142 +2567,44 @@ var App = window.App || {
             isNavigatingBack = true;
             setTimeout(() => { isNavigatingBack = false; }, 350);
 
-            const stepOperacion = document.getElementById('step-operacion');
-            const stepUbicacion = document.getElementById('step-ubicacion');
-            const stepCaracteristicas = document.getElementById('step-caracteristicas');
+            let curStep = window.currentWizardStep || 1;
+            let curSub = window.currentSubStep || 1;
 
-            const step1Container = document.getElementById('wizard-step-1-container');
-            const step2Container = document.getElementById('wizard-step-2-container');
-            const step3Container = document.getElementById('wizard-step-3-container');
-            const step4Container = document.getElementById('wizard-step-4-container');
-            const step5Container = document.getElementById('wizard-step-5-container');
-            const step6Container = document.getElementById('wizard-step-6-container');
-
-            const title = document.getElementById('publish-main-title');
-            const subtitle = document.getElementById('paso-subtitle');
-
-            const setSubmitButton = (formId, text) => {
-                document.querySelectorAll('#publish-property-view button[type="submit"]').forEach(btn => {
-                    btn.setAttribute('form', formId);
-                    btn.textContent = text;
-                });
-            };
-
-            // Case 0: Step 6 -> Step 5
-            if (step6Container && !step6Container.classList.contains('hidden')) {
-                step6Container.classList.add('hidden');
-                step6Container.style.height = '0';
-                if (step5Container) {
-                    step5Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                    step5Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                    step5Container.style.height = 'auto';
-                    step5Container.style.opacity = '1';
-                    step5Container.style.display = 'block';
+            // Detect active step from DOM container if state desynced
+            for (let i = 6; i >= 1; i--) {
+                const c = document.getElementById(`wizard-step-${i}-container`);
+                if (c && !c.classList.contains('hidden') && c.style.display !== 'none' && c.offsetHeight > 0) {
+                    curStep = i;
+                    break;
                 }
-                if (title) title.textContent = 'Agenda de Visitas y Tours Presenciales';
-                if (subtitle) subtitle.textContent = 'Configurá tus días, horarios y modalidad para agendar tours y mostrar la propiedad';
-                updateHeaderProgress(5);
-                setSubmitButton('form-visitas', 'Continuar');
-                window.currentWizardStep = 5;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
             }
 
-            // Case 1: Step 5 -> Step 4
-            if (step5Container && !step5Container.classList.contains('hidden')) {
-                step5Container.classList.add('hidden');
-                step5Container.style.height = '0';
-                if (step4Container) {
-                    step4Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                    step4Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                    step4Container.style.height = 'auto';
-                    step4Container.style.opacity = '1';
-                    step4Container.style.display = 'block';
+            if (curStep === 6) {
+                window.goToWizardStep(5);
+            } else if (curStep === 5) {
+                window.goToWizardStep(4);
+            } else if (curStep === 4) {
+                window.goToWizardStep(3);
+            } else if (curStep === 3) {
+                window.goToWizardStep(2);
+            } else if (curStep === 2) {
+                window.goToWizardStep(1, 3);
+            } else if (curStep === 1) {
+                const stepCaracteristicas = document.getElementById('step-caracteristicas');
+                const stepUbicacion = document.getElementById('step-ubicacion');
+                const isSub3 = curSub === 3 || (stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden') && stepCaracteristicas.style.display !== 'none');
+                const isSub2 = curSub === 2 || (stepUbicacion && !stepUbicacion.classList.contains('hidden') && stepUbicacion.style.display !== 'none');
+
+                if (isSub3) {
+                    window.goToWizardStep(1, 2);
+                } else if (isSub2) {
+                    window.goToWizardStep(1, 1);
+                } else {
+                    if (typeof App !== 'undefined' && typeof App.closePublishWizard === 'function') {
+                        App.closePublishWizard();
+                    }
                 }
-                if (title) title.textContent = 'Preferencias de alquiler';
-                if (subtitle) subtitle.textContent = 'Configurá las condiciones para tus futuros inquilinos';
-                updateHeaderProgress(4);
-                setSubmitButton('form-preferencias', 'Continuar');
-                window.currentWizardStep = 4;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
             }
-
-            // Case 2: Step 4 -> Step 3
-            if (step4Container && !step4Container.classList.contains('hidden')) {
-                step4Container.classList.add('hidden');
-                step4Container.style.height = '0';
-                if (step3Container) {
-                    step3Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                    step3Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                    step3Container.style.height = 'auto';
-                    step3Container.style.opacity = '1';
-                    step3Container.style.display = 'block';
-                }
-                if (title) title.textContent = '¡Agregá los amenities de tu propiedad!';
-                if (subtitle) subtitle.textContent = 'Estos campos opcionales mejoran el posicionamiento de tu aviso.';
-                updateHeaderProgress(3);
-                setSubmitButton('form-extras', 'Continuar');
-                window.currentWizardStep = 3;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-
-            // Case 3: Step 3 -> Step 2
-            if (step3Container && !step3Container.classList.contains('hidden')) {
-                step3Container.classList.add('hidden');
-                step3Container.style.height = '0';
-                if (step2Container) {
-                    step2Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                    step2Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                    step2Container.style.height = 'auto';
-                    step2Container.style.opacity = '1';
-                    step2Container.style.display = 'block';
-                }
-                if (title) title.textContent = 'Agregá fotos y videos';
-                if (subtitle) subtitle.textContent = 'Mostrá lo mejor de tu propiedad';
-                updateHeaderProgress(2);
-                setSubmitButton('form-multimedia', 'Continuar');
-                window.currentWizardStep = 2;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-
-            // Case 4: Step 2 -> Step 1 (Sub-step 1.3 Características)
-            if (step2Container && !step2Container.classList.contains('hidden')) {
-                step2Container.classList.add('hidden');
-                step2Container.style.height = '0';
-                if (step1Container) {
-                    step1Container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0', 'overflow-hidden');
-                    step1Container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                    step1Container.style.height = 'auto';
-                    step1Container.style.opacity = '1';
-                    step1Container.style.display = 'block';
-                }
-                if (title) title.textContent = '¡Empecemos a crear tu aviso!';
-                window.currentWizardStep = 1;
-                if (typeof window.goToSubStep === 'function') {
-                    window.goToSubStep(3);
-                }
-                return;
-            }
-
-            // Navigation through Sub-steps inside Step 1
-            const isSub3Visible = stepCaracteristicas && !stepCaracteristicas.classList.contains('hidden');
-            const isSub2Visible = stepUbicacion && !stepUbicacion.classList.contains('hidden');
-
-            if (isSub3Visible || window.currentSubStep === 3) {
-                if (typeof window.goToSubStep === 'function') window.goToSubStep(2);
-                return;
-            }
-            if (isSub2Visible || window.currentSubStep === 2) {
-                if (typeof window.goToSubStep === 'function') window.goToSubStep(1);
-                return;
-            }
-
-            // Sub-step 1.1 (Operación) -> Stay on Step 1.1
-            window.currentWizardStep = 1;
-            if (typeof window.goToSubStep === 'function') window.goToSubStep(1);
         };
 
         window.goToWizardStep = function (stepNum, subStepNum = 1) {
@@ -2926,15 +2669,18 @@ var App = window.App || {
                 const currentIdx = idx + 1;
                 if (currentIdx === targetStep) {
                     container.classList.remove('hidden', 'opacity-0', 'translate-y-8', 'scale-95', 'h-0');
-                    container.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    container.style.height = '';
-                    container.style.opacity = '1';
+                    container.classList.add('opacity-100', 'translate-y-0', 'scale-100');
                     container.style.display = 'block';
+                    container.style.height = 'auto';
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
                 } else {
                     container.classList.add('hidden', 'opacity-0', 'scale-95');
                     container.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'h-auto');
-                    container.style.height = '0';
                     container.style.display = 'none';
+                    container.style.height = '0';
+                    container.style.opacity = '0';
+                    container.style.pointerEvents = 'none';
                 }
             });
 
@@ -6649,6 +6395,52 @@ var App = window.App || {
     },
 
     showPublishWizard: async (editingProp = null) => {
+        // Enforce authentication: only authenticated/logged-in users can open the publishing wizard
+        let activeUser = null;
+        try {
+            if (window.supabaseClient && window.supabaseClient.auth) {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                activeUser = session?.user || null;
+            }
+        } catch (e) {
+            console.warn("Auth check error in showPublishWizard:", e);
+        }
+
+        if (!activeUser && window.DataManager && typeof window.DataManager.getCurrentUser === 'function') {
+            try {
+                activeUser = await window.DataManager.getCurrentUser();
+            } catch (e) {}
+        }
+
+        if (!activeUser && window.App && window.App.state && window.App.state.currentUser) {
+            activeUser = window.App.state.currentUser;
+        }
+
+        if (!activeUser) {
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+                        const tokenData = JSON.parse(localStorage.getItem(k));
+                        if (tokenData && (tokenData.user || tokenData.currentSession?.user)) {
+                            activeUser = tokenData.user || tokenData.currentSession?.user;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        if (!activeUser) {
+            if (typeof window.showValidationToast === 'function') {
+                window.showValidationToast('Debes iniciar sesión para publicar una propiedad.', 'warning');
+            } else if (typeof window.showToast === 'function') {
+                window.showToast('Debes iniciar sesión para publicar una propiedad.', 'warning');
+            }
+            window.location.href = 'login.html?redirect=publish&mode=login';
+            return;
+        }
+
         window.currentWizardStep = 1;
 
         // Automatically close hamburger menu / mobile menu drawer if open
@@ -6730,14 +6522,19 @@ var App = window.App || {
         if (step1Container) {
             step1Container.classList.remove('hidden', 'opacity-0', 'scale-95');
             step1Container.classList.add('opacity-100', 'scale-100');
+            step1Container.style.display = 'block';
             step1Container.style.height = 'auto';
             step1Container.style.opacity = '1';
+            step1Container.style.pointerEvents = 'auto';
         }
         [step2Container, step3Container, step4Container, step5Container, step6Container].forEach(c => {
             if (c) {
                 c.classList.add('hidden', 'opacity-0', 'scale-95');
                 c.classList.remove('opacity-100', 'scale-100');
+                c.style.display = 'none';
                 c.style.height = '0';
+                c.style.opacity = '0';
+                c.style.pointerEvents = 'none';
             }
         });
 
@@ -7069,9 +6866,44 @@ var App = window.App || {
         const pasoSubtitle = document.getElementById('paso-subtitle');
         const publishMainTitle = document.getElementById('publish-main-title');
 
-        if (stepOperacion) stepOperacion.classList.remove('hidden');
-        if (stepUbicacion) stepUbicacion.classList.add('hidden');
-        if (stepCaracteristicas) stepCaracteristicas.classList.add('hidden');
+        if (stepOperacion) {
+            stepOperacion.classList.remove('hidden');
+            stepOperacion.style.display = 'block';
+        }
+        if (stepUbicacion) {
+            stepUbicacion.classList.add('hidden');
+            stepUbicacion.style.display = 'none';
+        }
+        if (stepCaracteristicas) {
+            stepCaracteristicas.classList.add('hidden');
+            stepCaracteristicas.style.display = 'none';
+        }
+
+        const step1Container = document.getElementById('wizard-step-1-container');
+        if (step1Container) {
+            step1Container.classList.remove('hidden', 'opacity-0', 'scale-95');
+            step1Container.classList.add('opacity-100', 'scale-100');
+            step1Container.style.display = 'block';
+            step1Container.style.height = 'auto';
+            step1Container.style.opacity = '1';
+            step1Container.style.pointerEvents = 'auto';
+        }
+        [
+            document.getElementById('wizard-step-2-container'),
+            document.getElementById('wizard-step-3-container'),
+            document.getElementById('wizard-step-4-container'),
+            document.getElementById('wizard-step-5-container'),
+            document.getElementById('wizard-step-6-container')
+        ].forEach(c => {
+            if (c) {
+                c.classList.add('hidden', 'opacity-0', 'scale-95');
+                c.classList.remove('opacity-100', 'scale-100');
+                c.style.display = 'none';
+                c.style.height = '0';
+                c.style.opacity = '0';
+                c.style.pointerEvents = 'none';
+            }
+        });
 
         if (tabOperacion) tabOperacion.className = 'font-headline font-bold text-primary dark:text-[#A13333] border-b-2 border-primary dark:border-[#A13333] pb-2 whitespace-nowrap pointer-events-none active-tab';
         if (tabUbicacion) tabUbicacion.className = 'font-headline font-medium text-secondary dark:text-[#c7c6c6] hover:text-on-background transition-colors pb-2 whitespace-nowrap pointer-events-none';
@@ -13922,8 +13754,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Nuevo aviso from Mis Avisos
     const goToPublish = async () => {
+        if (window.App && typeof window.App.showPublishWizard === 'function') {
+            await window.App.showPublishWizard();
+            return;
+        }
         const { data: { session } } = await window.supabaseClient.auth.getSession();
-        if (!session) return;
+        if (!session) {
+            window.location.href = 'login.html?redirect=publish&mode=login';
+            return;
+        }
 
         if (misAvisosView) misAvisosView.classList.add('hidden');
         if (landingView) landingView.classList.add('hidden');

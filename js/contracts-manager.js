@@ -86,6 +86,99 @@
             Number(userProfileId) === Number(contractOwnerProfileId)
         );
     }
+    window.isUserOwnerOfContract = isUserOwnerOfContract;
+
+    function getContractTenantProfileId(contract, options = {}) {
+        if (!contract && !options) return null;
+        const c = contract || options.contract || {};
+        const prop = options.property || {};
+
+        const raw = c.id_perfil_inquilino ||
+                    c.tenant?.profileId ||
+                    c.tenant?.id_perfil ||
+                    c.tenant_profile_id ||
+                    (typeof c.tenant?.id === 'number' ? c.tenant.id : null) ||
+                    c.id_inquilino;
+
+        if (raw !== undefined && raw !== null && !isNaN(Number(raw))) {
+            return Number(raw);
+        }
+        return null;
+    }
+    window.getContractTenantProfileId = getContractTenantProfileId;
+
+    function isUserTenantOfContract(contract, options = {}) {
+        if (!contract && !options) return false;
+        const c = contract || options.contract || {};
+
+        // 1. Si el usuario actual es el propietario del contrato, NO es el inquilino
+        if (typeof isUserOwnerOfContract === 'function' && isUserOwnerOfContract(c, options)) {
+            return false;
+        }
+
+        // 2. Si estamos en el panel de corredor o administrador, no es inquilino
+        if (window.location.pathname.includes('panel-corredor') || window.location.pathname.includes('administrador')) {
+            return false;
+        }
+
+        // 3. Comparación por id_perfil contra el inquilino del contrato
+        const contractTenantProfileId = getContractTenantProfileId(c, options);
+        let userProfileId = window._currentUserProfileId || window.ContractsManager?._currentProfileId || null;
+        if (!userProfileId) {
+            try {
+                const storedProfileId = localStorage.getItem('vivat_profile_id');
+                if (storedProfileId && !isNaN(Number(storedProfileId))) {
+                    userProfileId = Number(storedProfileId);
+                } else {
+                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+                    userProfileId = uLocal.id_perfil || uLocal.profileId || (typeof uLocal.id === 'number' ? uLocal.id : null);
+                }
+            } catch (e) {}
+        }
+
+        if (Number.isSafeInteger(Number(userProfileId)) && Number.isSafeInteger(Number(contractTenantProfileId))) {
+            if (Number(userProfileId) === Number(contractTenantProfileId)) return true;
+        }
+
+        // 4. Comparación por email o DNI del usuario autenticado
+        try {
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+            const userEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
+            const userDni = (uLocal.dni || uLocal.documento || '').replace(/\D/g, '');
+            const tenantEmail = (c.tenant?.email || c.tenant_email || '').toLowerCase().trim();
+            const tenantDni = (c.tenant?.dni || '').replace(/\D/g, '');
+
+            if (userEmail && tenantEmail && userEmail === tenantEmail) return true;
+            if (userDni && tenantDni && userDni === tenantDni) return true;
+        } catch (e) {}
+
+        // 5. Verificación por rol activo en localStorage
+        try {
+            const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
+            const userRole = (uLocal.role || uLocal.tipo_usuario || uLocal.user_type || '').toUpperCase();
+            if (userRole === 'PROPIETARIO' || userRole === 'OWNER' || userRole === 'CORREDOR' || userRole === 'BROKER') {
+                return false;
+            }
+        } catch (e) {}
+
+        const storedRole = (localStorage.getItem('vivat_active_role') || localStorage.getItem('vivat_user_role') || '').toUpperCase();
+        if (storedRole === 'PROPIETARIO' || storedRole === 'OWNER' || storedRole === 'CORREDOR' || storedRole === 'BROKER') {
+            return false;
+        }
+
+        // 6. Si estamos en 'tu-alquiler.html', es el portal del inquilino
+        if (window.location.pathname.includes('tu-alquiler')) {
+            return true;
+        }
+
+        // 7. Fallback por detección de rol
+        if (typeof detectActiveUserRole === 'function') {
+            return detectActiveUserRole(c) === 'TENANT';
+        }
+
+        return false;
+    }
+    window.isUserTenantOfContract = isUserTenantOfContract;
 
     async function getApiAuthHeaders() {
         const headers = { 'Content-Type': 'application/json' };
@@ -1800,6 +1893,7 @@
                 ? this.isContractGenerated(contract)
                 : Boolean(contract.has_contract || contract.hasContract);
             const isOwner = isUserOwnerOfContract(contract);
+            const isTenant = isUserTenantOfContract(contract);
             const canEditContract = (!hasAnySignature) && isOwner;
             const isSigner = effectiveRole === 'TENANT' || effectiveRole === 'OWNER';
             const signerObj = effectiveRole === 'TENANT' ? contract?.tenant : contract?.owner;
@@ -2066,10 +2160,12 @@
                                             </p>
                                         </div>
                                     </div>
+                                    ${(isTenant) ? `
                                     <button type="button" onclick="ContractsManager.openInviteGuarantorModal('${contract.id}')" class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 active:scale-95 text-white font-headline font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-auto">
                                         <span class="material-symbols-outlined text-sm">person_add</span>
                                         <span>+ Invitar Garante</span>
                                     </button>
+                                    ` : ''}
                                 </div>
 
                                 ${(contractGuarantors && contractGuarantors.length > 0) ? `
@@ -2094,6 +2190,7 @@
                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${g.hasSigned ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'}">
                                                 ${g.hasSigned ? '✓ Firmado Digitalmente' : '⏳ Firma Pendiente'}
                                             </span>
+                                            ${(isTenant && !g.hasSigned) ? `
                                             <div class="flex items-center gap-1.5 ml-auto">
                                                 <button type="button" onclick="ContractsManager.copyGuarantorInvite('${g.token || g.token_invitacion}')" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-700 hover:bg-zinc-100 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-600 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs" title="Copiar enlace de invitación">
                                                     <span class="material-symbols-outlined text-sm text-primary">link</span>
@@ -2104,6 +2201,7 @@
                                                     <span>WhatsApp</span>
                                                 </button>
                                             </div>
+                                            ` : ''}
                                         </div>
                                     </div>
                                     `).join('')}
@@ -2117,12 +2215,16 @@
                                         No hay garantes o codeudores cargados en este contrato
                                     </h4>
                                     <p class="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-                                        El inquilino puede invitar garantes personales (con recibo de sueldo o propiedad) o adjuntar pólizas de seguros de caución para respaldar la locación.
+                                        ${isTenant
+                                            ? 'Puedes invitar a tus garantes personales (con recibo de sueldo o propiedad) o adjuntar pólizas de seguros de caución para respaldar la locación.'
+                                            : 'El locatario (inquilino) aún no ha registrado ni invitado garantes para este contrato. Se reflejarán aquí a medida que se vinculen.'}
                                     </p>
+                                    ${(isTenant) ? `
                                     <button type="button" onclick="ContractsManager.openInviteGuarantorModal('${contract.id}')" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:opacity-90 font-headline font-bold text-xs transition-all shadow-xs cursor-pointer mt-1">
                                         <span class="material-symbols-outlined text-sm">add_circle</span>
                                         <span>+ Invitar Garante / Cargar Aval</span>
                                     </button>
+                                    ` : ''}
                                 </div>
                                 `}
                             </div>
@@ -2601,6 +2703,19 @@
 
         openInviteGuarantorModal: async function (contractId) {
             const contract = this.getContractById(contractId);
+            if (!isUserTenantOfContract(contract)) {
+                if (window.ToastManager) {
+                    window.ToastManager.show({
+                        title: 'Acción no permitida',
+                        message: 'Solo el locatario (inquilino) puede invitar garantes o adjuntar garantías a la locación.',
+                        type: 'warning'
+                    });
+                } else {
+                    alert('Solo el locatario (inquilino) puede invitar garantes o adjuntar garantías a la locación.');
+                }
+                return;
+            }
+
             if (!window.GarantesManager) {
                 try {
                     await new Promise((resolve, reject) => {
