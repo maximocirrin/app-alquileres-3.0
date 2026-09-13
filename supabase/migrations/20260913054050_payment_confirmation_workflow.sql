@@ -1,4 +1,5 @@
 -- A tenant can report a payment, but only the contract owner can make it paid.
+-- Filename version matches the migration recorded by Supabase on deployment.
 -- Browser roles never write this table: the authenticated API calls the two
 -- service-role-only functions below after verifying the caller's profile.
 
