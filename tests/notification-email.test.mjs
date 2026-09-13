@@ -53,6 +53,10 @@ test('email worker authenticates the scheduler and uses provider idempotency', a
   assert.match(source, /target\.origin === base\.origin/);
   assert.match(source, /https:\/\/vivat\.com\.ar\/img\/logo-lite\.png/);
   assert.match(source, /<img src="\$\{logoUrl\}" width="104" alt="Vivat"/);
+  assert.match(source, /class="vivat-brand-background" bgcolor="#890527"/);
+  assert.match(source, /background-image:linear-gradient\(#890527,#890527\)/);
+  assert.match(source, /class="vivat-brand-button"/);
+  assert.match(source, /-webkit-text-fill-color:#ffffff!important/);
 });
 
 test('in-app notification actions match the business event', async () => {

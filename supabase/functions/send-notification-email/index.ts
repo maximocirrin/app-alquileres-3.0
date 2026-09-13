@@ -57,20 +57,69 @@ function buildHtml(row: EmailQueueRow) {
 
   return `<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style>
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      .vivat-brand-background {
+        background-color: #890527 !important;
+        background-image: linear-gradient(#890527, #890527) !important;
+      }
+      .vivat-brand-button,
+      .vivat-brand-button:link,
+      .vivat-brand-button:visited {
+        background-color: #890527 !important;
+        background-image: linear-gradient(#890527, #890527) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+      }
+      @media (prefers-color-scheme: dark) {
+        .vivat-brand-background,
+        .vivat-brand-button,
+        .vivat-brand-button:link,
+        .vivat-brand-button:visited {
+          background-color: #890527 !important;
+          background-image: linear-gradient(#890527, #890527) !important;
+        }
+        .vivat-brand-button,
+        .vivat-brand-button:link,
+        .vivat-brand-button:visited {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+      }
+      [data-ogsc] .vivat-brand-background,
+      [data-ogsc] .vivat-brand-button {
+        background-color: #890527 !important;
+        background-image: linear-gradient(#890527, #890527) !important;
+      }
+      [data-ogsc] .vivat-brand-button {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+      }
+    </style>
+  </head>
   <body style="margin:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#18181b">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f5;padding:32px 12px">
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e4e4e7;border-radius:20px;overflow:hidden">
-          <tr><td align="center" style="background:#ffffff;padding:18px 28px 14px;border-bottom:4px solid #890527">
+          <tr><td align="center" style="background:#ffffff;padding:18px 28px 14px">
             <a href="https://vivat.com.ar" style="display:inline-block;text-decoration:none">
               <img src="${logoUrl}" width="104" alt="Vivat" style="display:block;width:104px;max-width:104px;height:auto;border:0;outline:none;text-decoration:none">
             </a>
           </td></tr>
+          <tr><td class="vivat-brand-background" bgcolor="#890527" height="4" style="height:4px;line-height:4px;font-size:0;background-color:#890527;background-image:linear-gradient(#890527,#890527)">&nbsp;</td></tr>
           <tr><td style="padding:30px 28px">
             <p style="margin:0 0 14px;font-size:15px;color:#52525b">${name},</p>
             <h1 style="margin:0 0 16px;font-size:23px;line-height:1.25">${title}</h1>
             <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3f3f46">${message}</p>
-            <a href="${link}" style="display:inline-block;background:#890527;color:#ffffff;text-decoration:none;font-weight:700;padding:13px 20px;border-radius:12px">Ver en Vivat</a>
+            <table role="presentation" cellspacing="0" cellpadding="0"><tr>
+              <td class="vivat-brand-background" bgcolor="#890527" style="border-radius:12px;background-color:#890527;background-image:linear-gradient(#890527,#890527)">
+                <a class="vivat-brand-button" href="${link}" style="display:inline-block;background-color:#890527;background-image:linear-gradient(#890527,#890527);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;text-decoration:none;font-weight:700;padding:13px 20px;border-radius:12px">Ver en Vivat</a>
+              </td>
+            </tr></table>
           </td></tr>
           <tr><td style="padding:18px 28px;background:#fafafa;border-top:1px solid #e4e4e7;font-size:12px;line-height:1.5;color:#71717a">
             Este es un aviso operativo de Vivat. Podés cambiar tus preferencias de email desde Configuración.
