@@ -132,6 +132,62 @@ test('owner contracts and payments are returned in one authorized bundle', async
   assert.equal(res.body.data.paymentsByContract['62'][0].solicitud.estado, 'pendiente_revision');
 });
 
+test('participant contracts resolve both identities behind authenticated authorization', async () => {
+  const user = { id: '00000000-0000-4000-8000-000000000006', aud: 'authenticated' };
+  globalThis.fetch = async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/auth/v1/user') return jsonResponse(user);
+    if (target.pathname === '/rest/v1/Perfil') return jsonResponse({ id_perfil: 6, user_id: user.id });
+    if (target.pathname === '/rest/v1/rpc/consume_api_rate_limit') return jsonResponse(true);
+    if (target.pathname === '/rest/v1/Contrato') {
+      assert.match(target.searchParams.get('or') || '', /id_perfil_propietario\.eq\.6/);
+      assert.match(target.searchParams.get('or') || '', /id_perfil_inquilino\.eq\.6/);
+      return jsonResponse([{
+        id_contrato: 62,
+        id_perfil_propietario: 14,
+        id_perfil_inquilino: 6,
+        Inquilino: { id_perfil: 6, nombre_completo: 'Nombre Inquilino' },
+        Propietario: { id_perfil: 14, nombre_completo: 'Nombre Propietario' }
+      }]);
+    }
+    throw new Error(`Unexpected request: ${target.pathname}`);
+  };
+
+  const res = response();
+  await payments(request('participant-contracts-token', { action: 'participant-contracts' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.data.contracts[0].tenant.nombre_completo, 'Nombre Inquilino');
+  assert.equal(res.body.data.contracts[0].owner.nombre_completo, 'Nombre Propietario');
+});
+
+test('owner applications return only applicants to publications owned by the session profile', async () => {
+  const user = { id: '00000000-0000-4000-8000-000000000114', aud: 'authenticated' };
+  globalThis.fetch = async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/auth/v1/user') return jsonResponse(user);
+    if (target.pathname === '/rest/v1/Perfil') return jsonResponse({ id_perfil: 14, user_id: user.id });
+    if (target.pathname === '/rest/v1/rpc/consume_api_rate_limit') return jsonResponse(true);
+    if (target.pathname === '/rest/v1/Solicitud') {
+      assert.equal(target.searchParams.get('Publicacion.id_perfil'), 'eq.14');
+      return jsonResponse([{
+        id_solicitud: 91,
+        fecha_solicitud: '2026-09-13T12:00:00Z',
+        id_perfil: 6,
+        id_publicacion: 55,
+        Publicacion: { id_publicacion: 55, id_propiedad: 31, id_perfil: 14 },
+        Perfil: { id_perfil: 6, nombre_completo: 'Nombre Postulante', mail: 'postulante@example.com' }
+      }]);
+    }
+    throw new Error(`Unexpected request: ${target.pathname}`);
+  };
+
+  const res = response();
+  await payments(request('owner-applications-token', { action: 'owner-applications' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.data.applications.length, 1);
+  assert.equal(res.body.data.applications[0].tenant_name, 'Nombre Postulante');
+});
+
 test('self-assigned contract does not grant either payment role', async () => {
   const contract = {
     id_contrato: 62,

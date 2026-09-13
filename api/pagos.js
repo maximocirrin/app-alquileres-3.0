@@ -13,7 +13,11 @@ import {
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
-import { getOwnerContractsForProfile } from '../lib/owner-contracts.js';
+import {
+  getOwnerContractsForProfile,
+  getParticipantContractsForProfile
+} from '../lib/owner-contracts.js';
+import { getOwnerApplicationsForProfile } from '../lib/owner-applications.js';
 
 const MAX_REJECTION_REASON_LENGTH = 500;
 function withoutAutomaticRetries(query) {
@@ -259,6 +263,22 @@ async function handleOwnerContracts(res, supabase, profile) {
   return res.status(200).json({ ok: true, data: bundle });
 }
 
+async function handleParticipantContracts(res, supabase, profile) {
+  if (!await consumeRateLimit(supabase, 'participant-contracts-read', String(profile.id_perfil), 240, 60 * 60)) {
+    return sendRateLimited(res);
+  }
+  const contracts = await getParticipantContractsForProfile(supabase, profile.id_perfil);
+  return res.status(200).json({ ok: true, data: { contracts } });
+}
+
+async function handleOwnerApplications(res, supabase, profile) {
+  if (!await consumeRateLimit(supabase, 'owner-applications-read', String(profile.id_perfil), 240, 60 * 60)) {
+    return sendRateLimited(res);
+  }
+  const applications = await getOwnerApplicationsForProfile(supabase, profile.id_perfil);
+  return res.status(200).json({ ok: true, data: { applications } });
+}
+
 async function handleGet(req, res, supabase, profile) {
   const contractId = parsePositiveInteger(req.query?.id_contrato ?? req.query?.idContrato);
   if (!contractId) {
@@ -428,6 +448,12 @@ export default async function handler(req, res) {
       if (queryAction === 'owner-contracts') {
         return await handleOwnerContracts(res, supabase, profile);
       }
+      if (queryAction === 'participant-contracts') {
+        return await handleParticipantContracts(res, supabase, profile);
+      }
+      if (queryAction === 'owner-applications') {
+        return await handleOwnerApplications(res, supabase, profile);
+      }
       return await handleGet(req, res, supabase, profile);
     }
 
@@ -452,6 +478,9 @@ export default async function handler(req, res) {
       message: 'La acción debe ser report o review.'
     });
   } catch (error) {
-    return sendInternalError(res, queryAction === 'owner-contracts' ? 'owner-contracts' : 'pagos', error);
+    const context = ['owner-contracts', 'participant-contracts', 'owner-applications'].includes(queryAction)
+      ? queryAction
+      : 'pagos';
+    return sendInternalError(res, context, error);
   }
 }

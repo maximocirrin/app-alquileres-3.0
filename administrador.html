@@ -2228,6 +2228,7 @@
         function getApplicantPassportData(a) {
             if (!a) return {
                 id: '1',
+                passportId: null,
                 name: 'Postulante',
                 email: 'inquilino@email.com',
                 phone: '',
@@ -2448,6 +2449,7 @@
 
             return {
                 id: a.id,
+                passportId: a.passport_id || a.passportId || a.id_pasaporte || null,
                 name,
                 email,
                 phone: phone || 'No informado',

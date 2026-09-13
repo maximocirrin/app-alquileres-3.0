@@ -7,6 +7,7 @@ process.env.NODE_ENV = 'test';
 
 const {
   getOwnerContractsForProfile,
+  getParticipantContractsForProfile,
   normalizeOwnerContract
 } = await import('../lib/owner-contracts.js');
 const { default: payments } = await import('../api/pagos.js');
@@ -68,6 +69,14 @@ const sourceContract = {
     dni: '12345678',
     cbu: '0000000000000000000000'
   },
+  Propietario: {
+    id_perfil: 7,
+    nombre_completo: 'María Dueña',
+    mail: 'maria@example.com',
+    telefono: '+54 9 261 555-0102',
+    dni: '87654321',
+    cbu: '1111111111111111111111'
+  },
   Firma_contrato: [
     { rol_firmante: 'inquilino', estado_firma: 'sellada', didit_status: 'APPROVED', id_firma: 42 }
   ],
@@ -81,6 +90,7 @@ test('normalizes the owner dashboard DTO and removes sensitive nested columns', 
   const contract = normalizeOwnerContract(sourceContract);
 
   assert.equal(contract.tenant.nombre_completo, 'Ana Pérez');
+  assert.equal(contract.owner.nombre_completo, 'María Dueña');
   assert.equal(contract.alias_cbu, 'VIVAT.ALQUILER');
   assert.equal(contract.property_image, 'https://cdn.example/first.jpg');
   assert.deepEqual(contract.photos, ['https://cdn.example/first.jpg', 'https://cdn.example/second.jpg']);
@@ -91,7 +101,39 @@ test('normalizes the owner dashboard DTO and removes sensitive nested columns', 
   assert.equal(contract.history[0].id_historial_contrato, 2);
 
   const serialized = JSON.stringify(contract);
-  assert.doesNotMatch(serialized, /12345678|0000000000000000000000|must-not-leak|sensitive-hash-not-returned|private-original\.pdf|private-final\.pdf|path_privado/);
+  assert.doesNotMatch(serialized, /12345678|87654321|0000000000000000000000|1111111111111111111111|must-not-leak|sensitive-hash-not-returned|private-original\.pdf|private-final\.pdf|path_privado/);
+});
+
+test('constrains participant contracts to either legal party', async () => {
+  const calls = [];
+  const query = {
+    select(selection) {
+      calls.push(['select', selection]);
+      return this;
+    },
+    or(filter) {
+      calls.push(['or', filter]);
+      return this;
+    },
+    order(column, options) {
+      calls.push(['order', column, options]);
+      return Promise.resolve({ data: [sourceContract], error: null });
+    }
+  };
+  const supabase = {
+    from(table) {
+      calls.push(['from', table]);
+      return query;
+    }
+  };
+
+  const contracts = await getParticipantContractsForProfile(supabase, '18');
+
+  assert.equal(contracts.length, 1);
+  assert.deepEqual(calls.find(([method]) => method === 'or'), [
+    'or',
+    'id_perfil_propietario.eq.18,id_perfil_inquilino.eq.18'
+  ]);
 });
 
 test('constrains the service-role query to the authenticated owner profile', async () => {
