@@ -94,6 +94,10 @@ app.all(['/api/firmas', '/api/firmas/:action'], (req, res) => {
 app.all('/api/inventario', (req, res) => dispatch('./api/inventario.js', req, res));
 app.post('/api/inventario-upload', (req, res) => dispatch('./api/inventario.js', req, res));
 app.all('/api/pagos', (req, res) => dispatch('./api/pagos.js', req, res));
+app.all('/api/owner-contracts', (req, res) => {
+  req.query = { ...(req.query || {}), action: 'owner-contracts' };
+  return dispatch('./api/pagos.js', req, res);
+});
 app.post('/api/garante-portal', (req, res) => dispatch('./api/garantes.js', req, res));
 app.post('/api/garantes', (req, res) => dispatch('./api/garantes.js', req, res));
 app.post('/api/property-media-upload', (req, res) => dispatch('./api/property-media-upload.js', req, res));

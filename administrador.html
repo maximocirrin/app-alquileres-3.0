@@ -2076,13 +2076,6 @@
                             ownerActiveContractsMock = rawContracts || [];
                         } catch (e) { }
                     }
-                    if (!rawContracts || rawContracts.length === 0) {
-                        try {
-                            const raw = localStorage.getItem('vivat_contracts');
-                            if (raw) rawContracts = JSON.parse(raw);
-                            ownerActiveContractsMock = rawContracts || [];
-                        } catch (e) { }
-                    }
                 }
 
                 // Considerar solo alquileres vigentes/activos (excluyendo finalizados)
@@ -3078,13 +3071,12 @@
         };
 
         window.selectOwnerRentalContract = async function (contractId) {
+            cancelOwnerRentalRefresh();
             activeSelectedContractId = contractId;
             closeOwnerRentalFilterModal();
             if (typeof showOwnerRentalLoader === 'function') {
                 showOwnerRentalLoader();
             }
-            // Pequeña espera para feedback visual fluido y suave con skeleton
-            await new Promise(r => setTimeout(r, 240));
             await loadOwnerActiveRental(false);
         };
 
@@ -4061,6 +4053,7 @@
 
         let ownerActiveContractsMock = [];
         let activeSelectedContractId = null;
+        let ownerTicketsLoadToken = 0;
 
         function isFinalizedContract(c) {
             if (!c) return false;
@@ -4107,6 +4100,7 @@
         }
 
         function selectOwnerActiveContract(contractId) {
+            cancelOwnerRentalRefresh();
             activeSelectedContractId = contractId;
             if (typeof showOwnerRentalLoader === 'function') {
                 showOwnerRentalLoader();
@@ -4126,15 +4120,24 @@
             }
 
             try {
-                // Cargar contratos reales de la base de datos o localStorage
+                const defaultIndicesData = {
+                    ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
+                    icl: { valor: 35.25, tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
+                };
+                // Los índices no dependen del contrato seleccionado. Iniciar la consulta ahora
+                // evita sumar su latencia a la carga de contratos.
+                let latestIndicesPromise = Promise.resolve(defaultIndicesData);
+                if (window.DataManager?.getLatestIndices) {
+                    try {
+                        latestIndicesPromise = Promise.resolve(window.DataManager.getLatestIndices())
+                            .catch(() => defaultIndicesData);
+                    } catch (e) { }
+                }
+
+                // Cargar sólo los contratos verificados del propietario actual.
                 let rawList = [];
                 if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
                     rawList = await window.DataManager.getOwnerContracts();
-                } else {
-                    try {
-                        const raw = localStorage.getItem('vivat_contracts');
-                        if (raw) rawList = JSON.parse(raw);
-                    } catch (e) { }
                 }
 
                 // Normalizar contratos defensivamente
@@ -4213,26 +4216,6 @@
                     return true;
                 });
 
-                // Asegurar que las publicaciones/propiedades de la cartera estén disponibles para resolver imágenes y fotos
-                if (!ownerRawProperties || ownerRawProperties.length === 0) {
-                    if (window.DataManager && typeof window.DataManager.getUserMarketplaceProperties === 'function') {
-                        try {
-                            const fetchedProps = await window.DataManager.getUserMarketplaceProperties();
-                            if (Array.isArray(fetchedProps) && fetchedProps.length > 0) {
-                                ownerRawProperties = fetchedProps;
-                            }
-                        } catch (e) { }
-                    }
-                    if (!ownerRawProperties || ownerRawProperties.length === 0) {
-                        try {
-                            const localProps = JSON.parse(localStorage.getItem('vivat_marketplace_properties') || localStorage.getItem('vivat_properties') || '[]');
-                            if (Array.isArray(localProps) && localProps.length > 0) {
-                                ownerRawProperties = localProps;
-                            }
-                        } catch (e) { }
-                    }
-                }
-
                 const isFin = window.isFinalizedContract || (c => c && (c.is_finalized || c.status === 'finalizado' || c.id_estado_contrato === 2));
                 const activeList = ownerActiveContractsMock.filter(c => !isFin(c));
                 const finalizedList = ownerActiveContractsMock.filter(c => isFin(c));
@@ -4254,6 +4237,27 @@
                         </div>
                     `;
                     return;
+                }
+
+                // getOwnerContracts ya entrega la foto de portada. Sólo consultar toda la
+                // cartera como fallback para contratos antiguos que no traigan una imagen.
+                const hasContractImage = Boolean(
+                    contract.image || contract.imagen || contract.property_image || contract.publication_image ||
+                    (Array.isArray(contract.images) && contract.images[0]) ||
+                    (Array.isArray(contract.photos) && contract.photos[0])
+                );
+                if ((!ownerRawProperties || ownerRawProperties.length === 0) && Array.isArray(ownerAvisosState) && ownerAvisosState.length > 0) {
+                    ownerRawProperties = ownerAvisosState;
+                }
+                if ((!ownerRawProperties || ownerRawProperties.length === 0) && !hasContractImage) {
+                    if (window.DataManager && typeof window.DataManager.getUserMarketplaceProperties === 'function') {
+                        try {
+                            const fetchedProps = await window.DataManager.getUserMarketplaceProperties();
+                            if (Array.isArray(fetchedProps) && fetchedProps.length > 0) {
+                                ownerRawProperties = fetchedProps;
+                            }
+                        } catch (e) { }
+                    }
                 }
 
                 const isFinalized = isFin(contract);
@@ -4291,6 +4295,7 @@
                 const isRejected = payment && payment.status === 'rechazado';
                 const reviewRequestId = Number(payment?.payment_request?.id_solicitud_pago);
                 const hasReviewRequest = Number.isSafeInteger(reviewRequestId) && reviewRequestId > 0;
+                const canReviewPayment = payment?.can_review === true;
                 const isWaived = payment && payment.is_punitive_waived;
                 const expenses = contract.expenses_amount || 45000;
                 const commission = Math.round(contract.monthly_rent * ((contract.broker_commission_percent || 4.15) / 100));
@@ -4335,15 +4340,7 @@
                     ? window.DataManager.calculateNextRentAdjustment(contract.start_date || '2025-08-01', freqMonths)
                     : { nextDate: '01/11/2026', daysRemaining: 79 };
 
-                let indicesData = {
-                    ipc: { valor: 2.1, tasaSugeridaTrimestral: 7.2, tasaSugeridaSemestral: 14.8 },
-                    icl: { valor: 35.25, tasaSugeridaTrimestral: 6.8, tasaSugeridaSemestral: 13.9 }
-                };
-                if (window.DataManager && window.DataManager.getLatestIndices) {
-                    try {
-                        indicesData = await window.DataManager.getLatestIndices();
-                    } catch (e) { }
-                }
+                const indicesData = (await latestIndicesPromise) || defaultIndicesData;
 
                 const isIpc = !contract.adjustment_index || contract.adjustment_index.includes('IPC');
                 const defaultRate = isIpc
@@ -4364,7 +4361,7 @@
                     if (p.title && contract.property_title && p.title.toLowerCase().includes(cleanTitle.toLowerCase())) return true;
                     return false;
                 });
-                const contractImgUrl = contract.image || contract.imagen || (contract.images && contract.images[0]) || contract.publication_image || (matchedProp && matchedProp.images && matchedProp.images[0]) || (matchedProp && (matchedProp.imagen || matchedProp.image || matchedProp.foto)) || 'img/hero-marketplace.jpg';
+                const contractImgUrl = contract.image || contract.imagen || (contract.images && contract.images[0]) || contract.property_image || (contract.photos && contract.photos[0]) || contract.publication_image || (matchedProp && matchedProp.images && matchedProp.images[0]) || (matchedProp && (matchedProp.imagen || matchedProp.image || matchedProp.foto)) || 'img/hero-marketplace.jpg';
 
                 container.innerHTML = `
                     <div class="space-y-6 font-body">
@@ -4743,7 +4740,7 @@
                                                     </p>
                                                     <p class="mt-1 text-[11px] text-blue-700/75 dark:text-blue-300/75">Confirmalo solo cuando hayas verificado la acreditación. Al rechazarlo, el inquilino podrá informarlo nuevamente.</p>
                                                 </div>
-                                                ${hasReviewRequest ? `
+                                                ${hasReviewRequest && canReviewPayment ? `
                                                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                                                         <button type="button" id="btn-act-approve-payment" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
                                                             <span class="material-symbols-outlined text-base">check_circle</span>
@@ -4755,7 +4752,7 @@
                                                         </button>
                                                     </div>
                                                 ` : `
-                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Actualizá la página para revisar esta solicitud.</span>
+                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">${canReviewPayment ? 'Actualizá la página para revisar esta solicitud.' : 'Este pago fue informado. Sólo la cuenta propietaria del contrato puede confirmarlo.'}</span>
                                                 `}
                                             </div>
                                         ` : (isRejected ? `
@@ -4835,7 +4832,7 @@
                     }
                 };
 
-                if (hasReviewRequest && payment && !isFinalized && window.DataManager?.reviewPaymentReport) {
+                if (hasReviewRequest && canReviewPayment && payment && !isFinalized && window.DataManager?.reviewPaymentReport) {
                     if (bApprovePayment) {
                         bApprovePayment.onclick = async () => {
                             let confirmed = true;
@@ -4916,8 +4913,9 @@
                     };
                 }
 
-                // Cargar tickets de mantenimiento integrados
-                await loadOwnerTickets();
+                // Los tickets son una sección secundaria: no deben retrasar la
+                // primera pintura de los datos del alquiler seleccionado.
+                void loadOwnerTickets(contract.dbContractId || contract.id);
 
                 setupOwnerCardsIntersectionObserver();
             } catch (err) {
@@ -5494,14 +5492,28 @@
             }
         };
 
-        async function loadOwnerTickets() {
+        async function loadOwnerTickets(contractId = null) {
             const list = document.getElementById('owner-list-tickets');
             if (!list || !window.DataManager) return;
+            const loadToken = ++ownerTicketsLoadToken;
+            const rawContractId = String(contractId ?? '');
+            const legacyContractMatch = rawContractId.match(/^CTR-\d{4}-(\d+)$/i);
+            const parsedContractId = Number(legacyContractMatch ? legacyContractMatch[1] : rawContractId);
+            const selectedContractId = Number.isSafeInteger(parsedContractId) && parsedContractId > 0
+                ? String(parsedContractId)
+                : rawContractId;
 
             try {
-                const tickets = await window.DataManager.getMaintenanceTickets(null, true);
-                if (!tickets || tickets.length === 0) {
-                    list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay tickets de mantenimiento recibidos.</div>';
+                const tickets = await window.DataManager.getMaintenanceTickets(null, false, selectedContractId);
+                // Si se cambió de alquiler mientras se esperaba la consulta, no
+                // escribir resultados viejos sobre la tarjeta recién renderizada.
+                if (loadToken !== ownerTicketsLoadToken || list !== document.getElementById('owner-list-tickets')) return;
+
+                const visibleTickets = selectedContractId
+                    ? (tickets || []).filter(t => String(t.contract_id || t.id_contrato || '') === selectedContractId)
+                    : (tickets || []);
+                if (visibleTickets.length === 0) {
+                    list.innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-zinc-500">No hay tickets de mantenimiento para este alquiler.</div>';
                     return;
                 }
 
@@ -5511,7 +5523,7 @@
                     resuelto: '<span class="px-3 py-1 text-xs font-black rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">Resuelto</span>'
                 };
 
-                list.innerHTML = tickets.map(t => `
+                list.innerHTML = visibleTickets.map(t => `
                     <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4">
                         <div class="flex items-center justify-between gap-3 flex-wrap">
                             <div class="flex items-center gap-2">
@@ -5567,7 +5579,7 @@
 
                         await window.DataManager.updateTicketStatus(ticketId, status, response);
                         alert("¡Respuesta actualizada!");
-                        await loadOwnerTickets();
+                        await loadOwnerTickets(contractId);
                     };
                 });
 
@@ -6056,22 +6068,37 @@
             `;
         }
 
+        // Las notificaciones y Realtime pueden emitir varios eventos para una misma
+        // actualización. Sólo refrescamos este panel cuando está visible y agrupamos
+        // las señales cercanas para no relanzar cargas completas en paralelo.
+        let ownerRentalRefreshTimer = null;
+        function cancelOwnerRentalRefresh() {
+            if (ownerRentalRefreshTimer) {
+                clearTimeout(ownerRentalRefreshTimer);
+                ownerRentalRefreshTimer = null;
+            }
+        }
+        function scheduleOwnerRentalRefresh() {
+            if (currentActiveTab !== 'alquiler-activo' || typeof loadOwnerActiveRental !== 'function') return;
+            cancelOwnerRentalRefresh();
+            ownerRentalRefreshTimer = setTimeout(() => {
+                ownerRentalRefreshTimer = null;
+                void loadOwnerActiveRental();
+            }, 180);
+        }
+
         // Sincronización reactiva en tiempo real para el panel de propietario
         window.addEventListener('vivat:application_updated', () => {
             if (typeof loadOwnerApplications === 'function') {
                 loadOwnerApplications();
             }
-            if (typeof loadOwnerActiveRental === 'function') {
-                loadOwnerActiveRental();
-            }
+            scheduleOwnerRentalRefresh();
             if (typeof loadOwnerAvisos === 'function') {
                 loadOwnerAvisos();
             }
         });
         window.addEventListener('vivat:contract_updated', () => {
-            if (typeof loadOwnerActiveRental === 'function') {
-                loadOwnerActiveRental();
-            }
+            scheduleOwnerRentalRefresh();
             if (typeof loadOwnerAvisos === 'function') {
                 loadOwnerAvisos();
             }
@@ -6080,9 +6107,7 @@
             }
         });
         window.addEventListener('vivat:rental_created', () => {
-            if (typeof loadOwnerActiveRental === 'function') {
-                loadOwnerActiveRental();
-            }
+            scheduleOwnerRentalRefresh();
             if (typeof loadOwnerAvisos === 'function') {
                 loadOwnerAvisos();
             }

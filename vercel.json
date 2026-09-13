@@ -47,6 +47,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/owner-contracts",
+      "destination": "/api/pagos?action=owner-contracts"
+    },
+    {
       "source": "/og-image.png",
       "destination": "/img/og-vivat.png"
     },

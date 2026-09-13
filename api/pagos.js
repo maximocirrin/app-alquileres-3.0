@@ -13,19 +13,9 @@ import {
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
+import { getOwnerContractsForProfile } from '../lib/owner-contracts.js';
 
 const MAX_REJECTION_REASON_LENGTH = 500;
-const OWNER_CONTRACT_SELECT = `
-  *,
-  Propiedad (
-    *,
-    Publicacion (*, Multimedia (*))
-  ),
-  Inquilino:Perfil!id_perfil_inquilino (id_perfil, nombre_completo, mail, telefono, dni),
-  Propietario:Perfil!id_perfil_propietario (id_perfil, nombre_completo, mail, telefono, dni),
-  Firma_contrato (id_firma, rol_firmante, estado_firma, didit_status)
-`;
-
 function withoutAutomaticRetries(query) {
   if (typeof query?.retry === 'function') query.retry(false);
   return query;
@@ -160,7 +150,8 @@ async function paymentStatus(supabase, contractId) {
     .from('Pago')
     .select('id_pago, id_contrato, id_metodo_pago, monto, fecha_vencimiento, fecha_pago, periodo, interes_perdonado')
     .eq('id_contrato', contractId)
-    .order('id_pago', { ascending: false });
+    .order('id_pago', { ascending: false })
+    .limit(1);
   const { data: payments, error: paymentsError } = await withoutAutomaticRetries(paymentsQuery);
   if (paymentsError) throw paymentsError;
 
@@ -174,7 +165,8 @@ async function paymentStatus(supabase, contractId) {
     .select('id_solicitud_pago, id_pago, estado, metodo_pago, monto_informado, solicitado_en, resuelto_en, motivo_rechazo')
     .in('id_pago', paymentIds)
     .order('solicitado_en', { ascending: false })
-    .order('id_solicitud_pago', { ascending: false });
+    .order('id_solicitud_pago', { ascending: false })
+    .limit(1);
   const { data: requests, error: requestsError } = await withoutAutomaticRetries(requestsQuery);
   if (requestsError) throw requestsError;
 
@@ -200,13 +192,7 @@ async function paymentStatus(supabase, contractId) {
 }
 
 async function ownerContractBundle(supabase, profileId) {
-  const contractsQuery = supabase
-    .from('Contrato')
-    .select(OWNER_CONTRACT_SELECT)
-    .eq('id_perfil_propietario', Number(profileId))
-    .order('id_contrato', { ascending: false });
-  const { data: contracts, error: contractsError } = await withoutAutomaticRetries(contractsQuery);
-  if (contractsError) throw contractsError;
+  const contracts = await getOwnerContractsForProfile(supabase, profileId);
 
   const contractIds = (contracts || [])
     .map((contract) => parsePositiveInteger(contract.id_contrato))
@@ -292,6 +278,8 @@ async function handleGet(req, res, supabase, profile) {
     ok: true,
     data: {
       id_contrato: contractId,
+      role,
+      can_review: role === 'propietario',
       pagos
     }
   });
@@ -422,6 +410,9 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Cache-Control', 'no-store');
+  const queryAction = typeof req.query?.action === 'string'
+    ? req.query.action.trim().toLowerCase()
+    : '';
 
   try {
     const { user, profile, error: authError, status: authStatus, code: authCode } = await getAuthenticatedUser(req);
@@ -434,8 +425,9 @@ export default async function handler(req, res) {
 
     const supabase = getSupabaseAdmin();
     if (req.method === 'GET') {
-      const action = String(req.query?.action || '').trim().toLowerCase();
-      if (action === 'owner-contracts') return await handleOwnerContracts(res, supabase, profile);
+      if (queryAction === 'owner-contracts') {
+        return await handleOwnerContracts(res, supabase, profile);
+      }
       return await handleGet(req, res, supabase, profile);
     }
 
@@ -460,6 +452,6 @@ export default async function handler(req, res) {
       message: 'La acción debe ser report o review.'
     });
   } catch (error) {
-    return sendInternalError(res, 'pagos', error);
+    return sendInternalError(res, queryAction === 'owner-contracts' ? 'owner-contracts' : 'pagos', error);
   }
 }
