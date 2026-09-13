@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import {
+  consumeRateLimit,
   getAppUrl,
   getAuthenticatedUser,
   getClientIp,
@@ -12,6 +13,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from '../../api/_auth.js';
@@ -68,6 +70,9 @@ export default async function iniciarHandler(req, res) {
     if (contractError) throw contractError;
     if (!contract) return res.status(404).json({ ok: false, error: 'Not Found' });
     if (!role) return sendForbidden(res, 'No eres parte de este contrato.');
+    if (!await consumeRateLimit(supabase, 'didit-signature-session', `${profile.id_perfil}:${contractId}`, 5, 60 * 60)) {
+      return sendRateLimited(res);
+    }
 
     const apiKey = String(process.env.DIDIT_API_KEY || '').trim();
     const workflow = configuredWorkflow(process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID);
@@ -102,6 +107,8 @@ export default async function iniciarHandler(req, res) {
       contractId,
       profileId: Number(profile.id_perfil),
       role,
+      workflowId: workflow,
+      requiredChecks: ['liveness'],
       nonce: crypto.randomUUID()
     });
     const webhookUrl = `${appUrl}/api/firmas/webhook-didit`;

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import {
+  consumeRateLimit,
   getAppUrl,
   getAuthenticatedUser,
   getSafeCallbackUrl,
@@ -10,6 +11,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
@@ -25,6 +27,10 @@ function configuredWorkflow(value) {
   return workflow && !workflow.startsWith('TU_WORKFLOW') && workflow !== 'YOUR_WORKFLOW_ID' && workflow.length >= 6
     ? workflow
     : null;
+}
+
+function tokenDigest(token) {
+  return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
 }
 
 function parseVendorData(value) {
@@ -76,7 +82,13 @@ export default async function handler(req, res) {
   try {
     const body = await readJsonBody(req);
     const guarantorToken = body.garanteToken || body.token;
-    const isSignatureFlow = body.flow === 'signature' || body.flow === 'contract_signature' || body.isLivenessOnly === true;
+    const requestedSignatureFlow = body.flow === 'signature' || body.flow === 'contract_signature' || body.isLivenessOnly === true;
+    if (requestedSignatureFlow) {
+      return res.status(400).json({
+        error: 'Invalid verification flow.',
+        message: 'Las firmas contractuales deben iniciarse desde el flujo de firma dedicado.'
+      });
+    }
     const supabase = getSupabaseAdmin();
 
     let subject;
@@ -89,8 +101,11 @@ export default async function handler(req, res) {
 
       const { data, error } = await supabase
         .from('Garante')
-        .select('id_garante, token_invitacion, id_estado_garante, kyc_verificado')
-        .eq('token_invitacion', guarantorToken)
+        .select('id_garante, id_estado_garante, kyc_verificado, token_expires_at, token_used_at')
+        .eq('token_hash', tokenDigest(guarantorToken))
+        .eq('id_estado_garante', 2)
+        .is('token_used_at', null)
+        .gt('token_expires_at', new Date().toISOString())
         .maybeSingle();
 
       if (error || !data || data.kyc_verificado) {
@@ -106,19 +121,27 @@ export default async function handler(req, res) {
       subject = { kind: 'profile_kyc', profileId: Number(profile.id_perfil), userId: user.id };
     }
 
+    const rateSubject = guarantor
+      ? `guarantor:${guarantor.id_garante}`
+      : `profile:${subject.profileId}`;
+    if (!await consumeRateLimit(supabase, 'didit-kyc-session', rateSubject, 5, 60 * 60)) {
+      return sendRateLimited(res);
+    }
+
     const apiKey = String(process.env.DIDIT_API_KEY || '').trim();
-    const workflow = configuredWorkflow(
-      isSignatureFlow
-        ? (process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID)
-        : process.env.DIDIT_WORKFLOW_ID
-    );
+    const workflow = configuredWorkflow(process.env.DIDIT_WORKFLOW_ID);
     const appUrl = getAppUrl();
     if (!apiKey || !workflow || !appUrl) {
       console.error('[create-session] Missing Didit or canonical app configuration.');
       return res.status(503).json({ error: 'Verification service unavailable.' });
     }
 
-    const vendorData = JSON.stringify({ ...subject, nonce: crypto.randomUUID() });
+    const vendorData = JSON.stringify({
+      ...subject,
+      workflowId: workflow,
+      requiredChecks: ['document', 'liveness', 'face_match'],
+      nonce: crypto.randomUUID()
+    });
     const callbackUrl = getSafeCallbackUrl(body.callbackUrl || process.env.DIDIT_CALLBACK_URL);
     const payload = {
       workflow_id: workflow,
@@ -134,19 +157,25 @@ export default async function handler(req, res) {
     const session = await createDiditSession(apiKey, payload);
 
     if (guarantor) {
-      const { error } = await supabase
+      const { data: claimed, error } = await supabase
         .from('Garante')
         .update({ id_estado_garante: 3, didit_session_id: session.sessionId, updated_at: new Date().toISOString() })
         .eq('id_garante', guarantor.id_garante)
-        .eq('token_invitacion', guarantorToken);
+        .eq('token_hash', tokenDigest(guarantorToken))
+        .eq('id_estado_garante', 2)
+        .is('token_used_at', null)
+        .select('id_garante');
       if (error) throw error;
+      if (!Array.isArray(claimed) || claimed.length !== 1) {
+        return res.status(409).json({ error: 'Invitation state changed. Please request a new verification link.' });
+      }
     }
 
     return res.status(200).json({
       success: true,
       url: session.url,
       sessionId: session.sessionId,
-      workflowType: isSignatureFlow ? 'liveness_biometrics' : 'passport_full'
+      workflowType: 'passport_full'
     });
   } catch (error) {
     return sendInternalError(res, 'create-session', error);

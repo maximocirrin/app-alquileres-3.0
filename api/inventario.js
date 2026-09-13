@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import {
+  consumeRateLimit,
   getAuthenticatedUser,
   getContractForProfile,
   getSupabaseAdmin,
@@ -10,6 +11,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
@@ -42,6 +44,24 @@ function normalizeItem(item, contractId) {
     observaciones: text(item.observaciones, 4_000),
     fotos_urls: photos
   };
+}
+
+async function inventoryIsLocked(supabase, contractId) {
+  const [{ data: inventory, error: inventoryError }, { data: signatures, error: signatureError }] = await Promise.all([
+    supabase
+      .from('Inventario_Digital')
+      .select('firmado_inquilino, firmado_propietario')
+      .eq('id_contrato', contractId)
+      .maybeSingle(),
+    supabase
+      .from('Firma_contrato')
+      .select('id_firma')
+      .eq('id_contrato', contractId)
+      .limit(1)
+  ]);
+  if (inventoryError) throw inventoryError;
+  if (signatureError) throw signatureError;
+  return Boolean(inventory?.firmado_inquilino || inventory?.firmado_propietario || signatures?.length);
 }
 
 async function signedPath(supabase, path, contractId) {
@@ -95,8 +115,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, inventario: hydrated });
     }
 
+    if (await inventoryIsLocked(supabase, contractId)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Inventory locked.',
+        message: 'El inventario no puede modificarse después de iniciar el proceso de firma.'
+      });
+    }
+
     const isUpload = req.query?.action === 'upload' || body.action === 'upload' || (req.url && req.url.includes('inventario-upload'));
     if (isUpload) {
+      if (!await consumeRateLimit(supabase, 'inventory-media-upload', `${profile.id_perfil}:${contractId}`, 60, 60 * 60)) {
+        return sendRateLimited(res);
+      }
       const contentType = String(body.contentType || '').toLowerCase().split(';')[0].trim();
       const size = Number(body.size);
       const extension = IMAGE_TYPES.get(contentType);
@@ -105,7 +136,7 @@ export default async function handler(req, res) {
       }
 
       const randomSuffix = crypto.randomBytes(12).toString('hex');
-      const path = `${contractId}/items/item_${Date.now()}_${randomSuffix}.${extension}`;
+      const path = `contrato_${contractId}/inventario/item_${Date.now()}_${randomSuffix}.${extension}`;
       const { data, error } = await supabase.storage.from('contratos_firmados').createSignedUploadUrl(path);
       if (error || !data?.token) {
         return sendInternalError(res, 'inventario-upload', error || new Error('Upload token missing'));

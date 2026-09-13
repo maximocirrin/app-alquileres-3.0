@@ -4,6 +4,7 @@ import {
   getAuthenticatedUser,
   getContractForProfile,
   getSupabaseAdmin,
+  isSafeStoragePath,
   parsePositiveInteger,
   readJsonBody,
   requireProfile,
@@ -20,6 +21,23 @@ function approvedByDidit(signature) {
 
 function isSafeContractObjectPath(value, contractId) {
   return value === `contrato_${contractId}/contrato_original.pdf`;
+}
+
+async function hydrateInventoryImages(supabase, inventory, contractId) {
+  if (!inventory || !Array.isArray(inventory.items)) return inventory || null;
+  const items = await Promise.all(inventory.items.map(async (item) => {
+    const paths = Array.isArray(item.fotos_urls)
+      ? item.fotos_urls.filter((path) => isSafeStoragePath(path, contractId))
+      : [];
+    const urls = await Promise.all(paths.map(async (path) => {
+      const { data, error } = await supabase.storage
+        .from('contratos_firmados')
+        .createSignedUrl(path, 5 * 60);
+      return error ? null : data?.signedUrl || null;
+    }));
+    return { ...item, fotos_urls: urls.filter(Boolean) };
+  }));
+  return { ...inventory, items };
 }
 
 async function issueTrustedTimestamp(hash) {
@@ -129,6 +147,7 @@ export default async function sellarHandler(req, res) {
         .select('*, items:Detalle_Inventario_Item(*, Item:id_item(nombre), Estado_item:id_estado_item(nombre))')
         .eq('id_contrato', contractId)
         .maybeSingle();
+      const hydratedInventory = await hydrateInventoryImages(supabase, inventory, contractId);
 
       const { data: passports } = await supabase
         .from('Pasaporte_vivat')
@@ -146,7 +165,7 @@ export default async function sellarHandler(req, res) {
         inquilino: contractDetail.Inquilino || {},
         propietario: contractDetail.Propietario || {},
         garantes: guarantors || [],
-        inventario: inventory || null
+        inventario: hydratedInventory
       });
       originalHash = crypto.createHash('sha256').update(originalBytes).digest('hex');
       const { error: uploadError } = await supabase.storage.from('contratos_firmados').upload(originalPath, originalBytes, {

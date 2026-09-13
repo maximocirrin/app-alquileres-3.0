@@ -19,7 +19,6 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
   verificationUrl,
   errorMessage,
   isSimulated,
-  onSimulateSuccess,
   onSimulateFailure,
   onRetry,
   onClose,
@@ -30,7 +29,7 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isSimulated) {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices
           .getUserMedia({ video: { facingMode: 'user' } })
@@ -40,9 +39,7 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
               videoRef.current.srcObject = stream;
             }
           })
-          .catch(() => {
-            console.info('[DiditBiometric] Fallback a interfaz simulada de escaneo.');
-          });
+          .catch(() => undefined);
       }
     }
 
@@ -52,28 +49,13 @@ export const BiometricVerificationModal: React.FC<BiometricVerificationModalProp
         mediaStreamRef.current = null;
       }
     };
-  }, [isOpen]);
+  }, [isOpen, isSimulated]);
 
   if (!isOpen) return null;
 
   const handleCapture = () => {
-    setIsAnalyzing(true);
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      if (subStep === 1) {
-        setSubStep(2);
-      } else if (subStep === 2) {
-        setSubStep(3);
-      } else {
-        if (mediaStreamRef.current) {
-          mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-          mediaStreamRef.current = null;
-        }
-        if (onSimulateSuccess) {
-          onSimulateSuccess();
-        }
-      }
-    }, 800);
+    setIsAnalyzing(false);
+    if (onSimulateFailure) onSimulateFailure('La simulación biométrica fue deshabilitada.');
   };
 
   return (

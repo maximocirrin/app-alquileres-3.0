@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.105.1";
 
 function allowedOrigins() {
   const configured = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
@@ -24,6 +24,11 @@ function json(body: unknown, status: number, headers: Record<string, string> = {
   return new Response(JSON.stringify(body), { status, headers: { ...headers, "Content-Type": "application/json" } });
 }
 
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 /** Authenticated proxy for the paid Walk Score key. */
 serve(async (req) => {
   const corsHeaders = cors(req);
@@ -34,8 +39,11 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const authorization = req.headers.get("Authorization") ?? "";
-    if (!supabaseUrl || !anonKey || !/^Bearer\s+\S+$/i.test(authorization)) return json({ error: "Unauthorized" }, 401, corsHeaders ?? {});
+    if (!supabaseUrl || !anonKey || !serviceRoleKey || !/^Bearer\s+\S+$/i.test(authorization)) {
+      return json({ error: "Unauthorized" }, 401, corsHeaders ?? {});
+    }
 
     const supabase = createClient(supabaseUrl, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -43,6 +51,18 @@ serve(async (req) => {
     });
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) return json({ error: "Unauthorized" }, 401, corsHeaders ?? {});
+
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    const rateKey = await sha256Hex(`walk-score:${authData.user.id}`);
+    const { data: allowed, error: rateError } = await serviceClient.rpc("consume_api_rate_limit", {
+      p_key: rateKey,
+      p_limit: 30,
+      p_window_seconds: 3600
+    });
+    if (rateError) throw rateError;
+    if (!allowed) return json({ error: "Too Many Requests" }, 429, corsHeaders ?? {});
 
     const input = await req.json();
     const lat = Number(input?.lat);

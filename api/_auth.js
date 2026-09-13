@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
@@ -188,10 +189,6 @@ export function getSafeCallbackUrl(callbackUrl) {
   }
 }
 
-export function mocksAreAllowed() {
-  return !isProduction() && process.env.ALLOW_MOCK_SERVICES === 'true';
-}
-
 export function parsePositiveInteger(value) {
   const number = typeof value === 'number' ? value : Number(String(value || '').trim());
   return Number.isSafeInteger(number) && number > 0 ? number : null;
@@ -303,6 +300,29 @@ export function sendInternalError(res, context, error) {
   return res.status(500).json({
     ok: false,
     error: 'Internal Server Error',
-    message: error?.message || 'Ocurrió un error interno al procesar la solicitud.'
+    message: 'Ocurrió un error interno al procesar la solicitud.'
+  });
+}
+
+export async function consumeRateLimit(supabase, scope, subject, limit, windowSeconds) {
+  const rateKey = crypto
+    .createHash('sha256')
+    .update(`${String(scope)}\u0000${String(subject)}`, 'utf8')
+    .digest('hex');
+  const { data, error } = await supabase.rpc('consume_api_rate_limit', {
+    p_key: rateKey,
+    p_limit: limit,
+    p_window_seconds: windowSeconds
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+export function sendRateLimited(res) {
+  res.setHeader('Retry-After', '3600');
+  return res.status(429).json({
+    ok: false,
+    error: 'Too Many Requests',
+    message: 'Se alcanzó temporalmente el límite de solicitudes. Intentá nuevamente más tarde.'
   });
 }

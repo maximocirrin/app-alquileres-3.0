@@ -33,29 +33,35 @@ async function signedUrl(supabase, path, contractId) {
 }
 
 async function activateContract(supabase, contractId) {
-  const { data: latest, error } = await supabase
-    .from('Historial_Estado_Contrato')
-    .select('id_historial_contrato, id_estado_contrato')
+  const { data, error } = await supabase.rpc('finalize_signed_contract_state', {
+    p_contract_id: contractId
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+async function getCurrentContractState(supabase, contractId) {
+  const { data: history, error } = await supabase
+    .from('Historial_estado_contrato')
+    .select('id_estado_contrato, fecha_fin')
     .eq('id_contrato', contractId)
+    .is('fecha_fin', null)
     .order('fecha_inicio', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
-  if (latest?.id_estado_contrato === 1) return;
 
-  if (latest) {
-    const { error: closeError } = await supabase
-      .from('Historial_Estado_Contrato')
-      .update({ fecha_fin: new Date().toISOString() })
-      .eq('id_historial_contrato', latest.id_historial_contrato);
-    if (closeError) throw closeError;
-  }
-  const { error: insertError } = await supabase.from('Historial_Estado_Contrato').insert([{
-    id_contrato: contractId,
-    id_estado_contrato: 1,
-    fecha_inicio: new Date().toISOString()
-  }]);
-  if (insertError) throw insertError;
+  if (error) throw error;
+  return history ? Number(history.id_estado_contrato) : null;
+}
+
+function assertContractCanFinalize(currentState, hasFinalDocument) {
+  // State 5 is "pending signatures". State 1 is accepted only for an
+  // idempotent retry when the immutable final document already exists.
+  if (currentState === 5 || (currentState === 1 && hasFinalDocument)) return;
+
+  const conflict = new Error('Contract is not eligible for finalization.');
+  conflict.code = 'P0001';
+  throw conflict;
 }
 
 async function generateFinalDocument(supabase, contract, tenantSignature, ownerSignature) {
@@ -148,24 +154,18 @@ export default async function finalizarHandler(req, res) {
     let finalDocument = contract.hash_final_sha256 && isAllowedDocumentPath(contract.url_contrato_final_pdf, contractId)
       ? { path: contract.url_contrato_final_pdf, hash: contract.hash_final_sha256 }
       : null;
+    let currentState = await getCurrentContractState(supabase, contractId);
 
     // GET is read-only. A state-changing finalization requires an explicit POST
     // from an authenticated contract participant.
     if (req.method === 'POST' && complete) {
+      assertContractCanFinalize(currentState, Boolean(finalDocument));
       finalDocument = await generateFinalDocument(supabase, contract, tenantSignature, ownerSignature);
-      const { error: inventoryError } = await supabase
-        .from('Inventario_Digital')
-        .update({ firmado_inquilino: true, firmado_propietario: true })
-        .eq('id_contrato', contractId);
-      if (inventoryError && inventoryError.code !== 'PGRST116') throw inventoryError;
-
-      const { error: contractUpdateError } = await supabase
-        .from('Contrato')
-        .update({ fecha_firma_contrato: new Date().toISOString().slice(0, 10) })
-        .eq('id_contrato', contractId);
-      if (contractUpdateError) throw contractUpdateError;
       await activateContract(supabase, contractId);
+      currentState = 1;
     }
+
+    const isActive = currentState === 1 && complete && Boolean(finalDocument);
 
     const documents = {
       contrato_original: await signedUrl(supabase, contract.url_contrato_original_pdf, contractId),
@@ -178,8 +178,10 @@ export default async function finalizarHandler(req, res) {
       ok: true,
       data: {
         id_contrato: contractId,
-        contrato_activo: complete && Boolean(finalDocument),
-        estado_general: complete ? (finalDocument ? 'completado_activo' : 'pendiente_documento_final') : 'pendiente_firmas',
+        contrato_activo: isActive,
+        estado_general: isActive
+          ? 'completado_activo'
+          : (complete ? (finalDocument ? 'firmas_completas_estado_no_activo' : 'pendiente_documento_final') : 'pendiente_firmas'),
         hash_original_sha256: contract.hash_original_sha256 || null,
         hash_final_sha256: finalDocument?.hash || null,
         resumen_firmas: {
@@ -190,6 +192,13 @@ export default async function finalizarHandler(req, res) {
       }
     });
   } catch (error) {
+    if (error?.code === 'P0001') {
+      return res.status(409).json({
+        ok: false,
+        error: 'Contract state conflict.',
+        message: 'El contrato ya no se encuentra en estado pendiente de firma.'
+      });
+    }
     return sendInternalError(res, 'firmas/finalizar', error);
   }
 }

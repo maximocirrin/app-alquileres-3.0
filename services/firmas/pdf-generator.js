@@ -1,6 +1,50 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import crypto from 'crypto';
 
+const MAX_INVENTORY_IMAGE_BYTES = 10 * 1024 * 1024;
+
+async function fetchTrustedInventoryImage(value) {
+  const storageOrigin = new URL(
+    process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co'
+  ).origin;
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.origin !== storageOrigin ||
+      !url.pathname.startsWith('/storage/v1/object/sign/contratos_firmados/')) {
+    throw new Error('Untrusted inventory image URL.');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
+  try {
+    const response = await fetch(url, { signal: controller.signal, redirect: 'error' });
+    if (!response.ok) throw new Error('Inventory image could not be downloaded.');
+    const contentType = String(response.headers.get('content-type') || '').split(';')[0].toLowerCase();
+    if (!['image/jpeg', 'image/png'].includes(contentType)) {
+      throw new Error('Unsupported inventory image type.');
+    }
+    const declaredLength = Number(response.headers.get('content-length') || 0);
+    if (declaredLength > MAX_INVENTORY_IMAGE_BYTES) throw new Error('Inventory image is too large.');
+
+    const chunks = [];
+    let total = 0;
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Inventory image body is unavailable.');
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) break;
+      total += chunk.byteLength;
+      if (total > MAX_INVENTORY_IMAGE_BYTES) {
+        await reader.cancel();
+        throw new Error('Inventory image is too large.');
+      }
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks, total);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Diccionario de números ordinales en español
 const ORDINAL_NAMES = [
   'PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA',
@@ -307,8 +351,7 @@ export async function generateOriginalContractPdf({
 
         for (const photoUrl of item.fotos_urls) {
           try {
-            const imgRes = await fetch(photoUrl);
-            const imgBytes = await imgRes.arrayBuffer();
+            const imgBytes = await fetchTrustedInventoryImage(photoUrl);
             let image;
             try {
               image = await pdfDoc.embedJpg(imgBytes);

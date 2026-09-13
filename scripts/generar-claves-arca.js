@@ -1,6 +1,10 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 console.log('=== Generador de Clave Privada y Requerimiento para ARCA ===\n');
 
@@ -27,11 +31,9 @@ const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
 });
 
 const keyPath = path.join(__dirname, '..', 'arca_homo.key');
-fs.writeFileSync(keyPath, privateKey);
+fs.writeFileSync(keyPath, privateKey, { mode: 0o600 });
 
 console.log(`✅ Clave Privada generada con éxito: ${keyPath}`);
-console.log('\n--- CONTENIDO DE ARCA_PRIVATE_KEY ---');
-console.log(privateKey);
-console.log('-------------------------------------\n');
+console.log('La clave no se imprime. Guardala en un gestor de secretos y eliminá la copia local cuando termines.\n');
 console.log(`Siguiente paso:\nSi tienes Git instalado en Windows, puedes generar el archivo .csr ejecutando en la terminal:`);
 console.log(`& "C:\\Program Files\\Git\\usr\\bin\\openssl.exe" req -new -key arca_homo.key -subj "/C=AR/O=Vivat/CN=vivat/serialNumber=CUIT ${cleanCuit}" -out arca_homo.csr\n`);
