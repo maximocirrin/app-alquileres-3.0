@@ -15,6 +15,21 @@ import {
 } from './_auth.js';
 
 const MAX_REJECTION_REASON_LENGTH = 500;
+const OWNER_CONTRACT_SELECT = `
+  *,
+  Propiedad (
+    *,
+    Publicacion (*, Multimedia (*))
+  ),
+  Inquilino:Perfil!id_perfil_inquilino (id_perfil, nombre_completo, mail, telefono, dni),
+  Propietario:Perfil!id_perfil_propietario (id_perfil, nombre_completo, mail, telefono, dni),
+  Firma_contrato (id_firma, rol_firmante, estado_firma, didit_status)
+`;
+
+function withoutAutomaticRetries(query) {
+  if (typeof query?.retry === 'function') query.retry(false);
+  return query;
+}
 
 /**
  * Browser labels are intentionally normalized to the small, canonical set
@@ -141,11 +156,12 @@ async function requireParticipantForContract(supabase, contractId, profileId) {
 }
 
 async function paymentStatus(supabase, contractId) {
-  const { data: payments, error: paymentsError } = await supabase
+  const paymentsQuery = supabase
     .from('Pago')
     .select('id_pago, id_contrato, id_metodo_pago, monto, fecha_vencimiento, fecha_pago, periodo, interes_perdonado')
     .eq('id_contrato', contractId)
     .order('id_pago', { ascending: false });
+  const { data: payments, error: paymentsError } = await withoutAutomaticRetries(paymentsQuery);
   if (paymentsError) throw paymentsError;
 
   const paymentIds = (payments || [])
@@ -153,12 +169,13 @@ async function paymentStatus(supabase, contractId) {
     .filter(Boolean);
   if (paymentIds.length === 0) return [];
 
-  const { data: requests, error: requestsError } = await supabase
+  const requestsQuery = supabase
     .from('Solicitud_pago')
     .select('id_solicitud_pago, id_pago, estado, metodo_pago, monto_informado, solicitado_en, resuelto_en, motivo_rechazo')
     .in('id_pago', paymentIds)
     .order('solicitado_en', { ascending: false })
     .order('id_solicitud_pago', { ascending: false });
+  const { data: requests, error: requestsError } = await withoutAutomaticRetries(requestsQuery);
   if (requestsError) throw requestsError;
 
   const latestRequestByPayment = new Map();
@@ -180,6 +197,80 @@ async function paymentStatus(supabase, contractId) {
     interes_perdonado: payment.interes_perdonado === true,
     solicitud: latestRequestByPayment.get(parsePositiveInteger(payment.id_pago)) || null
   }));
+}
+
+async function ownerContractBundle(supabase, profileId) {
+  const contractsQuery = supabase
+    .from('Contrato')
+    .select(OWNER_CONTRACT_SELECT)
+    .eq('id_perfil_propietario', Number(profileId))
+    .order('id_contrato', { ascending: false });
+  const { data: contracts, error: contractsError } = await withoutAutomaticRetries(contractsQuery);
+  if (contractsError) throw contractsError;
+
+  const contractIds = (contracts || [])
+    .map((contract) => parsePositiveInteger(contract.id_contrato))
+    .filter(Boolean);
+  const paymentsByContract = Object.fromEntries(contractIds.map((id) => [String(id), []]));
+  if (contractIds.length === 0) return { contracts: contracts || [], paymentsByContract };
+
+  const paymentsQuery = supabase
+    .from('Pago')
+    .select('id_pago, id_contrato, id_metodo_pago, monto, fecha_vencimiento, fecha_pago, periodo, interes_perdonado')
+    .in('id_contrato', contractIds)
+    .order('id_pago', { ascending: false });
+  const { data: payments, error: paymentsError } = await withoutAutomaticRetries(paymentsQuery);
+  if (paymentsError) throw paymentsError;
+
+  const paymentIds = (payments || [])
+    .map((payment) => parsePositiveInteger(payment.id_pago))
+    .filter(Boolean);
+  let requests = [];
+  if (paymentIds.length > 0) {
+    const requestsQuery = supabase
+      .from('Solicitud_pago')
+      .select('id_solicitud_pago, id_pago, estado, metodo_pago, monto_informado, solicitado_en, resuelto_en, motivo_rechazo')
+      .in('id_pago', paymentIds)
+      .order('solicitado_en', { ascending: false })
+      .order('id_solicitud_pago', { ascending: false });
+    const { data, error } = await withoutAutomaticRetries(requestsQuery);
+    if (error) throw error;
+    requests = data || [];
+  }
+
+  const latestRequestByPayment = new Map();
+  for (const request of requests) {
+    const paymentId = parsePositiveInteger(request.id_pago);
+    if (paymentId && !latestRequestByPayment.has(paymentId)) {
+      latestRequestByPayment.set(paymentId, publicRequest(request));
+    }
+  }
+
+  for (const payment of payments || []) {
+    const contractId = parsePositiveInteger(payment.id_contrato);
+    if (!contractId || !paymentsByContract[String(contractId)]) continue;
+    paymentsByContract[String(contractId)].push({
+      id_pago: parsePositiveInteger(payment.id_pago),
+      id_contrato: contractId,
+      id_metodo_pago: payment.id_metodo_pago ?? null,
+      monto: payment.monto ?? null,
+      fecha_vencimiento: payment.fecha_vencimiento || null,
+      fecha_pago: payment.fecha_pago || null,
+      periodo: payment.periodo || null,
+      interes_perdonado: payment.interes_perdonado === true,
+      solicitud: latestRequestByPayment.get(parsePositiveInteger(payment.id_pago)) || null
+    });
+  }
+
+  return { contracts: contracts || [], paymentsByContract };
+}
+
+async function handleOwnerContracts(res, supabase, profile) {
+  if (!await consumeRateLimit(supabase, 'owner-contracts-read', String(profile.id_perfil), 240, 60 * 60)) {
+    return sendRateLimited(res);
+  }
+  const bundle = await ownerContractBundle(supabase, profile.id_perfil);
+  return res.status(200).json({ ok: true, data: bundle });
 }
 
 async function handleGet(req, res, supabase, profile) {
@@ -342,7 +433,11 @@ export default async function handler(req, res) {
     if (!requireProfile(profile)) return sendForbidden(res, 'No se encontró un perfil válido para esta cuenta.');
 
     const supabase = getSupabaseAdmin();
-    if (req.method === 'GET') return await handleGet(req, res, supabase, profile);
+    if (req.method === 'GET') {
+      const action = String(req.query?.action || '').trim().toLowerCase();
+      if (action === 'owner-contracts') return await handleOwnerContracts(res, supabase, profile);
+      return await handleGet(req, res, supabase, profile);
+    }
 
     let body;
     try {

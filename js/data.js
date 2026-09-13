@@ -70,6 +70,51 @@ async function fetchPaymentApi(query = '', options = {}) {
     }
 }
 
+const OWNER_CONTRACTS_CACHE_TTL_MS = 30_000;
+let ownerContractsApiCache = null;
+let ownerContractsApiPending = null;
+const ownerPaymentsApiCache = new Map();
+let authenticatedProfileCache = null;
+let authenticatedProfilePending = null;
+
+async function fetchOwnerContractsApi() {
+    const now = Date.now();
+    if (ownerContractsApiCache?.expiresAt > now) return ownerContractsApiCache.bundle;
+    if (ownerContractsApiPending) return ownerContractsApiPending;
+
+    ownerContractsApiPending = (async () => {
+        let response;
+        let payload = {};
+        for (let attempt = 0; attempt < 2; attempt++) {
+            response = await fetchPaymentApi('?action=owner-contracts');
+            payload = await response.json().catch(() => ({}));
+            if (response.status !== 503 || attempt === 1) break;
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        if (!response?.ok || !payload?.ok || !Array.isArray(payload?.data?.contracts)) {
+            throw new Error(payload?.message || 'No se pudieron consultar los alquileres.');
+        }
+
+        const bundle = payload.data;
+        ownerPaymentsApiCache.clear();
+        for (const contract of bundle.contracts) {
+            const contractId = Number(contract?.id_contrato);
+            if (!Number.isSafeInteger(contractId) || contractId <= 0) continue;
+            const payments = bundle.paymentsByContract?.[String(contractId)];
+            ownerPaymentsApiCache.set(contractId, Array.isArray(payments) ? payments : []);
+        }
+        ownerContractsApiCache = { bundle, expiresAt: Date.now() + OWNER_CONTRACTS_CACHE_TTL_MS };
+        return bundle;
+    })();
+
+    try {
+        return await ownerContractsApiPending;
+    } finally {
+        ownerContractsApiPending = null;
+    }
+}
+
 async function uploadPropertyImageSecurely(publicationId, file) {
     if (!(file instanceof Blob) || !window.supabaseClient?.storage) {
         throw new Error('No se recibió una imagen válida.');
@@ -122,66 +167,32 @@ var DataManager = {
     // Browser code must never create a profile, assign a role, or mark KYC valid.
     _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
-        try {
-            const { data: userData, error: userError } = await window.supabaseClient.auth.getUser();
-            const authUser = userData?.user;
-            if (userError || !authUser) return null;
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const authUserId = sessionData?.session?.user?.id;
+        if (!authUserId) return null;
+        if (authenticatedProfileCache?.userId === authUserId) return authenticatedProfileCache.profileId;
+        if (authenticatedProfilePending?.userId === authUserId) return authenticatedProfilePending.promise;
 
-            // 1. Resolve by authenticated user_id
-            let { data: profile, error } = await window.supabaseClient
-                .from('Perfil')
-                .select('id_perfil')
-                .eq('user_id', authUser.id)
-                .maybeSingle();
-
-            if (profile?.id_perfil) {
-                return profile.id_perfil;
-            }
-
-            // 2. Fallback: match by email and link user_id
-            if (authUser.email) {
-                const { data: profByEmail } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil, user_id')
-                    .eq('mail', authUser.email)
-                    .maybeSingle();
-
-                if (profByEmail?.id_perfil) {
-                    if (!profByEmail.user_id) {
-                        try {
-                            await window.supabaseClient
-                                .from('Perfil')
-                                .update({ user_id: authUser.id })
-                                .eq('id_perfil', profByEmail.id_perfil);
-                        } catch (e) { }
-                    }
-                    return profByEmail.id_perfil;
-                }
-            }
-
-            // 3. Fallback: provision basic client profile tied to this auth user
+        const promise = (async () => {
             try {
-                const { data: newProf } = await window.supabaseClient
+                const { data: profile, error } = await window.supabaseClient
                     .from('Perfil')
-                    .insert([{
-                        user_id: authUser.id,
-                        mail: authUser.email,
-                        nombre_completo: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario',
-                        id_tipo_perfil: 1
-                    }])
                     .select('id_perfil')
+                    .eq('user_id', authUserId)
                     .maybeSingle();
-
-                if (newProf?.id_perfil) {
-                    return newProf.id_perfil;
-                }
-            } catch (e) { }
-
-            return null;
-        } catch (e) {
-            console.error('Error al resolver el perfil autenticado:', e);
-            return null;
-        }
+                if (error || !profile?.id_perfil) return null;
+                const profileId = Number(profile.id_perfil);
+                authenticatedProfileCache = { userId: authUserId, profileId };
+                return profileId;
+            } catch (e) {
+                console.error('Error al resolver el perfil autenticado:', e);
+                return null;
+            } finally {
+                if (authenticatedProfilePending?.userId === authUserId) authenticatedProfilePending = null;
+            }
+        })();
+        authenticatedProfilePending = { userId: authUserId, promise };
+        return promise;
     },
 
     // User Management
@@ -253,6 +264,11 @@ var DataManager = {
             sessionStorage.removeItem('vivat_contracts_return_url');
             window.hasActivePassport = false;
             window.currentPasaporteId = null;
+            authenticatedProfileCache = null;
+            authenticatedProfilePending = null;
+            ownerContractsApiCache = null;
+            ownerContractsApiPending = null;
+            ownerPaymentsApiCache.clear();
         } catch (e) {}
         if (window.supabaseClient) {
             const { error } = await window.supabaseClient.auth.signOut();
@@ -262,18 +278,21 @@ var DataManager = {
 
     getCurrentUser: async () => {
         if (!window.supabaseClient) return null;
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
-        return user;
+        const { data } = await window.supabaseClient.auth.getSession();
+        return data?.session?.user || null;
     },
 
     getUserProfile: async () => {
         if (!window.supabaseClient) return null;
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const user = sessionData?.session?.user;
         if (!user) return null;
+        const profileId = await DataManager._getOrCreateProfile();
+        if (!profileId) return { mail: user.email, nombre_completo: user.user_metadata?.full_name || 'Usuario' };
         const { data } = await window.supabaseClient
             .from('Perfil')
             .select('*')
-            .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+            .eq('id_perfil', profileId)
             .maybeSingle();
         return data || { mail: user.email, nombre_completo: user.user_metadata?.full_name || 'Usuario' };
     },
@@ -2462,37 +2481,14 @@ var DataManager = {
         }
 
         try {
-            let profileId = targetProfileId;
-            if (!profileId && window.DataManager._getOrCreateProfile) {
-                profileId = await window.DataManager._getOrCreateProfile();
-            }
+            // The server derives the owner from the verified session. Never
+            // trust a browser-supplied profile id for owner data.
+            void targetProfileId;
+            const bundle = await fetchOwnerContractsApi();
+            const data = bundle.contracts;
+            const error = null;
 
-            if (!profileId) {
-                return [];
-            }
-
-            let query = window.supabaseClient
-                .from('Contrato')
-                .select(`
-                    *,
-                    Propiedad (
-                        *,
-                        Publicacion (*, Multimedia (*)),
-                        Propiedad_caracteristica (
-                            Caracteristica (*)
-                        )
-                    ),
-                    Inquilino:Perfil!id_perfil_inquilino (*),
-                    Propietario:Perfil!id_perfil_propietario (*),
-                    Firma_contrato (*),
-                    Historial_Estado_Contrato (*)
-                `)
-                .order('id_contrato', { ascending: false })
-                .eq('id_perfil_propietario', profileId);
-
-            const { data, error } = await query;
-
-            if (!error && Array.isArray(data) && data.length > 0) {
+            if (!error && Array.isArray(data)) {
                 const dbContracts = data.map(item => {
                     const prop = item.Propiedad || {};
                     const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
@@ -2516,7 +2512,8 @@ var DataManager = {
                             .replace(/HÁBITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'));
                     };
 
-                    const inqName = cleanVivatVal(inq.nombre_completo, 'Inquilino Titular');
+                    const inqFullName = inq.nombre_completo || [inq.nombre, inq.apellido].filter(Boolean).join(' ').trim();
+                    const inqName = cleanVivatVal(inqFullName, 'Inquilino Titular');
                     const inqEmail = cleanVivatVal(inq.mail, 'inquilino@email.com');
                     const inqPhone = inq.telefono || '+54 9 11 0000-0000';
                     const inqDni = inq.dni || '';
@@ -2540,7 +2537,7 @@ var DataManager = {
                     else if (tenantFirmado) status = 'WAITING_OWNER';
                     else if (ownerFirmado) status = 'WAITING_TENANT';
 
-                    const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || profileId || 6);
+                    const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || propOwner.id_perfil || 0);
                     const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil || 14);
 
                     let extraClauses = item.clausulas_adicionales || {};
@@ -2667,15 +2664,18 @@ var DataManager = {
                     };
                 });
 
-                // Combinar contratos de base de datos con los contratos locales de localStorage
-                const mergedMap = new Map();
+                // Supabase is authoritative for contract ownership. Local
+                // details may enrich a matching record, but must never add a
+                // contract that the authenticated owner did not receive.
+                const localById = new Map();
                 (contractsList || []).forEach(c => {
-                    if (c && c.id) mergedMap.set(String(c.id), c);
+                    if (c?.id) localById.set(String(c.id), c);
                 });
+                const mergedMap = new Map();
                 (dbContracts || []).forEach(c => {
                     if (c && c.id) {
-                        if (mergedMap.has(String(c.id))) {
-                            const local = mergedMap.get(String(c.id)) || {};
+                        if (localById.has(String(c.id))) {
+                            const local = localById.get(String(c.id)) || {};
                             const localFinalized = Boolean(local.is_finalized || local.isFinalized || local.status === 'finalizado' || local.id_estado_contrato === 2);
                             const finalIsFinalized = c.is_finalized || localFinalized;
                             const mergedItem = {
@@ -3468,6 +3468,15 @@ var DataManager = {
 
         if (!dbContractId || !window.supabaseClient) return fallbackPayment();
 
+        // getOwnerContracts loads every current payment in one server request.
+        // Reuse that bundle instead of issuing one API call per rental card.
+        if (ownerPaymentsApiCache.has(dbContractId)) {
+            const cachedPayments = ownerPaymentsApiCache.get(dbContractId);
+            if (!cachedPayments.length) return fallbackPayment();
+            const paymentData = cachedPayments[0];
+            return toPayment(paymentData, paymentData.solicitud || null);
+        }
+
         try {
             // The API is the authoritative source for review status. It also
             // prevents stale localStorage from making a tenant's claim look
@@ -3587,6 +3596,8 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo informar el pago.');
         }
+        ownerPaymentsApiCache.delete(contractDbId);
+        ownerContractsApiCache = null;
         return payload.data || null;
     },
 
@@ -3611,6 +3622,8 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo resolver la solicitud de pago.');
         }
+        ownerPaymentsApiCache.delete(contractDbId);
+        ownerContractsApiCache = null;
         return payload.data || null;
     },
 

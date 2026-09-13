@@ -67,6 +67,10 @@
       "destination": "/api/inventario?action=upload"
     },
     {
+      "source": "/api/owner-contracts",
+      "destination": "/api/pagos?action=owner-contracts"
+    },
+    {
       "source": "/api/garante-portal",
       "destination": "/api/garantes?portal=1"
     },
