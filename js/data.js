@@ -41,6 +41,35 @@ async function authenticatedApiHeaders() {
     return headers;
 }
 
+// Live Server only serves files. Payment operations run on the local Express
+// server; deployed pages and Express-served pages keep their own origin.
+function paymentApiUrl() {
+    const { protocol, hostname, port } = window.location;
+    if (protocol === 'http:' && ['localhost', '127.0.0.1'].includes(hostname) && port === '5500') {
+        return `http://${hostname}:3000/api/pagos`;
+    }
+    return '/api/pagos';
+}
+
+async function fetchPaymentApi(query = '', options = {}) {
+    const url = paymentApiUrl();
+    const headers = await authenticatedApiHeaders();
+    if (!headers.Authorization) {
+        throw new Error('Tu sesión no está disponible. Volvé a iniciar sesión para informar el pago.');
+    }
+    try {
+        return await fetch(url + query, {
+            ...options,
+            headers
+        });
+    } catch (error) {
+        if (url.startsWith('http:')) {
+            throw new Error('No se pudo conectar con el servidor de pagos. Iniciá el backend con npm start (puerto 3000) y volvé a intentar.');
+        }
+        throw error;
+    }
+}
+
 async function uploadPropertyImageSecurely(publicationId, file) {
     if (!(file instanceof Blob) || !window.supabaseClient?.storage) {
         throw new Error('No se recibió una imagen válida.');
@@ -3333,15 +3362,40 @@ var DataManager = {
     },
 
     getCurrentPayment: async function (contractId, fallbackContract = null) {
-        const isNumeric = contractId !== null && contractId !== undefined && (typeof contractId === 'number' || (typeof contractId === 'string' && /^\d+$/.test(contractId.trim())));
-        
+        const resolveDbContractId = () => {
+            const candidates = [
+                fallbackContract?.dbContractId,
+                fallbackContract?.id_contrato,
+                contractId
+            ];
+
+            for (const candidate of candidates) {
+                if (typeof candidate === 'number' && Number.isSafeInteger(candidate) && candidate > 0) return candidate;
+                if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
+                    const parsed = Number(candidate.trim());
+                    if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
+                }
+            }
+
+            // Legacy owner cards render IDs such as CTR-2026-0001. Prefer a
+            // real dbContractId when available, but support that display ID
+            // as a safe fallback rather than querying the wrong contract.
+            const legacyMatch = typeof contractId === 'string'
+                ? contractId.trim().match(/^CTR-\d{4}-(\d+)$/i)
+                : null;
+            if (legacyMatch) {
+                const parsed = Number(legacyMatch[1]);
+                if (Number.isSafeInteger(parsed) && parsed > 0) return parsed;
+            }
+            return null;
+        };
+
+        const dbContractId = resolveDbContractId();
         const now = new Date();
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const currentPeriod = `${months[now.getMonth()]} ${now.getFullYear()}`;
         const dueMonth = String(now.getMonth() + 1).padStart(2, '0');
         const defaultDueDate = `${now.getFullYear()}-${dueMonth}-10`;
-
-        const stored = this._getStoredPaymentState(contractId);
 
         // Buscar canon real del contrato para evitar fallbacks desactualizados
         let contractCanon = null;
@@ -3369,83 +3423,78 @@ var DataManager = {
             } catch (e) { }
         }
 
-        const effectiveBase = Number(stored?.amount_base || contractCanon || 380000);
+        const effectiveBase = Number(contractCanon || 380000);
+        const fallbackPayment = () => ({
+            id: 'pay-' + (dbContractId || contractId || 'current'),
+            contract_id: dbContractId || contractId,
+            period: currentPeriod,
+            amount_base: effectiveBase,
+            currency: contractCurrency,
+            due_date: defaultDueDate,
+            status: 'pendiente',
+            is_punitive_waived: false,
+            payment_request: null
+        });
 
-        if (!isNumeric) {
-            return {
-                id: 'pay-' + (contractId || 'current'),
-                contract_id: contractId,
-                period: stored?.period || currentPeriod,
-                amount_base: effectiveBase,
-                currency: contractCurrency,
-                due_date: stored?.due_date || defaultDueDate,
-                status: stored?.status || 'pendiente',
-                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
-            };
-        }
+        const toPayment = (paymentData, review = null) => {
+            const reviewStatus = String(review?.estado || '').toLowerCase();
+            const status = paymentData.fecha_pago
+                ? 'pagado'
+                : (reviewStatus === 'pendiente_revision'
+                    ? 'pendiente_revision'
+                    : (reviewStatus === 'rechazada' ? 'rechazado' : 'pendiente'));
+            const reportedAmount = review?.monto_informado === null || review?.monto_informado === undefined
+                ? null
+                : Number(review.monto_informado);
 
-        if (!window.supabaseClient) {
             return {
-                id: 'pay-' + (contractId || 'current'),
-                contract_id: contractId,
-                period: stored?.period || currentPeriod,
-                amount_base: effectiveBase,
+                id: paymentData.id_pago,
+                contract_id: paymentData.id_contrato,
+                period: paymentData.periodo || currentPeriod,
+                amount_base: Number(paymentData.monto || effectiveBase),
                 currency: contractCurrency,
-                due_date: stored?.due_date || defaultDueDate,
-                status: stored?.status || 'pendiente',
-                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
+                due_date: paymentData.fecha_vencimiento || defaultDueDate,
+                paid_at: paymentData.fecha_pago || null,
+                status,
+                payment_method: review?.metodo_pago || null,
+                reported_amount: Number.isFinite(reportedAmount) ? reportedAmount : null,
+                reported_at: review?.solicitado_en || null,
+                reviewed_at: review?.resuelto_en || null,
+                rejection_reason: review?.motivo_rechazo || null,
+                payment_request: review || null,
+                is_punitive_waived: Boolean(paymentData.interes_perdonado)
             };
-        }
+        };
+
+        if (!dbContractId || !window.supabaseClient) return fallbackPayment();
 
         try {
+            // The API is the authoritative source for review status. It also
+            // prevents stale localStorage from making a tenant's claim look
+            // like a confirmed payment on another device.
+            const apiResponse = await fetchPaymentApi(`?id_contrato=${encodeURIComponent(dbContractId)}`);
+            const apiPayload = await apiResponse.json().catch(() => ({}));
+            const apiPayments = apiPayload?.data?.pagos;
+            if (apiResponse.ok && Array.isArray(apiPayments)) {
+                if (apiPayments.length === 0) return fallbackPayment();
+                const paymentData = apiPayments[0];
+                return toPayment(paymentData, paymentData.solicitud || null);
+            }
+
+            // A read-only fallback preserves the dashboard if the local API
+            // is unavailable, but intentionally cannot fabricate review state.
             const { data, error } = await window.supabaseClient
                 .from('Pago')
                 .select('*')
-                .eq('id_contrato', Number(contractId))
+                .eq('id_contrato', dbContractId)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
-            if (error || !data) {
-                return {
-                    id: 'pay-' + contractId,
-                    contract_id: contractId,
-                    period: stored?.period || currentPeriod,
-                    amount_base: effectiveBase,
-                    currency: contractCurrency,
-                    due_date: stored?.due_date || defaultDueDate,
-                    status: stored?.status || 'pendiente',
-                    is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
-                };
-            }
-
-            const dbWaived = data.interes_perdonado || false;
-            const isWaived = (stored && stored.is_punitive_waived !== undefined) ? stored.is_punitive_waived : dbWaived;
-            const dbStatus = data.fecha_pago ? 'pagado' : 'pendiente';
-            const status = (stored && stored.status) ? stored.status : dbStatus;
-            const amountBase = dbStatus === 'pagado' ? Number(data.monto || effectiveBase) : effectiveBase;
-
-            return {
-                id: data.id_pago,
-                contract_id: data.id_contrato,
-                period: data.periodo || currentPeriod,
-                amount_base: amountBase,
-                currency: contractCurrency,
-                due_date: data.fecha_vencimiento || defaultDueDate,
-                status: status,
-                is_punitive_waived: isWaived
-            };
+            if (error || !data) return fallbackPayment();
+            return toPayment(data);
         } catch (e) {
-            return {
-                id: 'pay-' + (contractId || 'current'),
-                contract_id: contractId,
-                period: stored?.period || currentPeriod,
-                amount_base: effectiveBase,
-                currency: contractCurrency,
-                due_date: stored?.due_date || defaultDueDate,
-                status: stored?.status || 'pendiente',
-                is_punitive_waived: stored ? Boolean(stored.is_punitive_waived) : false
-            };
+            return fallbackPayment();
         }
     },
 
@@ -3457,12 +3506,18 @@ var DataManager = {
         const dailyRate = Number(contract.punitive_daily_rate || contract.punitiveDailyRate || 0.5);
         const baseAmount = Number(payment.amount_base || contract.monthly_rent || 0);
 
-        if (isPaid || isWaived) {
+        if (isPaid || isWaived || payment.status === 'pendiente_revision') {
+            const hasReportedAmount = payment.reported_amount !== null
+                && payment.reported_amount !== undefined
+                && Number.isFinite(Number(payment.reported_amount));
+            const reviewTotal = payment.status === 'pendiente_revision' && hasReportedAmount
+                ? Number(payment.reported_amount)
+                : baseAmount;
             return {
                 daysLate: 0,
                 dailyRate,
                 punitiveAmount: 0,
-                totalAmount: baseAmount,
+                totalAmount: reviewTotal,
                 isWaived,
                 isPaid
             };
@@ -3512,26 +3567,57 @@ var DataManager = {
         return { id: paymentId, is_punitive_waived: true };
     },
 
-    markPaymentAsPaid: async function (paymentId, method = 'Transferencia', contractId) {
-        const cId = contractId || (typeof paymentId === 'string' && paymentId.startsWith('pay-') ? paymentId.replace('pay-', '') : null);
-        if (cId) {
-            this._setStoredPaymentState(cId, { status: 'pagado', payment_method: method, fecha_pago: new Date().toISOString() });
+    reportPayment: async function (paymentId, method, contractId = null) {
+        const id = Number(paymentId);
+        const contractDbId = Number(contractId);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new Error('No se encontró un pago válido para informar.');
         }
-        if (window.supabaseClient && typeof paymentId === 'number') {
-            try {
-                await window.supabaseClient
-                    .from('Pago')
-                    .update({ fecha_pago: new Date().toISOString(), id_metodo_pago: 1 })
-                    .eq('id_pago', paymentId);
 
-                await window.supabaseClient.from('Historial_pago').insert([{
-                    id_pago: paymentId,
-                    id_estado_pago: 2, // Pagado
-                    fecha_inicio: new Date().toISOString()
-                }]);
-            } catch (e) { }
+        const response = await fetchPaymentApi('', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'report',
+                id_pago: id,
+                id_contrato: Number.isSafeInteger(contractDbId) && contractDbId > 0 ? contractDbId : undefined,
+                metodo_pago: method
+            })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.ok) {
+            throw new Error(payload?.message || payload?.error || 'No se pudo informar el pago.');
         }
-        return { id: paymentId, status: 'pagado', payment_method: method };
+        return payload.data || null;
+    },
+
+    reviewPaymentReport: async function (requestId, accept, rejectionReason = '', contractId = null) {
+        const id = Number(requestId);
+        const contractDbId = Number(contractId);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new Error('No se encontró una solicitud de pago válida.');
+        }
+
+        const response = await fetchPaymentApi('', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'review',
+                id_solicitud_pago: id,
+                id_contrato: Number.isSafeInteger(contractDbId) && contractDbId > 0 ? contractDbId : undefined,
+                aceptar: Boolean(accept),
+                motivo_rechazo: rejectionReason
+            })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.ok) {
+            throw new Error(payload?.message || payload?.error || 'No se pudo resolver la solicitud de pago.');
+        }
+        return payload.data || null;
+    },
+
+    // Kept only to make accidental legacy calls fail closed. A payment is
+    // definitive only after the owner reviews the tenant's report.
+    markPaymentAsPaid: async function () {
+        throw new Error('El pago debe ser informado por el inquilino y confirmado por el propietario.');
     },
 
     syncRentalValues: async function ({
