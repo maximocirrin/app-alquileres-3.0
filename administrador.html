@@ -221,31 +221,7 @@
         };
     </script>
     <script src="js/lead-monetization.js"></script>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-background": "#1a1c1c",
-                        "background": "#f8fafc",
-                        "surface": "#ffffff",
-                        "primary": "#811b1e",
-                        "primary-hover": "#9e2226",
-                        "primary-light": "rgba(129, 27, 30, 0.08)"
-                    },
-                    borderRadius: {
-                        "2xl": "1.25rem",
-                        "3xl": "1.75rem"
-                    },
-                    fontFamily: {
-                        headline: ["Manrope", "sans-serif"],
-                        body: ["Inter", "sans-serif"]
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind theme is compiled from tailwind.config.js into css/tailwind.css. -->
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -2249,7 +2225,7 @@
                     let payment = null;
                     if (window.DataManager && typeof window.DataManager.getCurrentPayment === 'function') {
                         try {
-                            payment = await window.DataManager.getCurrentPayment(contract.id, contract);
+                            payment = await window.DataManager.getCurrentPayment(contract.dbContractId || contract.id, contract);
                         } catch (e) { }
                     }
 
@@ -4446,7 +4422,7 @@
 
                 let payment = null;
                 if (window.DataManager) {
-                    payment = await window.DataManager.getCurrentPayment(contract.id);
+                    payment = await window.DataManager.getCurrentPayment(contract.dbContractId || contract.id, contract);
                 }
                 if (!payment) {
                     const now = new Date();
@@ -4472,10 +4448,48 @@
                 };
 
                 const isPaid = payment && payment.status === 'pagado';
+                const isReviewPending = payment && payment.status === 'pendiente_revision';
+                const isRejected = payment && payment.status === 'rechazado';
+                const reviewRequestId = Number(payment?.payment_request?.id_solicitud_pago);
+                const hasReviewRequest = Number.isSafeInteger(reviewRequestId) && reviewRequestId > 0;
                 const isWaived = payment && payment.is_punitive_waived;
                 const expenses = contract.expenses_amount || 45000;
                 const commission = Math.round(contract.monthly_rent * ((contract.broker_commission_percent || 4.15) / 100));
                 const dailyPunitiveEst = Math.round(contract.monthly_rent * ((contract.punitive_daily_rate || 0.5) / 100));
+                const escapeOwnerPaymentText = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+                }[char]));
+                const paymentMethodLabels = {
+                    transferencia: 'Transferencia bancaria',
+                    mercado_pago: 'Mercado Pago',
+                    efectivo: 'Efectivo'
+                };
+                const paymentMethodLabel = paymentMethodLabels[payment?.payment_method] || 'Método no informado';
+                const reportedAmount = Number(payment?.reported_amount);
+                const reportedAmountLabel = Number.isFinite(reportedAmount)
+                    ? `$ ${reportedAmount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                    : 'Monto no informado';
+                const paymentStatusBadge = isFinalized ? `
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">lock</span> CONTRATO CERRADO
+                    </span>
+                ` : (isPaid ? `
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">check_circle</span> PAGADO
+                    </span>
+                ` : (isReviewPending ? `
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">hourglass_top</span> PAGO INFORMADO · REVISAR
+                    </span>
+                ` : (isRejected ? `
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">cancel</span> PAGO NO CONFIRMADO
+                    </span>
+                ` : `
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE DE COBRO
+                    </span>
+                `)));
 
                 const freqMonths = Number(contract.adjustment_frequency_months || contract.periodo_aumento_meses || 3);
                 const nextAdj = window.DataManager?.calculateNextRentAdjustment
@@ -4794,21 +4808,7 @@
                                             ${isFinalized ? 'Valores registrados al momento de la conclusión del contrato' : `Vencimiento pactado: Días ${contract.payment_due_day} de cada mes`}
                                         </p>
                                     </div>
-                                    <div>
-                                        ${isFinalized ? `
-                                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-base">lock</span> CONTRATO CERRADO
-                                            </span>
-                                        ` : (isPaid ? `
-                                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-base">check_circle</span> PAGADO
-                                            </span>
-                                        ` : `
-                                            <span class="px-3.5 py-1.5 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE DE COBRO
-                                            </span>
-                                        `)}
-                                    </div>
+                                    <div>${paymentStatusBadge}</div>
                                 </div>
 
                                 <!-- Grilla de Valores (3 Tarjetas) -->
@@ -4885,24 +4885,62 @@
                                             </button>
                                         </div>
                                     ` : `
-                                        ${!isWaived && punitives.punitiveAmount > 0 && !isPaid ? `
+                                        ${!isWaived && punitives.punitiveAmount > 0 && !isPaid && !isReviewPending ? `
                                             <button type="button" id="btn-act-waive" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
                                                 <span class="material-symbols-outlined text-base">sentiment_satisfied</span>
                                                 Perdonar Intereses Punitorios
                                             </button>
                                         ` : ''}
 
-                                        ${!isPaid ? `
-                                            <button type="button" id="btn-act-pay" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
-                                                <span class="material-symbols-outlined text-base">check_circle</span>
-                                                Marcar como Pagado (Transferencia / Efectivo)
+                                        ${isReviewPending ? `
+                                            <div class="w-full rounded-2xl border border-blue-200 dark:border-blue-800/70 bg-blue-50/80 dark:bg-blue-950/30 p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2 text-blue-800 dark:text-blue-200 font-headline font-extrabold text-xs">
+                                                        <span class="material-symbols-outlined text-base">notifications_active</span>
+                                                        Pago informado por el inquilino
+                                                    </div>
+                                                    <p class="mt-1 text-xs text-blue-700/85 dark:text-blue-300/85">
+                                                        Método: <b>${escapeOwnerPaymentText(paymentMethodLabel)}</b> · Monto informado: <b>${reportedAmountLabel}</b> · ${payment.reported_at ? `Informado el ${formatDisplayDate(payment.reported_at)}` : 'Fecha de aviso no registrada'}
+                                                    </p>
+                                                    <p class="mt-1 text-[11px] text-blue-700/75 dark:text-blue-300/75">Confirmalo solo cuando hayas verificado la acreditación. Al rechazarlo, el inquilino podrá informarlo nuevamente.</p>
+                                                </div>
+                                                ${hasReviewRequest ? `
+                                                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                                        <button type="button" id="btn-act-approve-payment" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                                            <span class="material-symbols-outlined text-base">check_circle</span>
+                                                            Aceptar pago
+                                                        </button>
+                                                        <button type="button" id="btn-act-reject-payment" class="px-4 py-2.5 bg-white hover:bg-rose-50 dark:bg-zinc-900 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                                            <span class="material-symbols-outlined text-base">cancel</span>
+                                                            Rechazar pago
+                                                        </button>
+                                                    </div>
+                                                ` : `
+                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Actualizá la página para revisar esta solicitud.</span>
+                                                `}
+                                            </div>
+                                        ` : (isRejected ? `
+                                            <div class="w-full rounded-2xl border border-rose-200 dark:border-rose-800/70 bg-rose-50/80 dark:bg-rose-950/30 p-4 text-xs text-rose-800 dark:text-rose-200">
+                                                <div class="flex items-center gap-2 font-headline font-extrabold">
+                                                    <span class="material-symbols-outlined text-base">cancel</span>
+                                                    El último aviso de pago fue rechazado
+                                                </div>
+                                                ${payment.rejection_reason ? `<p class="mt-1">Motivo informado al inquilino: ${escapeOwnerPaymentText(payment.rejection_reason)}</p>` : ''}
+                                                <p class="mt-1 text-rose-700/80 dark:text-rose-300/80">El alquiler seguirá pendiente hasta que el inquilino envíe un nuevo aviso.</p>
+                                            </div>
+                                        ` : (!isPaid ? `
+                                            <div class="w-full rounded-2xl border border-amber-200 dark:border-amber-800/70 bg-amber-50/80 dark:bg-amber-950/25 p-4 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2.5">
+                                                <span class="material-symbols-outlined text-lg">schedule</span>
+                                                <span>Esperando a que el inquilino informe el pago. Cuando lo haga, recibirás una notificación para aceptarlo o rechazarlo.</span>
+                                            </div>
+                                        ` : ''))}
+
+                                        ${isPaid ? `
+                                            <button type="button" id="btn-act-invoice" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
+                                                <span class="material-symbols-outlined text-base">mark_email_read</span>
+                                                Enviar Factura / Recibo al Inquilino
                                             </button>
                                         ` : ''}
-
-                                        <button type="button" id="btn-act-invoice" class="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-base">mark_email_read</span>
-                                            Enviar Factura / Recibo al Inquilino
-                                        </button>
                                     `}
                                 </div>
                             </div>
@@ -4939,36 +4977,91 @@
                     };
                 }
 
-                const bPay = document.getElementById('btn-act-pay');
-                if (bPay && payment && !isFinalized) {
-                    bPay.onclick = async () => {
-                        const totalRentAndExp = Number(contract.monthly_rent || 0) + Number(expenses || 0);
-                        const finalCharge = punitives.isWaived || punitives.punitiveAmount <= 0 ? totalRentAndExp : (punitives.totalAmount + Number(expenses || 0));
+                const bApprovePayment = document.getElementById('btn-act-approve-payment');
+                const bRejectPayment = document.getElementById('btn-act-reject-payment');
+                const setPaymentReviewBusy = (busy, activeButton = null) => {
+                    [bApprovePayment, bRejectPayment].filter(Boolean).forEach((button) => {
+                        button.disabled = busy;
+                        button.classList.toggle('opacity-60', busy);
+                        button.classList.toggle('cursor-wait', busy);
+                    });
+                    if (busy && activeButton) activeButton.dataset.originalText = activeButton.innerHTML;
+                };
 
-                        let confirmed = true;
-                        if (window.showCustomConfirm) {
-                            confirmed = await window.showCustomConfirm({
-                                title: '¿Registrar cobro de alquiler?',
-                                message: `¿Confirmas que recibiste el pago de $ ${finalCharge.toLocaleString('es-AR')} correspondiente a ${payment.period} por parte de ${contract.tenant_name}?`,
-                                confirmText: 'Sí, marcar como pagado'
-                            });
-                        }
-                        if (!confirmed) return;
+                const showPaymentReviewAlert = async (title, message, icon = 'error') => {
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({ title, message, icon });
+                    } else {
+                        window.alert(message);
+                    }
+                };
 
-                        if (window.DataManager) {
-                            await window.DataManager.markPaymentAsPaid(payment.id, "Transferencia / Efectivo", contract.id);
-                        }
-                        payment.status = 'pagado';
+                if (hasReviewRequest && payment && !isFinalized && window.DataManager?.reviewPaymentReport) {
+                    if (bApprovePayment) {
+                        bApprovePayment.onclick = async () => {
+                            let confirmed = true;
+                            if (window.showCustomConfirm) {
+                                confirmed = await window.showCustomConfirm({
+                                    title: '¿Aceptar el pago informado?',
+                                    message: `¿Confirmás que verificaste el pago de ${reportedAmountLabel} correspondiente a ${payment.period}? El alquiler quedará marcado como pagado y se avisará al inquilino.`,
+                                    confirmText: 'Sí, aceptar pago'
+                                });
+                            }
+                            if (!confirmed) return;
 
-                        if (window.showCustomAlert) {
-                            await window.showCustomAlert({
-                                title: '¡Pago Registrado Exitosamente!',
-                                message: `El cobro del período ${payment.period} (${contract.property_title}) ha sido asentado correctamente en el sistema.`,
-                                icon: 'check_circle'
-                            });
-                        }
-                        await loadOwnerActiveRental();
-                    };
+                            setPaymentReviewBusy(true, bApprovePayment);
+                            try {
+                                await window.DataManager.reviewPaymentReport(reviewRequestId, true, '', payment.contract_id);
+                                await showPaymentReviewAlert(
+                                    'Pago confirmado',
+                                    `El pago del período ${payment.period} quedó confirmado y el inquilino fue notificado.`,
+                                    'check_circle'
+                                );
+                                await loadOwnerActiveRental();
+                            } catch (error) {
+                                console.error('No se pudo aceptar el pago informado:', error);
+                                await showPaymentReviewAlert('No se pudo confirmar el pago', error?.message || 'Intentá nuevamente en unos segundos.');
+                                setPaymentReviewBusy(false);
+                            }
+                        };
+                    }
+
+                    if (bRejectPayment) {
+                        bRejectPayment.onclick = async () => {
+                            const reasonInput = window.prompt('Indicá el motivo del rechazo para que el inquilino pueda corregirlo:');
+                            if (reasonInput === null) return;
+                            const reason = reasonInput.trim();
+                            if (reason.length < 3 || reason.length > 500) {
+                                await showPaymentReviewAlert('Motivo requerido', 'Escribí un motivo de rechazo de entre 3 y 500 caracteres.');
+                                return;
+                            }
+
+                            let confirmed = true;
+                            if (window.showCustomConfirm) {
+                                confirmed = await window.showCustomConfirm({
+                                    title: '¿Rechazar el pago informado?',
+                                    message: 'El alquiler seguirá pendiente y el inquilino recibirá el motivo para poder informar el pago nuevamente.',
+                                    confirmText: 'Sí, rechazar pago'
+                                });
+                            }
+                            if (!confirmed) return;
+
+                            setPaymentReviewBusy(true, bRejectPayment);
+                            try {
+                                await window.DataManager.reviewPaymentReport(reviewRequestId, false, reason, payment.contract_id);
+                                await showPaymentReviewAlert(
+                                    'Pago rechazado',
+                                    'El alquiler continúa pendiente. El inquilino recibió una notificación con el motivo del rechazo.',
+                                    'cancel'
+                                );
+                                await loadOwnerActiveRental();
+                            } catch (error) {
+                                console.error('No se pudo rechazar el pago informado:', error);
+                                await showPaymentReviewAlert('No se pudo rechazar el pago', error?.message || 'Intentá nuevamente en unos segundos.');
+                                setPaymentReviewBusy(false);
+                            }
+                        };
+                    }
                 }
 
                 const bInvoice = document.getElementById('btn-act-invoice');

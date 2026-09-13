@@ -2908,12 +2908,18 @@ body.no-scroll {
     appearance: none;
     border: 0;
     background: transparent;
-    color: #050505;
     font: 700 16px/1 'Manrope', 'Inter', sans-serif;
     letter-spacing: 0;
     text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
+}
+
+/* Dropdown triggers use their role-specific Tailwind text colors. */
+.landing-desktop-nav__role,
+.landing-desktop-nav__item,
+.landing-desktop-nav__auth-link {
+    color: #050505;
 }
 
 .landing-desktop-nav__role {

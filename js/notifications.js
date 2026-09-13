@@ -524,7 +524,17 @@
                                 this.receiveIncomingNotification(payload);
                             }
                         })
-                        // 2. Postgres Changes: Nueva Solicitud (Postulación)
+                        // 2. Postgres Changes: notificaciones persistentes.
+                        // No se usa el payload directamente: se vuelve a leer por
+                        // REST con la sesión actual, que aplica RLS y confirma que
+                        // la notificación pertenece al perfil autenticado.
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Notificacion' }, async (payload) => {
+                            const dbNotification = payload.new;
+                            if (!dbNotification?.id_notificacion) return;
+
+                            await NotificationManager.fetchFromDB();
+                        })
+                        // 3. Postgres Changes: Nueva Solicitud (Postulación)
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Solicitud' }, async (payload) => {
                             const newSol = payload.new;
                             if (!newSol) return;
@@ -575,7 +585,7 @@
                                 senderProfileId: newSol.id_perfil
                             });
                         })
-                        // 3. Postgres Changes: Firmas de Contrato
+                        // 4. Postgres Changes: Firmas de Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Firma_contrato' }, async (payload) => {
                             const firma = payload.new;
                             if (!firma) return;
@@ -643,11 +653,11 @@
                                 });
                             }
                         })
-                        // 4. Postgres Changes: Contrato
+                        // 5. Postgres Changes: Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, (payload) => {
                             window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: payload.new }));
                         })
-                        // 5. Postgres Changes: Mensajes de Chat en Negociación de Contratos
+                        // 6. Postgres Changes: Mensajes de Chat en Negociación de Contratos
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Mensaje_Contrato' }, async (payload) => {
                             const newMsg = payload.new;
                             if (!newMsg) return;
@@ -1188,6 +1198,9 @@
 
     window.addEventListener('focus', () => {
         if (window.NotificationManager) {
+            // Recupera inserciones persistentes que hayan llegado mientras la
+            // pestaña no tenía foco o el canal estaba reconectándose.
+            window.NotificationManager.fetchFromDB();
             window.NotificationManager.updateBadge();
             window.NotificationManager.renderDropdown();
             if (!window.NotificationManager._supabaseChannel) {
@@ -1198,6 +1211,7 @@
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && window.NotificationManager) {
+            window.NotificationManager.fetchFromDB();
             if (!window.NotificationManager._supabaseChannel) {
                 window.NotificationManager.initRealtimeWebSockets();
             }

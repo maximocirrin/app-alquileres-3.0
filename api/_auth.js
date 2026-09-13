@@ -37,6 +37,8 @@ function allowedOrigins() {
   return new Set([
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
     'http://localhost:5173',
     'http://127.0.0.1:5173'
   ]);
@@ -139,6 +141,15 @@ export async function getAuthenticatedUser(req) {
     const publicClient = createPublicClient();
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
 
+    if (authError && (authError.name === 'AuthRetryableFetchError' || authError.status === 0 || authError.status >= 500)) {
+      console.warn('[getAuthenticatedUser] Supabase Auth unavailable:', authError.name, authError.status);
+      return {
+        user: null, profile: null, token: null,
+        error: 'No se pudo conectar con el servicio de autenticación. Intentá nuevamente en unos instantes.',
+        status: 503, code: 'AUTH_SERVICE_UNAVAILABLE'
+      };
+    }
+
     if (authError || !user) {
       return { user: null, profile: null, token: null, error: 'Sesión inválida o expirada.' };
     }
@@ -152,12 +163,21 @@ export async function getAuthenticatedUser(req) {
 
     if (profileError) {
       console.warn('[getAuthenticatedUser] Could not resolve the authenticated profile:', profileError.message);
+      return {
+        user: null, profile: null, token: null,
+        error: 'No se pudo consultar tu perfil. Intentá nuevamente en unos instantes.',
+        status: 503, code: 'PROFILE_SERVICE_UNAVAILABLE'
+      };
     }
 
     return { user, profile: profile || null, token, error: null };
   } catch (error) {
     console.warn('[getAuthenticatedUser] Token validation failed:', error?.message || error);
-    return { user: null, profile: null, token: null, error: 'No fue posible validar la sesión.' };
+    return {
+      user: null, profile: null, token: null,
+      error: 'El servidor no pudo verificar la sesión. Intentá nuevamente en unos instantes.',
+      status: 503, code: 'AUTH_SERVICE_UNAVAILABLE'
+    };
   }
 }
 

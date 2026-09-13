@@ -70,40 +70,7 @@
             originalWarn.apply(console, arguments);
         };
     </script>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "on-background": "#1a1c1c",
-                        "background": "#f9f9f9",
-                        "surface": "#f9f9f9",
-                        "surface-container-low": "#f3f3f3",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container": "#eeeeee",
-                        "surface-container-high": "#e8e8e8",
-                        "primary": "#811b1e",
-                        "primary-container": "#a13333",
-                        "on-primary": "#ffffff",
-                        "outline-variant": "#debfbd"
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.25rem",
-                        lg: "0.5rem",
-                        xl: "0.75rem",
-                        full: "9999px"
-                    },
-                    fontFamily: {
-                        headline: ["Manrope", "sans-serif"],
-                        body: ["Inter", "sans-serif"],
-                        label: ["Inter", "sans-serif"],
-                        sans: ["Inter", "sans-serif"]
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind theme is compiled from tailwind.config.js into css/tailwind.css. -->
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -1735,9 +1702,14 @@
                     window._selectedTenantContractId = contract.id;
                 }
 
-                const payment = await window.DataManager.getCurrentPayment(contract.id, contract);
+                const payment = await window.DataManager.getCurrentPayment(contract.dbContractId || contract.id, contract);
                 const isPaid = payment && payment.status === 'pagado';
+                const isReviewPending = payment && payment.status === 'pendiente_revision';
+                const isRejected = payment && payment.status === 'rechazado';
                 const isWaived = payment && payment.is_punitive_waived;
+                const safeRejectionReason = String(payment?.rejection_reason || '').replace(/[&<>'"]/g, (char) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+                }[char]));
 
                 // Asegurar que para pagos pendientes el canon base coincida siempre con el contrato activo
                 if (payment && !isPaid) {
@@ -1990,6 +1962,14 @@
                                         <span class="px-4 py-1.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
                                             <span class="material-symbols-outlined text-base">check_circle</span> PAGADO
                                         </span>
+                                    ` : isReviewPending ? `
+                                        <span class="px-4 py-1.5 rounded-full text-xs font-black bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-base">hourglass_top</span> INFORMADO · EN REVISIÓN
+                                        </span>
+                                    ` : isRejected ? `
+                                        <span class="px-4 py-1.5 rounded-full text-xs font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-base">error</span> PAGO NO CONFIRMADO
+                                        </span>
                                     ` : `
                                         <span class="px-4 py-1.5 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center gap-1">
                                             <span class="material-symbols-outlined text-base">schedule</span> PENDIENTE
@@ -2033,17 +2013,27 @@
                                     <b class="text-zinc-800 dark:text-zinc-200 font-mono bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-md select-all">${contract.cbu_alias}</b>
                                 </div>
 
-                                ${!isPaid ? `
+                                ${!isPaid && !isReviewPending ? `
                                     <button id="btn-pagar-alquiler" type="button" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md cursor-pointer">
                                         <span class="material-symbols-outlined">payments</span>
-                                        Informar Pago de Alquiler
+                                        ${isRejected ? 'Informar Pago Nuevamente' : 'Informar Pago de Alquiler'}
                                     </button>
+                                ` : isReviewPending ? `
+                                    <div class="w-full sm:w-auto text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/40 px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-blue-900">
+                                        <span class="material-symbols-outlined text-base">hourglass_top</span>
+                                        Pago informado el ${payment.reported_at ? new Date(payment.reported_at).toLocaleDateString('es-AR') : 'recién'} · esperando confirmación del propietario
+                                    </div>
                                 ` : `
                                     <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-base">task_alt</span> Pago notificado correctamente el ${new Date(payment.paid_at).toLocaleDateString('es-AR')}
+                                        <span class="material-symbols-outlined text-base">task_alt</span> Pago confirmado el ${payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('es-AR') : 'hoy'}
                                     </span>
                                 `}
                             </div>
+                            ${isRejected && payment.rejection_reason ? `
+                                <p class="-mt-2 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-xl px-3.5 py-2.5">
+                                    <strong>Motivo indicado por el propietario:</strong> ${safeRejectionReason}
+                                </p>
+                            ` : ''}
                         </div>
                     </div>
 
@@ -2335,14 +2325,15 @@
                         <div>
                             <label class="block font-bold uppercase text-zinc-500 mb-1">Medio de Pago utilizado</label>
                             <select id="pay-method-select" class="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 font-bold text-sm">
-                                <option value="Transferencia Bancaria" selected>Transferencia Bancaria / Mercado Pago</option>
-                                <option value="Efectivo en persona">Efectivo entregado al Propietario</option>
+                                <option value="transferencia" selected>Transferencia bancaria</option>
+                                <option value="mercado_pago">Mercado Pago</option>
+                                <option value="efectivo">Efectivo entregado al propietario</option>
                             </select>
                         </div>
 
-                        <div>
-                            <label class="block font-bold uppercase text-zinc-500 mb-1">Comprobante de Pago (opcional)</label>
-                            <input type="file" id="pay-receipt-file" class="w-full text-xs text-zinc-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white hover:file:bg-primary-container cursor-pointer">
+                        <div class="flex gap-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-blue-800 dark:text-blue-200 leading-relaxed">
+                            <span class="material-symbols-outlined text-base shrink-0">info</span>
+                            <p>Al informar el pago, quedará pendiente de confirmación por parte del propietario. El alquiler se marcará como pagado únicamente cuando lo acepte.</p>
                         </div>
 
                         <div class="pt-2 flex gap-3">
@@ -2359,12 +2350,42 @@
 
             document.getElementById('btn-confirm-pay').onclick = async () => {
                 const method = document.getElementById('pay-method-select').value;
-                if (window.DataManager) {
-                    await window.DataManager.markPaymentAsPaid(payment.id, method);
+                const button = document.getElementById('btn-confirm-pay');
+                if (!window.DataManager) return;
+
+                button.disabled = true;
+                button.classList.add('opacity-60', 'cursor-wait');
+                button.textContent = 'Informando...';
+                try {
+                    await window.DataManager.reportPayment(payment.id, method, payment.contract_id);
+                    closeFn();
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: 'Pago informado',
+                            message: 'El propietario recibió tu aviso y deberá confirmarlo para que el alquiler quede marcado como pagado.',
+                            icon: 'hourglass_top',
+                            type: 'success'
+                        });
+                    } else {
+                        alert('El pago fue informado al propietario y quedó pendiente de confirmación.');
+                    }
+                    await renderTenantDashboard();
+                } catch (error) {
+                    if (window.showCustomAlert) {
+                        await window.showCustomAlert({
+                            title: 'No se pudo informar el pago',
+                            message: error?.message || 'Intentá nuevamente en unos instantes.',
+                            icon: 'error',
+                            type: 'error'
+                        });
+                    } else {
+                        alert(error?.message || 'No se pudo informar el pago.');
+                    }
+                } finally {
+                    button.disabled = false;
+                    button.classList.remove('opacity-60', 'cursor-wait');
+                    button.textContent = 'Confirmar Pago';
                 }
-                closeFn();
-                alert("¡El pago ha sido registrado e informado al propietario!");
-                await renderTenantDashboard();
             };
         }
 
