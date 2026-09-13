@@ -73,16 +73,24 @@ async function fetchPaymentApi(query = '', options = {}) {
 const OWNER_CONTRACTS_CACHE_TTL_MS = 30_000;
 let ownerContractsApiCache = null;
 let ownerContractsApiPending = null;
+let ownerApplicationsApiCache = null;
+let ownerApplicationsApiPending = null;
+let participantContractsApiCache = null;
+let participantContractsApiPending = null;
 const ownerPaymentsApiCache = new Map();
 let authenticatedProfileCache = null;
 let authenticatedProfilePending = null;
 
 async function fetchOwnerContractsApi() {
     const now = Date.now();
-    if (ownerContractsApiCache?.expiresAt > now) return ownerContractsApiCache.bundle;
-    if (ownerContractsApiPending) return ownerContractsApiPending;
+    const { data: sessionData } = await window.supabaseClient?.auth.getSession();
+    const sessionKey = sessionData?.session?.user?.id || null;
+    if (ownerContractsApiCache?.key === sessionKey && ownerContractsApiCache?.expiresAt > now) {
+        return ownerContractsApiCache.bundle;
+    }
+    if (ownerContractsApiPending?.key === sessionKey) return ownerContractsApiPending.promise;
 
-    ownerContractsApiPending = (async () => {
+    const request = (async () => {
         let response;
         let payload = {};
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -104,15 +112,71 @@ async function fetchOwnerContractsApi() {
             const payments = bundle.paymentsByContract?.[String(contractId)];
             ownerPaymentsApiCache.set(contractId, Array.isArray(payments) ? payments : []);
         }
-        ownerContractsApiCache = { bundle, expiresAt: Date.now() + OWNER_CONTRACTS_CACHE_TTL_MS };
+        ownerContractsApiCache = { key: sessionKey, bundle, expiresAt: Date.now() + OWNER_CONTRACTS_CACHE_TTL_MS };
         return bundle;
     })();
+    ownerContractsApiPending = { key: sessionKey, promise: request };
 
     try {
-        return await ownerContractsApiPending;
+        return await request;
     } finally {
-        ownerContractsApiPending = null;
+        if (ownerContractsApiPending?.promise === request) ownerContractsApiPending = null;
     }
+}
+
+async function fetchAuthorizedListApi(action, listKey, cache, setCache, pending, setPending) {
+    const now = Date.now();
+    const { data: sessionData } = await window.supabaseClient?.auth.getSession();
+    const sessionKey = sessionData?.session?.user?.id || null;
+    if (cache?.key === sessionKey && cache?.expiresAt > now) return cache.value;
+    if (pending?.key === sessionKey) return pending.promise;
+
+    const request = (async () => {
+        let response;
+        let payload = {};
+        for (let attempt = 0; attempt < 2; attempt++) {
+            response = await fetchPaymentApi(`?action=${encodeURIComponent(action)}`);
+            payload = await response.json().catch(() => ({}));
+            if (response.status !== 503 || attempt === 1) break;
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        const value = payload?.data?.[listKey];
+        if (!response?.ok || !payload?.ok || !Array.isArray(value)) {
+            throw new Error(payload?.message || 'No se pudieron consultar los datos de la cuenta.');
+        }
+        setCache({ key: sessionKey, value, expiresAt: Date.now() + OWNER_CONTRACTS_CACHE_TTL_MS });
+        return value;
+    })();
+
+    setPending({ key: sessionKey, promise: request });
+    try {
+        return await request;
+    } finally {
+        setPending(null);
+    }
+}
+
+async function fetchOwnerApplicationsApi() {
+    return fetchAuthorizedListApi(
+        'owner-applications',
+        'applications',
+        ownerApplicationsApiCache,
+        value => { ownerApplicationsApiCache = value; },
+        ownerApplicationsApiPending,
+        value => { ownerApplicationsApiPending = value; }
+    );
+}
+
+async function fetchParticipantContractsApi() {
+    return fetchAuthorizedListApi(
+        'participant-contracts',
+        'contracts',
+        participantContractsApiCache,
+        value => { participantContractsApiCache = value; },
+        participantContractsApiPending,
+        value => { participantContractsApiPending = value; }
+    );
 }
 
 async function uploadPropertyImageSecurely(publicationId, file) {
@@ -1290,7 +1354,27 @@ var DataManager = {
         } catch (e) {}
 
         let dbApps = [];
-        if (window.supabaseClient) {
+        if (window.supabaseClient && filterByUser) {
+            try {
+                const authenticatedProfileId = window.DataManager._getOrCreateProfile
+                    ? await window.DataManager._getOrCreateProfile()
+                    : null;
+                if (!authenticatedProfileId) return [];
+
+                // The endpoint always derives the owner from the session. An
+                // optional argument can narrow the result but never impersonate
+                // another profile.
+                if (targetProfileId !== null && targetProfileId !== undefined &&
+                    Number(targetProfileId) !== Number(authenticatedProfileId)) {
+                    return [];
+                }
+                dbApps = await fetchOwnerApplicationsApi();
+            } catch (error) {
+                console.error('[DataManager] No se pudieron consultar los postulantes autorizados:', error);
+            }
+        }
+
+        if (window.supabaseClient && !filterByUser) {
             try {
                 let profileId = targetProfileId;
                 if (filterByUser && !profileId && window.DataManager._getOrCreateProfile) {
@@ -2907,7 +2991,10 @@ var DataManager = {
             }
         } catch (e) {}
 
-        if (typeof this.getApplications === 'function') {
+        // A real contract lookup is already authorized by the profile id. The
+        // expensive application graph is only needed by the legacy local-data
+        // fallback when no profile could be resolved.
+        if (!currentProfileId && typeof this.getApplications === 'function') {
             try {
                 const allDbApps = await this.getApplications();
                 if (Array.isArray(allDbApps)) tenantApplications.push(...allDbApps);
@@ -3014,49 +3101,29 @@ var DataManager = {
             }
         });
 
-        // 4. Si hay Supabase, consultar contratos vinculados al perfil o propiedades postuladas
+        // 4. Consultar en el servidor los contratos donde la sesión es una de
+        // las partes. El navegador no debe unir perfiles ajenos directamente:
+        // RLS sólo expone el perfil propio y terminaba repitiendo su nombre.
         if (window.supabaseClient) {
             try {
-                let query = window.supabaseClient
-                    .from('Contrato')
-                    .select(`
-                        *,
-                        Propiedad (
-                            *,
-                            Publicacion (*, Multimedia (*)),
-                            Propiedad_caracteristica (
-                                Caracteristica (*)
-                            )
-                        ),
-                        Inquilino:Perfil!id_perfil_inquilino (*),
-                        Propietario:Perfil!id_perfil_propietario (*),
-                        Firma_contrato (*)
-                    `)
-                    .order('id_contrato', { ascending: false });
-
-                if (currentProfileId) {
-                    query = query.eq('id_perfil_inquilino', Number(currentProfileId));
-                } else if (appliedPropertyIds.size > 0) {
-                    const validPropIds = Array.from(appliedPropertyIds).map(Number).filter(n => !isNaN(n) && n > 0);
-                    if (validPropIds.length > 0) {
-                        query = query.in('id_propiedad', validPropIds);
-                    } else {
-                        query = null;
-                    }
-                } else {
-                    query = null; // Evitar traer contratos ajenos de la BD
-                }
-
-                if (query) {
-                    const { data, error } = await query;
-                    if (!error && Array.isArray(data)) {
+                const participantContracts = await fetchParticipantContractsApi();
+                const data = currentProfileId
+                    ? participantContracts.filter(item => Number(item?.id_perfil_inquilino) === Number(currentProfileId))
+                    : participantContracts;
+                if (Array.isArray(data)) {
                         data.forEach(item => {
-                            const prop = item.Propiedad || {};
-                            const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                            const prop = item.property || item.Propiedad || {};
+                            const pubSource = item.publication || prop.Publicacion;
+                            const pub = Array.isArray(pubSource) ? pubSource[0] : pubSource;
                             const media = pub?.Multimedia || [];
-                            const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
-                            const propOwner = item.Propietario || {};
-                            const inq = item.Inquilino || {};
+                            const photos = Array.isArray(item.photos) && item.photos.length > 0
+                                ? item.photos.filter(Boolean)
+                                : (media.length > 0
+                                    ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean)))
+                                    : ['img/hero-marketplace.jpg']);
+                            const propOwner = item.owner || item.Propietario || {};
+                            const inq = item.tenant || item.Inquilino || {};
+                            const signatures = item.signatures || item.Firma_contrato || [];
                             const dbCaracteristicas = (prop.Propiedad_caracteristica || []).map(pc => pc.Caracteristica?.nombre).filter(Boolean);
 
                             const cleanTitle = pub?.descripcion ? pub.descripcion.split(' | Detalles: ')[0] : `Propiedad en ${prop.calle || 'Alquiler'} ${prop.numero || ''}`.trim();
@@ -3074,11 +3141,9 @@ var DataManager = {
                             }
                             const dbHasContract = Boolean(
                                 localMatch.has_contract || localMatch.hasContract ||
-                                item.url_contrato_final_pdf ||
-                                item.url_contrato_original_pdf ||
-                                item.hash_original_sha256 ||
+                                item.has_contract ||
                                 (extraCfg && typeof extraCfg === 'object' && Object.keys(extraCfg).length > 0) ||
-                                item.Firma_contrato?.length > 0
+                                signatures.length > 0
                             );
 
                             const mergedObj = {
@@ -3094,12 +3159,12 @@ var DataManager = {
                                 expenses: exp,
                                 currency: (item.id_moneda === 2 || localMatch.currency === 'USD') ? 'USD' : 'ARS',
                                 m2_cubiertos: prop.superficie_cubierta || 75,
-                                m2_totales: prop.superficie_total || 85,
-                                ambientes: prop.ambientes || 3,
+                                m2_totales: prop.superficie_lote || prop.superficie_cubierta || 85,
+                                ambientes: prop.habitaciones_total || 3,
                                 dormitorios: prop.dormitorios || 2,
-                                banos: prop.banos || 1,
-                                cocheras: prop.cocheras || 1,
-                                cochera: prop.cocheras ? `${prop.cocheras} Cubierta fija` : 'Sin cochera',
+                                banos: prop.banos_completos || 1,
+                                cocheras: prop.cantidad_cocheras || 0,
+                                cochera: prop.cantidad_cocheras ? `${prop.cantidad_cocheras} Cubierta fija` : 'Sin cochera',
                                 start_date: item.fecha_inicio_contrato || '2026-08-01',
                                 end_date: item.fecha_fin_contrato || '2027-08-01',
                                 payment_due_day: item.dia_vencimiento_mensual || 10,
@@ -3118,17 +3183,16 @@ var DataManager = {
                                 has_contract: dbHasContract,
                                 hasContract: dbHasContract,
                                 clausulas_adicionales: extraCfg,
-                                status: item.Firma_contrato?.length > 0 ? 'SIGNED_AND_SEALED' : (localMatch.status || 'WAITING_TENANT'),
-                                tenant_signed: Boolean(localMatch.tenant_signed || item.Firma_contrato?.length > 0)
+                                status: signatures.length > 0 ? 'SIGNED_AND_SEALED' : (localMatch.status || 'WAITING_TENANT'),
+                                tenant_signed: Boolean(localMatch.tenant_signed || signatures.length > 0)
                             };
 
                             contractsMap.set(String(item.id_contrato), mergedObj);
                             contractsMap.set(cKey, mergedObj);
                         });
-                    }
                 }
             } catch (err) {
-                console.warn('[DataManager] Error obteniendo Contratos de Supabase:', err);
+                console.warn('[DataManager] Error obteniendo contratos autorizados:', err);
             }
         }
 
