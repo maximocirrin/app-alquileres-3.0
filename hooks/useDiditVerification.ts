@@ -32,12 +32,14 @@ export function useDiditVerification(config: DiditVerificationConfig = {}) {
   // Handle postMessage events from Didit embedded iframe or popup
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin if coming from Didit
-      const isDiditOrigin = event.origin.includes('didit.me') || 
-                            event.origin.includes('verification.didit.me') || 
-                            event.origin.includes(window.location.origin);
-
-      if (!isDiditOrigin) return;
+      let originUrl: URL;
+      try {
+        originUrl = new URL(event.origin);
+      } catch {
+        return;
+      }
+      const host = originUrl.hostname.toLowerCase();
+      if (originUrl.protocol !== 'https:' || (host !== 'didit.me' && !host.endsWith('.didit.me'))) return;
 
       const data = event.data;
       if (!data) return;
@@ -84,13 +86,21 @@ export function useDiditVerification(config: DiditVerificationConfig = {}) {
     setErrorMessage(null);
     updateState('IN_PROGRESS');
 
-    const isMock = url.includes('mock=true') || url.startsWith('#mock') || !url.startsWith('http');
-    setIsSimulated(isMock);
-
-    if (isMock) {
-      console.log('[useDiditVerification] Inició modo simulación interactivo Didit.');
+    let target: URL;
+    try {
+      target = new URL(url);
+    } catch {
+      updateState('ERROR');
+      setErrorMessage('La URL de verificación no es válida.');
       return;
     }
+    const host = target.hostname.toLowerCase();
+    if (target.protocol !== 'https:' || (host !== 'didit.me' && !host.endsWith('.didit.me'))) {
+      updateState('ERROR');
+      setErrorMessage('El proveedor de verificación no es válido.');
+      return;
+    }
+    setIsSimulated(false);
 
     if (mode === 'popup') {
       const width = 500;
@@ -120,17 +130,11 @@ export function useDiditVerification(config: DiditVerificationConfig = {}) {
     }
   }, [state, updateState]);
 
-  // Complete simulation manually for testing/development
+  // Compatibility callbacks remain fail-closed for the retired prototype UI.
   const simulateSuccess = useCallback(() => {
-    updateState('COMPLETED');
-    const mockSessionId = sessionId || `mock_didit_${Date.now()}`;
-    if (config.onSuccess) {
-      config.onSuccess({
-        sessionId: mockSessionId,
-        token: `mock_tok_${Math.random().toString(36).substring(2)}`,
-      });
-    }
-  }, [sessionId, updateState, config]);
+    updateState('ERROR');
+    setErrorMessage('La simulación biométrica fue deshabilitada.');
+  }, [updateState]);
 
   const simulateFailure = useCallback((msg?: string) => {
     updateState('FAILED');

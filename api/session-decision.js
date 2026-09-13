@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { parseVendorData } from './create-session.js';
+import { evaluateFullKyc } from './_didit-kyc.js';
 import {
   getAuthenticatedUser,
   getSupabaseAdmin,
@@ -18,6 +20,10 @@ export const config = { api: { bodyParser: false } };
 
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{6,200}$/;
 const INVITATION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,256}$/;
+
+function tokenDigest(token) {
+  return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
+}
 
 function findDeep(value, keys, depth = 0) {
   if (!value || typeof value !== 'object' || depth > 8) return null;
@@ -59,13 +65,6 @@ function buildDocument(remote) {
   const age = birthDate ? Math.floor((Date.now() - Date.parse(`${birthDate}T00:00:00Z`)) / 31_557_600_000) : null;
 
   return { firstName, lastName, fullName, documentNumber: dni, dni, dateOfBirth: birthDate, age };
-}
-
-function statusFrom(remote) {
-  const raw = String(remote?.decision?.status || remote?.status || '').toLowerCase();
-  if (['approved', 'success', 'passed'].includes(raw)) return 'APPROVED';
-  if (['declined', 'failed', 'rejected'].includes(raw)) return 'DECLINED';
-  return 'IN_PROGRESS';
 }
 
 async function fetchDiditResult(apiKey, sessionId) {
@@ -115,9 +114,12 @@ export default async function handler(req, res) {
       }
       const { data, error } = await supabase
         .from('Garante')
-        .select('id_garante, id_pasaporte, token_invitacion, didit_session_id, id_estado_garante, kyc_verificado')
-        .eq('token_invitacion', guarantorToken)
+        .select('id_garante, id_pasaporte, didit_session_id, id_estado_garante, kyc_verificado, token_expires_at, token_used_at')
+        .eq('token_hash', tokenDigest(guarantorToken))
         .eq('didit_session_id', sessionId)
+        .eq('id_estado_garante', 3)
+        .is('token_used_at', null)
+        .gt('token_expires_at', new Date().toISOString())
         .maybeSingle();
       if (error || !data) return sendForbidden(res, 'El enlace de verificación no es válido.');
       guarantor = data;
@@ -139,14 +141,19 @@ export default async function handler(req, res) {
       : vendor?.kind === 'profile_kyc' && Number(vendor.profileId) === Number(profile.id_perfil) && String(vendor.userId) === String(user.id);
     if (!expected) return sendForbidden(res, 'La sesión no pertenece al sujeto autenticado.');
 
-    const status = statusFrom(remote);
-    if (status === 'IN_PROGRESS') {
+    const expectedWorkflow = String(process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const assessment = evaluateFullKyc(remote, expectedWorkflow);
+    const status = assessment.status.toUpperCase();
+    if (assessment.status === 'pending') {
       return res.status(200).json({ success: true, sessionId, status, isPending: true });
     }
 
     const document = buildDocument(remote);
     const evidence = {
       status,
+      workflowId: assessment.workflowId,
+      workflowMatches: assessment.workflowMatches,
+      checks: assessment.checks,
       document: {
         fullName: document.fullName || null,
         documentNumber: document.documentNumber || null,
@@ -158,19 +165,21 @@ export default async function handler(req, res) {
     if (guarantor) {
       const update = {
         didit_session_id: sessionId,
-        kyc_verificado: status === 'APPROVED',
-        id_estado_garante: status === 'APPROVED' ? 4 : 7,
+        kyc_verificado: assessment.status === 'approved',
+        id_estado_garante: assessment.status === 'approved' ? 4 : (assessment.status === 'declined' ? 7 : 3),
         updated_at: new Date().toISOString()
       };
-      if (status === 'APPROVED' && document.fullName) update.nombre_completo = document.fullName;
-      if (status === 'APPROVED' && document.dni) update.dni = document.dni;
-      if (status === 'DECLINED') update.motivo_rechazo = 'La verificación de identidad fue rechazada por el proveedor.';
+      if (assessment.status === 'approved' && document.fullName) update.nombre_completo = document.fullName;
+      if (assessment.status === 'approved' && document.dni) update.dni = document.dni;
+      if (assessment.status === 'declined') update.motivo_rechazo = 'La verificación de identidad fue rechazada por el proveedor.';
 
       const { error } = await supabase
         .from('Garante')
         .update(update)
         .eq('id_garante', guarantor.id_garante)
-        .eq('didit_session_id', sessionId);
+        .eq('didit_session_id', sessionId)
+        .eq('id_estado_garante', 3)
+        .is('token_used_at', null);
       if (error) throw error;
 
       await recordKyc(supabase, [{
@@ -181,7 +190,7 @@ export default async function handler(req, res) {
         status: status.toLowerCase(),
         payload_raw: evidence
       }]);
-    } else if (status === 'APPROVED') {
+    } else if (assessment.status === 'approved') {
       const profileUpdate = { cuenta_verificada: true, fecha_verificacion: new Date().toISOString() };
       if (document.fullName) profileUpdate.nombre_completo = document.fullName;
       if (document.dni) profileUpdate.dni = document.dni;
@@ -227,7 +236,8 @@ export default async function handler(req, res) {
       success: true,
       sessionId,
       status,
-      document: status === 'APPROVED' ? document : null
+      document: assessment.status === 'approved' ? document : null,
+      checks: assessment.checks
     });
   } catch (error) {
     return sendInternalError(res, 'session-decision', error);

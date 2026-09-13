@@ -7,6 +7,38 @@
 (function () {
     'use strict';
 
+    function escapeHtml(value) {
+        if (typeof window.escapeHtml === 'function') return window.escapeHtml(value);
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function sanitizeClauseBody(value) {
+        const raw = String(value ?? '');
+        if (window.DOMPurify) {
+            return window.DOMPurify.sanitize(raw, {
+                ALLOWED_TAGS: ['b', 'strong', 'em', 'br', 'ul', 'ol', 'li'],
+                ALLOWED_ATTR: []
+            });
+        }
+        return escapeHtml(raw);
+    }
+
+    function safeSameOriginPath(value) {
+        if (typeof value !== 'string' || !value.trim()) return null;
+        try {
+            const target = new URL(value, window.location.href);
+            if (target.origin !== window.location.origin) return null;
+            return `${target.pathname}${target.search}${target.hash}`;
+        } catch {
+            return null;
+        }
+    }
+
     let stored = null;
     try {
         stored = JSON.parse(localStorage.getItem('vivat_contracts'));
@@ -331,7 +363,7 @@
             const garantesNombresYDocs = printGuarantors.map((g, idx) => {
                 const nom = g.name || g.nombre_completo || `Garante ${idx + 1}`;
                 const doc = g.dni ? `DNI ${g.dni}` : (g.cuil ? `CUIL ${g.cuil}` : '');
-                return `<b>${nom}</b>${doc ? ` (${doc})` : ''}`;
+                return `<b>${escapeHtml(nom)}</b>${doc ? ` (${escapeHtml(doc)})` : ''}`;
             }).join(', ');
             clauseGarantia = {
                 tag: 'FIANZA Y CODEUDA SOLIDARIA',
@@ -357,13 +389,13 @@
             if (isPrint) {
                 return finalList.map((c, idx) => `
                     <div class="clause">
-                        <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                        <b>${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
                     </div>
                 `).join('');
             }
             return finalList.map((c, idx) => `
                 <p class="text-justify leading-relaxed">
-                    <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                    <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
                 </p>
             `).join('');
         }
@@ -384,13 +416,13 @@
                 if (isPrint) {
                     return finalList.map((c, idx) => `
                         <div class="clause">
-                            <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                            <b>${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
                         </div>
                     `).join('');
                 }
                 return finalList.map((c, idx) => `
                     <p class="text-justify leading-relaxed">
-                        <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                        <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
                     </p>
                 `).join('');
             }
@@ -523,14 +555,14 @@
         if (isPrint) {
             return clauses.map((c, idx) => `
                 <div class="clause">
-                    <b>${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                    <b>${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
                 </div>
             `).join('');
         }
 
         return clauses.map((c, idx) => `
             <p class="text-justify leading-relaxed">
-                <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${c.tag}):</b> ${c.body}
+                <b class="text-zinc-900 dark:text-white font-bold">${getOrdinalName(idx)} (${escapeHtml(c.tag)}):</b> ${sanitizeClauseBody(c.body)}
             </p>
         `).join('');
     }
@@ -2581,10 +2613,12 @@
                 const returnUrl = urlParams.get('returnUrl') || sessionStorage.getItem('vivat_contracts_return_url');
                 
                 let targetRedirect = null;
-                if (returnUrl) {
+                const safeReturnUrl = safeSameOriginPath(returnUrl);
+                if (safeReturnUrl) {
                     sessionStorage.removeItem('vivat_contracts_return_url');
-                    targetRedirect = returnUrl;
+                    targetRedirect = safeReturnUrl;
                 } else {
+                    if (returnUrl) sessionStorage.removeItem('vivat_contracts_return_url');
                     const role = urlParams.get('role') || ContractsManager.currentUserRole;
                     if (role === 'OWNER' || (document.referrer && document.referrer.includes('administrador'))) {
                         targetRedirect = 'administrador.html?tab=alquiler-activo';
@@ -3843,635 +3877,9 @@
             throw new Error('El flujo local de firma fue deshabilitado por seguridad.');
         },
 
-        legacyUnsafeStartCryptographicStepSource_DISABLED: function (contractId, role, diditSessionData = {}) {
-            // This source is retained temporarily for audit traceability only.
-            // It must never run: it used browser-controlled approval, direct DB
-            // writes and fabricated timestamp evidence.
-            throw new Error('El flujo local de firma fue deshabilitado por seguridad.');
-
-            const currentSessionId = diditSessionData.sessionId || `didit_sess_${Date.now()}`;
-            const shortSessionId = currentSessionId.length > 22 ? currentSessionId.substring(0, 22) + '...' : currentSessionId;
-            const signerName = diditSessionData.signerName || diditSessionData.document?.fullName || (role === 'TENANT' ? 'Inquilino Titular' : 'Propietario Titular');
-            const signerDni = diditSessionData.signerDni || diditSessionData.document?.documentNumber || diditSessionData.document?.dni || 'DNI Verificado';
-
-            // Modal compatible con Modo Claro y Modo Oscuro
-            const cryptoModalHtml = `
-                <div id="contract-modal-overlay" class="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 font-body" style="-webkit-overflow-scrolling: touch;">
-                    <div class="relative w-full max-w-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-7 space-y-5 overflow-hidden my-auto animate-fadeIn">
-                        
-                        <div class="text-center space-y-2 relative z-10">
-                            <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-zinc-800 border border-red-200 dark:border-zinc-700 flex items-center justify-center text-primary dark:text-red-400 mx-auto">
-                                <span class="material-symbols-outlined text-3xl animate-pulse">lock_clock</span>
-                            </div>
-                            <h3 class="font-headline font-bold text-base sm:text-lg text-zinc-900 dark:text-white">Sellado Digital del Contrato</h3>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Verificación biométrica Didit y Time-Stamp <b>Ley 25.506</b></p>
-                        </div>
-
-                        <!-- Progress Bar -->
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                                <span>Progreso Criptográfico</span>
-                                <span id="crypto-progress-text" class="text-emerald-600 dark:text-emerald-400 font-bold">40%</span>
-                            </div>
-                            <div class="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                <div id="crypto-progress-bar" class="h-full bg-gradient-to-r from-primary via-red-500 to-emerald-400 transition-all duration-500" style="width: 40%"></div>
-                            </div>
-                            <p id="crypto-status-msg" class="text-[11px] text-center text-zinc-600 dark:text-zinc-300 font-medium animate-pulse min-h-[18px]">
-                                Datos Didit del Pasaporte validados. Generando Hash SHA-256...
-                            </p>
-                        </div>
-
-                        <!-- 4 Step Checkpoints -->
-                        <div class="space-y-2.5 text-xs font-mono">
-                            <div id="step-row-1" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-medium">
-                                    <span class="material-symbols-outlined text-emerald-500 text-base">check_circle</span>
-                                    <span>1. Biometría Didit (Pasaporte Digital)</span>
-                                </div>
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">VERIFICADA</span>
-                            </div>
-
-                            <div id="step-row-2" class="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-primary/40 flex items-center justify-between text-zinc-900 dark:text-white">
-                                <div class="flex items-center gap-2 font-medium">
-                                    <span class="material-symbols-outlined text-primary text-base animate-spin">sync</span>
-                                    <span>2. Hash SHA-256 Contrato Original</span>
-                                </div>
-                                <span id="step-tag-2" class="text-amber-600 dark:text-amber-400 font-bold text-[10px]">EN CURSO...</span>
-                            </div>
-
-                            <div id="step-row-3" class="p-2.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-zinc-400">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-zinc-400 text-base">merge_type</span>
-                                    <span>3. Inyección Audit Trail y Fusión PDF</span>
-                                </div>
-                                <span id="step-tag-3" class="text-[10px] text-zinc-400">PENDIENTE</span>
-                            </div>
-
-                            <div id="step-row-4" class="p-2.5 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-zinc-400">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-zinc-400 text-base">lock_clock</span>
-                                    <span>4. Sello de Tiempo TSA RFC 3161</span>
-                                </div>
-                                <span id="step-tag-4" class="text-[10px] text-zinc-400">PENDIENTE</span>
-                            </div>
-                        </div>
-
-                        <!-- Session & Identity Badge -->
-                        <div class="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400 flex flex-col gap-1">
-                            <div class="flex items-center justify-between">
-                                <span>Titular Pasaporte:</span>
-                                <span class="font-bold text-zinc-900 dark:text-white">${signerName} (DNI: ${signerDni})</span>
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-zinc-400">
-                                <span>ID Sesión Didit:</span>
-                                <span class="font-mono">${shortSessionId}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const existingModal = document.getElementById('contract-modal-overlay');
-            if (existingModal) existingModal.remove();
-
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = cryptoModalHtml;
-            document.body.appendChild(wrapper.firstElementChild);
-
-            const clientDirectStoragePromise = (async () => {
-                if (!window.supabaseClient) return null;
-                try {
-                    let contractObj = contracts.find(item => 
-                        String(item.id) === String(contractId) || 
-                        String(item.contractNumber) === String(contractId) || 
-                        String(item.dbContractId) === String(contractId)
-                    ) || ContractsManager.getContractById(contractId);
-
-                    let dbContractId = contractObj?.dbContractId ? Number(contractObj.dbContractId) : null;
-
-                    // 1. Si no tenemos dbContractId, buscar por ID numérico extraído
-                    if (!dbContractId && contractId) {
-                        const parsedNum = parseInt(String(contractId).replace(/\D/g, ''), 10);
-                        if (parsedNum && !isNaN(parsedNum)) {
-                            const { data: directC } = await window.supabaseClient
-                                .from('Contrato')
-                                .select('id_contrato')
-                                .eq('id_contrato', parsedNum)
-                                .maybeSingle();
-                            if (directC && directC.id_contrato) {
-                                dbContractId = directC.id_contrato;
-                            }
-                        }
-                    }
-
-                    if (!dbContractId && contractObj?.propertyId) {
-                        const propId = Number(contractObj.propertyId);
-                        const { data: propContract } = await window.supabaseClient
-                            .from('Contrato')
-                            .select('id_contrato')
-                            .eq('id_propiedad', propId)
-                            .order('id_contrato', { ascending: false })
-                            .limit(1)
-                            .maybeSingle();
-
-                        if (propContract && propContract.id_contrato) {
-                            dbContractId = propContract.id_contrato;
-                        }
-                    }
-
-                    if (!dbContractId && window.supabaseClient && contractObj) {
-                        try {
-                            const { data: newDbC } = await window.supabaseClient
-                                .from('Contrato')
-                                .insert([{
-                                    id_perfil_propietario: contractObj.id_perfil_propietario || contractObj.owner?.id_perfil || 6,
-                                    id_perfil_inquilino: contractObj.id_perfil_inquilino || contractObj.tenant?.id_perfil || 14,
-                                    id_propiedad: contractObj.propertyId ? Number(contractObj.propertyId) : 42,
-                                    id_publicacion: contractObj.publicationId ? Number(contractObj.publicationId) : null,
-                                    id_tipo_garantia: 1,
-                                    "id_Indice": 1,
-                                    id_moneda: 1,
-                                    fecha_firma_contrato: new Date().toISOString().split('T')[0],
-                                    fecha_inicio_contrato: contractObj.startDate || new Date().toISOString().split('T')[0],
-                                    fecha_fin_contrato: contractObj.endDate || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
-                                    monto_cierre: contractObj.monthlyRent || 450000,
-                                    periodo_aumento_meses: contractObj.adjustmentFrequencyMonths || 3,
-                                    dia_vencimiento_mensual: contractObj.paymentDueDay || 10,
-                                    monto_deposito: contractObj.depositAmount || contractObj.monthlyRent || 450000,
-                                    alias_cbu: contractObj.aliasCbu || 'VIVAT.ALQUILER.MP'
-                                }])
-                                .select('id_contrato')
-                                .maybeSingle();
-
-                            if (newDbC && newDbC.id_contrato) {
-                                dbContractId = newDbC.id_contrato;
-                                contractObj.dbContractId = dbContractId;
-                            }
-                        } catch (eDbIns) {
-                            console.warn("[ContractsManager] Auto-creación de Contrato en DB omitida:", eDbIns);
-                        }
-                    }
-
-                    if (contractObj && dbContractId) {
-                        contractObj.dbContractId = dbContractId;
-                    }
-
-                    if (!dbContractId) {
-                        console.warn("[ContractsManager] Procediendo con registro de firma local para contrato:", contractId);
-                        return {
-                            firma: {
-                                estado_firma: 'sellada',
-                                didit_session_id: currentSessionId,
-                                didit_status: 'APPROVED',
-                                fecha_firma: new Date().toISOString()
-                            }
-                        };
-                    }
-
-                    const isTenantRole = (role === 'TENANT' || role === 'INQUILINO' || String(role).toLowerCase() === 'inquilino' || String(role).toLowerCase() === 'tenant');
-                    const dbRole = isTenantRole ? 'inquilino' : 'propietario';
-
-                    let backendSellar = null;
-                    try {
-                        const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
-                        const authHeaders = await getApiAuthHeaders();
-                        const sellRes = await fetch(`${apiBase}/api/firmas/sellar`, {
-                            method: 'POST',
-                            headers: authHeaders,
-                            body: JSON.stringify({
-                                id_contrato: dbContractId,
-                                rol: dbRole,
-                                didit_session_id: currentSessionId,
-                                signer_name: signerName,
-                                signer_dni: signerDni,
-                                user_agent: navigator.userAgent
-                            })
-                        });
-                        if (sellRes.ok) {
-                            const sj = await sellRes.json();
-                            backendSellar = sj.data;
-                        }
-                    } catch(e) {
-                        console.warn("[ContractsManager] Fallo al contactar el backend de sellado", e);
-                    }
-
-                    let insertedFirma = backendSellar;
-
-                    // Fallback directo a Supabase en cliente si el backend serverless no respondió
-                    if (!insertedFirma && window.supabaseClient) {
-                        try {
-                            const origHash = contractObj.originalHash || await computeContractSha256(contractObj);
-                            const finalHash = await computeContractSha256({ ...contractObj, signedRole: dbRole, session: currentSessionId, time: Date.now() });
-                            let currentProfileId = null;
-                            try {
-                                const { data: authData } = await window.supabaseClient.auth.getUser();
-                                if (authData && authData.user) {
-                                    const { data: pData } = await window.supabaseClient
-                                        .from('Perfil')
-                                        .select('id_perfil')
-                                        .eq('user_id', authData.user.id)
-                                        .maybeSingle();
-                                    if (pData && pData.id_perfil) {
-                                        currentProfileId = pData.id_perfil;
-                                    }
-                                }
-                            } catch(eAuth) {
-                                console.warn("[ContractsManager] Error fetching current user profile ID:", eAuth);
-                            }
-
-                            const profileId = currentProfileId || (isTenantRole 
-                                ? (contractObj.tenant?.id_perfil || contractObj.tenant?.profileId || 14) 
-                                : (contractObj.owner?.id_perfil || contractObj.owner?.profileId || 6));
-
-                            const finalContractPdfPath = `contrato_${dbContractId}/contrato_definitivo_firmado_${dbRole}.pdf`;
-                            const origContractPdfPath = `contrato_${dbContractId}/contrato_original.pdf`;
-
-                            let pdfBytes = null;
-                            if (window.PDFLib && window.PDFLib.PDFDocument) {
-                                try {
-                                    const pdfDoc = await window.PDFLib.PDFDocument.create();
-                                    const page = pdfDoc.addPage([595.28, 841.89]);
-                                    const fontBold = await pdfDoc.embedFont(window.PDFLib.StandardFonts.HelveticaBold);
-                                    const fontReg = await pdfDoc.embedFont(window.PDFLib.StandardFonts.Helvetica);
-                                    page.drawText('CONTRATO DE LOCACION INMOBILIARIA FIRMADO DIGITALMENTE', { x: 45, y: 800, size: 12, font: fontBold });
-                                    page.drawText(`Identificador Legal: CTR-2026-${String(dbContractId).padStart(4, '0')} | Ley 25.506`, { x: 45, y: 775, size: 9, font: fontBold });
-                                    page.drawText(`Firmante: ${signerName} (DNI: ${signerDni}) - Rol: ${dbRole.toUpperCase()}`, { x: 45, y: 745, size: 9, font: fontReg });
-                                    page.drawText(`Hash Original Base (SHA-256): ${origHash}`, { x: 45, y: 720, size: 8, font: fontReg });
-                                    page.drawText(`Hash Final Consolidado (SHA-256): ${finalHash}`, { x: 45, y: 700, size: 8, font: fontReg });
-                                    page.drawText(`Validación Didit Biometrics Session: ${currentSessionId}`, { x: 45, y: 680, size: 8, font: fontReg });
-                                    page.drawText(`Timestamp TSA: ${new Date().toISOString()}`, { x: 45, y: 660, size: 8, font: fontReg });
-                                    pdfBytes = await pdfDoc.save();
-                                } catch(ePdf) {}
-                            }
-
-                            if (!pdfBytes) {
-                                pdfBytes = new TextEncoder().encode(`%PDF-1.4\n% CONTRATO DE LOCACION CTR-2026-${dbContractId}\n% FIRMANTE: ${signerName} (${signerDni})\n% HASH: ${finalHash}\n%%EOF`);
-                            }
-
-                            const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-
-                            // Subir a Storage
-                            try {
-                                await window.supabaseClient.storage.from('contratos_firmados').upload(finalContractPdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
-                            } catch(eUp2) {
-                                console.warn("[ContractsManager] Aviso subiendo a contratos_firmados:", eUp2);
-                            }
-
-                            const tsaPayload = {
-                                status: 'GRANTED',
-                                authority: 'Autoridad de Sellado de Tiempo TSA Ley 25.506',
-                                serialNumber: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-                                hashAlgorithm: 'SHA-256',
-                                hashContratoOriginal: origHash,
-                                hashedMessage: finalHash,
-                                genTimeUTC: new Date().toISOString()
-                            };
-
-                            // Upsert en Firma_contrato
-                            const { data: existingFirma } = await window.supabaseClient
-                                .from('Firma_contrato')
-                                .select('id_firma')
-                                .eq('id_contrato', dbContractId)
-                                .eq('rol_firmante', dbRole)
-                                .maybeSingle();
-
-                            let firmaRes = null;
-                            if (existingFirma) {
-                                const { data: upF, error: upFErr } = await window.supabaseClient
-                                    .from('Firma_contrato')
-                                    .update({
-                                        estado_firma: 'sellada',
-                                        didit_session_id: currentSessionId,
-                                        didit_status: 'APPROVED',
-                                        hash_original_sha256: origHash,
-                                        hash_audit_trail_sha256: finalHash,
-                                        hash_contrato_sha256: finalHash,
-                                        url_audit_trail_pdf: finalContractPdfPath,
-                                        tsa_sello_tiempo: tsaPayload,
-                                        fecha_firma: new Date().toISOString()
-                                    })
-                                    .eq('id_firma', existingFirma.id_firma)
-                                    .select()
-                                    .maybeSingle();
-                                if (upFErr) console.error("[ContractsManager] Error al actualizar Firma_contrato:", upFErr);
-                                firmaRes = upF;
-                            } else {
-                                const { data: inF, error: inFErr } = await window.supabaseClient
-                                    .from('Firma_contrato')
-                                    .insert([{
-                                        id_contrato: dbContractId,
-                                        id_perfil_firmante: profileId,
-                                        rol_firmante: dbRole,
-                                        estado_firma: 'sellada',
-                                        didit_session_id: currentSessionId,
-                                        didit_status: 'APPROVED',
-                                        hash_original_sha256: origHash,
-                                        hash_audit_trail_sha256: finalHash,
-                                        hash_contrato_sha256: finalHash,
-                                        url_audit_trail_pdf: finalContractPdfPath,
-                                        tsa_sello_tiempo: tsaPayload,
-                                        fecha_firma: new Date().toISOString()
-                                    }])
-                                    .select()
-                                    .maybeSingle();
-                                if (inFErr) console.error("[ContractsManager] Error al insertar Firma_contrato:", inFErr);
-                                firmaRes = inF;
-                            }
-
-                            // No sobreescribir el contrato original ni el final en la tabla Contrato con la hoja de firma
-                            // La app en backend o admin deberá consolidarlos luego
-
-                            insertedFirma = {
-                                ...(firmaRes || {}),
-                                hash_original_sha256: origHash,
-                                hash_final_sha256: finalHash,
-                                hash_contrato_sha256: finalHash,
-                                url_audit_trail_pdf: finalContractPdfPath,
-                                tsa_sello_tiempo: tsaPayload,
-                                fecha_firma: new Date().toISOString()
-                            };
-                        } catch(eDirect) {
-                            console.warn("[ContractsManager] Error en sellado directo cliente:", eDirect);
-                        }
-                    }
-
-                    const { data: freshSignatures } = await window.supabaseClient
-                        .from('Firma_contrato')
-                        .select('rol_firmante, estado_firma, didit_status')
-                        .eq('id_contrato', dbContractId);
-
-                    const otherPartySigned = isTenantRole
-                        ? (freshSignatures || []).some(f => ['OWNER', 'PROPIETARIO', 'owner', 'propietario'].includes(f.rol_firmante) && (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED'))
-                        : (freshSignatures || []).some(f => ['TENANT', 'INQUILINO', 'tenant', 'inquilino'].includes(f.rol_firmante) && (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED'));
-
-                    const tenantHasSigned = isTenantRole || (freshSignatures || []).some(f => 
-                        ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) && 
-                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
-                    );
-
-                    const ownerHasSigned = (!isTenantRole) || (freshSignatures || []).some(f => 
-                        ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) && 
-                        (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
-                    );
-
-                    const bothPartiesSigned = tenantHasSigned && ownerHasSigned && otherPartySigned;
-
-                    const rentAmount = Number(contractObj?.monthlyRent || 450000);
-                    const pubId = contractObj?.publicationId ? Number(contractObj.publicationId) : null;
-                    const propId = contractObj?.propertyId ? Number(contractObj.propertyId) : null;
-
-                    try {
-                        const { data: existingPago } = await window.supabaseClient
-                            .from('Pago')
-                            .select('id_pago')
-                            .eq('id_contrato', dbContractId)
-                            .limit(1)
-                            .maybeSingle();
-
-                        if (!existingPago) {
-                            const todayStr = new Date().toISOString().split('T')[0];
-                            const { data: newPago } = await window.supabaseClient
-                                .from('Pago')
-                                .insert([{
-                                    id_contrato: dbContractId,
-                                    id_metodo_pago: 1,
-                                    monto: rentAmount,
-                                    fecha_vencimiento: todayStr,
-                                    periodo: new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
-                                }]);
-
-                            if (newPago && newPago.id_pago) {
-                                await window.supabaseClient.from('Historial_pago').insert([{
-                                    id_pago: newPago.id_pago,
-                                    id_estado_pago: 1,
-                                    fecha_inicio: new Date().toISOString()
-                                }]);
-                            }
-                        }
-                    } catch (pErr) {
-                        console.warn("Aviso registrando pago en Supabase:", pErr);
-                    }
-
-                    let backendFinalizar = null;
-                    if (bothPartiesSigned) {
-                        try {
-                            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:3000' : '';
-                            const authHeaders = await getApiAuthHeaders();
-                            const finRes = await fetch(`${apiBase}/api/firmas/finalizar?id_contrato=${dbContractId}`, {
-                                headers: authHeaders
-                            });
-                            if (finRes.ok) {
-                                const fj = await finRes.json();
-                                backendFinalizar = fj.data;
-                            }
-                        } catch (e) {
-                            console.warn("[ContractsManager] Fallo al contactar backend finalizar", e);
-                        }
-
-                        try {
-                            await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
-                                id_contrato: dbContractId,
-                                id_estado_contrato: 1,
-                                fecha_inicio: new Date().toISOString()
-                            }]);
-                        } catch (e) {}
-
-                        if (pubId) {
-                            try {
-                                await window.supabaseClient.from('Historial_Estado_Publicacion').insert([{
-                                    id_publicacion: pubId,
-                                    id_estado_publicacion: 2,
-                                    fecha_inicio: new Date().toISOString()
-                                }]);
-                            } catch (e) {}
-                        }
-
-                        if (propId) {
-                            try {
-                                await window.supabaseClient
-                                    .from('Propiedad')
-                                    .update({ id_estado_propiedad: 4 })
-                                    .eq('id_propiedad', propId);
-
-                                await window.supabaseClient.from('Historial_estado_propiedad').insert([{
-                                    id_propiedad: propId,
-                                    id_estado_propiedad: 4,
-                                    fecha_inicio: new Date().toISOString()
-                                }]);
-                            } catch (e) {}
-                        }
-                    } else {
-                        try {
-                            await window.supabaseClient.from('Historial_Estado_Contrato').insert([{
-                                id_contrato: dbContractId,
-                                id_estado_contrato: 5,
-                                fecha_inicio: new Date().toISOString()
-                            }]);
-                        } catch (e) {}
-                    }
-
-                    return {
-                        firma: insertedFirma,
-                        backendSellar,
-                        backendFinalizar
-                    };
-                } catch (e) {
-                    console.warn("Aviso guardando firma en Supabase:", e);
-                }
-                return null;
-            })();
-
-            setTimeout(() => {
-                const pBar = document.getElementById('crypto-progress-bar');
-                const pText = document.getElementById('crypto-progress-text');
-                const msg = document.getElementById('crypto-status-msg');
-                const row2 = document.getElementById('step-row-2');
-                const tag2 = document.getElementById('step-tag-2');
-                const row3 = document.getElementById('step-row-3');
-                const tag3 = document.getElementById('step-tag-3');
-
-                if (pBar) pBar.style.width = '65%';
-                if (pText) pText.innerText = '65%';
-                if (msg) msg.innerText = 'Hash Base verificado. Inyectando evidencia de firma y fusionando PDF...';
-                if (row2 && tag2) {
-                    row2.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
-                    tag2.className = 'text-emerald-600 dark:text-emerald-400 font-bold text-[10px]';
-                    tag2.innerText = 'COMPLETADO';
-                }
-                if (row3 && tag3) {
-                    row3.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-primary/40 flex items-center justify-between text-zinc-900 dark:text-white';
-                    tag3.className = 'text-amber-600 dark:text-amber-400 font-bold text-[10px]';
-                    tag3.innerText = 'EN CURSO...';
-                }
-            }, 800);
-
-            setTimeout(() => {
-                const pBar = document.getElementById('crypto-progress-bar');
-                const pText = document.getElementById('crypto-progress-text');
-                const msg = document.getElementById('crypto-status-msg');
-                const row3 = document.getElementById('step-row-3');
-                const tag3 = document.getElementById('step-tag-3');
-                const row4 = document.getElementById('step-row-4');
-                const tag4 = document.getElementById('step-tag-4');
-
-                if (pBar) pBar.style.width = '95%';
-                if (pText) pText.innerText = '95%';
-                if (msg) msg.innerText = 'Estampando Sello de Tiempo TSA RFC 3161 y resguardando en Supabase...';
-                if (row3 && tag3) {
-                    row3.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-emerald-500/40 flex items-center justify-between';
-                    tag3.className = 'text-emerald-600 dark:text-emerald-400 font-bold text-[10px]';
-                    tag3.innerText = 'COMPLETADO';
-                }
-                if (row4 && tag4) {
-                    row4.className = 'p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-primary/40 flex items-center justify-between text-zinc-900 dark:text-white';
-                    tag4.className = 'text-amber-600 dark:text-amber-400 font-bold text-[10px]';
-                    tag4.innerText = 'EN CURSO...';
-                }
-            }, 1600);
-
-            setTimeout(async () => {
-                const serverData = await clientDirectStoragePromise;
-                const backendSellarData = serverData?.backendSellar || serverData?.firma || {};
-                const backendDocs = serverData?.backendFinalizar?.documentos || {};
-
-                const c = ContractsManager.getContractById(contractId);
-                if (c) {
-                    if (role === 'TENANT') {
-                        c.tenant.hasSigned = true;
-                        c.tenant.signedAt = new Date().toISOString();
-                        c.tenant.diditSessionId = currentSessionId;
-                        c.status = c.owner.hasSigned ? 'SIGNED_AND_SEALED' : 'WAITING_OWNER';
-                    } else if (role === 'OWNER') {
-                        c.owner.hasSigned = true;
-                        c.owner.signedAt = new Date().toISOString();
-                        c.owner.diditSessionId = currentSessionId;
-                        c.status = c.tenant.hasSigned ? 'SIGNED_AND_SEALED' : 'WAITING_TENANT';
-                    } else {
-                        c.tenant.hasSigned = true;
-                        c.owner.hasSigned = true;
-                        c.status = 'SIGNED_AND_SEALED';
-                    }
-
-                    c.originalHash = backendSellarData.hash_original_sha256 || c.originalHash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-                    c.finalHash = backendSellarData.hash_final_sha256 || backendSellarData.hash_contrato_sha256 || c.finalHash;
-                    c.sha256Hash = c.finalHash || c.originalHash || 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33';
-                    if (backendSellarData.url_contrato_original_pdf) c.urlContratoOriginal = backendSellarData.url_contrato_original_pdf;
-                    if (backendSellarData.url_contrato_final_pdf) c.urlContratoFinal = backendSellarData.url_contrato_final_pdf;
-                    c.tsaTimestamp = backendSellarData.fecha_firma || new Date().toISOString();
-                    c.tsaCertificateId = backendSellarData.tsa_sello_tiempo?.serialNumber || `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-                    c.auditTrailUrl = backendSellarData.url_audit_trail_pdf || backendSellarData.url_contrato_final_pdf;
-                    c.downloadUrls = backendDocs;
-
-                    c.auditTrailEvents = c.auditTrailEvents || [];
-                    c.auditTrailEvents.push({
-                        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                        action: role === 'TENANT' ? 'FIRMA_INQUILINO_COMPLETADA' : 'FIRMA_PROPIETARIO_COMPLETADA',
-                        actor: role === 'TENANT' ? c.tenant.name : c.owner.name,
-                        details: `Validación facial Didit Liveness Check Aprobada (Sesión: ${currentSessionId}), sellado TSA y PDF custodiado en Supabase Storage.`
-                    });
-
-                    saveContracts();
-
-                    if (window.NotificationManager) {
-                        let uLocal = {};
-                        try {
-                            uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                        } catch (e) {}
-                        const myProfileId = window._currentUserProfileId || (window.ContractsManager && window.ContractsManager._currentProfileId) || uLocal.id_perfil || uLocal.profileId || uLocal.id || null;
-                        const myEmail = uLocal.email || null;
-                        const cidNum = c.dbContractId || (c.id ? String(c.id).replace(/\D/g, '') : '0') || contractId;
-
-                        if (role === 'TENANT') {
-                            window.NotificationManager.createNotification({
-                                title: '✍️ ¡El inquilino firmó el contrato!',
-                                message: `${c.tenant.name} completó su validación biométrica y firmó el contrato para "${c.title}". Ahora es tu turno de firmar como propietario.`,
-                                type: 'contract',
-                                link: `contratos.html?contract=${c.id}&sign=1&role=OWNER`,
-                                role: 'OWNER',
-                                senderRole: 'TENANT',
-                                senderProfileId: myProfileId,
-                                senderEmail: myEmail,
-                                priority: 'high'
-                            });
-                        } else {
-                            window.NotificationManager.createNotification({
-                                title: '✍️ ¡El propietario firmó el contrato!',
-                                message: `${c.owner.name} firmó y selló el contrato para "${c.title}". El contrato de locación se encuentra 100% perfeccionado.`,
-                                type: 'contract',
-                                link: `contratos.html?contract=${c.id}&role=TENANT`,
-                                role: 'TENANT',
-                                senderRole: 'OWNER',
-                                senderProfileId: myProfileId,
-                                senderEmail: myEmail,
-                                priority: 'high'
-                            });
-                        }
-                    }
-                }
-
-                const modal = document.getElementById('contract-modal-overlay');
-                if (modal) modal.remove();
-
-                ContractsManager.renderDashboard('contracts-dashboard-container');
-                if (ContractsManager._activeFullscreenContractId) {
-                    ContractsManager.openContractFullscreen(ContractsManager._activeFullscreenContractId, ContractsManager._activeFullscreenTab || 'document');
-                }
-                window.dispatchEvent(new CustomEvent('contractsUpdated'));
-
-                if (window.ToastManager) {
-                    window.ToastManager.show({
-                        title: '✓ Firma Registrada y Sellada',
-                        message: 'Prueba de vida biométrica aprobada y certificado resguardado en Supabase Storage.',
-                        type: 'success',
-                        duration: 5000
-                    });
-                }
-
-                // Mostrar modal interactivo de confirmación de firma exitosa
-                ContractsManager.showSignatureSuccessModal(contractId, role);
-            }, 2600);
+        legacyUnsafeStartCryptographicStepSource_DISABLED: function () {
+            throw new Error('El flujo local de firma fue eliminado por seguridad.');
         },
-
         showSignatureSuccessModal: function (contractId, role) {
             const contract = this.getContractById(contractId);
             if (!contract) return;

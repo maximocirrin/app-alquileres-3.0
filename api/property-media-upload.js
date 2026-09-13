@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import {
+  consumeRateLimit,
   getAuthenticatedUser,
   getSupabaseAdmin,
   parsePositiveInteger,
@@ -8,6 +9,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
@@ -49,6 +51,9 @@ export default async function handler(req, res) {
     if (!publication) return res.status(404).json({ ok: false, error: 'Not Found' });
     if (Number(publication.id_perfil) !== Number(profile.id_perfil)) {
       return sendForbidden(res, 'No eres propietario de esta publicación.');
+    }
+    if (!await consumeRateLimit(supabase, 'property-media-upload', `${profile.id_perfil}:${publicationId}`, 30, 60 * 60)) {
+      return sendRateLimited(res);
     }
 
     const path = `prop-${publicationId}/${crypto.randomUUID()}.${extension}`;

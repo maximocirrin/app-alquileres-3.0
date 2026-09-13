@@ -1,0 +1,12 @@
+# Database definitions, backups and operational material are never public assets.
+supabase/
+*.sql
+*.md
+.env
+.env.*
+.git/
+.agents/
+.codex/
+coverage/
+test-results/
+tests/

@@ -74,39 +74,23 @@ export function useContractSignature({
       const signerEmail = userRole === 'TENANT' ? activeContract.tenant.email : activeContract.owner.email;
 
       // API Request to start signature
-      let response: Response;
-      let data: any;
-
-      try {
-        response = await fetch(`/api/contracts/${activeContract.id}/start-signature`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contractId: activeContract.id,
-            role: userRole,
-            signerName,
-            signerEmail,
-            signerCuil,
-            consentGiven: true,
-            consentTimestamp: new Date().toISOString(),
-            deviceMetadata: fullMeta,
-          }),
-        });
-
-        if (response.ok) {
-          data = await response.json();
-        } else {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (apiErr) {
-        console.warn('[useContractSignature] Fallback a simulación local de firma:', apiErr);
-        data = {
-          success: true,
-          sessionId: `sess_${userRole.toLowerCase()}_${Date.now()}`,
-          verificationUrl: `#mock-didit-kyc-${activeContract.id}`,
-          isMock: true,
-        };
-      }
+      const response = await fetch(`/api/contracts/${activeContract.id}/start-signature`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractId: activeContract.id,
+          role: userRole,
+          signerName,
+          signerEmail,
+          signerCuil,
+          consentGiven: true,
+          consentTimestamp: new Date().toISOString(),
+          deviceMetadata: fullMeta,
+        }),
+      });
+      if (!response.ok) throw new Error(`No se pudo iniciar la firma (HTTP ${response.status}).`);
+      const data = await response.json();
+      if (!data?.verificationUrl || !data?.sessionId) throw new Error('La sesión de firma es inválida.');
 
       setIsSubmittingConsent(false);
       setCurrentStep('BIOMETRIC_VERIFICATION');
@@ -129,15 +113,12 @@ export function useContractSignature({
     setActiveCryptoStep('ID_VERIFICATION');
     setCryptoMessage('Verificando prueba de vida y validación de DNI en RENAPER / Didit...');
 
-    let localStepCount = 0;
     let currentDelay = 2000;
 
     // Clear any previous timer
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
 
     const poll = async () => {
-      localStepCount++;
-
       try {
         const res = await fetch(`/api/contracts/${activeContract.id}/signature-status?sessionId=${sessionId}&role=${userRole}`);
         if (res.ok) {
@@ -155,44 +136,11 @@ export function useContractSignature({
           throw new Error('Endpoint no disponible');
         }
       } catch (pollErr) {
-        // Mock progressive simulation if offline / static mode
-        if (localStepCount === 1) {
-          setCryptoProgress(35);
-          setActiveCryptoStep('SHA256_HASHING');
-          setCryptoMessage('Calculando Hash criptográfico SHA-256 del documento contractual...');
-        } else if (localStepCount === 2) {
-          setCryptoProgress(70);
-          setActiveCryptoStep('TSA_TIMESTAMPING');
-          setCryptoMessage('Estampando sello de tiempo legal con Autoridad Certificante (TSA Time-Stamp)...');
-        } else if (localStepCount >= 3) {
-          setCryptoProgress(100);
-          setActiveCryptoStep('COMPLETED');
-          setCryptoMessage('Sellado inmutable y Certificado de Evidencia (Audit Trail) generado.');
-
-          const completedContract: Contract = {
-            ...activeContract,
-            status: userRole === 'TENANT' ? 'WAITING_OWNER' : 'SIGNED_AND_SEALED',
-            sha256Hash: 'a78f3c9e4210d5718a24c29c8789bc4410985a11df30e8c6114e9b986b245e33',
-            tsaTimestamp: new Date().toISOString(),
-            tsaCertificateId: `TSA-AR-2026-${Math.floor(100000 + Math.random() * 900000)}`,
-            qrVerificationUrl: `https://vivat.com.ar/verificar/${activeContract.id}`,
-            signedPdfUrl: `/api/contracts/${activeContract.id}/download-signed`,
-            auditTrailPdfUrl: `/api/contracts/${activeContract.id}/download-audit-trail`,
-          };
-
-          if (userRole === 'TENANT') {
-            completedContract.tenant.hasSigned = true;
-            completedContract.tenant.signedAt = new Date().toISOString();
-          } else {
-            completedContract.owner.hasSigned = true;
-            completedContract.owner.signedAt = new Date().toISOString();
-          }
-
-          setActiveContract(completedContract);
-          setCurrentStep('SUCCESS');
-          if (onSuccess) onSuccess(completedContract);
-          return;
-        }
+        const message = pollErr instanceof Error ? pollErr.message : 'No se pudo verificar la firma con el servidor.';
+        setErrorMessage(message);
+        setCurrentStep('ERROR');
+        if (onError) onError(new Error(message));
+        return;
       }
 
       // Schedule next poll with backoff
@@ -201,7 +149,7 @@ export function useContractSignature({
     };
 
     pollTimerRef.current = setTimeout(poll, currentDelay);
-  }, [activeContract, userRole, onSuccess]);
+  }, [activeContract, userRole, onSuccess, onError]);
 
   const finishSuccess = useCallback((statusRes: SignatureStatusResponse) => {
     const updated: Contract = {

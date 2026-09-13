@@ -16,7 +16,6 @@ app.disable('x-powered-by');
 function securityHeaders(req, res, next) {
   const scriptSources = [
     "'self'", "'unsafe-inline'",
-    'https://cdn.tailwindcss.com',
     'https://cdn.jsdelivr.net',
     'https://cdnjs.cloudflare.com',
     'https://unpkg.com',

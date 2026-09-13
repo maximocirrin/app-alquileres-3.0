@@ -17,6 +17,21 @@
             .replace(/'/g, '&#039;');
     };
 
+    // Accept only URLs that browsers can safely use as image sources. Remote
+    // marketplace images must use HTTPS; local development may use HTTP.
+    window.safeImageUrl = function (value, fallback = 'img/hero-marketplace.jpg') {
+        if (typeof value !== 'string' || !value.trim()) return fallback;
+        try {
+            const url = new URL(value, window.location.href);
+            const isLocalHttp = url.protocol === 'http:' &&
+                ['localhost', '127.0.0.1'].includes(url.hostname);
+            if (url.protocol !== 'https:' && !isLocalHttp) return fallback;
+            return url.href;
+        } catch {
+            return fallback;
+        }
+    };
+
     function patchClient(client) {
         if (!client || client.__vivatPatched) return client;
         const origFrom = client.from.bind(client);

@@ -55,7 +55,7 @@
     </script>
 
     <!-- Seguridad y compatibilidad -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.4.12/purify.min.js"></script>
     <script src="js/security-patch.js"></script>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -128,7 +128,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
     <link rel="stylesheet" href="css/style.css?v=15">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         if (typeof tailwind !== 'undefined') {
             tailwind.config = {
@@ -1407,18 +1406,23 @@
                         const barrioProv = [prop.barrio || prop.extraInfo?.barrio, prop.provincia || prop.province || prop.extraInfo?.provincia].filter(Boolean).join(', ') || prop.address;
                         const pubId = prop.id_publicacion || prop.id || '';
                         const isFav = window.FavoritesManager ? window.FavoritesManager.isFavorite(pubId) : false;
+                        const safeImage = window.escapeHtml(window.safeImageUrl(prop.image));
+                        const safeAddress = window.escapeHtml(calleNum || 'Propiedad');
+                        const safeLocation = window.escapeHtml(barrioProv || '');
+                        const safeType = window.escapeHtml(propertyType || '');
+                        const safePubId = window.escapeHtml(pubId);
 
                             const isMyProp = typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop);
                             card.innerHTML = `
                             <div>
                                 <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
-                                    <img src="${prop.image}" alt="${calleNum}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="${safeImage}" alt="${safeAddress}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     ${isAlquilada ? `
                                         <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                             <span class="material-symbols-outlined text-xs">key</span> Alquilada
                                         </div>
                                     ` : ''}
-                                    <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite('${pubId}', event);" title="Guardar en favoritos">
+                                    <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${safePubId}" title="Guardar en favoritos">
                                         <span class="material-symbols-outlined text-xl ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all" style="${isFav ? 'font-variation-settings: \'FILL\' 1;' : ''}">favorite</span>
                                     </button>
                                     ${photosCount > 1 ? `
@@ -1435,7 +1439,7 @@
                                     ` : ''}
                                 </div>
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
-                                    ${propertyType}
+                                    ${safeType}
                                 </div>
                                 <div class="flex items-center gap-2 flex-wrap mb-1">
                                     <strong class="text-base sm:text-lg font-black text-zinc-900 dark:text-white">${priceFormatted}</strong>
@@ -1444,7 +1448,7 @@
                                     </span>
                                 </div>
                                 <h3 class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors flex items-center gap-1.5">
-                                    <span>${calleNum}</span>
+                                    <span>${safeAddress}</span>
                                     ${isVerified ? `
                                         <span class="text-emerald-600 dark:text-emerald-400 inline-flex items-center shrink-0" title="Propietario Verificado">
                                             <span class="material-symbols-outlined text-base">verified</span>
@@ -1453,12 +1457,12 @@
                                 </h3>
                                 <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
                                     <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
-                                    ${barrioProv}
+                                    ${safeLocation}
                                 </p>
                                 <div class="flex flex-wrap gap-1.5 mb-4">
                                     ${prop.tags.filter(t => t !== 'Propietario Verificado').slice(0, 3).map(tag => `
                                         <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
-                                            ${tag}
+                                            ${window.escapeHtml(tag)}
                                         </span>
                                     `).join('')}
                                 </div>
@@ -1468,6 +1472,11 @@
                                 <span>${isMyProp ? 'Administrar mi publicación' : (isAlquilada ? 'Ver detalle de alquiler' : 'Ver detalle y postularse')}</span>
                             </button>
                         `;
+
+                        card.querySelector('.btn-favorite')?.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            window.FavoritesManager?.toggleFavorite(pubId, event);
+                        });
 
                         grid.appendChild(card);
                     });
@@ -2124,17 +2133,23 @@
                             const isFav = window.FavoritesManager ? window.FavoritesManager.isFavorite(pubId) : false;
                             const isMyProp = typeof window.isUserOwnerOfProperty === 'function' && window.isUserOwnerOfProperty(prop);
                             const favStyle = isFav ? "font-variation-settings: 'FILL' 1;" : "";
+                            const safeImage = window.escapeHtml(window.safeImageUrl(prop.image));
+                            const safeAddress = window.escapeHtml(calleNum || 'Propiedad');
+                            const safeLocation = window.escapeHtml(barrioProv || '');
+                            const safeCity = window.escapeHtml(cityName || '');
+                            const safeType = window.escapeHtml(propertyType || '');
+                            const safePubId = window.escapeHtml(pubId);
 
                             card.innerHTML = `
                                 <div>
                                     <div class="relative h-48 sm:h-52 rounded-xl overflow-hidden mb-3 bg-zinc-100 dark:bg-zinc-800">
-                                        <img src="${prop.image || 'img/hero-marketplace.jpg'}" alt="${calleNum}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        <img src="${safeImage}" alt="${safeAddress}" onerror="this.src='img/hero-marketplace.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         ${isAlquilada ? `
                                             <div class="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 bg-amber-500/95 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-headline font-black shadow-md border border-amber-400/30 shrink-0 whitespace-nowrap pointer-events-auto" title="Alquilada ${formattedEndDate ? `(Hasta ${formattedEndDate})` : ''}">
                                                 <span class="material-symbols-outlined text-xs">key</span> Alquilada
                                             </div>
                                         ` : ''}
-                                        <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${pubId}" onclick="event.stopPropagation(); window.FavoritesManager?.toggleFavorite('${pubId}', event);" title="Guardar en favoritos">
+                                        <button type="button" class="btn-favorite ${isFav ? 'is-favorite active' : ''} absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition-all z-10 cursor-pointer" data-pub-id="${safePubId}" title="Guardar en favoritos">
                                             <span class="material-symbols-outlined text-xl ${isFav ? 'text-rose-500 fill-1 scale-110' : 'text-white/90 hover:text-rose-500'} transition-all" style="${favStyle}">favorite</span>
                                         </button>
                                         ${photosCount > 1 ? `
@@ -2145,11 +2160,11 @@
                                         ` : ''}
                                         <div class="absolute bottom-2 right-2 bg-primary/90 text-white backdrop-blur-md text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                             <span class="material-symbols-outlined text-xs">location_on</span>
-                                            ${cityName}
+                                            ${safeCity}
                                         </div>
                                     </div>
                                     <div class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
-                                        ${propertyType}
+                                        ${safeType}
                                     </div>
                                     <div class="flex items-center gap-2 flex-wrap mb-1">
                                         <strong class="text-base sm:text-lg font-black text-zinc-900 dark:text-white">${priceFormatted}</strong>
@@ -2158,7 +2173,7 @@
                                         </span>
                                     </div>
                                     <h3 class="font-headline text-base font-bold text-on-background dark:text-white line-clamp-1 group-hover:text-primary dark:group-hover:text-red-400 transition-colors flex items-center gap-1.5">
-                                        <span>${calleNum}</span>
+                                        <span>${safeAddress}</span>
                                         ${isVerified ? `
                                             <span class="text-emerald-600 dark:text-emerald-400 inline-flex items-center shrink-0" title="Propietario Verificado">
                                                 <span class="material-symbols-outlined text-base">verified</span>
@@ -2167,12 +2182,12 @@
                                     </h3>
                                     <p class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-3 line-clamp-1 font-body">
                                         <span class="material-symbols-outlined text-sm text-primary dark:text-red-400 shrink-0">location_on</span>
-                                        ${barrioProv}
+                                        ${safeLocation}
                                     </p>
                                     <div class="flex flex-wrap gap-1.5 mb-4">
                                         ${(prop.tags || []).filter(t => t !== 'Propietario Verificado').slice(0, 3).map(tag => `
                                             <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold px-2.5 py-1 rounded-md">
-                                                ${tag}
+                                                ${window.escapeHtml(tag)}
                                             </span>
                                         `).join('')}
                                     </div>
@@ -2182,6 +2197,11 @@
                                     <span>${isMyProp ? 'Administrar mi publicación' : (isAlquilada ? 'Ver detalle de alquiler' : 'Ver detalle y postularse')}</span>
                                 </button>
                             `;
+
+                            card.querySelector('.btn-favorite')?.addEventListener('click', (event) => {
+                                event.stopPropagation();
+                                window.FavoritesManager?.toggleFavorite(pubId, event);
+                            });
 
                             grid.appendChild(card);
                         });
@@ -2714,7 +2734,7 @@
     </button>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/data.js"></script>
     <script src="js/lead-monetization.js"></script>

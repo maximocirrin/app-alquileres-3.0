@@ -1,8 +1,8 @@
 import crypto from 'crypto';
+import { evaluateFullKyc } from './_didit-kyc.js';
 import {
   getRawRequestBody,
   getSupabaseAdmin,
-  mocksAreAllowed,
   readJsonBody,
   sendInternalError,
   setCorsHeaders
@@ -10,17 +10,46 @@ import {
 
 export const config = { api: { bodyParser: false } };
 
-function verifyDiditSignature(req) {
+function sortObjectKeys(value) {
+  if (Array.isArray(value)) return value.map(sortObjectKeys);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((result, key) => {
+      result[key] = sortObjectKeys(value[key]);
+      return result;
+    }, {});
+  }
+  return value;
+}
+
+function safeSignatureEqual(expected, received) {
+  if (!/^[a-f0-9]{64}$/i.test(received || '')) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'));
+}
+
+function verifyDiditSignature(req, body) {
   const secret = String(process.env.DIDIT_WEBHOOK_SECRET || '').trim();
-  if (!secret) return mocksAreAllowed() && process.env.ALLOW_INSECURE_WEBHOOKS === 'true';
+  if (!secret) return false;
+  const timestamp = Number(req.headers['x-timestamp']);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isSafeInteger(timestamp) || Math.abs(now - timestamp) > 300 || Number(body?.timestamp) !== timestamp) {
+    return false;
+  }
+
+  const signatureV2 = String(req.headers['x-signature-v2'] || '').trim();
+  if (signatureV2) {
+    const canonical = JSON.stringify(sortObjectKeys(body));
+    const expectedV2 = crypto.createHmac('sha256', secret).update(canonical, 'utf8').digest('hex');
+    if (safeSignatureEqual(expectedV2, signatureV2)) return true;
+  }
+
   const raw = getRawRequestBody(req);
   const header = String(req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'] || '')
     .split(',')[0]
     .replace(/^(sha256|v1)=/i, '')
     .trim();
-  if (!raw || !/^[a-f0-9]{64}$/i.test(header)) return false;
+  if (!raw) return false;
   const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(header, 'hex'), Buffer.from(expected, 'hex'));
+  return safeSignatureEqual(expected, header);
 }
 
 function parseVendorData(value) {
@@ -31,13 +60,6 @@ function parseVendorData(value) {
   } catch {
     return null;
   }
-}
-
-function currentStatus(body) {
-  const status = String(body.status || body.decision?.status || '').toLowerCase();
-  if (['approved', 'success', 'passed'].includes(status)) return 'approved';
-  if (['declined', 'rejected', 'failed'].includes(status)) return 'declined';
-  return 'pending';
 }
 
 function documentData(body) {
@@ -69,7 +91,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await readJsonBody(req, { maxBytes: 8 * 1024 * 1024 });
-    if (!verifyDiditSignature(req)) return res.status(401).json({ error: 'Invalid webhook signature.' });
+    if (!verifyDiditSignature(req, body)) return res.status(401).json({ error: 'Invalid webhook signature.' });
 
     const sessionId = String(body.session_id || body.sessionId || body.id || '');
     if (!/^[A-Za-z0-9_-]{6,200}$/.test(sessionId)) return res.status(400).json({ error: 'Invalid session id.' });
@@ -78,9 +100,18 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, ignored: true });
     }
 
-    const status = currentStatus(body);
+    const expectedWorkflow = String(process.env.DIDIT_WORKFLOW_ID || '').trim();
+    const assessment = evaluateFullKyc(body, expectedWorkflow);
+    const status = assessment.status;
     const document = documentData(body);
-    const evidence = { status, document: { fullName: document.fullName || null, dni: document.dni || null }, processedAt: new Date().toISOString() };
+    const evidence = {
+      status,
+      workflowId: assessment.workflowId,
+      workflowMatches: assessment.workflowMatches,
+      checks: assessment.checks,
+      document: { fullName: document.fullName || null, dni: document.dni || null },
+      processedAt: new Date().toISOString()
+    };
     const supabase = getSupabaseAdmin();
 
     if (vendor.kind === 'guarantor_kyc') {
@@ -99,7 +130,13 @@ export default async function handler(req, res) {
       if (status === 'approved' && document.fullName) update.nombre_completo = document.fullName;
       if (status === 'approved' && document.dni) update.dni = document.dni;
       if (status === 'declined') update.motivo_rechazo = 'La verificación de identidad fue rechazada por el proveedor.';
-      const { error: updateError } = await supabase.from('Garante').update(update).eq('id_garante', guarantorId).eq('didit_session_id', sessionId);
+      const { error: updateError } = await supabase
+        .from('Garante')
+        .update(update)
+        .eq('id_garante', guarantorId)
+        .eq('didit_session_id', sessionId)
+        .eq('id_estado_garante', 3)
+        .is('token_used_at', null);
       if (updateError) throw updateError;
       await recordKyc(supabase, { id_garante: guarantorId, id_pasaporte: guarantor.id_pasaporte || null, proveedor: 'didit', session_id: sessionId, status, payload_raw: evidence });
     } else {

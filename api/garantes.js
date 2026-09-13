@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import {
+  consumeRateLimit,
   getAuthenticatedUser,
   getSupabaseAdmin,
   parsePositiveInteger,
@@ -8,6 +9,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
@@ -42,6 +44,10 @@ function parseToken(value) {
   return typeof value === 'string' && INVITATION_TOKEN.test(value) ? value : null;
 }
 
+function tokenDigest(token) {
+  return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
+}
+
 function documentKind(guaranteeType, index) {
   if (Number(guaranteeType) === 1) return ['escritura', 'dni_titular', 'impuesto_inmobiliario'][index] || 'documento_propietario';
   if (Number(guaranteeType) === 2) return 'poliza_caucion';
@@ -74,8 +80,10 @@ function guaranteeData(type, value) {
 async function findInvitation(supabase, token) {
   const { data, error } = await supabase
     .from('Garante')
-    .select('id_garante, id_tipo_garantia, id_estado_garante, kyc_verificado, nombre_completo, relacion_inquilino, token_invitacion')
-    .eq('token_invitacion', token)
+    .select('id_garante, id_tipo_garantia, id_estado_garante, kyc_verificado, nombre_completo, relacion_inquilino, token_expires_at, token_used_at')
+    .eq('token_hash', tokenDigest(token))
+    .is('token_used_at', null)
+    .gt('token_expires_at', new Date().toISOString())
     .maybeSingle();
   if (error) throw error;
   return data || null;
@@ -186,6 +194,9 @@ async function handlePortalRequest(req, res, body) {
     }
 
     if (action === 'upload') {
+      if (!await consumeRateLimit(supabase, 'guarantor-document-upload', invitation.id_garante, 20, 60 * 60)) {
+        return sendRateLimited(res);
+      }
       const data = await issueUpload(supabase, invitation, body);
       return res.status(201).json({ ok: true, data });
     }
@@ -204,6 +215,7 @@ async function handlePortalRequest(req, res, body) {
         .from('Garante')
         .update({
           id_estado_garante: 5,
+          token_used_at: timestamp,
           datos_garantia: {
             ...data,
             consentimiento_aceptado_en: timestamp
@@ -211,7 +223,8 @@ async function handlePortalRequest(req, res, body) {
           updated_at: timestamp
         })
         .eq('id_garante', invitation.id_garante)
-        .eq('token_invitacion', token)
+        .eq('token_hash', tokenDigest(token))
+        .is('token_used_at', null)
         .eq('id_estado_garante', 4)
         .eq('kyc_verificado', true)
         .select('id_garante');
@@ -224,9 +237,9 @@ async function handlePortalRequest(req, res, body) {
       if (documentsError) {
         await supabase
           .from('Garante')
-          .update({ id_estado_garante: 4, updated_at: new Date().toISOString() })
+          .update({ id_estado_garante: 4, token_used_at: null, updated_at: new Date().toISOString() })
           .eq('id_garante', invitation.id_garante)
-          .eq('token_invitacion', token)
+          .eq('token_hash', tokenDigest(token))
           .eq('id_estado_garante', 5);
         throw documentsError;
       }
@@ -278,6 +291,9 @@ export default async function handler(req, res) {
     if (!passport) return res.status(409).json({ ok: false, error: 'No passport found for this account.' });
 
     if (action === 'invite') {
+      if (!await consumeRateLimit(supabase, 'guarantor-invite', profile.id_perfil, 10, 24 * 60 * 60)) {
+        return sendRateLimited(res);
+      }
       const guaranteeType = Number(body.id_tipo_garantia || body.idTipoGarantia || 3);
       if (![1, 2, 3].includes(guaranteeType)) {
         return res.status(400).json({ ok: false, error: 'Invalid guarantee type.' });
@@ -290,6 +306,7 @@ export default async function handler(req, res) {
       if (!email && !phone) return res.status(400).json({ ok: false, error: 'Email or phone is required.' });
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Invalid email.' });
 
+      const rawToken = crypto.randomBytes(32).toString('base64url');
       const { data, error } = await supabase
         .from('Garante')
         .insert({
@@ -300,14 +317,16 @@ export default async function handler(req, res) {
           email: email || null,
           telefono: phone || null,
           relacion_inquilino: relation,
-          token_invitacion: crypto.randomBytes(32).toString('base64url'),
+          token_invitacion: `redacted_${crypto.randomBytes(16).toString('hex')}`,
+          token_hash: tokenDigest(rawToken),
+          token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           kyc_verificado: false
         })
-        .select('id_garante, id_tipo_garantia, nombre_completo, email, telefono, relacion_inquilino, token_invitacion, id_estado_garante, kyc_verificado, created_at')
+        .select('id_garante, id_tipo_garantia, nombre_completo, email, telefono, relacion_inquilino, id_estado_garante, kyc_verificado, created_at, token_expires_at')
         .single();
       if (error) throw error;
 
-      return res.status(201).json({ ok: true, data });
+      return res.status(201).json({ ok: true, data: { ...data, token_invitacion: rawToken } });
     }
 
     if (action === 'cancel') {

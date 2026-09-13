@@ -196,12 +196,32 @@ var DataManager = {
 
     logout: async () => {
         try {
-            localStorage.removeItem('vivat_tenant_applications');
-            localStorage.removeItem('vivat_passport_data');
-            localStorage.removeItem('vivat_didit_identity');
-            localStorage.removeItem('vivat_user');
-            localStorage.removeItem('vivat_user_id');
+            const sensitiveKeys = new Set([
+                'vivat_tenant_applications',
+                'vivat_passport_data',
+                'vivat_didit_identity',
+                'vivat_user',
+                'vivat_user_id',
+                'vivat_profile_id',
+                'vivat_active_role',
+                'vivat_user_role',
+                'vivat_user_type',
+                'vivat_contracts',
+                'vivat_favorites'
+            ]);
+            const sensitivePrefixes = [
+                'vivat_chat_messages_',
+                'chat_last_seen_',
+                'vivat_payment_state_'
+            ];
+            for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+                const key = localStorage.key(index);
+                if (key && (sensitiveKeys.has(key) || sensitivePrefixes.some((prefix) => key.startsWith(prefix)))) {
+                    localStorage.removeItem(key);
+                }
+            }
             sessionStorage.removeItem('vivat_pending_didit_session');
+            sessionStorage.removeItem('vivat_contracts_return_url');
             window.hasActivePassport = false;
             window.currentPasaporteId = null;
         } catch (e) {}
@@ -1825,7 +1845,6 @@ var DataManager = {
                                 // Actualizar condiciones si fueron personalizadas
                                 if (customTerms) {
                                     await window.supabaseClient.from('Contrato').update({
-                                        id_perfil_inquilino: solPerfilId,
                                         monto_cierre: monthlyRent,
                                         periodo_aumento_meses: periodoAumento,
                                         dia_vencimiento_mensual: diaVencimiento,

@@ -103,7 +103,7 @@ export const ContractsManager: React.FC<ContractsManagerProps> = ({
       <BiometricVerificationModal
         isOpen={signatureFlow.currentStep === 'BIOMETRIC_VERIFICATION'}
         state={signatureFlow.didit.state}
-        verificationUrl={signatureFlow.didit.verificationUrl}
+        verificationUrl={signatureFlow.didit.verificationUrl || undefined}
         errorMessage={signatureFlow.didit.errorMessage}
         isSimulated={signatureFlow.didit.isSimulated}
         onSimulateSuccess={signatureFlow.didit.simulateSuccess}

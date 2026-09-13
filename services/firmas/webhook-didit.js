@@ -1,8 +1,8 @@
 import crypto from 'crypto';
+import { evaluateSignatureBiometrics } from '../../api/_didit-kyc.js';
 import {
   getRawRequestBody,
   getSupabaseAdmin,
-  mocksAreAllowed,
   readJsonBody,
   sendInternalError,
   setCorsHeaders
@@ -11,21 +11,44 @@ import {
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{6,200}$/;
 const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024;
 
-function signatureHeader(req) {
-  const raw = String(req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'] || '');
-  return raw.split(',')[0].replace(/^(sha256|v1)=/i, '').trim();
+function sortObjectKeys(value) {
+  if (Array.isArray(value)) return value.map(sortObjectKeys);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((result, key) => {
+      result[key] = sortObjectKeys(value[key]);
+      return result;
+    }, {});
+  }
+  return value;
 }
 
-function verifyDiditSignature(req) {
+function safeSignatureEqual(expected, received) {
+  if (!/^[a-f0-9]{64}$/i.test(received || '')) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'));
+}
+
+function verifyDiditSignature(req, body) {
   const secret = String(process.env.DIDIT_SIGNATURE_WEBHOOK_SECRET || process.env.DIDIT_WEBHOOK_SECRET || '').trim();
-  if (!secret) {
-    return mocksAreAllowed() && process.env.ALLOW_INSECURE_WEBHOOKS === 'true';
+  if (!secret) return false;
+  const timestamp = Number(req.headers['x-timestamp']);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isSafeInteger(timestamp) || Math.abs(now - timestamp) > 300 || Number(body?.timestamp) !== timestamp) return false;
+
+  const signatureV2 = String(req.headers['x-signature-v2'] || '').trim();
+  if (signatureV2) {
+    const canonical = JSON.stringify(sortObjectKeys(body));
+    const expectedV2 = crypto.createHmac('sha256', secret).update(canonical, 'utf8').digest('hex');
+    if (safeSignatureEqual(expectedV2, signatureV2)) return true;
   }
-  const body = getRawRequestBody(req);
-  const provided = signatureHeader(req);
-  if (!body || !provided || !/^[a-f0-9]{64}$/i.test(provided)) return false;
-  const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(provided, 'hex'), Buffer.from(expected, 'hex'));
+
+  const raw = getRawRequestBody(req);
+  const provided = String(req.headers['x-didit-signature'] || req.headers['x-signature'] || req.headers['webhook-signature'] || '')
+    .split(',')[0]
+    .replace(/^(sha256|v1)=/i, '')
+    .trim();
+  if (!raw) return false;
+  const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+  return safeSignatureEqual(expected, provided);
 }
 
 function parseVendorData(value) {
@@ -36,14 +59,6 @@ function parseVendorData(value) {
   } catch {
     return null;
   }
-}
-
-function approvedStatus(value) {
-  return ['approved', 'success', 'passed'].includes(String(value || '').toLowerCase());
-}
-
-function declinedStatus(value) {
-  return ['declined', 'rejected', 'failed'].includes(String(value || '').toLowerCase());
 }
 
 function ocrData(body) {
@@ -78,12 +93,14 @@ export default async function webhookDiditHandler(req, res) {
 
   try {
     const body = await readJsonBody(req, { maxBytes: 8 * 1024 * 1024 });
-    if (!verifyDiditSignature(req)) return res.status(401).json({ ok: false, error: 'Invalid webhook signature.' });
+    if (!verifyDiditSignature(req, body)) return res.status(401).json({ ok: false, error: 'Invalid webhook signature.' });
 
     const sessionId = String(body.session_id || body.sessionId || body.id || '');
     if (!SESSION_ID_PATTERN.test(sessionId)) return res.status(400).json({ ok: false, error: 'Invalid session id.' });
-    const status = String(body.status || body.decision?.status || '').toLowerCase();
     const vendor = parseVendorData(body.vendor_data || body.vendorData);
+    const expectedWorkflow = String(process.env.DIDIT_WORKFLOW_ID_SIGNATURE || process.env.DIDIT_SIGNATURE_WORKFLOW_ID || '').trim();
+    const assessment = evaluateSignatureBiometrics(body, expectedWorkflow);
+    const status = assessment.status;
 
     const supabase = getSupabaseAdmin();
     const { data: signature, error: signatureError } = await supabase
@@ -104,13 +121,14 @@ export default async function webhookDiditHandler(req, res) {
       return res.status(200).json({ ok: true, idempotent: true });
     }
 
-    const approved = approvedStatus(status);
-    const declined = declinedStatus(status);
+    const approved = status === 'approved';
+    const declined = status === 'declined';
     const nextState = approved ? 'biometria_aprobada' : (declined ? 'biometria_rechazada' : 'biometria_pendiente');
     const scores = {
-      decision_status: status || 'pending',
-      face_match_score: body.decision?.face_match?.score ?? body.features?.face_match?.score ?? null,
-      liveness_status: body.decision?.liveness?.status || body.features?.liveness?.status || null,
+      decision_status: status,
+      workflow_id: assessment.workflowId,
+      workflow_matches: assessment.workflowMatches,
+      liveness_status: assessment.checks.liveness ? 'approved' : 'unverified',
       processed_at: new Date().toISOString()
     };
 

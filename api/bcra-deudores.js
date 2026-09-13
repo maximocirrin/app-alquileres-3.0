@@ -1,4 +1,5 @@
 import {
+  consumeRateLimit,
   getAuthenticatedUser,
   getSupabaseAdmin,
   parsePositiveInteger,
@@ -7,6 +8,7 @@ import {
   sendForbidden,
   sendInternalError,
   sendOriginForbidden,
+  sendRateLimited,
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
@@ -79,6 +81,9 @@ export default async function handler(req, res) {
     if (!/^\d{11}$/.test(cuit)) return res.status(400).json({ error: 'Invalid CUIT.' });
 
     const supabase = getSupabaseAdmin();
+    if (!await consumeRateLimit(supabase, 'bcra', profile.id_perfil, 10, 60 * 60)) {
+      return sendRateLimited(res);
+    }
     const passport = await ownPassport(supabase, profile.id_perfil, body.pasaporteId || body.pasaporte_id);
     if (!passport) return res.status(404).json({ error: 'Passport not found.' });
     if (!passport.cuit || String(passport.cuit).replace(/\D/g, '') !== cuit) {
