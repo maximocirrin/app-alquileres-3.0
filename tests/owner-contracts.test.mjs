@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+process.env.SUPABASE_URL = 'https://owner-contracts-test.supabase.co';
+process.env.SUPABASE_ANON_KEY = 'public-test-key';
+process.env.NODE_ENV = 'test';
+
 const {
-  default: ownerContracts,
   getOwnerContractsForProfile,
   normalizeOwnerContract
-} = await import('../api/owner-contracts.js');
+} = await import('../lib/owner-contracts.js');
+const { default: payments } = await import('../api/pagos.js');
 
 function response() {
   return {
@@ -121,10 +125,11 @@ test('constrains the service-role query to the authenticated owner profile', asy
   assert.deepEqual(calls.find(([method]) => method === 'order'), ['order', 'id_contrato', { ascending: false }]);
 });
 
-test('rejects an unauthenticated owner-contract request before creating a service client', async () => {
+test('rejects an unauthenticated consolidated owner-contract request before creating a service client', async () => {
   const res = response();
-  await ownerContracts({
+  await payments({
     method: 'GET',
+    query: { action: 'owner-contracts' },
     headers: { origin: 'http://127.0.0.1:5500' }
   }, res);
 

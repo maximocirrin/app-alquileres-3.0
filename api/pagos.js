@@ -13,6 +13,7 @@ import {
   sendUnauthorized,
   setCorsHeaders
 } from './_auth.js';
+import { getOwnerContractsForProfile } from '../lib/owner-contracts.js';
 
 const MAX_REJECTION_REASON_LENGTH = 500;
 
@@ -210,6 +211,11 @@ async function handleGet(req, res, supabase, profile) {
   });
 }
 
+async function handleOwnerContractsGet(res, supabase, profile) {
+  const contracts = await getOwnerContractsForProfile(supabase, profile.id_perfil);
+  return res.status(200).json({ ok: true, data: { contracts } });
+}
+
 async function handleReport(res, body, supabase, profile) {
   const paymentId = parsePositiveInteger(body.id_pago ?? body.idPago);
   const contractInput = optionalId(body.id_contrato ?? body.idContrato);
@@ -335,6 +341,9 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Cache-Control', 'no-store');
+  const queryAction = typeof req.query?.action === 'string'
+    ? req.query.action.trim().toLowerCase()
+    : '';
 
   try {
     const { user, profile, error: authError, status: authStatus, code: authCode } = await getAuthenticatedUser(req);
@@ -346,7 +355,12 @@ export default async function handler(req, res) {
     if (!requireProfile(profile)) return sendForbidden(res, 'No se encontró un perfil válido para esta cuenta.');
 
     const supabase = getSupabaseAdmin();
-    if (req.method === 'GET') return await handleGet(req, res, supabase, profile);
+    if (req.method === 'GET') {
+      if (queryAction === 'owner-contracts') {
+        return await handleOwnerContractsGet(res, supabase, profile);
+      }
+      return await handleGet(req, res, supabase, profile);
+    }
 
     let body;
     try {
@@ -369,6 +383,6 @@ export default async function handler(req, res) {
       message: 'La acción debe ser report o review.'
     });
   } catch (error) {
-    return sendInternalError(res, 'pagos', error);
+    return sendInternalError(res, queryAction === 'owner-contracts' ? 'owner-contracts' : 'pagos', error);
   }
 }
