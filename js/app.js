@@ -13022,7 +13022,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
                         <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-primary dark:text-red-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-primary dark:bg-red-500"></span> Para Propietarios
+                                <span class="w-2 h-2 rounded-full bg-primary dark:bg-red-500"></span> Propietarios
                             </h4>
                             <span class="material-symbols-outlined text-primary dark:text-red-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
                         </button>
@@ -13093,7 +13093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
                         <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Para Inquilinos
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Inquilinos
                             </h4>
                             <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
                         </button>
@@ -13155,7 +13155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="landing-menu__section border-b border-zinc-200 dark:border-zinc-800 py-1.5">
                         <button type="button" class="drawer-accordion-btn w-full flex items-center justify-between py-1 text-left cursor-pointer group select-none">
                             <h4 class="font-headline text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-blue-900 dark:bg-blue-500"></span> Para Corredores & Inmobiliarias
+                                <span class="w-2 h-2 rounded-full bg-blue-900 dark:bg-blue-500"></span> Corredores & Inmobiliarias
                             </h4>
                             <span class="material-symbols-outlined text-blue-900 dark:text-blue-400 text-lg transition-transform duration-300 transform accordion-chevron">expand_more</span>
                         </button>

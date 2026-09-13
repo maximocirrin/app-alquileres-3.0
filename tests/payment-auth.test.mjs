@@ -6,7 +6,7 @@ process.env.SUPABASE_URL = 'https://payment-auth-test.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'public-test-key';
 process.env.NODE_ENV = 'test';
 delete process.env.ALLOWED_ORIGINS;
-const { getAuthenticatedUser } = await import('../api/_auth.js');
+const { getAuthenticatedUser, getContractForProfile } = await import('../api/_auth.js');
 const { default: payments } = await import('../api/pagos.js');
 const realFetch = globalThis.fetch;
 const realConsoleError = console.error;
@@ -99,4 +99,39 @@ test('profile lookup outage does not become a login failure', async () => {
   await payments(request(), res);
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.error, 'PROFILE_SERVICE_UNAVAILABLE');
+});
+
+test('self-assigned contract does not grant either payment role', async () => {
+  const contract = {
+    id_contrato: 62,
+    id_propiedad: 10,
+    id_perfil_inquilino: 42,
+    id_perfil_propietario: 42
+  };
+  const query = {
+    select(columns) {
+      assert.equal(columns, 'id_contrato, id_propiedad, id_perfil_inquilino, id_perfil_propietario');
+      return this;
+    },
+    eq(column, value) {
+      assert.equal(column, 'id_contrato');
+      assert.equal(value, 62);
+      return this;
+    },
+    async maybeSingle() {
+      return { data: contract, error: null };
+    }
+  };
+  const supabase = {
+    from(table) {
+      assert.equal(table, 'Contrato');
+      return query;
+    }
+  };
+
+  const result = await getContractForProfile(supabase, 62, 42);
+
+  assert.equal(result.contract, contract);
+  assert.equal(result.role, null);
+  assert.equal(result.error, null);
 });

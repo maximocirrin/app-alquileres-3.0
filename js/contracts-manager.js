@@ -636,6 +636,21 @@
                 .select('*, Firma_contrato(*)')
                 .order('id_contrato', { ascending: false });
 
+            // A propietario cannot read Perfil(*) for the tenant under RLS.
+            // Reuse the minimal, owner-authorized identity DTO instead of
+            // weakening that policy or falling back to a fabricated label.
+            let ownerContractsById = new Map();
+            if (typeof window.DataManager?.getOwnerContracts === 'function') {
+                try {
+                    const ownerContracts = await window.DataManager.getOwnerContracts();
+                    ownerContractsById = new Map((ownerContracts || [])
+                        .map(contract => [Number(contract?.dbContractId || contract?.id_contrato), contract])
+                        .filter(([contractId]) => Number.isSafeInteger(contractId) && contractId > 0));
+                } catch (error) {
+                    console.warn('[ContractsManager] No se pudo obtener la identidad mínima de los inquilinos:', error);
+                }
+            }
+
             // 5. Consultar garantes y pasaportes de Supabase (evitando ambigüedad FK en PostgREST)
             let dbGarantes = [];
             try {
@@ -671,6 +686,8 @@
 
                     const sol = (solicitudes || []).find(s => s.id_publicacion === dbC.id_publicacion || s.id_perfil === dbC.id_perfil_inquilino);
                     const inqPerfil = profilesMap.get(dbC.id_perfil_inquilino) || sol?.Perfil || {};
+                    const authorizedContract = ownerContractsById.get(Number(dbC.id_contrato));
+                    const authorizedTenant = authorizedContract?.tenant || {};
                     const propOwnerId = prop.id_perfil_propietario || dbC.id_perfil_propietario;
                     const ownerPerfil = profilesMap.get(dbC.id_perfil_propietario) || (propOwnerId ? profilesMap.get(propOwnerId) : null) || {};
 
@@ -686,10 +703,11 @@
                     ) || (dbC.Firma_contrato || []).find(f => ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante));
                     const ownerFirmado = Boolean(ownerSignature && (ownerSignature.estado_firma === 'sellada' || ownerSignature.estado_firma === 'firmada' || ownerSignature.estado_firma === 'completada' || ownerSignature.didit_status === 'APPROVED'));
 
-                    const tenantName = inqPerfil.nombre_completo || 'Inquilino Titular';
+                    const tenantName = authorizedTenant.nombre_completo || authorizedTenant.name || authorizedContract?.tenant_name || inqPerfil.nombre_completo || 'Inquilino';
                     const tenantDni = inqPerfil.dni || '';
                     const tenantCuil = (typeof window.calcularCUIL === 'function' && tenantDni) ? window.calcularCUIL(tenantDni, 'M') : (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
-                    const tenantEmail = inqPerfil.mail || 'inquilino@email.com';
+                    const tenantEmail = authorizedTenant.mail || authorizedTenant.email || authorizedContract?.tenant_email || inqPerfil.mail || 'inquilino@email.com';
+                    const tenantPhone = authorizedTenant.telefono || authorizedTenant.phone || authorizedContract?.tenant_phone || inqPerfil.telefono || sol?.telefono || '+54 9 11';
 
                     const ownerName = ownerPerfil.nombre_completo || 'Propietario Titular';
                     const ownerDni = ownerPerfil.dni || '';
@@ -864,7 +882,7 @@
                             id: finalTenantProfileId,
                             name: tenantName,
                             email: tenantEmail,
-                            phone: inqPerfil.telefono || sol?.telefono || '+54 9 11',
+                            phone: tenantPhone,
                             cuil: tenantCuil,
                             dni: tenantDni,
                             ip: tenantSignature?.ip_origen || '',
@@ -1402,7 +1420,7 @@
                     profileId: Number(app.tenant_id || app.id_perfil || 14),
                     id_perfil: Number(app.tenant_id || app.id_perfil || 14),
                     id: Number(app.tenant_id || app.id_perfil || 14),
-                    name: app.tenant_name || 'Inquilino Titular',
+                    name: app.tenant_name || app.nombre_completo || app.name || 'Inquilino',
                     email: app.tenant_email || 'inquilino@email.com',
                     phone: app.tenant_phone || '+54 9 261 000-0000',
                     cuil: tenantCuil,

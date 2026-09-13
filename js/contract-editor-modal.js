@@ -344,7 +344,7 @@
             // data from a DNI in the browser. Contract participants are resolved
             // by the server when the contract is created.
 
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || contract.tenant_name || 'Inquilino';
             tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
             const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
             const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';
@@ -1556,7 +1556,7 @@
             const applicant = this._currentOptions?.applicant || {};
             const property = this._currentOptions?.property || {};
             const contract = this._currentOptions?.contract || {};
-            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || 'Inquilino Titular';
+            const tenantName = applicant.tenant_name || applicant.name || contract.tenant?.name || contract.tenant_name || 'Inquilino';
             const tenantDni = applicant.tenant_dni || applicant.dni || contract.tenant?.dni || '';
             const tenantCuil = applicant.tenant_cuit || applicant.cuit || (tenantDni ? `20-${tenantDni.replace(/\D/g,'')}-7` : '');
             const tenantEmail = applicant.tenant_email || applicant.email || contract.tenant?.email || 'inquilino@email.com';

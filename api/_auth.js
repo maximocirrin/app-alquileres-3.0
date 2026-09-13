@@ -295,8 +295,15 @@ export async function getContractForProfile(supabase, contractId, profileId) {
     .maybeSingle();
 
   if (error || !contract) return { contract: null, role: null, error };
-  if (Number(contract.id_perfil_inquilino) === profile) return { contract, role: 'inquilino', error: null };
-  if (Number(contract.id_perfil_propietario) === profile) return { contract, role: 'propietario', error: null };
+  const isTenant = Number(contract.id_perfil_inquilino) === profile;
+  const isOwner = Number(contract.id_perfil_propietario) === profile;
+
+  // A malformed self-assigned contract must never let one account both report
+  // and approve its own payment. Treat it as invalid until the contract data
+  // is corrected instead of choosing a role by field order.
+  if (isTenant && isOwner) return { contract, role: null, error: null };
+  if (isTenant) return { contract, role: 'inquilino', error: null };
+  if (isOwner) return { contract, role: 'propietario', error: null };
   return { contract, role: null, error: null };
 }
 

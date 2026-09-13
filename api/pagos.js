@@ -145,7 +145,8 @@ async function paymentStatus(supabase, contractId) {
     .from('Pago')
     .select('id_pago, id_contrato, id_metodo_pago, monto, fecha_vencimiento, fecha_pago, periodo, interes_perdonado')
     .eq('id_contrato', contractId)
-    .order('id_pago', { ascending: false });
+    .order('id_pago', { ascending: false })
+    .limit(1);
   if (paymentsError) throw paymentsError;
 
   const paymentIds = (payments || [])
@@ -158,7 +159,8 @@ async function paymentStatus(supabase, contractId) {
     .select('id_solicitud_pago, id_pago, estado, metodo_pago, monto_informado, solicitado_en, resuelto_en, motivo_rechazo')
     .in('id_pago', paymentIds)
     .order('solicitado_en', { ascending: false })
-    .order('id_solicitud_pago', { ascending: false });
+    .order('id_solicitud_pago', { ascending: false })
+    .limit(1);
   if (requestsError) throw requestsError;
 
   const latestRequestByPayment = new Map();
@@ -201,6 +203,8 @@ async function handleGet(req, res, supabase, profile) {
     ok: true,
     data: {
       id_contrato: contractId,
+      role,
+      can_review: role === 'propietario',
       pagos
     }
   });

@@ -51,6 +51,14 @@ function paymentApiUrl() {
     return '/api/pagos';
 }
 
+function ownerContractsApiUrl() {
+    const { protocol, hostname, port } = window.location;
+    if (protocol === 'http:' && ['localhost', '127.0.0.1'].includes(hostname) && port === '5500') {
+        return `http://${hostname}:3000/api/owner-contracts`;
+    }
+    return '/api/owner-contracts';
+}
+
 async function fetchPaymentApi(query = '', options = {}) {
     const url = paymentApiUrl();
     const headers = await authenticatedApiHeaders();
@@ -65,6 +73,28 @@ async function fetchPaymentApi(query = '', options = {}) {
     } catch (error) {
         if (url.startsWith('http:')) {
             throw new Error('No se pudo conectar con el servidor de pagos. Iniciá el backend con npm start (puerto 3000) y volvé a intentar.');
+        }
+        throw error;
+    }
+}
+
+async function fetchOwnerContractsApi() {
+    const headers = await authenticatedApiHeaders();
+    if (!headers.Authorization) {
+        throw new Error('Tu sesión no está disponible. Volvé a iniciar sesión para consultar tus alquileres.');
+    }
+
+    const url = ownerContractsApiUrl();
+    try {
+        const response = await fetch(url, { headers });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.contracts)) {
+            throw new Error(payload?.message || payload?.error || 'No se pudieron consultar los alquileres.');
+        }
+        return payload.data.contracts;
+    } catch (error) {
+        if (url.startsWith('http:')) {
+            throw new Error('No se pudo conectar con el servidor de alquileres. Iniciá el backend con npm start (puerto 3000) y volvé a intentar.');
         }
         throw error;
     }
@@ -119,64 +149,36 @@ function safeExternalImageUrl(value) {
 
 var DataManager = {
     // Resolve only a server-provisioned profile tied to the immutable Auth ID.
-    // Browser code must never create a profile, assign a role, or mark KYC valid.
+    // Do not fall back to email here: the API authorizes payment actions by
+    // user_id, so an email match could make the UI render another account's
+    // contracts while the server (correctly) refuses the action.
     _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
         try {
+            const cachedProfile = DataManager._authenticatedProfileCache;
+            if (cachedProfile?.id && cachedProfile.expiresAt > Date.now()) {
+                return cachedProfile.id;
+            }
             const { data: userData, error: userError } = await window.supabaseClient.auth.getUser();
             const authUser = userData?.user;
             if (userError || !authUser) return null;
 
             // 1. Resolve by authenticated user_id
-            let { data: profile, error } = await window.supabaseClient
+            const { data: profile } = await window.supabaseClient
                 .from('Perfil')
                 .select('id_perfil')
                 .eq('user_id', authUser.id)
                 .maybeSingle();
 
             if (profile?.id_perfil) {
+                DataManager._authenticatedProfileCache = {
+                    id: profile.id_perfil,
+                    expiresAt: Date.now() + 5 * 60_000
+                };
                 return profile.id_perfil;
             }
-
-            // 2. Fallback: match by email and link user_id
-            if (authUser.email) {
-                const { data: profByEmail } = await window.supabaseClient
-                    .from('Perfil')
-                    .select('id_perfil, user_id')
-                    .eq('mail', authUser.email)
-                    .maybeSingle();
-
-                if (profByEmail?.id_perfil) {
-                    if (!profByEmail.user_id) {
-                        try {
-                            await window.supabaseClient
-                                .from('Perfil')
-                                .update({ user_id: authUser.id })
-                                .eq('id_perfil', profByEmail.id_perfil);
-                        } catch (e) { }
-                    }
-                    return profByEmail.id_perfil;
-                }
-            }
-
-            // 3. Fallback: provision basic client profile tied to this auth user
-            try {
-                const { data: newProf } = await window.supabaseClient
-                    .from('Perfil')
-                    .insert([{
-                        user_id: authUser.id,
-                        mail: authUser.email,
-                        nombre_completo: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario',
-                        id_tipo_perfil: 1
-                    }])
-                    .select('id_perfil')
-                    .maybeSingle();
-
-                if (newProf?.id_perfil) {
-                    return newProf.id_perfil;
-                }
-            } catch (e) { }
-
+            // Profile provisioning/linking belongs to the authenticated server
+            // workflow. A browser must never claim an existing profile.
             return null;
         } catch (e) {
             console.error('Error al resolver el perfil autenticado:', e);
@@ -253,6 +255,9 @@ var DataManager = {
             sessionStorage.removeItem('vivat_contracts_return_url');
             window.hasActivePassport = false;
             window.currentPasaporteId = null;
+            DataManager._authenticatedProfileCache = null;
+            DataManager._ownerContractsCache = null;
+            DataManager._currentPaymentCache = null;
         } catch (e) {}
         if (window.supabaseClient) {
             const { error } = await window.supabaseClient.auth.signOut();
@@ -2445,61 +2450,80 @@ var DataManager = {
         }
     },
 
-    getOwnerContracts: async function(targetProfileId = null) {
-        let contractsList = [];
-        try {
-            const raw = localStorage.getItem('vivat_contracts');
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) {
-                    contractsList = parsed.filter(c => c && c.id && !['CTR-2026-0891', 'CTR-2026-0742', 'CTR-2026-0610', 'CTR-2026-0925', 'CTR-2026-0518'].includes(c.id) && c.tenant?.name !== 'Carlos Gómez' && c.tenant?.name !== 'Lucía Fernández');
-                }
-            }
-        } catch(e) {}
-
-        if (!window.supabaseClient) {
-            return contractsList;
-        }
+    getOwnerContracts: async function(targetProfileId = null, forceRefresh = false) {
+        if (!window.supabaseClient) return [];
 
         try {
-            let profileId = targetProfileId;
-            if (!profileId && window.DataManager._getOrCreateProfile) {
-                profileId = await window.DataManager._getOrCreateProfile();
-            }
-
-            if (!profileId) {
+            const authenticatedProfileId = window.DataManager._getOrCreateProfile
+                ? await window.DataManager._getOrCreateProfile()
+                : null;
+            if (!authenticatedProfileId) {
                 return [];
             }
 
-            let query = window.supabaseClient
-                .from('Contrato')
-                .select(`
-                    *,
+            // This dashboard is for the signed-in owner only. Do not turn an
+            // optional caller argument into an authorization bypass.
+            if (targetProfileId !== null && targetProfileId !== undefined &&
+                Number(targetProfileId) !== Number(authenticatedProfileId)) {
+                return [];
+            }
+            const profileId = authenticatedProfileId;
+
+            const cacheKey = String(profileId);
+            const cached = DataManager._ownerContractsCache;
+            if (!forceRefresh && cached?.key === cacheKey && cached.expiresAt > Date.now()) {
+                return cached.value;
+            }
+
+            // The server verifies ownership and returns the minimal identity
+            // data needed by this dashboard. Direct joins to Perfil are not
+            // viable here: RLS correctly hides the tenant's full profile.
+            let data = null;
+            try {
+                data = await fetchOwnerContractsApi();
+            } catch (apiError) {
+                console.warn('[DataManager] No se pudo usar la API de alquileres; se usará una consulta local acotada.', apiError);
+            }
+
+            // Keeps local development usable when the Express server is not
+            // running. It intentionally does not join Perfil or return any
+            // local-only contracts that the authenticated owner cannot prove.
+            if (!Array.isArray(data)) {
+                const { data: directData, error } = await window.supabaseClient
+                    .from('Contrato')
+                    .select(`
+                    id_contrato, id_propiedad, id_publicacion,
+                    id_perfil_propietario, id_perfil_inquilino,
+                    fecha_inicio_contrato, fecha_fin_contrato,
+                    monto_cierre, monto_deposito, deposito_devuelto,
+                    id_moneda, id_Indice, periodo_aumento_meses,
+                    dia_vencimiento_mensual, tasa_punitoria_diaria, alias_cbu,
+                    url_contrato_original_pdf, url_contrato_final_pdf,
                     Propiedad (
-                        *,
-                        Publicacion (*, Multimedia (*)),
-                        Propiedad_caracteristica (
-                            Caracteristica (*)
-                        )
+                        calle, numero, piso_dpto, expensas_mensuales,
+                        Publicacion (id_publicacion, descripcion, precio, Multimedia (url_archivo, orden_visualizacion))
                     ),
-                    Inquilino:Perfil!id_perfil_inquilino (*),
-                    Propietario:Perfil!id_perfil_propietario (*),
-                    Firma_contrato (*),
-                    Historial_Estado_Contrato (*)
+                    Firma_contrato (rol_firmante, estado_firma, didit_status),
+                    Historial_Estado_Contrato (id_historial_contrato, id_estado_contrato, fecha_inicio)
                 `)
                 .order('id_contrato', { ascending: false })
                 .eq('id_perfil_propietario', profileId);
 
-            const { data, error } = await query;
+                if (error) throw error;
+                data = directData || [];
+            }
 
-            if (!error && Array.isArray(data) && data.length > 0) {
+            if (Array.isArray(data)) {
                 const dbContracts = data.map(item => {
-                    const prop = item.Propiedad || {};
-                    const pub = Array.isArray(prop.Publicacion) ? prop.Publicacion[0] : prop.Publicacion;
+                    const prop = item.property || item.Propiedad || {};
+                    const pubSource = item.publication || prop.Publicacion;
+                    const pub = Array.isArray(pubSource) ? pubSource[0] : pubSource;
                     const media = pub?.Multimedia || [];
-                    const photos = media.length > 0 ? Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean))) : ['img/hero-marketplace.jpg'];
-                    const inq = item.Inquilino || {};
-                    const propOwner = item.Propietario || {};
+                    const photos = Array.isArray(item.photos) && item.photos.length > 0
+                        ? item.photos.filter(Boolean)
+                        : Array.from(new Set(media.map(m => m.url_archivo).filter(Boolean)));
+                    const inq = item.tenant || item.Inquilino || {};
+                    const propOwner = item.owner || item.Propietario || {};
 
                     const cleanTitle = pub?.descripcion 
                         ? pub.descripcion.split(' | Detalles: ')[0] 
@@ -2516,21 +2540,22 @@ var DataManager = {
                             .replace(/HÁBITAT/gi, (m) => m === m.toUpperCase() ? 'VIVAT' : (m[0] === m[0].toUpperCase() ? 'Vivat' : 'vivat'));
                     };
 
-                    const inqName = cleanVivatVal(inq.nombre_completo, 'Inquilino Titular');
-                    const inqEmail = cleanVivatVal(inq.mail, 'inquilino@email.com');
-                    const inqPhone = inq.telefono || '+54 9 11 0000-0000';
+                    const inqName = cleanVivatVal(inq.nombre_completo, '');
+                    const inqEmail = cleanVivatVal(inq.mail, '');
+                    const inqPhone = inq.telefono || '';
                     const inqDni = inq.dni || '';
 
-                    const ownerName = cleanVivatVal(propOwner.nombre_completo, 'Propietario Titular');
-                    const ownerEmail = cleanVivatVal(propOwner.mail, 'propietario@email.com');
-                    const ownerPhone = propOwner.telefono || '+54 9 261 000-0000';
+                    const ownerName = cleanVivatVal(propOwner.nombre_completo, '');
+                    const ownerEmail = cleanVivatVal(propOwner.mail, '');
+                    const ownerPhone = propOwner.telefono || '';
                     const ownerDni = propOwner.dni || '';
 
-                    const tenantFirmado = (item.Firma_contrato || []).some(f => 
+                    const signatures = item.signatures || item.Firma_contrato || [];
+                    const tenantFirmado = signatures.some(f =>
                         ['TENANT', 'INQUILINO', 'inquilino', 'tenant'].includes(f.rol_firmante) &&
                         (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
                     );
-                    const ownerFirmado = (item.Firma_contrato || []).some(f => 
+                    const ownerFirmado = signatures.some(f =>
                         ['OWNER', 'PROPIETARIO', 'propietario', 'owner'].includes(f.rol_firmante) &&
                         (['sellada', 'completada', 'firmada'].includes(f.estado_firma) || f.didit_status === 'APPROVED')
                     );
@@ -2540,8 +2565,8 @@ var DataManager = {
                     else if (tenantFirmado) status = 'WAITING_OWNER';
                     else if (ownerFirmado) status = 'WAITING_TENANT';
 
-                    const finalOwnerProfileId = Number(item.id_perfil_propietario || prop.id_perfil_propietario || profileId || 6);
-                    const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil || 14);
+                    const finalOwnerProfileId = Number(item.id_perfil_propietario || profileId) || null;
+                    const finalTenantProfileId = Number(item.id_perfil_inquilino || inq.id_perfil) || null;
 
                     let extraClauses = item.clausulas_adicionales || {};
                     if (typeof extraClauses === 'string') {
@@ -2558,7 +2583,7 @@ var DataManager = {
                     const rentFromDb = Number(item.monto_cierre || extraClauses.monthlyRent || pub?.precio || 450000);
 
                     // Detectar historial y finalización
-                    const histList = Array.isArray(item.Historial_Estado_Contrato) ? item.Historial_Estado_Contrato : [];
+                    const histList = Array.isArray(item.history) ? item.history : (Array.isArray(item.Historial_Estado_Contrato) ? item.Historial_Estado_Contrato : []);
                     const latestHist = histList.slice().sort((a, b) => (Number(b.id_historial_contrato) || 0) - (Number(a.id_historial_contrato) || 0))[0];
                     const idEstadoContrato = latestHist ? Number(latestHist.id_estado_contrato) : Number(extraClauses.id_estado_contrato || (status === 'SIGNED_AND_SEALED' ? 1 : 5));
 
@@ -2589,8 +2614,8 @@ var DataManager = {
                         id_perfil_inquilino: finalTenantProfileId,
                         property_title: cleanTitle,
                         property_address: cleanAddress,
-                        property_image: photos[0] || 'img/hero-marketplace.jpg',
-                        photos: photos,
+                        property_image: item.property_image || photos[0] || 'img/hero-marketplace.jpg',
+                        photos: photos.length > 0 ? photos : ['img/hero-marketplace.jpg'],
                         monthly_rent: rentFromDb,
                         monthlyRent: rentFromDb,
                         currency: currencyFromDb,
@@ -2610,11 +2635,11 @@ var DataManager = {
                         broker_commission_percent: 4.15,
                         start_date: item.fecha_inicio_contrato || new Date().toISOString().split('T')[0],
                         end_date: item.fecha_fin_contrato || new Date(Date.now() + 86400000 * 365 * 2).toISOString().split('T')[0],
-                        tenant_name: inqName,
+                        tenant_name: inqName || 'Inquilino',
                         tenant_email: inqEmail,
                         tenant_phone: inqPhone,
                         tenant_dni: inqDni,
-                        owner_name: ownerName,
+                        owner_name: ownerName || 'Propietario',
                         owner_email: ownerEmail,
                         owner_phone: ownerPhone,
                         owner_dni: ownerDni,
@@ -2636,19 +2661,19 @@ var DataManager = {
                         customClauses: customClausesFromDb,
                         activeClausesList: activeClausesFromDb,
                         clausulas_adicionales: extraClauses,
-                        has_contract: Boolean(
+                        has_contract: Boolean(item.has_contract || (
                             item.url_contrato_final_pdf || 
                             item.url_contrato_original_pdf || 
                             item.hash_original_sha256 || 
                             (item.clausulas_adicionales && typeof item.clausulas_adicionales === 'object' && Object.keys(item.clausulas_adicionales).length > 0) ||
                             tenantFirmado ||
                             ownerFirmado
-                        ),
+                        )),
                         tenant: {
                             role: 'TENANT',
                             profileId: finalTenantProfileId,
                             id_perfil: finalTenantProfileId,
-                            name: inqName,
+                            name: inqName || 'Inquilino',
                             email: inqEmail,
                             phone: inqPhone,
                             dni: inqDni,
@@ -2658,7 +2683,7 @@ var DataManager = {
                             role: 'OWNER',
                             profileId: finalOwnerProfileId,
                             id_perfil: finalOwnerProfileId,
-                            name: ownerName,
+                            name: ownerName || 'Propietario',
                             email: ownerEmail,
                             phone: ownerPhone,
                             dni: ownerDni,
@@ -2667,50 +2692,10 @@ var DataManager = {
                     };
                 });
 
-                // Combinar contratos de base de datos con los contratos locales de localStorage
-                const mergedMap = new Map();
-                (contractsList || []).forEach(c => {
-                    if (c && c.id) mergedMap.set(String(c.id), c);
-                });
-                (dbContracts || []).forEach(c => {
-                    if (c && c.id) {
-                        if (mergedMap.has(String(c.id))) {
-                            const local = mergedMap.get(String(c.id)) || {};
-                            const localFinalized = Boolean(local.is_finalized || local.isFinalized || local.status === 'finalizado' || local.id_estado_contrato === 2);
-                            const finalIsFinalized = c.is_finalized || localFinalized;
-                            const mergedItem = {
-                                ...local,
-                                ...c,
-                                dbContractId: c.dbContractId,
-                                is_finalized: finalIsFinalized,
-                                isFinalized: finalIsFinalized,
-                                status: finalIsFinalized ? 'finalizado' : (c.status || local.status),
-                                id_estado_contrato: finalIsFinalized ? 2 : (c.id_estado_contrato || local.id_estado_contrato),
-                                finalized_at: c.finalized_at || local.finalized_at || null,
-                                termination_reason: c.termination_reason || local.termination_reason || null,
-                                termination_notes: c.termination_notes || local.termination_notes || null,
-                                deposit_status: c.deposit_status || local.deposit_status || null,
-                                clauses: (c.clauses && Object.keys(c.clauses).length > 0) ? c.clauses : (local.clauses || local.clausulas_adicionales || {}),
-                                customClauses: (c.customClauses && c.customClauses.length > 0) ? c.customClauses : (local.customClauses || []),
-                                activeClausesList: (c.activeClausesList && c.activeClausesList.length > 0) ? c.activeClausesList : (local.activeClausesList || []),
-                                durationMonths: c.durationMonths || local.durationMonths || 24,
-                                duration_months: c.durationMonths || local.durationMonths || 24,
-                                currency: c.currency || local.currency || 'ARS',
-                                adjustmentIndex: c.adjustmentIndex || local.adjustmentIndex || 'IPC',
-                                adjustmentFrequencyMonths: c.adjustmentFrequencyMonths || local.adjustmentFrequencyMonths || 3,
-                                paymentDueDay: c.paymentDueDay || local.paymentDueDay || 10,
-                                aliasCbu: c.aliasCbu || local.aliasCbu || 'VIVAT.ALQUILER.MP'
-                            };
-                            mergedMap.set(String(c.id), mergedItem);
-                        } else {
-                            mergedMap.set(String(c.id), c);
-                        }
-                    }
-                });
-
-                const uniqueOwnerContracts = [];
-                const seenContractIds = new Set();
-                const sortedContracts = Array.from(mergedMap.values()).sort((a, b) => {
+                // The server response is the only source for owner contracts.
+                // Do not decorate it from localStorage: browser data can outlive
+                // a session and was the source of the false approval action.
+                const sortedContracts = (dbContracts || []).filter(c => c && c.id).sort((a, b) => {
                     const aFinalized = Boolean(a.is_finalized || a.status === 'finalizado') ? 1 : 0;
                     const bFinalized = Boolean(b.is_finalized || b.status === 'finalizado') ? 1 : 0;
                     if (aFinalized !== bFinalized) return aFinalized - bFinalized; // Activos primero
@@ -2720,29 +2705,20 @@ var DataManager = {
                     return (Number(b.dbContractId || b.id_contrato || 0)) - (Number(a.dbContractId || a.id_contrato || 0));
                 });
 
-                for (const c of sortedContracts) {
-                    const cKey = String(c.id || c.dbContractId || '');
-                    if (cKey && seenContractIds.has(cKey)) continue;
-                    if (cKey) seenContractIds.add(cKey);
-                    uniqueOwnerContracts.push(c);
-                }
-                return uniqueOwnerContracts;
+                DataManager._ownerContractsCache = {
+                    key: cacheKey,
+                    value: sortedContracts,
+                    expiresAt: Date.now() + 30_000
+                };
+                return sortedContracts;
             }
         } catch(e) {
             console.error("Error in getOwnerContracts:", e);
         }
 
-        // Si no hubo datos de supabase o falló, normalizar lista local
-        return (contractsList || []).map(c => {
-            const isFin = Boolean(c.is_finalized || c.isFinalized || c.status === 'finalizado' || c.id_estado_contrato === 2);
-            return {
-                ...c,
-                is_finalized: isFin,
-                isFinalized: isFin,
-                status: isFin ? 'finalizado' : (c.status || 'SIGNED_AND_SEALED'),
-                        id_estado_contrato: isFin ? 2 : (c.id_estado_contrato || 1)
-            };
-        });
+        // Do not fall back to an unscoped local cache on errors: it may belong
+        // to a prior user session and would recreate the authorization bug.
+        return [];
     },
 
     finalizeRental: async function (contractId, details = {}) {
@@ -3361,6 +3337,11 @@ var DataManager = {
         } catch (e) { }
     },
 
+    _invalidateCurrentPaymentCache: function (contractId) {
+        if (!contractId || !this._currentPaymentCache) return;
+        this._currentPaymentCache.delete(String(contractId));
+    },
+
     getCurrentPayment: async function (contractId, fallbackContract = null) {
         const resolveDbContractId = () => {
             const candidates = [
@@ -3433,10 +3414,11 @@ var DataManager = {
             due_date: defaultDueDate,
             status: 'pendiente',
             is_punitive_waived: false,
-            payment_request: null
+            payment_request: null,
+            can_review: false
         });
 
-        const toPayment = (paymentData, review = null) => {
+        const toPayment = (paymentData, review = null, access = null) => {
             const reviewStatus = String(review?.estado || '').toLowerCase();
             const status = paymentData.fecha_pago
                 ? 'pagado'
@@ -3462,40 +3444,62 @@ var DataManager = {
                 reviewed_at: review?.resuelto_en || null,
                 rejection_reason: review?.motivo_rechazo || null,
                 payment_request: review || null,
-                is_punitive_waived: Boolean(paymentData.interes_perdonado)
+                is_punitive_waived: Boolean(paymentData.interes_perdonado),
+                // This comes from the server-side contract role check. Never
+                // infer approval rights from the page the user happens to be
+                // viewing or from localStorage.
+                can_review: access?.can_review === true
             };
         };
 
         if (!dbContractId || !window.supabaseClient) return fallbackPayment();
 
-        try {
-            // The API is the authoritative source for review status. It also
-            // prevents stale localStorage from making a tenant's claim look
-            // like a confirmed payment on another device.
-            const apiResponse = await fetchPaymentApi(`?id_contrato=${encodeURIComponent(dbContractId)}`);
-            const apiPayload = await apiResponse.json().catch(() => ({}));
-            const apiPayments = apiPayload?.data?.pagos;
-            if (apiResponse.ok && Array.isArray(apiPayments)) {
-                if (apiPayments.length === 0) return fallbackPayment();
-                const paymentData = apiPayments[0];
-                return toPayment(paymentData, paymentData.solicitud || null);
+        const cache = this._currentPaymentCache || (this._currentPaymentCache = new Map());
+        const cacheKey = String(dbContractId);
+        const cached = cache.get(cacheKey);
+        const nowMs = Date.now();
+        if (cached?.value && cached.expiresAt > nowMs) return cached.value;
+        if (cached?.promise) return cached.promise;
+
+        const loadPayment = async () => {
+            try {
+                // The API is the authoritative source for review status. It also
+                // prevents stale localStorage from making a tenant's claim look
+                // like a confirmed payment on another device.
+                const apiResponse = await fetchPaymentApi(`?id_contrato=${encodeURIComponent(dbContractId)}`);
+                const apiPayload = await apiResponse.json().catch(() => ({}));
+                const apiPayments = apiPayload?.data?.pagos;
+                if (apiResponse.ok && Array.isArray(apiPayments)) {
+                    if (apiPayments.length === 0) return fallbackPayment();
+                    const paymentData = apiPayments[0];
+                    return toPayment(paymentData, paymentData.solicitud || null, apiPayload.data);
+                }
+
+                // A read-only fallback preserves the dashboard if the local API
+                // is unavailable, but intentionally cannot fabricate review state.
+                const { data, error } = await window.supabaseClient
+                    .from('Pago')
+                    .select('*')
+                    .eq('id_contrato', dbContractId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error || !data) return fallbackPayment();
+                return toPayment(data);
+            } catch (e) {
+                return fallbackPayment();
             }
+        };
 
-            // A read-only fallback preserves the dashboard if the local API
-            // is unavailable, but intentionally cannot fabricate review state.
-            const { data, error } = await window.supabaseClient
-                .from('Pago')
-                .select('*')
-                .eq('id_contrato', dbContractId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (error || !data) return fallbackPayment();
-            return toPayment(data);
-        } catch (e) {
-            return fallbackPayment();
-        }
+        const promise = loadPayment();
+        cache.set(cacheKey, { promise });
+        const result = await promise;
+        // Payment requests update through the API, so a short cache avoids a
+        // second fetch when a dashboard and the rental panel render together
+        // without masking a later approval/rejection.
+        cache.set(cacheKey, { value: result, expiresAt: Date.now() + 15_000 });
+        return result;
     },
 
     calculatePunitiveInterests: function (contract, payment) {
@@ -3562,6 +3566,7 @@ var DataManager = {
         if (window.supabaseClient && typeof paymentId === 'number') {
             try {
                 await window.supabaseClient.from('Pago').update({ interes_perdonado: true }).eq('id_pago', paymentId);
+                this._invalidateCurrentPaymentCache(cId);
             } catch (e) { }
         }
         return { id: paymentId, is_punitive_waived: true };
@@ -3587,6 +3592,7 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo informar el pago.');
         }
+        this._invalidateCurrentPaymentCache(contractDbId);
         return payload.data || null;
     },
 
@@ -3611,6 +3617,7 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo resolver la solicitud de pago.');
         }
+        this._invalidateCurrentPaymentCache(contractDbId);
         return payload.data || null;
     },
 
@@ -4605,23 +4612,26 @@ var DataManager = {
         };
 
         if (!window.supabaseClient) return defaults;
+        const cached = this._latestIndicesCache;
+        if (cached?.value && cached.expiresAt > Date.now()) return cached.value;
 
         try {
-            // 1. Obtener los últimos 6 meses de IPC (id_indice = 1)
-            const { data: ipcRows } = await window.supabaseClient
-                .from('Valor_Indice_Mensual')
-                .select('*')
-                .eq('id_indice', 1)
-                .order('fecha_publicacion', { ascending: false })
-                .limit(6);
-
-            // 2. Obtener los últimos 200 valores de ICL (id_indice = 2)
-            const { data: iclRows } = await window.supabaseClient
-                .from('Valor_Indice_Mensual')
-                .select('*')
-                .eq('id_indice', 2)
-                .order('fecha_publicacion', { ascending: false })
-                .limit(200);
+            // IPC and ICL are independent reads. Run them together and fetch
+            // only the two fields used to calculate the adjustment.
+            const [{ data: ipcRows }, { data: iclRows }] = await Promise.all([
+                window.supabaseClient
+                    .from('Valor_Indice_Mensual')
+                    .select('fecha_publicacion, valor_oficial')
+                    .eq('id_indice', 1)
+                    .order('fecha_publicacion', { ascending: false })
+                    .limit(6),
+                window.supabaseClient
+                    .from('Valor_Indice_Mensual')
+                    .select('fecha_publicacion, valor_oficial')
+                    .eq('id_indice', 2)
+                    .order('fecha_publicacion', { ascending: false })
+                    .limit(200)
+            ]);
 
             let ipcResult = defaults.ipc;
             if (ipcRows && ipcRows.length > 0) {
@@ -4696,7 +4706,11 @@ var DataManager = {
                 };
             }
 
-            return { ipc: ipcResult, icl: iclResult };
+            const result = { ipc: ipcResult, icl: iclResult };
+            // Index values change at most daily; avoid repeating the same two
+            // round trips every time the user switches between rentals.
+            this._latestIndicesCache = { value: result, expiresAt: Date.now() + 5 * 60_000 };
+            return result;
         } catch (err) {
             console.warn('[DataManager] Error obteniendo índices de Supabase, usando defaults:', err);
             return defaults;
@@ -4800,7 +4814,7 @@ var DataManager = {
     },
 
     // Tickets de Mantenimiento
-    getMaintenanceTickets: async function (targetProfileId = null, filterByUser = false) {
+    getMaintenanceTickets: async function (targetProfileId = null, filterByUser = false, contractId = null) {
         if (!window.supabaseClient) return [];
         try {
             let profileId = targetProfileId;
@@ -4811,7 +4825,12 @@ var DataManager = {
                 return [];
             }
 
-            const { data, error } = await window.supabaseClient
+            const requestedContractId = Number(contractId);
+            const scopedContractId = Number.isSafeInteger(requestedContractId) && requestedContractId > 0
+                ? requestedContractId
+                : null;
+
+            let query = window.supabaseClient
                 .from('Ticket_mantenimiento')
                 .select(`
                     *,
@@ -4825,11 +4844,17 @@ var DataManager = {
                 `)
                 .order('created_at', { ascending: false });
 
+            if (scopedContractId) {
+                query = query.eq('id_contrato', scopedContractId);
+            }
+
+            const { data, error } = await query;
+
             if (error || !data) return [];
 
             // If filtering by user, also get user's property addresses
             let userPropAddresses = [];
-            if (filterByUser && profileId) {
+            if (filterByUser && profileId && !scopedContractId) {
                 try {
                     const { data: userProps } = await window.supabaseClient
                         .from('Propiedad')
@@ -4842,14 +4867,16 @@ var DataManager = {
             }
 
             const rawList = data || [];
-            const filtered = (filterByUser && profileId) ? rawList.filter(t => {
+            const filtered = scopedContractId
+                ? rawList
+                : ((filterByUser && profileId) ? rawList.filter(t => {
                 if (Number(t.id_perfil) === Number(profileId)) return true;
                 const tAddr = (t.direccion_propiedad || '').toLowerCase().trim();
                 if (tAddr && userPropAddresses.some(addr => addr && (tAddr.includes(addr) || addr.includes(tAddr)))) {
                     return true;
                 }
                 return false;
-            }) : rawList;
+            }) : rawList);
 
             const statusMap = {
                 1: 'abierto',
