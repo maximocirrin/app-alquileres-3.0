@@ -213,13 +213,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
     <link rel="stylesheet" href="css/style.css?v=14">
-    <script>
-        const originalWarn = console.warn;
-        console.warn = function () {
-            if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com should not be used in production')) return;
-            originalWarn.apply(console, arguments);
-        };
-    </script>
     <script src="js/lead-monetization.js"></script>
     <!-- Tailwind theme is compiled from tailwind.config.js into css/tailwind.css. -->
     <style>
@@ -1199,9 +1192,7 @@
         </div>
     </footer>
 
-    <!-- Supabase & App Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
-    <script src="js/supabaseClient.js"></script>
+    <!-- App Scripts -->
     <script src="js/data.js"></script>
     <script src="js/google-maps-loader.js"></script>
     <script src="js/app.js?v=12"></script>

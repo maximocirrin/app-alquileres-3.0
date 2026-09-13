@@ -10,11 +10,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "@vercel/analytics": "^1.5.0",
     "dotenv": "^17.4.2",
     "express": "^4.18.2",
-    "pdf-lib": "^1.17.1",
-    "pg": "^8.23.0"
+    "pdf-lib": "^1.17.1"
   },
   "repository": {
     "type": "git",
@@ -31,11 +29,6 @@
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^7.0.2"
+    "tailwindcss": "^3.4.17"
   }
 }
