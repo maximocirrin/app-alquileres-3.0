@@ -607,86 +607,7 @@
                             </div>
                         </div>
 
-                        <!-- Card 2: Publicaciones (Antes Total Propiedades) -->
-                        <div id="card-balance-props" onclick="window.resetOwnerAvisosFilters?.(); document.getElementById('mis-publicaciones-section')?.scrollIntoView({behavior:'smooth'});" title="Total de propiedades en cartera" class="relative bg-white dark:bg-zinc-900 rounded-[26px] border border-[#ece5e5] dark:border-zinc-800 p-6 sm:p-7 min-h-[175px] sm:min-h-[190px] shadow-[0_2px_16px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md">
-                            <!-- Detalle en esquina superior derecha (curvatura suave y tamaño contenido) -->
-                            <svg class="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none text-[#F2E7E8] dark:text-[#811B1D]/15" viewBox="0 0 100 100" fill="currentColor">
-                                <path d="M 0 0 C 20 35, 55 70, 100 100 L 100 0 Z" />
-                            </svg>
-
-                            <!-- Fila Superior: Título e Icono de Edificio -->
-                            <div class="relative z-10 flex items-start justify-between">
-                                <span class="text-xs sm:text-[13px] font-bold uppercase tracking-[0.14em] text-[#595252] dark:text-zinc-400 font-headline select-none pt-0.5">
-                                    PUBLICACIONES
-                                </span>
-                                <div class="mr-4 sm:mr-5 text-[#811B1D] dark:text-red-400 shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 55" fill="currentColor" class="w-8 h-8 sm:w-9 sm:h-9">
-                                        <rect x="0" y="0" width="31" height="5" />
-                                        <rect x="0" y="5" width="5" height="7" />
-                                        <rect x="12" y="5" width="6" height="7" />
-                                        <rect x="25" y="5" width="6" height="7" />
-                                        <rect x="0" y="12" width="63" height="6" />
-                                        <rect x="0" y="18" width="5" height="7" />
-                                        <rect x="12" y="18" width="6" height="7" />
-                                        <rect x="25" y="18" width="6" height="7" />
-                                        <rect x="58" y="18" width="5" height="33" />
-                                        <rect x="0" y="25" width="37" height="5" />
-                                        <rect x="45" y="25" width="5" height="5" />
-                                        <rect x="0" y="30" width="6" height="1" />
-                                        <rect x="12" y="30" width="7" height="1" />
-                                        <rect x="24" y="30" width="8" height="1" />
-                                        <rect x="0" y="31" width="5" height="7" />
-                                        <rect x="12" y="31" width="6" height="7" />
-                                        <rect x="25" y="31" width="6" height="7" />
-                                        <rect x="0" y="38" width="37" height="5" />
-                                        <rect x="45" y="38" width="5" height="5" />
-                                        <rect x="0" y="43" width="6" height="1" />
-                                        <rect x="12" y="43" width="7" height="1" />
-                                        <rect x="25" y="43" width="7" height="1" />
-                                        <rect x="0" y="44" width="5" height="7" />
-                                        <rect x="12" y="44" width="6" height="7" />
-                                        <rect x="25" y="44" width="6" height="7" />
-                                        <rect x="0" y="51" width="63" height="4" />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <!-- Fila Inferior: Número 17 -->
-                            <div class="relative z-10 mt-6 sm:mt-8">
-                                <span id="balance-props-count" class="text-5xl sm:text-6xl font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline">
-                                    17
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Card 3: Alquileres Activos (Icono de Llave de Alquiler / Tenencia) -->
-                        <div id="card-balance-active-rentals" onclick="switchViewTab('alquiler-activo')" title="Contratos de alquiler vigentes" class="relative bg-white dark:bg-zinc-900 rounded-[26px] border border-[#ece5e5] dark:border-zinc-800 p-6 sm:p-7 min-h-[175px] sm:min-h-[190px] shadow-[0_2px_16px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md">
-                            <!-- Detalle en esquina superior derecha (curvatura suave y tamaño contenido) -->
-                            <svg class="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none text-[#F2E7E8] dark:text-[#811B1D]/15" viewBox="0 0 100 100" fill="currentColor">
-                                <path d="M 0 0 C 20 35, 55 70, 100 100 L 100 0 Z" />
-                            </svg>
-
-                            <!-- Fila Superior: Título e Icono de Llave -->
-                            <div class="relative z-10 flex items-start justify-between">
-                                <span class="text-xs sm:text-[13px] font-bold uppercase tracking-[0.14em] text-[#595252] dark:text-zinc-400 font-headline select-none pt-0.5">
-                                    ALQUILERES ACTIVOS
-                                </span>
-                                <div class="mr-4 sm:mr-5 text-[#811B1D] dark:text-red-400 shrink-0">
-                                    <svg class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <!-- Fila Inferior: Número -->
-                            <div class="relative z-10 mt-6 sm:mt-8">
-                                <span id="balance-active-rentals-count" class="text-5xl sm:text-6xl font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline">
-                                    0
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Card 4: Inquilinos en Mora -->
+                        <!-- Card 2: Inquilinos en Mora -->
                         <div id="card-balance-mora" onclick="switchViewTab('alquiler-activo')" title="Inquilinos con pagos atrasados" class="relative bg-white dark:bg-zinc-900 rounded-[26px] border border-[#ece5e5] dark:border-zinc-800 p-6 sm:p-7 min-h-[175px] sm:min-h-[190px] shadow-[0_2px_16px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md">
                             <!-- Detalle en esquina superior derecha (curvatura suave y tamaño contenido) -->
                             <svg class="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none text-[#F2E7E8] dark:text-[#811B1D]/15" viewBox="0 0 100 100" fill="currentColor">
@@ -713,7 +634,7 @@
                             </div>
                         </div>
 
-                        <!-- Card 5: Tickets Mantenimiento -->
+                        <!-- Card 3: Tickets Mantenimiento -->
                         <div id="card-balance-tickets" onclick="switchViewTab('alquiler-activo')" title="Tickets de mantenimiento pendientes" class="relative bg-white dark:bg-zinc-900 rounded-[26px] border border-[#ece5e5] dark:border-zinc-800 p-6 sm:p-7 min-h-[175px] sm:min-h-[190px] shadow-[0_2px_16px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md">
                             <!-- Detalle en esquina superior derecha (curvatura suave y tamaño contenido) -->
                             <svg class="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none text-[#F2E7E8] dark:text-[#811B1D]/15" viewBox="0 0 100 100" fill="currentColor">
@@ -735,33 +656,6 @@
                             <!-- Fila Inferior: Número -->
                             <div class="relative z-10 mt-6 sm:mt-8">
                                 <span id="balance-tickets-count" class="text-5xl sm:text-6xl font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline">
-                                    0
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Card 6: Postulaciones Activas -->
-                        <div id="card-balance-apps" onclick="switchViewTab('postulaciones')" title="Postulantes en espera de revisión" class="relative bg-white dark:bg-zinc-900 rounded-[26px] border border-[#ece5e5] dark:border-zinc-800 p-6 sm:p-7 min-h-[175px] sm:min-h-[190px] shadow-[0_2px_16px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md">
-                            <!-- Detalle en esquina superior derecha (curvatura suave y tamaño contenido) -->
-                            <svg class="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 pointer-events-none text-[#F2E7E8] dark:text-[#811B1D]/15" viewBox="0 0 100 100" fill="currentColor">
-                                <path d="M 0 0 C 20 35, 55 70, 100 100 L 100 0 Z" />
-                            </svg>
-
-                            <!-- Fila Superior: Título e Icono -->
-                            <div class="relative z-10 flex items-start justify-between">
-                                <span class="text-xs sm:text-[13px] font-bold uppercase tracking-[0.14em] text-[#595252] dark:text-zinc-400 font-headline select-none pt-0.5">
-                                    POSTULACIONES
-                                </span>
-                                <div class="mr-4 sm:mr-5 text-[#811B1D] dark:text-red-400 shrink-0">
-                                    <svg class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <!-- Fila Inferior: Número -->
-                            <div class="relative z-10 mt-6 sm:mt-8">
-                                <span id="balance-apps-count" class="text-5xl sm:text-6xl font-black text-[#811B1D] dark:text-red-400 tracking-tight leading-none font-headline">
                                     0
                                 </span>
                             </div>
@@ -2245,41 +2139,13 @@
                     }
                 }
 
-                // 2. Publicaciones
-                const totalProps = (ownerAvisosState || []).length;
-                let countDisp = 0;
-                let countAlq = 0;
-                let countPaus = 0;
-                (ownerAvisosState || []).forEach(p => {
-                    const norm = normalizePropStatus(p.status);
-                    if (norm === 'disponible') countDisp++;
-                    else if (norm === 'alquilada') countAlq++;
-                    else if (norm === 'paused') countPaus++;
-                });
-
-                // 3. Tasa de ocupación
-                const effectiveRented = Math.max(countAlq, contracts.length);
-                const occupancyBase = Math.max(totalProps, contracts.length);
-                const occupancyRate = occupancyBase > 0 ? Math.min(100, Math.round((effectiveRented / occupancyBase) * 100)) : 0;
-
-                // 4. Tickets de Mantenimiento
+                // 2. Tickets de Mantenimiento
                 let openTicketsCount = 0;
                 if (window.DataManager && typeof window.DataManager.getMaintenanceTickets === 'function') {
                     try {
                         const tkts = await window.DataManager.getMaintenanceTickets(null, true);
                         if (Array.isArray(tkts)) {
                             openTicketsCount = tkts.filter(t => t.status === 'abierto' || t.status === 'en_proceso' || t.id_estado_ticket === 1 || t.id_estado_ticket === 2).length;
-                        }
-                    } catch (e) { }
-                }
-
-                // 5. Postulaciones pendientes
-                let pendingAppsCount = 0;
-                if (window.DataManager && typeof window.DataManager.getOwnerApplications === 'function') {
-                    try {
-                        const apps = await window.DataManager.getOwnerApplications();
-                        if (Array.isArray(apps)) {
-                            pendingAppsCount = apps.filter(a => (a.status || 'pendiente').toLowerCase() === 'pendiente').length;
                         }
                     } catch (e) { }
                 }
@@ -2293,11 +2159,8 @@
                 const elUsdWrapper = document.getElementById('balance-usd-wrapper');
                 const elAmountsContainer = document.getElementById('balance-amounts-container');
 
-                const elActiveRentals = document.getElementById('balance-active-rentals-count');
                 const elMoraCount = document.getElementById('balance-mora-count');
-                const elPropsCount = document.getElementById('balance-props-count');
                 const elTicketsCount = document.getElementById('balance-tickets-count');
-                const elAppsCount = document.getElementById('balance-apps-count');
 
                 if (elTotalRent) {
                     elTotalRent.textContent = formatMoneyArs(totalMonthlyRentArs);
@@ -2328,11 +2191,8 @@
                     }
                 }
 
-                if (elActiveRentals) elActiveRentals.textContent = contracts.length;
                 if (elMoraCount) elMoraCount.textContent = delinquentCount;
-                if (elPropsCount) elPropsCount.textContent = totalProps;
                 if (elTicketsCount) elTicketsCount.textContent = openTicketsCount;
-                if (elAppsCount) elAppsCount.textContent = pendingAppsCount;
 
                 // Tooltips informativos al pasar el cursor (mantiene la tarjeta 100% limpia y minimalista)
                 const cardTotalRent = document.getElementById('card-balance-total-rent');
@@ -2346,25 +2206,13 @@
                         cardTotalRent.title = totalMonthlyRentArs > 0 ? `${formatMoneyArs(totalCollectedArs)} cobrado • ${formatMoneyArs(totalPendingArs)} por cobrar` : 'Ingresos mensuales contratados';
                     }
                 }
-                const cardActiveRentals = document.getElementById('card-balance-active-rentals');
-                if (cardActiveRentals) {
-                    cardActiveRentals.title = `${contracts.length} contratos vigentes (${occupancyRate}% tasa de ocupación)`;
-                }
                 const cardMora = document.getElementById('card-balance-mora');
                 if (cardMora) {
                     cardMora.title = delinquentCount > 0 ? `${delinquentCount} inquilino(s) con atraso` : 'Sin retrasos activos • Pagos al día';
                 }
-                const cardProps = document.getElementById('card-balance-props');
-                if (cardProps) {
-                    cardProps.title = `${totalProps} propiedades en cartera (${countDisp} disponibles, ${countAlq} alquiladas, ${countPaus} pausadas)`;
-                }
                 const cardTickets = document.getElementById('card-balance-tickets');
                 if (cardTickets) {
                     cardTickets.title = openTicketsCount > 0 ? `${openTicketsCount} incidencia(s) en curso` : 'Todo al día • Sin tickets abiertos';
-                }
-                const cardApps = document.getElementById('card-balance-apps');
-                if (cardApps) {
-                    cardApps.title = pendingAppsCount > 0 ? `${pendingAppsCount} postulante(s) en espera` : 'Sin candidatos pendientes';
                 }
             } catch (err) {
                 console.warn("Error calculando balance general del propietario:", err);
