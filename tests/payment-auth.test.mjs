@@ -4,6 +4,7 @@ import { after, beforeEach, test } from 'node:test';
 // All requests in these tests are mocked: no credentials or real sessions.
 process.env.SUPABASE_URL = 'https://payment-auth-test.supabase.co';
 process.env.SUPABASE_ANON_KEY = 'public-test-key';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-test-key';
 process.env.NODE_ENV = 'test';
 delete process.env.ALLOWED_ORIGINS;
 const { getAuthenticatedUser, getContractForProfile } = await import('../api/_auth.js');
@@ -23,8 +24,8 @@ after(() => {
   console.warn = realConsoleWarn;
 });
 
-const request = (token = 'test-session-token') => ({
-  method: 'GET', query: { id_contrato: '62' },
+const request = (token = 'test-session-token', query = { id_contrato: '62' }) => ({
+  method: 'GET', query,
   headers: { origin: 'http://127.0.0.1:5500', ...(token ? { authorization: `Bearer ${token}` } : {}) }
 });
 const response = () => ({
@@ -72,19 +73,22 @@ test('upstream Auth outage is service unavailable', async () => {
   assert.equal(res.body.error, 'AUTH_SERVICE_UNAVAILABLE');
 });
 
-test('verified identity resolves only its own profile with the caller token', async () => {
+test('verified identity resolves only its own profile with the server client', async () => {
   const user = { id: '00000000-0000-4000-8000-000000000062', aud: 'authenticated' };
   const calls = [];
   globalThis.fetch = async (url, options) => {
     const target = new URL(url);
     calls.push(target);
-    assert.equal(new Headers(options.headers).get('authorization'), 'Bearer test-session-token');
-    if (target.pathname === '/auth/v1/user') return jsonResponse(user);
+    if (target.pathname === '/auth/v1/user') {
+      assert.equal(new Headers(options.headers).get('authorization'), 'Bearer verified-session-token');
+      return jsonResponse(user);
+    }
     assert.equal(target.pathname, '/rest/v1/Perfil');
+    assert.equal(new Headers(options.headers).get('authorization'), 'Bearer service-role-test-key');
     assert.equal(target.searchParams.get('user_id'), `eq.${user.id}`);
     return jsonResponse({ id_perfil: 62, user_id: user.id });
   };
-  const auth = await getAuthenticatedUser(request());
+  const auth = await getAuthenticatedUser(request('verified-session-token'));
   assert.equal(auth.error, null);
   assert.equal(auth.user.id, user.id);
   assert.equal(auth.profile.id_perfil, 62);
@@ -96,9 +100,36 @@ test('profile lookup outage does not become a login failure', async () => {
     ? jsonResponse({ id: '00000000-0000-4000-8000-000000000062', aud: 'authenticated' })
     : jsonResponse({ message: 'Database unavailable' }, 503);
   const res = response();
-  await payments(request(), res);
+  await payments(request('profile-outage-session-token'), res);
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.error, 'PROFILE_SERVICE_UNAVAILABLE');
+});
+
+test('owner contracts and payments are returned in one authorized bundle', async () => {
+  const user = { id: '00000000-0000-4000-8000-000000000014', aud: 'authenticated' };
+  globalThis.fetch = async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/auth/v1/user') return jsonResponse(user);
+    if (target.pathname === '/rest/v1/Perfil') return jsonResponse({ id_perfil: 14, user_id: user.id });
+    if (target.pathname === '/rest/v1/rpc/consume_api_rate_limit') return jsonResponse(true);
+    if (target.pathname === '/rest/v1/Contrato') {
+      assert.equal(target.searchParams.get('id_perfil_propietario'), 'eq.14');
+      return jsonResponse([{ id_contrato: 62, id_perfil_propietario: 14, id_perfil_inquilino: 6 }]);
+    }
+    if (target.pathname === '/rest/v1/Pago') {
+      return jsonResponse([{ id_pago: 9, id_contrato: 62, monto: 450000, periodo: 'Septiembre 2026' }]);
+    }
+    if (target.pathname === '/rest/v1/Solicitud_pago') {
+      return jsonResponse([{ id_solicitud_pago: 4, id_pago: 9, estado: 'pendiente_revision' }]);
+    }
+    throw new Error(`Unexpected request: ${target.pathname}`);
+  };
+
+  const res = response();
+  await payments(request('owner-bundle-session-token', { action: 'owner-contracts' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.data.contracts.length, 1);
+  assert.equal(res.body.data.paymentsByContract['62'][0].solicitud.estado, 'pendiente_revision');
 });
 
 test('self-assigned contract does not grant either payment role', async () => {

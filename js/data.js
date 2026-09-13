@@ -51,14 +51,6 @@ function paymentApiUrl() {
     return '/api/pagos';
 }
 
-function ownerContractsApiUrl() {
-    const { protocol, hostname, port } = window.location;
-    if (protocol === 'http:' && ['localhost', '127.0.0.1'].includes(hostname) && port === '5500') {
-        return `http://${hostname}:3000/api/owner-contracts`;
-    }
-    return '/api/owner-contracts';
-}
-
 async function fetchPaymentApi(query = '', options = {}) {
     const url = paymentApiUrl();
     const headers = await authenticatedApiHeaders();
@@ -78,25 +70,48 @@ async function fetchPaymentApi(query = '', options = {}) {
     }
 }
 
-async function fetchOwnerContractsApi() {
-    const headers = await authenticatedApiHeaders();
-    if (!headers.Authorization) {
-        throw new Error('Tu sesión no está disponible. Volvé a iniciar sesión para consultar tus alquileres.');
-    }
+const OWNER_CONTRACTS_CACHE_TTL_MS = 30_000;
+let ownerContractsApiCache = null;
+let ownerContractsApiPending = null;
+const ownerPaymentsApiCache = new Map();
+let authenticatedProfileCache = null;
+let authenticatedProfilePending = null;
 
-    const url = ownerContractsApiUrl();
+async function fetchOwnerContractsApi() {
+    const now = Date.now();
+    if (ownerContractsApiCache?.expiresAt > now) return ownerContractsApiCache.bundle;
+    if (ownerContractsApiPending) return ownerContractsApiPending;
+
+    ownerContractsApiPending = (async () => {
+        let response;
+        let payload = {};
+        for (let attempt = 0; attempt < 2; attempt++) {
+            response = await fetchPaymentApi('?action=owner-contracts');
+            payload = await response.json().catch(() => ({}));
+            if (response.status !== 503 || attempt === 1) break;
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        if (!response?.ok || !payload?.ok || !Array.isArray(payload?.data?.contracts)) {
+            throw new Error(payload?.message || 'No se pudieron consultar los alquileres.');
+        }
+
+        const bundle = payload.data;
+        ownerPaymentsApiCache.clear();
+        for (const contract of bundle.contracts) {
+            const contractId = Number(contract?.id_contrato);
+            if (!Number.isSafeInteger(contractId) || contractId <= 0) continue;
+            const payments = bundle.paymentsByContract?.[String(contractId)];
+            ownerPaymentsApiCache.set(contractId, Array.isArray(payments) ? payments : []);
+        }
+        ownerContractsApiCache = { bundle, expiresAt: Date.now() + OWNER_CONTRACTS_CACHE_TTL_MS };
+        return bundle;
+    })();
+
     try {
-        const response = await fetch(url, { headers });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.contracts)) {
-            throw new Error(payload?.message || payload?.error || 'No se pudieron consultar los alquileres.');
-        }
-        return payload.data.contracts;
-    } catch (error) {
-        if (url.startsWith('http:')) {
-            throw new Error('No se pudo conectar con el servidor de alquileres. Iniciá el backend con npm start (puerto 3000) y volvé a intentar.');
-        }
-        throw error;
+        return await ownerContractsApiPending;
+    } finally {
+        ownerContractsApiPending = null;
     }
 }
 
@@ -154,36 +169,32 @@ var DataManager = {
     // contracts while the server (correctly) refuses the action.
     _getOrCreateProfile: async function () {
         if (!window.supabaseClient) return null;
-        try {
-            const cachedProfile = DataManager._authenticatedProfileCache;
-            if (cachedProfile?.id && cachedProfile.expiresAt > Date.now()) {
-                return cachedProfile.id;
-            }
-            const { data: userData, error: userError } = await window.supabaseClient.auth.getUser();
-            const authUser = userData?.user;
-            if (userError || !authUser) return null;
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const authUserId = sessionData?.session?.user?.id;
+        if (!authUserId) return null;
+        if (authenticatedProfileCache?.userId === authUserId) return authenticatedProfileCache.profileId;
+        if (authenticatedProfilePending?.userId === authUserId) return authenticatedProfilePending.promise;
 
-            // 1. Resolve by authenticated user_id
-            const { data: profile } = await window.supabaseClient
-                .from('Perfil')
-                .select('id_perfil')
-                .eq('user_id', authUser.id)
-                .maybeSingle();
-
-            if (profile?.id_perfil) {
-                DataManager._authenticatedProfileCache = {
-                    id: profile.id_perfil,
-                    expiresAt: Date.now() + 5 * 60_000
-                };
-                return profile.id_perfil;
+        const promise = (async () => {
+            try {
+                const { data: profile, error } = await window.supabaseClient
+                    .from('Perfil')
+                    .select('id_perfil')
+                    .eq('user_id', authUserId)
+                    .maybeSingle();
+                if (error || !profile?.id_perfil) return null;
+                const profileId = Number(profile.id_perfil);
+                authenticatedProfileCache = { userId: authUserId, profileId };
+                return profileId;
+            } catch (e) {
+                console.error('Error al resolver el perfil autenticado:', e);
+                return null;
+            } finally {
+                if (authenticatedProfilePending?.userId === authUserId) authenticatedProfilePending = null;
             }
-            // Profile provisioning/linking belongs to the authenticated server
-            // workflow. A browser must never claim an existing profile.
-            return null;
-        } catch (e) {
-            console.error('Error al resolver el perfil autenticado:', e);
-            return null;
-        }
+        })();
+        authenticatedProfilePending = { userId: authUserId, promise };
+        return promise;
     },
 
     // User Management
@@ -255,6 +266,11 @@ var DataManager = {
             sessionStorage.removeItem('vivat_contracts_return_url');
             window.hasActivePassport = false;
             window.currentPasaporteId = null;
+            authenticatedProfileCache = null;
+            authenticatedProfilePending = null;
+            ownerContractsApiCache = null;
+            ownerContractsApiPending = null;
+            ownerPaymentsApiCache.clear();
             DataManager._authenticatedProfileCache = null;
             DataManager._ownerContractsCache = null;
             DataManager._currentPaymentCache = null;
@@ -267,18 +283,21 @@ var DataManager = {
 
     getCurrentUser: async () => {
         if (!window.supabaseClient) return null;
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
-        return user;
+        const { data } = await window.supabaseClient.auth.getSession();
+        return data?.session?.user || null;
     },
 
     getUserProfile: async () => {
         if (!window.supabaseClient) return null;
-        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const user = sessionData?.session?.user;
         if (!user) return null;
+        const profileId = await DataManager._getOrCreateProfile();
+        if (!profileId) return { mail: user.email, nombre_completo: user.user_metadata?.full_name || 'Usuario' };
         const { data } = await window.supabaseClient
             .from('Perfil')
             .select('*')
-            .or(`user_id.eq.${user.id},mail.eq.${user.email}`)
+            .eq('id_perfil', profileId)
             .maybeSingle();
         return data || { mail: user.email, nombre_completo: user.user_metadata?.full_name || 'Usuario' };
     },
@@ -2478,40 +2497,8 @@ var DataManager = {
             // The server verifies ownership and returns the minimal identity
             // data needed by this dashboard. Direct joins to Perfil are not
             // viable here: RLS correctly hides the tenant's full profile.
-            let data = null;
-            try {
-                data = await fetchOwnerContractsApi();
-            } catch (apiError) {
-                console.warn('[DataManager] No se pudo usar la API de alquileres; se usará una consulta local acotada.', apiError);
-            }
-
-            // Keeps local development usable when the Express server is not
-            // running. It intentionally does not join Perfil or return any
-            // local-only contracts that the authenticated owner cannot prove.
-            if (!Array.isArray(data)) {
-                const { data: directData, error } = await window.supabaseClient
-                    .from('Contrato')
-                    .select(`
-                    id_contrato, id_propiedad, id_publicacion,
-                    id_perfil_propietario, id_perfil_inquilino,
-                    fecha_inicio_contrato, fecha_fin_contrato,
-                    monto_cierre, monto_deposito, deposito_devuelto,
-                    id_moneda, id_Indice, periodo_aumento_meses,
-                    dia_vencimiento_mensual, tasa_punitoria_diaria, alias_cbu,
-                    url_contrato_original_pdf, url_contrato_final_pdf,
-                    Propiedad (
-                        calle, numero, piso_dpto, expensas_mensuales,
-                        Publicacion (id_publicacion, descripcion, precio, Multimedia (url_archivo, orden_visualizacion))
-                    ),
-                    Firma_contrato (rol_firmante, estado_firma, didit_status),
-                    Historial_Estado_Contrato (id_historial_contrato, id_estado_contrato, fecha_inicio)
-                `)
-                .order('id_contrato', { ascending: false })
-                .eq('id_perfil_propietario', profileId);
-
-                if (error) throw error;
-                data = directData || [];
-            }
+            const bundle = await fetchOwnerContractsApi();
+            const data = bundle.contracts;
 
             if (Array.isArray(data)) {
                 const dbContracts = data.map(item => {
@@ -3454,6 +3441,15 @@ var DataManager = {
 
         if (!dbContractId || !window.supabaseClient) return fallbackPayment();
 
+        // getOwnerContracts loads every current payment in one server request.
+        // Reuse that bundle instead of issuing one API call per rental card.
+        if (ownerPaymentsApiCache.has(dbContractId)) {
+            const cachedPayments = ownerPaymentsApiCache.get(dbContractId);
+            if (!cachedPayments.length) return fallbackPayment();
+            const paymentData = cachedPayments[0];
+            return toPayment(paymentData, paymentData.solicitud || null, { can_review: true });
+        }
+
         const cache = this._currentPaymentCache || (this._currentPaymentCache = new Map());
         const cacheKey = String(dbContractId);
         const cached = cache.get(cacheKey);
@@ -3592,6 +3588,8 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo informar el pago.');
         }
+        ownerPaymentsApiCache.delete(contractDbId);
+        ownerContractsApiCache = null;
         this._invalidateCurrentPaymentCache(contractDbId);
         return payload.data || null;
     },
@@ -3617,6 +3615,8 @@ var DataManager = {
         if (!response.ok || !payload?.ok) {
             throw new Error(payload?.message || payload?.error || 'No se pudo resolver la solicitud de pago.');
         }
+        ownerPaymentsApiCache.delete(contractDbId);
+        ownerContractsApiCache = null;
         this._invalidateCurrentPaymentCache(contractDbId);
         return payload.data || null;
     },

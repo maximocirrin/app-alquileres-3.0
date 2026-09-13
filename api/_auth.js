@@ -3,6 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://djhwqttaiggjaxmswggr.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const AUTH_CACHE_TTL_MS = 30_000;
+const AUTH_CACHE_MAX_ENTRIES = 100;
+const authenticatedUserCache = new Map();
+let publicClientSingleton = null;
+let adminClientSingleton = null;
 
 /**
  * Production is intentionally fail-closed. Do not enable test doubles or
@@ -94,6 +99,11 @@ function createPublicClient(accessToken = null) {
   return withLegacyTableAliases(client);
 }
 
+function getPublicAuthClient() {
+  if (!publicClientSingleton) publicClientSingleton = createPublicClient();
+  return publicClientSingleton;
+}
+
 // The deployed database renamed this table. Keeping the alias at the server
 // boundary avoids a silent split between the local legacy code and production.
 function withLegacyTableAliases(client) {
@@ -112,11 +122,13 @@ export function getSupabaseAdmin() {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations.');
   }
 
-  const client = createClient(SUPABASE_URL, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
+  if (!adminClientSingleton) {
+    adminClientSingleton = withLegacyTableAliases(createClient(SUPABASE_URL, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    }));
+  }
 
-  return withLegacyTableAliases(client);
+  return adminClientSingleton;
 }
 
 export function getBearerToken(req) {
@@ -138,7 +150,14 @@ export async function getAuthenticatedUser(req) {
   }
 
   try {
-    const publicClient = createPublicClient();
+    const cacheKey = crypto.createHash('sha256').update(token, 'utf8').digest('hex');
+    const cached = authenticatedUserCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return { user: cached.user, profile: cached.profile, token, error: null };
+    }
+    if (cached) authenticatedUserCache.delete(cacheKey);
+
+    const publicClient = getPublicAuthClient();
     const { data: { user }, error: authError } = await publicClient.auth.getUser(token);
 
     if (authError && (authError.name === 'AuthRetryableFetchError' || authError.status === 0 || authError.status >= 500)) {
@@ -154,21 +173,41 @@ export async function getAuthenticatedUser(req) {
       return { user: null, profile: null, token: null, error: 'Sesión inválida o expirada.' };
     }
 
-    const userClient = createPublicClient(token);
-    const { data: profile, error: profileError } = await userClient
+    // The token was already verified by Supabase Auth. Resolve its immutable
+    // user_id with the server client so an unrelated or temporarily broken RLS
+    // policy cannot turn every authenticated API request into a 503.
+    const profileQuery = getSupabaseAdmin()
       .from('Perfil')
       .select('id_perfil, user_id, mail, id_tipo_perfil')
       .eq('user_id', user.id)
       .maybeSingle();
+    // postgrest-js retries a 503 after 1, 2 and 4 seconds by default. API
+    // handlers already return Retry-After, so fail promptly and let the caller
+    // retry instead of freezing the dashboard for roughly seven seconds.
+    if (typeof profileQuery.retry === 'function') profileQuery.retry(false);
+    const { data: profile, error: profileError } = await profileQuery;
 
     if (profileError) {
-      console.warn('[getAuthenticatedUser] Could not resolve the authenticated profile:', profileError.message);
+      console.warn('[getAuthenticatedUser] Could not resolve the authenticated profile:', {
+        code: profileError.code || null,
+        status: profileError.status || null,
+        message: profileError.message
+      });
       return {
         user: null, profile: null, token: null,
         error: 'No se pudo consultar tu perfil. Intentá nuevamente en unos instantes.',
         status: 503, code: 'PROFILE_SERVICE_UNAVAILABLE'
       };
     }
+
+    if (authenticatedUserCache.size >= AUTH_CACHE_MAX_ENTRIES) {
+      authenticatedUserCache.delete(authenticatedUserCache.keys().next().value);
+    }
+    authenticatedUserCache.set(cacheKey, {
+      user,
+      profile: profile || null,
+      expiresAt: Date.now() + AUTH_CACHE_TTL_MS
+    });
 
     return { user, profile: profile || null, token, error: null };
   } catch (error) {

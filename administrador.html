@@ -1963,14 +1963,22 @@
             }
 
             try {
-                ownerAvisosState = await window.DataManager.getUserMarketplaceProperties(100);
+                // Properties and rentals are independent. Loading them together
+                // avoids adding both network latencies every time this tab opens.
+                const propertiesPromise = window.DataManager.getUserMarketplaceProperties(100);
+                const contractsPromise = (typeof window.DataManager.getOwnerContracts === 'function')
+                    ? window.DataManager.getOwnerContracts()
+                    : Promise.resolve([]);
+                const [properties, rawContracts] = await Promise.all([propertiesPromise, contractsPromise]);
+                ownerAvisosState = Array.isArray(properties) ? properties : [];
                 updateOwnerStatusBadgesCounts(ownerAvisosState);
 
                 // Precargar contratos activos para vincular avisos con sus alquileres
                 try {
-                    let rawList = [];
-                    if (window.DataManager && typeof window.DataManager.getOwnerContracts === 'function') {
-                        rawList = await window.DataManager.getOwnerContracts();
+                    let rawList = Array.isArray(rawContracts) ? rawContracts : [];
+                    if (rawList.length === 0 && typeof window.DataManager.getOwnerContracts !== 'function') {
+                        const raw = localStorage.getItem('vivat_contracts');
+                        if (raw) rawList = JSON.parse(raw);
                     }
                     ownerActiveContractsMock = rawList || [];
                 } catch (ce) { }
