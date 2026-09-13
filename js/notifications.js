@@ -532,7 +532,7 @@
                             const dbNotification = payload.new;
                             if (!dbNotification?.id_notificacion) return;
 
-                            await NotificationManager.fetchFromDB();
+                            await NotificationManager.fetchFromDB(true);
                         })
                         // 3. Postgres Changes: Nueva Solicitud (Postulación)
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Solicitud' }, async (payload) => {
@@ -540,50 +540,6 @@
                             if (!newSol) return;
                             console.log('[Supabase Realtime] Nueva Solicitud detectada:', newSol);
                             window.dispatchEvent(new CustomEvent('vivat:application_updated', { detail: newSol }));
-
-                            let uLocal = {};
-                            try {
-                                uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                            } catch (e) {}
-                            const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-                            const currentRole = getActiveUserRole();
-
-                            // Si yo soy el solicitante o mi rol activo es inquilino, NO notificarme de "Nueva postulación recibida"
-                            if (newSol.id_perfil && myProfileId && String(newSol.id_perfil) === String(myProfileId)) {
-                                return;
-                            }
-                            if (currentRole === 'TENANT') {
-                                return;
-                            }
-
-                            const solNotifId = `notif_solicitud_${newSol.id_solicitud}`;
-                            if (NotificationManager._processedNotifIds.has(solNotifId)) return;
-
-                            let applicantName = 'Un inquilino verificado';
-                            let propTitle = 'tu propiedad';
-                            try {
-                                if (newSol.id_perfil) {
-                                    const { data: p } = await window.supabaseClient.from('Perfil').select('nombre_completo').eq('id_perfil', newSol.id_perfil).maybeSingle();
-                                    if (p?.nombre_completo) applicantName = p.nombre_completo;
-                                }
-                                if (newSol.id_publicacion) {
-                                    const { data: pub } = await window.supabaseClient.from('Publicacion').select('descripcion, Propiedad(calle, numero)').eq('id_publicacion', newSol.id_publicacion).maybeSingle();
-                                    if (pub?.Propiedad?.calle) propTitle = `${pub.Propiedad.calle} ${pub.Propiedad.numero || ''}`.trim();
-                                    else if (pub?.descripcion) propTitle = pub.descripcion.split(' | ')[0];
-                                }
-                            } catch(e) {}
-
-                            NotificationManager.receiveIncomingNotification({
-                                id: solNotifId,
-                                title: '🎉 ¡Nueva postulación recibida!',
-                                message: `${applicantName} se ha postulado para alquilar "${propTitle}".`,
-                                type: 'application',
-                                icon: 'person_add',
-                                link: 'administrador.html#postulaciones',
-                                role: 'OWNER',
-                                senderRole: 'TENANT',
-                                senderProfileId: newSol.id_perfil
-                            });
                         })
                         // 4. Postgres Changes: Firmas de Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Firma_contrato' }, async (payload) => {
@@ -591,67 +547,6 @@
                             if (!firma) return;
                             console.log('[Supabase Realtime] Evento Firma_contrato detectado:', firma);
                             window.dispatchEvent(new CustomEvent('vivat:contract_updated', { detail: firma }));
-
-                            const isSigned = ['sellada', 'completada', 'firmada'].includes(firma.estado_firma) || firma.didit_status === 'APPROVED';
-                            if (!isSigned) return;
-
-                            let uLocal = {};
-                            try {
-                                uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                            } catch (e) {}
-                            const myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-                            const myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-                            const currentRole = getActiveUserRole();
-
-                            // Si yo fui quien firmó, no generar auto-notificación
-                            if (firma.id_perfil && myProfileId && String(firma.id_perfil) === String(myProfileId)) {
-                                return;
-                            }
-                            if (firma.email_firmante && myEmail && firma.email_firmante.toLowerCase().trim() === myEmail) {
-                                return;
-                            }
-
-                            const isTenant = ['inquilino', 'tenant', 'TENANT', 'INQUILINO'].includes(firma.rol_firmante);
-                            const contractIdNum = firma.id_contrato;
-                            const ctrCode = `CTR-2026-${String(contractIdNum).padStart(4, '0')}`;
-
-                            if (isTenant) {
-                                // La firma la realizó el inquilino -> El destinatario es el PROPIETARIO
-                                if (currentRole === 'TENANT') return;
-
-                                const notifId = `notif_firma_tenant_${contractIdNum}`;
-                                if (NotificationManager._processedNotifIds.has(notifId)) return;
-
-                                NotificationManager.receiveIncomingNotification({
-                                    id: notifId,
-                                    title: '✍️ ¡El inquilino firmó el contrato!',
-                                    message: `El locatario completó su firma digital para el contrato ${ctrCode}. Ya puedes ingresar a firmar como propietario.`,
-                                    type: 'contract',
-                                    icon: 'draw',
-                                    link: `contratos.html?contract=${ctrCode}&sign=1&role=OWNER`,
-                                    role: 'OWNER',
-                                    senderRole: 'TENANT',
-                                    senderProfileId: firma.id_perfil
-                                });
-                            } else {
-                                // La firma la realizó el propietario -> El destinatario es el INQUILINO
-                                if (currentRole === 'OWNER') return;
-
-                                const notifId = `notif_firma_owner_${contractIdNum}`;
-                                if (NotificationManager._processedNotifIds.has(notifId)) return;
-
-                                NotificationManager.receiveIncomingNotification({
-                                    id: notifId,
-                                    title: '✍️ ¡El propietario firmó el contrato!',
-                                    message: `El propietario completó la firma del contrato ${ctrCode}. El documento se encuentra 100% sellado bajo Ley 25.506.`,
-                                    type: 'contract',
-                                    icon: 'verified_user',
-                                    link: `contratos.html?contract=${ctrCode}&role=TENANT`,
-                                    role: 'TENANT',
-                                    senderRole: 'OWNER',
-                                    senderProfileId: firma.id_perfil
-                                });
-                            }
                         })
                         // 5. Postgres Changes: Contrato
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'Contrato' }, (payload) => {
@@ -664,87 +559,6 @@
 
                             // 1. Notificar siempre al visor de chat local para actualizar mensajes en vivo entre pestañas
                             window.dispatchEvent(new CustomEvent('vivat:new_chat_message', { detail: newMsg }));
-
-                            // 2. Comprobar si el mensaje fue enviado por el usuario actual
-                            let isMe = false;
-                            if (newMsg.id_mensaje && NotificationManager.isOwnMessage(newMsg.id_mensaje)) {
-                                isMe = true;
-                            }
-
-                            if (!isMe) {
-                                try {
-                                    const uLocal = JSON.parse(localStorage.getItem('vivat_user') || '{}');
-                                    let myEmail = (uLocal.email || uLocal.mail || '').toLowerCase().trim();
-                                    let myProfileId = uLocal.id_perfil || uLocal.profileId || uLocal.id;
-
-                                    if (!myEmail && window.ContractsManager && typeof window.ContractsManager.resolveCurrentUserInfo === 'function') {
-                                        const cUser = window.ContractsManager.resolveCurrentUserInfo();
-                                        if (cUser) {
-                                            if (cUser.email) myEmail = cUser.email.toLowerCase().trim();
-                                            if (cUser.profileId && !myProfileId) myProfileId = cUser.profileId;
-                                        }
-                                    }
-
-                                    const msgEmail = (newMsg.remitente_email || '').toLowerCase().trim();
-                                    if (myEmail && msgEmail && myEmail === msgEmail) {
-                                        isMe = true;
-                                    }
-                                    if (myProfileId && newMsg.id_perfil && String(myProfileId) === String(newMsg.id_perfil)) {
-                                        isMe = true;
-                                    }
-
-                                    // Mismo rol activo en el contrato: inquilino no recibe notificaciones de mensajes de inquilino
-                                    const activeRole = getActiveUserRole();
-                                    if (newMsg.remitente_rol && activeRole && newMsg.remitente_rol.toUpperCase() === activeRole.toUpperCase()) {
-                                        isMe = true;
-                                    }
-
-                                    if (!isMe && window.supabaseClient) {
-                                        const { data: { session } } = await window.supabaseClient.auth.getSession();
-                                        if (session?.user?.email && msgEmail && session.user.email.toLowerCase().trim() === msgEmail) {
-                                            isMe = true;
-                                        }
-                                    }
-                                } catch (e) {}
-                            }
-
-                            if (isMe) {
-                                if (newMsg.id_mensaje) {
-                                    NotificationManager.registerOwnMessage(newMsg.id_mensaje);
-                                }
-                                return; // No generar alerta sonora ni visual de mi propio mensaje
-                            }
-
-                            const senderName = newMsg.remitente_nombre || (newMsg.remitente_rol ? `Usuario (${newMsg.remitente_rol})` : 'Nuevo mensaje');
-                            const msgSnippet = newMsg.mensaje ? (newMsg.mensaje.length > 80 ? newMsg.mensaje.substring(0, 80) + '...' : newMsg.mensaje) : 'Nueva propuesta en el contrato';
-
-                            let chatLink = 'administrador.html#chat-negociacion';
-                            if (window.location.pathname.includes('panel-corredor')) {
-                                chatLink = 'panel-corredor.html#chat-negociacion';
-                            } else if (window.location.pathname.includes('tu-alquiler')) {
-                                chatLink = 'tu-alquiler.html#chat-negociacion';
-                            } else if (window.location.pathname.includes('administrador')) {
-                                chatLink = 'administrador.html#chat-negociacion';
-                            } else if (newMsg.contract_ref_id) {
-                                chatLink = `contratos.html?id=${newMsg.contract_ref_id}&tab=chat`;
-                            }
-
-                            const targetRole = newMsg.remitente_rol === 'TENANT' ? 'OWNER' : (newMsg.remitente_rol === 'OWNER' ? 'TENANT' : 'ALL');
-
-                            NotificationManager.receiveIncomingNotification({
-                                id: `notif_msg_${newMsg.id_mensaje || Date.now()}`,
-                                title: `💬 Mensaje de ${senderName}`,
-                                message: msgSnippet,
-                                type: 'chat',
-                                icon: 'forum',
-                                link: chatLink,
-                                role: targetRole,
-                                targetRole: targetRole,
-                                senderRole: newMsg.remitente_rol,
-                                senderEmail: newMsg.remitente_email,
-                                senderProfileId: newMsg.id_perfil,
-                                senderName: newMsg.remitente_nombre
-                            });
                         })
                         .subscribe((status) => {
                             console.log('[Supabase Realtime Notifications Status]:', status);
@@ -1033,7 +847,7 @@
             this.updateBadge();
         },
 
-        fetchFromDB: async function () {
+        fetchFromDB: async function (showLatestToast = false) {
             if (!window.supabaseClient) return;
             
             try {
@@ -1078,6 +892,7 @@
                     } catch (e) { }
 
                     let hasNew = false;
+                    const freshNotifications = [];
                     data.reverse().forEach(dbn => {
                         const localFormat = {
                             id: dbn.id_notificacion,
@@ -1105,6 +920,9 @@
                             }
                         } else {
                             allStored.unshift(localFormat);
+                            if (!this._processedNotifIds.has(localFormat.id)) {
+                                freshNotifications.push(localFormat);
+                            }
                             this._processedNotifIds.add(localFormat.id);
                             hasNew = true;
                         }
@@ -1116,6 +934,12 @@
                         localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(allStored));
                         this.updateBadge();
                         this.renderDropdown();
+
+                        if (showLatestToast && freshNotifications.length > 0) {
+                            freshNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                            this.showToast(freshNotifications[0]);
+                            playNotificationChime();
+                        }
                     }
                 }
             } catch (err) {
