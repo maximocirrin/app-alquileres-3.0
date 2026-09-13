@@ -1616,48 +1616,7 @@ var DataManager = {
                         }]);
                     } catch (e) { }
 
-                    // 4. Notificar en tiempo real al PROPIETARIO
-                    try {
-                        let ownerTargetId = null;
-                        if (pubIdNum) {
-                            const { data: pubData } = await window.supabaseClient
-                                .from('Publicacion')
-                                .select('id_propiedad, Propiedad(id_perfil_propietario)')
-                                .eq('id_publicacion', pubIdNum)
-                                .maybeSingle();
-                            if (pubData && pubData.Propiedad) {
-                                ownerTargetId = pubData.Propiedad.id_perfil_propietario;
-                            }
-                        } else if (appData.propertyId || appData.id_propiedad) {
-                            try {
-                                const propIdVal = appData.propertyId || appData.id_propiedad;
-                                const localProps = JSON.parse(localStorage.getItem('vivat_properties') || '[]');
-                                const prop = localProps.find(p => String(p.id) === String(propIdVal));
-                                if (prop && prop.id_perfil_propietario) {
-                                    ownerTargetId = Number(prop.id_perfil_propietario);
-                                }
-                            } catch (e) {}
-                        }
-                        if (window.NotificationManager) {
-                            const notifFn = window.NotificationManager.createNotification || window.NotificationManager.add;
-                            if (typeof notifFn === 'function') {
-                                notifFn.call(window.NotificationManager, {
-                                    id: `notif_solicitud_${insertedId}`,
-                                    title: '🎉 ¡Nueva postulación recibida!',
-                                    message: `${appData.tenantName || 'Un inquilino verificado'} se ha postulado para alquilar "${appData.propertyTitle || 'tu propiedad'}".`,
-                                    type: 'application',
-                                    icon: 'person_add',
-                                    link: 'administrador.html#postulaciones',
-                                    role: 'OWNER',
-                                    senderRole: 'TENANT',
-                                    senderProfileId: profileId,
-                                    targetProfileId: ownerTargetId
-                                });
-                            }
-                        }
-                    } catch (eNotif) {
-                        console.warn("[DataManager] Aviso enviando notificación al propietario:", eNotif);
-                    }
+                    // La base crea la notificación durable y el email mediante trigger.
                 } else if (error) {
                     console.error("[DataManager] Error insertando Solicitud:", error);
                     throw error;
@@ -2130,29 +2089,7 @@ var DataManager = {
             }
         } catch (e) {}
 
-        // Despachar notificaciones in-app para ambas partes con IDs canónicos
-        if (window.NotificationManager) {
-            window.NotificationManager.createNotification({
-                id: `notif_accept_owner_${appId}_${contractId}`,
-                title: '¡Postulación Aceptada! Contrato Listo para Firma',
-                message: `Has aceptado a ${tenantName} para "${propTitle}". El contrato digital ya está disponible para firmar.`,
-                type: 'contract',
-                link: `contratos.html?contract=${contractId}&sign=1&role=OWNER`,
-                role: 'OWNER',
-                senderRole: 'OWNER',
-                targetProfileId: Number(prop?.id_perfil_propietario || profileId || 6)
-            });
-            window.NotificationManager.createNotification({
-                id: `notif_accept_tenant_${appId}_${contractId}`,
-                title: '¡Tu postulación fue aprobada por el propietario! 🎉',
-                message: `El propietario aprobó tu postulación para "${propTitle}". Ingresa para realizar tu validación biométrica y firmar el contrato digital.`,
-                type: 'contract',
-                link: `contratos.html?contract=${contractId}&sign=1&role=TENANT`,
-                role: 'TENANT',
-                senderRole: 'OWNER',
-                targetProfileId: solPerfilId
-            });
-        }
+        // El cambio de estado genera una notificación durable y un email desde la base.
 
         return {
             id: appId,
@@ -2165,19 +2102,8 @@ var DataManager = {
     },
 
     rejectApplication: async function (appId) {
-        let propTitle = 'la propiedad';
-        let targetProfileId = null;
         if (window.supabaseClient && appId) {
             try {
-                const { data: sol } = await window.supabaseClient
-                    .from('Solicitud')
-                    .select('id_perfil')
-                    .eq('id_solicitud', appId)
-                    .maybeSingle();
-                if (sol) {
-                    targetProfileId = sol.id_perfil;
-                }
-                
                 await window.supabaseClient.from('Historial_estado_solicitud').insert([{
                     id_solicitud: appId,
                     id_estado_solicitud: 3, // Rechazada
@@ -2196,26 +2122,13 @@ var DataManager = {
                 apps.forEach(a => {
                     if (String(a.id) === String(appId)) {
                         a.status = 'rechazada';
-                        if (a.property_title) propTitle = a.property_title;
-                        if (a.tenant_id || a.id_perfil) targetProfileId = targetProfileId || Number(a.tenant_id || a.id_perfil);
                     }
                 });
                 localStorage.setItem('vivat_tenant_applications', JSON.stringify(apps));
             }
         } catch (e) {}
 
-        if (window.NotificationManager) {
-            window.NotificationManager.createNotification({
-                id: `notif_reject_${appId}`,
-                title: 'Estado de postulación actualizado',
-                message: `El proceso de evaluación para "${propTitle}" ha concluido. Puedes explorar más propiedades disponibles en el Marketplace.`,
-                type: 'rejection',
-                link: 'index.html',
-                role: 'TENANT',
-                senderRole: 'OWNER',
-                targetProfileId: targetProfileId
-            });
-        }
+        // El cambio de estado genera una notificación durable y un email desde la base.
 
         return { id: appId, status: 'rechazada' };
     },
@@ -2276,14 +2189,7 @@ var DataManager = {
                 fecha_inicio: new Date().toISOString()
             }]);
             
-            // Trigger notification for the owner (we pass propId so they know which property)
-            await this.createNotification({
-                title: "Nueva solicitud de visita",
-                message: "Un inquilino ha solicitado agendar o modificado una visita.",
-                type: "visita",
-                userId: null, 
-                link: "administrador.html"
-            });
+            // El trigger de Evento notifica a ambas partes sin depender del navegador.
         } catch (e) { console.error(e) }
 
         return {
@@ -2326,16 +2232,6 @@ var DataManager = {
                 fecha_inicio: new Date().toISOString()
             }]);
 
-            // Try to notify the tenant
-            if (data.id_perfil) {
-                await this.createNotification({
-                    title: "Visita Aceptada",
-                    message: "Tu solicitud de visita ha sido confirmada por el propietario.",
-                    type: "visita",
-                    userId: data.id_perfil,
-                    link: "tu-alquiler.html"
-                });
-            }
             return data;
         } catch (e) {
             console.error(e);
@@ -2360,16 +2256,6 @@ var DataManager = {
                 fecha_inicio: new Date().toISOString()
             }]);
 
-            // Try to notify the tenant
-            if (data.id_perfil) {
-                await this.createNotification({
-                    title: "Visita Rechazada",
-                    message: "Lamentablemente tu solicitud de visita no pudo ser confirmada.",
-                    type: "visita",
-                    userId: data.id_perfil,
-                    link: "tu-alquiler.html"
-                });
-            }
             return data;
         } catch (e) {
             console.error(e);
@@ -2398,16 +2284,6 @@ var DataManager = {
                 fecha_inicio: new Date().toISOString()
             }]);
 
-            // Notify the tenant about the reschedule
-            if (data.id_perfil) {
-                await this.createNotification({
-                    title: "Visita Reprogramada",
-                    message: `El propietario ha propuesto una nueva fecha para tu visita: ${newDate} a las ${newTime}.`,
-                    type: "visita",
-                    userId: data.id_perfil,
-                    link: "tu-alquiler.html#visitas"
-                });
-            }
             return data;
         } catch (e) {
             console.error(e);

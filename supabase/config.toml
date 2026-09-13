@@ -5,3 +5,16 @@ verify_jwt = true
 # BCRA_SYNC_SECRET through x-bcra-sync-secret; see the function source.
 [functions.sync-indices-bcra]
 verify_jwt = false
+
+# Internal worker called by pg_net/pg_cron. The function validates the
+# NOTIFICATION_EMAIL_WEBHOOK_SECRET before using its admin database client.
+[functions.send-notification-email]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-notification-email/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/send-notification-email/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/send-notification-email/*.html" ]

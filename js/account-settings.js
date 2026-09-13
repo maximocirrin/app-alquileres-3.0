@@ -250,6 +250,9 @@
                 notif_contratos_sellado: true,
                 notif_visitas_agenda: true,
                 notif_postulaciones: true,
+                notif_mantenimiento: true,
+                notif_mensajes: true,
+                notif_operativas: true,
                 notif_pasaporte_scoring: true,
                 notif_marketing_precios: false
             };
@@ -735,6 +738,9 @@
                 notif_contratos_sellado: document.getElementById('notif_contratos_sellado')?.checked ?? true,
                 notif_visitas_agenda: document.getElementById('notif_visitas_agenda')?.checked ?? true,
                 notif_postulaciones: document.getElementById('notif_postulaciones')?.checked ?? true,
+                notif_mantenimiento: document.getElementById('notif_mantenimiento')?.checked ?? true,
+                notif_mensajes: document.getElementById('notif_mensajes')?.checked ?? true,
+                notif_operativas: document.getElementById('notif_operativas')?.checked ?? true,
                 notif_pasaporte_scoring: document.getElementById('notif_pasaporte_scoring')?.checked ?? true,
                 notif_marketing_precios: document.getElementById('notif_marketing_precios')?.checked ?? false
             };
