@@ -5,6 +5,7 @@ import { test } from 'node:test';
 const migrationUrl = new URL('../supabase/migrations/20260913213156_durable_email_notifications.sql', import.meta.url);
 const workerUrl = new URL('../supabase/functions/send-notification-email/index.ts', import.meta.url);
 const dataManagerUrl = new URL('../js/data.js', import.meta.url);
+const notificationsUrl = new URL('../js/notifications.js', import.meta.url);
 const settingsUrl = new URL('../js/account-settings.js', import.meta.url);
 
 test('all requested business events create durable notifications', async () => {
@@ -50,6 +51,15 @@ test('email worker authenticates the scheduler and uses provider idempotency', a
   assert.match(source, /claim_notification_email_batch/);
   assert.match(source, /complete_notification_email/);
   assert.match(source, /target\.origin === base\.origin/);
+  assert.match(source, /https:\/\/vivat\.com\.ar\/img\/logo-lite\.png/);
+  assert.match(source, /<img src="\$\{logoUrl\}" width="104" alt="Vivat"/);
+});
+
+test('in-app notification actions match the business event', async () => {
+  const source = await readFile(notificationsUrl, 'utf8');
+  assert.match(source, /type === 'pago_informado'\) return 'Revisar pago'/);
+  assert.match(source, /type\.startsWith\('pago_'\).*return 'Ver pago'/);
+  assert.doesNotMatch(source, /Ver y Firmar/);
 });
 
 test('browser no longer calls the removed ephemeral notification helper', async () => {

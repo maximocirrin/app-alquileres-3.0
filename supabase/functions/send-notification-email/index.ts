@@ -51,6 +51,9 @@ function buildHtml(row: EmailQueueRow) {
   const title = escapeHtml(row.titulo);
   const message = escapeHtml(row.mensaje).replaceAll("\n", "<br>");
   const link = escapeHtml(absoluteAppLink(row.enlace));
+  const logoUrl = escapeHtml(
+    Deno.env.get("EMAIL_LOGO_URL") ?? "https://vivat.com.ar/img/logo-lite.png",
+  );
 
   return `<!doctype html>
 <html lang="es">
@@ -58,7 +61,11 @@ function buildHtml(row: EmailQueueRow) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f5;padding:32px 12px">
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e4e4e7;border-radius:20px;overflow:hidden">
-          <tr><td style="background:#890527;padding:22px 28px;color:#ffffff;font-size:24px;font-weight:800">Vivat</td></tr>
+          <tr><td align="center" style="background:#ffffff;padding:18px 28px 14px;border-bottom:4px solid #890527">
+            <a href="https://vivat.com.ar" style="display:inline-block;text-decoration:none">
+              <img src="${logoUrl}" width="104" alt="Vivat" style="display:block;width:104px;max-width:104px;height:auto;border:0;outline:none;text-decoration:none">
+            </a>
+          </td></tr>
           <tr><td style="padding:30px 28px">
             <p style="margin:0 0 14px;font-size:15px;color:#52525b">${name},</p>
             <h1 style="margin:0 0 16px;font-size:23px;line-height:1.25">${title}</h1>

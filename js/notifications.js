@@ -62,6 +62,19 @@
         return 'TENANT';
     }
 
+    function getNotificationActionLabel(notif) {
+        if (notif?.actionLabel) return String(notif.actionLabel);
+
+        const type = String(notif?.type || '').toLowerCase();
+        if (type === 'pago_informado') return 'Revisar pago';
+        if (type.startsWith('pago_') || type === 'interes_perdonado') return 'Ver pago';
+        if (type.startsWith('mantenimiento_')) return 'Ver ticket';
+        if (type.startsWith('visita_') || type === 'visita') return 'Ver visita';
+        if (type.startsWith('postulacion_') || type === 'application') return 'Ver postulación';
+        if (type.startsWith('firma_') || type.startsWith('contrato_') || type === 'contract') return 'Ver contrato';
+        return 'Ver detalle';
+    }
+
     // Comprobar si el usuario actual es el destinatario de la notificación
     function isTargetRecipient(notif) {
         if (!notif) return false;
@@ -690,6 +703,7 @@
             const safeMsg = esc(notif.message);
             const safeIcon = esc(notif.icon || 'notifications');
             const safeLink = notif.link ? esc(notif.link) : '';
+            const safeActionLabel = esc(getNotificationActionLabel(notif));
 
             toast.innerHTML = `
                 <div class="w-9 h-9 rounded-xl bg-primary/10 dark:bg-red-950/60 text-primary dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
@@ -706,7 +720,7 @@
                     ${safeLink && safeLink !== '#' && notif.type !== 'chat' ? `
                         <div class="mt-2.5">
                             <a href="${safeLink}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer">
-                                <span>Ver y Firmar</span>
+                                <span>${safeActionLabel}</span>
                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
                             </a>
                         </div>
@@ -812,6 +826,7 @@
                             const safeNMsg = esc(n.message);
                             const safeNIcon = esc(n.icon || 'notifications');
                             const safeNLink = n.link ? esc(n.link) : '';
+                            const safeNActionLabel = esc(getNotificationActionLabel(n));
                             const dateStr = new Date(n.createdAt).toLocaleDateString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
                             return `
                                 <div onclick="window.NotificationManager.markAsRead('${safeNId}'); if('${safeNLink}' && '${safeNLink}' !== '#') window.location.href='${safeNLink}';" class="p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!n.read ? 'bg-red-50/40 dark:bg-red-950/20' : ''}">
@@ -826,7 +841,7 @@
                                         <p class="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2 mt-0.5 leading-relaxed">${safeNMsg}</p>
                                         ${safeNLink && safeNLink !== '#' ? `
                                             <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary dark:text-red-400 mt-1.5 hover:underline">
-                                                <span>Acceder</span>
+                                                <span>${safeNActionLabel}</span>
                                                 <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                             </span>
                                         ` : ''}
