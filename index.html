@@ -143,8 +143,8 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/tailwind.css?v=2">
-    <link rel="stylesheet" href="css/style.css?v=31">
-    <script defer src="js/landing-motion.js?v=9"></script>
+    <link rel="stylesheet" href="css/style.css?v=32">
+    <script defer src="js/landing-motion.js?v=10"></script>
     <style>
         /* Flechas Laterales de Carruseles en Modo Escritorio */
         .desktop-carousel-arrow {
@@ -301,34 +301,8 @@
         }
 
         /* Animations */
-        .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            transition-property: opacity, transform;
-            will-change: opacity, transform;
-        }
-
-        .animate-on-scroll.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: 0s !important;
-        }
-
         .premium-guarantee-target {
             scroll-margin-top: 96px;
-        }
-
-        .delay-100 {
-            transition-delay: 100ms;
-        }
-
-        .delay-200 {
-            transition-delay: 200ms;
-        }
-
-        .delay-300 {
-            transition-delay: 300ms;
         }
 
         .tenant-benefit-card {
@@ -1140,7 +1114,7 @@
             <!-- A clear journey, from applying to living in the property. -->
             <section class="landing-journey" aria-label="Tu alquiler en tres pasos">
                 <ol class="landing-journey-steps">
-                    <li>
+                    <li class="animate-on-scroll">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">01</span>
                         <div>
@@ -1148,7 +1122,7 @@
                             <p>Un mismo perfil para encontrar tu lugar.</p>
                         </div>
                     </li>
-                    <li>
+                    <li class="animate-on-scroll delay-100">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-1 12-12a2.1 2.1 0 0 0-3-3L5 16zM13 20h7"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">02</span>
                         <div>
@@ -1156,7 +1130,7 @@
                             <p>Tu contrato, desde el celular.</p>
                         </div>
                     </li>
-                    <li>
+                    <li class="animate-on-scroll delay-200">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">03</span>
                         <div>
@@ -1176,7 +1150,7 @@
             <section class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 pt-16 pb-6"
                 id="landing-featured-properties-section">
                 <!-- Header con Título -->
-                <div class="flex items-end justify-between mb-4 sm:mb-6 gap-4">
+                <div class="flex items-end justify-between mb-4 sm:mb-6 gap-4 animate-on-scroll">
                     <div>
                         <span class="premium-kicker !mb-0">Destacadas</span>
                     </div>
@@ -1627,7 +1601,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                         <!-- Card 1 -->
                         <article
-                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 animate-on-scroll">
                             <div
                                 class="relative w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">fingerprint</span>
@@ -1646,7 +1620,7 @@
 
                         <!-- Card 2 -->
                         <article
-                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 animate-on-scroll delay-100">
                             <div
                                 class="relative w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">calendar_month</span>
@@ -1663,7 +1637,7 @@
 
                         <!-- Card 3 -->
                         <article
-                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1">
+                            class="bg-white dark:bg-zinc-900/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800/60 p-8 sm:p-10 flex flex-col items-center text-center shadow-[0_12px_30px_-10px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-300 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 animate-on-scroll delay-200">
                             <div
                                 class="relative w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6 shrink-0">
                                 <span class="material-symbols-rounded text-3xl">security</span>
@@ -1787,7 +1761,7 @@
             <section id="landing-city-properties-section"
                 class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 pt-16 pb-12 border-b border-zinc-200/40 dark:border-zinc-800/40">
                 <!-- Header de la sección con Título -->
-                <div class="flex items-end justify-between mb-8 gap-4">
+                <div class="flex items-end justify-between mb-8 gap-4 animate-on-scroll">
                     <div>
                         <span
                             class="text-primary dark:text-red-400 font-bold tracking-[0.2em] uppercase text-xs mb-2 block">
@@ -1801,7 +1775,7 @@
                 </div>
 
                 <!-- Tabs selector de Ciudades (Pills horizontales) -->
-                <div class="relative mb-8 pb-1 overflow-x-auto scrollbar-none">
+                <div class="relative mb-8 pb-1 overflow-x-auto scrollbar-none animate-on-scroll delay-100">
                     <div id="city-section-tabs-container" class="flex items-center gap-2.5 min-w-max py-1">
                         <!-- Generado dinámicamente -->
                         <div class="flex gap-2">
@@ -2272,7 +2246,7 @@
                 class="max-w-[1280px] mx-auto px-4 md:px-8 py-24 animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40"
                 aria-labelledby="tenant-faq-title">
                 <div class="grid grid-cols-1 lg:grid-cols-[0.72fr_1.28fr] gap-10 lg:gap-20 items-start">
-                    <div class="lg:sticky lg:top-28">
+                    <div class="lg:sticky lg:top-28 animate-on-scroll">
                         <h2 id="tenant-faq-title"
                             class="font-headline text-[48px] leading-[1.05] md:text-6xl md:leading-[1.08] font-light text-on-background dark:text-white mb-7">
                             Antes de<br>dar el próximo<br>paso</h2>
@@ -2282,7 +2256,7 @@
                             class="inline-flex font-body text-lg font-bold text-on-background dark:text-white underline underline-offset-4 decoration-1 hover:text-primary dark:hover:text-red-400 transition-colors">Conocé el Pasaporte Vivat</a>
                     </div>
 
-                    <div class="owner-faq-list">
+                    <div class="owner-faq-list animate-on-scroll delay-100">
                         <!-- Q0: Pasaporte Vivat -->
                         <article class="owner-faq-item">
                             <button
@@ -2454,7 +2428,7 @@
                 class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-on-scroll border-t border-zinc-200/40 dark:border-zinc-800/40">
                 <div class="max-w-2xl mx-auto flex flex-col items-center">
                     <!-- Premium Custom SVG Illustration -->
-                    <div class="w-48 h-32 mb-8 select-none text-primary dark:text-red-400">
+                    <div class="w-48 h-32 mb-8 select-none text-primary dark:text-red-400 animate-on-scroll">
                         <svg viewBox="0 0 200 120" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <!-- Ground line -->
                             <path d="M20 110 H180" stroke="currentColor" stroke-width="2" stroke-linecap="round"

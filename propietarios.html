@@ -161,8 +161,8 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/tailwind.css?v=1">
-    <link rel="stylesheet" href="css/style.css?v=31">
-    <script defer src="js/landing-motion.js?v=9"></script>
+    <link rel="stylesheet" href="css/style.css?v=32">
+    <script defer src="js/landing-motion.js?v=10"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -240,33 +240,6 @@
 
         html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #52525b;
-        }
-
-        /* Animations */
-        .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            transition-property: opacity, transform;
-            will-change: opacity, transform;
-        }
-
-        .animate-on-scroll.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: 0s !important;
-        }
-
-        .delay-100 {
-            transition-delay: 100ms;
-        }
-
-        .delay-200 {
-            transition-delay: 200ms;
-        }
-
-        .delay-300 {
-            transition-delay: 300ms;
         }
 
         .owner-steps-carousel {
@@ -947,7 +920,7 @@
 
             <section class="landing-journey" aria-label="Tu propiedad en tres pasos">
                 <ol class="landing-journey-steps">
-                    <li>
+                    <li class="animate-on-scroll">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">01</span>
                         <div>
@@ -955,7 +928,7 @@
                             <p>Recibí postulaciones y elegí con información.</p>
                         </div>
                     </li>
-                    <li>
+                    <li class="animate-on-scroll delay-100">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4-1 12-12a2.1 2.1 0 0 0-3-3L5 16zM13 20h7"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">02</span>
                         <div>
@@ -963,7 +936,7 @@
                             <p>Prepará el contrato y seguí cada firma online.</p>
                         </div>
                     </li>
-                    <li>
+                    <li class="animate-on-scroll delay-200">
                         <span class="landing-journey-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7"/></svg></span>
                         <span class="landing-journey-number" aria-hidden="true">03</span>
                         <div>
@@ -1096,7 +1069,7 @@
                     class="relative overflow-hidden rounded-[28px] border border-outline-variant/30 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-[0_18px_46px_rgba(26,28,28,0.08)] dark:shadow-[0_18px_46px_rgba(0,0,0,0.22)]">
                     <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
                         <div
-                            class="bg-surface-container-low dark:bg-[#0f0f12] p-6 md:p-10 lg:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-outline-variant/30 dark:border-zinc-800">
+                            class="bg-surface-container-low dark:bg-[#0f0f12] p-6 md:p-10 lg:p-12 flex flex-col justify-between gap-8 border-b lg:border-b-0 lg:border-r border-outline-variant/30 dark:border-zinc-800 animate-on-scroll">
                             <div>
                                 <span
                                     class="inline-flex items-center gap-2 rounded-full border border-primary/20 dark:border-red-500/30 bg-primary/10 dark:bg-red-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary dark:text-red-400">
@@ -1120,7 +1093,7 @@
                         <div
                             class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200/70 dark:divide-zinc-800">
                             <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60 animate-on-scroll">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">badge</span>
@@ -1139,7 +1112,7 @@
                             </article>
 
                             <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60 animate-on-scroll delay-100">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">document_scanner</span>
@@ -1159,7 +1132,7 @@
                             </article>
 
                             <article
-                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60">
+                                class="group p-6 md:p-8 lg:p-9 transition-colors hover:bg-surface-container-low dark:hover:bg-zinc-800/60 animate-on-scroll delay-200">
                                 <div
                                     class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-red-500/10 text-primary dark:text-red-400 flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105">
                                     <span class="material-symbols-outlined">account_balance</span>
@@ -1182,7 +1155,7 @@
                 </div>
             </section>
 
-            <section class="owner-steps-carousel py-6 md:py-10" data-layout="tabs" aria-labelledby="owner-steps-title">
+            <section class="owner-steps-carousel py-6 md:py-10 animate-on-scroll" data-layout="tabs" aria-labelledby="owner-steps-title">
                 <div class="owner-steps-carousel-inner">
                     <div class="max-w-[1280px] mx-auto px-0 md:px-8">
                         <h2 id="owner-steps-title"
